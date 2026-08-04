@@ -1,4 +1,5 @@
 import { i18n } from '$i18n/i18n';
+import { INSTRUMENTS_DATA } from '$core/legacyConfig';
 
 // Reactive counterpart to plain i18n.t/i18n.language - services (e.g. FileService) call those
 // directly and don't need reactivity. Components should use t/language from here instead: tick is
@@ -40,4 +41,18 @@ export const t = ((key: any, options?: any) => {
 export function language() {
   void binding.tick;
   return i18n.language;
+}
+
+/**
+ * Instrument display name: the locale's `instruments:<name>` entry when present,
+ * else the instrument's own config `displayName` (ADR-0003 — a new instrument
+ * folder needs zero locale edits; translators catch up later), else the raw name
+ * (unknown/legacy names in song files).
+ */
+export function tInstrument(name: string): string {
+  void binding.tick;
+  const key = `instruments:${name}`;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- same narrowly scoped passthrough as `t` above
+  if (i18n.exists(key)) return i18n.t(key as any) as string;
+  return INSTRUMENTS_DATA[name]?.displayName ?? name;
 }

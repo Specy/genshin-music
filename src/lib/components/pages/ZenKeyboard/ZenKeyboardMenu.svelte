@@ -3,7 +3,7 @@
   import { PITCHES } from '$core/sharedConfig';
   import { homeStore } from '$stores/HomeStore.svelte';
   import { clickOutside } from '$lib/utils/clickOutside';
-  import { t } from '$i18n/binding.svelte';
+  import { t, tInstrument } from '$i18n/binding.svelte';
   import MenuSidebar from '$cmp/menu/MenuSidebar.svelte';
   import MenuButton from '$cmp/menu/MenuButton.svelte';
   import MenuItem from '$cmp/menu/MenuItem.svelte';
@@ -37,7 +37,7 @@
   let wrapperEl: HTMLDivElement | undefined = $state();
 
   const instrumentLabels = $derived(
-    game.instruments.list.map((i) => ({ value: i, label: t(`instruments:${i}`) }))
+    game.instruments.list.map((i) => ({ value: i, label: tInstrument(i) }))
   );
 
   $effect(() => {

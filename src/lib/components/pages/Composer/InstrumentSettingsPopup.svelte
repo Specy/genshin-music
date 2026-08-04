@@ -17,7 +17,7 @@
 <script lang="ts">
   import type { Pitch } from '$lib/games/types';
   import { InstrumentData } from '$core/Songs/SongClasses';
-  import { t } from '$i18n/binding.svelte';
+  import { t, tInstrument } from '$i18n/binding.svelte';
   import { clickOutside } from '$lib/utils/clickOutside';
   import AppButton from '$cmp/inputs/AppButton.svelte';
   import PitchSelect from '$cmp/inputs/PitchSelect.svelte';
@@ -63,7 +63,7 @@
         style="width:7.4rem"
         value={instrument.alias}
         oninput={(e) => onChange(instrument.set({ alias: e.currentTarget.value }))}
-        placeholder={t(`instruments:${instrument.name}`)}
+        placeholder={tInstrument(instrument.name)}
       />
     </div>
 

@@ -5,7 +5,7 @@
   import type { VsrgHitObject, VsrgSong, VsrgTrack } from '$core/Songs/VsrgSong';
   import { noteIdToButton } from '$core/Songs/noteIds';
   import { ThemeProvider } from '$core/theme/ThemeProvider.svelte';
-  import { t } from '$i18n/binding.svelte';
+  import { t, tInstrument } from '$i18n/binding.svelte';
   import Row from '$cmp/layout/Row.svelte';
   import AppButton from '$cmp/inputs/AppButton.svelte';
   import VsrgTrackSettings from './VsrgTrackSettings.svelte';
@@ -160,7 +160,7 @@
         ? selectedText
         : 'var(--text-color)'};padding-left:0.6rem;padding-right:0.2rem;flex:1"
     >
-      {track.instrument.alias || t(`instruments:${track.instrument.name}`)}
+      {track.instrument.alias || tInstrument(track.instrument.name)}
     </span>
     <AppButton
       onclick={() => selected && (isTrackSettingsOpen = !isTrackSettingsOpen)}

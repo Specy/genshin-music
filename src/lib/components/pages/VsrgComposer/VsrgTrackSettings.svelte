@@ -3,7 +3,7 @@
   import type { VsrgTrack } from '$core/Songs/VsrgSong';
   import type { Pitch } from '$lib/games/types';
   import { vsrgComposerStore } from '$stores/VsrgComposerStore.svelte';
-  import { t } from '$i18n/binding.svelte';
+  import { t, tInstrument } from '$i18n/binding.svelte';
   import Row from '$cmp/layout/Row.svelte';
   import Column from '$cmp/layout/Column.svelte';
   import AppButton from '$cmp/inputs/AppButton.svelte';
@@ -64,7 +64,7 @@
           track.instrument.set({ alias: e.currentTarget.value });
           onChange(track);
         }}
-        placeholder={t(`instruments:${track.instrument.name}`)}
+        placeholder={tInstrument(track.instrument.name)}
       />
     </Row>
     <Row justify="between" align="center" style="margin-top:0.4rem">
