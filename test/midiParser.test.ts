@@ -38,6 +38,12 @@ function findMappedMidi(isAccidental: boolean): number {
 }
 
 describe('MidiParser conversion math (MidiNote.fromMidi)', () => {
+    it('stores nominal Note IDs in the MIDI map rather than layout buttons', () => {
+        for (const [midi, [id, isAccidental]] of MIDI_MAP_TO_NOTE) {
+            expect(id).toBe(Number(midi) - (isAccidental ? 1 : 0))
+        }
+    })
+
     it('counts accidentals via the real midi-to-note map', () => {
         const accidentalMidi = buildMidiNote(findMappedMidi(true))
         const naturalMidi = buildMidiNote(findMappedMidi(false))
@@ -56,9 +62,9 @@ describe('MidiParser conversion math (MidiNote.fromMidi)', () => {
         const belowNote = MidiNote.fromMidi(0, 0, belowMidi, 0)
         const aboveNote = MidiNote.fromMidi(0, 0, aboveMidi, 0)
 
-        expect(belowNote.data.note).toBe(-1)
+        expect(belowNote.data.id).toBe(-1)
         expect(belowNote.data.outOfRangeBound).toBe(-1)
-        expect(aboveNote.data.note).toBe(-1)
+        expect(aboveNote.data.id).toBe(-1)
         expect(aboveNote.data.outOfRangeBound).toBe(1)
     })
 
@@ -73,10 +79,10 @@ describe('MidiParser conversion math (MidiNote.fromMidi)', () => {
         const scaled = MidiNote.fromMidi(0, 0, belowRangeMidi, 1)
 
         expect(unscaled.data.outOfRangeBound).toBe(-1)
-        expect(unscaled.data.note).toBe(-1)
+        expect(unscaled.data.id).toBe(-1)
         //one octave up lands exactly on the same pitch class, in range
         expect(scaled.data.outOfRangeBound).toBe(0)
-        expect(scaled.data.note).toBe(expectedNote)
+        expect(scaled.data.id).toBe(expectedNote)
 
         //the note's file duration is carried for span conversion
         expect(MidiNote.fromMidi(0, 0, belowRangeMidi, 0, 750).durationMs).toBe(750)
@@ -99,16 +105,16 @@ describe('MidiParser conversion math (MidiNote.fromMidi)', () => {
 
         // No local offset -> the (nonzero) global offset is genuinely subtracted, pushing this
         // otherwise in-range note out of range.
-        expect(usesGlobalOffset.data.note).toBe(-1)
+        expect(usesGlobalOffset.data.id).toBe(-1)
         expect(usesGlobalOffset.data.outOfRangeBound).toBe(-1)
 
         // A per-track localOffset of 0 overrides the nonzero global offset entirely - 0 is a
         // meaningful override, not "absent" (exactly why the component uses `??`, not `||`, here).
-        expect(usesLocalOffsetOverGlobal.data.note).toBe(expectedNote)
+        expect(usesLocalOffsetOverGlobal.data.id).toBe(expectedNote)
         expect(usesLocalOffsetOverGlobal.data.outOfRangeBound).toBe(0)
 
         // No local offset + a zero global offset -> unchanged, still in range.
-        expect(usesGlobalOffsetWhenZero.data.note).toBe(expectedNote)
+        expect(usesGlobalOffsetWhenZero.data.id).toBe(expectedNote)
         expect(usesGlobalOffsetWhenZero.data.outOfRangeBound).toBe(0)
     })
 })

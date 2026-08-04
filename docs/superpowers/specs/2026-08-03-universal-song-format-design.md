@@ -16,20 +16,20 @@ Decouple song data from keyboard layout and add sustained notes, on `migration/s
 
 ## 2. Decisions (locked during grilling)
 
-| Question | Decision |
-| --- | --- |
-| Sequencing | On `migration/sveltekit`, pre-publish. Golden fixtures change role: legacy fixtures now guard **deserialization + conversion**, not byte-identical round-trip (serialize writes new versions). |
-| Note identity | **Nominal MIDI id** (existing `midiNotes` values), stored pre-Transposition. Pitch dropdown stays a playback-rate transform. See ADR-0001. |
-| Track model | **Per-track notes** on the shared column timeline. See ADR-0002. |
-| Duration unit | Composed: **integer column span ≥ 1** (omitted when 1). Recorded: **ms press→release** (omitted when absent/legacy). |
-| Non-sustaining playback | Duration stored but **ignored**: one-shot natural ring-out, byte-for-byte today's audio path. |
-| Sustain audio | **Loop region + crossfade into the sample's natural release tail** per instrument (per-note loop overrides), on **raw Web Audio** via a new `Voice` abstraction. tone.js: experiment branch *after* this ships, never in v1. |
-| Composer duration UX | Long-press a composer keyboard button → popover: drag-right slider + `<`/`>` ±1-column steppers; dismissed by outside click / `X` / column change. Buttons show held-state in covered columns; timeline canvas renders tails. |
-| Occupancy rule | Same-id spans on one track never overlap; pressing a covered button cannot create a note there. |
-| Column edits vs spans | Removing a covered TAIL column shrinks the span by 1 per removed column (removing the start column removes the note); inserting a column strictly inside a span stretches it by 1 per inserted column — inserting exactly where the span ends leaves it unchanged (decided 2026-08-04). |
-| Packaging | Version bumps: **composed v4, recorded v3, VSRG v2**. All older versions deserialize forever (converted to the new model on load, quirks preserved). Sky old-format export **kept** (id→index reverse map; off-layout ids dropped with a visible warning count). |
-| Stranded ids | **Convert on import, skip at playback.** Two import paths (implementation finding: the historic remap was a rank-preserving uniform -12 shift, not a fold): legacy files cross-convert through the frozen index remap inside deserialization (byte-reproduces the old converter, fixture-locked); new-format files convert via `toOtherGame` (similar-instrument roster swap + octave-fold of out-of-range ids only (84 → 72), longest-duration collision merge, invariant re-enforced), gap ids stranded. Everywhere else data is untouched — unplayable notes skip at playback and are marked in the composer. |
-| V1 scope | Everything: MIDI durations in+out, VSRG holds drive real audio sustain, practice-mode visual tails, sheet-visualizer durations, zen sustain. |
+| Question                | Decision                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Sequencing              | On `migration/sveltekit`, pre-publish. Golden fixtures change role: legacy fixtures now guard **deserialization + conversion**, not byte-identical round-trip (serialize writes new versions).                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| Note identity           | **Nominal MIDI id** (existing `midiNotes` values), stored pre-Transposition. Pitch dropdown stays a playback-rate transform. See ADR-0001.                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| Track model             | **Per-track notes** on the shared column timeline. See ADR-0002.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| Duration unit           | Composed: **integer column span ≥ 1** (omitted when 1). Recorded: **ms press→release** (omitted when absent/legacy).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| Non-sustaining playback | Duration stored but **ignored**: one-shot natural ring-out, byte-for-byte today's audio path.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| Sustain audio           | **Loop region + crossfade into the sample's natural release tail** per instrument (per-note loop overrides), on **raw Web Audio** via a new `Voice` abstraction. tone.js: experiment branch _after_ this ships, never in v1.                                                                                                                                                                                                                                                                                                                                                                                     |
+| Composer duration UX    | Long-press a composer keyboard button → popover: drag-right slider + `<`/`>` ±1-column steppers; dismissed by outside click / `X` / column change. Buttons show held-state in covered columns; timeline canvas renders tails.                                                                                                                                                                                                                                                                                                                                                                                    |
+| Occupancy rule          | Same-id spans on one track never overlap; pressing a covered button cannot create a note there.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| Column edits vs spans   | Removing a covered TAIL column shrinks the span by 1 per removed column (removing the start column removes the note); inserting a column strictly inside a span stretches it by 1 per inserted column — inserting exactly where the span ends leaves it unchanged (decided 2026-08-04).                                                                                                                                                                                                                                                                                                                          |
+| Packaging               | Version bumps: **composed v4, recorded v3, VSRG v2**. All older versions deserialize forever (converted to the new model on load, quirks preserved). Sky old-format export **kept** (id→index reverse map; off-layout ids dropped with a visible warning count).                                                                                                                                                                                                                                                                                                                                                 |
+| Stranded ids            | **Convert on import, skip at playback.** Two import paths (implementation finding: the historic remap was a rank-preserving uniform -12 shift, not a fold): legacy files cross-convert through the frozen index remap inside deserialization (byte-reproduces the old converter, fixture-locked); new-format files convert via `toOtherGame` (similar-instrument roster swap + octave-fold of out-of-range ids only (84 → 72), longest-duration collision merge, invariant re-enforced), gap ids stranded. Everywhere else data is untouched — unplayable notes skip at playback and are marked in the composer. |
+| V1 scope                | Everything: MIDI durations in+out, VSRG holds drive real audio sustain, practice-mode visual tails, sheet-visualizer durations, zen sustain.                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
 
 ## 3. Current state being replaced
 
@@ -40,7 +40,7 @@ Decouple song data from keyboard layout and add sustained notes, on `migration/s
 
 ## 4. Note model
 
-- An instrument declares `noteIds: number[]` (rename of `midiNotes` — the authoritative ordered list; `baseNotes`, `icons`, `layout` stay display concerns). Button *b* plays `noteIds[b]`; reverse map `id → button` is built per instrument. No current instrument has duplicate ids.
+- An instrument declares `noteIds: number[]` (rename of `midiNotes` — the authoritative ordered list; `baseNotes`, `icons`, `layout` stay display concerns). Button _b_ plays `noteIds[b]`; reverse map `id → button` is built per instrument. No current instrument has duplicate ids.
 - Stored ids are pre-Transposition (what the button plays at pitch C). Changing the pitch dropdown rewrites nothing.
 - **Stranded notes** (id not in the track instrument's list): playback skips them; the composer renders them with a distinct marker; counts surface in the UI. Import-time folding is the only mutation (§6).
 
@@ -51,23 +51,23 @@ Decouple song data from keyboard layout and add sustained notes, on `migration/s
 ```ts
 // Composed v4 — replaces `columns: [tempo, [index, layerHex][]][]` + top-level instruments
 type SerializedComposedSongV4 = BaseSerializedSong & {
-  version: 4
-  columnTempos: number[]                       // tempo-changer id per column; length = timeline length
+  version: 4;
+  columnTempos: number[]; // tempo-changer id per column; length = timeline length
   tracks: {
-    instrument: SerializedInstrumentData
-    notes: SerializedTrackNote[]               // sorted by column
-  }[]
-}
-type SerializedTrackNote = [column: number, id: number, span?: number]  // span omitted when 1
+    instrument: SerializedInstrumentData;
+    notes: SerializedTrackNote[]; // sorted by column
+  }[];
+};
+type SerializedTrackNote = [column: number, id: number, span?: number]; // span omitted when 1
 
 // Recorded v3 — replaces flat `notes: [index, time, layerHex][]` + top-level instruments
 type SerializedRecordedSongV3 = BaseSerializedSong & {
-  version: 3
+  version: 3;
   tracks: {
-    instrument: SerializedInstrumentData
-    notes: [id: number, timeMs: number, durationMs?: number][]  // sorted by time
-  }[]
-}
+    instrument: SerializedInstrumentData;
+    notes: [id: number, timeMs: number, durationMs?: number][]; // sorted by time
+  }[];
+};
 
 // VSRG v2 — hit objects unchanged except `notes` holds Note Ids instead of indices
 // [laneIndex, timestamp, holdDuration, noteIds[]]
@@ -77,12 +77,12 @@ In-memory: `ComposedSong { columnTempos, tracks: Track[] }`, `Track { instrument
 
 ## 6. Legacy conversion
 
-- **Frozen tables module** `$core/Songs/legacyNoteTables.ts`: for *both* games (deliberate carve-out from the `$game`-only import rule — tiny, numeric, DOM-free, frozen forever), per legacy instrument name, the v3-era `index → id` array. Unknown instrument names fall back to the game's default instrument table.
-- **Composed v1–v3 → v4**: existing deserializers run unchanged (v1 layer-string reversal quirk and all others preserved) up to the old in-memory shape, then: for each column, for each note, for each set layer bit *i* → track *i* gets `[column, table(instruments[i].name)[note.index]]`. Tempo changers copy into `columnTempos`.
+- **Frozen tables module** `$core/Songs/legacyNoteTables.ts`: for _both_ games (deliberate carve-out from the `$game`-only import rule — tiny, numeric, DOM-free, frozen forever), per legacy instrument name, the v3-era `index → id` array. Unknown instrument names fall back to the game's default instrument table.
+- **Composed v1–v3 → v4**: existing deserializers run unchanged (v1 layer-string reversal quirk and all others preserved) up to the old in-memory shape, then: for each column, for each note, for each set layer bit _i_ → track _i_ gets `[column, table(instruments[i].name)[note.index]]`. Tempo changers copy into `columnTempos`.
 - **Recorded v1–v2 → v3**: same per-note mapping (v1 decimal-read-as-hex quirk preserved); `durationMs` absent.
 - **Old (pre-versioned) format**: existing path → recorded/composed → convert as above.
 - **Cross-game import** (appName mismatch, explicit user action) has two paths:
-  - **Legacy files** (≤v3 composed, ≤v2 recorded, v1 vsrg): the frozen `importPositions` index remap applies *inside* deserialization, before id-ification, with the historic roster behavior (composed: reset to target default with icon cycle; recorded: instruments untouched — they fall back to the default at runtime; vsrg: DunDun, appName-preservation quirk kept). Byte-reproduces the old converter (fixture-locked); for default instruments the remap equals a uniform -12 id shift.
+  - **Legacy files** (≤v3 composed, ≤v2 recorded, v1 vsrg): the frozen `importPositions` index remap applies _inside_ deserialization, before id-ification, with the historic roster behavior (composed: reset to target default with icon cycle; recorded: instruments untouched — they fall back to the default at runtime; vsrg: DunDun, appName-preservation quirk kept). Byte-reproduces the old converter (fixture-locked); for default instruments the remap equals a uniform -12 id shift.
   - **New-format files** (v4/v3/vsrg-v2): `toOtherGame(target)` — many-to-many by signature. Each track's instrument swaps to the target game's most **similar instrument** (curated cross-game map in `instrumentSimilarity.ts`; target default when unmapped), keeping the track's volume/pitch/icon/alias; ids carry over and only out-of-range ids octave-fold into the mapped instrument's range (Sky 84 → 72); fold collisions merge keeping the longest span/duration; the Duration no-overlap invariant is re-enforced (`normalizeSpans`); ids landing on gaps stay stranded — visible, not mangled. Unlike the legacy path's historic quirk, the vsrg conversion rewrites `data.appName` (converts once, not on every load).
 - **Sky old-format export**: `toOldFormat()` reverse-maps id → default-15-key index; unmappable ids are dropped and the export UI shows the dropped count.
 
@@ -100,12 +100,12 @@ Raw Web Audio; the current graph (per-instrument `GainNode` → optional shared 
 
 ```ts
 class Voice {
-  private source: AudioBufferSourceNode          // looped sustain source
-  private gain: GainNode                         // sustain gain
-  private releaseSource: AudioBufferSourceNode   // starts at loop.end on release
-  private releaseGain: GainNode                  // short sustain→tail crossfade
-  release(): void                                // play the natural tail, safety-fade its end
-  fadeOut(): void                                // stop/blur path; no new release tail
+  private source: AudioBufferSourceNode; // looped sustain source
+  private gain: GainNode; // sustain gain
+  private releaseSource: AudioBufferSourceNode; // starts at loop.end on release
+  private releaseGain: GainNode; // short sustain→tail crossfade
+  release(): void; // play the natural tail, safety-fade its end
+  fadeOut(): void; // stop/blur path; no new release tail
 }
 ```
 
@@ -147,13 +147,13 @@ Each lands green before the next.
 
 ## 12. Risks & mitigations
 
-| Risk | Mitigation |
-| --- | --- |
-| Conversion drift corrupts songs | Fixture-first (Phase A); mixed-id-space and quirk cases explicitly covered. |
-| Composer canvas perf with tails | Reuse VSRG trail sprites + existing texture caches; tails are per visible column, not per ms. |
-| Loop points sound bad | Per-note overrides; author samples with normalized loop regions; audition during Phase B. |
-| File-size growth for doubled melodies | Sparse per-track tuples; measure on real library songs in Phase A; acceptable regression is small single-digit %. |
-| Cross-game behavior regression | Fold rule fixture-locked to reproduce old remap outcomes. |
+| Risk                                                | Mitigation                                                                                                                                                                     |
+| --------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Conversion drift corrupts songs                     | Fixture-first (Phase A); mixed-id-space and quirk cases explicitly covered.                                                                                                    |
+| Composer canvas perf with tails                     | Reuse VSRG trail sprites + existing texture caches; tails are per visible column, not per ms.                                                                                  |
+| Loop points sound bad                               | Per-note overrides; author samples with normalized loop regions; audition during Phase B.                                                                                      |
+| File-size growth for doubled melodies               | Sparse per-track tuples; measure on real library songs in Phase A; acceptable regression is small single-digit %.                                                              |
+| Cross-game behavior regression                      | Fold rule fixture-locked to reproduce old remap outcomes.                                                                                                                      |
 | Stuck voices (missed keyup: tab blur, touch cancel) | Blur/visibilitychange releases the live held voices (scheduled playback voices continue — background playback is a feature); the voice registry is the single source of truth. |
 
 ## 13. Out of scope

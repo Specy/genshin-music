@@ -51,9 +51,11 @@ export class Voice {
     this.releaseS = Number.isFinite(options.release)
       ? Math.min(60, Math.max(0, options.release))
       : 0.1;
-    this.crossfadeS = Number.isFinite(options.crossfade)
-      ? Math.min(0.1, Math.max(0, options.crossfade as number))
-      : 0.02;
+    const crossfade = options.crossfade;
+    this.crossfadeS =
+      typeof crossfade === 'number' && Number.isFinite(crossfade)
+        ? Math.min(0.1, Math.max(0, crossfade))
+        : 0.02;
     this.gain = options.context.createGain();
     this.gain.gain.value = 1;
     this.source = options.context.createBufferSource();
@@ -69,9 +71,10 @@ export class Voice {
     }
     this.source.connect(this.gain);
     this.gain.connect(this.destination);
+    const requestedDelay = options.delay;
     const delay =
-      Number.isFinite(options.delay as number) && (options.delay as number) > 0
-        ? (options.delay as number)
+      typeof requestedDelay === 'number' && Number.isFinite(requestedDelay) && requestedDelay > 0
+        ? requestedDelay
         : 0;
     this.startedAt = options.context.currentTime + delay;
     this.source.start(delay ? this.startedAt : undefined);

@@ -573,7 +573,7 @@
         const notes = audioSong.tickPlayback(timestamp);
         notes.forEach((n) => {
           if (vsrg.trackModifiers[n.trackIndex]?.muted) return;
-          audioPlaybackPlayer.playNoteOfInstrument(n.trackIndex, n.id);
+          audioPlaybackPlayer.pressNoteOfInstrument(n.trackIndex, n.id, n.duration);
         });
       }
       const tracks = vsrg.tickPlayback(timestamp);

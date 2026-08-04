@@ -5,7 +5,7 @@ import CrGlyph from './glyphs/cr.svelte';
 import DmGlyph from './glyphs/dm.svelte';
 import DmcrGlyph from './glyphs/dmcr.svelte';
 
-export const game: GameDefinition = {
+const gameDefinition = {
   // Sourced from ./identity, the single source for these two fields (see GameIdentity in
   // ../types) - this object never restates them independently.
   id: GAME_IDENTITY.id,
@@ -3319,31 +3319,31 @@ export const game: GameDefinition = {
 
   midi: {
     mapToNote: {
-      60: [0, false],
-      61: [0, true],
-      62: [1, false],
-      63: [1, true],
-      64: [2, false],
-      65: [3, false],
-      66: [3, true],
-      67: [4, false],
-      68: [4, true],
-      69: [5, false],
-      70: [5, true],
-      71: [6, false],
-      72: [7, false],
-      73: [7, true],
-      74: [8, false],
-      75: [8, true],
-      76: [9, false],
-      77: [10, false],
-      78: [10, true],
-      79: [11, false],
-      80: [11, true],
-      81: [12, false],
-      82: [12, true],
-      83: [13, false],
-      84: [14, false],
+      60: [60, false],
+      61: [60, true],
+      62: [62, false],
+      63: [62, true],
+      64: [64, false],
+      65: [65, false],
+      66: [65, true],
+      67: [67, false],
+      68: [67, true],
+      69: [69, false],
+      70: [69, true],
+      71: [71, false],
+      72: [72, false],
+      73: [72, true],
+      74: [74, false],
+      75: [74, true],
+      76: [76, false],
+      77: [77, false],
+      78: [77, true],
+      79: [79, false],
+      80: [79, true],
+      81: [81, false],
+      82: [81, true],
+      83: [83, false],
+      84: [84, false],
     },
     bounds: {
       upper: 84,
@@ -3400,4 +3400,6 @@ export const game: GameDefinition = {
     updateMessage: 'Added new instruments: Harmonic Key (genshin)\nAdded new Layout: number layout',
     overrides: undefined,
   },
-};
+} satisfies GameDefinition;
+
+export const game: GameDefinition = gameDefinition;
