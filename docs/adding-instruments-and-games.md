@@ -14,7 +14,7 @@ src/lib/games/genshin/
 └── instruments/
     └── Lyre/
         ├── meta.json      # the instrument definition
-        └── 0.mp3 … 20.mp3 # its samples (any file names; see `file` below)
+        └── 0.mp3 … 20.mp3 # its samples (`[A-Za-z0-9._-]+` names; see `file` below)
 ```
 
 Everything is aggregated and validated at build time (`games/registry.ts` +
@@ -28,7 +28,9 @@ production build at prerender** with a message naming the game/instrument.
    (`/assets/audio/<game>/<Name>/…`), and what songs reference. Don't rename
    existing folders — saved songs point at them.
 2. Drop the samples in, one per button. Default naming is `0.mp3 … N-1.mp3`
-   (button order); arbitrary names work via the per-note `file` field.
+   (button order); other names work via the per-note `file` field as long as they
+   match `[A-Za-z0-9._-]+` (file names go verbatim into URLs and copy paths — the
+   registry rejects `/`, `#`, `?`, `%`, spaces, `..`).
 3. Write `meta.json`:
 
 ```json
@@ -44,8 +46,8 @@ production build at prerender** with a message naming the game/instrument.
 ```
 
 4. Add the name to `instruments.list` in the game's `game.json` (the array is
-   the menu order). A folder deliberately **not** listed is an *Unlisted
-   Instrument*: loadable by the engine, hidden from menus.
+   the menu order). A folder deliberately **not** listed is an _Unlisted
+   Instrument_: loadable by the engine, hidden from menus.
 5. Done. `npm run dev:<game>` picks it up; `npm test` verifies every note's
    sample file exists. Locale entries are optional — menus fall back to
    `displayName` until translators add `instruments.<Name>` keys.
@@ -119,7 +121,8 @@ Code (what data can't express):
    where they fit).
 4. `<game>/glyphs/*.svelte` — icon components; keys go into the `NoteImage`
    union in `types.ts` if new.
-5. `<game>/index.ts` — ~15 lines: `defineGame(id, { shapes, svgGlyphs })`.
+5. `<game>/index.ts` — ~15 lines: `defineGame(GAME_IDENTITY, { shapes, svgGlyphs })`
+   (the full identity, so game.json ↔ identity.ts drift fails the build).
 6. `scripts/buildApp.js` + `scripts/startApp.js` — add the game to their
    `GAMES` tables (build/dev entry points).
 

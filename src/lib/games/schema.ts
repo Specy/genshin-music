@@ -32,7 +32,9 @@ import type {
  * `baseNote` is the displayed note-name root; it can NOT be derived from `midi`
  * (Vintage-Lyre's nominal id 74 displays as Db; unpitched SFX use '').
  * `file` defaults to `<index>.mp3` — the historical sample naming (URL-locked for
- * existing instruments); new instruments may name samples freely.
+ * existing instruments). New instruments may name samples anything matching
+ * `[A-Za-z0-9._-]+` — the registry rejects everything else, since file names land
+ * verbatim in copy paths and fetch URLs (no '/', '#', '?', '%', spaces, '..').
  * `loop` is the per-note sustain loop region, overriding the instrument-level
  * `sustain.loop` (replaces the old parallel `sustain.noteLoops` array).
  */

@@ -20,7 +20,10 @@ import LabGlyph from './glyphs/lab.svelte';
 import TiGlyph from './glyphs/ti.svelte';
 import TibGlyph from './glyphs/tib.svelte';
 
-export const game = defineGame(GAME_IDENTITY.id, {
+// The FULL identity is passed (not just .id): defineGame asserts game.json agrees
+// with identity.ts on both fields, so the two sources can never drift (see the
+// storageId doctrine in ../types.ts and defineGame's own comment).
+export const game = defineGame(GAME_IDENTITY, {
   shapes,
   // Genshin's own 11 solfège glyphs only - the shared type is Partial, so a per-game
   // module importing just its own glyphs still type-checks against the union.

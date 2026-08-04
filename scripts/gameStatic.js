@@ -11,6 +11,17 @@ import clc from 'cli-color';
  * overlay dir is cleaned first so a previous build/dev run of the OTHER game
  * can't leak its audio into this build's output.
  */
+// Mirrors games/registry.ts SAFE_SEGMENT (Codex review M3): names/files land verbatim
+// in copy paths and fetch URLs, so path escapes ('..', '/') and URL metacharacters
+// ('#', '?', '%') must be unrepresentable. This script validates independently because
+// it runs before the app's registry ever evaluates (dev/build preparation).
+const SAFE_SEGMENT = /^[A-Za-z0-9._-]+$/;
+function assertSafeSegment(context, kind, value) {
+  if (typeof value !== 'string' || !SAFE_SEGMENT.test(value) || value === '.' || value === '..') {
+    throw new Error(`[gameStatic] ${context}: ${kind} "${value}" must match ${SAFE_SEGMENT}`);
+  }
+}
+
 async function prepareGameAudio(id) {
   const gamesRoot = './src/lib/games';
   for (const gameId of await fse.readdir(gamesRoot)) {
@@ -20,6 +31,7 @@ async function prepareGameAudio(id) {
   const instrumentsDir = `${gamesRoot}/${id}/instruments`;
   const presets = await fse.readJson(`${gamesRoot}/${id}/presets.json`);
   for (const name of await fse.readdir(instrumentsDir)) {
+    assertSafeSegment(id, 'instrument folder name', name);
     const meta = await fse.readJson(`${instrumentsDir}/${name}/meta.json`);
     const notes = typeof meta.notes === 'string' ? presets[meta.notes] : meta.notes;
     if (!Array.isArray(notes)) {
@@ -27,6 +39,7 @@ async function prepareGameAudio(id) {
     }
     for (let i = 0; i < notes.length; i++) {
       const file = notes[i].file ?? `${i}.mp3`;
+      assertSafeSegment(`${id}/${name}`, `note ${i} file`, file);
       await fse.copy(
         `${instrumentsDir}/${name}/${file}`,
         `./static/assets/audio/${id}/${name}/${file}`

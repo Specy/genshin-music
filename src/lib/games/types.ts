@@ -33,30 +33,33 @@ export type GameIdentity = { id: GameId; storageId: StorageId };
 
 export type Pitch = 'C' | 'Db' | 'D' | 'Eb' | 'E' | 'F' | 'Gb' | 'G' | 'Ab' | 'A' | 'Bb' | 'B';
 
-export type BaseNote =
-  // = keyof typeof NOTE_SCALE
-  | 'Cb'
-  | 'C'
-  | 'C#'
-  | 'Db'
-  | 'D'
-  | 'D#'
-  | 'Eb'
-  | 'E'
-  | 'E#'
-  | 'Fb'
-  | 'F'
-  | 'F#'
-  | 'Gb'
-  | 'G'
-  | 'G#'
-  | 'Ab'
-  | 'A'
-  | 'A#'
-  | 'Bb'
-  | 'B'
-  | 'B#'
-  | '';
+// = keyof typeof NOTE_SCALE. A runtime const (not a bare union) so the registry can
+// validate authored meta.json baseNote values at module evaluation (Codex review M4).
+export const BASE_NOTES = [
+  'Cb',
+  'C',
+  'C#',
+  'Db',
+  'D',
+  'D#',
+  'Eb',
+  'E',
+  'E#',
+  'Fb',
+  'F',
+  'F#',
+  'Gb',
+  'G',
+  'G#',
+  'Ab',
+  'A',
+  'A#',
+  'Bb',
+  'B',
+  'B#',
+  '',
+] as const;
+export type BaseNote = (typeof BASE_NOTES)[number];
 
 export type NoteNameType =
   | 'Note name'
