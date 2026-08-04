@@ -1,7 +1,7 @@
 <script lang="ts">
   import { ThemeProvider } from '$core/theme/ThemeProvider.svelte';
   import { InstrumentData } from '$core/Songs/SongClasses';
-  import { t } from '$i18n/binding.svelte';
+  import { t, tInstrument } from '$i18n/binding.svelte';
   import AppButton from '$cmp/inputs/AppButton.svelte';
   import InstrumentSettingsPopup from './InstrumentSettingsPopup.svelte';
 
@@ -161,7 +161,7 @@
         class="flex-grow flex-centered instrument-name-button"
       >
         <span class="text-ellipsis" style="width:6rem">
-          {ins.alias || t(`instruments:${ins.name}`)}
+          {ins.alias || tInstrument(ins.name)}
         </span>
       </AppButton>
 

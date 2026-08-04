@@ -24,7 +24,7 @@
   import type { ClassValue } from 'svelte/elements';
   import { ThemeProvider as theme } from '$core/theme/ThemeProvider.svelte';
   import { capitalize } from '$core/utils/Utilities';
-  import { t } from '$i18n/binding.svelte';
+  import { tInstrument } from '$i18n/binding.svelte';
   import type { InstrumentName } from '$core/types';
 
   let {
@@ -60,13 +60,13 @@
 >
   {#if entries.length === 1}
     {#each instrumentGroups.instruments as ins (ins)}
-      <option value={ins}>{t(`instruments:${ins}`)}</option>
+      <option value={ins}>{tInstrument(ins)}</option>
     {/each}
   {:else}
     {#each entries as [prefix, ins] (prefix)}
       <optgroup label={capitalize(prefix)}>
         {#each ins as instrumentName (instrumentName)}
-          <option value={instrumentName}>{t(`instruments:${instrumentName}`)}</option>
+          <option value={instrumentName}>{tInstrument(instrumentName)}</option>
         {/each}
       </optgroup>
     {/each}
