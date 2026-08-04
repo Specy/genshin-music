@@ -22,6 +22,26 @@ _Avoid_: base note, real pitch
 The song-level or per-instrument playback transform (C, Db, … B) applied at play time via playback rate. Stored Note Ids are always pre-transposition (what the button plays at C).
 _Avoid_: pitch (alone — overloaded with Sounding Pitch)
 
+### Instruments
+
+**Shape**:
+The named on-screen arrangement of an instrument's buttons (`genshin-3x7`, `sky-2x4`, …). Every instrument declares exactly one, explicitly — never inferred from its note count. A Shape owns the button geometry, the interaction/rendering behavior, and the default Label Sets; a game can give the same geometry a different Shape when its behavior differs.
+_Avoid_: layout (overloaded with Label Set), keyboard size
+
+**Label Set**:
+The per-button display texts a Shape provides for one naming mode (default key bindings, ABC, numbers, PlayStation, Switch). A property of the Shape, never of the instrument or the song.
+_Avoid_: keyboard layout (ambiguous with Shape and with user-rebound keys)
+
+**Note Preset**:
+A game-scoped, named note list (per button: Note Id, display note name, glyph) that instruments reference instead of restating shared tables; an instrument may instead declare its notes inline. Authoring vocabulary only — resolved away into each instrument before the app runs.
+_Avoid_: kind (the retired term)
+
+**Song Grid**:
+The game-canonical rows×columns note grid that song-wide surfaces (composer canvas, sheet visualizer) render, regardless of which instruments the song's tracks use. Distinct from any single instrument's Shape.
+
+**Unlisted Instrument**:
+An instrument a game ships (fully loadable by songs and the engine) but hides from its instrument menus.
+
 ### Songs
 
 **Track**:

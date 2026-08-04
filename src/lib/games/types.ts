@@ -133,6 +133,61 @@ export type InstrumentDataType = {
   sustain?: InstrumentSustainConfig;
 };
 
+// ---- folder-based config runtime types (ADR-0003) ----------------------------
+// The normalized shapes the registry produces from the authored JSON (see
+// ./schema.ts for the authoring side). These replace InstrumentDataType &
+// LayoutKeys at the Step-4 cutover; both coexist until then.
+
+/** Shape id, game-prefixed by convention ('genshin-3x7'). Keys the game's shapes.ts. */
+export type ShapeId = string;
+
+/** The per-button display texts a Shape provides for each naming mode. */
+export type ShapeLabels = {
+  keyboard: readonly string[];
+  abc: readonly string[];
+  number: readonly string[];
+  playstation: readonly string[];
+  switch: readonly string[];
+};
+
+/**
+ * Instrument-level sustain capability, normalized. No `noteLoops` parallel
+ * array — per-note loops live on InstrumentNote.loop.
+ */
+export type InstrumentSustain = {
+  release: number;
+  crossfade?: number;
+  loop: LoopRegion;
+};
+
+/**
+ * One button's note, normalized. Array position IS the Button index.
+ * `midi` is the Note Id (ADR-0001); `file` is always resolved (default `<index>.mp3`);
+ * `loop` overrides the instrument's sustain.loop for this note.
+ */
+export type InstrumentNote = {
+  file: string;
+  midi: number;
+  baseNote: BaseNote;
+  icon: NoteImage;
+  loop?: LoopRegion;
+};
+
+/** A fully-normalized instrument: what the app consumes at runtime. */
+export type InstrumentDefinition = {
+  /** Folder name = runtime key = audio URL segment = what songs reference. */
+  name: string;
+  /** English fallback; i18n overrides when the locale has the key. */
+  displayName: string;
+  family: string;
+  midiName: string;
+  fill?: string;
+  clickColor?: string;
+  shape: ShapeId;
+  sustain?: InstrumentSustain;
+  notes: readonly InstrumentNote[];
+};
+
 export type TempoChanger = {
   // typeof TEMPO_CHANGERS[number]
   id: number;
