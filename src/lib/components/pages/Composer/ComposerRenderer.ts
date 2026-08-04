@@ -602,11 +602,15 @@ export class ComposerRenderer {
     });
   }
 
-  /** Tail segments per column for every visible span note (start stub + full-width covered columns). One pass over all notes per draw. */
+  /** Tail segments clipped to the visible column window, including spans that start off-screen. */
   private computeTailsByColumn(): Map<number, TailSegment[]> {
     const tails = new Map<number, TailSegment[]>();
     const { columns, song, currentLayer } = this.state;
-    columns.forEach((column, start) => {
+    const threshold = this.numberOfColumnsPerCanvas / 2 + 2;
+    const visibleStart = Math.max(0, Math.floor(this.state.selected - threshold) + 1);
+    const visibleEnd = Math.min(columns.length, Math.ceil(this.state.selected + threshold));
+    for (let start = 0; start < visibleEnd; start++) {
+      const column = columns[start];
       column.notes.forEach((note) => {
         if (note.span <= 1) return;
         const instrument = song.instruments[note.trackIndex];
@@ -614,15 +618,16 @@ export class ComposerRenderer {
         if (!isCurrentLayer && !instrument?.visible) return;
         const button = displayButtonForId(instrument?.name ?? '', note.id);
         if (button === -1) return;
-        const end = Math.min(start + note.span, columns.length);
-        for (let i = start; i < end; i++) {
+        const segmentStart = Math.max(start, visibleStart);
+        const end = Math.min(start + note.span, visibleEnd);
+        for (let i = segmentStart; i < end; i++) {
           const segment: TailSegment = { button, isCurrentLayer, isStart: i === start };
           const existing = tails.get(i);
           if (existing) existing.push(segment);
           else tails.set(i, [segment]);
         }
       });
-    });
+    }
     return tails;
   }
 

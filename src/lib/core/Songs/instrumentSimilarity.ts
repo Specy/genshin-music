@@ -14,7 +14,7 @@ export type ConversionGame = 'Genshin' | 'Sky'
 
 type SimilarByTarget = Partial<Record<ConversionGame, string>>
 
-export const SIMILAR_INSTRUMENTS: Record<ConversionGame, Record<string, SimilarByTarget>> = {
+export const SIMILAR_INSTRUMENTS = {
     Genshin: {
         'Lyre': {Sky: 'Harp'},
         'Vintage-Lyre': {Sky: 'Harp'},
@@ -48,7 +48,7 @@ export const SIMILAR_INSTRUMENTS: Record<ConversionGame, Record<string, SimilarB
         //to the target default (Flute, Panflute, Ocarina, MantaOcarina, Trumpet,
         //Horn, Contrabass, SFX_*)
     },
-}
+} satisfies Record<ConversionGame, Record<string, SimilarByTarget>>
 
 /** The target game's most similar instrument for a source instrument, or null (caller falls back to the target's default). */
 export function findSimilarInstrument(
@@ -56,6 +56,7 @@ export function findSimilarInstrument(
     instrumentName: string,
     targetGame: ConversionGame
 ): string | null {
-    const bySource = SIMILAR_INSTRUMENTS[sourceGame as ConversionGame]
+    if (sourceGame !== 'Genshin' && sourceGame !== 'Sky') return null
+    const bySource: Record<string, SimilarByTarget> = SIMILAR_INSTRUMENTS[sourceGame]
     return bySource?.[instrumentName]?.[targetGame] ?? null
 }

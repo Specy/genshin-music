@@ -310,7 +310,7 @@ export type SongData = {
     appName: string
 }
 export type ParsedMidiNote = {
-    note: number
+    id: number
     isAccidental: boolean
     outOfRangeBound: 1 | -1 | 0
 }
@@ -325,7 +325,7 @@ export class MidiNote {
     constructor(time: number, layer: number, data?: ParsedMidiNote, durationMs: number = 0) {
         this.time = time
         this.data = data || {
-            note: -1,
+            id: -1,
             isAccidental: false,
             outOfRangeBound: 0
         }
@@ -347,9 +347,9 @@ export class MidiNote {
                 midiNote -= 12
             }
         }
-        const note = (MIDI_MAP_TO_NOTE.get(`${midiNote}`) || [-1, false]) as [note: number, isAccidental: boolean]
+        const note = MIDI_MAP_TO_NOTE.get(`${midiNote}`) ?? ([-1, false] satisfies [number, boolean])
         toReturn.data = {
-            note: note[0],
+            id: note[0],
             isAccidental: note[1],
             outOfRangeBound: 0
         }

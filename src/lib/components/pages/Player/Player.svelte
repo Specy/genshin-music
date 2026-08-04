@@ -30,6 +30,7 @@
 
   let settings: PlayerSettingsDataType = $state(settingsService.getDefaultPlayerSettings());
   let instruments: Instrument[] = $state([new Instrument(game.instruments.list[0])]);
+  const songDisplayInstrument = new Instrument(game.instruments.list[0]);
   let instrumentsData: InstrumentData[] = [new InstrumentData({ name: game.instruments.list[0] })];
   let isLoadingInstrument = $state(true);
   let isRecording = $state(false);
@@ -154,7 +155,7 @@
     if (!loaded) logger.error(t('logs:error_loading_instrument'));
     AudioProvider.connect(instrument.endNode, null);
     if (!mounted) return;
-    playerStore.setKeyboardLayout(instrument.notes);
+    if (playerStore.eventType === 'stop') playerStore.setKeyboardLayout(instrument.notes);
     instruments[0] = instrument;
     instrumentsData[0] = new InstrumentData({ name, volume });
     instruments = [...instruments];
@@ -225,7 +226,7 @@
     });
     const newInstruments = (await Promise.all(promises)) as Instrument[];
     if (!mounted) return;
-    if (instruments[0]) {
+    if (instruments[0] && playerStore.eventType === 'stop') {
       settings.instrument = { ...settings.instrument, value: instruments[0].name };
       playerStore.setKeyboardLayout(instruments[0].notes);
     }
@@ -418,6 +419,7 @@
       data={{
         isLoading: isLoadingInstrument,
         instrument: instruments[0],
+        songDisplayInstrument,
         pitch: settings.pitch.value,
         keyboardSize: settings.keyboardSize.value,
         noteNameType: settings.noteNameType.value,

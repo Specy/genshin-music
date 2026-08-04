@@ -1,7 +1,7 @@
 // Phase-C span (Duration) model tests: covering lookup, clamped span setting, and the
 // no-overlap invariant re-enforced after bulk edits (see CONTEXT.md: Duration).
 import {describe, expect, it} from 'vitest'
-import {ComposedSong, INSTRUMENTS, INSTRUMENTS_DATA} from './imports'
+import {ComposedSong, INSTRUMENTS, INSTRUMENTS_DATA, NoteColumn} from './imports'
 
 function idOf(button: number): number {
     return INSTRUMENTS_DATA[INSTRUMENTS[0]].midiNotes[button]
@@ -108,6 +108,29 @@ describe('normalizeSpans after bulk edits', () => {
         expect(song.columns[1].findNote(0, idOf(0))?.span).toBe(5)
         song.addColumns(1, 0) // insertion before the start: note shifts, span unchanged
         expect(song.columns[2].findNote(0, idOf(0))?.span).toBe(5)
+    })
+
+    it('inserting copied columns inside a span stretches it without materializing off-grid tails', async () => {
+        const song = makeSong()
+        song.columns[0].addNote(0, idOf(0), 5)
+        song.selected = 2
+        await song.pasteColumns([new NoteColumn()], false)
+        expect(song.columns[0].findNote(0, idOf(0))?.span).toBe(6)
+    })
+
+    it('track and paste collisions keep the longest span', async () => {
+        const song = makeSong()
+        song.columns[0].addNote(0, idOf(0), 6)
+        song.columns[0].addNote(1, idOf(0), 2)
+        song.switchLayer(1, 0, 0, 1)
+        expect(song.columns[0].findNote(1, idOf(0))?.span).toBe(6)
+
+        const copied = makeSong()
+        copied.columns[0].addNote(0, idOf(1), 3)
+        copied.columns[0].addNote(1, idOf(1), 7)
+        song.columns[0].addNote(0, idOf(1), 2)
+        await song.pasteLayer(copied.copyColumns([0], 'all'), true, 0)
+        expect(song.columns[0].findNote(0, idOf(1))?.span).toBe(7)
     })
 
     it('normalizeSpans sanitizes NaN/fractional/zero spans to finite integers ≥ 1', () => {

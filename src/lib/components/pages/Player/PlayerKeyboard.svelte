@@ -33,6 +33,7 @@
     data: {
       isLoading: boolean;
       instrument: Instrument;
+      songDisplayInstrument: Instrument;
       pitch: Pitch;
       keyboardSize: number;
       noteNameType: NoteNameType;
@@ -67,6 +68,7 @@
   let debouncedStateUpdate: Timer = 0;
   let mode: 'play' | 'practice' | 'approaching' | undefined = $state('play');
   let songToPractice: Chunk[] = [];
+  let sustainingTracks: boolean[] = [];
   let approachingNotes: ApproachingNote[][] = $state(Array2d.from(game.notes.perColumn));
   // QUIRK: written once, never read again - dead field, preserved rather than removed.
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -83,7 +85,7 @@
 
   function handleMidi([eventType, note, velocity]: MIDIEvent) {
     if (!mounted) return;
-    const instrument = data.instrument;
+    const instrument = data.hasSong ? data.songDisplayInstrument : data.instrument;
     //running-status zero-velocity note-on is the classic note-off alias
     const isRelease =
       MIDIProvider.isUp(eventType) || (MIDIProvider.isDown(eventType) && velocity === 0);
@@ -106,21 +108,23 @@
   const handleKeyboard: ShortcutListener<'keyboard'> = async ({ event, shortcut }) => {
     if (event.repeat) return;
     if (!event.shiftKey) {
-      const note = data.instrument.getNoteFromCode(shortcut.name);
+      const instrument = data.hasSong ? data.songDisplayInstrument : data.instrument;
+      const note = instrument.getNoteFromCode(shortcut.name);
       if (note !== null) handleClick(note);
     }
   };
 
   //release unconditionally (even if shift is down by now) — releasing an unheld button is a no-op
   const handleKeyboardRelease: ShortcutListener<'keyboard'> = ({ shortcut }) => {
-    const note = data.instrument.getNoteFromCode(shortcut.name);
+    const instrument = data.hasSong ? data.songDisplayInstrument : data.instrument;
+    const note = instrument.getNoteFromCode(shortcut.name);
     if (note !== null) handleRelease(note);
   };
 
   async function approachingSong(song: RecordedSong, start = 0, end?: number) {
     mode = 'approaching';
     setTicker(true);
-    end = end ? end : song.notes.length;
+    end = end ?? song.notes.length;
     const { speedChanger } = data;
     const notes: ApproachingNote[] = [];
     approachRate = data.approachRate || 1500;
@@ -134,7 +138,7 @@
         time: Song.roundTime((note.time - startOffset) / speedChanger.value + startDelay),
         index: note.displayButton,
         //durations scale with playback speed like the times do (matches applySpeedChange)
-        duration: note.duration / speedChanger.value,
+        duration: sustainingTracks[note.trackIndex] ? note.duration / speedChanger.value : 0,
       });
       notes.push(obj);
     }
@@ -250,11 +254,12 @@
 
   async function playSong(song: RecordedSong, start = 0, end?: number) {
     mode = 'play';
-    end = end ? end : song.notes.length;
+    end = end ?? song.notes.length;
     songTimestamp = song.timestamp;
     const keyboard = playerStore.keyboard;
     const { visualSheetSize } = data;
     const notes = applySpeedChange(song.notes).slice(start, end);
+    if (notes.length === 0) return;
     const mergedNotes = RecordedSong.mergeNotesIntoChunks(notes.map((n) => n.clone()));
     playerControlsStore.setPages(groupArrayEvery(mergedNotes, visualSheetSize));
     await delay(200); //add small start offset
@@ -268,7 +273,9 @@
       previous = notes[i].time;
       if (delayTime > 16) await delay(delayTime + delayOffset);
       if (!mounted || songTimestamp !== song.timestamp) return;
-      handleClick(keyboard[notes[i].displayButton], notes[i]);
+      const keyboardNote = keyboard[notes[i].displayButton];
+      if (keyboardNote) handleClick(keyboardNote, notes[i]);
+      else functions.playSound(-1, notes[i]);
       if (chunkPlayedNotes >= (playerControlsStore.currentChunk?.notes.length ?? 0)) {
         chunkPlayedNotes = 1;
         playerControlsStore.incrementChunkPositionAndSetCurrent(start + i + 1);
@@ -278,16 +285,26 @@
       }
       delayOffset = startTime + previous - startOffset - Date.now();
     }
+    const lastNoteTime = notes.at(-1)?.time ?? 0;
+    const finalReleaseTime = notes.reduce(
+      (latest, note) =>
+        Math.max(latest, note.time + (sustainingTracks[note.trackIndex] ? note.duration : 0)),
+      lastNoteTime
+    );
+    if (finalReleaseTime > lastNoteTime) await delay(finalReleaseTime - lastNoteTime);
+    if (!mounted || songTimestamp !== song.timestamp) return;
     functions.onSongFinished();
   }
 
   function practiceSong(song: RecordedSong, start = 0, end?: number) {
     mode = 'practice';
     //TODO move this to the song class
-    end = end ? end : song.notes.length;
+    end = end ?? song.notes.length;
     const keyboard = playerStore.keyboard;
     const { visualSheetSize } = data;
-    const notes = applySpeedChange(song.notes).slice(start, end);
+    const notes = applySpeedChange(song.notes)
+      .slice(start, end)
+      .filter((note) => note.displayButton >= 0 && note.displayButton < keyboard.length);
     const chunks = RecordedSong.mergeNotesIntoChunks(notes.map((n) => n.clone()));
     if (chunks.length === 0) return;
     nextChunkDelay = 0;
@@ -296,7 +313,10 @@
       playerStore.setNoteState(note.displayButton, {
         status: 'toClick',
         delay: game.notes.animationDelayMs,
-        holdMs: note.duration >= SUSTAIN_VISUAL_THRESHOLD_MS ? note.duration : 0,
+        holdMs:
+          sustainingTracks[note.trackIndex] && note.duration >= SUSTAIN_VISUAL_THRESHOLD_MS
+            ? note.duration
+            : 0,
       });
     });
     const secondChunk = chunks[1];
@@ -321,13 +341,17 @@
 
   async function stopSong(): Promise<void> {
     songTimestamp = 0;
+    timeouts.forEach(clearTimeout);
+    timeouts = [];
     heldVisualPresses.clear();
     playerStore.resetKeyboardLayout();
     approachingNotesList = [];
     songToPractice = [];
+    sustainingTracks = [];
     approachingNotes = Array2d.from(game.notes.perColumn);
     //stopping playback releases every still-held voice (live and scheduled)
     functions.releaseAllSounds();
+    playerStore.setKeyboardLayout(data.instrument.notes);
     functions.setHasSong(false);
   }
 
@@ -367,7 +391,10 @@
             playerStore.setNoteState(note.displayButton, {
               status: 'toClick',
               delay: nextChunk.delay,
-              holdMs: note.duration >= SUSTAIN_VISUAL_THRESHOLD_MS ? note.duration : 0,
+              holdMs:
+                sustainingTracks[note.trackIndex] && note.duration >= SUSTAIN_VISUAL_THRESHOLD_MS
+                  ? note.duration
+                  : 0,
             });
           });
           if (nextNextChunk) {
@@ -406,20 +433,20 @@
       if (status === 'approach-wrong') playerControlsStore.increaseScore(false);
     }
     //TODO could add this to the player store
-    if ((timeouts[note.index] as number) > 0 && playerStore.eventType === 'play')
+    if (timeouts[note.index] && playerStore.eventType === 'play')
       clearTimeout(timeouts[note.index]);
     if (songNote) {
-      //held playback notes keep the button lit for their (speed-scaled) duration
+      const holdDuration = sustainingTracks[songNote.trackIndex] ? songNote.duration : 0;
       scheduleStatusReset(
         note.index,
         prevStatus,
-        Math.max(game.notes.animationDelayMs, songNote.duration)
+        Math.max(game.notes.animationDelayMs, holdDuration)
       );
     } else if (data.instrument.supportsSustain) {
       //live press on a sustaining instrument: the button stays visually pressed until
       //handleRelease lifts it — clear any pending reset from a previous tap so it
       //can't unlight the hold
-      if ((timeouts[note.index] as number) > 0) clearTimeout(timeouts[note.index]);
+      if (timeouts[note.index]) clearTimeout(timeouts[note.index]);
       heldVisualPresses.set(note.index, { prevStatus, pressedAt: Date.now() });
     } else {
       //non-sustaining instruments keep the plain tap animation
@@ -481,34 +508,58 @@
         } else {
           if (!song) return;
           const lostReference = song.isComposed ? song.toRecordedSong().clone() : song.clone();
-          //resolve each note's display button once, from its own track's instrument;
-          //stranded notes are dropped — they had no playable/renderable row before either
+          playerStore.setKeyboardLayout(data.songDisplayInstrument.notes);
+          // Resolve each note's display button once, from its own track's instrument. The
+          // full-size display keyboard keeps every game row available even when track 0 uses
+          // a shorter instrument; truly unrenderable notes remain in the timing stream and
+          // are skipped instead of changing the user's requested note range.
           const songInstruments = lostReference.instruments;
+          sustainingTracks = songInstruments.map(
+            (instrument) => game.instruments.data[instrument.name]?.sustain !== undefined
+          );
           lostReference.notes.forEach((n) => {
             n.displayButton = displayButtonForId(songInstruments[n.trackIndex]?.name ?? '', n.id);
           });
-          lostReference.notes = lostReference.notes.filter((n) => n.displayButton !== -1);
 
           lostReference.timestamp = Date.now();
-          //clamp to the filtered count so `end` can never exceed the score `size`
-          //when stranded notes were dropped above
-          const end = Math.min(state.end || lostReference.notes.length, lostReference.notes.length);
+          const start = clamp(state.start, 0, lostReference.notes.length);
+          const end = clamp(
+            state.end || lostReference.notes.length,
+            start,
+            lostReference.notes.length
+          );
+          const hasPlayableNotes = lostReference.notes
+            .slice(start, end)
+            .some(
+              (note) =>
+                note.displayButton >= 0 &&
+                note.displayButton < data.songDisplayInstrument.notes.length
+            );
+          if (end === start || !hasPlayableNotes) {
+            playerControlsStore.setState({
+              size: lostReference.notes.length,
+              position: start,
+              end,
+              current: start,
+            });
+            return;
+          }
           if (type === 'play') {
-            playSong(lostReference, state.start, end);
+            playSong(lostReference, start, end);
           }
           if (type === 'practice') {
-            practiceSong(lostReference, state.start, end);
+            practiceSong(lostReference, start, end);
           }
           if (type === 'approaching') {
-            approachingSong(lostReference, state.start, end);
+            approachingSong(lostReference, start, end);
           }
           functions.setHasSong(true);
           Analytics.songEvent({ type });
           playerControlsStore.setState({
-            size: lostReference?.notes?.length || 1,
-            position: state.start,
+            size: lostReference.notes.length,
+            position: start,
             end,
-            current: state.start,
+            current: start,
           });
         }
       }, 4);
@@ -553,12 +604,19 @@
     {#each playerStore.keyboard as note (note.index)}
       <PlayerNote
         {note}
-        data={{ approachRate, instrument: data.instrument.name }}
+        data={{
+          approachRate,
+          instrument: data.hasSong ? data.songDisplayInstrument.name : data.instrument.name,
+        }}
         hideNote={hideNotes}
         approachingNotes={approachingNotes[note.index]}
         {handleClick}
         {handleRelease}
-        noteText={data.instrument.getNoteText(note.index, data.noteNameType, data.pitch)}
+        noteText={(data.hasSong ? data.songDisplayInstrument : data.instrument).getNoteText(
+          note.index,
+          data.noteNameType,
+          data.pitch
+        )}
       />
     {/each}
   {/if}

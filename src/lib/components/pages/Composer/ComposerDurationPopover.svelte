@@ -55,7 +55,7 @@
   }
 
   function handleOutsidePointerDown(e: PointerEvent) {
-    if (popoverElement && !popoverElement.contains(e.target as Node)) onClose();
+    if (popoverElement && e.target instanceof Node && !popoverElement.contains(e.target)) onClose();
   }
 </script>
 

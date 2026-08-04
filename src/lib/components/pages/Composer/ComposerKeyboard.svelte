@@ -2,7 +2,6 @@
   import { game } from '$game';
   import { ThemeProvider } from '$core/theme/ThemeProvider.svelte';
   import type { NoteNameType, Pitch } from '$lib/games/types';
-  import type { LayerStatus } from '$core/Songs/Layer';
   import { computeRowLayerStatuses } from '$core/Songs/noteIds';
   import type { InstrumentData, NoteColumn } from '$core/Songs/SongClasses';
   import type { ComposerSettingsDataType } from '$core/BaseSettings';
@@ -38,20 +37,13 @@
     };
   } = $props();
 
-  // Isolates one bad note's lookup so it can't crash the whole keyboard render - the template
-  // renders bare "Err" text in that note's place when this catches.
-  function getNoteLayerOrError(index: number): LayerStatus | 'Err' {
+  const layerStatuses = $derived.by(() => {
     try {
-      const statuses = computeRowLayerStatuses(
-        data.currentColumn.notes,
-        data.currentLayer,
-        data.instruments
-      );
-      return (statuses.get(index) ?? 0) as LayerStatus;
+      return computeRowLayerStatuses(data.currentColumn.notes, data.currentLayer, data.instruments);
     } catch {
-      return 'Err';
+      return null;
     }
-  }
+  });
 
   const keyboardClass = $derived.by(() => {
     let cls = 'keyboard';
@@ -129,12 +121,11 @@
         <div class="loading">Loading...</div>
       {/if}
       {#each data.keyboard.notes as note, i (note.index)}
-        {@const layerOrError = getNoteLayerOrError(i)}
-        {#if layerOrError === 'Err'}
+        {#if layerStatuses === null}
           Err
         {:else}
           <ComposerNote
-            layer={layerOrError}
+            layer={layerStatuses.get(i) ?? 0}
             data={note}
             noteText={data.keyboard.getNoteText(i, data.noteNameType, data.pitch)}
             instrument={data.keyboard.name}

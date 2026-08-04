@@ -19,8 +19,8 @@
   import { songService } from '$core/Services/SongService';
   import { _folderService } from '$core/Services/FolderService';
   import { ThemeProvider } from '$core/theme/ThemeProvider.svelte';
-  import { ComposedSong, type UnknownSerializedComposedSong } from '$core/Songs/ComposedSong';
-  import { RecordedSong, type UnknownSerializedRecordedSong } from '$core/Songs/RecordedSong';
+  import { ComposedSong } from '$core/Songs/ComposedSong';
+  import { RecordedSong } from '$core/Songs/RecordedSong';
   import type { SerializedSong, SongType } from '$core/Songs/Song';
   import type { SettingUpdate, SettingVolumeUpdate } from '$core/types/SettingsPropriety';
   import type { PlayerSettingsDataType } from '$core/BaseSettings';
@@ -144,7 +144,7 @@
   async function importSong(files: FileElement<SerializedSong[] | SerializedSong>[]) {
     for (const file of files) {
       try {
-        const songs = (Array.isArray(file.data) ? file.data : [file.data]) as SerializedSong[];
+        const songs = Array.isArray(file.data) ? file.data : [file.data];
         await fileService.importAndLog(songs);
       } catch (e) {
         console.error(e);
@@ -209,13 +209,13 @@
       let droppedNotes = 0;
       const toDownload = songs.map((song) => {
         if (game.features.downloadsSongsInOldFormat) {
-          if (song.type === 'composed') {
-            const parsed = ComposedSong.deserialize(song as UnknownSerializedComposedSong);
+          if (ComposedSong.isSerializedType(song)) {
+            const parsed = ComposedSong.deserialize(song);
             droppedNotes += parsed.countOldFormatDroppedNotes();
             return parsed.toOldFormat();
           }
-          if (song.type === 'recorded') {
-            const parsed = RecordedSong.deserialize(song as UnknownSerializedRecordedSong);
+          if (RecordedSong.isSerializedType(song)) {
+            const parsed = RecordedSong.deserialize(song);
             droppedNotes += parsed.countOldFormatDroppedNotes();
             return parsed.toOldFormat();
           }

@@ -73,7 +73,7 @@ export class VsrgSong extends Song<VsrgSong, SerializedVsrgSong, 2> {
             const crossGame = importInto !== undefined && song.data.appName !== importInto
             const appName = crossGame
                 ? importInto
-                : (isLegacyAppName(song.data.appName) ? song.data.appName : (APP_NAME as 'Genshin' | 'Sky'))
+                : (isLegacyAppName(song.data.appName) ? song.data.appName : APP_NAME)
             const importPositions = crossGame ? LEGACY_NOTE_TABLES[importInto].importPositions : null
             song.tracks.forEach(track => {
                 if (crossGame) track.instrument.name = "DunDun"
@@ -130,15 +130,15 @@ export class VsrgSong extends Song<VsrgSong, SerializedVsrgSong, 2> {
      * IS rewritten, so the song converts once instead of on every load. Legacy v1 files
      * never reach this: their conversion happens inside deserialize(importInto).
      */
-    toOtherGame(target: string) {
+    toOtherGame(target: ConversionGame) {
         const song = this.clone()
         if (target !== APP_NAME) throw new Error(`toOtherGame can only convert into the running game (${APP_NAME}), got ${target}`)
         if (song.data.appName === target) return song
         const sourceGame = song.data.appName
         song.data.appName = target
         song.tracks.forEach(t => {
-            const similar = findSimilarInstrument(sourceGame, t.instrument.name, target as ConversionGame)
-            t.instrument.name = (similar ?? INSTRUMENTS[0]) as InstrumentName
+            const similar = findSimilarInstrument(sourceGame, t.instrument.name, target)
+            t.instrument.name = INSTRUMENTS.find(name => name === similar) ?? INSTRUMENTS[0]
             t.hitObjects.forEach(h => {
                 const ids: number[] = []
                 h.notes.forEach(n => {

@@ -25,7 +25,6 @@
   import { ThemeProvider } from '$core/theme/ThemeProvider.svelte';
   import { ComposedSong } from '$core/Songs/ComposedSong';
   import { ColumnNote, MidiNote, NoteColumn, type InstrumentData } from '$core/Songs/SongClasses';
-  import { buttonToNoteId } from '$core/Songs/noteIds';
   import { delay, isAudioFormat, isVideoFormat } from '$core/utils/Utilities';
   import { t } from '$i18n/binding.svelte';
   import FilePicker, { type FileElement } from '$cmp/inputs/FilePicker.svelte';
@@ -185,8 +184,7 @@
       fileName = name;
       bpm = Math.floor(midiBpm * 4) || 220;
       offset = 0;
-      // key is a plain string; `as never` lets it satisfy includes()'s readonly Pitch[] param type.
-      pitch = (game.notes.pitches.includes(key as never) ? key : 'C') as Pitch;
+      pitch = game.notes.pitches.find((candidate) => candidate === key) ?? 'C';
       if (tracks.length) convertMidi();
     } catch (e) {
       console.error(e);
@@ -217,7 +215,7 @@
           accidentalsCount++;
           track.numberOfAccidentals++;
         }
-        if (note.data.note !== -1) {
+        if (note.data.id !== -1) {
           if (includeAccidentals || !note.data.isAccidental) {
             notes.push(note);
           }
@@ -251,18 +249,10 @@
       if (emptyColumns > -1)
         new Array(emptyColumns).fill(0).forEach(() => columns.push(new NoteColumn())); // adds empty columns
       noteColumn.notes = notes.flatMap((note) => {
-        //note.data.note is the legacy MIDI_MAP_TO_NOTE index; resolve it to the Note Id
-        //of the target layer's instrument. Notes past a short instrument's button range
-        //are dropped — count them as out of range so the importer UI reflects the loss
-        const id = buttonToNoteId(data.instruments[note.layer]?.name ?? '', note.data.note);
-        if (id === null) {
-          outOfRangeCount++;
-          return [];
-        }
         //the file's real note length becomes a column span (min 1; the invariant pass
         //below truncates spans that would overlap a following same-id note)
         const span = Math.max(1, Math.round(note.durationMs / bpmToMs));
-        return [new ColumnNote(note.layer, id, span)];
+        return [new ColumnNote(note.layer, note.data.id, span)];
       });
       columns.push(noteColumn);
     });
@@ -287,7 +277,6 @@
     //enforce the no-overlap Duration invariant over the imported spans
     song.normalizeSpans();
     song.bpm = bpm;
-    song.instruments = []; // dead assignment - overwritten unconditionally by the next line
     song.instruments = data.instruments.map((ins) => ins.clone());
     song.pitch = pitch;
     const lastColumn = data.selectedColumn;
