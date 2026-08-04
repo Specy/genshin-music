@@ -23,7 +23,7 @@ Decouple song data from keyboard layout and add sustained notes, on `migration/s
 | Track model | **Per-track notes** on the shared column timeline. See ADR-0002. |
 | Duration unit | Composed: **integer column span ≥ 1** (omitted when 1). Recorded: **ms press→release** (omitted when absent/legacy). |
 | Non-sustaining playback | Duration stored but **ignored**: one-shot natural ring-out, byte-for-byte today's audio path. |
-| Sustain audio | **Loop region + release gain ramp** per instrument (per-note loop overrides), on **raw Web Audio** via a new `Voice` abstraction. tone.js: experiment branch *after* this ships, never in v1. |
+| Sustain audio | **Loop region + crossfade into the sample's natural release tail** per instrument (per-note loop overrides), on **raw Web Audio** via a new `Voice` abstraction. tone.js: experiment branch *after* this ships, never in v1. |
 | Composer duration UX | Long-press a composer keyboard button → popover: drag-right slider + `<`/`>` ±1-column steppers; dismissed by outside click / `X` / column change. Buttons show held-state in covered columns; timeline canvas renders tails. |
 | Occupancy rule | Same-id spans on one track never overlap; pressing a covered button cannot create a note there. |
 | Column edits vs spans | Removing a covered TAIL column shrinks the span by 1 per removed column (removing the start column removes the note); inserting a column strictly inside a span stretches it by 1 per inserted column — inserting exactly where the span ends leaves it unchanged (decided 2026-08-04). |
@@ -89,7 +89,7 @@ In-memory: `ComposedSong { columnTempos, tracks: Track[] }`, `Track { instrument
 ## 7. Instrument & game definition changes
 
 - `InstrumentDataType`: `midiNotes` → `noteIds` (semantic promotion); new optional
-  `sustain?: { releaseS: number; loop: { start: number; end: number }; noteLoops?: ({ start: number; end: number } | null)[] }`
+  `sustain?: { release: number; crossfade?: number; loop: { start: number; end: number }; noteLoops?: ({ start: number; end: number } | null)[] }`
   — per-instrument default loop region with per-note overrides (samples can be authored with normalized loop points so the default usually suffices). Absence of `sustain` = today's one-shot instrument. No existing instrument gains the field in this refactor.
 - **MIDI file import table** (`midi.mapToNote`): values change meaning from `[index, accidental]` to `[id, accidental]` (for Genshin this makes the table near-identity). The `MidiNote.fromMidi` octave-clamp bug (±8) is **fixed to ±12** — import is lossy authoring, not a serialization compat surface, and this is the moment to fix it (deliberate behavior change, release-noted).
 - **MIDI hardware presets** stay button-addressed (`preset.notes[button] = physical midi note`) — hardware mapping is physically per-button; resolution is physical note → button → id.
@@ -100,13 +100,17 @@ Raw Web Audio; the current graph (per-instrument `GainNode` → optional shared 
 
 ```ts
 class Voice {
-  private source: AudioBufferSourceNode   // loop/loopStart/loopEnd set for sustaining instruments
-  private gain: GainNode                  // per-voice, feeds the instrument's volumeNode
-  release(): void                         // linearRamp gain→0 over releaseS, then stop+disconnect
+  private source: AudioBufferSourceNode          // looped sustain source
+  private gain: GainNode                         // sustain gain
+  private releaseSource: AudioBufferSourceNode   // starts at loop.end on release
+  private releaseGain: GainNode                  // short sustain→tail crossfade
+  release(): void                                // play the natural tail, safety-fade its end
+  fadeOut(): void                                // stop/blur path; no new release tail
 }
 ```
 
 - `Instrument` API becomes id-addressed: `play(id, {pitch, delay})` (one-shot, current path) and `startVoice(id, {pitch}) → Voice` (sustaining). UI resolves buttons; the engine never sees them.
+- The two sources and gains belong to one logical `Voice`, not to the shared sample or instrument definition. Separate Composer instrument instances and overlapping scheduled voices therefore crossfade independently; only a repeated live press of the same button chokes its previous held voice over the short crossfade.
 - Active voices are held in a registry keyed `(trackIndex, id)` — keyboard `keyup`, touch lift, MIDI note-off, or a playback tick reaching a note's end column calls `release()`. Composed playback schedules releases by tick (not precomputed ms), so tempo edits during playback stay correct.
 - Voice cap per instrument (~32) with oldest-first stealing guards mobile.
 - Live input: `keydown` starts / `keyup` releases with OS auto-repeat filtered; touch press/lift including drag-off; `MIDIProvider` gains note-off handling (`0x80` and running-status zero-velocity `0x90`).

@@ -106,11 +106,13 @@ export type LoopRegion = { start: number; end: number };
 /**
  * Sustain capability of an instrument (spec 2026-08-03 §7). Absent = one-shot
  * instrument (every pre-format-v4 instrument). While a note is held the engine loops
- * the region; on release it gain-ramps to silence over `release` seconds.
+ * the region; on release it crossfades into the sample's natural post-loop tail.
  */
 export type InstrumentSustainConfig = {
-  /** Release ramp length in seconds. */
+  /** Safety fade at the end of the sample tail; also used when no tail is available. */
   release: number;
+  /** Sustain-loop to natural-tail crossfade in seconds (default 0.02). */
+  crossfade?: number;
   /** Default loop region, used for every note without an override. */
   loop: LoopRegion;
   /** Per-note (button-indexed) overrides; null entries fall back to `loop`. */

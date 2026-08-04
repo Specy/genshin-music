@@ -201,8 +201,14 @@ export class Instrument {
     if (this.isDeleted || !this.volumeNode || !this.audioContext) return null;
     const buffer = this.buffers[button];
     if (!buffer) return null;
-    //retrigger: a still-held voice on the same button releases naturally first
-    this.releaseNote(button);
+    //same-button live retrigger: choke the previous sustain quickly instead of
+    //layering its full release tail under the new attack. Scheduled Composer voices
+    //are not in heldVoices, so same-note polyphony across tracks remains independent.
+    const previous = this.heldVoices.get(button);
+    if (previous) {
+      this.heldVoices.delete(button);
+      previous.choke();
+    }
     this.pruneVoices();
     if (this.activeVoices.length >= Instrument.MAX_VOICES) {
       //oldest-first stealing keeps the newest notes audible on constrained devices
@@ -215,6 +221,7 @@ export class Instrument {
       playbackRate: getPitchChanger(pitch),
       loop: sustain.noteLoops?.[button] ?? sustain.loop,
       release: sustain.release,
+      crossfade: sustain.crossfade,
       delay: options?.delay,
     });
     this.activeVoices.push(voice);
@@ -247,7 +254,7 @@ export class Instrument {
   /** Release everything sounding, live and scheduled — ramped (playback stop) or hard (teardown). */
   releaseAllNotes = (hard = false) => {
     this.heldVoices.clear();
-    this.activeVoices.forEach((voice) => (hard ? voice.stop() : voice.release()));
+    this.activeVoices.forEach((voice) => (hard ? voice.stop() : voice.fadeOut()));
     this.activeVoices = [];
   };
 
