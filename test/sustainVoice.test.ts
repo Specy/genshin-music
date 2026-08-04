@@ -243,13 +243,23 @@ describe('Voice', () => {
 const SUSTAIN = {
     release: 0.3,
     loop: {start: 0.1, end: 1.9},
-    noteLoops: [null, {start: 0.2, end: 1.2}],
 }
 
-/** A real Instrument, force-fed a sustain config and fake audio plumbing (no INSTRUMENTS_DATA entry sustains yet by design). */
+/**
+ * A real Instrument, force-fed a sustain config and fake audio plumbing (the default
+ * instrument is one-shot by design). Post-ADR-0003 the per-note loop override lives on
+ * the note struct itself (button 1 here), and instrumentData is a REFERENCE to the
+ * shared config — so this builds a fresh copy instead of mutating it in place.
+ */
 function sustainingInstrument() {
     const instrument = new Instrument(INSTRUMENTS[0])
-    ;(instrument.instrumentData as any).sustain = SUSTAIN
+    instrument.instrumentData = {
+        ...instrument.instrumentData,
+        sustain: SUSTAIN,
+        notes: instrument.instrumentData.notes.map((note, i) =>
+            i === 1 ? {...note, loop: {start: 0.2, end: 1.2}} : note
+        ),
+    }
     const {context, created} = fakeContext()
     instrument.audioContext = context as any
     instrument.volumeNode = (context as any).createGain()
@@ -281,7 +291,7 @@ describe('Instrument sustain', () => {
         const {instrument, created} = sustainingInstrument()
         instrument.pressNote(0, 'C')
         instrument.pressNote(1, 'C')
-        expect(created.sources[0].loopStart).toBe(0.1) // default region (noteLoops[0] = null)
+        expect(created.sources[0].loopStart).toBe(0.1) // default region (note 0 has no loop override)
         expect(created.sources[1].loopStart).toBe(0.2) // per-note override
         instrument.releaseNote(1)
         expect(created.sources[1].calls.some((c: Call) => c.method === 'stop')).toBe(true)

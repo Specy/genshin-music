@@ -4,12 +4,6 @@
   // margin never applies. Reproduces old's own dead-styling bug (a stray brace outside its
   // original CSS-Modules interpolation) faithfully. Flagged, not fixed.
   const cssBase = `keyboard zen-keyboard}`;
-  const keyboardClasses = new Map<number, string>([
-    [15, `${cssBase} keyboard-5`],
-    [14, `${cssBase} keyboard-5`],
-    [8, `${cssBase} keyboard-4`],
-    [6, `${cssBase} keyboard-3`],
-  ]);
 </script>
 
 <script lang="ts">
@@ -18,6 +12,7 @@
   import { createKeyboardListener } from '$stores/KeybindsStore.svelte';
   import type { Instrument, ObservableNote } from '$lib/audio/Instrument.svelte';
   import type { NoteNameType, Pitch } from '$core/legacyConfig';
+  import ShapeKeyboard from '$lib/games/shapes/ShapeKeyboard.svelte';
   import ZenNote from './ZenNote.svelte';
 
   let {
@@ -61,15 +56,16 @@
       }
     );
   });
-
-  const keyboardClass = $derived(keyboardClasses.get(zenKeyboardStore.keyboard.length) || cssBase);
 </script>
 
-<div
-  class={keyboardClass}
+<ShapeKeyboard
+  shape={instrument.shape}
+  count={zenKeyboardStore.keyboard.length}
+  class={cssBase}
   style="transform:scale({scale / 100}) translateY({verticalOffset}px);margin-top:unset"
 >
-  {#each zenKeyboardStore.keyboard as note, index (index)}
+  {#snippet button(index)}
+    {@const note = zenKeyboardStore.keyboard[index]}
     <ZenNote
       keyPadding={keySpacing}
       instrumentName={instrument.name}
@@ -80,8 +76,8 @@
       onRelease={onNoteRelease}
       held={heldNotes?.has(index) ?? false}
     />
-  {/each}
-</div>
+  {/snippet}
+</ShapeKeyboard>
 
 <style>
   :global(.zen-keyboard) {

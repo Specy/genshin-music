@@ -59,7 +59,11 @@ const defaultShortcuts = {
     Escape: createShortcut('stop', false, 'stop_description'),
   },
   keyboard: Object.fromEntries(
-    game.layouts.defaultKeyboardKeys.map((key) => [`Key${key}`, createShortcut(key, false)])
+    // Default key row = the default instrument's Shape keyboard Label Set (ADR-0003;
+    // replaces the old game.layouts.defaultKeyboardKeys, which was that same data).
+    game.shapes[game.instruments.data[game.instruments.list[0]].shape].labels.keyboard.map(
+      (key) => [`Key${key}`, createShortcut(key, false)]
+    )
   ),
 } as const satisfies Record<string, Record<string, Shortcut<string>>>;
 

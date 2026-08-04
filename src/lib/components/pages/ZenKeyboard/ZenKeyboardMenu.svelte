@@ -1,5 +1,6 @@
 <script lang="ts">
   import { game } from '$game';
+  import { PITCHES } from '$core/sharedConfig';
   import { homeStore } from '$stores/HomeStore.svelte';
   import { clickOutside } from '$lib/utils/clickOutside';
   import { t } from '$i18n/binding.svelte';
@@ -28,7 +29,7 @@
     setIsMetronomePlaying: (val: boolean) => void;
   } = $props();
 
-  const pitchesLabels = game.notes.pitches.map((p) => ({ value: p, label: p }));
+  const pitchesLabels = PITCHES.map((p) => ({ value: p, label: p }));
 
   let selectedPage = $state('Settings');
   let isOpen = $state(true);

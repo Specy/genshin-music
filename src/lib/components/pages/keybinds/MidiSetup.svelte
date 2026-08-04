@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { game } from '$game';
+  import ShapeKeyboard from '$lib/games/shapes/ShapeKeyboard.svelte';
   import BaseNote from '$cmp/BaseNote.svelte';
   import MidiShortcut from './MidiShortcut.svelte';
   import { logger } from '$stores/LoggerStore.svelte';
@@ -315,19 +316,22 @@
 </Column>
 
 <div class="midi-setup-content">
-  <div
-    class={game.notes.perColumn === 15 ? 'keyboard keyboard-5' : 'keyboard'}
+  <ShapeKeyboard
+    shape={baseInstrument.shape}
+    count={notes.length}
+    class="keyboard"
     style="margin:1.5rem 0;width:fit-content"
   >
-    {#each notes as note, i (i)}
+    {#snippet button(i)}
+      {@const note = notes[i]}
       <BaseNote
         handleClick={() => handleClick(note)}
         data={note}
         noteImage={baseInstrument.notes[i]?.noteImage}
         noteText={note.midi < 0 ? 'N/A' : String(note.midi)}
       />
-    {/each}
-  </div>
+    {/snippet}
+  </ShapeKeyboard>
   <div class="midi-shortcuts-wrapper">
     <h1>
       {t('keybinds:midi_shortcuts')}

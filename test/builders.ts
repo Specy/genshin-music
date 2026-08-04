@@ -2,7 +2,7 @@ import {ComposedSong, INSTRUMENTS, INSTRUMENTS_DATA, RecordedNote, RecordedSong}
 
 /** Note Id of a button on the game's default instrument (what the legacy builders' indices meant). */
 function idOf(button: number): number {
-    return INSTRUMENTS_DATA[INSTRUMENTS[0]].midiNotes[button]
+    return INSTRUMENTS_DATA[INSTRUMENTS[0]].notes[button].midi
 }
 
 // Same musical content as the pre-v3 builder (notes at legacy indices 0/3/7/14, the

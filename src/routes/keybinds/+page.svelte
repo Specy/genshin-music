@@ -1,6 +1,5 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { game } from '$game';
   import DefaultPage from '$cmp/shell/DefaultPage.svelte';
   import PageMetadata from '$cmp/shell/PageMetadata.svelte';
   import BaseNote from '$cmp/BaseNote.svelte';
@@ -10,6 +9,7 @@
   import { keyBinds } from '$stores/KeybindsStore.svelte';
   import { Instrument } from '$lib/audio/Instrument.svelte';
   import { logger } from '$stores/LoggerStore.svelte';
+  import ShapeKeyboard from '$lib/games/shapes/ShapeKeyboard.svelte';
   import ShortcutEditor from '$cmp/pages/keybinds/ShortcutEditor.svelte';
   import VsrgKey from '$cmp/pages/keybinds/VsrgKey.svelte';
   import MidiSetup from '$cmp/pages/keybinds/MidiSetup.svelte';
@@ -75,8 +75,14 @@
       {t('keybinds:keyboard_keybinds_description')}
     </div>
     <div class="flex-centered">
-      <div class={['keyboard', game.notes.perColumn === 15 && 'keyboard-5']} style="margin:1rem 0">
-        {#each baseInstrument.notes as note, i (i)}
+      <ShapeKeyboard
+        shape={baseInstrument.shape}
+        count={baseInstrument.notes.length}
+        class="keyboard"
+        style="margin:1rem 0"
+      >
+        {#snippet button(i)}
+          {@const note = baseInstrument.notes[i]}
           {@const key = keyBinds.getKeyOfShortcut('keyboard', note.noteNames.keyboard)}
           <BaseNote
             data={{ status: selected.type === 'keyboard' && i === selected.index ? 'clicked' : '' }}
@@ -86,8 +92,8 @@
               selected = { type: 'keyboard', index: selected.index === i ? -1 : i };
             }}
           />
-        {/each}
-      </div>
+        {/snippet}
+      </ShapeKeyboard>
     </div>
 
     <h1>
