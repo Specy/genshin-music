@@ -1,6 +1,8 @@
 // Shared, game-INDEPENDENT constants. BASE_LAYER_LIMIT is deliberately NOT in
 // GameDefinition: it is BigInt-capability-based, not game data (audit Step-3
 // documented exception; both games' config-surface fixtures carry 52).
+import type { BaseNote } from '$lib/games/types';
+
 export const APP_VERSION = '3.7.0' as const
 
 export const HAS_BIGINT = typeof BigInt !== 'undefined'
@@ -126,3 +128,113 @@ export const PIXI_VERTICAL_ALIGN = {x: 0.5, y: 0}
 export const PIXI_HORIZONTAL_ALIGN = {x: 0, y: 0.5}
 export const PIXI_CENTER_X_END_Y = {x: 0.5, y: 1}
 export const PIXI_CENTER_ALIGN = 0.5
+
+// ---- shared music theory (moved out of per-game GameDefinitions, ADR-0003) ----
+// Byte-identical in both games' definitions before the folder-based config change
+// (verified programmatically during extraction): these are western-scale spelling
+// tables, not game data. Types live in $lib/games/types; legacyConfig re-exports
+// these under the same historical names.
+
+export const PITCHES = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'] as const
+
+export const NOTE_SCALE: Readonly<Record<BaseNote, readonly string[]>> = {
+  Cb: ['Cb', 'Dbb', 'Db', 'Ebb', 'Eb', 'Fb', 'Gbb', 'Gb', 'Abb', 'Ab', 'Bbb', 'Bb'],
+  C: ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'],
+  'C#': ['C#', 'D', 'D#', 'E', 'E#', 'F#', 'G', 'G#', 'A', 'A#', 'B', 'B#'],
+  Db: ['Db', 'Ebb', 'Eb', 'Fb', 'F', 'Gb', 'Abb', 'Ab', 'Bbb', 'Bb', 'Cb', 'C'],
+  D: ['D', 'Eb', 'E', 'F', 'F#', 'G', 'Ab', 'A', 'Bb', 'B', 'C', 'C#'],
+  'D#': ['D#', 'E', 'E#', 'F#', 'F##', 'G#', 'A', 'A#', 'B', 'B#', 'C#', 'C##'],
+  Eb: ['Eb', 'Fb', 'F', 'Gb', 'G', 'Ab', 'Bbb', 'Bb', 'Cb', 'C', 'Db', 'D'],
+  E: ['E', 'F', 'F#', 'G', 'G#', 'A', 'Bb', 'B', 'C', 'C#', 'D', 'D#'],
+  'E#': ['E#', 'F#', 'F##', 'G#', 'G##', 'A#', 'B', 'B#', 'C#', 'C##', 'D#', 'D##'],
+  Fb: ['Fb', 'Gbb', 'Gb', 'Abb', 'Ab', 'Bbb', 'Cbb', 'Cb', 'Dbb', 'Db', 'Ebb', 'Eb'],
+  F: ['F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'Cb', 'C', 'Db', 'D', 'Eb', 'E'],
+  'F#': ['F#', 'G', 'G#', 'A', 'A#', 'B', 'C', 'C#', 'D', 'D#', 'E', 'E#'],
+  Gb: ['Gb', 'Abb', 'Ab', 'Bbb', 'Bb', 'Cb', 'Dbb', 'Db', 'Ebb', 'Eb', 'Fb', 'F'],
+  G: ['G', 'Ab', 'A', 'Bb', 'B', 'C', 'Db', 'D', 'Eb', 'E', 'F', 'F#'],
+  'G#': ['G#', 'A', 'A#', 'B', 'B#', 'C#', 'D', 'D#', 'E', 'E#', 'F#', 'F##'],
+  Ab: ['Ab', 'Bbb', 'Bb', 'Cb', 'C', 'Db', 'Ebb', 'Eb', 'Fb', 'F', 'Gb', 'G'],
+  A: ['A', 'Bb', 'B', 'C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'G#'],
+  'A#': ['A#', 'B', 'B#', 'C#', 'C##', 'D#', 'E', 'E#', 'F#', 'F##', 'G#', 'G##'],
+  Bb: ['Bb', 'Cb', 'C', 'Db', 'D', 'Eb', 'Fb', 'F', 'Gb', 'G', 'Ab', 'A'],
+  B: ['B', 'C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#'],
+  'B#': ['B#', 'C#', 'C##', 'D#', 'D##', 'E#', 'F#', 'F##', 'G#', 'G##', 'A#', 'A##'],
+  '': ['', '', '', '', '', '', '', '', '', '', '', ''],
+}
+
+export const DO_RE_MI_NOTE_SCALE: Readonly<Record<BaseNote, readonly string[]>> = {
+  Cb: [
+    'dob',
+    'rebb',
+    'reb',
+    'mibb',
+    'mib',
+    'fab',
+    'solbb',
+    'solb',
+    'labb',
+    'lab',
+    'tibb',
+    'tib',
+  ],
+  C: ['do', 'reb', 're', 'mib', 'mi', 'fa', 'solb', 'sol', 'lab', 'la', 'tib', 'ti'],
+  'C#': ['do#', 're', 're#', 'mi', 'mi#', 'fa#', 'sol', 'sol#', 'la', 'la#', 'ti', 'ti#'],
+  Db: ['reb', 'mibb', 'mib', 'fab', 'fa', 'solb', 'labb', 'lab', 'tibb', 'tib', 'dob', 'do'],
+  D: ['re', 'mib', 'mi', 'fa', 'fa#', 'sol', 'lab', 'la', 'tib', 'ti', 'do', 'do#'],
+  'D#': ['re#', 'mi', 'mi#', 'fa#', 'fa##', 'sol#', 'la', 'la#', 'ti', 'ti#', 'do#', 'do##'],
+  Eb: ['mib', 'fab', 'fa', 'solb', 'sol', 'lab', 'tibb', 'tib', 'dob', 'do', 'reb', 're'],
+  E: ['mi', 'fa', 'fa#', 'sol', 'sol#', 'la', 'tib', 'ti', 'do', 'do#', 're', 're#'],
+  'E#': [
+    'mi#',
+    'fa#',
+    'fa##',
+    'sol#',
+    'sol##',
+    'la#',
+    'ti',
+    'ti#',
+    'do#',
+    'do##',
+    're#',
+    're##',
+  ],
+  Fb: [
+    'fab',
+    'solbb',
+    'solb',
+    'labb',
+    'lab',
+    'tibb',
+    'dobb',
+    'dob',
+    'rebb',
+    'reb',
+    'mibb',
+    'mib',
+  ],
+  F: ['fa', 'solb', 'sol', 'lab', 'la', 'tib', 'dob', 'do', 'reb', 're', 'mib', 'mi'],
+  'F#': ['fa#', 'sol', 'sol#', 'la', 'la#', 'ti', 'do', 'do#', 're', 're#', 'mi', 'mi#'],
+  Gb: ['solb', 'labb', 'lab', 'tibb', 'tib', 'dob', 'rebb', 'reb', 'mibb', 'mib', 'fab', 'fa'],
+  G: ['sol', 'lab', 'la', 'tib', 'ti', 'do', 'reb', 're', 'mib', 'mi', 'fa', 'fa#'],
+  'G#': ['sol#', 'la', 'la#', 'ti', 'ti#', 'do#', 're', 're#', 'mi', 'mi#', 'fa#', 'fa##'],
+  Ab: ['lab', 'tibb', 'tib', 'dob', 'do', 'reb', 'mibb', 'mib', 'fab', 'fa', 'solb', 'sol'],
+  A: ['la', 'tib', 'ti', 'do', 'do#', 're', 'mib', 'mi', 'fa', 'fa#', 'sol', 'sol#'],
+  'A#': ['la#', 'ti', 'ti#', 'do#', 'do##', 're#', 'mi', 'mi#', 'fa#', 'fa##', 'sol#', 'sol##'],
+  Bb: ['tib', 'dob', 'do', 'reb', 're', 'mib', 'fab', 'fa', 'solb', 'sol', 'lab', 'la'],
+  B: ['ti', 'do', 'do#', 're', 're#', 'mi', 'fa', 'fa#', 'sol', 'sol#', 'la', 'la#'],
+  'B#': [
+    'ti#',
+    'do#',
+    'do##',
+    're#',
+    're##',
+    'mi#',
+    'fa#',
+    'fa##',
+    'sol#',
+    'sol##',
+    'la#',
+    'la##',
+  ],
+  '': ['', '', '', '', '', '', '', '', '', '', '', ''],
+}
