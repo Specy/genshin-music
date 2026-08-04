@@ -50,6 +50,9 @@ import {
     PIXI_HORIZONTAL_ALIGN,
     PIXI_CENTER_X_END_Y,
     PIXI_CENTER_ALIGN,
+    PITCHES,
+    NOTE_SCALE,
+    DO_RE_MI_NOTE_SCALE,
 } from './sharedConfig'
 
 // ---- re-exported type aliases (old files import these from $config) ----
@@ -78,8 +81,8 @@ export {
 // ---- identity ----
 export const APP_NAME: AppName = game.storageId
 
-// ---- pitches ----
-export const PITCHES = game.notes.pitches
+// ---- pitches (music theory — sharedConfig since ADR-0003, identical across games) ----
+export {PITCHES}
 // old Config.ts:712 — `export const PITCH_TO_INDEX = new Map<Pitch, number>(PITCHES.map((pitch, index) => [pitch, index]))`
 export const PITCH_TO_INDEX = new Map<Pitch, number>(PITCHES.map((pitch, index) => [pitch, index]))
 
@@ -89,18 +92,24 @@ export const INSTRUMENTS_DATA = game.instruments.data
 
 // ---- note geometry ----
 export const NOTES_PER_COLUMN = game.notes.perColumn
-export const NOTE_SCALE = game.notes.scale
-export const DO_RE_MI_NOTE_SCALE = game.notes.doReMiScale
+// NOTE_SCALE / DO_RE_MI_NOTE_SCALE moved to sharedConfig (ADR-0003): music theory,
+// byte-identical across games. Re-exported here under the historical names.
+export {NOTE_SCALE, DO_RE_MI_NOTE_SCALE}
 export const NOTES_CSS_CLASSES = game.notes.cssClasses
 export const NOTE_NAME_TYPES = game.notes.nameTypes
 export const COMPOSER_NOTE_POSITIONS = game.notes.composerPositions
 export const IMPORT_NOTE_POSITIONS = game.notes.importPositions
 
 // ---- layouts ----
-export const INSTRUMENT_NOTE_LAYOUT_KINDS = game.layouts.noteLayoutKinds
-export const INSTRUMENT_MIDI_LAYOUT_KINDS = game.layouts.midiLayoutKinds
-export const LAYOUT_KINDS = game.layouts.layoutKinds
-export const LAYOUT_ICONS_KINDS = game.layouts.iconKinds
+// The four *_KINDS exports died with ADR-0003: they had zero runtime consumers
+// (instruments inlined copies instead of referencing them), and their authoring
+// role is replaced by Note Presets (presets.json) + Shape Label Sets (shapes.ts).
+
+// ---- note rendering defaults (ADR-0003 cleanup: these replace the literal
+// `APP_NAME === 'Genshin' ? … : …` ternaries in PlayerStore/ObservableNote that
+// duplicated existing GameDefinition fields) ----
+export const NOTE_ANIMATION_DELAY_MS = game.notes.animationDelayMs
+export const DEFAULT_NOTE_ICON = game.notes.defaultIcon
 
 // ---- composer ----
 export const TEMPO_CHANGERS = game.composer.tempoChangers

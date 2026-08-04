@@ -8,6 +8,7 @@
     type Pitch,
   } from '$core/legacyConfig';
   import PlayerNote from './PlayerNote.svelte';
+  import ShapeKeyboard from '$lib/games/shapes/ShapeKeyboard.svelte';
   import { playerStore } from '$stores/PlayerStore.svelte';
   import { playerControlsStore } from '$stores/PlayerControlsStore.svelte';
   import { Array2d, clamp, delay, groupArrayEvery, type Timer } from '$core/utils/Utilities';
@@ -578,15 +579,12 @@
   });
 
   const size = $derived(clamp(data.keyboardSize / 100, 0.5, 1.5));
-  const keyboardClass = $derived.by(() => {
-    let cls = 'keyboard' + (playerStore.eventType === 'play' ? ' keyboard-playback' : '');
-    const len = playerStore.keyboard.length;
-    if (len === 15) cls += ' keyboard-5';
-    if (len === 14) cls += ' keyboard-5';
-    if (len === 8) cls += ' keyboard-4';
-    if (len === 6) cls += ' keyboard-3';
-    return cls;
-  });
+  // Geometry follows the displayed instrument's Shape (ADR-0003) — the same
+  // instrument whose notes fill playerStore.keyboard; no more length sniffing.
+  const shape = $derived((data.hasSong ? data.songDisplayInstrument : data.instrument).shape);
+  const keyboardClass = $derived(
+    'keyboard' + (playerStore.eventType === 'play' ? ' keyboard-playback' : '')
+  );
   // $derived.by (not bare $derived(expr)) is required: TypeScript narrows mode to its
   // initializer literal ('play') at this point, since no synchronous code reassigns it first -
   // wrapping the expression in an arrow function (like keyboardClass above) forces a fresh,
@@ -597,11 +595,19 @@
   );
 </script>
 
-<div class={keyboardClass} style={wrapperStyle}>
-  {#if data.isLoading}
+{#if data.isLoading}
+  <div class={keyboardClass} style={wrapperStyle}>
     <div class="loading">{t('common:loading')}...</div>
-  {:else}
-    {#each playerStore.keyboard as note (note.index)}
+  </div>
+{:else}
+  <ShapeKeyboard
+    {shape}
+    count={playerStore.keyboard.length}
+    class={keyboardClass}
+    style={wrapperStyle}
+  >
+    {#snippet button(index)}
+      {@const note = playerStore.keyboard[index]}
       <PlayerNote
         {note}
         data={{
@@ -618,6 +624,6 @@
           data.pitch
         )}
       />
-    {/each}
-  {/if}
-</div>
+    {/snippet}
+  </ShapeKeyboard>
+{/if}

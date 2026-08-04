@@ -13,7 +13,7 @@
   class={className}
   style="display:grid;grid-template-columns:repeat({shape.columns},1fr);grid-template-rows:repeat({rows},1fr);{style}"
 >
-  {#each Array(count) as _, index (index)}
+  {#each { length: count }, index (index)}
     {@render button(index)}
   {/each}
 </div>

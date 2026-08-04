@@ -1772,50 +1772,24 @@ a {
   }
 }
 
-/* pulled from Player/Keyboard.css (.keyboard/.keyboard-5 only) — OWNERSHIP NOTE (was a
-   forward-looking "4b MUST SKIP"): Phase 4b's Player page port is complete and correctly did not
-   re-define these selectors; PlayerKeyboard.svelte's `keyboardClass` builds `"keyboard"`/
-   `"keyboard-5"` as plain class-name strings and reads their styling from here. */
+/* .keyboard: page-level styling for the keyboard surfaces. GEOMETRY (grid-template
+   columns/rows) moved to the Shape system (ADR-0003): GridShape.svelte sets it inline
+   from the instrument's Shape, and the old length-derived .keyboard-5/-4/-3/-7-2
+   variant classes died with it. */
 .keyboard {
   display: grid;
   width: fit-content;
   margin-top: auto;
-  grid-template-columns: repeat(7, 1fr);
-  grid-template-rows: repeat(3, 1fr);
   justify-items: center;
   align-items: center;
   margin-bottom: 2vh;
   touch-action: none;
 }
 
-.keyboard-5 {
-  grid-template-columns: repeat(5, 1fr);
-  grid-template-rows: repeat(3, 1fr);
-}
-
 @media only screen and (max-width: 920px) {
   .keyboard {
     margin-bottom: 1vh;
   }
-}
-
-/* remainder of Player/Keyboard.css (357 lines old; .keyboard/.keyboard-5 above are the only part
-   already pulled forward, P4a Task 3) — P4b Task 3. Grid variants + every note/approach-circle/
-   note-animation/practice-color rule. Global (old: imported in app/layout.tsx on every page, not
-   just Player), consumed by BOTH Player (PlayerNote.svelte, this task) and Zen (P4b Task 4). */
-.keyboard-7-2 {
-  grid-template-columns: repeat(7, 1fr);
-  grid-template-rows: repeat(2, 1fr);
-}
-
-.keyboard-4 {
-  grid-template-columns: repeat(4, 1fr);
-  grid-template-rows: repeat(2, 1fr);
-}
-
-.keyboard-3 {
-  grid-template-columns: repeat(3, 1fr);
-  grid-template-rows: repeat(2, 1fr);
 }
 
 .note,

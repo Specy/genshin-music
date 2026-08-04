@@ -1,9 +1,19 @@
 import adapter from '@sveltejs/adapter-static';
 import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
+import fs from 'node:fs';
 
-// Build-time game selection (spec §5.5): lowercase game id via PUBLIC_GAME.
-// The unselected game's module tree is simply never imported.
-const gameId = process.env.PUBLIC_GAME === 'sky' ? 'sky' : 'genshin';
+// Build-time DEFAULT-game selection (spec §5.5 + ADR-0003): games are DISCOVERED
+// from src/lib/games/<id>/game.json folders; PUBLIC_GAME picks which one the
+// `$game` alias resolves to (fallback: genshin). All games' JSON metadata is
+// bundled regardless via games/registry.ts — a future runtime game switch only
+// replaces the alias consumer, not this discovery.
+const discoveredGames = fs
+  .readdirSync('./src/lib/games', { withFileTypes: true })
+  .filter((d) => d.isDirectory() && fs.existsSync(`./src/lib/games/${d.name}/game.json`))
+  .map((d) => d.name);
+const gameId = discoveredGames.includes(process.env.PUBLIC_GAME)
+  ? process.env.PUBLIC_GAME
+  : 'genshin';
 const outDir = process.env.BUILD_PATH ?? 'build';
 // '' for production build:all; '/skyMusic' | '/genshinMusic' for *-no-root builds
 const basePath = process.env.PUBLIC_BASE_PATH ?? '';
