@@ -5,8 +5,7 @@
   import { game } from '$game';
   import { APP_NAME } from '$core/legacyConfig';
   import type { Pitch } from '$lib/games/types';
-  import { t } from '$i18n/binding.svelte';
-  import { i18n } from '$i18n/i18n';
+  import { t, tInstrument } from '$i18n/binding.svelte';
   import PageMetadata from '$cmp/shell/PageMetadata.svelte';
   import AppButton from '$cmp/inputs/AppButton.svelte';
   import MidiParser from './MidiParser/MidiParser.svelte';
@@ -290,11 +289,12 @@
     if (layers.length <= 1) return logger.warn(t('composer:cant_remove_all_layers'));
     const confirm = await asyncConfirm(
       t('composer:confirm_layer_remove', {
-        // QUIRK: '.' instead of the ':' namespace separator every other instrument-label
-        // lookup uses (e.g. InstrumentControls.svelte's t(`instruments:${ins.name}`)) - a
-        // pre-existing typo kept so the resolved i18next key doesn't change.
-        layer_name:
-          song.instruments[index].alias ?? i18n.t('instruments.' + song.instruments[index].name),
+        // Was `i18n.t('instruments.' + name)` — a pre-existing '.'-for-':' namespace
+        // separator typo that NEVER resolved (i18next returned the raw
+        // "instruments.Name" key here). Routed through tInstrument like every other
+        // instrument-label lookup (Codex review, ADR-0003 follow-up): locale key,
+        // else config displayName, else the raw name.
+        layer_name: song.instruments[index].alias ?? tInstrument(song.instruments[index].name),
       })
     );
     if (confirm) {

@@ -7,7 +7,7 @@
 // glyph component. Module-eval throws fail dev instantly and prod at prerender.
 import type {
   GameDefinition,
-  GameId,
+  GameIdentity,
   GlyphComponent,
   NoteImage,
   ShapeDefinition,
@@ -16,15 +16,38 @@ import type {
 import { gamesMeta } from './registry';
 
 export function defineGame(
-  id: GameId,
+  identity: GameIdentity,
   code: {
     shapes: Readonly<Record<ShapeId, ShapeDefinition>>;
     svgGlyphs: Readonly<Partial<Record<NoteImage, GlyphComponent>>>;
   }
 ): GameDefinition {
-  const meta = gamesMeta[id];
-  if (!meta) throw new Error(`[defineGame] no game folder for id "${id}"`);
+  const meta = gamesMeta[identity.id];
+  if (!meta) throw new Error(`[defineGame] no game folder for id "${identity.id}"`);
   const { gameJson, instruments } = meta;
+  const id = identity.id;
+
+  // identity.ts (the DOM-free module the service worker imports) and game.json (what
+  // everything else reads through this definition) MUST agree — storageId names the
+  // IndexedDB database, every storage key prefix, serialized song appName AND the
+  // service worker's cache namespace; drift between the two sources would present as
+  // total local-data loss to existing users (Codex review M2).
+  if (gameJson.id !== identity.id || gameJson.storageId !== identity.storageId) {
+    throw new Error(
+      `[defineGame] ${id}: game.json identity {${gameJson.id}, ${gameJson.storageId}} ` +
+        `!= identity.ts {${identity.id}, ${identity.storageId}}`
+    );
+  }
+
+  for (const shape of Object.values(code.shapes)) {
+    for (const [mode, labels] of Object.entries(shape.labels)) {
+      if (labels.length !== shape.capacity) {
+        throw new Error(
+          `[defineGame] ${id}: shape "${shape.id}" ${mode} labels have ${labels.length} entries, capacity is ${shape.capacity}`
+        );
+      }
+    }
+  }
 
   for (const instrument of Object.values(instruments)) {
     const context = `[defineGame] ${id}/${instrument.name}`;

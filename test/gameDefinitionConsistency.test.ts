@@ -1,5 +1,6 @@
 import {describe, expect, it} from 'vitest'
 import {game} from '$game'
+import {GAME_IDENTITY} from '$game/identity'
 import {
     APP_NAME, ComposerSettings, INSTRUMENTS, LEGACY_NOTE_TABLES, NOTES_PER_COLUMN,
     PlayerSettings, SIMILAR_INSTRUMENTS, ThemeSettings, ZenKeyboardSettings,
@@ -11,6 +12,13 @@ describe('GameDefinition fields match legacy-computed values (drift guard)', () 
         expect(game.storageId).toBe(APP_NAME)
         expect(game.notes.perColumn).toBe(NOTES_PER_COLUMN)
         expect(game.instruments.list).toEqual(INSTRUMENTS)
+    })
+    it('identity.ts and game.json agree on both identity fields (Codex review M2)', () => {
+        // defineGame throws on drift at module eval; this pins the same invariant
+        // observably. identity.ts feeds the service worker's cache namespace, game.json
+        // feeds IndexedDB/storage-key/appName via the definition — they must never split.
+        expect(game.id).toBe(GAME_IDENTITY.id)
+        expect(game.storageId).toBe(GAME_IDENTITY.storageId)
     })
     it('defaults duplicated in core ternaries', () => {
         expect(new InstrumentData().volume).toBe(game.instruments.defaultVolume)

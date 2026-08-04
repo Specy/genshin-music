@@ -19,7 +19,7 @@ Use the bundled browser script to reproduce the same decoded PCM the app receive
 3. Open the following URL in a browser and wait until the document title becomes `DONE`:
 
    ```text
-   http://127.0.0.1:4173/docs/skills/audio-loop-analysis/scripts/analyze-audio-loops.html?root=/static/assets/audio/sky/test_sustain&count=15&midi=60,62,64,65,67,69,71,72,74,76,77,79,81,83,84
+   http://127.0.0.1:4173/docs/skills/audio-loop-analysis/scripts/analyze-audio-loops.html?root=/src/lib/games/sky/instruments/test_sustain&count=15&midi=60,62,64,65,67,69,71,72,74,76,77,79,81,83,84
    ```
 
 4. Read machine-readable results from `#output` or `window.analysisResults`. Use the generated buttons to audition candidates.

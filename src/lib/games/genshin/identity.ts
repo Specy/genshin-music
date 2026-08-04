@@ -5,10 +5,11 @@
 // .svelte glyph components (notes.svgGlyphs) and would drag the Svelte runtime into a
 // context (self: ServiceWorkerGlobalScope) that has no DOM and never renders anything.
 //
-// Zero imports besides the GameIdentity type - keep it that way. games/genshin/index.ts
-// imports GAME_IDENTITY from here (not the other way around): this module is the single
-// source for the GameDefinition's own id/storageId fields, so index.ts never restates
-// them. Not a repo-wide claim - the build scripts keep their own `id:` GAMES-table
+// Zero imports besides the GameIdentity type - keep it that way. Since ADR-0003 the
+// same two fields are ALSO authored in this folder's game.json (the data side needs
+// them without importing TS); defineGame() asserts both sources agree at module eval
+// and gameDefinitionConsistency.test.ts pins it, so they can never drift silently.
+// Not a repo-wide claim - the build scripts keep their own `id:` GAMES-table
 // entries, svelte.config.js resolves the same literal from PUBLIC_GAME, and
 // `APP_NAME === 'Genshin'` comparisons are the two-tier-allowed reads catalogued in the
 // app-name audit.
