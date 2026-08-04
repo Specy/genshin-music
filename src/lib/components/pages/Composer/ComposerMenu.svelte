@@ -116,7 +116,7 @@
   async function importFile(files: FileElement<SerializedSong[] | SerializedSong>[]) {
     for (const file of files) {
       try {
-        const songs = (Array.isArray(file.data) ? file.data : [file.data]) as SerializedSong[];
+        const songs = Array.isArray(file.data) ? file.data : [file.data];
         await fileService.importAndLog(songs);
       } catch (e) {
         console.error(e);

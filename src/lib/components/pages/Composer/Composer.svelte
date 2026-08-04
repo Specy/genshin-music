@@ -22,8 +22,8 @@
   import Analytics from '$core/Analytics';
   import { homeStore } from '$stores/HomeStore.svelte';
   import { logger } from '$stores/LoggerStore.svelte';
-  import { ComposedSong, type UnknownSerializedComposedSong } from '$core/Songs/ComposedSong';
-  import { RecordedSong, type SerializedRecordedSong } from '$core/Songs/RecordedSong';
+  import { ComposedSong } from '$core/Songs/ComposedSong';
+  import { RecordedSong } from '$core/Songs/RecordedSong';
   import { VsrgSong } from '$core/Songs/VsrgSong';
   import { Song, type SerializedSong } from '$core/Songs/Song';
   import { NoteLayer } from '$core/Songs/Layer';
@@ -651,14 +651,14 @@
         //TODO not sure if i should clone the song here
         parsed = songToLoad;
       } else {
-        if (songToLoad.type === 'recorded') {
-          const parsedRecorded = RecordedSong.deserialize(songToLoad as SerializedRecordedSong);
+        if (RecordedSong.isSerializedType(songToLoad)) {
+          const parsedRecorded = RecordedSong.deserialize(songToLoad);
           parsedRecorded.bpm = 400;
           parsed = parsedRecorded.toComposedSong(4);
           parsed.name += ' - Composed';
         }
-        if (songToLoad.type === 'composed') {
-          parsed = ComposedSong.deserialize(songToLoad as UnknownSerializedComposedSong);
+        if (ComposedSong.isSerializedType(songToLoad)) {
+          parsed = ComposedSong.deserialize(songToLoad);
         }
       }
       if (!parsed) return;

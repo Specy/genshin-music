@@ -126,7 +126,9 @@ export class RecordedSong extends Song<RecordedSong, SerializedRecordedSong> {
             bpm: this.bpm,
             reverb: this.reverb,
             data: {...this.data},
-            notes: legacyNotes.map(note => [note.index, note.time, note.layer.serializeHex()] as SerializedRecordedNoteV2),
+            notes: legacyNotes.map(note =>
+                [note.index, note.time, note.layer.serializeHex()] satisfies SerializedRecordedNoteV2
+            ),
             id: this.id,
             isComposed: false,
             pitchLevel: PITCHES.indexOf(this.pitch),
@@ -153,7 +155,7 @@ export class RecordedSong extends Song<RecordedSong, SerializedRecordedSong> {
         const song = Song.deserializeTo(new RecordedSong(name || 'Untitled'), obj)
         song.reverb = obj.reverb ?? false
         if (version === 3) {
-            const tracks = (obj as SerializedRecordedSong).tracks ?? []
+            const tracks = 'tracks' in obj && Array.isArray(obj.tracks) ? obj.tracks : []
             song.instruments = tracks.map(track => InstrumentData.deserialize(track.instrument))
             if (song.instruments.length === 0) song.instruments = [new InstrumentData()]
             const notes: RecordedNote[] = []
@@ -163,8 +165,8 @@ export class RecordedSong extends Song<RecordedSong, SerializedRecordedSong> {
                 (track.notes ?? []).forEach(note => {
                     const [id, time, duration] = note
                     if (!Number.isFinite(id) || !Number.isFinite(time)) return
-                    const safeDuration = Number.isFinite(duration as number) && (duration as number) > 0
-                        ? (duration as number)
+                    const safeDuration = typeof duration === 'number' && Number.isFinite(duration) && duration > 0
+                        ? duration
                         : 0
                     notes.push(new RecordedNote(id, time, safeDuration, trackIndex))
                 })
@@ -175,10 +177,10 @@ export class RecordedSong extends Song<RecordedSong, SerializedRecordedSong> {
         }
         //legacy (v1/v2) path: decode flat index+layer notes, expand per track
         if (song.instruments.length === 0) song.instruments = [new InstrumentData()]
-        const legacy = obj as SerializedRecordedSongV2
+        const legacyNotes = 'notes' in obj && Array.isArray(obj.notes) ? obj.notes : []
         const crossGame = importInto !== undefined && song.data.appName !== importInto
         if (crossGame) song.data.appName = importInto
-        const appName = isLegacyAppName(song.data.appName) ? song.data.appName : (APP_NAME as 'Genshin' | 'Sky')
+        const appName = isLegacyAppName(song.data.appName) ? song.data.appName : APP_NAME
         const importPositions = crossGame ? LEGACY_NOTE_TABLES[importInto].importPositions : null
         // QUIRK: a v1 note's layer is a decimal number, but the legacy decoder fed it to
         // NoteLayer.deserializeHex - so a decimal layer is read as hex (10 becomes 16).
@@ -186,7 +188,7 @@ export class RecordedSong extends Song<RecordedSong, SerializedRecordedSong> {
         // as they always have.
         const rawNotes: { index: number, time: number, layer: NoteLayer }[] = []
         if (version === 1) {
-            const clonedNotes = Array.isArray(legacy.notes) ? clonedeep(legacy.notes) : []
+            const clonedNotes = clonedeep(legacyNotes)
             clonedNotes.forEach(note => {
                 rawNotes.push({
                     index: note[0],
@@ -195,7 +197,7 @@ export class RecordedSong extends Song<RecordedSong, SerializedRecordedSong> {
                 })
             })
         } else if (version === 2) {
-            (legacy.notes ?? []).forEach(note => {
+            legacyNotes.forEach(note => {
                 rawNotes.push({index: note[0], time: note[1], layer: NoteLayer.deserializeHex(note[2])})
             })
         }
@@ -213,18 +215,22 @@ export class RecordedSong extends Song<RecordedSong, SerializedRecordedSong> {
         return song
     }
 
-    static isSerializedType(obj: any) {
+    static isSerializedType(obj: unknown): obj is UnknownSerializedRecordedSong {
         if (typeof obj !== 'object') return false
-        if (obj.type === 'recorded') return true
+        if (obj === null) return false
+        if ('type' in obj && obj.type === 'recorded') return true
         //legacy format
-        if (obj?.data?.isComposedVersion === false) return true
+        if ('data' in obj && typeof obj.data === 'object' && obj.data !== null
+            && 'isComposedVersion' in obj.data && obj.data.isComposedVersion === false) return true
         return false
     }
 
-    static isOldFormatSerializedType(obj: any) {
+    static isOldFormatSerializedType(obj: unknown) {
         if (typeof obj !== 'object') return false
-        if (obj.type) return false
-        if (Array.isArray(obj.songNotes) && !obj.composedSong) return true
+        if (obj === null) return false
+        if ('type' in obj && obj.type) return false
+        if ('songNotes' in obj && Array.isArray(obj.songNotes)
+            && (!('composedSong' in obj) || !obj.composedSong)) return true
         return false
     }
 
@@ -336,7 +342,7 @@ export class RecordedSong extends Song<RecordedSong, SerializedRecordedSong> {
                     return toColumnNote(note)
                 })
                 const next = grouped[i + 1]
-                const paddingColumns = [] as number[]
+                const paddingColumns: number[] = []
                 let difference = (next?.[0]?.time ?? 0) - grouped[i][0].time
                 while (difference >= combinations[3]) {
                     if (difference / combinations[0] >= 1) {
@@ -505,7 +511,7 @@ export class RecordedSong extends Song<RecordedSong, SerializedRecordedSong> {
             parsed.forEach(note => {
                 for (let trackIndex = 0; trackIndex < converted.instruments.length; trackIndex++) {
                     if (!note.layer.test(trackIndex)) continue
-                    const id = legacyIndexToId(APP_NAME as 'Genshin' | 'Sky', converted.instruments[trackIndex].name, note.index)
+                    const id = legacyIndexToId(APP_NAME, converted.instruments[trackIndex].name, note.index)
                     if (id === null) continue
                     converted.notes.push(new RecordedNote(id, note.time, 0, trackIndex))
                 }
@@ -520,7 +526,7 @@ export class RecordedSong extends Song<RecordedSong, SerializedRecordedSong> {
         }
     }
     /** NEW-format cross-game conversion (see ComposedSong.toOtherGame): tracks swap to the target game's most similar instruments (settings kept), ids fold into the mapped instrument's range, fold collisions merge keeping the longest duration. */
-    toOtherGame = (target: string) => {
+    toOtherGame = (target: ConversionGame) => {
         const clone = this.clone()
         if (target !== APP_NAME) throw new Error(`toOtherGame can only convert into the running game (${APP_NAME}), got ${target}`)
         if (clone.data.appName === target) {
@@ -530,9 +536,9 @@ export class RecordedSong extends Song<RecordedSong, SerializedRecordedSong> {
         const sourceGame = clone.data.appName
         clone.data.appName = target
         clone.instruments = clone.instruments.map(ins => {
-            const similar = findSimilarInstrument(sourceGame, ins.name, target as ConversionGame)
+            const similar = findSimilarInstrument(sourceGame, ins.name, target)
             const swapped = ins.clone()
-            swapped.name = (similar ?? INSTRUMENTS[0]) as InstrumentName
+            swapped.name = INSTRUMENTS.find(name => name === similar) ?? INSTRUMENTS[0]
             return swapped
         })
         clone.notes = clone.notes.map(note => {

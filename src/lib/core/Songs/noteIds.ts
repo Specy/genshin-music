@@ -12,16 +12,23 @@
 
 import {INSTRUMENTS, INSTRUMENTS_DATA} from '$core/legacyConfig'
 import type {ColumnNote, InstrumentData} from './SongClasses'
+import type {LayerStatus} from './Layer'
 
 type InstrumentDataMap = typeof INSTRUMENTS_DATA
 export type RuntimeInstrumentName = keyof InstrumentDataMap | (string & {})
 
 const DEFAULT_INSTRUMENT = INSTRUMENTS[0]
+const LAYER_STATUSES = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16] as const
+
+function isInstrumentName(name: RuntimeInstrumentName): name is keyof InstrumentDataMap {
+    return name in INSTRUMENTS_DATA
+}
 
 /** Ordered Note Id list (button b plays table[b]) of an instrument; unknown names use the default instrument's, matching the legacy `new Instrument(name)` guard. */
 export function getNoteIdTable(instrumentName: RuntimeInstrumentName): readonly number[] {
-    const data = INSTRUMENTS_DATA[instrumentName as keyof InstrumentDataMap]
-        ?? INSTRUMENTS_DATA[DEFAULT_INSTRUMENT as keyof InstrumentDataMap]
+    const data = isInstrumentName(instrumentName)
+        ? INSTRUMENTS_DATA[instrumentName]
+        : INSTRUMENTS_DATA[DEFAULT_INSTRUMENT]
     return data.midiNotes
 }
 
@@ -31,14 +38,14 @@ export function getNoteIdTable(instrumentName: RuntimeInstrumentName): readonly 
 const reverseCache = new Map<string, Map<number, number>>()
 
 function getReverseMap(instrumentName: RuntimeInstrumentName): Map<number, number> {
-    const cached = reverseCache.get(instrumentName as string)
+    const cached = reverseCache.get(instrumentName)
     if (cached) return cached
     const map = new Map<number, number>()
     getNoteIdTable(instrumentName).forEach((id, button) => {
         // first occurrence wins if a table ever contains duplicate ids
         if (!map.has(id)) map.set(id, button)
     })
-    reverseCache.set(instrumentName as string, map)
+    reverseCache.set(instrumentName, map)
     return map
 }
 
@@ -74,8 +81,8 @@ export function displayButtonForId(instrumentName: RuntimeInstrumentName, id: nu
  * the icon classes of OTHER visible tracks with a note there. Rows are display buttons.
  * Used by the composer canvas and keyboard.
  */
-export function computeRowLayerStatuses(notes: readonly ColumnNote[], currentLayer: number, instruments: InstrumentData[]): Map<number, number> {
-    const rows = new Map<number, number>()
+export function computeRowLayerStatuses(notes: readonly ColumnNote[], currentLayer: number, instruments: InstrumentData[]): Map<number, LayerStatus> {
+    const rows = new Map<number, LayerStatus>()
     for (const note of notes) {
         const button = displayButtonForId(instruments[note.trackIndex]?.name ?? '', note.id)
         if (button === -1) continue
@@ -85,7 +92,7 @@ export function computeRowLayerStatuses(notes: readonly ColumnNote[], currentLay
         } else if (instruments[note.trackIndex]?.visible) {
             status |= 1 << instruments[note.trackIndex].toNoteIcon()
         }
-        rows.set(button, status)
+        rows.set(button, LAYER_STATUSES[status] ?? 0)
     }
     return rows
 }
@@ -115,14 +122,19 @@ export function computeStrandedRows(notes: readonly ColumnNote[], instruments: I
 /** Octave-fold an id into an instrument's range (cross-game NEW-format import policy: fold into range, keep even if it lands on a gap — the note strands visibly instead of being rewritten twice). */
 export function foldIdIntoRange(instrumentName: RuntimeInstrumentName, id: number): number {
     const table = getNoteIdTable(instrumentName)
-    if (table.length === 0) return id
+    if (table.length === 0 || !Number.isFinite(id)) return id
     let min = table[0], max = table[0]
     for (const t of table) {
         if (t < min) min = t
         if (t > max) max = t
     }
-    let folded = id
-    while (folded > max) folded -= 12
-    while (folded < min) folded += 12
-    return folded
+    if (id > max) {
+        const offsetBelowMax = ((max - id) % 12 + 12) % 12
+        return max - offsetBelowMax
+    }
+    if (id < min) {
+        const offsetAboveMin = ((id - min) % 12 + 12) % 12
+        return min + offsetAboveMin
+    }
+    return id
 }

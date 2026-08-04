@@ -145,7 +145,7 @@
       const notes = audioSong.tickPlayback(timestamp + settings.offset.value);
       notes.forEach((n) => {
         if (song!.trackModifiers[n.trackIndex]?.muted) return;
-        songAudioPlayer.playNoteOfInstrument(n.trackIndex, n.id);
+        songAudioPlayer.pressNoteOfInstrument(n.trackIndex, n.id, n.duration);
       });
     }
   }

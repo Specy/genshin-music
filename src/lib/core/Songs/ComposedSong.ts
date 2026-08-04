@@ -125,7 +125,7 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 4> 
                     if (!Number.isInteger(columnIndex) || !Number.isFinite(id)) return
                     const column = parsed.columns[columnIndex]
                     if (column === undefined) return
-                    const safeSpan = Number.isFinite(span as number) ? (span as number) : 1
+                    const safeSpan = typeof span === 'number' && Number.isFinite(span) ? span : 1
                     //duplicate (column, track, id) entries merge keeping the longest span
                     const existing = column.findNote(trackIndex, id)
                     if (existing) {
@@ -197,13 +197,16 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 4> 
             //historic toGenshin(): roster reset to the target default with the icon cycle
             parsed.data.appName = importInto
             parsed.instruments = parsed.instruments.map((_, i) => {
-                const ins = new InstrumentData({name: LEGACY_NOTE_TABLES[importInto].defaultInstrument as InstrumentName})
+                const name = INSTRUMENTS.find(
+                    instrument => instrument === LEGACY_NOTE_TABLES[importInto].defaultInstrument
+                ) ?? INSTRUMENTS[0]
+                const ins = new InstrumentData({name})
                 ins.icon = defaultInstrumentMap[i % 3]
                 return ins
             })
         }
         //expand (index, mask) into per-track Note Id notes
-        const appName = isLegacyAppName(parsed.data.appName) ? parsed.data.appName : (APP_NAME as 'Genshin' | 'Sky')
+        const appName = isLegacyAppName(parsed.data.appName) ? parsed.data.appName : APP_NAME
         const importPositions = crossGame ? LEGACY_NOTE_TABLES[importInto].importPositions : null
         parsed.columns = legacyColumns.map(legacyColumn => {
             const column = new NoteColumn()
@@ -223,19 +226,22 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 4> 
         return parsed
     }
 
-    static isSerializedType(obj: any) {
+    static isSerializedType(obj: unknown): obj is UnknownSerializedComposedSong {
         if (typeof obj !== 'object') return false
-        if (obj.type === 'composed') return true
+        if (obj === null) return false
+        if ('type' in obj && obj.type === 'composed') return true
         //legacy format
-        if (obj?.data?.isComposedVersion === true) return true
+        if ('data' in obj && typeof obj.data === 'object' && obj.data !== null
+            && 'isComposedVersion' in obj.data && obj.data.isComposedVersion === true) return true
 
         return false
     }
 
-    static isOldFormatSerializedType(obj: any) {
+    static isOldFormatSerializedType(obj: unknown) {
         if (typeof obj !== 'object') return false
-        if (obj.type) return false
-        if (Array.isArray(obj.songNotes) && obj.composedSong) return true
+        if (obj === null) return false
+        if ('type' in obj && obj.type) return false
+        if ('songNotes' in obj && Array.isArray(obj.songNotes) && 'composedSong' in obj && obj.composedSong) return true
         return false
     }
 
@@ -396,9 +402,9 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 4> 
             const notes = this.groupColumnNotesById(column).map(({index, trackIndices}) => {
                 const layer = new NoteLayer()
                 trackIndices.forEach(t => layer.set(t, true))
-                return [index, layer.serializeHex()] as [number, string]
+                return [index, layer.serializeHex()] satisfies [number, string]
             })
-            return [column.tempoChanger, notes] as SerializedColumnV3
+            return [column.tempoChanger, notes] satisfies SerializedColumnV3
         })
     }
 
@@ -511,16 +517,19 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 4> 
             this.columns.push(...columns)
         } else {
             const insertionIndex = position + 1
-            this.columns.forEach((column, startColumn) => {
-                column.notes.forEach(note => {
-                    //covered tail range is (startColumn, startColumn + span - 1]
-                    if (startColumn < insertionIndex && insertionIndex <= startColumn + note.span - 1) {
-                        note.span += amount
-                    }
-                })
-            })
+            this.adjustSpansForInsertedColumns(insertionIndex, amount)
             this.columns.splice(insertionIndex, 0, ...columns)
         }
+    }
+
+    private adjustSpansForInsertedColumns(insertionIndex: number, amount: number) {
+        this.columns.forEach((column, startColumn) => {
+            column.notes.forEach(note => {
+                if (startColumn < insertionIndex && insertionIndex < startColumn + note.span) {
+                    note.span += amount
+                }
+            })
+        })
     }
     /**
      * Remove `amount` columns from `position`. A sustained note loses one span per
@@ -555,7 +564,9 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 4> 
         const columns = this.columns.slice(position, position + amount)
         columns.forEach(column => {
             column.notesOfTrack(from).forEach(note => {
-                if (column.findNote(to, note.id)) {
+                const existing = column.findNote(to, note.id)
+                if (existing) {
+                    existing.span = Math.max(existing.span, note.span)
                     column.removeNote(from, note.id)
                 } else {
                     note.trackIndex = to
@@ -604,10 +615,14 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 4> 
     pasteLayer(copiedColumns: NoteColumn[], insert: boolean, layer: number) {
         const layerColumns = copiedColumns.map(col => {
             const clone = col.clone()
-            const seen = new Set<number>()
+            const seen = new Map<number, ColumnNote>()
             clone.notes = clone.notes.filter(note => {
-                if (seen.has(note.id)) return false
-                seen.add(note.id)
+                const existing = seen.get(note.id)
+                if (existing) {
+                    existing.span = Math.max(existing.span, note.span)
+                    return false
+                }
+                seen.set(note.id, note)
                 note.trackIndex = layer
                 return true
             })
@@ -620,14 +635,18 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 4> 
     pasteColumns = async (copiedColumns: NoteColumn[], insert: boolean) => {
         const cloned: NoteColumn[] = copiedColumns.map(column => column.clone())
         if (!insert) {
+            this.adjustSpansForInsertedColumns(this.selected, cloned.length)
             this.columns.splice(this.selected, 0, ...cloned)
         } else {
             cloned.forEach((clonedColumn, i) => {
                 const column = this.columns[this.selected + i]
                 if (column === undefined) return
                 clonedColumn.notes.forEach(clonedNote => {
-                    if (column.findNote(clonedNote.trackIndex, clonedNote.id) === null) {
+                    const existing = column.findNote(clonedNote.trackIndex, clonedNote.id)
+                    if (existing === null) {
                         column.addNote(clonedNote.clone())
+                    } else {
+                        existing.span = Math.max(existing.span, clonedNote.span)
                     }
                 })
             })
@@ -669,11 +688,15 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 4> 
                     return [note]
                 })
                 //merge collisions created by the shift
-                const seen = new Set<string>()
+                const seen = new Map<string, ColumnNote>()
                 column.notes = column.notes.filter(note => {
                     const key = `${note.trackIndex}-${note.id}`
-                    if (seen.has(key)) return false
-                    seen.add(key)
+                    const existing = seen.get(key)
+                    if (existing) {
+                        existing.span = Math.max(existing.span, note.span)
+                        return false
+                    }
+                    seen.set(key, note)
                     return true
                 })
             })
@@ -689,7 +712,9 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 4> 
                         column.removeNote(layer, note.id)
                         return
                     }
-                    if (column.findNote(layer, newId)) {
+                    const existing = column.findNote(layer, newId)
+                    if (existing) {
+                        existing.span = Math.max(existing.span, note.span)
                         column.removeNote(layer, note.id)
                     } else {
                         note.id = newId
@@ -744,7 +769,7 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 4> 
      * be it — the parameter exists so call sites already express the many-to-many
      * intent (game #3 needs no signature change).
      */
-    toOtherGame = (target: string) => {
+    toOtherGame = (target: ConversionGame) => {
         const clone = this.clone()
         if (target !== APP_NAME) throw new Error(`toOtherGame can only convert into the running game (${APP_NAME}), got ${target}`)
         if (clone.data.appName === target) {
@@ -754,9 +779,9 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 4> 
         const sourceGame = clone.data.appName
         clone.data.appName = target
         clone.instruments = clone.instruments.map(ins => {
-            const similar = findSimilarInstrument(sourceGame, ins.name, target as ConversionGame)
+            const similar = findSimilarInstrument(sourceGame, ins.name, target)
             const swapped = ins.clone()
-            swapped.name = (similar ?? INSTRUMENTS[0]) as InstrumentName
+            swapped.name = INSTRUMENTS.find(name => name === similar) ?? INSTRUMENTS[0]
             return swapped
         })
         clone.columns.forEach(column => {
