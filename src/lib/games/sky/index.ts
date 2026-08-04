@@ -9,7 +9,9 @@ import CrGlyph from './glyphs/cr.svelte';
 import DmGlyph from './glyphs/dm.svelte';
 import DmcrGlyph from './glyphs/dmcr.svelte';
 
-export const game = defineGame(GAME_IDENTITY.id, {
+// Full identity passed so defineGame asserts game.json ↔ identity.ts agreement
+// (see genshin/index.ts).
+export const game = defineGame(GAME_IDENTITY, {
   shapes,
   svgGlyphs: {
     cr: CrGlyph,

@@ -25,7 +25,7 @@
     const value = Number(raw);
     return Number.isFinite(value) ? value : fallback;
   };
-  const root = params.get('root') ?? '/static/assets/audio/sky/test_sustain';
+  const root = params.get('root') ?? '/src/lib/games/sky/instruments/test_sustain';
   const count = numberParam('count', 15);
   const files = params.has('files')
     ? params.get('files').split(',')
