@@ -1,0 +1,4 @@
+interface:
+  display_name: 'Audio Loop Analysis'
+  short_description: 'Find seamless sustain loops in audio samples'
+  default_prompt: 'Use $audio-loop-analysis to analyze these note samples and author click-free sustain loop points.'
