@@ -59,8 +59,13 @@
       if (name === 'toggle_record') toggleRecord();
     });
     cleanup.push(disposeShortcuts);
-    //missed key-up guards: leaving the tab releases every held voice (spec §12 stuck-voice risk)
-    const releaseOnLeave = () => releaseAllSounds();
+    //missed key-up guard: leaving the tab releases only LIVE held keys (their key-up is
+    //delivered elsewhere) and closes their recording entries. Scheduled playback voices
+    //are deliberately untouched — music keeps playing in a background tab.
+    const releaseOnLeave = () => {
+      instruments.forEach((ins) => ins.releaseHeldNotes());
+      if (isRecording) recording.closeAllOpenNotes();
+    };
     window.addEventListener('blur', releaseOnLeave);
     document.addEventListener('visibilitychange', releaseOnLeave);
     cleanup.push(() => {
@@ -340,7 +345,8 @@
     if (typeof override !== 'boolean') override = null;
     const newState = override !== null ? override : !isRecording;
     if (!newState && recording.notes.length > 0) {
-      //if there was a song recording
+      //if there was a song recording — keys still held at stop count as released now
+      recording.closeAllOpenNotes();
       const songName = await asyncPrompt(t('question:ask_song_name_cancellable'));
       if (!mounted) return;
       if (songName !== null) {
@@ -353,6 +359,8 @@
       }
     } else {
       recording = new Recording();
+      //durations are only captured on instruments that can actually sustain
+      recording.captureDurations = instruments[0]?.supportsSustain ?? false;
     }
     isRecording = newState;
   }

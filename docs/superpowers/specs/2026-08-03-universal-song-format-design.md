@@ -26,8 +26,9 @@ Decouple song data from keyboard layout and add sustained notes, on `migration/s
 | Sustain audio | **Loop region + release gain ramp** per instrument (per-note loop overrides), on **raw Web Audio** via a new `Voice` abstraction. tone.js: experiment branch *after* this ships, never in v1. |
 | Composer duration UX | Long-press a composer keyboard button → popover: drag-right slider + `<`/`>` ±1-column steppers; dismissed by outside click / `X` / column change. Buttons show held-state in covered columns; timeline canvas renders tails. |
 | Occupancy rule | Same-id spans on one track never overlap; pressing a covered button cannot create a note there. |
+| Column edits vs spans | Removing a covered TAIL column shrinks the span by 1 per removed column (removing the start column removes the note); inserting a column strictly inside a span stretches it by 1 per inserted column — inserting exactly where the span ends leaves it unchanged (decided 2026-08-04). |
 | Packaging | Version bumps: **composed v4, recorded v3, VSRG v2**. All older versions deserialize forever (converted to the new model on load, quirks preserved). Sky old-format export **kept** (id→index reverse map; off-layout ids dropped with a visible warning count). |
-| Stranded ids | **Convert on import, skip at playback.** Two import paths (implementation finding: the historic remap was a rank-preserving uniform -12 shift, not a fold): legacy files cross-convert through the frozen index remap inside deserialization (byte-reproduces the old converter, fixture-locked); new-format files carry ids with roster swap + octave-fold of out-of-range ids only (84 → 72), collisions deduped, gap ids stranded. Everywhere else data is untouched — unplayable notes skip at playback and are marked in the composer. |
+| Stranded ids | **Convert on import, skip at playback.** Two import paths (implementation finding: the historic remap was a rank-preserving uniform -12 shift, not a fold): legacy files cross-convert through the frozen index remap inside deserialization (byte-reproduces the old converter, fixture-locked); new-format files convert via `toOtherGame` (similar-instrument roster swap + octave-fold of out-of-range ids only (84 → 72), longest-duration collision merge, invariant re-enforced), gap ids stranded. Everywhere else data is untouched — unplayable notes skip at playback and are marked in the composer. |
 | V1 scope | Everything: MIDI durations in+out, VSRG holds drive real audio sustain, practice-mode visual tails, sheet-visualizer durations, zen sustain. |
 
 ## 3. Current state being replaced
@@ -82,7 +83,7 @@ In-memory: `ComposedSong { columnTempos, tracks: Track[] }`, `Track { instrument
 - **Old (pre-versioned) format**: existing path → recorded/composed → convert as above.
 - **Cross-game import** (appName mismatch, explicit user action) has two paths:
   - **Legacy files** (≤v3 composed, ≤v2 recorded, v1 vsrg): the frozen `importPositions` index remap applies *inside* deserialization, before id-ification, with the historic roster behavior (composed: reset to target default with icon cycle; recorded: instruments untouched — they fall back to the default at runtime; vsrg: DunDun, appName-preservation quirk kept). Byte-reproduces the old converter (fixture-locked); for default instruments the remap equals a uniform -12 id shift.
-  - **New-format files** (v4/v3/vsrg-v2): ids carry over; roster swaps to the target default; only out-of-range ids octave-fold (Sky 84 → 72); fold collisions dedupe; ids landing on gaps stay stranded — visible, not mangled.
+  - **New-format files** (v4/v3/vsrg-v2): `toOtherGame(target)` — many-to-many by signature. Each track's instrument swaps to the target game's most **similar instrument** (curated cross-game map in `instrumentSimilarity.ts`; target default when unmapped), keeping the track's volume/pitch/icon/alias; ids carry over and only out-of-range ids octave-fold into the mapped instrument's range (Sky 84 → 72); fold collisions merge keeping the longest span/duration; the Duration no-overlap invariant is re-enforced (`normalizeSpans`); ids landing on gaps stay stranded — visible, not mangled. Unlike the legacy path's historic quirk, the vsrg conversion rewrites `data.appName` (converts once, not on every load).
 - **Sky old-format export**: `toOldFormat()` reverse-maps id → default-15-key index; unmappable ids are dropped and the export UI shows the dropped count.
 
 ## 7. Instrument & game definition changes
@@ -109,7 +110,8 @@ class Voice {
 - Active voices are held in a registry keyed `(trackIndex, id)` — keyboard `keyup`, touch lift, MIDI note-off, or a playback tick reaching a note's end column calls `release()`. Composed playback schedules releases by tick (not precomputed ms), so tempo edits during playback stay correct.
 - Voice cap per instrument (~32) with oldest-first stealing guards mobile.
 - Live input: `keydown` starts / `keyup` releases with OS auto-repeat filtered; touch press/lift including drag-off; `MIDIProvider` gains note-off handling (`0x80` and running-status zero-velocity `0x90`).
-- Recording captures press→release durations on **every** instrument.
+- Recording captures press→release durations **only on sustaining instruments** (`Recording.captureDurations`, set at record start — revised 2026-08-04, superseding the earlier capture-everywhere rule: non-sustaining recordings stay pure taps). Where capture is on: re-pressing a still-open id closes the previous press first (exact press↔release pairing, mirroring the engine's one-voice-per-button retrigger); closed durations floor at 1 ms so an instant tap is distinguishable from an open note; stopping the recording or losing window focus closes every open note at that moment. The composer's long-press duration popover and the player/zen press-and-hold visuals are likewise gated to sustaining instruments.
+- Blur/visibility loss releases only LIVE held voices (their key-up is delivered elsewhere) — scheduled playback voices are untouched, so **music keeps playing in a background tab** (decided 2026-08-04).
 
 ## 9. Per-page changes
 
@@ -119,7 +121,7 @@ class Voice {
 - **VSRG**: `hitObject.notes` hold ids; player holds start a `Voice` and release at `timestamp + holdDuration` when the track instrument sustains (scoring unchanged).
 - **Sheet visualizer**: held notes get a duration indication; `VisualSong` adapts to tracks (merged view preserved).
 - **MIDI**: import maps real durations → column spans (round, min 1); export writes real durations (composed span → seconds via summed column times; recorded ms), replacing the hardcoded `duration: 1`.
-- **Conversions**: composed→recorded turns spans into ms via the tempo map; recorded→composed rounds ms into spans (min 1).
+- **Conversions**: composed→recorded turns spans into ms via the tempo map; recorded→composed converts durations to spans in a second pass over the laid-out tempo grid, **flooring to complete columns** (min 1) — a 1900 ms hold over 1000 ms columns spans 1, not 2 (decided 2026-08-04; fixture-locked in recordedSong.test.ts).
 
 ## 10. Verification
 
@@ -148,7 +150,7 @@ Each lands green before the next.
 | Loop points sound bad | Per-note overrides; author samples with normalized loop regions; audition during Phase B. |
 | File-size growth for doubled melodies | Sparse per-track tuples; measure on real library songs in Phase A; acceptable regression is small single-digit %. |
 | Cross-game behavior regression | Fold rule fixture-locked to reproduce old remap outcomes. |
-| Stuck voices (missed keyup: tab blur, touch cancel) | Global blur/visibilitychange releases all voices; voice registry is the single source of truth. |
+| Stuck voices (missed keyup: tab blur, touch cancel) | Blur/visibilitychange releases the live held voices (scheduled playback voices continue — background playback is a feature); the voice registry is the single source of truth. |
 
 ## 13. Out of scope
 

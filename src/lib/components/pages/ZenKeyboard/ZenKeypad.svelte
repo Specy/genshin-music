@@ -29,6 +29,7 @@
     noteNameType,
     keySpacing,
     onNoteRelease,
+    heldNotes,
   }: {
     instrument: Instrument;
     pitch: Pitch;
@@ -38,6 +39,8 @@
     verticalOffset: number;
     onNoteClick: (note: ObservableNote) => void;
     onNoteRelease?: (note: ObservableNote) => void;
+    /** Button indexes currently physically held — rendered pressed-down. */
+    heldNotes?: ReadonlySet<number>;
   } = $props();
 
   // Registered once here, not re-run when instrument/onNoteClick change: the callback below reads
@@ -75,6 +78,7 @@
       {note}
       onClick={onNoteClick}
       onRelease={onNoteRelease}
+      held={heldNotes?.has(index) ?? false}
     />
   {/each}
 </div>

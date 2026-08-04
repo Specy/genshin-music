@@ -4,8 +4,9 @@ import {APP_NAME, INSTRUMENTS, NoteLayer} from './imports'
 describe('environment smoke test', () => {
     it('runs against a selected game', () => {
         expect(['Genshin', 'Sky']).toContain(APP_NAME)
-        // Genshin has 10 instruments, Sky has 34 (from Config.ts, counted directly)
-        expect(INSTRUMENTS.length).toBe(APP_NAME === 'Genshin' ? 10 : 34)
+        // Genshin has 10 instruments; Sky had 34 (from Config.ts, counted directly)
+        // +1 on 2026-08-04: the `test_sustain` dummy sustaining instrument
+        expect(INSTRUMENTS.length).toBe(APP_NAME === 'Genshin' ? 10 : 35)
     })
 
     it('NoteLayer bit operations work', () => {

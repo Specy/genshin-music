@@ -37,3 +37,6 @@ _Avoid_: hold (reserved for the VSRG gameplay mechanic — a scored held lane pr
 
 **Stranded Note**:
 A note whose Note Id the track's current instrument doesn't offer. Skipped at playback and visually marked in the composer; never silently rewritten. Exceptions are explicit imports only: legacy files cross-convert through the frozen historic index remap, and new-format cross-game imports octave-fold out-of-range ids while producing the converted copy.
+
+**Similar Instrument**:
+The target game's curated counterpart for a source game's instrument — the one a track swaps to during cross-game conversion so the song keeps a comparable timbre. Unmapped instruments fall back to the target's default.

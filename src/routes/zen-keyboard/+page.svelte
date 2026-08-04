@@ -1,6 +1,7 @@
 <script lang="ts">
   import AppBackground from '$cmp/theme/AppBackground.svelte';
   import { onMount, untrack } from 'svelte';
+  import { SvelteSet } from 'svelte/reactivity';
   import { t } from '$i18n/binding.svelte';
   import { i18n } from '$i18n/i18n';
   import ZenKeypad from '$cmp/pages/ZenKeyboard/ZenKeypad.svelte';
@@ -21,6 +22,8 @@
   let settings: ZenKeyboardSettingsDataType = $state(ZenKeyboardSettings.data);
   let instrument: Instrument = $state(new Instrument());
   let isMetronomePlaying = $state(false);
+  //buttons physically held right now (pointer or bound key) — rendered pressed-down
+  const heldNotes = new SvelteSet<number>();
 
   onMount(() => {
     setPageVisited('zenKeyboard');
@@ -75,14 +78,19 @@
     return () => {
       //hard-release held voices before the node is disconnected (instrument swap mid-hold)
       currentInstrument.releaseAllNotes(true);
+      heldNotes.clear();
       AudioProvider.disconnect(currentInstrument.endNode);
     };
   });
 
   $effect(() => {
-    //missed key-up guards: leaving the tab releases every held voice
+    //missed key-up guard: leaving the tab releases only LIVE held keys (audio is
+    //otherwise allowed to keep sounding in a background tab)
     const currentInstrument = instrument;
-    const releaseOnLeave = () => currentInstrument.releaseAllNotes();
+    const releaseOnLeave = () => {
+      currentInstrument.releaseHeldNotes();
+      heldNotes.clear();
+    };
     window.addEventListener('blur', releaseOnLeave);
     document.addEventListener('visibilitychange', releaseOnLeave);
     return () => {
@@ -122,11 +130,14 @@
   function onNoteClick(note: ObservableNote) {
     //one-shot on non-sustaining instruments (exact old path), held Voice on sustaining ones
     instrument.pressNote(note.index, settings.pitch.value);
+    //the pressed-down visual only applies where holding means something
+    if (instrument.supportsSustain) heldNotes.add(note.index);
     zenKeyboardStore.animateNote(note.index);
     MIDIProvider.broadcastNoteClick(note.midiNote);
   }
 
   function onNoteRelease(note: ObservableNote) {
+    heldNotes.delete(note.index);
     instrument.releaseNote(note.index);
   }
 
@@ -150,6 +161,7 @@
   <div class="flex-centered">
     <ZenKeypad
       {onNoteRelease}
+      {heldNotes}
       {instrument}
       {onNoteClick}
       noteNameType={settings.noteNameType.value}

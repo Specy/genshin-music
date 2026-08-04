@@ -21,8 +21,8 @@
 import {APP_NAME, SUSTAIN_VISUAL_THRESHOLD_MS, type NoteNameType} from "$core/legacyConfig"
 import {ComposedSong} from "./ComposedSong"
 import {RecordedSong} from "./RecordedSong"
-import {ColumnNote, NoteColumn, RecordedNote} from "./SongClasses"
-import {canonicalButtonForId} from "./noteIds"
+import {ColumnNote, type InstrumentData, NoteColumn, RecordedNote} from "./SongClasses"
+import {displayButtonForId} from "./noteIds"
 import {Instrument} from '$lib/audio/Instrument.svelte'
 import {Song} from "./Song"
 
@@ -61,14 +61,14 @@ export class VisualSong {
                     stack.push(note)
                 } else {
                     const delay = note.time - lastNoteTimestamp
-                    const chunk = new TempoChunk(0, [TempoChunkColumn.from(stack.splice(0, stack.length))])
+                    const chunk = new TempoChunk(0, [TempoChunkColumn.from(stack.splice(0, stack.length), song.instruments)])
                     vs.addChunk(chunk, delay)
                     stack.push(note)
                 }
                 lastNoteTimestamp = note.time
             }
             const delay = song.notes[song.notes.length - 1].time - lastNoteTimestamp
-            const chunk = new TempoChunk(0, [TempoChunkColumn.from(stack)])
+            const chunk = new TempoChunk(0, [TempoChunkColumn.from(stack, song.instruments)])
             vs.addChunk(chunk, delay)
             //make sure there is at least one column even in empty chunks
             vs.chunks = vs.chunks.map(chunk => {
@@ -85,10 +85,10 @@ export class VisualSong {
             let lastTempoChanger = first.tempoChanger
             for (const column of columns) {
                 if (lastTempoChanger === 0 && column.tempoChanger === 0) {
-                    vs.addChunk(TempoChunk.from([column]), 0)
+                    vs.addChunk(TempoChunk.from([column], song.instruments), 0)
                 } else if (lastTempoChanger > column.tempoChanger) {
                     stack.push(column)
-                    const chunk = TempoChunk.from(stack.splice(0, stack.length))
+                    const chunk = TempoChunk.from(stack.splice(0, stack.length), song.instruments)
                     chunk.endingTempoChanger = column.tempoChanger
                     vs.addChunk(chunk, 0)
 
@@ -96,7 +96,7 @@ export class VisualSong {
                     if (lastTempoChanger === 0) {
                         stack.push(column)
                     } else {
-                        vs.addChunk(TempoChunk.from(stack.splice(0, stack.length)), 0)
+                        vs.addChunk(TempoChunk.from(stack.splice(0, stack.length), song.instruments), 0)
                         stack.push(column)
                     }
                 } else {
@@ -104,7 +104,7 @@ export class VisualSong {
                 }
                 lastTempoChanger = column.tempoChanger
             }
-            if (stack.length) vs.addChunk(TempoChunk.from(stack.splice(0, stack.length)), 0)
+            if (stack.length) vs.addChunk(TempoChunk.from(stack.splice(0, stack.length), song.instruments), 0)
             //remove padding from start and end
             let lastChunkWithNotes = -1
             for (let i = 0; i < vs.chunks.length; i++) {
@@ -171,7 +171,7 @@ export class VisualSong {
 
 
 class TempoChunkNote {
-    /** BUTTON position on the default instrument (display concern), resolved from the song note's id. */
+    /** BUTTON row (display concern): the note's own track instrument's button — exactly the pre-v4 `note.index` — falling back to the canonical (default-instrument) position for stranded ids. */
     note: number
     /** Deliberately-held note (composed span > 1, recorded duration over the visual threshold) — grid display cue only; toText() ignores it (the shared text format is unchanged). */
     held: boolean
@@ -181,8 +181,8 @@ class TempoChunkNote {
         this.held = held
     }
 
-    static from(note: ColumnNote | RecordedNote): TempoChunkNote | null {
-        const button = canonicalButtonForId(note.id)
+    static from(note: ColumnNote | RecordedNote, instruments: InstrumentData[]): TempoChunkNote | null {
+        const button = displayButtonForId(instruments[note.trackIndex]?.name ?? '', note.id)
         if (button === -1) return null
         const held = note instanceof ColumnNote
             ? note.span > 1
@@ -216,14 +216,14 @@ class TempoChunkColumn {
         this.notes = notes
     }
 
-    static from(column: NoteColumn | RecordedNote[]) {
+    static from(column: NoteColumn | RecordedNote[], instruments: InstrumentData[]) {
         const source = column instanceof NoteColumn ? column.notes : column
         //same id doubled on several tracks was ONE merged entry pre-v4 — dedupe by button
         //(a held contribution wins over a tap on the same button)
         const seen = new Map<number, TempoChunkNote>()
         const notes: TempoChunkNote[] = []
         for (const note of source) {
-            const chunkNote = TempoChunkNote.from(note)
+            const chunkNote = TempoChunkNote.from(note, instruments)
             if (chunkNote === null) continue
             const existing = seen.get(chunkNote.note)
             if (existing) {
@@ -253,12 +253,12 @@ export class TempoChunk {
         this.columns = columns
     }
 
-    static from(columns: NoteColumn[], tempoChanger?: number) {
+    static from(columns: NoteColumn[], instruments: InstrumentData[], tempoChanger?: number) {
         tempoChanger = tempoChanger ?? columns[0]?.tempoChanger
         if (tempoChanger === undefined) console.warn("tempoChanger is undefined", columns, tempoChanger)
         return new TempoChunk(
             tempoChanger ?? 0,
-            columns.map(column => TempoChunkColumn.from(column))
+            columns.map(column => TempoChunkColumn.from(column, instruments))
         )
     }
 
