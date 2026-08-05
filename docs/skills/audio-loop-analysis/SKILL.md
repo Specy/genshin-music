@@ -7,6 +7,8 @@ description: Analyze MP3/WAV instrument samples and author click-resistant susta
 
 Use the bundled browser script to reproduce the same decoded PCM the app receives, rank phase- and level-matched loop boundaries, and audition the candidates before editing metadata.
 
+Capturing NEW source material (recording sustained notes from another app/game) is covered by `docs/skills/recording-sustained-instruments` — record per that protocol first, then analyze here.
+
 ## Headless WAV analysis (no browser)
 
 For WAV samples, `scripts/analyze-wav-loops.mjs` runs the identical algorithm in
