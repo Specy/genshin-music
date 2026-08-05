@@ -10,6 +10,11 @@
 //   [midiCsv]    per-file MIDI ids for fundamental estimation, e.g. "60,62,64"
 //   [searchJson] JSON overrides: {startMin,startMax,endMin,endMax,loopMin,loopMax,top}
 //
+// Window seconds (startMin/startMax/endMin/endMax) may be NEGATIVE: counted from
+// the END of each file (e.g. endMax: -1.5 = 1.5 s before the file ends), so one
+// invocation adapts to files of different lengths — long sustains want the loop
+// end late in the hold but safely before the natural release.
+//
 // Prints per-file candidates (best first) as JSON, same fields as the HTML tool.
 // Audition the winners with the HTML tool before authoring metadata.
 import fs from 'node:fs';
@@ -103,8 +108,10 @@ function analyse(data, rate, midiNote) {
   const comparisonRadius = Math.round(rate * 0.06);
   const refinementRadius = Math.round((rate / fundamental) * 0.3);
   const safeMargin = Math.max(comparisonRadius, refinementRadius + 2);
+  //negative window seconds count from the end of this file (see header)
+  const resolve = (seconds) => (seconds < 0 ? data.length / rate + seconds : seconds);
   const frameAt = (seconds) =>
-    Math.max(safeMargin, Math.min(data.length - safeMargin - 1, Math.round(seconds * rate)));
+    Math.max(safeMargin, Math.min(data.length - safeMargin - 1, Math.round(resolve(seconds) * rate)));
   const startMin = frameAt(search.startMin);
   const startMax = frameAt(search.startMax);
   const endMin = frameAt(search.endMin);
