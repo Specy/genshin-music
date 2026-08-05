@@ -45,6 +45,8 @@ export type NoteMetaJson = {
   baseNote: BaseNote;
   icon: NoteImage;
   loop?: LoopRegion;
+  /** Per-note override of sustain.minLength (minimum seconds the note sounds). */
+  minLength?: number;
 };
 
 /** Named Note Presets, per game: full note arrays instruments reference by name. */
@@ -73,6 +75,14 @@ export type SustainMetaJson = {
    * same behavior as omitting `sustain` entirely.
    */
   loopMode?: SustainLoopMode;
+  /**
+   * Minimum seconds a triggered note sounds before its release begins, measured
+   * from the note's start — a very fast tap still plays this much, then the
+   * normal release, on every surface (player taps, zen, composer previews/span-1,
+   * recorded taps). Absent = releases act immediately (sampler default).
+   * Per-note overrides live on NoteMetaJson.minLength.
+   */
+  minLength?: number;
   /** Default loop region, used for every note without its own `loop`. */
   loop: LoopRegion;
 };

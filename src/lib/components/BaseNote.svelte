@@ -5,6 +5,7 @@
   import type { NoteImage } from '$lib/games/types';
   import GenshinNoteBorder from './GenshinNoteBorder.svelte';
   import SvgNote from './SvgNote.svelte';
+  import { suppressNativeTouch } from './suppressNativeTouch';
 
   // `theme.get(...)` inside `getTextColor()`'s `$derived` (below) auto-tracks
   // ThemeProvider's rune-backed state, so no manual subscribe/dispose is needed.
@@ -77,6 +78,7 @@
 </script>
 
 <button
+  {@attach suppressNativeTouch}
   onpointerdown={(e) => {
     preventDefault(e);
     handleClick(data);

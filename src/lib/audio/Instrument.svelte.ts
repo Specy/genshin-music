@@ -177,6 +177,14 @@ export class Instrument {
   };
 
   play = (note: number, pitch: Pitch, delay?: number) => {
+    // A sustaining instrument has no meaningful whole-file one-shot: plain triggers
+    // (composer previews and span-1 columns, recorded taps, VSRG hits, MIDI-setup
+    // auditions) become a tap — press + immediate release, so the authored
+    // minLength/release define the sound instead of the raw multi-second sample.
+    if (this.supportsSustain) {
+      this.pressNote(note, pitch, { delay, durationMs: 0 });
+      return;
+    }
     if (this.isDeleted || !this.volumeNode || !this.audioContext) return;
     const pitchChanger = getPitchChanger(pitch);
     const player = this.audioContext.createBufferSource();
@@ -202,12 +210,14 @@ export class Instrument {
    * Press a button. Non-sustaining instruments take the exact one-shot `play()` path
    * (returns null). Sustaining instruments start a looped Voice that sounds until
    * `releaseNote(button)` — or self-releases after `durationMs` (song playback,
-   * scheduled sample-accurately on the audio timeline at start).
+   * scheduled sample-accurately on the audio timeline at start). `skipMs` resumes
+   * mid-note (playback started inside a spanned note): audio picks up at the position
+   * the playhead would have reached, and `durationMs` counts the REMAINING hold.
    */
   pressNote = (
     button: number,
     pitch: Pitch,
-    options?: { delay?: number; durationMs?: number }
+    options?: { delay?: number; durationMs?: number; skipMs?: number }
   ): Voice | null => {
     const sustain = this.sustainConfig;
     if (!sustain) {
@@ -241,14 +251,30 @@ export class Instrument {
       release: sustain.release,
       crossfade: sustain.crossfade,
       delay: options?.delay,
+      skip: options?.skipMs !== undefined ? options.skipMs / 1000 : undefined,
     });
     this.activeVoices.push(voice);
     if (options?.durationMs !== undefined) {
-      voice.releaseAt(voice.startedAt + options.durationMs / 1000);
+      // the note must sound at least minLength from ITS start — a resumed voice
+      // (skipMs) already served that much of the note before this press
+      const minRemainingMs = Math.max(0, this.minNoteMs(button) - (options.skipMs ?? 0));
+      voice.releaseAt(voice.startedAt + Math.max(options.durationMs, minRemainingMs) / 1000);
     } else {
       this.heldVoices.set(button, voice);
     }
     return voice;
+  };
+
+  /**
+   * Minimum milliseconds a triggered note must sound before its release begins
+   * (sustain.minLength with per-note override; 0 when unset) — the Instrument-level
+   * tap guarantee: a very fast tap still plays this much, then the normal release.
+   */
+  private minNoteMs = (button: number): number => {
+    const sustain = this.sustainConfig;
+    if (!sustain) return 0;
+    const min = this.instrumentData.notes[button]?.minLength ?? sustain.minLength;
+    return typeof min === 'number' && Number.isFinite(min) && min > 0 ? min * 1000 : 0;
   };
 
   /** Release the live voice held on a button (no-op for one-shot instruments and unheld buttons). */
@@ -256,7 +282,9 @@ export class Instrument {
     const voice = this.heldVoices.get(button);
     if (!voice) return;
     this.heldVoices.delete(button);
-    voice.release();
+    // releaseAt clamps to "now" once the minimum has already elapsed, so held
+    // notes released late act exactly on the key-up
+    voice.releaseAt(voice.startedAt + this.minNoteMs(button) / 1000);
   };
 
   /**
@@ -265,7 +293,9 @@ export class Instrument {
    * keeps playing in a background tab.
    */
   releaseHeldNotes = () => {
-    this.heldVoices.forEach((voice) => voice.release());
+    this.heldVoices.forEach((voice, button) =>
+      voice.releaseAt(voice.startedAt + this.minNoteMs(button) / 1000)
+    );
     this.heldVoices.clear();
   };
 

@@ -108,6 +108,9 @@ function normalizeNotes(
     }
     assertNonEmptyString(context, `note ${index} icon`, note.icon);
     if (note.loop) assertLoop(context, `note ${index} loop`, note.loop);
+    if (note.minLength !== undefined && (!Number.isFinite(note.minLength) || note.minLength < 0)) {
+      fail(context, `note ${index}: minLength must be a non-negative number`);
+    }
     const file = note.file ?? `${index}.mp3`;
     assertSafeSegment(context, `note ${index} file`, file);
     return {
@@ -116,6 +119,7 @@ function normalizeNotes(
       baseNote: note.baseNote,
       icon: note.icon,
       ...(note.loop ? { loop: note.loop } : {}),
+      ...(note.minLength !== undefined ? { minLength: note.minLength } : {}),
     };
   });
   // Note Ids are per-instrument identity (ADR-0001): the id->button reverse map is
@@ -194,6 +198,12 @@ function buildGameMeta(id: string): GameMeta {
         !SUSTAIN_LOOP_MODES.includes(meta.sustain.loopMode)
       ) {
         fail(context, `sustain.loopMode must be one of ${SUSTAIN_LOOP_MODES.join(', ')}`);
+      }
+      if (
+        meta.sustain.minLength !== undefined &&
+        (!Number.isFinite(meta.sustain.minLength) || meta.sustain.minLength < 0)
+      ) {
+        fail(context, 'sustain.minLength must be a non-negative number');
       }
       assertLoop(context, 'sustain.loop', meta.sustain.loop);
     }

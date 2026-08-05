@@ -7,7 +7,9 @@
 // over `release`; 'loop-sustain' stops wrapping and crossfades into a second source
 // playing out the remainder of the pass from the exact playhead phase into the
 // sample's natural tail. Releases are NEVER deferred to a loop boundary — like every
-// sampler, note-off acts immediately from wherever the playhead is. `releaseAt()` is
+// sampler, note-off acts immediately from wherever the playhead is (the Instrument
+// enforces any authored `minLength` by releasing at a later time; the Voice itself
+// knows no minimum). `releaseAt()` is
 // the sample-accurate variant used by song playback (the loop-sustain phase is
 // deterministic, so even future releases schedule exactly). `fadeOut()` skips the
 // tail for playback stop/retrigger, while `stop()` is immediate teardown (page
@@ -34,6 +36,15 @@ export type VoiceOptions = {
   crossfade?: number;
   /** Start delay in seconds from now. */
   delay?: number;
+  /**
+   * Seconds of the NOTE already elapsed when this voice starts (resuming playback
+   * mid-note): audio begins at the buffer position the playhead would have reached
+   * by holding for `skip` seconds — through the attack, wrapped inside the loop
+   * once past it. Expressed in note time; the buffer offset scales by playbackRate.
+   * The start is spliced in over `crossfade` seconds — a hard start at an arbitrary
+   * mid-waveform amplitude would click.
+   */
+  skip?: number;
 };
 
 export class Voice {
@@ -49,6 +60,10 @@ export class Voice {
   private readonly crossfadeS: number;
   private releaseSource: AudioBufferSourceNode | null = null;
   private releaseGain: GainNode | null = null;
+  /** Buffer position (seconds) the source starts at — 0 unless `skip` resumed mid-note. */
+  private readonly initialPosition: number;
+  /** End time of the skipped-start ramp-in, or null when no ramp was scheduled. */
+  private readonly rampInEndAt: number | null;
   /** Context time the voice started (or will start) sounding at. */
   readonly startedAt: number;
   private releaseScheduledAt: number | null = null;
@@ -84,13 +99,41 @@ export class Voice {
     }
     this.source.connect(this.gain);
     this.gain.connect(this.destination);
+    const requestedSkip = options.skip;
+    const skip =
+      typeof requestedSkip === 'number' && Number.isFinite(requestedSkip) && requestedSkip > 0
+        ? requestedSkip
+        : 0;
+    // Where the playhead would be after holding for `skip` seconds — the same mapping
+    // sourcePositionAt uses live, so a later loop-sustain release still splices exactly.
+    // On a loopless sample a skip past the end clamps there: born ended, plays nothing.
+    this.initialPosition = Math.min(
+      this.positionAfter(skip * this.playbackRate),
+      this.buffer.duration
+    );
     const requestedDelay = options.delay;
     const delay =
       typeof requestedDelay === 'number' && Number.isFinite(requestedDelay) && requestedDelay > 0
         ? requestedDelay
         : 0;
     this.startedAt = options.context.currentTime + delay;
-    this.source.start(delay ? this.startedAt : undefined);
+    if (this.initialPosition > 0 && this.crossfadeS > 0) {
+      // A resumed start lands on an arbitrary waveform amplitude; stepping there
+      // from silence clicks. Ramp in over the same short crossfade the release tail
+      // uses for its splice (identical problem, opposite direction). fadeSustainAt
+      // anchors later fades with rampInValueAt, never the scheduling-time .value —
+      // which this automation would make stale.
+      this.rampInEndAt = this.startedAt + this.crossfadeS;
+      this.gain.gain.setValueAtTime(0, this.startedAt);
+      this.gain.gain.linearRampToValueAtTime(1, this.rampInEndAt);
+    } else {
+      this.rampInEndAt = null;
+    }
+    if (this.initialPosition > 0) {
+      this.source.start(this.startedAt, this.initialPosition);
+    } else {
+      this.source.start(delay ? this.startedAt : undefined);
+    }
     this.source.addEventListener('ended', this.handleSustainEnded, { once: true });
   }
 
@@ -182,15 +225,26 @@ export class Voice {
   };
 
   /**
-   * The looping source's exact sample position at context time `at` — deterministic
-   * (start time, rate and loop bounds are all fixed), which is what lets a FUTURE
-   * loop-sustain release schedule its play-out sample-accurately with no timers.
+   * Buffer position after `played` seconds of source-domain progress (already scaled
+   * by playbackRate): linear until the first pass reaches loop.end, wrapped inside
+   * the loop region from then on — exactly how the AudioBufferSourceNode advances.
    */
-  private sourcePositionAt(at: number): number {
-    const played = Math.max(0, at - this.startedAt) * this.playbackRate;
+  private positionAfter(played: number): number {
     const loop = this.loop;
     if (!loop || played < loop.end) return played; // still in the attack or first pass
     return loop.start + ((played - loop.end) % (loop.end - loop.start));
+  }
+
+  /**
+   * The looping source's exact sample position at context time `at` — deterministic
+   * (start position, start time, rate and loop bounds are all fixed), which is what
+   * lets a FUTURE loop-sustain release schedule its play-out sample-accurately with
+   * no timers.
+   */
+  private sourcePositionAt(at: number): number {
+    return this.positionAfter(
+      this.initialPosition + Math.max(0, at - this.startedAt) * this.playbackRate
+    );
   }
 
   /**
@@ -240,12 +294,23 @@ export class Voice {
     return true;
   }
 
+  /** Gain the skipped-start ramp-in reaches at `at` — 1 once complete or when no ramp exists. */
+  private rampInValueAt(at: number): number {
+    if (this.rampInEndAt === null || at >= this.rampInEndAt) return 1;
+    if (at <= this.startedAt) return 0;
+    return (at - this.startedAt) / (this.rampInEndAt - this.startedAt);
+  }
+
   private fadeSustainAt(at: number, duration: number) {
-    this.fadeParam(this.gain.gain, at, duration);
+    // The anchor must be the gain's value AT the fade time, computed from the only
+    // automation ever scheduled before a release (the ramp-in). Reading .value at
+    // scheduling time instead would anchor a zero-delay resumed note at 0 and hard-cut
+    // it at its release point; the computed anchor is also seamless mid-ramp.
+    this.fadeParam(this.gain.gain, at, duration, this.rampInValueAt(at));
     this.stopSource(this.source, at + duration);
   }
 
-  private fadeParam(param: AudioParam, at: number, duration: number) {
+  private fadeParam(param: AudioParam, at: number, duration: number, anchor = param.value) {
     // Preserve the instantaneous value if fadeOut interrupts an in-progress or
     // future automation curve. Safari gained cancelAndHoldAtTime later than the
     // other automation methods, so retain a compatible fallback.
@@ -257,7 +322,7 @@ export class Voice {
     // (Composer spanned notes) that fades the gain across the WHOLE note, then
     // resurrects to a full-volume tail at the end. cancelAndHoldAtTime inserts no
     // hold event when the param was never automated, so it alone cannot anchor.
-    param.setValueAtTime(param.value, at);
+    param.setValueAtTime(anchor, at);
     param.linearRampToValueAtTime(0, at + duration);
   }
 

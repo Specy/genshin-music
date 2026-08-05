@@ -140,13 +140,21 @@ export type InstrumentSustain = {
   loopCrossfade?: number;
   /** Always present after registry normalization (authored default: 'loop-continuous'). */
   loopMode: SustainLoopMode;
+  /**
+   * Minimum seconds a triggered note sounds before its release begins, measured
+   * from the note's start (enforced by the Instrument, not the Voice) — a very
+   * fast tap still plays this much, then the normal release. Applies on every
+   * surface (player key taps, zen, composer previews and span-1 columns, recorded
+   * taps). Absent = releases act immediately (sampler default).
+   */
+  minLength?: number;
   loop: LoopRegion;
 };
 
 /**
  * One button's note, normalized. Array position IS the Button index.
  * `midi` is the Note Id (ADR-0001); `file` is always resolved (default `<index>.mp3`);
- * `loop` overrides the instrument's sustain.loop for this note.
+ * `loop` and `minLength` override the instrument's sustain values for this note.
  */
 export type InstrumentNote = {
   file: string;
@@ -154,6 +162,7 @@ export type InstrumentNote = {
   baseNote: BaseNote;
   icon: NoteImage;
   loop?: LoopRegion;
+  minLength?: number;
 };
 
 /** Props every Shape arrangement component receives (default impl: shapes/GridShape.svelte). */

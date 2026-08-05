@@ -8,6 +8,7 @@
   import type { NoteImage } from '$lib/games/types';
   import GenshinNoteBorder from '$cmp/GenshinNoteBorder.svelte';
   import SvgNote from '$cmp/SvgNote.svelte';
+  import { suppressNativeTouch } from '$cmp/suppressNativeTouch';
 
   // QUIRK: noteImage is a redundant prop, always equal to note.noteImage (ZenKeypad's only call
   // site passes noteImage={note.noteImage}) - used only as the truthiness gate in the template
@@ -186,6 +187,7 @@
 </script>
 
 <button
+  {@attach suppressNativeTouch}
   onpointerdown={handleClick}
   onpointerup={() => onRelease?.(note)}
   onpointerleave={() => onRelease?.(note)}

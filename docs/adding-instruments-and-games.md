@@ -54,16 +54,16 @@ production build at prerender** with a message naming the game/instrument.
 
 ### meta.json reference
 
-| field         | required | notes                                                             |
-| ------------- | -------- | ----------------------------------------------------------------- |
-| `displayName` | yes      | English fallback shown until a locale has the key                 |
-| `family`      | yes      | MIDI-ish family label (export metadata)                           |
-| `midiName`    | yes      | MIDI program name used on export                                  |
-| `fill`        | no       | note button fill color                                            |
-| `clickColor`  | no       | note press color                                                  |
-| `shape`       | yes      | a Shape id from the game's `shapes.ts`                            |
-| `sustain`     | no       | `{ release, crossfade?, loopCrossfade?, loopMode?, loop }`        |
-| `notes`       | yes      | a preset name from `presets.json` **or** an inline array of notes |
+| field         | required | notes                                                                  |
+| ------------- | -------- | ---------------------------------------------------------------------- |
+| `displayName` | yes      | English fallback shown until a locale has the key                      |
+| `family`      | yes      | MIDI-ish family label (export metadata)                                |
+| `midiName`    | yes      | MIDI program name used on export                                       |
+| `fill`        | no       | note button fill color                                                 |
+| `clickColor`  | no       | note press color                                                       |
+| `shape`       | yes      | a Shape id from the game's `shapes.ts`                                 |
+| `sustain`     | no       | `{ release, crossfade?, loopCrossfade?, loopMode?, minLength?, loop }` |
+| `notes`       | yes      | a preset name from `presets.json` **or** an inline array of notes      |
 
 Each note (inline or in a preset) is:
 
@@ -80,13 +80,15 @@ Each note (inline or in a preset) is:
 - `loop` — optional per-note sustain loop, overriding `sustain.loop`. Only
   meaningful when the instrument has `sustain` (see
   `sky/instruments/sustained_recorder/` for a fully worked example).
+- `minLength` — optional per-note override of `sustain.minLength` (below).
 
 **Sustain**: presence of the `sustain` object makes the instrument hold notes
 while pressed, using the standard sampler model: ONE file per note with three
 regions — attack `[0, loop.start)`, a sustain loop `[loop.start, loop.end)`
 wrapped while held, and the rest of the file as the natural release. Note-off
 acts **immediately, from wherever the playhead is** (never deferred to a loop
-boundary — the same as every sampler); what it does is `loopMode`:
+boundary — the same as every sampler; `minLength` below can defer it by a fixed
+tap minimum); what it does is `loopMode`:
 
 - `loop-continuous` (default): keep looping and fade out over `release`
   seconds. Organ/pad style; a tap becomes a short faded dab.
@@ -101,6 +103,18 @@ boundary — the same as every sampler); what it does is `loopMode`:
 
 Additionally:
 
+- `minLength` (seconds, optional; per-note override on each note) is the
+  minimum time a triggered note sounds before its release begins, measured from
+  the note's start — a very fast tap still plays `minLength`, then the normal
+  release, on every surface (player key taps, zen keyboard, composer previews
+  and span-1 columns, recorded taps, VSRG hits). Holds and scheduled durations
+  longer than `minLength` are unaffected. When absent, releases act immediately
+  (the sampler default — a tap on `loop-continuous` is then just the first
+  `release` seconds fading out). Enforced by the Instrument when it releases a
+  voice, so it is independent of where the loop points sit.
+- On a sustaining instrument there is NO whole-file one-shot path: any plain
+  trigger without a hold (previews, span-1 columns, recorded taps) is played as
+  a tap — press plus immediate release under the rules above.
 - Loop points don't need to be sample-perfect: at load the engine blends the
   audio approaching `loop.end` toward the audio approaching `loop.start`
   (`loopCrossfade` seconds, default 0.05; `0` disables), so the wrap doesn't

@@ -8,6 +8,7 @@
   import type { ApproachingNote } from '$core/Songs/SongClasses';
   import GenshinNoteBorder from '$cmp/GenshinNoteBorder.svelte';
   import SvgNote from '$cmp/SvgNote.svelte';
+  import { suppressNativeTouch } from '$cmp/suppressNativeTouch';
 
   let {
     note,
@@ -116,6 +117,7 @@
 </script>
 
 <button
+  {@attach suppressNativeTouch}
   onpointerdown={(e) => {
     e.preventDefault();
     handleClick(note);

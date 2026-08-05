@@ -26,6 +26,7 @@
   import type { NoteImage } from '$lib/games/types';
   import GenshinNoteBorder from '$cmp/GenshinNoteBorder.svelte';
   import SvgNote from '$cmp/SvgNote.svelte';
+  import { suppressNativeTouch } from '$cmp/suppressNativeTouch';
 
   let {
     data,
@@ -91,6 +92,7 @@
 
 <button
   bind:this={buttonElement}
+  {@attach suppressNativeTouch}
   onpointerdown={(e) => {
     preventDefault(e);
     clickAction(data);
