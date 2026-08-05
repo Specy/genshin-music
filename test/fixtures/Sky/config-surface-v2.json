@@ -3024,8 +3024,8 @@
       "sustain": {
         "release": 0.3,
         "loop": {
-          "start": 0.837104,
-          "end": 1.477521
+          "start": 0.789396,
+          "end": 3.512646
         },
         "loopMode": "loop-continuous"
       },
@@ -3036,8 +3036,8 @@
           "baseNote": "C",
           "icon": "dmcr",
           "loop": {
-            "start": 0.837104,
-            "end": 1.477521
+            "start": 0.789396,
+            "end": 3.512646
           }
         },
         {
@@ -3046,8 +3046,8 @@
           "baseNote": "D",
           "icon": "dm",
           "loop": {
-            "start": 0.729667,
-            "end": 0.9065
+            "start": 2.667771,
+            "end": 5.923667
           }
         },
         {
@@ -3056,8 +3056,8 @@
           "baseNote": "E",
           "icon": "cr",
           "loop": {
-            "start": 0.572583,
-            "end": 0.7485
+            "start": 2.885313,
+            "end": 6.604146
           }
         },
         {
@@ -3066,8 +3066,8 @@
           "baseNote": "F",
           "icon": "dm",
           "loop": {
-            "start": 1.30675,
-            "end": 1.732021
+            "start": 1.629167,
+            "end": 4.566833
           }
         },
         {
@@ -3076,8 +3076,8 @@
           "baseNote": "G",
           "icon": "cr",
           "loop": {
-            "start": 0.671875,
-            "end": 0.849729
+            "start": 2.873125,
+            "end": 8.789208
           }
         },
         {
@@ -3086,8 +3086,8 @@
           "baseNote": "A",
           "icon": "dm",
           "loop": {
-            "start": 0.782229,
-            "end": 1.152833
+            "start": 2.258521,
+            "end": 9.591979
           }
         },
         {
@@ -3096,8 +3096,8 @@
           "baseNote": "B",
           "icon": "cr",
           "loop": {
-            "start": 1.027375,
-            "end": 1.299833
+            "start": 2.856417,
+            "end": 9.169083
           }
         },
         {
@@ -3106,8 +3106,8 @@
           "baseNote": "C",
           "icon": "dmcr",
           "loop": {
-            "start": 1.225938,
-            "end": 1.885729
+            "start": 2.723813,
+            "end": 6.866021
           }
         }
       ]
