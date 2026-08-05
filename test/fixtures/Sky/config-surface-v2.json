@@ -3020,7 +3020,7 @@
       "displayName": "Test Recorder",
       "family": "pipe",
       "midiName": "recorder",
-      "shape": "sky-2x4",
+      "shape": "sky-3x5",
       "sustain": {
         "release": 0.3,
         "loop": {
@@ -3031,7 +3031,7 @@
       },
       "notes": [
         {
-          "file": "0.wav",
+          "file": "0.mp3",
           "midi": 60,
           "baseNote": "C",
           "icon": "dmcr",
@@ -3041,7 +3041,7 @@
           }
         },
         {
-          "file": "1.wav",
+          "file": "1.mp3",
           "midi": 62,
           "baseNote": "D",
           "icon": "dm",
@@ -3051,7 +3051,7 @@
           }
         },
         {
-          "file": "2.wav",
+          "file": "2.mp3",
           "midi": 64,
           "baseNote": "E",
           "icon": "cr",
@@ -3061,7 +3061,7 @@
           }
         },
         {
-          "file": "3.wav",
+          "file": "3.mp3",
           "midi": 65,
           "baseNote": "F",
           "icon": "dm",
@@ -3071,7 +3071,7 @@
           }
         },
         {
-          "file": "4.wav",
+          "file": "4.mp3",
           "midi": 67,
           "baseNote": "G",
           "icon": "cr",
@@ -3081,33 +3081,103 @@
           }
         },
         {
-          "file": "5.wav",
+          "file": "5.mp3",
           "midi": 69,
           "baseNote": "A",
-          "icon": "dm",
+          "icon": "cr",
           "loop": {
             "start": 2.258521,
             "end": 9.591979
           }
         },
         {
-          "file": "6.wav",
+          "file": "6.mp3",
           "midi": 71,
           "baseNote": "B",
-          "icon": "cr",
+          "icon": "dm",
           "loop": {
             "start": 2.856417,
             "end": 9.169083
           }
         },
         {
-          "file": "7.wav",
+          "file": "7.mp3",
           "midi": 72,
           "baseNote": "C",
           "icon": "dmcr",
           "loop": {
             "start": 2.723813,
             "end": 6.866021
+          }
+        },
+        {
+          "file": "8.mp3",
+          "midi": 74,
+          "baseNote": "D",
+          "icon": "dm",
+          "loop": {
+            "start": 2.450146,
+            "end": 9.962083
+          }
+        },
+        {
+          "file": "9.mp3",
+          "midi": 76,
+          "baseNote": "E",
+          "icon": "cr",
+          "loop": {
+            "start": 2.814104,
+            "end": 10.40575
+          }
+        },
+        {
+          "file": "10.mp3",
+          "midi": 77,
+          "baseNote": "F",
+          "icon": "cr",
+          "loop": {
+            "start": 2.871083,
+            "end": 13.466313
+          }
+        },
+        {
+          "file": "11.mp3",
+          "midi": 79,
+          "baseNote": "G",
+          "icon": "dm",
+          "loop": {
+            "start": 2.605438,
+            "end": 5.112542
+          }
+        },
+        {
+          "file": "12.mp3",
+          "midi": 81,
+          "baseNote": "A",
+          "icon": "cr",
+          "loop": {
+            "start": 2.706375,
+            "end": 4.784604
+          }
+        },
+        {
+          "file": "13.mp3",
+          "midi": 83,
+          "baseNote": "B",
+          "icon": "dm",
+          "loop": {
+            "start": 2.997688,
+            "end": 5.208792
+          }
+        },
+        {
+          "file": "14.mp3",
+          "midi": 84,
+          "baseNote": "C",
+          "icon": "dmcr",
+          "loop": {
+            "start": 2.868646,
+            "end": 4.87775
           }
         }
       ]
