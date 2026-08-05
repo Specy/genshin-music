@@ -7,7 +7,22 @@ description: Analyze MP3/WAV instrument samples and author click-resistant susta
 
 Use the bundled browser script to reproduce the same decoded PCM the app receives, rank phase- and level-matched loop boundaries, and audition the candidates before editing metadata.
 
-## Run the analysis
+## Headless WAV analysis (no browser)
+
+For WAV samples, `scripts/analyze-wav-loops.mjs` runs the identical algorithm in
+Node — WAV is raw PCM, so Node reads the exact frames every browser decodes
+(MP3 must go through the browser tool: encoder padding shifts positions per
+decoder):
+
+```bash
+node docs/skills/audio-loop-analysis/scripts/analyze-wav-loops.mjs src/lib/games/sky/instruments/test_recorder 8 60,62,64,65,67,69,71,72
+```
+
+Candidates print best-first per file. Audition winners with the browser tool
+before authoring. See `sky/instruments/test_recorder/` (VCSL samples, CC0) for a
+fully worked WAV instrument produced this way.
+
+## Run the analysis (browser)
 
 1. Inspect the instrument metadata and sample filenames. Record each sample's intended MIDI pitch.
 2. Serve the repository root over HTTP; direct `file:` loading cannot fetch the samples reliably:
@@ -51,8 +66,10 @@ Do not choose solely by the aggregate rank. Balance:
 
 Store six decimal places. At 48 kHz this retains the chosen decoded frame to substantially better than half a sample. Add per-note overrides when the samples are not normalized.
 
-For this repository, update both the game definition and `test/fixtures/Sky/config-surface.json`, then run the config-surface, sustain voice, and consistency tests plus `npm run check:sky`.
+For this repository, update the instrument's `meta.json` and regenerate the
+game's `config-surface-v2` fixture (`npm run test:update-fixtures`), then run the
+config-surface, sustain voice, and consistency tests plus `npm run check:sky`.
 
 ## Interpret limitations
 
-Zero crossings alone are insufficient: slope, phase context, and level must also match. A decaying/reverberant vocal cannot form a mathematically perfect hard loop. The current `Voice` implementation crossfades each sustain loop into the sample's natural post-loop tail on release; keep that release behavior separate from loop-point analysis.
+Zero crossings alone are insufficient: slope, phase context, and level must also match. A decaying/reverberant vocal cannot form a mathematically perfect hard loop. The current `Voice` implementation crossfades each sustain loop into the sample's natural post-loop tail on release; keep that release behavior separate from loop-point analysis. Since the `loopCrossfade` pre-render (blending toward the loop start at load), candidates only need to be good, not sample-exact — but the blend cannot rescue level mismatch or timbre drift, so the scoring above still applies.

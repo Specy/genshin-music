@@ -62,7 +62,7 @@ production build at prerender** with a message naming the game/instrument.
 | `fill`        | no       | note button fill color                                            |
 | `clickColor`  | no       | note press color                                                  |
 | `shape`       | yes      | a Shape id from the game's `shapes.ts`                            |
-| `sustain`     | no       | `{ release, crossfade?, loop: {start, end} }` — see below         |
+| `sustain`     | no       | `{ release, crossfade?, loopCrossfade?, loop: {start, end} }`     |
 | `notes`       | yes      | a preset name from `presets.json` **or** an inline array of notes |
 
 Each note (inline or in a preset) is:
@@ -82,8 +82,21 @@ Each note (inline or in a preset) is:
   `sky/instruments/test_sustain/` for a fully worked example).
 
 **Sustain**: presence of the `sustain` object makes the instrument hold notes
-while pressed (Voice engine loops the region, releases into the natural tail).
-Omit it for one-shot instruments.
+while pressed. This is the standard sampler model (SFZ `loop_mode=loop_sustain`):
+ONE file per note with three regions — attack `[0, loop.start)`, sustain loop
+`[loop.start, loop.end)` looped while held, then on release a crossfade
+(`crossfade`, default 20 ms) into the sample's natural tail after `loop.end`,
+with a final `release`-seconds safety fade. Omit `sustain` for one-shot
+instruments.
+
+- A note is never cut short: releasing before the sample has played its attack
+  plus one loop pass defers the release, so a tap plays the file front to back.
+- Loop points don't need to be sample-perfect: at load the engine blends the
+  audio approaching `loop.end` toward the audio approaching `loop.start`
+  (`loopCrossfade` seconds, default 0.05; `0` disables), so the wrap doesn't
+  click. Find candidate points with `docs/skills/audio-loop-analysis`.
+- Prefer WAV (or FLAC) over MP3 for sustained samples: MP3 encoder padding
+  shifts decoded sample positions per browser, which moves tuned loop points.
 
 **Note Presets** (`presets.json`): named note arrays for the tables most
 instruments share (`standard-21`, `drums-8`, …). If your instrument deviates in

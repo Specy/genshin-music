@@ -19,6 +19,7 @@ import type { InstrumentName, NoteStatus } from '$core/types';
 import { capitalize, getPitchChanger } from '$core/utils/Utilities';
 import type { BaseNote, InstrumentSustain, NoteImage, ShapeDefinition } from '$lib/games/types';
 import { Voice } from '$lib/audio/Voice';
+import { crossfadeLoopRegion, DEFAULT_LOOP_CROSSFADE_S } from '$lib/audio/loopCrossfade';
 import { KeyboardProvider } from '$lib/providers/KeyboardProvider';
 import type { KeyboardCode } from '$lib/providers/KeyboardProvider/KeyboardTypes';
 import { keyBinds } from '$stores/KeybindsStore.svelte';
@@ -267,6 +268,21 @@ export class Instrument {
     // count toward the cap (and remain available to releaseAllNotes on stop/blur).
     this.activeVoices = this.activeVoices.filter((voice) => !voice.isDisposed);
   };
+
+  /** Bake each sustained note's loop-boundary crossfade into its decoded buffer (see loopCrossfade.ts). */
+  private renderLoopCrossfades = () => {
+    const sustain = this.sustainConfig;
+    if (!sustain) return;
+    const seconds = sustain.loopCrossfade ?? DEFAULT_LOOP_CROSSFADE_S;
+    for (const [index, note] of this.instrumentData.notes.entries()) {
+      const loop = note.loop ?? sustain.loop;
+      const buffer = this.buffers[index];
+      if (!loop || !buffer) continue;
+      for (let channel = 0; channel < buffer.numberOfChannels; channel++) {
+        crossfadeLoopRegion(buffer.getChannelData(channel), buffer.sampleRate, loop, seconds);
+      }
+    }
+  };
   load = async (audioContext: AudioContext) => {
     this.audioContext = audioContext;
     this.volumeNode = audioContext.createGain();
@@ -285,6 +301,9 @@ export class Instrument {
         })
       );
       this.buffers = await Promise.all(requests);
+      // Render loop-boundary crossfades once per decode, BEFORE pooling: pool hits
+      // must reuse the processed buffers, never re-blend already-blended audio.
+      this.renderLoopCrossfades();
       if (loadedCorrectly) INSTRUMENT_BUFFER_POOL.set(this.name, this.buffers);
     } else {
       this.buffers = INSTRUMENT_BUFFER_POOL.get(this.name)!;

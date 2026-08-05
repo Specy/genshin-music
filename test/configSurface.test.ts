@@ -56,8 +56,14 @@ describe('game config surface', () => {
         delete frozen.instrumentMidiLayoutKinds
         delete frozen.instrumentsData['Aurora_Short']
 
+        // Instruments added AFTER the v1 freeze have no old surface to reproduce —
+        // they exist only in the v2 fixture. (test_sustain predates the freeze.)
+        const POST_FREEZE_INSTRUMENTS = new Set(['test_recorder'])
+
         const derivedInstrumentsData = Object.fromEntries(
-            Object.entries(INSTRUMENTS_DATA).map(([name, data]) => {
+            Object.entries(INSTRUMENTS_DATA)
+                .filter(([name]) => !POST_FREEZE_INSTRUMENTS.has(name))
+                .map(([name, data]) => {
                 const labels = game.shapes[data.shape].labels
                 const sustain = data.sustain
                     ? {
@@ -94,7 +100,7 @@ describe('game config surface', () => {
 
         const derived = JSON.parse(JSON.stringify({
             appName: APP_NAME,
-            instruments: INSTRUMENTS,
+            instruments: INSTRUMENTS.filter((name) => !POST_FREEZE_INSTRUMENTS.has(name)),
             instrumentsData: derivedInstrumentsData,
             pitches: PITCHES,
             tempoChangers: TEMPO_CHANGERS,

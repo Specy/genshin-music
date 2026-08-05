@@ -59,6 +59,13 @@ export type SustainMetaJson = {
   release: number;
   /** Sustain-loop to natural-tail crossfade in seconds (default 0.02). */
   crossfade?: number;
+  /**
+   * Pre-rendered crossfade at the loop boundary in seconds (default 0.05, 0
+   * disables): the audio approaching loop.end is blended toward the audio
+   * approaching loop.start at load, so imperfect loop points wrap without a
+   * click. Applied per note against its resolved loop region.
+   */
+  loopCrossfade?: number;
   /** Default loop region, used for every note without its own `loop`. */
   loop: LoopRegion;
 };
