@@ -49,16 +49,21 @@ describe('game config surface', () => {
         //  - instrumentsData.Aurora_Short (Sky): orphaned data key with NO audio
         //    folder, unreachable through the INSTRUMENTS constructor guard; its
         //    legacy conversion tables in code are untouched
+        //  - test_sustain (Sky): the dummy sustaining instrument (2026-08-04,
+        //    predates the freeze) deleted 2026-08-05 when `sustained_recorder`
+        //    replaced it — removed from both the list and the data below
         const frozen = readFixture('config-surface')
         delete frozen.layoutKinds
         delete frozen.layoutIconsKinds
         delete frozen.instrumentNoteLayoutKinds
         delete frozen.instrumentMidiLayoutKinds
         delete frozen.instrumentsData['Aurora_Short']
+        delete frozen.instrumentsData['test_sustain']
+        frozen.instruments = frozen.instruments.filter((name: string) => name !== 'test_sustain')
 
         // Instruments added AFTER the v1 freeze have no old surface to reproduce —
-        // they exist only in the v2 fixture. (test_sustain predates the freeze.)
-        const POST_FREEZE_INSTRUMENTS = new Set(['test_recorder'])
+        // they exist only in the v2 fixture.
+        const POST_FREEZE_INSTRUMENTS = new Set(['sustained_recorder'])
 
         const derivedInstrumentsData = Object.fromEntries(
             Object.entries(INSTRUMENTS_DATA)

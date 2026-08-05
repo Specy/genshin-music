@@ -5,9 +5,9 @@ describe('environment smoke test', () => {
     it('runs against a selected game', () => {
         expect(['Genshin', 'Sky']).toContain(APP_NAME)
         // Genshin has 10 instruments; Sky had 34 (from Config.ts, counted directly)
-        // +1 on 2026-08-04: the `test_sustain` dummy sustaining instrument
-        // +1 on 2026-08-05: the `test_recorder` VCSL sustaining instrument
-        expect(INSTRUMENTS.length).toBe(APP_NAME === 'Genshin' ? 10 : 36)
+        // +1 on 2026-08-05: `sustained_recorder` (VCSL) — the `test_sustain` dummy
+        // it replaced (added 2026-08-04) was deleted the same day it became redundant
+        expect(INSTRUMENTS.length).toBe(APP_NAME === 'Genshin' ? 10 : 35)
     })
 
     it('NoteLayer bit operations work', () => {

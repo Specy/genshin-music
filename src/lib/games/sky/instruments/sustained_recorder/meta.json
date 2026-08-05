@@ -1,13 +1,13 @@
 {
-  "displayName": "Test Sustain",
-  "family": "vocal",
-  "midiName": "voice oohs",
+  "displayName": "Sustained recorder",
+  "family": "pipe",
+  "midiName": "recorder",
   "shape": "sky-3x5",
   "sustain": {
     "release": 0.3,
     "loop": {
-      "start": 0.929563,
-      "end": 1.074792
+      "start": 0.789396,
+      "end": 3.512646
     }
   },
   "notes": [
@@ -16,8 +16,8 @@
       "baseNote": "C",
       "icon": "dmcr",
       "loop": {
-        "start": 0.929563,
-        "end": 1.074792
+        "start": 0.789396,
+        "end": 3.512646
       }
     },
     {
@@ -25,8 +25,8 @@
       "baseNote": "D",
       "icon": "dm",
       "loop": {
-        "start": 0.702271,
-        "end": 0.841604
+        "start": 2.667771,
+        "end": 5.923667
       }
     },
     {
@@ -34,8 +34,8 @@
       "baseNote": "E",
       "icon": "cr",
       "loop": {
-        "start": 0.602396,
-        "end": 0.738729
+        "start": 2.885313,
+        "end": 6.604146
       }
     },
     {
@@ -43,8 +43,8 @@
       "baseNote": "F",
       "icon": "dm",
       "loop": {
-        "start": 0.995667,
-        "end": 1.172458
+        "start": 1.629167,
+        "end": 4.566833
       }
     },
     {
@@ -52,8 +52,8 @@
       "baseNote": "G",
       "icon": "cr",
       "loop": {
-        "start": 0.495667,
-        "end": 0.739708
+        "start": 2.873125,
+        "end": 8.789208
       }
     },
     {
@@ -61,8 +61,8 @@
       "baseNote": "A",
       "icon": "cr",
       "loop": {
-        "start": 1.029021,
-        "end": 1.176958
+        "start": 2.258521,
+        "end": 9.591979
       }
     },
     {
@@ -70,8 +70,8 @@
       "baseNote": "B",
       "icon": "dm",
       "loop": {
-        "start": 1.101417,
-        "end": 1.274375
+        "start": 2.856417,
+        "end": 9.169083
       }
     },
     {
@@ -79,8 +79,8 @@
       "baseNote": "C",
       "icon": "dmcr",
       "loop": {
-        "start": 0.574896,
-        "end": 0.749854
+        "start": 2.723813,
+        "end": 6.866021
       }
     },
     {
@@ -88,8 +88,8 @@
       "baseNote": "D",
       "icon": "dm",
       "loop": {
-        "start": 0.610854,
-        "end": 0.857896
+        "start": 2.450146,
+        "end": 9.962083
       }
     },
     {
@@ -97,8 +97,8 @@
       "baseNote": "E",
       "icon": "cr",
       "loop": {
-        "start": 0.573208,
-        "end": 0.718604
+        "start": 2.814104,
+        "end": 10.40575
       }
     },
     {
@@ -106,8 +106,8 @@
       "baseNote": "F",
       "icon": "cr",
       "loop": {
-        "start": 0.649146,
-        "end": 0.806771
+        "start": 2.871083,
+        "end": 13.466313
       }
     },
     {
@@ -115,8 +115,8 @@
       "baseNote": "G",
       "icon": "dm",
       "loop": {
-        "start": 0.8615,
-        "end": 1.065604
+        "start": 2.605438,
+        "end": 5.112542
       }
     },
     {
@@ -124,8 +124,8 @@
       "baseNote": "A",
       "icon": "cr",
       "loop": {
-        "start": 1.011125,
-        "end": 1.289646
+        "start": 2.706375,
+        "end": 4.784604
       }
     },
     {
@@ -133,8 +133,8 @@
       "baseNote": "B",
       "icon": "dm",
       "loop": {
-        "start": 0.642104,
-        "end": 0.804375
+        "start": 2.997688,
+        "end": 5.208792
       }
     },
     {
@@ -142,8 +142,8 @@
       "baseNote": "C",
       "icon": "dmcr",
       "loop": {
-        "start": 1.008833,
-        "end": 1.184875
+        "start": 2.868646,
+        "end": 4.87775
       }
     }
   ]

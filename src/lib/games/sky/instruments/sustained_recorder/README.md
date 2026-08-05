@@ -1,4 +1,4 @@
-# test_recorder — real sustained samples (VCSL, CC0)
+# sustained_recorder — real sustained samples (VCSL, CC0)
 
 A full 15-note (`sky-3x5`, standard-15 table, C4–C6) recorder built from the
 [Versilian Community Sample Library](https://github.com/sgossner/VCSL)
