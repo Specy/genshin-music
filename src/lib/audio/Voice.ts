@@ -2,13 +2,19 @@
 // per-voice GainNode, feeding the owning instrument's volume node (spec 2026-08-03 §8).
 // Raw Web Audio by design — see the tone.js decision in the spec.
 //
-// Lifecycle: constructed = sounding. `release()` crossfades the sustain loop into a second
-// source playing the sample's natural post-loop tail; `releaseAt()` is the sample-accurate
-// variant used by song playback. `fadeOut()` skips the tail for playback stop/retrigger,
-// while `stop()` is immediate teardown (page unload, disposal, voice stealing). Release
-// scheduling is idempotent and safe to bring forward — the earliest request wins.
+// Lifecycle: constructed = sounding. What note-off does is the loopMode (standard
+// sampler semantics — SFZ loop_mode): 'loop-continuous' keeps looping and fades out
+// over `release`; 'loop-sustain' stops wrapping and crossfades into a second source
+// playing out the remainder of the pass from the exact playhead phase into the
+// sample's natural tail. Releases are NEVER deferred to a loop boundary — like every
+// sampler, note-off acts immediately from wherever the playhead is. `releaseAt()` is
+// the sample-accurate variant used by song playback (the loop-sustain phase is
+// deterministic, so even future releases schedule exactly). `fadeOut()` skips the
+// tail for playback stop/retrigger, while `stop()` is immediate teardown (page
+// unload, disposal, voice stealing). Release scheduling is idempotent and safe to
+// bring forward — the earliest request wins.
 
-import type { LoopRegion } from '$lib/games/types';
+import type { LoopRegion, SustainLoopMode } from '$lib/games/types';
 
 export type VoiceOptions = {
   context: BaseAudioContext;
@@ -17,7 +23,12 @@ export type VoiceOptions = {
   playbackRate: number;
   /** Loop region in seconds; null/undefined = play the sample one-shot (no loop). */
   loop?: LoopRegion | null;
-  /** Fade length at the end of the natural release tail (and fallback fade length). */
+  /**
+   * Note-off behavior (default 'loop-continuous'). 'one-shot' never reaches Voice —
+   * the Instrument routes it to the plain one-shot play() path.
+   */
+  loopMode?: Exclude<SustainLoopMode, 'one-shot'>;
+  /** Fade at the end of the natural release tail; ALSO the loop-continuous fade-out length. */
   release: number;
   /** Sustain-to-release crossfade length in seconds (default 20 ms). */
   crossfade?: number;
@@ -31,6 +42,7 @@ export class Voice {
   private readonly destination: AudioNode;
   private readonly playbackRate: number;
   private readonly loop: LoopRegion | null;
+  private readonly loopMode: Exclude<SustainLoopMode, 'one-shot'>;
   private readonly source: AudioBufferSourceNode;
   private readonly gain: GainNode;
   private readonly releaseS: number;
@@ -39,8 +51,6 @@ export class Voice {
   private releaseGain: GainNode | null = null;
   /** Context time the voice started (or will start) sounding at. */
   readonly startedAt: number;
-  /** Earliest context time a release may begin (attack + one full loop pass). */
-  private readonly minReleaseAt: number;
   private releaseScheduledAt: number | null = null;
   private disposed = false;
 
@@ -66,6 +76,7 @@ export class Voice {
       Number.isFinite(options.playbackRate) && options.playbackRate > 0 ? options.playbackRate : 1;
     this.source.playbackRate.value = this.playbackRate;
     this.loop = Voice.sanitizeLoop(options.loop, this.buffer.duration);
+    this.loopMode = options.loopMode ?? 'loop-continuous';
     if (this.loop) {
       this.source.loop = true;
       this.source.loopStart = this.loop.start;
@@ -79,11 +90,6 @@ export class Voice {
         ? requestedDelay
         : 0;
     this.startedAt = options.context.currentTime + delay;
-    // A tap must still sound like a complete short note, not an instant cut: hold
-    // every release until the source has played its attack and reached loop.end once.
-    // Since the release tail continues from exactly loop.end, a tap then plays the
-    // original sample front to back (attack -> one loop pass -> natural tail).
-    this.minReleaseAt = this.loop ? this.startedAt + this.loop.end / this.playbackRate : this.startedAt;
     this.source.start(delay ? this.startedAt : undefined);
     this.source.addEventListener('ended', this.handleSustainEnded, { once: true });
   }
@@ -119,18 +125,22 @@ export class Voice {
 
   /**
    * Release at an absolute context time — sample-accurate scheduling for playback.
-   * Never before the voice has started, and never before the minimum audible length
-   * (attack + one loop pass); a shorter requested hold is deferred, not truncated.
+   * Never before the voice has started; otherwise the release acts exactly when
+   * requested, mid-loop wherever the playhead is (standard sampler behavior).
    */
   releaseAt = (when: number) => {
     if (this.disposed) return;
-    const at = Math.max(when, this.minReleaseAt, this.context.currentTime);
+    const at = Math.max(when, this.startedAt, this.context.currentTime);
     // A stop/blur may need to bring a future song-playback release forward. Later
     // requests remain no-ops, preserving idempotence for repeated key-up events.
     if (this.releaseScheduledAt !== null && this.releaseScheduledAt <= at) return;
     if (this.releaseScheduledAt !== null) this.cancelReleaseTail();
     this.releaseScheduledAt = at;
-    if (!this.startReleaseTail(at)) this.fadeSustainAt(at, this.releaseS);
+    // loop-continuous (and loopless voices): keep playing as-is under a `release`-
+    // seconds fade — the loop wraps freely until the fade silences it.
+    if (this.loopMode !== 'loop-sustain' || !this.startReleaseTail(at)) {
+      this.fadeSustainAt(at, this.releaseS);
+    }
   };
 
   /** Fade the entire logical voice without spawning a release tail (playback stop). */
@@ -171,11 +181,31 @@ export class Voice {
     this.dispose();
   };
 
-  /** Crossfade to the source sample's post-loop tail; returns false when no tail exists. */
-  private startReleaseTail(at: number): boolean {
+  /**
+   * The looping source's exact sample position at context time `at` — deterministic
+   * (start time, rate and loop bounds are all fixed), which is what lets a FUTURE
+   * loop-sustain release schedule its play-out sample-accurately with no timers.
+   */
+  private sourcePositionAt(at: number): number {
+    const played = Math.max(0, at - this.startedAt) * this.playbackRate;
     const loop = this.loop;
-    if (!loop || loop.end >= this.buffer.duration) return false;
-    const tailDuration = (this.buffer.duration - loop.end) / this.playbackRate;
+    if (!loop || played < loop.end) return played; // still in the attack or first pass
+    return loop.start + ((played - loop.end) % (loop.end - loop.start));
+  }
+
+  /**
+   * loop-sustain note-off: stop wrapping and play out the rest of the sample from
+   * the exact playhead phase (SFZ loop_mode=loop_sustain — the remainder of the
+   * current pass, then past loop.end into the natural tail; a tap released in the
+   * attack simply plays the file front to back). Implemented as a second, unlooped
+   * source spliced in with a short crossfade of identical content, because a
+   * future `source.loop = false` cannot be scheduled on the audio timeline.
+   * Returns false when no audible tail would remain.
+   */
+  private startReleaseTail(at: number): boolean {
+    if (!this.loop) return false;
+    const position = this.sourcePositionAt(at);
+    const tailDuration = (this.buffer.duration - position) / this.playbackRate;
     if (!Number.isFinite(tailDuration) || tailDuration <= 0) return false;
 
     const source = this.context.createBufferSource();
@@ -204,7 +234,7 @@ export class Voice {
       gain.gain.linearRampToValueAtTime(0, endAt);
     }
 
-    source.start(at, loop.end);
+    source.start(at, position);
     this.stopSource(source, endAt);
     this.fadeSustainAt(at, crossfadeS);
     return true;

@@ -17,7 +17,13 @@ import {
 } from '$core/legacyConfig';
 import type { InstrumentName, NoteStatus } from '$core/types';
 import { capitalize, getPitchChanger } from '$core/utils/Utilities';
-import type { BaseNote, InstrumentSustain, NoteImage, ShapeDefinition } from '$lib/games/types';
+import type {
+  BaseNote,
+  InstrumentSustain,
+  NoteImage,
+  ShapeDefinition,
+  SustainLoopMode,
+} from '$lib/games/types';
 import { Voice } from '$lib/audio/Voice';
 import { crossfadeLoopRegion, DEFAULT_LOOP_CROSSFADE_S } from '$lib/audio/loopCrossfade';
 import { KeyboardProvider } from '$lib/providers/KeyboardProvider';
@@ -66,11 +72,16 @@ export class Instrument {
     return this.volumeNode;
   }
 
-  get sustainConfig(): InstrumentSustain | null {
-    return this.instrumentData.sustain ?? null;
+  get sustainConfig(): (InstrumentSustain & { loopMode: Exclude<SustainLoopMode, 'one-shot'> }) | null {
+    const sustain = this.instrumentData.sustain;
+    // 'one-shot' = "ignores note-off": behaviorally identical to omitting `sustain`,
+    // so the whole sustain machinery (Voice, hold/duration UX, recorded durations)
+    // stays off and pressNote takes the plain play() path.
+    if (!sustain || sustain.loopMode === 'one-shot') return null;
+    return sustain as InstrumentSustain & { loopMode: Exclude<SustainLoopMode, 'one-shot'> };
   }
 
-  /** Whether this instrument can hold notes (spec 2026-08-03: capability, per instrument). */
+  /** Whether this instrument responds to hold length (spec 2026-08-03: capability, per instrument). */
   get supportsSustain() {
     return this.sustainConfig !== null;
   }
@@ -225,6 +236,7 @@ export class Instrument {
       playbackRate: getPitchChanger(pitch),
       // per-note loop override lives on the note itself (ADR-0003)
       loop: this.instrumentData.notes[button]?.loop ?? sustain.loop,
+      loopMode: sustain.loopMode,
       release: sustain.release,
       crossfade: sustain.crossfade,
       delay: options?.delay,

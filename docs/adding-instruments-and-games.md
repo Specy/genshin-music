@@ -62,7 +62,7 @@ production build at prerender** with a message naming the game/instrument.
 | `fill`        | no       | note button fill color                                            |
 | `clickColor`  | no       | note press color                                                  |
 | `shape`       | yes      | a Shape id from the game's `shapes.ts`                            |
-| `sustain`     | no       | `{ release, crossfade?, loopCrossfade?, loop: {start, end} }`     |
+| `sustain`     | no       | `{ release, crossfade?, loopCrossfade?, loopMode?, loop }`        |
 | `notes`       | yes      | a preset name from `presets.json` **or** an inline array of notes |
 
 Each note (inline or in a preset) is:
@@ -82,15 +82,25 @@ Each note (inline or in a preset) is:
   `sky/instruments/test_sustain/` for a fully worked example).
 
 **Sustain**: presence of the `sustain` object makes the instrument hold notes
-while pressed. This is the standard sampler model (SFZ `loop_mode=loop_sustain`):
-ONE file per note with three regions — attack `[0, loop.start)`, sustain loop
-`[loop.start, loop.end)` looped while held, then on release a crossfade
-(`crossfade`, default 20 ms) into the sample's natural tail after `loop.end`,
-with a final `release`-seconds safety fade. Omit `sustain` for one-shot
-instruments.
+while pressed, using the standard sampler model: ONE file per note with three
+regions — attack `[0, loop.start)`, a sustain loop `[loop.start, loop.end)`
+wrapped while held, and the rest of the file as the natural release. Note-off
+acts **immediately, from wherever the playhead is** (never deferred to a loop
+boundary — the same as every sampler); what it does is `loopMode`:
 
-- A note is never cut short: releasing before the sample has played its attack
-  plus one loop pass defers the release, so a tap plays the file front to back.
+- `loop-continuous` (default): keep looping and fade out over `release`
+  seconds. Organ/pad style; a tap becomes a short faded dab.
+- `loop-sustain` (SFZ `loop_mode=loop_sustain`): stop wrapping and play out the
+  rest of the file from the exact playhead phase — the remainder of the pass,
+  then the natural tail past `loop.end`, with a final `release`-seconds safety
+  fade at the very end (`crossfade`, default 20 ms, splices the play-out in). A
+  tap plays the file front to back.
+- `one-shot`: ignore note-off entirely; the whole sample always plays.
+  Behaviorally identical to omitting `sustain` — an explicit "tap" spelling.
+  Hold-length UX (Composer durations, recorded durations) stays off.
+
+Additionally:
+
 - Loop points don't need to be sample-perfect: at load the engine blends the
   audio approaching `loop.end` toward the audio approaching `loop.start`
   (`loopCrossfade` seconds, default 0.05; `0` disables), so the wrap doesn't

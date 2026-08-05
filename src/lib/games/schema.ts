@@ -23,6 +23,7 @@ import type {
   NoteNameTypeDefault,
   NotesCssClasses,
   StorageId,
+  SustainLoopMode,
   TempoChanger,
 } from './types';
 
@@ -66,6 +67,12 @@ export type SustainMetaJson = {
    * click. Applied per note against its resolved loop region.
    */
   loopCrossfade?: number;
+  /**
+   * What note-off does (default 'loop-continuous'); see SustainLoopMode in
+   * types.ts for the three kinds. 'one-shot' is an explicit way to say "tap" —
+   * same behavior as omitting `sustain` entirely.
+   */
+  loopMode?: SustainLoopMode;
   /** Default loop region, used for every note without its own `loop`. */
   loop: LoopRegion;
 };
