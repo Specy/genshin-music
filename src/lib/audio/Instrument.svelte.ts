@@ -72,7 +72,8 @@ export class Instrument {
     return this.volumeNode;
   }
 
-  get sustainConfig(): (InstrumentSustain & { loopMode: Exclude<SustainLoopMode, 'one-shot'> }) | null {
+  get sustainConfig():
+    (InstrumentSustain & { loopMode: Exclude<SustainLoopMode, 'one-shot'> }) | null {
     const sustain = this.instrumentData.sustain;
     // 'one-shot' = "ignores note-off": behaviorally identical to omitting `sustain`,
     // so the whole sustain machinery (Voice, hold/duration UX, recorded durations)

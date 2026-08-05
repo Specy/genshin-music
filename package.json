@@ -16,6 +16,7 @@
     "check:sky": "cross-env PUBLIC_GAME=sky npm run check",
     "lint": "eslint .",
     "format": "prettier --write .",
+    "fix": "eslint --fix . && prettier --write .",
     "format:check": "prettier --check .",
     "build:sky": "node ./scripts/buildApp.js Sky",
     "build:sky:analyze": "cross-env ANALYZE=true npm run build:sky",

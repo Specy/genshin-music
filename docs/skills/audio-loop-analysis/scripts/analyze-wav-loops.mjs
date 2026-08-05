@@ -26,9 +26,7 @@ if (!dir) {
   process.exit(1);
 }
 const count = Number(countArg ?? 8);
-const midi = midiArg
-  ? midiArg.split(',').map(Number)
-  : [60, 62, 64, 65, 67, 69, 71, 72];
+const midi = midiArg ? midiArg.split(',').map(Number) : [60, 62, 64, 65, 67, 69, 71, 72];
 const search = {
   startMin: 0.3,
   startMax: 1.5,
@@ -73,7 +71,7 @@ function readWavMono(file) {
       const at = (i * fmt.channels + c) * bytes;
       if (fmt.bits === 16) sum += data.readInt16LE(at) / 32768;
       else if (fmt.bits === 24)
-        sum += ((data[at] | (data[at + 1] << 8) | (data[at + 2] << 16)) << 8 >> 8) / 8388608;
+        sum += (((data[at] | (data[at + 1] << 8) | (data[at + 2] << 16)) << 8) >> 8) / 8388608;
       else if (fmt.bits === 32) sum += data.readInt32LE(at) / 2147483648;
       else throw new Error(`${file}: unsupported bit depth ${fmt.bits}`);
     }
@@ -111,7 +109,10 @@ function analyse(data, rate, midiNote) {
   //negative window seconds count from the end of this file (see header)
   const resolve = (seconds) => (seconds < 0 ? data.length / rate + seconds : seconds);
   const frameAt = (seconds) =>
-    Math.max(safeMargin, Math.min(data.length - safeMargin - 1, Math.round(resolve(seconds) * rate)));
+    Math.max(
+      safeMargin,
+      Math.min(data.length - safeMargin - 1, Math.round(resolve(seconds) * rate))
+    );
   const startMin = frameAt(search.startMin);
   const startMax = frameAt(search.startMax);
   const endMin = frameAt(search.endMin);
@@ -122,7 +123,8 @@ function analyse(data, rate, midiNote) {
   let lastCrossing = -Infinity;
 
   for (let i = startMin; i <= endMax; i++) {
-    if (!(phaseSignal[i - 1] <= 0 && phaseSignal[i] > 0 && i - lastCrossing >= minimumGap)) continue;
+    if (!(phaseSignal[i - 1] <= 0 && phaseSignal[i] > 0 && i - lastCrossing >= minimumGap))
+      continue;
     lastCrossing = i;
     let frame = i;
     let strongestSlope = -Infinity;
