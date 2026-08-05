@@ -39,6 +39,8 @@ export class Voice {
   private releaseGain: GainNode | null = null;
   /** Context time the voice started (or will start) sounding at. */
   readonly startedAt: number;
+  /** Earliest context time a release may begin (attack + one full loop pass). */
+  private readonly minReleaseAt: number;
   private releaseScheduledAt: number | null = null;
   private disposed = false;
 
@@ -77,6 +79,11 @@ export class Voice {
         ? requestedDelay
         : 0;
     this.startedAt = options.context.currentTime + delay;
+    // A tap must still sound like a complete short note, not an instant cut: hold
+    // every release until the source has played its attack and reached loop.end once.
+    // Since the release tail continues from exactly loop.end, a tap then plays the
+    // original sample front to back (attack -> one loop pass -> natural tail).
+    this.minReleaseAt = this.loop ? this.startedAt + this.loop.end / this.playbackRate : this.startedAt;
     this.source.start(delay ? this.startedAt : undefined);
     this.source.addEventListener('ended', this.handleSustainEnded, { once: true });
   }
@@ -110,10 +117,14 @@ export class Voice {
     this.releaseAt(this.context.currentTime);
   };
 
-  /** Release at an absolute context time — sample-accurate scheduling for playback. Never before the voice has started. */
+  /**
+   * Release at an absolute context time — sample-accurate scheduling for playback.
+   * Never before the voice has started, and never before the minimum audible length
+   * (attack + one loop pass); a shorter requested hold is deferred, not truncated.
+   */
   releaseAt = (when: number) => {
     if (this.disposed) return;
-    const at = Math.max(when, this.startedAt, this.context.currentTime);
+    const at = Math.max(when, this.minReleaseAt, this.context.currentTime);
     // A stop/blur may need to bring a future song-playback release forward. Later
     // requests remain no-ops, preserving idempotence for repeated key-up events.
     if (this.releaseScheduledAt !== null && this.releaseScheduledAt <= at) return;
@@ -209,11 +220,14 @@ export class Voice {
     // future automation curve. Safari gained cancelAndHoldAtTime later than the
     // other automation methods, so retain a compatible fallback.
     if (typeof param.cancelAndHoldAtTime === 'function') param.cancelAndHoldAtTime(at);
-    else {
-      const value = param.value;
-      param.cancelScheduledValues(at);
-      param.setValueAtTime(value, at);
-    }
+    else param.cancelScheduledValues(at);
+    // ALWAYS anchor the ramp with an explicit event at `at`. A linearRamp with no
+    // preceding event has no defined start point: browsers interpolate from the
+    // last event or from scheduling time — for a release scheduled seconds ahead
+    // (Composer spanned notes) that fades the gain across the WHOLE note, then
+    // resurrects to a full-volume tail at the end. cancelAndHoldAtTime inserts no
+    // hold event when the param was never automated, so it alone cannot anchor.
+    param.setValueAtTime(param.value, at);
     param.linearRampToValueAtTime(0, at + duration);
   }
 

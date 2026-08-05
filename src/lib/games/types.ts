@@ -121,6 +121,8 @@ export type ShapeLabels = {
 export type InstrumentSustain = {
   release: number;
   crossfade?: number;
+  /** Pre-rendered loop-boundary crossfade seconds (default 0.05, 0 disables) — see loopCrossfade.ts. */
+  loopCrossfade?: number;
   loop: LoopRegion;
 };
 

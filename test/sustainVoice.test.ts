@@ -10,8 +10,8 @@ import {INSTRUMENTS} from './imports'
 
 type Call = { method: string, args: unknown[] }
 
-function fakeGainParam(calls: Call[]) {
-    return {
+function fakeGainParam(calls: Call[], withCancelAndHold: boolean) {
+    const param: Record<string, unknown> = {
         value: 1,
         setValueAtTime(value: number, time: number) {
             calls.push({method: 'setValueAtTime', args: [value, time]})
@@ -23,9 +23,18 @@ function fakeGainParam(calls: Call[]) {
             calls.push({method: 'cancelScheduledValues', args: [time]})
         },
     }
+    // All current browsers have cancelAndHoldAtTime, so the default fake does too —
+    // otherwise the tests would only ever exercise the legacy-Safari fallback branch
+    // of Voice.fadeParam (which is exactly how the unanchored-ramp bug shipped).
+    if (withCancelAndHold) {
+        param.cancelAndHoldAtTime = (time: number) => {
+            calls.push({method: 'cancelAndHoldAtTime', args: [time]})
+        }
+    }
+    return param
 }
 
-function fakeContext(currentTime = 10) {
+function fakeContext(currentTime = 10, {withCancelAndHold = true} = {}) {
     const created: { sources: any[], gains: any[] } = {sources: [], gains: []}
     const context = {
         currentTime,
@@ -33,7 +42,7 @@ function fakeContext(currentTime = 10) {
             const calls: Call[] = []
             const gain = {
                 calls,
-                gain: fakeGainParam(calls),
+                gain: fakeGainParam(calls, withCancelAndHold),
                 connectedTo: [] as unknown[],
                 connect(node: unknown) {
                     this.connectedTo.push(node)
@@ -86,9 +95,15 @@ function fakeContext(currentTime = 10) {
 }
 
 const FAKE_BUFFER = {duration: 3} as AudioBuffer
+// Minimum audible length for makeVoice defaults: startedAt + loop.end / playbackRate.
+// Same float expression the code computes, so strict equality holds in assertions.
+const MIN_RELEASE = 10 + 2.5 / 1.5
 
-function makeVoice(overrides: Partial<ConstructorParameters<typeof Voice>[0]> = {}) {
-    const {context, created} = fakeContext()
+function makeVoice(
+    overrides: Partial<ConstructorParameters<typeof Voice>[0]> = {},
+    contextOptions?: {withCancelAndHold?: boolean},
+) {
+    const {context, created} = fakeContext(10, contextOptions)
     const destination = (context as any).createGain()
     const voice = new Voice({
         context,
@@ -125,27 +140,66 @@ describe('Voice', () => {
         expect(source.calls).toContainEqual({method: 'start', args: [10.5]})
     })
 
-    it('release() crossfades into the natural post-loop tail and safety-fades its end', () => {
+    it('a tap (instant release) defers the tail until attack + one loop pass have sounded, then crossfades into it', () => {
         const {voice, created} = makeVoice()
         const sustainSource = created.sources[0]
         const sustainGain = created.gains[1]
-        voice.release()
+        voice.release() // key-up right away — must still sound like a complete short note
         const releaseSource = created.sources[1]
         const releaseGain = created.gains[2]
         expect(voice.isReleased).toBe(true)
-        expect(sustainGain.calls).toContainEqual({method: 'setValueAtTime', args: [1, 10]})
-        expect(sustainGain.calls).toContainEqual({method: 'linearRampToValueAtTime', args: [0, 10.02]})
-        expect(sustainSource.calls).toContainEqual({method: 'stop', args: [10.02]})
+        expect(sustainGain.calls).toContainEqual({method: 'setValueAtTime', args: [1, MIN_RELEASE]})
+        expect(sustainGain.calls).toContainEqual({method: 'linearRampToValueAtTime', args: [0, MIN_RELEASE + 0.02]})
+        expect(sustainSource.calls).toContainEqual({method: 'stop', args: [MIN_RELEASE + 0.02]})
         expect(releaseSource.buffer).toBe(FAKE_BUFFER)
         expect(releaseSource.loop).toBe(false)
         expect(releaseSource.playbackRate.value).toBe(1.5)
-        expect(releaseSource.calls).toContainEqual({method: 'start', args: [10, 2.5]})
-        expect(releaseGain.calls).toContainEqual({method: 'setValueAtTime', args: [0, 10]})
-        expect(releaseGain.calls).toContainEqual({method: 'linearRampToValueAtTime', args: [1, 10.02]})
+        // the tail starts exactly when the sustain source first reaches loop.end, so a
+        // tap plays the original sample front to back (attack -> loop pass -> tail)
+        expect(releaseSource.calls).toContainEqual({method: 'start', args: [MIN_RELEASE, 2.5]})
+        expect(releaseGain.calls).toContainEqual({method: 'setValueAtTime', args: [0, MIN_RELEASE]})
+        expect(releaseGain.calls).toContainEqual({method: 'linearRampToValueAtTime', args: [1, MIN_RELEASE + 0.02]})
         const finalRamp = releaseGain.calls.at(-1)
         expect(finalRamp?.method).toBe('linearRampToValueAtTime')
         expect(finalRamp?.args[0]).toBe(0)
-        expect(finalRamp?.args[1]).toBeCloseTo(10 + (3 - 2.5) / 1.5)
+        expect(finalRamp?.args[1]).toBeCloseTo(MIN_RELEASE + (3 - 2.5) / 1.5)
+    })
+
+    it('a release after the minimum audible length happens at the requested time', () => {
+        const {voice, created, context} = makeVoice()
+        ;(context as any).currentTime = 13 // held well past attack + one loop pass
+        voice.release()
+        expect(created.sources[1].calls).toContainEqual({method: 'start', args: [13, 2.5]})
+        expect(created.sources[0].calls).toContainEqual({method: 'stop', args: [13.02]})
+    })
+
+    it('a scheduled future release holds full level until the release point (anchored ramp — the Composer whole-note-fade bug)', () => {
+        const {voice, created} = makeVoice()
+        const gain = created.gains[1]
+        voice.releaseAt(20)
+        // Without an explicit setValueAtTime anchor the lone linearRamp has no defined
+        // start point: browsers fade from scheduling time, sagging the gain across the
+        // entire note and popping the tail in at full volume at the end.
+        const anchor = gain.calls.findIndex(
+            (c: Call) => c.method === 'setValueAtTime' && c.args[0] === 1 && c.args[1] === 20)
+        const ramp = gain.calls.findIndex(
+            (c: Call) => c.method === 'linearRampToValueAtTime' && c.args[1] === 20.02)
+        expect(anchor).toBeGreaterThanOrEqual(0)
+        expect(ramp).toBeGreaterThan(anchor)
+        expect(gain.calls).toContainEqual({method: 'cancelAndHoldAtTime', args: [20]})
+    })
+
+    it('params without cancelAndHoldAtTime (older Safari) still cancel and anchor before ramping', () => {
+        const {voice, created} = makeVoice({}, {withCancelAndHold: false})
+        const gain = created.gains[1]
+        voice.releaseAt(20)
+        expect(gain.calls).toContainEqual({method: 'cancelScheduledValues', args: [20]})
+        const anchor = gain.calls.findIndex(
+            (c: Call) => c.method === 'setValueAtTime' && c.args[0] === 1 && c.args[1] === 20)
+        const ramp = gain.calls.findIndex(
+            (c: Call) => c.method === 'linearRampToValueAtTime' && c.args[1] === 20.02)
+        expect(anchor).toBeGreaterThanOrEqual(0)
+        expect(ramp).toBeGreaterThan(anchor)
     })
 
     it('release is idempotent — a second release/releaseAt schedules nothing new', () => {
@@ -158,22 +212,23 @@ describe('Voice', () => {
         expect(created.sources).toHaveLength(2)
     })
 
-    it('releaseAt clamps to the voice start time (never releases before it starts)', () => {
+    it('releaseAt clamps to the voice start time + minimum audible length (never releases before either)', () => {
         const {voice, created} = makeVoice({delay: 1}) // startedAt = 11
+        const minRelease = 11 + 2.5 / 1.5
         voice.releaseAt(10.2)
-        expect(created.sources[0].calls).toContainEqual({method: 'stop', args: [11.02]})
-        expect(created.sources[1].calls).toContainEqual({method: 'start', args: [11, 2.5]})
+        expect(created.sources[0].calls).toContainEqual({method: 'stop', args: [minRelease + 0.02]})
+        expect(created.sources[1].calls).toContainEqual({method: 'start', args: [minRelease, 2.5]})
     })
 
     it('release() brings a future scheduled release forward so playback stop cannot leave a voice sounding', () => {
         const {voice, created} = makeVoice()
         const gain = created.gains[1]
         voice.releaseAt(20)
-        voice.release()
-        expect(gain.calls).toContainEqual({method: 'cancelScheduledValues', args: [10]})
+        voice.release() // brought forward — but never below the minimum audible length
+        expect(gain.calls).toContainEqual({method: 'cancelAndHoldAtTime', args: [MIN_RELEASE]})
         expect(created.sources[1].calls).toContainEqual({method: 'stop', args: [undefined]})
-        expect(created.sources[2].calls).toContainEqual({method: 'start', args: [10, 2.5]})
-        expect(created.sources[0].calls).toContainEqual({method: 'stop', args: [10.02]})
+        expect(created.sources[2].calls).toContainEqual({method: 'start', args: [MIN_RELEASE, 2.5]})
+        expect(created.sources[0].calls).toContainEqual({method: 'stop', args: [MIN_RELEASE + 0.02]})
     })
 
     it('fadeOut skips the release tail and choke uses only the short crossfade', () => {
@@ -295,7 +350,8 @@ describe('Instrument sustain', () => {
         expect(created.sources[1].loopStart).toBe(0.2) // per-note override
         instrument.releaseNote(1)
         expect(created.sources[1].calls.some((c: Call) => c.method === 'stop')).toBe(true)
-        expect(created.sources[2].calls).toContainEqual({method: 'start', args: [10, 1.2]})
+        // release defers to the note's own min audible length (per-note loop end 1.2, rate 1)
+        expect(created.sources[2].calls).toContainEqual({method: 'start', args: [10 + 1.2, 1.2]})
         expect(created.sources[0].calls.some((c: Call) => c.method === 'stop')).toBe(false)
         //releasing an unheld button is a no-op
         instrument.releaseNote(5)
@@ -323,12 +379,21 @@ describe('Instrument sustain', () => {
 
     it('a durationMs press self-releases on the audio timeline and is not registered as held', () => {
         const {instrument, created} = sustainingInstrument()
+        //durationMs 500 is shorter than attack + one loop pass (loop end 1.9s, rate 1):
+        //the release defers to the minimum audible length instead of truncating
         const voice = instrument.pressNote(0, 'C', {durationMs: 500})
         expect(voice?.isReleased).toBe(true) // scheduled release counts as released
-        expect(created.sources[0].calls).toContainEqual({method: 'stop', args: [10.52]})
-        expect(created.sources[1].calls).toContainEqual({method: 'start', args: [10.5, 1.9]})
+        expect(created.sources[0].calls).toContainEqual({method: 'stop', args: [10 + 1.9 + 0.02]})
+        expect(created.sources[1].calls).toContainEqual({method: 'start', args: [10 + 1.9, 1.9]})
         instrument.releaseNote(0) // no live voice to release
         expect(created.sources.length).toBe(2)
+    })
+
+    it('a durationMs press longer than the minimum audible length releases at its musical end', () => {
+        const {instrument, created} = sustainingInstrument()
+        instrument.pressNote(0, 'C', {durationMs: 2500})
+        expect(created.sources[0].calls).toContainEqual({method: 'stop', args: [12.52]})
+        expect(created.sources[1].calls).toContainEqual({method: 'start', args: [12.5, 1.9]})
     })
 
     it('releaseAllNotes releases every sounding voice (ramped) or hard-stops on teardown', () => {

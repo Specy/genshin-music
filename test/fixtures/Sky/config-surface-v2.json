@@ -18,6 +18,7 @@
     "MantaOcarina",
     "Aurora",
     "test_sustain",
+    "test_recorder",
     "Kalimba",
     "ToyUkulele",
     "Drum",
@@ -3011,6 +3012,102 @@
           "midi": 84,
           "baseNote": "C",
           "icon": "dmcr"
+        }
+      ]
+    },
+    "test_recorder": {
+      "name": "test_recorder",
+      "displayName": "Test Recorder",
+      "family": "pipe",
+      "midiName": "recorder",
+      "shape": "sky-2x4",
+      "sustain": {
+        "release": 0.3,
+        "loop": {
+          "start": 0.837104,
+          "end": 1.477521
+        }
+      },
+      "notes": [
+        {
+          "file": "0.wav",
+          "midi": 60,
+          "baseNote": "C",
+          "icon": "dmcr",
+          "loop": {
+            "start": 0.837104,
+            "end": 1.477521
+          }
+        },
+        {
+          "file": "1.wav",
+          "midi": 62,
+          "baseNote": "D",
+          "icon": "dm",
+          "loop": {
+            "start": 0.729667,
+            "end": 0.9065
+          }
+        },
+        {
+          "file": "2.wav",
+          "midi": 64,
+          "baseNote": "E",
+          "icon": "cr",
+          "loop": {
+            "start": 0.572583,
+            "end": 0.7485
+          }
+        },
+        {
+          "file": "3.wav",
+          "midi": 65,
+          "baseNote": "F",
+          "icon": "dm",
+          "loop": {
+            "start": 1.30675,
+            "end": 1.732021
+          }
+        },
+        {
+          "file": "4.wav",
+          "midi": 67,
+          "baseNote": "G",
+          "icon": "cr",
+          "loop": {
+            "start": 0.671875,
+            "end": 0.849729
+          }
+        },
+        {
+          "file": "5.wav",
+          "midi": 69,
+          "baseNote": "A",
+          "icon": "dm",
+          "loop": {
+            "start": 0.782229,
+            "end": 1.152833
+          }
+        },
+        {
+          "file": "6.wav",
+          "midi": 71,
+          "baseNote": "B",
+          "icon": "cr",
+          "loop": {
+            "start": 1.027375,
+            "end": 1.299833
+          }
+        },
+        {
+          "file": "7.wav",
+          "midi": 72,
+          "baseNote": "C",
+          "icon": "dmcr",
+          "loop": {
+            "start": 1.225938,
+            "end": 1.885729
+          }
         }
       ]
     },

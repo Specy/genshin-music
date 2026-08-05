@@ -178,6 +178,12 @@ function buildGameMeta(id: string): GameMeta {
       ) {
         fail(context, 'sustain.crossfade must be a non-negative number');
       }
+      if (
+        meta.sustain.loopCrossfade !== undefined &&
+        (!Number.isFinite(meta.sustain.loopCrossfade) || meta.sustain.loopCrossfade < 0)
+      ) {
+        fail(context, 'sustain.loopCrossfade must be a non-negative number');
+      }
       assertLoop(context, 'sustain.loop', meta.sustain.loop);
     }
     instruments[name] = {
