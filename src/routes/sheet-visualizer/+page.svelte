@@ -20,6 +20,7 @@
   import AppButton from '$cmp/inputs/AppButton.svelte';
   import Row from '$cmp/layout/Row.svelte';
   import Column from '$cmp/layout/Column.svelte';
+  import Card from '$cmp/layout/Card.svelte';
   import SheetVisualizerMenu from '$cmp/pages/SheetVisualizer/SheetVisualizerMenu.svelte';
   import SheetFrame2 from '$cmp/pages/SheetVisualizer/SheetFrame2.svelte';
 
@@ -107,41 +108,6 @@
     description="Learn a sheet in a visual way, convert the song into text format or print it as pdf"
   />
   <div style="display:flex;align-items:center;flex-direction:column">
-    <div
-      class="visualizer-buttons-wrapper noprint"
-      style="border-bottom:solid 1px var(--secondary);padding-bottom:1rem"
-    >
-      <Column gap="0.5rem">
-        <Row align="center" gap="0.5rem">
-          <div>{t('sheet_visualizer:note_names')}</div>
-          <Switch checked={hasText} onchange={(v) => (hasText = v)} />
-          {#if hasText}
-            <Select
-              value={keyboardLayout}
-              onchange={(e) => (keyboardLayout = e.currentTarget.value as NoteNameType)}
-            >
-              {#each game.notes.nameTypes as noteNameType (noteNameType)}
-                <option value={noteNameType}>{noteNameType}</option>
-              {/each}
-            </Select>
-          {/if}
-        </Row>
-        <Row align="center" gap="0.5rem">
-          <div>{t('sheet_visualizer:merge_empty_spaces')}</div>
-          <Switch checked={flattenSpaces} onchange={(v) => (flattenSpaces = v)} />
-        </Row>
-        <Row align="center" gap="0.5rem">
-          <div>{t('sheet_visualizer:different_color_rows')}</div>
-          <Switch checked={multiColor} onchange={(v) => (multiColor = v)} />
-        </Row>
-      </Column>
-
-      <div style="display:flex;align-items:center">
-        {t('sheet_visualizer:per_row')}: {framesPerRow}
-        <button class="visualizer-plus-minus" onclick={() => setFrames(-1)}> - </button>
-        <button class="visualizer-plus-minus" onclick={() => setFrames(1)}> + </button>
-      </div>
-    </div>
     <h1 class="onprint" style="color:black">
       {game.i18n.interpolation.APP_NAME} Music Nightly
     </h1>
@@ -166,6 +132,52 @@
         {t('sheet_visualizer:sheet_visualizer_instructions')}
       </div>
     </div>
+    <Card
+      class="noprint"
+      background="none"
+      border="secondary"
+      row
+      gap="1.5rem"
+      style="width:100%;margin-top:1rem;justify-content:space-between;align-items:center;flex-wrap:wrap"
+    >
+      <Column gap="0.6rem">
+        <Row align="center" gap="0.5rem">
+          <div class="visualizer-setting-label">{t('sheet_visualizer:note_names')}</div>
+          <Switch checked={hasText} onchange={(v) => (hasText = v)} />
+          <!-- always rendered, merely disabled while the toggle is off, so the row keeps its
+               width instead of the controls jumping sideways as it is switched -->
+          <Select
+            disabled={!hasText}
+            value={keyboardLayout}
+            onchange={(e) => (keyboardLayout = e.currentTarget.value as NoteNameType)}
+          >
+            {#each game.notes.nameTypes as noteNameType (noteNameType)}
+              <option value={noteNameType}>{noteNameType}</option>
+            {/each}
+          </Select>
+        </Row>
+        <Row align="center" gap="0.5rem">
+          <div class="visualizer-setting-label">{t('sheet_visualizer:merge_empty_spaces')}</div>
+          <Switch checked={flattenSpaces} onchange={(v) => (flattenSpaces = v)} />
+        </Row>
+      </Column>
+
+      <Column gap="0.6rem">
+        <Row align="center" gap="0.5rem">
+          <div class="visualizer-setting-label">{t('sheet_visualizer:different_color_rows')}</div>
+          <Switch checked={multiColor} onchange={(v) => (multiColor = v)} />
+        </Row>
+        <!-- no gap on this Row: the steppers space themselves with their own margin-left, so a
+             gap here would double it and break their alignment with the switches above -->
+        <Row align="center">
+          <div class="visualizer-setting-label">
+            {t('sheet_visualizer:per_row')}: {framesPerRow}
+          </div>
+          <button class="visualizer-plus-minus" onclick={() => setFrames(-1)}> - </button>
+          <button class="visualizer-plus-minus" onclick={() => setFrames(1)}> + </button>
+        </Row>
+      </Column>
+    </Card>
     <div
       class="visualizer-frame-wrapper"
       style="grid-template-columns:repeat({framesPerRow},1fr)"
@@ -196,6 +208,12 @@
        deeper, SheetVisualizerMenu -> MenuSidebar's outer div), not elements this file's own
        template renders directly. The other selectors below target elements this file authors
        directly, so they keep normal Svelte scoping. */
+  /* one width for every setting label so the switches (and the frame steppers) line up in a
+     single vertical column, across both halves of the card */
+  .visualizer-setting-label {
+    min-width: 11rem;
+  }
+
   .visualizer-plus-minus {
     width: 2rem;
     margin-left: 0.5rem;
@@ -211,14 +229,6 @@
 
   .visualizer-plus-minus:hover {
     background-color: var(--secondary-layer-10);
-  }
-
-  .visualizer-buttons-wrapper {
-    display: flex;
-    justify-content: space-between;
-    width: 100%;
-    margin-top: 0.5rem;
-    align-items: center;
   }
 
   .visualizer-frame-wrapper {

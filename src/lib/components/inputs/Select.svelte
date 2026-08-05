@@ -9,11 +9,13 @@
     value,
     children,
     style = '',
+    disabled = false,
   }: {
     onchange: (e: Event & { currentTarget: EventTarget & HTMLSelectElement }) => void;
     value: string | number | string[] | undefined;
     children?: Snippet;
     style?: string;
+    disabled?: boolean;
   } = $props();
 
   function handleChange(e: Event & { currentTarget: EventTarget & HTMLSelectElement }) {
@@ -29,6 +31,7 @@
 <select
   onchange={handleChange}
   {value}
+  {disabled}
   class="select"
   style="background-image:{backgroundImage};{style}"
 >
@@ -46,6 +49,11 @@
 
   .select:focus {
     outline: none;
+  }
+
+  .select:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
   }
 
   /* :global() because the <option> elements come from the caller via

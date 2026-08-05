@@ -1,46 +1,58 @@
 <script lang="ts">
   import type { Snippet } from 'svelte';
   import type { ClassValue } from 'svelte/elements';
+  import { ThemeProvider, type ThemeKeys } from '$core/theme/ThemeProvider.svelte';
 
   // A caller's `style` is appended after the computed styles below, so a
   // caller's own declaration still wins on any shared CSS property.
   interface CardProps {
-    background?: string;
-    color?: string;
-    radius?: string;
+    /**
+     * A theme key, NOT a css color - the card's text color is whatever the
+     * theme pairs with that background, so the two can never drift apart.
+     * `'none'` makes an outlined card: no fill, text inherited from the page.
+     */
+    background?: ThemeKeys | 'none';
+    /** A theme key: outlines the card in that color. */
+    border?: ThemeKeys;
     padding?: string;
+    radius?: string;
     gap?: string;
+    /** Lays the children out in a row instead of the default column. */
     row?: boolean;
-    border?: string;
-    withShadow?: boolean;
     class?: ClassValue;
     style?: string;
     children?: Snippet;
   }
 
   let {
-    background = 'var(--primary)',
-    color = 'var(--primary-text)',
+    background = 'primary',
+    border,
+    padding = '1rem',
+    radius = '0.6rem',
     gap,
-    radius = '0.4rem',
-    padding,
+    row = false,
     class: cls = '',
     style = '',
-    row = false,
-    border,
     children,
-    withShadow,
   }: CardProps = $props();
+
+  // ThemeVars publishes --<css> and --<css>-text for every theme key, and `css` is the theme's
+  // own dashed spelling of that key (menu_background -> menu-background), so it is read from
+  // the theme rather than guessed from the key.
+  const cssName = $derived(background === 'none' ? null : ThemeProvider.state.data[background].css);
+  const borderCssName = $derived(
+    border !== undefined ? ThemeProvider.state.data[border].css : null
+  );
 
   const computedStyle = $derived(
     [
-      `background:${background}`,
-      `color:${color}`,
-      gap !== undefined ? `gap:${gap}` : '',
+      //no declaration at all when there is no fill, so the card inherits both from the page
+      cssName !== null ? `background:var(--${cssName})` : '',
+      cssName !== null ? `color:var(--${cssName}-text)` : '',
+      borderCssName !== null ? `border:solid 0.1rem var(--${borderCssName})` : '',
       `border-radius:${radius}`,
-      padding !== undefined ? `padding:${padding}` : '',
-      border !== undefined ? `border:${border}` : '',
-      withShadow ? 'box-shadow:0 0 0.5rem 0.2rem rgba(var(--shadow-rgb), 0.25)' : '',
+      `padding:${padding}`,
+      gap !== undefined ? `gap:${gap}` : '',
     ]
       .filter(Boolean)
       .join(';')

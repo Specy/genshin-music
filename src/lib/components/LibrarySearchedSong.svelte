@@ -14,7 +14,7 @@
   import type { RecordedSong } from '$core/Songs/RecordedSong';
 
   // CSS (.song-row/.song-name/.song-buttons-wrapper/.song-button) lives in
-  // global App.css; no component-local <style> is needed here.
+  // global App.css; the only local rule is the spinner's rotation below.
   //
   // QUIRK: aria-label below and the two logger.error() messages are
   // hardcoded English, never run through i18n - a pre-existing gap, not
@@ -94,6 +94,7 @@
 
 {#snippet spinnerIcon()}
   <svg
+    class="spinner"
     stroke="currentColor"
     fill="currentColor"
     stroke-width="0"
@@ -126,3 +127,23 @@
     </button>
   </div>
 </div>
+
+<style>
+  /* the icon is a static ring of dots (react-icons' FaSpinner never span itself), so the
+     rotation has to come from CSS */
+  .spinner {
+    animation: spinner-rotate 1.2s linear infinite;
+  }
+
+  @keyframes spinner-rotate {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .spinner {
+      animation-duration: 3s;
+    }
+  }
+</style>

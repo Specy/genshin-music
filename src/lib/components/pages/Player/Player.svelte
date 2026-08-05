@@ -25,6 +25,7 @@
   import { RecordedSong } from '$core/Songs/RecordedSong';
   import type { ComposedSong } from '$core/Songs/ComposedSong';
   import type { InstrumentName } from '$core/types';
+  import type { Pitch } from '$core/legacyConfig';
   import type { PlayerSettingsDataType } from '$core/BaseSettings';
   import type { SettingUpdate, SettingVolumeUpdate } from '$core/types/SettingsPropriety';
 
@@ -43,6 +44,13 @@
   let recording = new Recording();
   let mounted = false;
   let cleanup: (() => void)[] = [];
+  /**
+   * The user's OWN pitch/reverb, captured the first time a song's values are swapped into
+   * `settings`, and put back when the song stops. While it is set, `settings` holds the song's
+   * values (so the menu shows what is actually playing) but `updateSettings` keeps persisting
+   * these - a song must never overwrite what the user chose.
+   */
+  let settingsBeforeSong: { pitch: Pitch; reverb: boolean } | null = null;
 
   let { inPreview = false }: { inPreview?: boolean } = $props();
 
@@ -85,32 +93,30 @@
       // approaching/resetSong/restartSong call, even when the song object is reference-equal.
       void playerStore.state.key;
       void playerStore.state.playId;
-      // untrack: the body reads settings.pitch/reverb and, via handleSettingChange, writes
-      // the same settings path - without untrack that read-then-write self-triggers this
-      // effect and throws effect_update_depth_exceeded once a song actually plays.
+      // untrack: the body reads settings.pitch/reverb and, via applySetting, writes the same
+      // settings path - without untrack that read-then-write self-triggers this effect and
+      // throws effect_update_depth_exceeded once a song actually plays.
       untrack(() => {
         const { eventType, song } = playerStore.state;
         if (!settings.syncSongData.value) return;
         if (song !== null && ['play', 'practice', 'approaching'].includes(eventType)) {
-          handleSettingChange({
-            data: {
-              ...settings.pitch,
-              value: song.pitch,
-            },
-            key: 'pitch',
-          });
-          handleSettingChange({
-            data: {
-              ...settings.reverb,
-              value: song.reverb,
-            },
-            key: 'reverb',
-          });
+          //remember the user's own values before the first song overrides them (a second song
+          //replacing the first must not snapshot the previous song's values)
+          settingsBeforeSong ??= { pitch: settings.pitch.value, reverb: settings.reverb.value };
+          applySetting({ data: { ...settings.pitch, value: song.pitch }, key: 'pitch' });
+          applySetting({ data: { ...settings.reverb, value: song.reverb }, key: 'reverb' });
           loadInstruments(song.instruments);
         } else if (eventType === 'stop') {
-          //song stopped: the branch above swapped the song's instruments in, so put the
-          //keyboard back on the user's own settings instrument (queued, so a stop right
-          //after play cannot race the song load still in flight)
+          //song stopped: the branch above swapped the song's pitch/reverb/instruments in, so
+          //put all three back to the user's own (queued, so a stop right after play cannot
+          //race the song load still in flight)
+          if (settingsBeforeSong) {
+            const { pitch, reverb } = settingsBeforeSong;
+            applySetting({ data: { ...settings.pitch, value: pitch }, key: 'pitch' });
+            applySetting({ data: { ...settings.reverb, value: reverb }, key: 'reverb' });
+            //cleared last: while it is set, updateSettings substitutes it into what it saves
+            settingsBeforeSong = null;
+          }
           loadInstruments([
             new InstrumentData({
               name: settings.instrument.value,
@@ -310,11 +316,23 @@
   }
 
   function updateSettings(override?: PlayerSettingsDataType) {
-    settingsService.updatePlayerSettings(override !== undefined ? override : settings);
+    const next = override !== undefined ? override : settings;
+    //while a song's pitch/reverb are swapped in, `settings` holds the SONG's values - persist
+    //the user's own instead, so an unrelated save (volume, loop, hide-notes) can't make the
+    //song's values stick, and closing the tab mid-song can't either
+    settingsService.updatePlayerSettings(
+      settingsBeforeSong
+        ? {
+            ...next,
+            pitch: { ...next.pitch, value: settingsBeforeSong.pitch },
+            reverb: { ...next.reverb, value: settingsBeforeSong.reverb },
+          }
+        : next
+    );
   }
 
-  //TODO make method to sync settings to the song
-  function handleSettingChange(setting: SettingUpdate) {
+  /** Applies a setting to the live state and its audio side effect, WITHOUT persisting it. */
+  function applySetting(setting: SettingUpdate) {
     const { data } = setting;
     // @ts-expect-error SettingUpdateKey spans all 4 settings families; narrower here by design
     settings[setting.key] = { ...settings[setting.key], value: data.value };
@@ -325,6 +343,17 @@
     if (setting.key === 'bpm') metronome.bpm = data.value as number;
     if (setting.key === 'metronomeBeats') metronome.beats = data.value as number;
     if (setting.key === 'metronomeVolume') metronome.changeVolume(data.value as number);
+  }
+
+  //TODO make method to sync settings to the song
+  function handleSettingChange(setting: SettingUpdate) {
+    applySetting(setting);
+    //a deliberate change by the user outranks the song's value: it is what gets persisted and
+    //what the stop-time restore puts back
+    if (settingsBeforeSong) {
+      if (setting.key === 'pitch') settingsBeforeSong.pitch = setting.data.value as Pitch;
+      if (setting.key === 'reverb') settingsBeforeSong.reverb = setting.data.value as boolean;
+    }
     updateSettings();
   }
 

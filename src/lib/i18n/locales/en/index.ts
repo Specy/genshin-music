@@ -446,7 +446,7 @@ export const i18n_en = {
     },
   },
   sheet_visualizer: {
-    note_names: 'Note names',
+    note_names: 'Show note names',
     merge_empty_spaces: 'Merge empty spaces',
     no_song_selected: 'No song selected',
     print_as_pdf: 'Print as PDF',
@@ -455,8 +455,8 @@ export const i18n_en = {
                     Remember that you can learn a song
                                         with the interactive
                                             practice tool in the Player`,
-    different_color_rows: 'Different color rows',
-    per_row: 'Per row', //elements per row
+    different_color_rows: 'Alternate row colors',
+    per_row: 'Frames per row', //elements per row
     invalid_song_to_visualize: 'Invalid song, it is not composed or recorded',
     error_converting_to_visual_song_try_convert_in_recorded:
       'Error converting song to visual song, trying to convert to recorded song first...',
@@ -486,6 +486,7 @@ export const i18n_en = {
   },
   keybinds: {
     already_used_keybind: `This keybind is already used by the note "{{note_name}}"`,
+    already_used_shortcut: `This shortcut is already used by the "{{shortcut_name}}" action`,
     midi_keybinds: 'MIDI keybinds',
     keyboard_keybinds: 'Keyboard keybinds',
     keyboard_keybinds_description: `You can remap the keyboard keys to whatever key on your keyboard, press the note you want to remap

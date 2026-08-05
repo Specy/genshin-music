@@ -87,7 +87,13 @@
     metadata.createdAt
   )}
   <AppLink href="/blog/posts/{metadata.relativeUrl}">
-    <Card class={['blog-card', !visited && 'blog-card-new']} style="height:100%">
+    <!-- padding="0": the title strip is edge-to-edge; radius matches .blog-card-title's own -->
+    <Card
+      radius="0.4rem"
+      padding="0"
+      class={['blog-card', !visited && 'blog-card-new']}
+      style="height:100%"
+    >
       <Header type="h2" class="blog-card-title" style="margin-bottom:-1.5rem">
         <div class="blog-card-image" style="background-image:url('{metadata.image}')"></div>
         <div class="blog-card-title-content">
