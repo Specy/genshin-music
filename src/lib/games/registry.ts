@@ -20,7 +20,12 @@
 // in test/gameConfig.test.ts, where fs access exists; icon/shape/label checks need
 // the code side and live in defineGame().
 import type { GameId, LoopRegion } from './types';
-import { BASE_NOTES, type InstrumentDefinition, type InstrumentNote } from './types';
+import {
+  BASE_NOTES,
+  type InstrumentDefinition,
+  type InstrumentNote,
+  SUSTAIN_LOOP_MODES,
+} from './types';
 import type { GameJson, InstrumentMetaJson, NoteMetaJson, NotePresetsJson } from './schema';
 
 export type GameMeta = {
@@ -184,6 +189,12 @@ function buildGameMeta(id: string): GameMeta {
       ) {
         fail(context, 'sustain.loopCrossfade must be a non-negative number');
       }
+      if (
+        meta.sustain.loopMode !== undefined &&
+        !SUSTAIN_LOOP_MODES.includes(meta.sustain.loopMode)
+      ) {
+        fail(context, `sustain.loopMode must be one of ${SUSTAIN_LOOP_MODES.join(', ')}`);
+      }
       assertLoop(context, 'sustain.loop', meta.sustain.loop);
     }
     instruments[name] = {
@@ -194,7 +205,9 @@ function buildGameMeta(id: string): GameMeta {
       ...(meta.fill !== undefined ? { fill: meta.fill } : {}),
       ...(meta.clickColor !== undefined ? { clickColor: meta.clickColor } : {}),
       shape: meta.shape,
-      ...(meta.sustain !== undefined ? { sustain: meta.sustain } : {}),
+      ...(meta.sustain !== undefined
+        ? { sustain: { ...meta.sustain, loopMode: meta.sustain.loopMode ?? 'loop-continuous' } }
+        : {}),
       notes: normalizeNotes(context, meta, presets),
     };
   }

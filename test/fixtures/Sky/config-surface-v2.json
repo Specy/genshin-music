@@ -3026,7 +3026,8 @@
         "loop": {
           "start": 0.837104,
           "end": 1.477521
-        }
+        },
+        "loopMode": "loop-continuous"
       },
       "notes": [
         {
@@ -3122,7 +3123,8 @@
         "loop": {
           "start": 0.929563,
           "end": 1.074792
-        }
+        },
+        "loopMode": "loop-continuous"
       },
       "notes": [
         {

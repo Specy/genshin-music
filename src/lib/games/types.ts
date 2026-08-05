@@ -118,11 +118,28 @@ export type ShapeLabels = {
  * Instrument-level sustain capability, normalized. No `noteLoops` parallel
  * array — per-note loops live on InstrumentNote.loop.
  */
+/**
+ * What note-off does, mirroring the standard sampler modes (SFZ loop_mode):
+ * - 'loop-continuous': keep looping, fade out over `release` seconds. Never
+ *   leaves the loop (organ/pad style; taps become short faded dabs).
+ * - 'loop-sustain': stop wrapping — play out the remainder of the current pass
+ *   from the exact playhead phase into the sample's natural tail (a tap plays
+ *   the file front to back).
+ * - 'one-shot': ignore note-off entirely; the whole sample always plays.
+ *   Behaviorally identical to omitting `sustain` (an explicit "tap" spelling) —
+ *   the instrument does not respond to hold length, so sustain UX stays off.
+ * Runtime const (not just a type) so the registry can validate authored data.
+ */
+export const SUSTAIN_LOOP_MODES = ['loop-continuous', 'loop-sustain', 'one-shot'] as const;
+export type SustainLoopMode = (typeof SUSTAIN_LOOP_MODES)[number];
+
 export type InstrumentSustain = {
   release: number;
   crossfade?: number;
   /** Pre-rendered loop-boundary crossfade seconds (default 0.05, 0 disables) — see loopCrossfade.ts. */
   loopCrossfade?: number;
+  /** Always present after registry normalization (authored default: 'loop-continuous'). */
+  loopMode: SustainLoopMode;
   loop: LoopRegion;
 };
 

@@ -7,6 +7,7 @@ import {Voice} from '../src/lib/audio/Voice'
 import {Instrument} from '../src/lib/audio/Instrument.svelte'
 import {Recording} from '../src/lib/core/Songs/SongClasses'
 import {INSTRUMENTS} from './imports'
+import type {SustainLoopMode} from '../src/lib/games/types'
 
 type Call = { method: string, args: unknown[] }
 
@@ -95,9 +96,6 @@ function fakeContext(currentTime = 10, {withCancelAndHold = true} = {}) {
 }
 
 const FAKE_BUFFER = {duration: 3} as AudioBuffer
-// Minimum audible length for makeVoice defaults: startedAt + loop.end / playbackRate.
-// Same float expression the code computes, so strict equality holds in assertions.
-const MIN_RELEASE = 10 + 2.5 / 1.5
 
 function makeVoice(
     overrides: Partial<ConstructorParameters<typeof Voice>[0]> = {},
@@ -140,37 +138,57 @@ describe('Voice', () => {
         expect(source.calls).toContainEqual({method: 'start', args: [10.5]})
     })
 
-    it('a tap (instant release) defers the tail until attack + one loop pass have sounded, then crossfades into it', () => {
+    it('loop-continuous (default): release keeps the loop wrapping and fades it out over `release` — no tail source', () => {
         const {voice, created} = makeVoice()
         const sustainSource = created.sources[0]
         const sustainGain = created.gains[1]
-        voice.release() // key-up right away — must still sound like a complete short note
+        voice.release()
+        expect(voice.isReleased).toBe(true)
+        expect(created.sources).toHaveLength(1) // never leaves the loop
+        expect(sustainSource.loop).toBe(true)
+        expect(sustainGain.calls).toContainEqual({method: 'setValueAtTime', args: [1, 10]})
+        expect(sustainGain.calls).toContainEqual({method: 'linearRampToValueAtTime', args: [0, 10.2]})
+        expect(sustainSource.calls).toContainEqual({method: 'stop', args: [10.2]})
+    })
+
+    it('loop-sustain: a tap released in the attack plays out the whole file from the exact playhead phase', () => {
+        const {voice, created} = makeVoice({loopMode: 'loop-sustain'})
+        const sustainSource = created.sources[0]
+        const sustainGain = created.gains[1]
+        voice.release() // key-up right away — playhead is at position 0
         const releaseSource = created.sources[1]
         const releaseGain = created.gains[2]
         expect(voice.isReleased).toBe(true)
-        expect(sustainGain.calls).toContainEqual({method: 'setValueAtTime', args: [1, MIN_RELEASE]})
-        expect(sustainGain.calls).toContainEqual({method: 'linearRampToValueAtTime', args: [0, MIN_RELEASE + 0.02]})
-        expect(sustainSource.calls).toContainEqual({method: 'stop', args: [MIN_RELEASE + 0.02]})
+        expect(sustainGain.calls).toContainEqual({method: 'setValueAtTime', args: [1, 10]})
+        expect(sustainGain.calls).toContainEqual({method: 'linearRampToValueAtTime', args: [0, 10.02]})
+        expect(sustainSource.calls).toContainEqual({method: 'stop', args: [10.02]})
         expect(releaseSource.buffer).toBe(FAKE_BUFFER)
         expect(releaseSource.loop).toBe(false)
         expect(releaseSource.playbackRate.value).toBe(1.5)
-        // the tail starts exactly when the sustain source first reaches loop.end, so a
-        // tap plays the original sample front to back (attack -> loop pass -> tail)
-        expect(releaseSource.calls).toContainEqual({method: 'start', args: [MIN_RELEASE, 2.5]})
-        expect(releaseGain.calls).toContainEqual({method: 'setValueAtTime', args: [0, MIN_RELEASE]})
-        expect(releaseGain.calls).toContainEqual({method: 'linearRampToValueAtTime', args: [1, MIN_RELEASE + 0.02]})
+        // spliced with identical content at the current position — front to back
+        expect(releaseSource.calls).toContainEqual({method: 'start', args: [10, 0]})
+        expect(releaseGain.calls).toContainEqual({method: 'setValueAtTime', args: [0, 10]})
+        expect(releaseGain.calls).toContainEqual({method: 'linearRampToValueAtTime', args: [1, 10.02]})
         const finalRamp = releaseGain.calls.at(-1)
         expect(finalRamp?.method).toBe('linearRampToValueAtTime')
         expect(finalRamp?.args[0]).toBe(0)
-        expect(finalRamp?.args[1]).toBeCloseTo(MIN_RELEASE + (3 - 2.5) / 1.5)
+        expect(finalRamp?.args[1]).toBeCloseTo(10 + 3 / 1.5) // natural end of the whole file
     })
 
-    it('a release after the minimum audible length happens at the requested time', () => {
-        const {voice, created, context} = makeVoice()
-        ;(context as any).currentTime = 13 // held well past attack + one loop pass
-        voice.release()
-        expect(created.sources[1].calls).toContainEqual({method: 'start', args: [13, 2.5]})
-        expect(created.sources[0].calls).toContainEqual({method: 'stop', args: [13.02]})
+    it('loop-sustain: releases continue from the current phase — mid-first-pass and after wrapping', () => {
+        // mid-first-pass: played (11-10)*1.5 = 1.5 sample-seconds, still before loop.end
+        const first = makeVoice({loopMode: 'loop-sustain'})
+        ;(first.context as any).currentTime = 11
+        first.voice.release()
+        expect(first.created.sources[1].calls).toContainEqual({method: 'start', args: [11, 1.5]})
+
+        // wrapped: played (13-10)*1.5 = 4.5 -> 0.5 + (4.5-2.5) % 2 = position 0.5
+        const wrapped = makeVoice({loopMode: 'loop-sustain'})
+        ;(wrapped.context as any).currentTime = 13
+        wrapped.voice.release()
+        expect(wrapped.created.sources[1].calls).toContainEqual({method: 'start', args: [13, 0.5]})
+        // never deferred: the release acts exactly when requested
+        expect(wrapped.created.sources[0].calls).toContainEqual({method: 'stop', args: [13.02]})
     })
 
     it('a scheduled future release holds full level until the release point (anchored ramp — the Composer whole-note-fade bug)', () => {
@@ -183,7 +201,7 @@ describe('Voice', () => {
         const anchor = gain.calls.findIndex(
             (c: Call) => c.method === 'setValueAtTime' && c.args[0] === 1 && c.args[1] === 20)
         const ramp = gain.calls.findIndex(
-            (c: Call) => c.method === 'linearRampToValueAtTime' && c.args[1] === 20.02)
+            (c: Call) => c.method === 'linearRampToValueAtTime' && c.args[1] === 20.2)
         expect(anchor).toBeGreaterThanOrEqual(0)
         expect(ramp).toBeGreaterThan(anchor)
         expect(gain.calls).toContainEqual({method: 'cancelAndHoldAtTime', args: [20]})
@@ -197,7 +215,7 @@ describe('Voice', () => {
         const anchor = gain.calls.findIndex(
             (c: Call) => c.method === 'setValueAtTime' && c.args[0] === 1 && c.args[1] === 20)
         const ramp = gain.calls.findIndex(
-            (c: Call) => c.method === 'linearRampToValueAtTime' && c.args[1] === 20.02)
+            (c: Call) => c.method === 'linearRampToValueAtTime' && c.args[1] === 20.2)
         expect(anchor).toBeGreaterThanOrEqual(0)
         expect(ramp).toBeGreaterThan(anchor)
     })
@@ -209,26 +227,27 @@ describe('Voice', () => {
         voice.release()
         voice.releaseAt(99)
         expect(created.gains.reduce((count, gain) => count + gain.calls.length, 0)).toBe(callsAfterFirst)
-        expect(created.sources).toHaveLength(2)
+        expect(created.sources).toHaveLength(1)
     })
 
-    it('releaseAt clamps to the voice start time + minimum audible length (never releases before either)', () => {
-        const {voice, created} = makeVoice({delay: 1}) // startedAt = 11
-        const minRelease = 11 + 2.5 / 1.5
+    it('releaseAt clamps to the voice start time (never releases before it starts)', () => {
+        const {voice, created} = makeVoice({delay: 1, loopMode: 'loop-sustain'}) // startedAt = 11
         voice.releaseAt(10.2)
-        expect(created.sources[0].calls).toContainEqual({method: 'stop', args: [minRelease + 0.02]})
-        expect(created.sources[1].calls).toContainEqual({method: 'start', args: [minRelease, 2.5]})
+        // clamped to the start: position 0, tail plays the file front to back
+        expect(created.sources[0].calls).toContainEqual({method: 'stop', args: [11.02]})
+        expect(created.sources[1].calls).toContainEqual({method: 'start', args: [11, 0]})
     })
 
     it('release() brings a future scheduled release forward so playback stop cannot leave a voice sounding', () => {
-        const {voice, created} = makeVoice()
+        const {voice, created} = makeVoice({loopMode: 'loop-sustain'})
         const gain = created.gains[1]
-        voice.releaseAt(20)
-        voice.release() // brought forward — but never below the minimum audible length
-        expect(gain.calls).toContainEqual({method: 'cancelAndHoldAtTime', args: [MIN_RELEASE]})
+        voice.releaseAt(20) // scheduled tail at phase(20): 15 played -> 0.5 + 12.5 % 2 = 1
+        expect(created.sources[1].calls).toContainEqual({method: 'start', args: [20, 0.5 + (15 - 2.5) % 2]})
+        voice.release() // brought forward to now — old tail cancelled, new one at phase(10) = 0
+        expect(gain.calls).toContainEqual({method: 'cancelAndHoldAtTime', args: [10]})
         expect(created.sources[1].calls).toContainEqual({method: 'stop', args: [undefined]})
-        expect(created.sources[2].calls).toContainEqual({method: 'start', args: [MIN_RELEASE, 2.5]})
-        expect(created.sources[0].calls).toContainEqual({method: 'stop', args: [MIN_RELEASE + 0.02]})
+        expect(created.sources[2].calls).toContainEqual({method: 'start', args: [10, 0]})
+        expect(created.sources[0].calls).toContainEqual({method: 'stop', args: [10.02]})
     })
 
     it('fadeOut skips the release tail and choke uses only the short crossfade', () => {
@@ -270,7 +289,7 @@ describe('Voice', () => {
     })
 
     it('sustain-source end does not dispose a voice until its release tail also ends', () => {
-        const {voice, created} = makeVoice()
+        const {voice, created} = makeVoice({loopMode: 'loop-sustain'})
         voice.release()
         created.sources[0].emitEnded()
         expect(voice.isDisposed).toBe(false)
@@ -305,12 +324,13 @@ const SUSTAIN = {
  * instrument is one-shot by design). Post-ADR-0003 the per-note loop override lives on
  * the note struct itself (button 1 here), and instrumentData is a REFERENCE to the
  * shared config — so this builds a fresh copy instead of mutating it in place.
+ * The registry normalizes loopMode to 'loop-continuous' when unauthored; mirrored here.
  */
-function sustainingInstrument() {
+function sustainingInstrument(loopMode: SustainLoopMode = 'loop-continuous') {
     const instrument = new Instrument(INSTRUMENTS[0])
     instrument.instrumentData = {
         ...instrument.instrumentData,
-        sustain: SUSTAIN,
+        sustain: {...SUSTAIN, loopMode},
         notes: instrument.instrumentData.notes.map((note, i) =>
             i === 1 ? {...note, loop: {start: 0.2, end: 1.2}} : note
         ),
@@ -349,12 +369,30 @@ describe('Instrument sustain', () => {
         expect(created.sources[0].loopStart).toBe(0.1) // default region (note 0 has no loop override)
         expect(created.sources[1].loopStart).toBe(0.2) // per-note override
         instrument.releaseNote(1)
-        expect(created.sources[1].calls.some((c: Call) => c.method === 'stop')).toBe(true)
-        // release defers to the note's own min audible length (per-note loop end 1.2, rate 1)
-        expect(created.sources[2].calls).toContainEqual({method: 'start', args: [10 + 1.2, 1.2]})
+        // loop-continuous default: fades out over `release`, spawns no tail source
+        expect(created.sources).toHaveLength(2)
+        expect(created.sources[1].calls).toContainEqual({method: 'stop', args: [10.3]})
         expect(created.sources[0].calls.some((c: Call) => c.method === 'stop')).toBe(false)
         //releasing an unheld button is a no-op
         instrument.releaseNote(5)
+    })
+
+    it('a loop-sustain instrument plays out from the current phase on release', () => {
+        const {instrument, created} = sustainingInstrument('loop-sustain')
+        instrument.pressNote(1, 'C')
+        instrument.releaseNote(1) // released at start time — position 0, file front to back
+        expect(created.sources[1].calls).toContainEqual({method: 'start', args: [10, 0]})
+        expect(created.sources[0].calls).toContainEqual({method: 'stop', args: [10.02]})
+    })
+
+    it("loopMode 'one-shot' ignores note-off entirely — the explicit \"tap\" spelling", () => {
+        const {instrument, created} = sustainingInstrument('one-shot')
+        expect(instrument.supportsSustain).toBe(false)
+        const voice = instrument.pressNote(0, 'C')
+        expect(voice).toBeNull() // plain play() path, same as an instrument without sustain
+        expect(created.sources[0].loop).toBe(false)
+        instrument.releaseNote(0) // nothing held — no-op, the sample rings out fully
+        expect(created.sources[0].calls.some((c: Call) => c.method === 'stop')).toBe(false)
     })
 
     it('re-pressing a held button releases the previous voice (retrigger)', () => {
@@ -372,28 +410,29 @@ describe('Instrument sustain', () => {
         first.instrument.pressNote(0, 'C')
         second.instrument.pressNote(0, 'C')
         first.instrument.releaseNote(0)
-        expect(first.created.sources).toHaveLength(2) // sustain + its release tail
+        expect(first.created.sources).toHaveLength(1) // continuous: fade only, no tail source
+        expect(first.created.sources[0].calls.some((c: Call) => c.method === 'stop')).toBe(true)
         expect(second.created.sources).toHaveLength(1)
         expect(second.created.sources[0].calls.some((c: Call) => c.method === 'stop')).toBe(false)
     })
 
-    it('a durationMs press self-releases on the audio timeline and is not registered as held', () => {
+    it('a durationMs press self-releases exactly at its musical end and is not registered as held', () => {
         const {instrument, created} = sustainingInstrument()
-        //durationMs 500 is shorter than attack + one loop pass (loop end 1.9s, rate 1):
-        //the release defers to the minimum audible length instead of truncating
         const voice = instrument.pressNote(0, 'C', {durationMs: 500})
         expect(voice?.isReleased).toBe(true) // scheduled release counts as released
-        expect(created.sources[0].calls).toContainEqual({method: 'stop', args: [10 + 1.9 + 0.02]})
-        expect(created.sources[1].calls).toContainEqual({method: 'start', args: [10 + 1.9, 1.9]})
+        // release acts at the requested time (10.5) — never deferred to a loop boundary
+        expect(created.sources[0].calls).toContainEqual({method: 'stop', args: [10.5 + 0.3]})
         instrument.releaseNote(0) // no live voice to release
-        expect(created.sources.length).toBe(2)
+        expect(created.sources.length).toBe(1)
     })
 
-    it('a durationMs press longer than the minimum audible length releases at its musical end', () => {
-        const {instrument, created} = sustainingInstrument()
+    it('a scheduled durationMs press on a loop-sustain instrument plays out from the phase at its end', () => {
+        const {instrument, created} = sustainingInstrument('loop-sustain')
         instrument.pressNote(0, 'C', {durationMs: 2500})
+        // phase at 12.5: played 2.5 sample-seconds >= loop.end 1.9 -> 0.1 + (2.5 - 1.9) % 1.8
+        expect(created.sources[1].calls).toContainEqual(
+            {method: 'start', args: [12.5, 0.1 + (2.5 - 1.9) % (1.9 - 0.1)]})
         expect(created.sources[0].calls).toContainEqual({method: 'stop', args: [12.52]})
-        expect(created.sources[1].calls).toContainEqual({method: 'start', args: [12.5, 1.9]})
     })
 
     it('releaseAllNotes releases every sounding voice (ramped) or hard-stops on teardown', () => {
