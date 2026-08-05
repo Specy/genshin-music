@@ -2,7 +2,7 @@
   "displayName": "Test Recorder",
   "family": "pipe",
   "midiName": "recorder",
-  "shape": "sky-2x4",
+  "shape": "sky-3x5",
   "sustain": {
     "release": 0.3,
     "loop": {
@@ -12,7 +12,6 @@
   },
   "notes": [
     {
-      "file": "0.wav",
       "midi": 60,
       "baseNote": "C",
       "icon": "dmcr",
@@ -22,7 +21,6 @@
       }
     },
     {
-      "file": "1.wav",
       "midi": 62,
       "baseNote": "D",
       "icon": "dm",
@@ -32,7 +30,6 @@
       }
     },
     {
-      "file": "2.wav",
       "midi": 64,
       "baseNote": "E",
       "icon": "cr",
@@ -42,7 +39,6 @@
       }
     },
     {
-      "file": "3.wav",
       "midi": 65,
       "baseNote": "F",
       "icon": "dm",
@@ -52,7 +48,6 @@
       }
     },
     {
-      "file": "4.wav",
       "midi": 67,
       "baseNote": "G",
       "icon": "cr",
@@ -62,33 +57,93 @@
       }
     },
     {
-      "file": "5.wav",
       "midi": 69,
       "baseNote": "A",
-      "icon": "dm",
+      "icon": "cr",
       "loop": {
         "start": 2.258521,
         "end": 9.591979
       }
     },
     {
-      "file": "6.wav",
       "midi": 71,
       "baseNote": "B",
-      "icon": "cr",
+      "icon": "dm",
       "loop": {
         "start": 2.856417,
         "end": 9.169083
       }
     },
     {
-      "file": "7.wav",
       "midi": 72,
       "baseNote": "C",
       "icon": "dmcr",
       "loop": {
         "start": 2.723813,
         "end": 6.866021
+      }
+    },
+    {
+      "midi": 74,
+      "baseNote": "D",
+      "icon": "dm",
+      "loop": {
+        "start": 2.450146,
+        "end": 9.962083
+      }
+    },
+    {
+      "midi": 76,
+      "baseNote": "E",
+      "icon": "cr",
+      "loop": {
+        "start": 2.814104,
+        "end": 10.40575
+      }
+    },
+    {
+      "midi": 77,
+      "baseNote": "F",
+      "icon": "cr",
+      "loop": {
+        "start": 2.871083,
+        "end": 13.466313
+      }
+    },
+    {
+      "midi": 79,
+      "baseNote": "G",
+      "icon": "dm",
+      "loop": {
+        "start": 2.605438,
+        "end": 5.112542
+      }
+    },
+    {
+      "midi": 81,
+      "baseNote": "A",
+      "icon": "cr",
+      "loop": {
+        "start": 2.706375,
+        "end": 4.784604
+      }
+    },
+    {
+      "midi": 83,
+      "baseNote": "B",
+      "icon": "dm",
+      "loop": {
+        "start": 2.997688,
+        "end": 5.208792
+      }
+    },
+    {
+      "midi": 84,
+      "baseNote": "C",
+      "icon": "dmcr",
+      "loop": {
+        "start": 2.868646,
+        "end": 4.87775
       }
     }
   ]
