@@ -90,8 +90,8 @@
       // effect and throws effect_update_depth_exceeded once a song actually plays.
       untrack(() => {
         const { eventType, song } = playerStore.state;
-        if (!settings.syncSongData.value || song === null) return;
-        if (['play', 'practice', 'approaching'].includes(eventType)) {
+        if (!settings.syncSongData.value) return;
+        if (song !== null && ['play', 'practice', 'approaching'].includes(eventType)) {
           handleSettingChange({
             data: {
               ...settings.pitch,
@@ -106,8 +106,18 @@
             },
             key: 'reverb',
           });
+          loadInstruments(song.instruments);
+        } else if (eventType === 'stop') {
+          //song stopped: the branch above swapped the song's instruments in, so put the
+          //keyboard back on the user's own settings instrument (queued, so a stop right
+          //after play cannot race the song load still in flight)
+          loadInstruments([
+            new InstrumentData({
+              name: settings.instrument.value,
+              volume: settings.instrument.volume ?? 100,
+            }),
+          ]);
         }
-        loadInstruments(song.instruments);
       });
     });
 
@@ -143,24 +153,41 @@
     updateSettings();
   }
 
-  async function loadInstrument(name: InstrumentName) {
-    const oldInstrument = instruments[0];
-    AudioProvider.disconnect(oldInstrument.endNode);
-    instruments[0].dispose();
-    const instrument = new Instrument(name);
-    const volume = settings.instrument.volume ?? 100;
-    instrument.changeVolume(volume);
-    isLoadingInstrument = true;
-    const loaded = await instrument.load(AudioProvider.getAudioContext());
-    if (!loaded) logger.error(t('logs:error_loading_instrument'));
-    AudioProvider.connect(instrument.endNode, null);
-    if (!mounted) return;
-    if (playerStore.eventType === 'stop') playerStore.setKeyboardLayout(instrument.notes);
-    instruments[0] = instrument;
-    instrumentsData[0] = new InstrumentData({ name, volume });
-    instruments = [...instruments];
-    isLoadingInstrument = false;
-    AudioProvider.setReverb(settings.reverb.value);
+  let instrumentsTasks: Promise<unknown> = Promise.resolve();
+
+  /**
+   * Every mutation of `instruments` (initial/settings loads, song loads, the
+   * stop-time restore) runs through this queue: the loaders await mid-flight while
+   * diffing the shared array in place, so two running concurrently would interleave
+   * and leak or double-connect AudioNodes. Requests run in order, so the last
+   * requested state always wins.
+   */
+  function enqueueInstrumentsTask<T>(task: () => Promise<T>): Promise<T> {
+    const run = instrumentsTasks.then(task, task);
+    instrumentsTasks = run;
+    return run;
+  }
+
+  function loadInstrument(name: InstrumentName) {
+    return enqueueInstrumentsTask(async () => {
+      const oldInstrument = instruments[0];
+      AudioProvider.disconnect(oldInstrument.endNode);
+      instruments[0].dispose();
+      const instrument = new Instrument(name);
+      const volume = settings.instrument.volume ?? 100;
+      instrument.changeVolume(volume);
+      isLoadingInstrument = true;
+      const loaded = await instrument.load(AudioProvider.getAudioContext());
+      if (!loaded) logger.error(t('logs:error_loading_instrument'));
+      AudioProvider.connect(instrument.endNode, null);
+      if (!mounted) return;
+      if (playerStore.eventType === 'stop') playerStore.setKeyboardLayout(instrument.notes);
+      instruments[0] = instrument;
+      instrumentsData[0] = new InstrumentData({ name, volume });
+      instruments = [...instruments];
+      isLoadingInstrument = false;
+      AudioProvider.setReverb(settings.reverb.value);
+    });
   }
 
   function handleSpeedChanger(e: Event & { currentTarget: EventTarget & HTMLSelectElement }) {
@@ -185,14 +212,20 @@
     }
   }
 
-  async function loadInstruments(toLoad: InstrumentData[]) {
+  function loadInstruments(toLoad: InstrumentData[]) {
+    return enqueueInstrumentsTask(() => doLoadInstruments(toLoad));
+  }
+
+  async function doLoadInstruments(toLoad: InstrumentData[]) {
     //remove excess instruments
     const extraInstruments = instruments.splice(toLoad.length);
     extraInstruments.forEach((ins) => {
       AudioProvider.disconnect(ins.endNode);
       ins.dispose();
     });
-    logger.showPill(t('logs:loading_instruments'));
+    //the pill only when something actually loads — same-name syncs are silent
+    const needsLoad = toLoad.some((ins, i) => instruments[i]?.name !== ins.name);
+    if (needsLoad) logger.showPill(t('logs:loading_instruments'));
     const promises = toLoad.map(async (ins, i) => {
       if (instruments[i] === undefined) {
         //If it doesn't have a layer, create one
@@ -226,14 +259,17 @@
     });
     const newInstruments = (await Promise.all(promises)) as Instrument[];
     if (!mounted) return;
+    // Free play resumed while this load was in flight (or this IS the stop-time
+    // restore): the live keyboard shows instruments[0] again, so sync its layout.
+    // The old code also wrote instruments[0].name into settings.instrument here,
+    // silently making the song's instrument the user's saved one — removed; settings
+    // stay whatever the user chose, and the stop-time restore reloads from them.
     if (instruments[0] && playerStore.eventType === 'stop') {
-      settings.instrument = { ...settings.instrument, value: instruments[0].name };
       playerStore.setKeyboardLayout(instruments[0].notes);
     }
     instruments = newInstruments;
     instrumentsData = toLoad;
-    logger.hidePill();
-    updateSettings();
+    if (needsLoad) logger.hidePill();
   }
 
   function playSound(index: number, songNote?: RecordedNote) {

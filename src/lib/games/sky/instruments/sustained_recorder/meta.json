@@ -5,6 +5,7 @@
   "shape": "sky-3x5",
   "sustain": {
     "release": 0.3,
+    "minLength": 0.1,
     "loop": {
       "start": 0.789396,
       "end": 3.512646

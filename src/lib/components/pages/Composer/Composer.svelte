@@ -390,7 +390,13 @@
     }
   }
 
-  function playSound(layer: number, index: number, delay?: number, durationMs?: number) {
+  function playSound(
+    layer: number,
+    index: number,
+    delay?: number,
+    durationMs?: number,
+    skipMs?: number
+  ) {
     const instrument = layers[layer];
     const note = instrument?.notes[index];
     if (note === undefined) return;
@@ -398,18 +404,19 @@
     const pitch = song.instruments[layer].pitch || settings.pitch.value;
     if (durationMs !== undefined && instrument.supportsSustain) {
       //spanned note on a sustaining instrument: hold for its musical length, then release
-      instrument.pressNote(note.index, pitch, { delay, durationMs });
+      instrument.pressNote(note.index, pitch, { delay, durationMs, skipMs });
     } else {
+      //on sustaining instruments play() IS the tap (minLength + release inside the
+      //Instrument) — previews, span-1 columns and non-sustaining one-shots all land here
       instrument.play(note.index, pitch, delay);
     }
   }
 
-  /** Real length in ms of a note's column span starting at the currently selected column (same math as the playback tick). */
-  function spanDurationMs(span: number): number | undefined {
-    if (span <= 1) return undefined;
+  /** Real length in ms of columns [from, to) at the current bpm, honoring each column's tempo changer (same math and rounding as the playback tick). */
+  function columnsDurationMs(from: number, to: number): number {
     const msPerBeat = 60000 / settings.bpm.value;
     let ms = 0;
-    for (let i = song.selected; i < song.selected + span; i++) {
+    for (let i = from; i < to; i++) {
       const changer = song.columns[i]?.getTempoChanger().changer ?? 1;
       ms += Song.roundTime(msPerBeat * changer);
     }
@@ -717,7 +724,11 @@
     isPlaying = newState;
     //stopping playback releases voices still held from spanned notes
     if (!isPlaying) layers.forEach((layer) => layer?.releaseAllNotes());
-    if (isPlaying) selectColumn(song.selected, false, settings.lookaheadTime.value / 1000);
+    if (isPlaying) {
+      const lookahead = settings.lookaheadTime.value / 1000;
+      selectColumn(song.selected, false, lookahead);
+      pressSpansCoveringStart(lookahead);
+    }
     let delayOffset = 0;
     let previousTime: number;
     while (isPlaying) {
@@ -739,6 +750,41 @@
       return togglePlay(false);
     }
     selectColumn(newIndex, false, errorDelay);
+  }
+
+  /**
+   * Notes whose span begins BEFORE the playback start column but still covers it
+   * (play pressed mid-note): press each at the audio position it would have reached
+   * by now, releasing where its span really ends. Under the no-overlap invariant the
+   * nearest earlier same-(track, id) note is the only possible coverer, so a backward
+   * scan marking seen pairs decides every candidate at its first sighting. Only
+   * sustaining tracks resume — a one-shot sample's attack happened in the past and
+   * cannot be meaningfully re-entered.
+   */
+  function pressSpansCoveringStart(delaySeconds: number) {
+    const startColumn = song.selected;
+    //mirrors selectColumn's recording offset so resumed spans stay aligned with the column notes
+    const delay = delaySeconds ? delaySeconds + (isRecordingAudio ? 0.5 : 0) : 0;
+    // eslint-disable-next-line svelte/prefer-svelte-reactivity -- transient local dedupe set
+    const seen = new Set<string>();
+    for (let start = startColumn - 1; start >= 0; start--) {
+      for (const spanNote of song.columns[start]?.notes ?? []) {
+        const key = `${spanNote.trackIndex}:${spanNote.id}`;
+        if (seen.has(key)) continue;
+        seen.add(key);
+        if (start + spanNote.span <= startColumn) continue;
+        if (!layers[spanNote.trackIndex]?.supportsSustain) continue;
+        const button = layers[spanNote.trackIndex]?.getButtonFromId(spanNote.id) ?? -1;
+        if (button === -1) continue; //stranded on its instrument = silent
+        playSound(
+          spanNote.trackIndex,
+          button,
+          delay,
+          columnsDurationMs(startColumn, start + spanNote.span),
+          columnsDurationMs(start, startColumn)
+        );
+      }
+    }
   }
 
   function toggleBreakpoint(override?: number) {
@@ -795,8 +841,16 @@
     song.selectedColumn.notes.forEach((note) => {
       const button = layers[note.trackIndex]?.getButtonFromId(note.id) ?? -1;
       if (button === -1) return; //stranded on its instrument = silent
-      //held length only during playback — manually browsing columns previews a short tap
-      playSound(note.trackIndex, button, delay, isPlaying ? spanDurationMs(note.span) : undefined);
+      //held length only for spanned notes during playback — span 1 is the pre-sustain
+      //tap, and manually browsing columns always previews taps
+      playSound(
+        note.trackIndex,
+        button,
+        delay,
+        isPlaying && note.span > 1
+          ? columnsDurationMs(song.selected, song.selected + note.span)
+          : undefined
+      );
     });
   }
 

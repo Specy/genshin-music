@@ -6,6 +6,7 @@
   import { onMount } from 'svelte';
   import { KeyboardProvider } from '$lib/providers/KeyboardProvider';
   import { vsrgPlayerStore } from '$stores/VsrgPlayerStore.svelte';
+  import { suppressNativeTouch } from '$cmp/suppressNativeTouch';
 
   interface VsrgPlayerKeyboardProps {
     hitObjectSize: number;
@@ -63,6 +64,7 @@
     <button
       class="vsrg-player-key-hitbox-circle flex-centered"
       style="padding-bottom:{offset}px"
+      {@attach suppressNativeTouch}
       onpointerdown={() => vsrgPlayerStore.pressKey(index)}
       onpointerup={() => vsrgPlayerStore.releaseKey(index)}
       onpointerleave={() => vsrgPlayerStore.releaseKey(index)}
@@ -80,6 +82,7 @@
     <!-- svelte-ignore a11y_consider_explicit_label -->
     <button
       class="vsrg-player-key-hitbox-line"
+      {@attach suppressNativeTouch}
       onpointerdown={() => vsrgPlayerStore.pressKey(index)}
       onpointerup={() => vsrgPlayerStore.releaseKey(index)}
       onpointerleave={() => vsrgPlayerStore.releaseKey(index)}

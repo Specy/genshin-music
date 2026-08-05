@@ -238,6 +238,84 @@ describe('Voice', () => {
         expect(created.sources[1].calls).toContainEqual({method: 'start', args: [11, 0]})
     })
 
+    it('skip resumes mid-note: source starts at the elapsed position, scaled by playbackRate', () => {
+        // 0.5 note-seconds in -> buffer position 0.5 * 1.5 = 0.75, still in the attack
+        const {created, voice} = makeVoice({skip: 0.5})
+        expect(created.sources[0].calls).toContainEqual({method: 'start', args: [10, 0.75]})
+        expect(voice.startedAt).toBe(10)
+    })
+
+    it('skip past the first pass wraps into the loop region, like the live playhead would', () => {
+        // 3 note-seconds -> buffer 4.5 -> 0.5 + (4.5 - 2.5) % 2 = 0.5
+        const wrapped = makeVoice({skip: 3})
+        expect(wrapped.created.sources[0].calls).toContainEqual({method: 'start', args: [10, 0.5]})
+        // exactly at loop.end wraps to loop.start (rate 1 keeps the arithmetic exact)
+        const atEnd = makeVoice({skip: 2.5, playbackRate: 1})
+        expect(atEnd.created.sources[0].calls).toContainEqual({method: 'start', args: [10, 0.5]})
+    })
+
+    it('skip composes with delay: source starts at now+delay from the skipped position', () => {
+        const {created, voice} = makeVoice({delay: 0.5, skip: 1})
+        expect(voice.startedAt).toBe(10.5)
+        expect(created.sources[0].calls).toContainEqual({method: 'start', args: [10.5, 1.5]})
+    })
+
+    it('loop-sustain releases splice at the true phase when the voice was started with skip', () => {
+        // initial buffer position 1.5; released 0.5s later: 1.5 + 0.5 * 1.5 = 2.25
+        const {voice, created, context} = makeVoice({loopMode: 'loop-sustain', skip: 1})
+        ;(context as any).currentTime = 10.5
+        voice.release()
+        expect(created.sources[1].calls).toContainEqual({method: 'start', args: [10.5, 2.25]})
+
+        // skip already wrapped: buffer 2 * 1.5 = 3 -> 0.5 + 0.5 % 2 = 1; released immediately
+        const wrapped = makeVoice({loopMode: 'loop-sustain', skip: 2})
+        wrapped.voice.release()
+        expect(wrapped.created.sources[1].calls).toContainEqual({method: 'start', args: [10, 1]})
+    })
+
+    it('a skip past the end of a loopless sample clamps to the end (born ended, no sound, no throw)', () => {
+        const {created} = makeVoice({loop: null, skip: 10})
+        expect(created.sources[0].calls).toContainEqual({method: 'start', args: [10, 3]})
+    })
+
+    it('non-finite or non-positive skip behaves as no skip at all', () => {
+        for (const skip of [0, -2, NaN, Infinity]) {
+            const {created} = makeVoice({skip})
+            expect(created.sources[0].calls).toContainEqual({method: 'start', args: [undefined]})
+        }
+    })
+
+    it('a skipped start ramps in over the crossfade — a hard start at mid-waveform amplitude clicks', () => {
+        const {created} = makeVoice({skip: 1})
+        const gain = created.gains[1]
+        expect(gain.calls).toContainEqual({method: 'setValueAtTime', args: [0, 10]})
+        expect(gain.calls).toContainEqual({method: 'linearRampToValueAtTime', args: [1, 10.02]})
+        // an un-skipped press keeps its natural attack — no ramp events at all
+        expect(makeVoice().created.gains[1].calls).toHaveLength(0)
+        // crossfade 0 = author opted out of splice fades everywhere
+        expect(makeVoice({skip: 1, crossfade: 0}).created.gains[1].calls).toHaveLength(0)
+    })
+
+    it('releases on a skipped voice anchor at the gain the ramp-in reaches, not the stale .value', () => {
+        const {voice, created} = makeVoice({skip: 1})
+        const gain = created.gains[1]
+        // what a real browser's .value getter reports at the ramp's start instant
+        // (zero-delay resume): anchoring there would hard-cut the note at its release
+        ;(gain.gain as any).value = 0
+        voice.releaseAt(20)
+        expect(gain.calls).toContainEqual({method: 'setValueAtTime', args: [1, 20]})
+        expect(gain.calls).toContainEqual({method: 'linearRampToValueAtTime', args: [0, 20.2]})
+    })
+
+    it('a release landing mid-ramp anchors at the ramp value of that exact instant (no step)', () => {
+        const {voice, created} = makeVoice({skip: 1})
+        voice.releaseAt(10.01) // halfway through the 0.02s ramp-in
+        const anchor = created.gains[1].calls.find(
+            (c: Call) => c.method === 'setValueAtTime' && c.args[1] === 10.01)
+        expect(anchor).toBeDefined()
+        expect(anchor!.args[0] as number).toBeCloseTo(0.5, 10)
+    })
+
     it('release() brings a future scheduled release forward so playback stop cannot leave a voice sounding', () => {
         const {voice, created} = makeVoice({loopMode: 'loop-sustain'})
         const gain = created.gains[1]
@@ -339,6 +417,21 @@ function sustainingInstrument(loopMode: SustainLoopMode = 'loop-continuous') {
     instrument.audioContext = context as any
     instrument.volumeNode = (context as any).createGain()
     instrument.buffers = instrument.notes.map(() => FAKE_BUFFER)
+    return {instrument, created}
+}
+
+/** sustainingInstrument with sustain.minLength authored (and optionally a per-note override on button 1). */
+function minLengthInstrument(minLength: number, options: {noteOneMinLength?: number} = {}) {
+    const {instrument, created} = sustainingInstrument()
+    instrument.instrumentData = {
+        ...instrument.instrumentData,
+        sustain: {...SUSTAIN, loopMode: 'loop-continuous', minLength},
+        notes: instrument.instrumentData.notes.map((note, i) =>
+            i === 1 && options.noteOneMinLength !== undefined
+                ? {...note, minLength: options.noteOneMinLength}
+                : note
+        ),
+    }
     return {instrument, created}
 }
 
@@ -448,6 +541,74 @@ describe('Instrument sustain', () => {
         second.instrument.pressNote(0, 'C')
         second.instrument.dispose()
         expect(second.created.sources[0].calls).toContainEqual({method: 'stop', args: [undefined]})
+    })
+
+    it('play() on a sustaining instrument is a tap (press + immediate release), never the raw whole file', () => {
+        const {instrument, created} = sustainingInstrument()
+        instrument.play(0, 'C')
+        const source = created.sources[0]
+        expect(source.loop).toBe(true) // a Voice with the loop region, not a bare one-shot source
+        expect(source.loopStart).toBe(0.1)
+        // no minLength authored: released at start, fades over `release` (0.3)
+        expect(source.calls).toContainEqual({method: 'stop', args: [10.3]})
+        instrument.releaseNote(0) // taps are scheduled, not held
+        expect(created.sources).toHaveLength(1)
+    })
+
+    it('sustain.minLength shapes taps from play(): the note sounds minLength, then releases', () => {
+        const {instrument, created} = minLengthInstrument(0.5)
+        instrument.play(0, 'C')
+        // released at 10.5 (the minimum, measured from the note start), faded by 10.8
+        expect(created.sources[0].calls).toContainEqual({method: 'stop', args: [10.5 + 0.3]})
+    })
+
+    it('per-note minLength overrides the instrument default (0 = no minimum)', () => {
+        const {instrument, created} = minLengthInstrument(0.5, {noteOneMinLength: 0})
+        instrument.play(1, 'C')
+        expect(created.sources[0].calls).toContainEqual({method: 'stop', args: [10 + 0.3]})
+    })
+
+    it('a live release before minLength is deferred to it; a late release acts on the key-up', () => {
+        const early = minLengthInstrument(0.5)
+        early.instrument.pressNote(0, 'C')
+        early.instrument.releaseNote(0) // key-up at 10 — the note still sounds until 10.5
+        expect(early.created.sources[0].calls).toContainEqual({method: 'stop', args: [10.5 + 0.3]})
+
+        const late = minLengthInstrument(0.5)
+        late.instrument.pressNote(0, 'C')
+        ;(late.instrument.audioContext as any).currentTime = 11
+        late.instrument.releaseNote(0) // minimum long elapsed — releases now
+        expect(late.created.sources[0].calls).toContainEqual({method: 'stop', args: [11 + 0.3]})
+    })
+
+    it('scheduled durations shorter than minLength stretch to it; longer ones are untouched', () => {
+        const short = minLengthInstrument(0.5)
+        short.instrument.pressNote(0, 'C', {durationMs: 125})
+        expect(short.created.sources[0].calls).toContainEqual({method: 'stop', args: [10.5 + 0.3]})
+
+        const long = minLengthInstrument(0.5)
+        long.instrument.pressNote(0, 'C', {durationMs: 1000})
+        expect(long.created.sources[0].calls).toContainEqual({method: 'stop', args: [11 + 0.3]})
+    })
+
+    it('skipMs counts toward minLength — a resumed mid-note press is not re-stretched', () => {
+        // 125ms already served: 375ms of the minimum remain and win over the 125ms hold
+        const partial = minLengthInstrument(0.5)
+        partial.instrument.pressNote(0, 'C', {durationMs: 125, skipMs: 125})
+        expect(partial.created.sources[0].calls).toContainEqual(
+            {method: 'stop', args: [10.375 + 0.3]})
+        // resumed past the whole minimum: the remaining hold applies as-is
+        const served = minLengthInstrument(0.5)
+        served.instrument.pressNote(0, 'C', {durationMs: 125, skipMs: 750})
+        expect(served.created.sources[0].calls).toContainEqual(
+            {method: 'stop', args: [10.125 + 0.3]})
+    })
+
+    it('releaseAllNotes ignores minLength — playback stop stays immediate', () => {
+        const {instrument, created} = minLengthInstrument(0.5)
+        instrument.pressNote(0, 'C')
+        instrument.releaseAllNotes()
+        expect(created.sources[0].calls).toContainEqual({method: 'stop', args: [10.3]})
     })
 })
 
