@@ -87,8 +87,12 @@
 </script>
 
 <div class={[cls, 'floating-dropdown', isActive && 'floating-dropdown-active']}>
+  <!-- the `;` after {style} is load-bearing: callers pass declarations without a trailing one
+       (e.g. the song rows' `background-color:...`), so without it the two run together into a
+       single invalid declaration and the browser drops the accent background, leaving the X
+       icon in --accent-text on the untouched default background. -->
   <SongActionButton
-    style="margin:0;{style}{isActive
+    style="margin:0;{style};{isActive
       ? 'background-color:var(--accent);color:var(--accent-text);'
       : ''}"
     onclick={toggle}

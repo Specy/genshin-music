@@ -35,7 +35,11 @@
     instrument = new Instrument(loaded.instrument.value);
     settings = loaded;
     AudioProvider.setReverb(loaded.reverb.value);
-    return () => logger.hidePill();
+    return () => {
+      logger.hidePill();
+      //the metronome is app-global, so leaving the page has to silence it explicitly
+      metronome.stop();
+    };
   });
 
   $effect(() => {
@@ -100,9 +104,9 @@
   });
 
   $effect(() => {
-    // QUIRK: no cleanup here (or anywhere else in this file) to stop the metronome - matches
-    // old exactly. Navigating away from this page while the metronome is running leaves it
-    // ticking in the background indefinitely.
+    // No cleanup here on purpose: this reruns on every toggle, so a cleanup would stop and
+    // immediately restart the metronome. Leaving the page is handled by the onMount cleanup
+    // above (old had neither, and left it ticking in the background forever).
     if (isMetronomePlaying) metronome.start();
     else metronome.stop();
   });

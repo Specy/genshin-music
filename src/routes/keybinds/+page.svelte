@@ -6,7 +6,7 @@
   import { KeyboardProvider } from '$lib/providers/KeyboardProvider';
   import type { KeyboardCode } from '$lib/providers/KeyboardProvider/KeyboardTypes';
   import type { VsrgSongKeys } from '$core/Songs/VsrgSong';
-  import { keyBinds } from '$stores/KeybindsStore.svelte';
+  import { keyBinds, type Shortcut } from '$stores/KeybindsStore.svelte';
   import { Instrument } from '$lib/audio/Instrument.svelte';
   import { logger } from '$stores/LoggerStore.svelte';
   import ShapeKeyboard from '$lib/games/shapes/ShapeKeyboard.svelte';
@@ -23,6 +23,15 @@
   const baseInstrument = new Instrument();
 
   let selected = $state<{ type: string; index: number }>({ type: '', index: -1 });
+
+  // setShortcut returns the whole conflicting Shortcut object, not its name - interpolating it
+  // directly rendered "[object Object]". `shortcuts:props.<name>` is the same key
+  // ShortcutElement.svelte labels each row with, so the warning names the action the user sees.
+  function shortcutInUseMessage(existing: Shortcut<string>) {
+    return t('keybinds:already_used_shortcut', {
+      shortcut_name: t(`shortcuts:props.${existing.name}`),
+    });
+  }
 
   const composerShortcuts = keyBinds.getShortcutMap('composer');
   const playerShortcuts = keyBinds.getShortcutMap('player');
@@ -105,7 +114,7 @@
         onChangeShortcut={(oldKey, newKey) => {
           if (oldKey === newKey) return;
           const existing = keyBinds.setShortcut('composer', oldKey, newKey);
-          if (existing) logger.warn(`This shortcut is already used by the "${existing}" action`);
+          if (existing) logger.warn(shortcutInUseMessage(existing));
         }}
       />
     </div>
@@ -118,7 +127,7 @@
         onChangeShortcut={(oldKey, newKey) => {
           if (oldKey === newKey) return;
           const existing = keyBinds.setShortcut('player', oldKey, newKey);
-          if (existing) logger.warn(`This shortcut is already used by the "${existing}" action`);
+          if (existing) logger.warn(shortcutInUseMessage(existing));
         }}
       />
     </div>
@@ -131,7 +140,7 @@
         onChangeShortcut={(oldKey, newKey) => {
           if (oldKey === newKey) return;
           const existing = keyBinds.setShortcut('vsrg_composer', oldKey, newKey);
-          if (existing) logger.warn(`This shortcut is already used by the "${existing}" action`);
+          if (existing) logger.warn(shortcutInUseMessage(existing));
         }}
       />
     </div>
@@ -144,7 +153,7 @@
         onChangeShortcut={(oldKey, newKey) => {
           if (oldKey === newKey) return;
           const existing = keyBinds.setShortcut('vsrg_player', oldKey, newKey);
-          if (existing) logger.warn(`This shortcut is already used by the "${existing}" action`);
+          if (existing) logger.warn(shortcutInUseMessage(existing));
         }}
       />
     </div>

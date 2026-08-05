@@ -30,8 +30,9 @@
     style?: string;
   } = $props();
 
-  let selectedPage = $state('');
-  let open = $state(false);
+  //the page is useless without a song, so it opens straight onto the song list
+  let selectedPage = $state('Songs');
+  let open = $state(true);
   let wrapperEl: HTMLDivElement | undefined = $state();
 
   // QUIRK: open is read only inside the onOutside closure below, not the effect body, so toggling

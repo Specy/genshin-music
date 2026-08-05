@@ -71,10 +71,13 @@
   >
 {/snippet}
 
+<!-- padding="0": the header button and the content Column carry their own, and an outer one
+     would keep the divider between them from spanning the full width -->
 <Card
   radius="0.4rem"
+  padding="0"
   class={['expandable-container', cls]}
-  background="var(--{headerBackground})"
+  background={headerBackground}
   style="border:solid 0.1rem var(--{borderColor}-layer-10);{style}"
 >
   <button class="expandable-container-header" style={headerStyle} onclick={toggle}>

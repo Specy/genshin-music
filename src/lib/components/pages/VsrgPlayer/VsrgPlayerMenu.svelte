@@ -35,14 +35,15 @@
 
   const excludedSongs: SongType[] = ['composed', 'recorded'];
 
-  let isOpen = $state(false);
+  //the page is useless without a song, so it opens straight onto the song list
+  let isOpen = $state(true);
   // QUIRK: two real, deliberate differences from the otherwise-identical VsrgComposerMenu.svelte:
   // isVisible starts true (this menu is visible by default; VsrgComposerMenu's starts hidden),
   // and the hamburger/close handlers below are UNCONDITIONAL sets (isVisible = true / = false),
   // not toggles like VsrgComposerMenu's onclick={() => isVisible = !isVisible}. Don't "unify"
   // these to match that sibling.
   let isVisible = $state(true);
-  let selectedMenu = $state('Settings');
+  let selectedMenu = $state('Songs');
   let wrapperEl: HTMLDivElement | undefined = $state();
 
   $effect(() => {
