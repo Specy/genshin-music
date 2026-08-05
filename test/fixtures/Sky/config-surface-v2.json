@@ -17,8 +17,7 @@
     "Ocarina",
     "MantaOcarina",
     "Aurora",
-    "test_sustain",
-    "test_recorder",
+    "sustained_recorder",
     "Kalimba",
     "ToyUkulele",
     "Drum",
@@ -3015,9 +3014,9 @@
         }
       ]
     },
-    "test_recorder": {
-      "name": "test_recorder",
-      "displayName": "Test Recorder",
+    "sustained_recorder": {
+      "name": "sustained_recorder",
+      "displayName": "Sustained recorder",
       "family": "pipe",
       "midiName": "recorder",
       "shape": "sky-3x5",
@@ -3178,173 +3177,6 @@
           "loop": {
             "start": 2.868646,
             "end": 4.87775
-          }
-        }
-      ]
-    },
-    "test_sustain": {
-      "name": "test_sustain",
-      "displayName": "Test Sustain",
-      "family": "vocal",
-      "midiName": "voice oohs",
-      "shape": "sky-3x5",
-      "sustain": {
-        "release": 0.3,
-        "loop": {
-          "start": 0.929563,
-          "end": 1.074792
-        },
-        "loopMode": "loop-continuous"
-      },
-      "notes": [
-        {
-          "file": "0.mp3",
-          "midi": 60,
-          "baseNote": "C",
-          "icon": "dmcr",
-          "loop": {
-            "start": 0.929563,
-            "end": 1.074792
-          }
-        },
-        {
-          "file": "1.mp3",
-          "midi": 62,
-          "baseNote": "D",
-          "icon": "dm",
-          "loop": {
-            "start": 0.702271,
-            "end": 0.841604
-          }
-        },
-        {
-          "file": "2.mp3",
-          "midi": 64,
-          "baseNote": "E",
-          "icon": "cr",
-          "loop": {
-            "start": 0.602396,
-            "end": 0.738729
-          }
-        },
-        {
-          "file": "3.mp3",
-          "midi": 65,
-          "baseNote": "F",
-          "icon": "dm",
-          "loop": {
-            "start": 0.995667,
-            "end": 1.172458
-          }
-        },
-        {
-          "file": "4.mp3",
-          "midi": 67,
-          "baseNote": "G",
-          "icon": "cr",
-          "loop": {
-            "start": 0.495667,
-            "end": 0.739708
-          }
-        },
-        {
-          "file": "5.mp3",
-          "midi": 69,
-          "baseNote": "A",
-          "icon": "cr",
-          "loop": {
-            "start": 1.029021,
-            "end": 1.176958
-          }
-        },
-        {
-          "file": "6.mp3",
-          "midi": 71,
-          "baseNote": "B",
-          "icon": "dm",
-          "loop": {
-            "start": 1.101417,
-            "end": 1.274375
-          }
-        },
-        {
-          "file": "7.mp3",
-          "midi": 72,
-          "baseNote": "C",
-          "icon": "dmcr",
-          "loop": {
-            "start": 0.574896,
-            "end": 0.749854
-          }
-        },
-        {
-          "file": "8.mp3",
-          "midi": 74,
-          "baseNote": "D",
-          "icon": "dm",
-          "loop": {
-            "start": 0.610854,
-            "end": 0.857896
-          }
-        },
-        {
-          "file": "9.mp3",
-          "midi": 76,
-          "baseNote": "E",
-          "icon": "cr",
-          "loop": {
-            "start": 0.573208,
-            "end": 0.718604
-          }
-        },
-        {
-          "file": "10.mp3",
-          "midi": 77,
-          "baseNote": "F",
-          "icon": "cr",
-          "loop": {
-            "start": 0.649146,
-            "end": 0.806771
-          }
-        },
-        {
-          "file": "11.mp3",
-          "midi": 79,
-          "baseNote": "G",
-          "icon": "dm",
-          "loop": {
-            "start": 0.8615,
-            "end": 1.065604
-          }
-        },
-        {
-          "file": "12.mp3",
-          "midi": 81,
-          "baseNote": "A",
-          "icon": "cr",
-          "loop": {
-            "start": 1.011125,
-            "end": 1.289646
-          }
-        },
-        {
-          "file": "13.mp3",
-          "midi": 83,
-          "baseNote": "B",
-          "icon": "dm",
-          "loop": {
-            "start": 0.642104,
-            "end": 0.804375
-          }
-        },
-        {
-          "file": "14.mp3",
-          "midi": 84,
-          "baseNote": "C",
-          "icon": "dmcr",
-          "loop": {
-            "start": 1.008833,
-            "end": 1.184875
           }
         }
       ]
