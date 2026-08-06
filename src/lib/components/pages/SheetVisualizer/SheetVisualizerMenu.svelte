@@ -11,6 +11,7 @@
   import MenuItem from '$cmp/menu/MenuItem.svelte';
   import MenuPanel from '$cmp/menu/MenuPanel.svelte';
   import MenuPanelWrapper from '$cmp/menu/MenuPanelWrapper.svelte';
+  import Header from '$cmp/header/Header.svelte';
   import SongMenu from '$cmp/SongMenu.svelte';
   import SheetVisualizerSongRow from './SheetVisualizerSongRow.svelte';
 
@@ -157,6 +158,9 @@
   {#snippet panel()}
     <MenuPanelWrapper>
       <MenuPanel id="Songs">
+        <Header type="h2" style="margin-bottom:0.6rem">
+          {t('common:select_song')}
+        </Header>
         <SongMenu
           songs={songsStore.songs}
           class="noprint"

@@ -54,10 +54,12 @@
   // $effect reading vsrg UNLESS the top-level vsrg variable itself is reassigned. refreshVsrg()
   // below (vsrg = vsrg.clone()) is called after every mutation that needs to be observed.
   //
-  // The pixi renderer (VsrgComposerCanvas.svelte/VsrgComposerRenderer.ts) does NOT need
-  // refreshVsrg() to see a change: it holds the SAME live vsrg reference and reads it directly
-  // from its own vsrgComposerStore-event-driven draw() calls, not through Svelte reactivity -
-  // its content is always current regardless of whether the Svelte-facing vsrg was reassigned.
+  // The pixi renderer (VsrgComposerCanvas.svelte/VsrgComposerRenderer.ts) needs refreshVsrg()
+  // just as much as the templates do: Svelte props are its ONLY state channel. It used to also
+  // be poked through vsrgComposerStore events, which the React original emitted from
+  // `setState(..., callback)` (i.e. after the new props had landed) but this port emitted
+  // synchronously, one flush too early - so those recalculations ran on stale props. The store
+  // now carries only the seek command; see VsrgComposerRenderer.update().
   let settings = $state(settingsService.getDefaultVsrgComposerSettings());
   let vsrg: VsrgSong = $state(new VsrgSong('Untitled'));
   // svelte-ignore state_referenced_locally
@@ -92,14 +94,57 @@
   const pressedDownHitObjects: (VsrgHitObject | undefined)[] = [];
   const cleanup: (() => void)[] = [];
 
+  /**
+   * Cloning is what makes a mutation of this non-reactive class instance visible to Svelte (see
+   * the header note) - but it also detaches every hit-object reference this file is holding,
+   * because the clone rebuilds each track's array with .map(). The React original never cloned
+   * (it re-committed the same instance), so its references stayed valid forever; in this port
+   * two call sites had grown their own "re-point by index" workarounds, and the call sites that
+   * hadn't were bugs: a hold note's tail was applied to an orphan (and deleted the real note
+   * instead), and note toggles after the first were silently lost.
+   *
+   * So re-pointing lives here, in the one and only place that clones, and every retained
+   * reference goes through it. A reference whose object is no longer in the song at all (it was
+   * deleted) becomes null rather than a detached object - holding one of those is the bug.
+   */
   function refreshVsrg() {
+    const selected = locateHitObject(selectedHitObject);
+    const lastCreated = locateHitObject(lastCreatedHitObject);
+    const pressedDown = pressedDownHitObjects.map((hitObject) =>
+      locateHitObject(hitObject ?? null)
+    );
     vsrg = vsrg.clone();
+    selectedHitObject = resolveHitObject(selected);
+    lastCreatedHitObject = resolveHitObject(lastCreated);
+    pressedDown.forEach((location, key) => {
+      pressedDownHitObjects[key] = resolveHitObject(location) ?? undefined;
+    });
+  }
+
+  type HitObjectLocation = { track: number; index: number };
+
+  /**
+   * Searches every track rather than just `selectedTrack`, so a selection survives a track
+   * switch. Runs against the ALREADY-mutated song, which is what the clone is about to copy.
+   */
+  function locateHitObject(hitObject: VsrgHitObject | null): HitObjectLocation | null {
+    if (hitObject === null) return null;
+    for (let track = 0; track < vsrg.tracks.length; track++) {
+      const index = vsrg.tracks[track].hitObjects.indexOf(hitObject);
+      if (index !== -1) return { track, index };
+    }
+    return null;
+  }
+
+  //positions carry over because VsrgSong.clone()/VsrgTrack.clone() both rebuild with .map()
+  function resolveHitObject(location: HitObjectLocation | null): VsrgHitObject | null {
+    if (location === null) return null;
+    return vsrg.tracks[location.track]?.hitObjects[location.index] ?? null;
   }
 
   function addTrack() {
     vsrg.addTrack();
     refreshVsrg();
-    vsrgComposerStore.emitEvent('tracksChange');
   }
 
   onMount(() => {
@@ -267,20 +312,25 @@
     // songSetting: true in VsrgComposerSettings.data, but changing it never propagates into
     // vsrg.pitch for an already-open song (only createNewSong seeds vsrg.pitch). Preserved,
     // not generalized to cover pitch too.
+    // every branch below mutates `vsrg` in place, so each needs refreshVsrg() for the change to
+    // reach the canvas at all (see this file's header QUIRK note) - these used to lean on
+    // vsrgComposerStore events instead, which pushed the renderer to recalculate from props it
+    // had not received yet. isVertical/maxFps need nothing here: they are plain props the
+    // canvas already receives.
     if (key === 'keys') {
       vsrg.changeKeys(data.value as VsrgSongKeys);
+      refreshVsrg();
     }
     if (key === 'bpm') {
       vsrg.set({ bpm: data.value as number });
       calculateSnapPoints();
+      refreshVsrg();
     }
     if (key === 'difficulty') {
       vsrg.set({ difficulty: data.value as number });
+      refreshVsrg();
     }
     updateSettings();
-    if (key === 'keys') vsrgComposerStore.emitEvent('updateKeys');
-    if (key === 'isVertical') vsrgComposerStore.emitEvent('updateOrientation');
-    if (key === 'maxFps') vsrgComposerStore.emitEvent('maxFpsChange');
   }
 
   async function prepareToLeave(): Promise<boolean> {
@@ -309,7 +359,6 @@
     snapPoint = newSnapPoint;
     refreshVsrg();
     calculateSnapPoints();
-    vsrgComposerStore.emitEvent('snapPointChange');
   }
 
   function selectHitObject(hitObject: VsrgHitObject, trackIndex: number, clickType: ClickType) {
@@ -320,14 +369,30 @@
       refreshVsrg();
       return;
     }
-    if (selectedType === 'hold' && clickType === ClickType.Left) {
-      selectedHitObject = hitObject;
-      lastCreatedHitObject = hitObject;
-      selectedType = newSelectedType;
-    }
+    // Selecting is not creating. There used to be a `selectedType === 'hold'` branch here that
+    // also armed lastCreatedHitObject with the clicked object - which disables the whole
+    // track/note panel (.vsrg-top-right-disabled, the "place the tail first" state). It could
+    // never be disarmed: the same branch set selectedType to the CLICKED object's type, so if
+    // that was a tap, onSnapPointSelect took its tap path from then on and nothing ever
+    // consumed the armed object. Clicking a hit object with the hold tool active therefore
+    // disabled the panel until the deselect shortcut was pressed. Every other assignment in
+    // that branch was an exact duplicate of the three below it.
     selectedHitObject = hitObject;
     selectedTrack = trackIndex;
     selectedType = newSelectedType;
+  }
+
+  /**
+   * Clicking the empty background of a snap point that already holds a hit object selects that
+   * object - and must sync the same three pieces of state clicking the object itself does, or
+   * the note keyboard maps note ids through a different track's instrument than the one the
+   * selection lives in, and the tap/hold toggle disagrees with what is selected. This path used
+   * to set only `selectedHitObject` (an original bug, faithfully ported from React).
+   */
+  function selectExistingHitObject(hitObject: VsrgHitObject, trackIndex: number) {
+    selectedHitObject = hitObject;
+    selectedTrack = trackIndex;
+    selectedType = hitObject.isHeld ? 'hold' : 'tap';
   }
 
   function onSnapPointSelect(timestamp: number, key: number, type?: ClickType) {
@@ -336,16 +401,16 @@
       console.warn('Timestamp is less than 0');
       return;
     }
+    //getHitObjectsAt returns one slot per track, so the index IS the owning track
     const existing = vsrg.getHitObjectsAt(timestamp, key);
-    const firstNote = existing.find((h) => h !== null);
+    const firstNoteTrack = existing.findIndex((h) => h !== null);
+    const firstNote = firstNoteTrack === -1 ? null : existing[firstNoteTrack];
     if (type === ClickType.Unknown) console.warn('unknown click type');
     // if wants to add a tap note
     if (selectedType === 'tap' && type === ClickType.Left) {
       if (firstNote) {
         // No refreshVsrg() needed here - no vsrg content changed in this branch.
-        // selectedHitObject = firstNote alone already retriggers the canvas $effect;
-        // calling refreshVsrg() here would just orphan this reference for no gain.
-        selectedHitObject = firstNote;
+        selectExistingHitObject(firstNote, firstNoteTrack);
         return;
       }
       const hitObject = vsrg.createHitObjectInTrack(selectedTrack, timestamp, key);
@@ -365,7 +430,7 @@
       } else {
         if (firstNote) {
           // Same as the 'tap' branch's firstNote check above - no refreshVsrg() needed.
-          selectedHitObject = firstNote;
+          selectExistingHitObject(firstNote, firstNoteTrack);
           return;
         }
         const newLastCreatedHitObject = vsrg.createHeldHitObject(selectedTrack, timestamp, key);
@@ -446,7 +511,6 @@
       newVsrg.set({ id });
       vsrg = newVsrg;
       renderableNotes = [];
-      vsrgComposerStore.emitEvent('songLoad');
       calculateSnapPoints();
       syncInstruments();
     }
@@ -461,18 +525,9 @@
 
   function dragHitObject(newTimestamp: number, key?: number) {
     if (selectedHitObject === null) return;
-    // QUIRK (load-bearing): refreshVsrg() deep-clones every hit object, which detaches this
-    // retained selectedHitObject reference from the freshly-cloned tracks[...].hitObjects
-    // array. This runs once per pointermove for the whole drag gesture, so every call after
-    // the first would mutate an orphaned, invisible object without the re-point below - the
-    // final drop position would be silently lost on release. Re-pointing by index after
-    // cloning is safe because VsrgTrack.clone()/VsrgSong.clone() both build arrays with
-    // .map(), which preserves order.
-    const index = vsrg.tracks[selectedTrack].hitObjects.indexOf(selectedHitObject);
     selectedHitObject.timestamp = newTimestamp;
     if (key !== undefined && key < settings.keys.value) selectedHitObject.index = key;
     refreshVsrg();
-    if (index !== -1) selectedHitObject = vsrg.tracks[selectedTrack].hitObjects[index];
   }
 
   function findClosestSnapPoint(timestamp: number) {
@@ -497,14 +552,7 @@
       )
     );
     changes++;
-    // Same refreshVsrg()-detaches-selectedHitObject mechanism as dragHitObject above.
-    // Captured AFTER the conflict-removal loop above, not before: that loop can splice
-    // sibling entries out of this same track's hitObjects array, shifting selectedHitObject's
-    // own position - indexOf must run against the array's final pre-clone shape for the index
-    // to still be valid once re-applied to the clone below.
-    const index = vsrg.tracks[selectedTrack].hitObjects.indexOf(selectedHitObject);
     refreshVsrg();
-    if (index !== -1) selectedHitObject = vsrg.tracks[selectedTrack].hitObjects[index];
   }
 
   function onTrackChange(track: VsrgTrack, index: number) {
@@ -520,9 +568,10 @@
     if (id === null) return;
     selectedHitObject?.toggleNote(id);
     audioPlayer.playNoteOfInstrument(selectedTrack, id);
-    // selectedHitObject needs a genuinely new reference for Svelte to notice the mutation
-    // .toggleNote() just made in place - .clone() is cheap (a handful of primitive fields).
-    if (selectedHitObject) selectedHitObject = selectedHitObject.clone();
+    //this used to reassign selectedHitObject to a .clone() of itself to force reactivity, which
+    //pointed it at an object that is not in the song: the canvas' identity check stopped
+    //matching (the selection ring vanished) and every further toggle mutated the detached copy
+    refreshVsrg();
   }
 
   function togglePlay() {
@@ -594,7 +643,6 @@
     vsrg.deleteTrack(index);
     selectedTrack = Math.max(0, index - 1);
     refreshVsrg();
-    vsrgComposerStore.emitEvent('tracksChange');
   }
 
   async function onSongOpen(song: VsrgSong) {
@@ -622,7 +670,6 @@
     selectedTrack = 0;
     selectedHitObject = null;
     lastCreatedHitObject = null;
-    vsrgComposerStore.emitEvent('songLoad');
     syncInstruments();
     const loadedAudioSong = await songsStore.getSongById(song.audioSongId);
     setAudioSong(loadedAudioSong);
@@ -645,7 +692,6 @@
 
   function onScalingChange(newScaling: number) {
     scaling = newScaling;
-    vsrgComposerStore.emitEvent('scaleChange');
   }
 
   async function saveSong() {

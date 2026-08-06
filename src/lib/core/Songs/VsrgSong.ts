@@ -1,4 +1,4 @@
-import {APP_NAME, INSTRUMENTS} from "$core/legacyConfig";
+import {APP_NAME, INSTRUMENTS, VSRG_TRACK_COLORS} from "$core/legacyConfig";
 // SnapPoint normally lives in $cmp/pages/VsrgComposer/VsrgBottom.tsx (not ported until the UI
 // phase) - hoisted into $core/types.ts instead, same pattern as VsrgKeyboardLayout (Task 6).
 import type {SnapPoint} from "$core/types";
@@ -161,9 +161,20 @@ export class VsrgSong extends Song<VsrgSong, SerializedVsrgSong, 2> {
 
     addTrack(instrument?: InstrumentName) {
         const track = new VsrgTrack(instrument ?? "DunDun")
+        track.color = this.nextTrackColor()
         this.tracks.push(track)
         this.tracks = [...this.tracks]
         return track
+    }
+
+    // First palette color no existing track is using, so tracks stay visually distinct without
+    // the user having to pick one. Falls back to cycling by track count once all 16 are taken -
+    // duplicates are unavoidable past that point, and repeating the palette in order at least
+    // keeps neighbouring tracks apart.
+    private nextTrackColor() {
+        const used = new Set(this.tracks.map(track => track.color.toLowerCase()))
+        const unused = VSRG_TRACK_COLORS.find(color => !used.has(color.toLowerCase()))
+        return unused ?? VSRG_TRACK_COLORS[this.tracks.length % VSRG_TRACK_COLORS.length]
     }
 
     validateBreakpoints() {

@@ -16,7 +16,6 @@ import { subscribeCurrentVsrgSong, vsrgPlayerStore } from '$stores/VsrgPlayerSto
 import type {
   KeyboardKey,
   VsrgKeyboardPressType,
-  VsrgPlayerEvent,
   VsrgPlayerHitType,
   VsrgPlayerSong,
 } from '$stores/VsrgPlayerStore.svelte';
@@ -162,7 +161,6 @@ export class VsrgPlayerRenderer {
       id: 'vsrg-player-canvas',
     });
     this.currentSongDispose = subscribeCurrentVsrgSong(this.onSongPick);
-    vsrgPlayerStore.addEventListener(this.handleVsrgEvent, 'vsrg-player-canvas');
     window.addEventListener('resize', this.calculateSizes);
     this.calculateSizes();
 
@@ -222,16 +220,11 @@ export class VsrgPlayerRenderer {
     vsrgPlayerStore.removeKeyboardListener({ id: 'vsrg-player-canvas' });
     this.currentSongDispose?.();
     this.themeDispose?.();
-    vsrgPlayerStore.removeEventListener('vsrg-player-canvas');
     window.removeEventListener('resize', this.calculateSizes);
     this.cache?.destroy();
     this.app?.destroy(true, { children: true });
     this.app = null;
   }
-
-  private handleVsrgEvent = (data: VsrgPlayerEvent) => {
-    if (data === 'fpsChange') this.throttledEventLoop.changeMaxFps(this.state.maxFps);
-  };
 
   // QUIRK: mutates rho.status directly below and never calls draw() itself, so a key-press
   // never repaints immediately on keydown/keyup - it only becomes visible on the next
@@ -420,8 +413,15 @@ export class VsrgPlayerRenderer {
   };
 
   // The entry point VsrgPlayerCanvas.svelte's $effect calls on every reactive-prop change.
+  // Svelte props are this class's only state channel. maxFps used to arrive through a
+  // vsrgPlayerStore 'fpsChange' event, which the React original emitted from
+  // `setState(..., callback)` - after the new props had landed - but this port emitted
+  // synchronously, one flush before them, so it re-read the PREVIOUS maxFps. Diffing here
+  // cannot get out of step; see VsrgComposerRenderer.update() for the same fix.
   update(state: VsrgPlayerRendererState): void {
+    const previous = this.state;
     this.state = state;
+    if (previous.maxFps !== state.maxFps) this.throttledEventLoop.changeMaxFps(state.maxFps);
   }
 
   private draw(): void {

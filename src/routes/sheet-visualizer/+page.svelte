@@ -237,7 +237,6 @@
     display: grid;
     justify-items: center;
     row-gap: 0.2rem;
-    border-top: solid 1px var(--secondary);
     padding-top: 1rem;
     grid-template-columns: repeat(5, 1fr);
     justify-content: center;

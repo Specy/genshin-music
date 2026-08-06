@@ -6,17 +6,14 @@
 // genuinely varies by event (e.g. timestampChange passes a breakpoint object, most others pass
 // nothing), so `any` is the correct type-level bound - narrowing to `unknown` would just force
 // every consumer to cast anyway, with no added safety.
-export type VsrgComposerEvents =
-  | 'ALL'
-  | 'colorChange'
-  | 'updateKeys'
-  | 'updateOrientation'
-  | 'snapPointChange'
-  | 'tracksChange'
-  | 'songLoad'
-  | 'scaleChange'
-  | 'maxFpsChange'
-  | 'timestampChange';
+// COMMANDS only. The state-sync events this used to carry (colorChange, updateKeys,
+// updateOrientation, snapPointChange, tracksChange, songLoad, scaleChange, maxFpsChange) were
+// ported from React, where each was emitted from a `setState(..., callback)` - i.e. only after
+// React had committed the state and re-rendered the canvas with new props. Svelte has no such
+// callback, so they fired one flush early and the renderer recalculated from the PREVIOUS
+// props. They are gone: VsrgComposerRenderer.update() diffs its own state instead, which
+// cannot get out of step. Don't reintroduce an event to push state at the renderer.
+export type VsrgComposerEvents = 'ALL' | 'timestampChange';
 export type VsrcComposerEventCallback = {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- payload shape genuinely varies by event, see file header
   callback: (event: VsrgComposerEvents, data?: any) => void;

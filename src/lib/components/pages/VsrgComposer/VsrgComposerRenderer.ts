@@ -177,9 +177,9 @@ export class VsrgComposerRenderer {
     this.timelineContainer.on('pointerupoutside', this.handleTimelineRelease);
 
     window.addEventListener('resize', this.calculateSizes);
-    vsrgComposerStore.addEventListener('ALL', {
+    vsrgComposerStore.addEventListener('timestampChange', {
       callback: this.handleEvent,
-      id: 'vsrg-canvas-color-change',
+      id: 'vsrg-canvas',
     });
     this.throttledEventLoop.setCallback(this.handleTick);
     this.throttledEventLoop.changeMaxFps(this.state.maxFps);
@@ -280,17 +280,10 @@ export class VsrgComposerRenderer {
     }, 500);
   };
 
-  // The vsrgComposerStore 'ALL' listener.
-  private handleEvent = (event: VsrgComposerEvents, data?: unknown) => {
-    if (event === 'colorChange') this.generateCache();
-    if (event === 'updateKeys') this.calculateSizes();
-    if (event === 'updateOrientation') this.calculateSizes();
-    if (event === 'snapPointChange') this.calculateSizes();
-    if (event === 'tracksChange') this.generateCache();
-    if (event === 'songLoad') this.calculateSizes();
-    if (event === 'scaleChange') this.calculateSizes();
-    if (event === 'maxFpsChange') this.throttledEventLoop.changeMaxFps(this.state.maxFps);
-    if (event === 'timestampChange') this.setTimestamp(data as number);
+  // The store carries imperative COMMANDS only (seek to a breakpoint) - never state, which
+  // arrives exclusively through update() below.
+  private handleEvent = (_event: VsrgComposerEvents, data?: unknown) => {
+    this.setTimestamp(data as number);
   };
 
   // The ThrottledEventLoop-driven playback tick.
@@ -435,10 +428,53 @@ export class VsrgComposerRenderer {
     });
   }
 
-  // The entry point VsrgComposerCanvas.svelte's $effect calls on every reactive-state change.
+  // The entry point VsrgComposerCanvas.svelte's $effect calls on every reactive-state change,
+  // and the ONLY way state reaches this class.
+  //
+  // The React original drove the expensive recalculations below from vsrgComposerStore events
+  // emitted inside `this.setState(..., callback)` - the callback ran after React had committed
+  // state and re-rendered children, so the renderer always saw fresh props. The Svelte port
+  // kept the emits but not the callback: they fire synchronously, one flush BEFORE the new
+  // props arrive here, so every recalculation read the previous values (a scale/snap change
+  // applied one step late, an orientation switch built its texture cache for the old
+  // orientation). Diffing here restores that ordering by construction rather than by timing -
+  // there is no second channel left to get out of step.
   update(state: VsrgComposerRendererState): void {
+    const previous = this.state;
     this.state = state;
+    if (previous.maxFps !== state.maxFps) this.throttledEventLoop.changeMaxFps(state.maxFps);
+    // calculateSizes() ends in generateCache(), which ends in draw() - so each branch below is
+    // a superset of the ones after it, and only the outermost one that applies has to run.
+    if (this.needsSizes(previous, state)) return this.calculateSizes();
+    if (this.needsCache(previous, state)) return this.generateCache();
     this.draw();
+  }
+
+  /** `sizes` is derived from these; the container's own size is handled by the resize listener. */
+  private needsSizes(
+    previous: VsrgComposerRendererState,
+    next: VsrgComposerRendererState
+  ): boolean {
+    return (
+      previous.scaling !== next.scaling ||
+      previous.snapPoint !== next.snapPoint ||
+      previous.vsrg.bpm !== next.vsrg.bpm ||
+      previous.vsrg.keys !== next.vsrg.keys
+    );
+  }
+
+  /** The cached textures are baked per orientation and per track color. */
+  private needsCache(
+    previous: VsrgComposerRendererState,
+    next: VsrgComposerRendererState
+  ): boolean {
+    if (previous.isHorizontal !== next.isHorizontal) return true;
+    const previousTracks = previous.vsrg.tracks;
+    const nextTracks = next.vsrg.tracks;
+    return (
+      previousTracks.length !== nextTracks.length ||
+      nextTracks.some((track, i) => track.color !== previousTracks[i].color)
+    );
   }
 
   // Rebuilds every container's children fully on every call (see the scrollableTrackContainer/
@@ -571,6 +607,11 @@ export class VsrgComposerRenderer {
       timestamp + ((isHorizontal ? sizes.width : sizes.height) - PLAY_BAR_OFFSET) / scale;
     const snapPointSize = cache.textures.snapPoints.size;
 
+    // Each sprite spans the whole cross axis, so only the axis it is POSITIONED along can be
+    // read off the sprite (that gives the timestamp); the key has to come from where the
+    // pointer actually landed. Vertically that used to read the key from `target.x`, which is
+    // 0 for every vertical snap point (see the sprite.x assignment below) - so every click in
+    // vertical mode landed on key 0 no matter which column was under the cursor.
     const handleSnapPointClick = (event: FederatedPointerEvent) => {
       if (preventClick) return;
       const target = event.target as Sprite;
@@ -584,7 +625,7 @@ export class VsrgComposerRenderer {
         );
       } else {
         const y = Math.abs(Math.floor(target.y - sizes.height + snapPointSize) / scale);
-        const x = target.x;
+        const x = event.globalX;
         this.callbacks.onSnapPointSelect(
           y,
           Math.floor(x / sizes.keyWidth),
@@ -814,7 +855,7 @@ export class VsrgComposerRenderer {
   destroy(): void {
     window.removeEventListener('resize', this.calculateSizes);
     window.removeEventListener('blur', this.handleBlur);
-    vsrgComposerStore.removeEventListener('ALL', { id: 'vsrg-canvas-color-change' });
+    vsrgComposerStore.removeEventListener('timestampChange', { id: 'vsrg-canvas' });
     this.themeDispose?.();
     this.cache?.destroy();
     this.throttledEventLoop.stop();

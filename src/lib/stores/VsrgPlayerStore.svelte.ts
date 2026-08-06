@@ -44,12 +44,6 @@ const baseScoreMap = {
   miss: 0,
 };
 
-export type VsrgPlayerEvent = 'fpsChange';
-type VsrgPlayerCallback = {
-  callback: (data: VsrgPlayerEvent) => void;
-  id: string;
-};
-
 class VsrgPlayerStore {
   keyboard: KeyboardKey[] = $state([]);
   currentSong: VsrgPlayerSong = $state({
@@ -73,10 +67,13 @@ class VsrgPlayerStore {
       combo: 0,
     },
   });
-  // Deliberately plain arrays, not $state: neither is ever read from a template/$derived/$effect
-  // - they only exist to be pushed/filtered/iterated imperatively by
-  // addEventListener/removeEventListener/emitEvent and the keyboard-listener trio.
-  private listeners: VsrgPlayerCallback[] = [];
+  // Deliberately a plain array, not $state: it is never read from a template/$derived/$effect -
+  // it only exists to be pushed/filtered/iterated imperatively by the keyboard-listener trio.
+  //
+  // The general event bus that used to sit beside it carried exactly one event, 'fpsChange',
+  // which pushed a settings value at VsrgPlayerRenderer one flush before the same value
+  // arrived as a prop - so the renderer re-read the previous one. The renderer diffs its own
+  // props now (see its update()), and the bus is gone with it.
   private keyboardListeners: VsrcPlayerKeyboardCallback[] = [];
 
   setLayout = (layout: string[]) => {
@@ -91,18 +88,6 @@ class VsrgPlayerStore {
         };
       })
     );
-  };
-  addEventListener = (callback: (data: VsrgPlayerEvent) => void, id: string) => {
-    this.listeners.push({
-      callback,
-      id,
-    });
-  };
-  emitEvent = (event: VsrgPlayerEvent) => {
-    this.listeners.forEach((listener) => listener.callback(event));
-  };
-  removeEventListener = (id: string) => {
-    this.listeners = this.listeners.filter((l) => l.id !== id);
   };
   resetScore = () => {
     const resetScore: VsrgPlayerScore = {

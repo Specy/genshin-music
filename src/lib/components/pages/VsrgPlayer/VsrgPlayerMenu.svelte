@@ -20,6 +20,7 @@
   import Separator from '$cmp/Separator.svelte';
   import AppLink from '$cmp/AppLink.svelte';
   import AppButton from '$cmp/inputs/AppButton.svelte';
+  import Header from '$cmp/header/Header.svelte';
 
   // No shortcut listener in this file - the vsrg-player page route registers restart/stop
   // shortcuts instead.
@@ -173,6 +174,9 @@
   {#snippet panel()}
     <MenuPanelWrapper>
       <MenuPanel id="Songs">
+        <Header type="h2" style="margin-bottom:0.6rem">
+          {t('common:select_song')}
+        </Header>
         <div class="row">
           <AppLink href="/vsrg-composer">
             <AppButton>

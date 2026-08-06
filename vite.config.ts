@@ -2,6 +2,7 @@
 import { sveltekit } from '@sveltejs/kit/vite';
 import { defineConfig } from 'vite';
 import { visualizer } from 'rollup-plugin-visualizer';
+import Icons from 'unplugin-icons/vite';
 
 // P5 Task 3: named replacement for old's @next/bundle-analyzer (spec §4.1).
 // scripts/buildApp.js spawns `npm run build` with `...process.env`, so ANALYZE
@@ -10,7 +11,15 @@ import { visualizer } from 'rollup-plugin-visualizer';
 // fs.writeFile(filename, ...) against process.cwd(), not an output dir) and
 // matches .gitignore's pre-existing `build-stats.html` entry — do not
 // introduce a second ignored artifact name.
-const plugins = [sveltekit()];
+// unplugin-icons must come BEFORE sveltekit(): it resolves `~icons/<set>/<name>` to Svelte
+// COMPONENT SOURCE, which the svelte plugin then has to compile - the other order hands the
+// svelte plugin nothing to compile and the import stays raw source at runtime.
+//
+// Icon sets are installed per collection (@iconify-json/fa6-solid, matching the Font Awesome
+// icons this app already inlines by hand); add another @iconify-json/* devDependency to use
+// another set. Only the icons actually imported end up in the bundle. Type declarations for
+// the virtual `~icons/*` modules are referenced from src/app.d.ts.
+const plugins = [Icons({ compiler: 'svelte' }), sveltekit()];
 if (process.env.ANALYZE === 'true') {
   plugins.push(
     visualizer({
