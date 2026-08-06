@@ -108,7 +108,9 @@
     // @ts-expect-error SettingUpdateKey spans all settings families; narrower here by design.
     settings[setting.key] = { ...settings[setting.key], value: data.value };
     updateSettings();
-    if (setting.key === 'maxFps') vsrgPlayerStore.emitEvent('fpsChange');
+    //maxFps needs nothing here: it is a plain prop the canvas already receives, and the
+    //renderer picks the change up by diffing it (it used to be pushed through a store event
+    //that fired before the prop landed, so the renderer re-read the previous value)
   }
 
   function updateSettings(override?: VsrgPlayerSettingsDataType) {

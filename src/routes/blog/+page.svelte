@@ -42,8 +42,6 @@
   import { blogNavbar, hasVisitedBlogPost } from '$cmp/blog/BaseBlogPost.svelte';
   import { blogAuthorRenderer, blogTagsRenderer } from '$cmp/blog/BlogMetadataRenderers.svelte';
   import { game } from '$game';
-  import { globalConfigStore } from '$stores/GlobalConfigStore.svelte';
-  import { createMediaQuery } from '$lib/utils/mediaQuery.svelte';
   import { setPageVisited } from '$stores/PageVisitStore.svelte';
 
   // Distinct from BaseBlogPost.svelte's own per-post visited map: this call is the page-level
@@ -66,9 +64,6 @@
       ? posts
       : posts.filter((p) => selectedTags.some((t) => t.selected && p.tags.includes(t.item)))
   );
-
-  const isPortrait = createMediaQuery('(orientation: portrait)');
-  const closeMenu = $derived(isPortrait.matches && globalConfigStore.state.IS_MOBILE);
 </script>
 
 {#snippet indexNavChildren()}
@@ -118,15 +113,18 @@
   </AppLink>
 {/snippet}
 
-<DefaultPage excludeMenu={closeMenu} contentStyle="gap:1rem">
+<!-- The portrait/mobile layout is decided entirely in CSS below. It used to be a $derived over
+     globalConfigStore.IS_MOBILE, which only becomes true once AppInit's onMount has run: the
+     sidebar was therefore always painted first and then yanked away (the layout shift), and on
+     any device whose user agent `is-mobile` doesn't recognise it never went away at all. A
+     media query has neither problem - it is right before the first paint, on any device. -->
+<DefaultPage class="blog-index" contentStyle="gap:1rem">
   <PageMetadata
     text="{game.meta.title} Blog"
     description="Welcome to {game.meta
       .title} blog! Here there will be written guides, news and info about the app!"
   />
-  {#if closeMenu}
-    {@render blogNavbar(indexNavChildren, 'border-radius:0.5rem;padding:1rem 1.5rem')}
-  {/if}
+  {@render blogNavbar(indexNavChildren, 'border-radius:0.5rem;padding:1rem 1.5rem')}
   <Column gap="2rem">
     <Header style="font-size:2.2rem;text-align:center">
       Welcome to {game.meta.title} blog!
@@ -150,7 +148,9 @@
         </ComboBox>
       </Row>
 
-      <Grid columns={closeMenu ? '1fr' : 'repeat(2, 1fr)'} gap="1rem">
+      <!-- auto-fit rather than a scripted 1fr/2fr swap: it collapses to one column exactly when
+           a second one would no longer fit, at any width, with no JS involved -->
+      <Grid columns="repeat(auto-fit, minmax(min(20rem, 100%), 1fr))" gap="1rem">
         {#each filteredPosts as metadata (metadata.relativeUrl)}
           {@render blogPostCard(metadata)}
         {/each}
@@ -166,6 +166,28 @@
        native divs passed as those components' CHILDREN, compiled as part of THIS file's
        template, so plain scoped CSS reaches them - only the base (non-hover) .blog-card-image
        rule can skip :global(). */
+
+  /* The sidebar is the app-wide SimpleMenu, and .blog-nav lives in BaseBlogPost's snippet -
+     both foreign elements, hence :global(), and both scoped under .blog-index so this page's
+     rules can't reach the blog POSTS (which show .blog-nav at every width).
+     .blog-index.default-page is a two-class selector on purpose: it has to outrank App.css's
+     own .default-page mobile padding rule regardless of stylesheet order. */
+  :global(.blog-index .blog-nav) {
+    display: none;
+  }
+
+  @media (orientation: portrait) and (max-width: 920px) {
+    :global(.blog-index .menu-wrapper) {
+      display: none;
+    }
+    :global(.blog-index.default-page) {
+      padding-left: 1rem;
+    }
+    :global(.blog-index .blog-nav) {
+      display: flex;
+    }
+  }
+
   :global(.blog-card) {
     position: relative;
     transition:

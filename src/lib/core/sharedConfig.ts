@@ -120,6 +120,20 @@ export const VSRG_SCORE_COLOR_MAP = {
     '': '#ffffff',
 }
 
+// Not from old Config.ts: new tracks used to all be born '#FFFFFF', so every track in the vsrg
+// composer looked identical until the user opened track settings and picked a color by hand.
+// VsrgSong.addTrack() walks this palette instead, taking the first entry no existing track is
+// already using (and wrapping once all 16 are taken). White stays FIRST so a song's first track
+// still looks exactly as it always has, and only the second one onward picks up a color.
+// Deserialization is deliberately NOT routed through this - saved songs keep whatever color
+// they stored.
+export const VSRG_TRACK_COLORS = [
+    '#ffffff', '#d16d6d', '#d1a56d', '#c9d16d',
+    '#8ed16d', '#6dd192', '#6dd1c4', '#6db4d1',
+    '#6d84d1', '#8a6dd1', '#b96dd1', '#d16dae',
+    '#d16d80', '#b58b5e', '#5eb58b', '#5e7db5',
+]
+
 // old Config.ts:865-868 — `export const PIXI_VERTICAL_ALIGN = {x: 0.5, y: 0}`,
 // `PIXI_HORIZONTAL_ALIGN = {x: 0, y: 0.5}`, `PIXI_CENTER_X_END_Y = {x: 0.5, y: 1}`,
 // `PIXI_CENTER_ALIGN = 0.5`. pixi.js `anchor`/`align` values for text/sprite layout -

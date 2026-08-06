@@ -48,6 +48,14 @@ The app is built with SvelteKit 2 and Svelte 5 (using runes) in TypeScript, bund
 
 Genshin music and Sky music are the same codebase, built twice. Each game's data lives in its own folder under `src/lib/games/<id>/`, and a build or dev run picks one of them at build time through the `$game` import alias, which points at that folder depending on the `PUBLIC_GAME` environment variable. Adding a new game means creating its `src/lib/games/<id>/` folder and registering it in `scripts/buildApp.js`.
 
+# Translations
+
+English is the source of truth and lives in TypeScript at `src/lib/i18n/locales/en/index.ts` (it is bundled into the app); every other language is a JSON file in `static/locales/`, fetched and cached at runtime. Run `npm run check:translations` to see, per language, which keys are missing, which are empty, and which no longer exist in English. Add `-- --strict` to make it exit non-zero when anything is missing.
+
+# Icons
+
+Most icons are inline `<svg>` markup. New ones can instead be imported as components through [unplugin-icons](https://github.com/unplugin/unplugin-icons): `import IconName from '~icons/fa6-solid/download'`, then `<IconName />`. Only the icons you import are bundled. Icon sets are installed per collection - `@iconify-json/fa6-solid` is the one set up; add another `@iconify-json/*` devDependency to use a different one.
+
 # Documentation
 
 You can find the documentation of the app [here](https://github.com/Specy/genshin-music/wiki)

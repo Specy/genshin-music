@@ -104,6 +104,7 @@ export const i18n_en = {
     search: 'Search',
     rename: 'Rename',
     create_song: 'Create song',
+    select_song: 'Select song',
     edit_song: 'Edit song',
     none: 'None',
     instrument: 'Instrument',

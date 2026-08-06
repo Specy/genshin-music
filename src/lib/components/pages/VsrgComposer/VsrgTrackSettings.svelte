@@ -2,7 +2,6 @@
   import Color from 'color';
   import type { VsrgTrack } from '$core/Songs/VsrgSong';
   import type { Pitch } from '$lib/games/types';
-  import { vsrgComposerStore } from '$stores/VsrgComposerStore.svelte';
   import { t, tInstrument } from '$i18n/binding.svelte';
   import Row from '$cmp/layout/Row.svelte';
   import Column from '$cmp/layout/Column.svelte';
@@ -151,9 +150,9 @@
       style="right:0.8rem;top:0.5rem"
       value={track.color}
       onChange={(color) => {
+        //the canvas rebuilds its per-color texture cache off this, via the page's refreshVsrg()
         onChange(track.set({ color }));
         isColorPickerOpen = false;
-        vsrgComposerStore.emitEvent('colorChange');
       }}
     />
   {/if}

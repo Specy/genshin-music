@@ -36,8 +36,6 @@
   import Header from '../header/Header.svelte';
   import BlogElements from './BlogElements.svelte';
   import { blogAuthorRenderer, blogTagsRenderer } from './BlogMetadataRenderers.svelte';
-  import { globalConfigStore } from '$stores/GlobalConfigStore.svelte';
-  import { createMediaQuery } from '$lib/utils/mediaQuery.svelte';
   import type { BlogMetadata } from './types';
 
   interface BaseBlogPostProps {
@@ -63,8 +61,11 @@
     )
   );
 
-  const isPortrait = createMediaQuery('(orientation: portrait)');
-  const closeMenu = $derived(isPortrait.matches && globalConfigStore.state.IS_MOBILE);
+  // The portrait/mobile layout is decided entirely in CSS at the bottom of this file, driven by
+  // --blog-menu-inset. It used to be a $derived over globalConfigStore.IS_MOBILE, which only
+  // becomes true once AppInit's onMount has run: the sidebar was therefore always painted first
+  // and then yanked away (the layout shift), and on any device whose user agent `is-mobile`
+  // doesn't recognise it never went away at all.
 </script>
 
 {#snippet blogNavbar(children: Snippet, style: string = '')}
@@ -81,15 +82,15 @@
 
 <DefaultPage
   cropped={false}
-  excludeMenu={closeMenu}
-  style="padding-left:var(--menu-size);gap:1rem;line-height:1.5"
+  class="blog-post"
+  style="padding-left:var(--blog-menu-inset);gap:1rem;line-height:1.5"
 >
   <PageMetadata text={metadata.title} description={metadata.description} image={metadata.image}>
     <meta name="author" content={metadata.author?.name ?? 'Specy'} />
     <meta name="date" content={metadata.createdAt.toISOString()} />
     <meta name="keywords" content={metadata.tags.join(', ')} />
   </PageMetadata>
-  {@render blogNavbar(navChildren, closeMenu ? 'padding:1rem 1.5rem' : '')}
+  {@render blogNavbar(navChildren)}
   <div class="blog-header">
     <img
       src={metadata.image ?? ''}
@@ -106,7 +107,7 @@
 
   <article
     style={cropped
-      ? `max-width:60rem;margin:0 auto;padding:2rem;padding-left:${closeMenu ? '2rem' : 'calc(var(--menu-size) + 2rem)'}`
+      ? 'max-width:60rem;margin:0 auto;padding:2rem;padding-left:calc(var(--blog-menu-inset) + 2rem)'
       : 'padding:2rem'}
   >
     <Row align="center" gap="2rem" style="font-size:1.2rem;margin-bottom:1rem;flex-wrap:wrap">
@@ -131,13 +132,32 @@
        applies either class to an element - but are kept, wrapped in
        :global(), so svelte-check's unused-selector check doesn't flag them.
        Not dead code to prune. */
+
+  /* --blog-menu-inset is how much room the sidebar takes: the page's own padding-left, the
+     navbar's and the article's all resolve through it, so hiding the sidebar and reclaiming
+     its space are one decision made in one place - and made in CSS, so it is already correct
+     at the first paint (see the note in the script block). .menu-wrapper is the app-wide
+     SimpleMenu, a foreign element, hence :global(). */
+  :global(.blog-post) {
+    --blog-menu-inset: var(--menu-size);
+  }
+
+  @media (orientation: portrait) and (max-width: 920px) {
+    :global(.blog-post) {
+      --blog-menu-inset: 0rem;
+    }
+    :global(.blog-post .menu-wrapper) {
+      display: none;
+    }
+  }
+
   :global(.blog-nav) {
     display: flex;
     align-items: center;
     padding: 0.5rem 2rem;
     border-bottom: solid 0.1rem var(--secondary);
     background-color: var(--primary);
-    padding-left: calc(var(--menu-size) + 2rem);
+    padding-left: calc(var(--blog-menu-inset, var(--menu-size)) + 2rem);
     z-index: 1;
     height: calc(var(--menu-size) - 0.1rem);
     box-shadow: 0 0.5rem 0.7rem 0.5rem rgba(0, 0, 0, 0.2);
