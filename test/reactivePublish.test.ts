@@ -34,7 +34,10 @@ import {flushEffects, observeDerived, observeSignal} from './signals.svelte'
  *    blind to publishing twice.
  *  - `touches`: which columns' plain `version` counter advanced, and by exactly how much. Plain
  *    counters do not coalesce, so this is the half that catches a double publish - and it is the
- *    value phase 4 repaints from. ComposedSong only: VsrgSong has no per-object render counters
+ *    value ComposerRenderer's narrowed repaint reads. This column is the MODEL half of that
+ *    contract; the renderer half is test/composerRenderer.test.ts's REPAINTS table, whose four
+ *    #touchColumns rows state the same ranges as painted column indices. A change to the range rule
+ *    below has to move both. ComposedSong only: VsrgSong has no per-object render counters
  *    (VsrgHitObject.renderId is written by its constructor and read by nothing), so a double bump
  *    there is genuinely invisible to this file. Said plainly rather than implied by its absence.
  */
@@ -1230,7 +1233,7 @@ describe('structureVersion is the graph version as a value, on both classes', ()
     })
 
     it('it is only comparable WITHIN one song - two instances both start at 0', () => {
-        //the reason ComposerRenderer.needsFullRepaint pairs the version with the `columns` ARRAY
+        //the reason ComposerRenderer pairs the version with the `columns` ARRAY
         //IDENTITY: a song swap (load, new song, MIDI import) installs a graph whose version is 0,
         //so a version-only diff of an untouched song replacing an untouched song reports "nothing
         //changed". VsrgSong's version is captured by VsrgSongRenderState too, but nothing over

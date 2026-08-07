@@ -23,7 +23,7 @@
     // ComposedSong's graph version. Its own prop for the same reason `instruments` is: the renderer
     // DIFFS it, and `columns` cannot serve on its own - the mutators that edit the array in place
     // leave its identity alone, so an identity comparison does not see those edits. (The renderer
-    // compares both; see needsFullRepaint for what each half covers.) Reading it here is also what
+    // compares both; the identity in needsUnconditionalRepaint, the version in update().)) Reading it here is also what
     // subscribes this component to the graph.
     structureVersion: number;
     isPlaying: boolean;

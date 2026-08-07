@@ -74,13 +74,26 @@ export class NoteColumn {
      * ComposedSong's mutators are what bump it, through the two marking passes there:
      * #touchColumns marks the range a changed note's span COVERS, not just the column that owns the
      * note - a tail is drawn on every column it crosses - and #touchAllColumns marks the whole song
-     * for the bulk/structural passes, where indexes shift or any span may be retouched. Nothing
-     * consumes the counter yet; ComposerRenderer picks it up in phase 4.
+     * for the bulk/structural passes, where indexes shift or any span may be retouched.
      *
-     * CONSUMER CONTRACT: "monotonic" is true only PER INSTANCE, and clone() deliberately does not
-     * copy it (see below), so an undo restores columns whose counters start at 0 while the live
-     * ones have climbed. Phase 4 must therefore test `column.version !== lastPainted` and NEVER
-     * `>` - a `>` comparison silently skips the repaint of every restored column.
+     * ITS ONE CONSUMER is ComposerRenderer's narrowed repaint (phase 4): a pooled column view
+     * records the column it painted and that column's counter, and a structural edit repaints only
+     * the drawn columns whose pair no longer matches. Which is where the two rules below bite.
+     *
+     * CONSUMER CONTRACT, RULE 1: the counter alone identifies nothing. "Monotonic" is true only PER
+     * INSTANCE - clone() deliberately does not copy it (see below), and two unrelated columns
+     * routinely sit at the same number - while addColumns/removeColumns/pasteColumns splice the live
+     * array IN PLACE, moving column objects to new INDEXES without the array's identity moving. So a
+     * consumer keyed by index must hold the column OBJECT beside the number and compare both. See
+     * ComposerRenderer's ColumnPaintKey, which states the same pair from the other side.
+     *
+     * RULE 2: compare the number with `!==`, never `>`. clone() drops the counter, so a restored
+     * column (undo) is observable at 1 - restoreColumns' own #touchAllColumns bumps it on the way
+     * in - as is a freshly inserted one, both BELOW live columns edited more often, so `>`
+     * is the comparison that never repaints exactly the columns whose contents are newest. Holding
+     * the object as rule 1 requires happens to make the two forms coincide - a given instance's
+     * counter only increments - which is why this is written as a rule rather than left implicit:
+     * it is what keeps a consumer correct if it ever stops holding the object.
      */
     version: number = 0
 
