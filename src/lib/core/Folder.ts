@@ -1,5 +1,5 @@
 import {FOLDER_FILTER_TYPES} from "$core/legacyConfig"
-import type {SongStorable} from "./Songs/Song"
+import type {SongStorable} from "./Songs/Song.svelte"
 
 
 export type FolderFilterType = typeof FOLDER_FILTER_TYPES[number]

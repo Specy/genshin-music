@@ -1,5 +1,5 @@
 <script module lang="ts">
-  import type { SongStorable } from '$core/Songs/Song';
+  import type { SongStorable } from '$core/Songs/Song.svelte';
 
   // Named separately, not inlined into the `generics` attribute below: that
   // attribute is a plain string Svelte's tokenizer brace-balance-scans
@@ -26,7 +26,7 @@
   import type { ClassValue } from 'svelte/elements';
   import FuzzySearch from 'fuzzy-search';
   import { Folder } from '$core/Folder';
-  import type { SongType } from '$core/Songs/Song';
+  import type { SongType } from '$core/Songs/Song.svelte';
   import { folderStore } from '$stores/FoldersStore.svelte';
   import { ThemeProvider } from '$core/theme/ThemeProvider.svelte';
   import { t } from '$i18n/binding.svelte';

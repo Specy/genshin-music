@@ -4,8 +4,8 @@
 
 <script lang="ts">
   import type { Folder } from '$core/Folder';
-  import type { SongStorable } from '$core/Songs/Song';
-  import type { VsrgSong } from '$core/Songs/VsrgSong';
+  import type { SongStorable } from '$core/Songs/Song.svelte';
+  import type { VsrgSong } from '$core/Songs/VsrgSong.svelte';
   import { songService } from '$core/Services/SongService';
   import { songsStore } from '$stores/SongsStore.svelte';
   import { logger } from '$stores/LoggerStore.svelte';

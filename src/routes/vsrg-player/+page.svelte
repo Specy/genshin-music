@@ -10,9 +10,9 @@
   import type { VsrgSongSelectType } from '$cmp/pages/VsrgPlayer/VsrgPlayerSongRow.svelte';
   import type { VsrgPlayerCanvasSizes } from '$cmp/pages/VsrgPlayer/VsrgPlayerRenderer';
   import { DEFAULT_DOM_RECT } from '$core/legacyConfig';
-  import { VsrgSong, type VsrgHitObject } from '$core/Songs/VsrgSong';
+  import { VsrgSong, type VsrgHitObject } from '$core/Songs/VsrgSong.svelte';
   import { RecordedSong } from '$core/Songs/RecordedSong';
-  import { ComposedSong } from '$core/Songs/ComposedSong';
+  import { ComposedSong } from '$core/Songs/ComposedSong.svelte';
   import { AudioPlayer } from '$lib/audio/AudioPlayer';
   import { songsStore } from '$stores/SongsStore.svelte';
   import { songService } from '$core/Services/SongService';

@@ -1,7 +1,7 @@
 import {type Pitch, PITCHES, TEMPO_CHANGERS} from "$core/legacyConfig"
 import {NoteColumn, RecordedNote} from "../Songs/SongClasses";
-import {Song} from "../Songs/Song";
-import {ComposedSong} from "../Songs/ComposedSong";
+import {Song} from "../Songs/Song.svelte";
+import {ComposedSong} from "../Songs/ComposedSong.svelte";
 import {RecordedSong} from "../Songs/RecordedSong";
 import Color, { type ColorInstance } from "color";
 import * as workerTimers from 'worker-timers';

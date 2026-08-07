@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { SerializedSong, SongStorable } from '$core/Songs/Song';
+  import type { SerializedSong, SongStorable } from '$core/Songs/Song.svelte';
   import { songService } from '$core/Services/SongService';
   import { logger } from '$stores/LoggerStore.svelte';
   import { t } from '$i18n/binding.svelte';

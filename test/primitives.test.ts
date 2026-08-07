@@ -1,5 +1,5 @@
 import {describe, it} from 'vitest'
-import {ColumnNote, ComposedSong, Folder, InstrumentData, NoteColumn, RecordedNote} from './imports'
+import {ComposedSong, Folder, InstrumentData, NoteColumn, RecordedNote} from './imports'
 import {expectGolden, readFixture} from './golden'
 
 describe('primitive serialization', () => {
@@ -35,7 +35,7 @@ describe('primitive serialization', () => {
         const column = new NoteColumn()
         column.tempoChanger = 2
         column.addNote(0, 60)
-        column.addNote(new ColumnNote(1, 72, 4))
+        column.addNote({trackIndex: 1, id: 72, span: 4}) //object overload: the only coverage of addNote's non-numeric branch outside core
         expectGolden('primitives-v4', {
             fromLegacyColumn: ComposedSong.deserialize(v3Payload as any).serialize(),
             columnNotes: column.notes.map(note => ({trackIndex: note.trackIndex, id: note.id, span: note.span})),

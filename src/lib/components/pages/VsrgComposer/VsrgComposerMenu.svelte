@@ -5,8 +5,12 @@
   import { globalConfigStore } from '$stores/GlobalConfigStore.svelte';
   import { clickOutside } from '$lib/utils/clickOutside';
   import type { RecordedSong } from '$core/Songs/RecordedSong';
-  import type { SerializedSong, SongType } from '$core/Songs/Song';
-  import type { VsrgSong, VsrgTrackModifier } from '$core/Songs/VsrgSong';
+  import type { SerializedSong, SongType } from '$core/Songs/Song.svelte';
+  import type {
+    VsrgSong,
+    VsrgTrackModifier,
+    VsrgTrackModifierPatch,
+  } from '$core/Songs/VsrgSong.svelte';
   import type { VsrgComposerSettingsDataType } from '$core/BaseSettings';
   import type { SettingUpdate } from '$core/types/SettingsPropriety';
   import { t } from '$i18n/binding.svelte';
@@ -45,8 +49,8 @@
       onSongOpen: (song: VsrgSong) => void;
       onCreateSong: () => void;
       onTrackModifierChange: (
-        trackModifier: VsrgTrackModifier,
         index: number,
+        patch: VsrgTrackModifierPatch,
         recalculate: boolean
       ) => void;
     };
@@ -333,13 +337,9 @@
               {#each data.trackModifiers as trackModifier, i (i)}
                 <TrackModifier
                   data={trackModifier}
-                  onChange={(t) => functions.onTrackModifierChange(t, i, false)}
+                  onChange={(patch) => functions.onTrackModifierChange(i, patch, false)}
                   onVisibilityChange={(visible) => {
-                    functions.onTrackModifierChange(
-                      trackModifier.set({ hidden: visible }),
-                      i,
-                      true
-                    );
+                    functions.onTrackModifierChange(i, { hidden: visible }, true);
                   }}
                 />
               {/each}

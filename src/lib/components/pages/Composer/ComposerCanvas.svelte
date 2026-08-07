@@ -5,8 +5,7 @@
   import { colorToRGB } from '$core/utils/Utilities';
   import { isMobile } from 'is-mobile';
   import { createShortcutListener } from '$stores/KeybindsStore.svelte';
-  import type { NoteColumn } from '$core/Songs/SongClasses';
-  import type { ComposedSong } from '$core/Songs/ComposedSong';
+  import type { InstrumentData, NoteColumn } from '$core/Songs/SongClasses';
   import type { ComposerSettingsDataType } from '$core/BaseSettings';
   import type { ComposerRenderer } from './ComposerRenderer';
   import TimelineButton from './TimelineButton.svelte';
@@ -23,7 +22,9 @@
     columns: NoteColumn[];
     isPlaying: boolean;
     isRecordingAudio: boolean;
-    song: ComposedSong;
+    // The roster is its own prop, not reached through a `song` prop - see ComposerRendererState's
+    // note. The $effect below has to READ it for an instrument edit to repaint the canvas.
+    instruments: InstrumentData[];
     selected: number;
     currentLayer: number;
     inPreview?: boolean;
@@ -38,7 +39,7 @@
     columns,
     isPlaying,
     isRecordingAudio,
-    song,
+    instruments,
     selected,
     currentLayer,
     inPreview,
@@ -81,7 +82,7 @@
           columns,
           isPlaying,
           isRecordingAudio,
-          song,
+          instruments,
           selected,
           currentLayer,
           inPreview,
@@ -118,12 +119,18 @@
     };
   });
 
+  // `renderer?.update({...})` short-circuits the ARGUMENT while renderer is still null (before the
+  // dynamic pixi import resolves), so on those runs the state object is not built at all and this
+  // effect registers `renderer` alone. It self-heals - assigning renderer re-runs this, and that
+  // run does read every field - but it is why the dependency set is run-dependent, and why phase
+  // 3's diffing has to live inside update() rather than as an early return here.
+  // VsrgComposerCanvas.svelte hit the same edge and captures its song reads BEFORE the call.
   $effect(() => {
     renderer?.update({
       columns,
       isPlaying,
       isRecordingAudio,
-      song,
+      instruments,
       selected,
       currentLayer,
       inPreview,

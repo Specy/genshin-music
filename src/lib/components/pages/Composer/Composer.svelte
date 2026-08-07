@@ -21,10 +21,10 @@
   import Analytics from '$core/Analytics';
   import { homeStore } from '$stores/HomeStore.svelte';
   import { logger } from '$stores/LoggerStore.svelte';
-  import { ComposedSong } from '$core/Songs/ComposedSong';
+  import { ComposedSong } from '$core/Songs/ComposedSong.svelte';
   import { RecordedSong } from '$core/Songs/RecordedSong';
-  import { VsrgSong } from '$core/Songs/VsrgSong';
-  import { Song, type SerializedSong } from '$core/Songs/Song';
+  import { VsrgSong } from '$core/Songs/VsrgSong.svelte';
+  import { Song, type SerializedSong } from '$core/Songs/Song.svelte';
   import { NoteLayer } from '$core/Songs/Layer';
   import type { InstrumentData, NoteColumn } from '$core/Songs/SongClasses';
   import type { SettingUpdate, SettingVolumeUpdate } from '$core/types/SettingsPropriety';
@@ -72,7 +72,12 @@
   // svelte-ignore state_referenced_locally
   song.bpm = settings.bpm.value;
   let layer = $state(0);
-  let selectedColumns: number[] = $state([]);
+  // `$state.raw`, like song.breakpoints/song.instruments: this array is handed to the canvas and
+  // the renderer calls `selectedColumns.includes(i)` once per visible column on every draw, so it
+  // has to stay a PLAIN array rather than a deep proxy whose every element read is a trap. The
+  // rule that comes with it: assign a new array, never push/splice (every write below already
+  // does, see selectColumn).
+  let selectedColumns: number[] = $state.raw([]);
   let undoHistory: NoteColumn[][] = $state([]);
   let copiedColumns: NoteColumn[] = $state([]);
   let isToolsVisible = $state(false);
@@ -90,12 +95,11 @@
   const currentInstrument = $derived(layers[layer]);
   const songLength = $derived(calculateSongLength(song.columns, settings.bpm.value, song.selected));
 
-  // song is a class instance, and $state() only deep-wraps plain objects/arrays - mutating it
-  // in place would not trigger reactivity. Call this after every mutation; clone() rebuilds a
-  // fresh instance so template/child-prop reads pick up the change.
-  function refreshSong() {
-    song = song.clone();
-  }
+  // No refreshSong() any more (2026-08-06 reactive-model plan, phase 1). ComposedSong publishes
+  // its own changes now: `selected`, `breakpoints`, `instruments`, `name`/`bpm`/`pitch` are
+  // signals, and the whole column/note graph rides one structure version that the `columns`
+  // getter reads. So a mutation is published by the model method that made it - this component
+  // just calls the method. `song` itself is still $state, but it only changes on load/create.
 
   onMount(() => {
     mounted = true;
@@ -264,9 +268,14 @@
     // @ts-expect-error SettingUpdateKey spans all 4 settings families; narrower here by design
     settings[key] = { ...settings[key], value: data.value };
     if (data.songSetting) {
+      // A songSetting key is written straight onto the song here, so whether the write publishes
+      // is decided by the field it lands on. The keys that carry the flag today are bpm, pitch and
+      // reverb: bpm/pitch are signals and publish through this dynamic write (they keep public
+      // setters, which is why it still works); reverb is plain on purpose - it goes straight to
+      // AudioProvider below and into serialize(). A fourth songSetting whose field needs to be
+      // observed would have to be a signal on the song, like those two.
       // @ts-expect-error SettingUpdateKey spans all 4 settings families; narrower here by design
       song[key] = data.value;
-      refreshSong();
     }
     if (key === 'reverb') {
       AudioProvider.setReverb(data.value as boolean);
@@ -281,7 +290,6 @@
         t('composer:cant_add_more_than_n_layers', { max_layers: NoteLayer.MAX_LAYERS })
       );
     song.addInstrument(game.instruments.list[0]);
-    refreshSong();
     syncInstruments(song);
   }
 
@@ -300,16 +308,16 @@
     if (confirm) {
       song.removeInstrument(index);
       syncInstruments(song);
-      refreshSong();
       layer = Math.max(0, index - 1);
     }
   }
 
   function editInstrument(instrument: InstrumentData, index: number) {
-    song.instruments[index] = instrument.clone();
-    song.instruments = [...song.instruments];
+    // setInstrument clones and REPLACES the array entry. That fresh identity is load-bearing:
+    // InstrumentControls renders a keyed {#each} over the roster, so an in-place field edit would
+    // leave the layer panel showing the old name/colour/visibility. Do not "optimise" it away.
+    song.setInstrument(index, instrument);
     syncInstruments(song);
-    refreshSong();
   }
 
   async function syncInstruments(songToSync?: ComposedSong) {
@@ -462,8 +470,7 @@
     }
     const existing = song.selectedColumn.findNote(layer, id);
     if (existing === null) {
-      song.selectedColumn.addNote(layer, id);
-      refreshSong();
+      song.addNoteAt(song.selected, layer, id);
       handleAutoSave();
       notePress = { id, existedAtPress: false, coveringStart: null, longPressFired: false };
     } else {
@@ -478,11 +485,10 @@
     if (song.getSpanCovering(song.selected, layer, id)) return;
     const existing = song.selectedColumn.findNote(layer, id);
     if (existing === null) {
-      song.selectedColumn.addNote(layer, id);
+      song.addNoteAt(song.selected, layer, id);
     } else {
-      song.selectedColumn.removeNote(layer, id);
+      song.removeNoteAt(song.selected, layer, id);
     }
-    refreshSong();
     handleAutoSave();
   }
 
@@ -492,8 +498,7 @@
     if (!press || press.longPressFired || press.id !== note.midiNote) return;
     if (press.coveringStart !== null) return; //occupancy: covered buttons don't toggle
     if (press.existedAtPress) {
-      song.selectedColumn.removeNote(layer, press.id);
-      refreshSong();
+      song.removeNoteAt(song.selected, layer, press.id);
       handleAutoSave();
     }
   }
@@ -516,10 +521,17 @@
     };
   }
 
-  const popoverNote = $derived.by(() => {
+  // The SPAN NUMBER, never the note object. Identity trap: with cloning gone the ColumnNote is a
+  // stable object, so a $derived whose value IS the note re-runs on every edit (it reads the
+  // tracked columns getter) but returns a === value and never propagates - the popover's slider
+  // would freeze at the span it opened with while the song and the canvas tails updated
+  // underneath. null doubles as "no such note", which is what the {#if} guard below tests.
+  const popoverSpan = $derived.by(() => {
     const popover = durationPopover;
     if (!popover) return null;
-    return song.columns[popover.startColumn]?.findNote(popover.trackIndex, popover.id) ?? null;
+    return (
+      song.columns[popover.startColumn]?.findNote(popover.trackIndex, popover.id)?.span ?? null
+    );
   });
   const popoverMaxSpan = $derived.by(() => {
     const popover = durationPopover;
@@ -535,7 +547,6 @@
       durationPopover.id,
       span
     );
-    refreshSong();
     handleAutoSave();
   }
 
@@ -574,7 +585,6 @@
     await songsStore.renameSong(id, newName);
     if (song.id === id) {
       song.name = newName;
-      refreshSong();
     }
   }
 
@@ -590,7 +600,6 @@
       const name = await asyncPrompt(t('question:ask_song_name_cancellable'));
       if (name === null || !mounted) return false;
       songToSave.name = name;
-      refreshSong();
       changes = 0;
       await addSong(songToSave);
       return true;
@@ -608,7 +617,6 @@
         const name = await asyncPrompt(t('composer:ask_song_name_for_composed_song_version'));
         if (name === null) return false;
         songToSave.name = name;
-        refreshSong();
         addSong(songToSave);
         return true;
       }
@@ -648,6 +656,9 @@
     if (!mounted) return;
     song = added;
     layer = 0;
+    // same reason as loadSong: the history belongs to the song that was just replaced
+    undoHistory = [];
+    copiedColumns = [];
     Analytics.songEvent({ type: 'create' });
   }
 
@@ -697,6 +708,12 @@
       layer = 0;
       song = parsed;
       selectedColumns = [];
+      // Both hold columns cloned from the PREVIOUS song, carrying that song's track indices.
+      // refreshSong() used to launder a stale restore into a fresh graph one tick later; with no
+      // clone, undoing after a load installs the old song's columns into the new one - and then
+      // autosaves the result.
+      undoHistory = [];
+      copiedColumns = [];
       syncInstruments();
     } catch (e) {
       console.error(e);
@@ -708,7 +725,6 @@
     song.addColumns(amount, position);
     if (amount === 1) selectColumn(song.selected + 1);
     handleAutoSave();
-    refreshSong();
   }
 
   function removeColumns(amount: number, position: number) {
@@ -716,7 +732,6 @@
     song.removeColumns(amount, position);
     if (song.columns.length <= song.selected) selectColumn(song.selected - 1);
     handleAutoSave();
-    refreshSong();
   }
 
   async function togglePlay(override?: boolean): Promise<void> {
@@ -787,22 +802,24 @@
     }
   }
 
+  // Nothing is chained onto this. song.toggleBreakpoint() assigns a new breakpoints array (which
+  // is what publishing means for that $state.raw field) and refuses any index validateBreakpoints()
+  // would filter, so the toggle itself does not produce one to clean up.
+  // Breakpoints going stale because COLUMNS disappeared is a different problem and not this
+  // wrapper's to solve: the paths that shrink the live song's column array validate inside
+  // ComposedSong - see validateBreakpoints' own docstring for which and why.
   function toggleBreakpoint(override?: number) {
     song.toggleBreakpoint(override);
-    validateBreakpoints();
   }
 
   function handleTempoChanger(changer: (typeof game.composer.tempoChangers)[number]) {
     if (selectedColumns.length) {
       addToHistory();
-      selectedColumns.forEach((column) => {
-        song.columns[column]?.setTempoChanger(changer);
-      });
+      song.setTempoChangerAt(selectedColumns, changer);
     } else {
-      song.selectedColumn.setTempoChanger(changer);
+      song.setTempoChangerAt(song.selected, changer);
     }
     handleAutoSave();
-    refreshSong();
   }
 
   async function prepareToLeave(): Promise<boolean> {
@@ -829,12 +846,16 @@
     if (durationPopover !== null && index !== song.selected) durationPopover = null;
     song.selected = index;
     if (isToolsVisible && copiedColumns.length === 0) {
-      selectedColumns.push(index);
-      const min = Math.min(...selectedColumns);
-      const max = Math.max(...selectedColumns);
+      // the clicked column only ever feeds the min/max below, which then replace the array
+      // wholesale - so extend the RANGE rather than pushing into the array (see its declaration)
+      const min = Math.min(index, ...selectedColumns);
+      const max = Math.max(index, ...selectedColumns);
       selectedColumns = new Array(max - min + 1).fill(0).map((_, i) => min + i);
     }
-    refreshSong();
+    // BEHAVIOR NOTE: refreshSong() used to clone unconditionally, so re-selecting the SAME index
+    // still forced a repaint. Writing an unchanged value to the `selected` signal notifies
+    // nothing, which only matters for togglePlay's selectColumn(song.selected, ...) on play-start
+    // - the canvas effect reads `isPlaying`, which did change, so it still repaints.
     //add a bit of delay if recording audio to imrove the recording quality
     delay = delay ? delay + (isRecordingAudio ? 0.5 : 0) : 0;
     if (ignoreAudio) return;
@@ -884,9 +905,7 @@
   function undo() {
     const history = undoHistory.pop();
     if (!history) return;
-    song.columns = history;
-    song.selected = song.columns.length > song.selected ? song.selected : song.columns.length - 1;
-    refreshSong();
+    song.restoreColumns(history);
   }
 
   function copyColumns(targetLayer: number | 'all') {
@@ -901,7 +920,6 @@
     else if (Number.isFinite(targetLayer)) song.pasteLayer(copiedColumns, insert, targetLayer);
     syncInstruments();
     changes++;
-    refreshSong();
   }
 
   function eraseColumns(targetLayer: number | 'all') {
@@ -909,42 +927,34 @@
     song.eraseColumns(selectedColumns, targetLayer);
     changes++;
     selectedColumns = [song.selected];
-    refreshSong();
   }
 
   function moveNotesBy(amount: number, position: number | 'all') {
     addToHistory();
     song.moveNotesBy(selectedColumns, amount, position);
     changes++;
-    refreshSong();
   }
 
   function switchLayerPosition(direction: 1 | -1) {
     const toSwap = layer + direction;
     if (toSwap < 0 || toSwap > song.instruments.length - 1) return;
+    // two halves of one move: swapLayer retags the notes (structure version), swapInstruments
+    // reorders the roster (instruments signal)
     song.swapLayer(song.columns.length, 0, layer, toSwap);
-    const tmp = song.instruments[layer];
-    song.instruments[layer] = song.instruments[toSwap];
-    song.instruments[toSwap] = tmp;
-    song.instruments = [...song.instruments];
+    song.swapInstruments(layer, toSwap);
     changes++;
     syncInstruments();
-    refreshSong();
     layer = toSwap;
   }
 
   function deleteColumns() {
     addToHistory();
+    // no validateBreakpoints() chained on: deleteColumns() runs it itself, like the other paths
+    // that shrink the column array. It did not use to, and while that was so, this call site was
+    // what kept a deleted column's breakpoint out of the saved song
     song.deleteColumns(selectedColumns);
     changes++;
     selectedColumns = [song.selected];
-    refreshSong();
-    validateBreakpoints();
-  }
-
-  function validateBreakpoints() {
-    song.validateBreakpoints();
-    refreshSong();
   }
 
   function changeMidiVisibility(visible: boolean) {
@@ -1167,7 +1177,7 @@
           columns={song.columns}
           {isPlaying}
           {isRecordingAudio}
-          {song}
+          instruments={song.instruments}
           selected={song.selected}
           currentLayer={layer}
           {inPreview}
@@ -1232,9 +1242,9 @@
       noteNameType: settings.noteNameType.value,
     }}
   />
-  {#if durationPopover && popoverNote}
+  {#if durationPopover && popoverSpan !== null}
     <ComposerDurationPopover
-      span={popoverNote.span}
+      span={popoverSpan}
       maxSpan={popoverMaxSpan}
       anchor={durationPopover.anchor}
       onChange={setPopoverSpan}

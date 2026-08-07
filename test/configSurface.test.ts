@@ -11,14 +11,26 @@ import {expectGolden, readFixture} from './golden'
 describe('game config surface', () => {
     it('all game-defining constants are stable (folder-based config, ADR-0003)', () => {
         // v2 fixture: the post-ADR-0003 surface — per-note structs + Shape ids +
-        // Shape registries (components drop in JSON). The music-theory constants
-        // (pitches/scales) still appear even though they now live in sharedConfig:
-        // they remain part of the runtime surface consumers read.
+        // Shape registries. The music-theory constants (pitches/scales) still appear
+        // even though they now live in sharedConfig: they remain part of the runtime
+        // surface consumers read.
         expectGolden('config-surface-v2', {
             appName: APP_NAME,
             instruments: INSTRUMENTS,
-            instrumentsData: INSTRUMENTS_DATA,      // functions/components drop in JSON
-            shapes: game.shapes,                    // {id, capacity, columns, labels} survive JSON
+            // passed WHOLE: it is plain data end to end. expectGolden now also asserts the value
+            // is structured-cloneable (test/noProxies.ts) and structuredClone throws on a
+            // function, so a function anywhere under here would fail this test rather than be
+            // dropped silently the way JSON.stringify used to drop it. Contrast `shapes` below,
+            // which really does carry one and has to be stripped by hand.
+            instrumentsData: INSTRUMENTS_DATA,
+            // {id, capacity, columns, labels} — the serializable half. The Shape's
+            // `component` (a Svelte component FUNCTION) is dropped HERE rather than
+            // silently by JSON.stringify, because expectGolden now also asserts the
+            // value is structured-cloneable (test/noProxies.ts) and structuredClone
+            // refuses functions. Same fixture bytes either way.
+            shapes: Object.fromEntries(
+                Object.entries(game.shapes).map(([id, {component, ...serializable}]) => [id, serializable])
+            ),
             pitches: PITCHES,
             tempoChangers: TEMPO_CHANGERS,
             baseLayerLimit: BASE_LAYER_LIMIT,

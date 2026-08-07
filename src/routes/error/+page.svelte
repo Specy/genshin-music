@@ -12,9 +12,9 @@
   import { setPageVisited } from '$stores/PageVisitStore.svelte';
   import { fileService } from '$core/Services/FileService';
   import { songService } from '$core/Services/SongService';
-  import { ComposedSong } from '$core/Songs/ComposedSong';
+  import { ComposedSong } from '$core/Songs/ComposedSong.svelte';
   import { RecordedSong } from '$core/Songs/RecordedSong';
-  import type { SerializedSong } from '$core/Songs/Song';
+  import type { SerializedSong } from '$core/Songs/Song.svelte';
   import { APP_NAME } from '$core/legacyConfig';
   import { game } from '$game';
   import { t } from '$i18n/binding.svelte';

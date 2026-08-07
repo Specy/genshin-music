@@ -1126,7 +1126,7 @@
     "version": 3,
     "pitch": "E",
     "bpm": 160,
-    "reverb": false,
+    "reverb": true,
     "data": {
       "isComposed": false,
       "isComposedVersion": false,

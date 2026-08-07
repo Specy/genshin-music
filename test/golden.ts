@@ -3,6 +3,7 @@ import path from 'node:path'
 import {fileURLToPath} from 'node:url'
 import {expect} from 'vitest'
 import {APP_NAME} from './imports'
+import {assertNoReactiveProxies} from './noProxies'
 
 const HERE = path.dirname(fileURLToPath(import.meta.url))
 const FIXTURE_DIR = path.join(HERE, 'fixtures', APP_NAME)
@@ -24,6 +25,11 @@ const UPDATE = process.env.UPDATE_FIXTURES === 'true'
  */
 export function expectGolden(name: string, value: unknown): void {
     const file = path.join(FIXTURE_DIR, `${name}.json`)
+    //BEFORE the UPDATE branch on purpose: a fixture-regeneration run must not be able to bake a
+    //leaked $state proxy into a brand-new fixture. The JSON normalization below cannot see one -
+    //JSON.stringify walks a proxy transparently - so every golden assertion in the suite gets its
+    //IndexedDB-writability checked here instead. See noProxies.ts for what this does NOT catch.
+    assertNoReactiveProxies(`expectGolden(${name})`, value)
     const normalized = JSON.parse(JSON.stringify(value))
     if (UPDATE) {
         fs.mkdirSync(path.dirname(file), {recursive: true})

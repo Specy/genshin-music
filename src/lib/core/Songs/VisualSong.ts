@@ -1,13 +1,21 @@
 // old: src/lib/Songs/VisualSong.ts (245 lines) - minimal-diff port, import-path swaps only.
 // `$config` -> `$core/legacyConfig` (APP_NAME/NoteNameType); `$lib/Songs/*` -> relative imports
-// (`./ComposedSong`, `./RecordedSong`, `./SongClasses`) - matches this directory's own sibling-file
-// convention (RecordedSong.ts/ComposedSong.ts both import their Songs/ siblings relatively, not via
-// the `$core/Songs/*` alias); `$lib/audio/Instrument` -> `$lib/audio/Instrument.svelte`
-// (Phase-4a Task 2's ObservableNote/Instrument port).
+// (`./ComposedSong.svelte`, `./RecordedSong`, `./SongClasses`) - matches this directory's own
+// sibling-file convention (RecordedSong.ts/ComposedSong.svelte.ts both import their Songs/ siblings
+// relatively, not via the `$core/Songs/*` alias); `$lib/audio/Instrument` ->
+// `$lib/audio/Instrument.svelte` (Phase-4a Task 2's ObservableNote/Instrument port).
+//
+// The `.svelte` segment in a specifier is this repo's convention for a MODULE that uses runes, not
+// a component: './ComposedSong.svelte' resolves to ComposedSong.svelte.ts, './Song.svelte' to
+// Song.svelte.ts, exactly as '$lib/audio/Instrument.svelte' resolves to Instrument.svelte.ts. Both
+// Songs/ siblings gained it in the 2026-08-06 reactive-model plan (phase 1) when their scalars
+// became `$state`; there is no file named ComposedSong.svelte or Song.svelte, so nothing is
+// ambiguous. A file that gains a rune has to be renamed AND every importer's specifier updated -
+// the svelte plugin compiles nothing else, and a missed one fails loudly at resolution.
 //
 // FLAGGED FOR REVIEWER: getNoteText's `APP_NAME === 'Genshin' ? toLowerCase : toUpperCase` casing
 // branch is kept via legacyConfig's direct APP_NAME (core-tier file, same precedent as
-// ComposedSong.ts:360's `APP_NAME === 'Genshin' ? 21 : 15`). `game.notes.visualNameCasing`
+// ComposedSong.svelte.ts's `APP_NAME === 'Genshin' ? 21 : 15`). `game.notes.visualNameCasing`
 // ('lowercase'/'uppercase', $lib/games/types.ts:124, both genshin/index.ts:123 and sky/index.ts:119
 // already cite this exact old line as its source) is the UI-tier twin of this branch but has NO
 // consumer anywhere - this core-tier model cannot read `$game` directly (two-tier rule), so the
@@ -19,12 +27,12 @@
 // being fed RecordedSong chunks at runtime by PlayerPagesRenderer (duck-typed - both shapes are
 // `{notes, delay}`) - preserved exactly as old wired it, not unified.
 import {APP_NAME, SUSTAIN_VISUAL_THRESHOLD_MS, type NoteNameType} from "$core/legacyConfig"
-import {ComposedSong} from "./ComposedSong"
+import {ComposedSong} from "./ComposedSong.svelte"
 import {RecordedSong} from "./RecordedSong"
-import {ColumnNote, type InstrumentData, NoteColumn, RecordedNote} from "./SongClasses"
+import {type ColumnNote, type InstrumentData, NoteColumn, RecordedNote} from "./SongClasses"
 import {displayButtonForId} from "./noteIds"
 import {Instrument} from '$lib/audio/Instrument.svelte'
-import {Song} from "./Song"
+import {Song} from "./Song.svelte"
 
 const THRESHOLDS = {
     joined: 50,
@@ -184,9 +192,10 @@ class TempoChunkNote {
     static from(note: ColumnNote | RecordedNote, instruments: InstrumentData[]): TempoChunkNote | null {
         const button = displayButtonForId(instruments[note.trackIndex]?.name ?? '', note.id)
         if (button === -1) return null
-        const held = note instanceof ColumnNote
-            ? note.span > 1
-            : note.duration >= SUSTAIN_VISUAL_THRESHOLD_MS
+        //discriminate on RecordedNote: ColumnNote is plain data now and has no instanceof
+        const held = note instanceof RecordedNote
+            ? note.duration >= SUSTAIN_VISUAL_THRESHOLD_MS
+            : note.span > 1
         return new TempoChunkNote(button, held)
     }
 

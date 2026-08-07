@@ -12,7 +12,7 @@
   import { KeyboardProvider } from '$lib/providers/KeyboardProvider';
   import { clickOutside } from '$lib/utils/clickOutside';
   import { isAudioFormat, isMidiFormat, isVideoFormat } from '$core/utils/Utilities';
-  import type { SerializedSong, SongType } from '$core/Songs/Song';
+  import type { SerializedSong, SongType } from '$core/Songs/Song.svelte';
   import type { ComposerSettingsDataType } from '$core/BaseSettings';
   import type { SettingUpdate, SettingVolumeUpdate } from '$core/types/SettingsPropriety';
   import { t } from '$i18n/binding.svelte';

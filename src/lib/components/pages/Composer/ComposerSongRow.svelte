@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { Folder } from '$core/Folder';
-  import type { SerializedSong, SongStorable } from '$core/Songs/Song';
+  import type { SerializedSong, SongStorable } from '$core/Songs/Song.svelte';
   import { songService } from '$core/Services/SongService';
   import { songsStore } from '$stores/SongsStore.svelte';
   import { logger } from '$stores/LoggerStore.svelte';

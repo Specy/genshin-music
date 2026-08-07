@@ -10,7 +10,7 @@
   import { logger } from '$stores/LoggerStore.svelte';
   import { songService } from '$core/Services/SongService';
   import { ThemeProvider } from '$core/theme/ThemeProvider.svelte';
-  import type { ComposedSong } from '$core/Songs/ComposedSong';
+  import type { ComposedSong } from '$core/Songs/ComposedSong.svelte';
   import type { RecordedSong } from '$core/Songs/RecordedSong';
   import IconDownload from '~icons/fa6-solid/download';
   import IconSpinner from '~icons/fa6-solid/spinner';

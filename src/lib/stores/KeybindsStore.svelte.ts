@@ -1,7 +1,7 @@
 import { APP_NAME } from '$core/legacyConfig';
 import { KeyboardProvider } from '$lib/providers/KeyboardProvider';
 import { game } from '$game';
-import type { VsrgSongKeys } from '$core/Songs/VsrgSong';
+import type { VsrgSongKeys } from '$core/Songs/VsrgSong.svelte';
 import cloneDeep from 'lodash.clonedeep';
 import { SvelteMap } from 'svelte/reactivity';
 

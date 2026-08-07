@@ -14,7 +14,7 @@
   import { _themeService } from '$core/Services/ThemeService';
   import { _folderService } from '$core/Services/FolderService';
   import { fileService, type UnknownFileTypes } from '$core/Services/FileService';
-  import type { SerializedSong } from '$core/Songs/Song';
+  import type { SerializedSong } from '$core/Songs/Song.svelte';
   import type { SerializedTheme } from '$core/theme/ThemeProvider.svelte';
   import { ThemeProvider as theme } from '$core/theme/ThemeProvider.svelte';
   import { Folder, type SerializedFolder } from '$core/Folder';

@@ -25,7 +25,7 @@
     type ShortcutListener,
   } from '$stores/KeybindsStore.svelte';
   import { t } from '$i18n/binding.svelte';
-  import { Song } from '$core/Songs/Song';
+  import { Song } from '$core/Songs/Song.svelte';
 
   let {
     data,

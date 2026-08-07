@@ -1,6 +1,11 @@
 import { createDebouncer } from '$core/utils/Utilities';
 import { songService } from '$core/Services/SongService';
-import { extractStorable, type SerializedSong, Song, type SongStorable } from '$core/Songs/Song';
+import {
+  extractStorable,
+  type SerializedSong,
+  Song,
+  type SongStorable,
+} from '$core/Songs/Song.svelte';
 
 class SongsStore {
   songs: SongStorable[] = $state([]);

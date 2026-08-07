@@ -1,6 +1,6 @@
 <script lang="ts">
   import Color from 'color';
-  import type { VsrgTrack } from '$core/Songs/VsrgSong';
+  import type { VsrgTrack } from '$core/Songs/VsrgSong.svelte';
   import type { Pitch } from '$lib/games/types';
   import { t, tInstrument } from '$i18n/binding.svelte';
   import Row from '$cmp/layout/Row.svelte';
@@ -26,10 +26,17 @@
     onChange: (track: VsrgTrack) => void;
   } = $props();
 
-  // QUIRK: onChange(track) below always hands back the SAME (mutated in place) VsrgTrack
-  // reference the parent already holds - it is not a "new value" signal. The parent re-triggers
-  // its own refresh on any call regardless of reference equality; don't add a reference-equality
-  // check here or upstream expecting onChange to only fire on a genuine identity change.
+  // QUIRK (load-bearing): every handler below mutates `track` - the song's own VsrgTrack - IN
+  // PLACE, then calls onChange(track) with that same reference. So onChange is not a "new value"
+  // signal; it is "the object you gave me has changed". The page turns it into
+  // vsrg.setTrack(index, track), which bumps the song's structure version unconditionally BECAUSE
+  // the reference is unchanged - don't add an equality check here or upstream, and don't make
+  // setTrack skip on identity, or every edit made here stops reaching the canvas and the sidebar.
+  //
+  // The reads in the template are all `track.x` on the PROP, which is what makes them re-render:
+  // the prop expression the parent writes (`track={vsrg.tracks[selectedTrack]}`) is a lazy getter,
+  // so reading it here subscribes this component's effects to the song's structure signal. Do not
+  // hoist `track` into a $derived or a {@const} on either side - see VsrgTop.svelte's header.
   let isColorPickerOpen = $state(false);
 </script>
 
@@ -150,7 +157,8 @@
       style="right:0.8rem;top:0.5rem"
       value={track.color}
       onChange={(color) => {
-        //the canvas rebuilds its per-color texture cache off this, via the page's refreshVsrg()
+        //the canvas bakes one texture set per track colour; the setTrack() this call ends in is
+        //what makes VsrgComposerRenderer.needsCache() see a new colour and rebuild them
         onChange(track.set({ color }));
         isColorPickerOpen = false;
       }}

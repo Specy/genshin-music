@@ -1,4 +1,5 @@
-import { VsrgSong } from '$core/Songs/VsrgSong';
+import { untrack } from 'svelte';
+import { VsrgSong } from '$core/Songs/VsrgSong.svelte';
 
 export type KeyboardKey = {
   key: string;
@@ -45,7 +46,22 @@ const baseScoreMap = {
 };
 
 class VsrgPlayerStore {
-  keyboard: KeyboardKey[] = $state([]);
+  /**
+   * `$state.raw`, not `$state`, for the reason the 2026-08-06 reactive-model plan gives for the
+   * composer's arrays: VsrgPlayerRenderer.validateHitObjects indexes this per renderable hit object
+   * on every frame (`keyboard[ro.hitObject.index]`, then `key.isPressed`), and each of those reads
+   * through a deep proxy is a Proxy trap. Raw makes them plain reads and keeps the whole-array
+   * signal, which is what the keyboard UI watches anyway.
+   *
+   * THE RULE THAT COMES WITH IT is stricter here than for the model's arrays, because a keypress is
+   * an in-place edit by nature: setLayout/pressKey/releaseKey ASSIGN a new array, and press/release
+   * also install a NEW KeyboardKey at the index they touch. Both halves are load-bearing -
+   * `{@const data = vsrgPlayerStore.keyboard[index]}` in VsrgPlayerKeyboard.svelte compiles to an
+   * identity-compared derived, so mutating the existing key and reassigning the array would publish
+   * and still leave that key drawn unpressed. The cost is a 4-6 element array plus one object per
+   * keypress, which is user-paced; the reads it makes plain are per frame.
+   */
+  keyboard: KeyboardKey[] = $state.raw([]);
   currentSong: VsrgPlayerSong = $state({
     song: null,
     type: 'stop',
@@ -76,18 +92,10 @@ class VsrgPlayerStore {
   // props now (see its update()), and the bus is gone with it.
   private keyboardListeners: VsrcPlayerKeyboardCallback[] = [];
 
+  //assigns rather than splicing the live array: under `$state.raw` an in-place edit publishes
+  //nothing, so the keyboard would keep rendering the previous key count after a 4 <-> 6 key change
   setLayout = (layout: string[]) => {
-    this.keyboard.splice(
-      0,
-      this.keyboard.length,
-      ...layout.map((key, index) => {
-        return {
-          key,
-          index,
-          isPressed: false,
-        };
-      })
-    );
+    this.keyboard = layout.map((key, index) => ({ key, index, isPressed: false }));
   };
   resetScore = () => {
     const resetScore: VsrgPlayerScore = {
@@ -127,6 +135,10 @@ class VsrgPlayerStore {
     // simplified.
     return baseScoreMap[type] ?? 0;
   };
+  // The clone here is a SNAPSHOT for the player, not the clone-to-notify the 2026-08-06
+  // reactive-model plan deleted: it gives the player its own copy so that editing the song in the
+  // composer cannot rewrite what is being played. It also happens to be what makes retrying the
+  // SAME song work, since subscribeCurrentVsrgSong detects changes by reference. Keep it.
   playSong = (song: VsrgSong) => {
     this.currentSong.type = 'play';
     this.currentSong.song = song.clone();
@@ -139,12 +151,25 @@ class VsrgPlayerStore {
     this.currentSong.song = null;
   };
   pressKey = (index: number) => {
-    this.keyboard[index].isPressed = true;
-    this.emitKeyboardEvent(this.keyboard[index], 'down');
+    this.emitKeyboardEvent(this.setPressed(index, true), 'down');
   };
   releaseKey = (index: number) => {
-    this.keyboard[index].isPressed = false;
-    this.emitKeyboardEvent(this.keyboard[index], 'up');
+    this.emitKeyboardEvent(this.setPressed(index, false), 'up');
+  };
+  // Install a new key object in a new array - see the `keyboard` field for why both, and for what
+  // an in-place `keyboard[index].isPressed = ...` would fail to do now. The listeners are handed
+  // the new object, as they used to be handed the mutated one.
+  //
+  // An index that addresses no key throws here, as the in-place write it replaces did: both call
+  // sites (VsrgPlayerKeyboard's pointer handlers and its findIndex-guarded key listeners) pass an
+  // index of the layout they just read, so a bad one is a caller bug rather than an input.
+  private setPressed = (index: number, isPressed: boolean): KeyboardKey => {
+    const current = this.keyboard[index];
+    const updated: KeyboardKey = { key: current.key, index: current.index, isPressed };
+    const keyboard = [...this.keyboard];
+    keyboard[index] = updated;
+    this.keyboard = keyboard;
+    return updated;
   };
   addKeyboardListener = (listener: VsrcPlayerKeyboardCallback) => {
     this.keyboardListeners.push(listener);
@@ -197,7 +222,14 @@ export function subscribeCurrentVsrgSong(callback: (data: VsrgPlayerSong) => voi
       if (song === lastSong && type === lastType) return;
       lastSong = song;
       lastType = type;
-      callback(vsrgPlayerStore.currentSong);
+      // untrack: this callback runs SYNCHRONOUSLY inside the effect and its call tree reads the
+      // song - VsrgPlayerRenderer.onSongPick reaches song.keys, song.getAccuracyBounds()'s
+      // `difficulty` and song.tracks. Those became signals in the 2026-08-06 reactive-model plan's
+      // phase 2, so without this every one of them would silently join this effect's dependency
+      // set, and an effect whose contract is "fires when the current song changes" would re-run on
+      // any edit to the song it is holding. The two reads above stay tracked - they are the
+      // dependencies this subscriber is actually for.
+      untrack(() => callback(vsrgPlayerStore.currentSong));
     });
   });
 }

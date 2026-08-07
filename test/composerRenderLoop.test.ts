@@ -128,7 +128,7 @@ const pixi = vi.hoisted(() => {
 vi.mock('pixi.js', () => pixi);
 
 import { ComposerSettings } from '$core/BaseSettings';
-import { ComposedSong } from '$core/Songs/ComposedSong';
+import { ComposedSong } from '$core/Songs/ComposedSong.svelte';
 import { ComposerRenderer, type ComposerRendererState } from '$cmp/pages/Composer/ComposerRenderer';
 
 afterEach(() => {
@@ -145,7 +145,7 @@ describe('ComposerRenderer rendering', () => {
       columns: song.columns,
       isPlaying: false,
       isRecordingAudio: false,
-      song,
+      instruments: song.instruments,
       selected: 0,
       currentLayer: 0,
       settings: ComposerSettings.data,

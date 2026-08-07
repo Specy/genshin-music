@@ -7,7 +7,7 @@
 <script lang="ts">
   import type { SnapPoint } from '$core/types';
   import { VSRG_TEMPO_CHANGER } from '$core/legacyConfig';
-  import type { VsrgSong } from '$core/Songs/VsrgSong';
+  import type { VsrgSong } from '$core/Songs/VsrgSong.svelte';
   import { t } from '$i18n/binding.svelte';
   import AppButton from '$cmp/inputs/AppButton.svelte';
   import Select from '$cmp/inputs/Select.svelte';

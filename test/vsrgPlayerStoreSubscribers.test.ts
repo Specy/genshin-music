@@ -5,7 +5,7 @@ import {
     subscribeVsrgScore,
     vsrgPlayerStore,
 } from '../src/lib/stores/VsrgPlayerStore.svelte'
-import {VsrgSong} from '../src/lib/core/Songs/VsrgSong'
+import {VsrgSong} from '../src/lib/core/Songs/VsrgSong.svelte'
 
 // The three `$effect.root`-based subscribers on `vsrgPlayerStore` share the same novel mechanism
 // (and the same fixed race condition) as `subscribeTheme` - see that function's header comment in

@@ -1,5 +1,5 @@
 <script module lang="ts">
-  import type { ComposedSong } from '$core/Songs/ComposedSong';
+  import type { ComposedSong } from '$core/Songs/ComposedSong.svelte';
   import { RecordedSong } from '$core/Songs/RecordedSong';
 
   export type RecordedOrComposed = RecordedSong | ComposedSong;
@@ -8,7 +8,7 @@
 <script lang="ts">
   import type { Midi } from '@tonejs/midi';
   import type { Folder } from '$core/Folder';
-  import type { SongStorable } from '$core/Songs/Song';
+  import type { SongStorable } from '$core/Songs/Song.svelte';
   import { songService } from '$core/Services/SongService';
   import { songsStore } from '$stores/SongsStore.svelte';
   import { playerStore } from '$stores/PlayerStore.svelte';
