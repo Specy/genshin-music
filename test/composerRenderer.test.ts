@@ -17,6 +17,23 @@ import type {ComposerCache} from '$cmp/pages/Composer/ComposerCache'
  *   it does not see those. `structureVersion` is the value that moves on every graph edit - and it
  *   is per-song, so the columns identity is compared beside it for the song-swap case.
  *
+ * AND ITS PER-COLUMN HALF (phase 4), which is the same idea one level down. A graph edit repaints
+ * only the drawn columns whose own `NoteColumn.version` counter differs from what their view last
+ * painted; every other input to a column's pixels forces the whole window instead, and the rows
+ * below pin each of those - moving any one of `currentLayer`, `instruments`, `breakpoints`,
+ * `selectedColumns` or `beatMarks` onto the narrowed path fails three to five tests.
+ *
+ * The key a view holds is the PAIR (column object, version). The object half is the one this file
+ * has to construct a case for: addColumns/removeColumns/pasteColumns splice the live array in
+ * place, so column objects move to new INDEXES without the array's identity moving, and two
+ * counters sitting at the same number is an ordinary coincidence - see the two rows that build
+ * exactly that and assert it. A version-only key fails them with `!==` and with `>` alike.
+ *
+ * What this file does NOT distinguish, said here rather than left to be rediscovered: `>` versus
+ * `!==` while the object half is present (a given column's counter only increments, so the two
+ * cannot differ), and clearing a released view's key (redundant against the renderer painting every
+ * view it acquires). Both are pinned only in the forms above, and the renderer says so at each.
+ *
  * THE SILENT FAILURE MODE the pool introduces is a reused view showing something its previous
  * occupant left behind - a texture, an alpha, a note sprite that should have been hidden. Nothing
  * about that is visible in HOW MUCH was repainted, so counting repaints cannot see it. The second
@@ -82,12 +99,20 @@ import type {ComposerCache} from '$cmp/pages/Composer/ComposerCache'
  *    computeRowLayerStatuses, computeStrandedRows, displayButtonForId, isColumnVisible. A defect
  *    inside one of those is followed by the reference rather than caught, EXCEPT where a second,
  *    independent statement pins it (the closed-form window range does this for isColumnVisible).
+ *  - an edit to a column entirely OUTSIDE the drawn window. It is correct because the column is
+ *    painted on the way in, but nothing here drives that.
+ *  - a wrong skip whose stale content happens to equal the correct content. Invisible by
+ *    construction, since the scene is compared as values - and harmless for the same reason.
+ *  - over-repainting BEYOND the marked set. Only the counts can see it, and only on the rows that
+ *    state an exact painted set rather than 'window'.
  *
- * HOW MUCH was repainted is observed indirectly, because everything the renderer decides is
- * private. Each counter of Repainted rides on something the class does in one place:
+ * HOW MUCH was repainted, AND WHICH COLUMNS, is observed indirectly, because everything the
+ * renderer decides is private. Each counter of Repainted rides on something the class does in one
+ * place:
  *  - painting a column clears that view's tail Graphics; the timeline viewport is the other
  *    Graphics this class clears, and it is subtracted by identity, so `columnPaints` follows column
- *    paints rather than clears in general;
+ *    paints rather than clears in general. `paintedColumns` reads the SAME clears per view instead
+ *    of globally, and push() asserts the two agree, so neither reading can narrow on its own;
  *  - rebuilding the timeline content removeChildren()s the timeline content container, which
  *    nothing else in the class calls;
  *  - the class constructs plain Containers in two places - its persistent scene containers, in
@@ -517,8 +542,17 @@ function makeContext(): Context {
 interface Repainted {
     /** both Applications, asserted together - a row where they differ is a bug in the renderer */
     renders: {notes: number, timeline: number}
-    /** columns whose content was repainted */
+    /** how many columns' content was repainted */
     columnPaints: number
+    /**
+     * WHICH columns' content was repainted, ascending. The count above cannot see a repaint set
+     * that is the right SIZE and the wrong SET, which is exactly the mistake a per-column skip
+     * makes: an off-by-one on the touched range, a tail range dropped, the wrong side of a window
+     * shift. Both readings come off the same channel (a paint clears that column's tail Graphics)
+     * and push() asserts they agree, so a per-view reading that misses a paint fails instead of
+     * quietly narrowing what the rows below compare against.
+     */
+    paintedColumns: number[]
     /** timeline content container rebuilds */
     timelineRebuilds: number
     /** pooled views constructed (the pool grew) and destroyed (the pool was thrown away) */
@@ -699,6 +733,8 @@ interface Harness {
     context: Context
     /** Push the current song + props at the renderer and report what it repainted. */
     push(): Repainted
+    /** The column indices isColumnVisible says are drawn right now, ascending. */
+    drawnColumns(): number[]
     /** How many columns isColumnVisible says are drawn right now. */
     windowSize(): number
     /** The column indices the pool currently has on screen, derived from the containers' x. */
@@ -919,32 +955,82 @@ async function mount(context: Context = makeContext()): Promise<Harness> {
 
     const columnIndex = (column: SceneNode) => Math.round(column.x / geometry().columnWidth)
 
+    /** A view's tail Graphics - the fixed slot ColumnView gives every view, asserted as such. */
+    const tailGraphicsOf = (column: SceneNode): SceneNode => {
+        const tails = column.children[3]
+        expect(tails.kind).toBe('graphics')
+        return tails
+    }
+
+    /**
+     * How many times each view's tail Graphics had been cleared - i.e. how many times that VIEW had
+     * been painted - as of the start of the last push.
+     *
+     * Keyed by the Graphics OBJECT and not by column index, because a view outlives its index: it
+     * is released into the free list when its column leaves the window and re-acquired for whatever
+     * column needs one later. It cannot be painted while it is parked there (paintColumn only ever
+     * paints a view it has just put in the on-screen map), so the value recorded while it was last
+     * attached is still current when it comes back - which is what makes a returning view read as
+     * "painted" exactly when the update that brought it back painted it.
+     */
+    const paintsPerView = new WeakMap<SceneNode, number>()
+
+    const drawnColumns = (): number[] => {
+        const drawn: number[] = []
+        for (let i = 0; i < context.song.columns.length; i++) {
+            if (isColumnVisible(i, context.song.selected, COLUMNS_PER_CANVAS)) drawn.push(i)
+        }
+        return drawn
+    }
+
     return {
         context,
         push() {
             const before = measure()
+            //the baseline, taken over the views ATTACHED NOW: it covers repaints that happened
+            //outside a push() as well (a resize, a theme change - both debounced timers this file
+            //drives forward), which would otherwise read as paints of the update below
+            for (const column of notesColumns.children) {
+                paintsPerView.set(tailGraphicsOf(column), tailGraphicsOf(column).clears)
+            }
             renderer.update(state())
             const after = measure()
+            const columnPaints =
+                after.graphicsClears -
+                before.graphicsClears -
+                (after.viewportClears - before.viewportClears)
+            const {columnWidth} = geometry()
+            const paintedColumns: number[] = []
+            for (const column of notesColumns.children) {
+                const tails = tailGraphicsOf(column)
+                //a view with no entry has never been attached at the start of a push - it was
+                //constructed during this update, and its first paint is the one being measured
+                if (tails.clears > (paintsPerView.get(tails) ?? 0)) {
+                    paintedColumns.push(Math.round(column.x / columnWidth))
+                }
+            }
+            paintedColumns.sort((a, b) => a - b)
+            //the two readings of one thing, cross-checked: the global clear count says HOW MANY
+            //columns were painted, the per-view walk says WHICH. They disagree on a paint this walk
+            //cannot attribute - a column painted twice in one update, or a view painted and then
+            //released before the walk sees it (the renderer releases BEFORE it paints, so that
+            //ordering is a claim in its own right).
+            expect(paintedColumns).toHaveLength(columnPaints)
             return {
                 renders: {
                     notes: after.notesRenders - before.notesRenders,
                     timeline: after.timelineRenders - before.timelineRenders,
                 },
-                columnPaints:
-                    after.graphicsClears -
-                    before.graphicsClears -
-                    (after.viewportClears - before.viewportClears),
+                columnPaints,
+                paintedColumns,
                 timelineRebuilds: after.timelineClears - before.timelineClears,
                 viewsCreated: after.containersCreated - before.containersCreated,
                 viewsDestroyed: after.containersDestroyed - before.containersDestroyed,
             }
         },
+        drawnColumns,
         windowSize() {
-            let count = 0
-            for (let i = 0; i < context.song.columns.length; i++) {
-                if (isColumnVisible(i, context.song.selected, COLUMNS_PER_CANVAS)) count++
-            }
-            return count
+            return drawnColumns().length
         },
         attachedColumns() {
             return notesColumns.children.map(columnIndex)
@@ -1347,12 +1433,26 @@ interface RepaintCase {
     /** ONE renderer, and (except for the song-swap row) ONE stable ComposedSong */
     change: (context: Context) => void
     renders: number
-    /** a number, or 'window' for "every drawn column", which is what a full repaint does */
-    columnPaints: number | 'window'
+    /**
+     * The columns repainted, ascending and exactly - or 'window' for "every drawn column", which is
+     * what an unnarrowed repaint does.
+     *
+     * The four rows that state an exact set are the four ComposedSong mutators that mark a RANGE
+     * rather than the whole song (#touchColumns: addNoteAt, removeNoteAt, setNoteSpan,
+     * setTempoChangerAt), and the indices here are the ranges test/reactivePublish.test.ts's
+     * `touches` column states from the model side. That pair is the whole of phase 4's correctness:
+     * the model marks the columns a change can be seen on, and the renderer repaints exactly those.
+     * Every other mutator ends in #touchAllColumns, so it stays 'window'.
+     */
+    columnPaints: number[] | 'window'
     timelineRebuilds: number
 }
 
-/** A structural edit: the window is repainted column by column and the timeline content rebuilt. */
+/**
+ * A change no per-column counter can localise: the whole drawn window is repainted column by column
+ * and the timeline content rebuilt. Either the change is not a graph edit at all (so
+ * needsUnconditionalRepaint takes it), or it is one that marks every column.
+ */
 const FULL: Pick<RepaintCase, 'renders' | 'columnPaints' | 'timelineRebuilds'> = {
     renders: 1,
     columnPaints: 'window',
@@ -1365,7 +1465,7 @@ const REPAINTS: RepaintCase[] = [
         what: 'nothing changed',
         change: () => {},
         renders: 0,
-        columnPaints: 0,
+        columnPaints: [],
         timelineRebuilds: 0,
     },
     {
@@ -1376,7 +1476,7 @@ const REPAINTS: RepaintCase[] = [
             context.props.isPlaying = false
         },
         renders: 0,
-        columnPaints: 0,
+        columnPaints: [],
         timelineRebuilds: 0,
     },
     // ---- the playback tick -------------------------------------------------------------------
@@ -1389,7 +1489,8 @@ const REPAINTS: RepaintCase[] = [
             context.song.selected += 1
         },
         renders: 1,
-        columnPaints: 1,
+        //the window is 29..51 at column 40 and 30..52 at 41, so 52 is the one that entered
+        columnPaints: [52],
         timelineRebuilds: 0,
     },
     {
@@ -1404,7 +1505,7 @@ const REPAINTS: RepaintCase[] = [
             context.song.selected += 1
         },
         renders: 1,
-        columnPaints: 0,
+        columnPaints: [],
         timelineRebuilds: 0,
     },
     {
@@ -1419,25 +1520,59 @@ const REPAINTS: RepaintCase[] = [
         timelineRebuilds: 0,
     },
     // ---- edits to the graph ------------------------------------------------------------------
+    // The four rows that state an exact set are the four #touchColumns mutators - see
+    // RepaintCase.columnPaints. Everything below them marks the whole song and stays 'window'.
     {
         what: 'a note is added',
         change: context => void context.song.addNoteAt(41, 0, idOf(3)),
-        ...FULL,
+        renders: 1,
+        //a span of 1 covers only the column that owns the note
+        columnPaints: [41],
+        timelineRebuilds: 1,
     },
     {
         what: 'a note is removed',
-        change: context => context.song.removeNoteAt(41, 0, idOf(41 % 7)),
-        ...FULL,
+        //column 40, not 41: makeSong gives every 8th column a span of 3, and 41 has span 1 - so
+        //[41] would read the same under the range rule and under a column-only one, and the row
+        //would state nothing about #touchColumns
+        change: context => context.song.removeNoteAt(40, 0, idOf(40 % 7)),
+        renders: 1,
+        columnPaints: [40, 41, 42],
+        timelineRebuilds: 1,
     },
     {
         what: "a note's span changes",
+        //makeSong gives column 40 a span of 3 (every 8th), so this grows it to 4 and the marked
+        //range is the UNION of the two - [40, 40 + max(3, 4))
         change: context => void context.song.setNoteSpan(40, 0, idOf(40 % 7), 4),
-        ...FULL,
+        renders: 1,
+        columnPaints: [40, 41, 42, 43],
+        timelineRebuilds: 1,
     },
     {
+        //a tempo changer decides one column's background texture and nothing else, so it marks one
+        //column even though the same mutator can take a whole tools selection
         what: 'a tempo changer is set',
         change: context => context.song.setTempoChangerAt(41, TEMPO_CHANGERS[2]),
-        ...FULL,
+        renders: 1,
+        columnPaints: [41],
+        timelineRebuilds: 1,
+    },
+    {
+        //note entry is not gated on isPlaying (the plan says so at its Design decisions), so a
+        //keypress during playback produces a structure change and a moved playhead in ONE update.
+        //The narrowed repaint has to apply both: the edited column and the entering one are
+        //painted, and the two columns whose selection flag moved (40 and 41) get their overlay
+        //written - which is not a paint, and so is not in this list. The content half has the
+        //matching row.
+        what: 'a note is added while selected also moved',
+        change: context => {
+            context.song.addNoteAt(41, 0, idOf(3))
+            context.song.selected += 1
+        },
+        renders: 1,
+        columnPaints: [41, 52],
+        timelineRebuilds: 1,
     },
     {
         what: 'a column is added',
@@ -1447,6 +1582,55 @@ const REPAINTS: RepaintCase[] = [
     {
         what: 'a column is removed',
         change: context => context.song.removeColumns(1, 40),
+        ...FULL,
+    },
+    {
+        /**
+         * THE VERSION COLLISION, constructed deliberately - `addColumns(1, 40)` above does not
+         * produce one, and a version-only, identity-blind skip passes that row.
+         *
+         * addColumns SPLICES `#columns` in place, so the array identity does not move and
+         * needsUnconditionalRepaint's `previous.columns !== next.columns` does not fire: this is a
+         * NARROWED repaint over column objects that have shifted one index right, while
+         * #touchAllColumns advanced every counter by exactly 1. Both collisions the row is built on
+         * are asserted, so a drift in makeSong fails loudly instead of quietly turning this into a
+         * row that proves nothing.
+         */
+        what: 'a column is inserted, colliding two views\' paint keys',
+        change: context => {
+            const song = context.song
+            const paintedAt40 = song.columns[40]
+            const paintedVersionAt40 = paintedAt40.version
+            const paintedVersionAt41 = song.columns[41].version
+            song.addColumns(1, 39)
+            //index 40 now holds a BRAND-NEW column, at a version BELOW the one its view painted -
+            //which is the case a `>` comparison never repaints, leaving the old occupant's notes on
+            //screen for good
+            expect(song.columns[40]).not.toBe(paintedAt40)
+            expect(song.columns[40].notes).toHaveLength(0)
+            expect(paintedAt40.notes.length).toBeGreaterThan(0)
+            expect(song.columns[40].version).toBeLessThan(paintedVersionAt40)
+            //...and index 41 holds the object that WAS at 40, at exactly the version index 41's
+            //view painted: equal numbers, different columns, which is what the object half of the
+            //paint key is for
+            expect(song.columns[41]).toBe(paintedAt40)
+            expect(song.columns[41].version).toBe(paintedVersionAt41)
+        },
+        ...FULL,
+    },
+    {
+        //the mirror of the row above, so an insert-only implementation cannot pass: index 34 comes
+        //to hold the object that was at 35, at exactly the version index 34's view painted
+        what: 'a column is removed, colliding a view\'s paint key',
+        change: context => {
+            const song = context.song
+            const paintedAt34 = song.columns[34]
+            const paintedVersionAt34 = paintedAt34.version
+            song.removeColumns(1, 34)
+            expect(song.columns[34]).not.toBe(paintedAt34)
+            expect(song.columns[34].version).toBe(paintedVersionAt34)
+            expect(song.columns[34].notes).not.toEqual(paintedAt34.notes)
+        },
         ...FULL,
     },
     {
@@ -1539,7 +1723,7 @@ const REPAINTS: RepaintCase[] = [
             context.props.isRecordingAudio = true
         },
         renders: 1,
-        columnPaints: 0,
+        columnPaints: [],
         timelineRebuilds: 1,
     },
     {
@@ -1556,14 +1740,17 @@ const REPAINTS: RepaintCase[] = [
     },
 ]
 
-function expectedColumnPaints(testCase: RepaintCase, harness: Harness): number {
-    return testCase.columnPaints === 'window' ? harness.windowSize() : testCase.columnPaints
+function expectedColumnPaints(testCase: RepaintCase, harness: Harness): number[] {
+    return testCase.columnPaints === 'window' ? harness.drawnColumns() : testCase.columnPaints
 }
 
 describe('ComposerRenderer repaints from a diff of two moments, on one stable song', () => {
     for (const testCase of REPAINTS) {
+        const columns = Array.isArray(testCase.columnPaints)
+            ? `[${testCase.columnPaints.join(',')}]`
+            : testCase.columnPaints
         const expected =
-            `renders=${testCase.renders} columns=${testCase.columnPaints}`
+            `renders=${testCase.renders} columns=${columns}`
             + ` timeline=${testCase.timelineRebuilds}`
         it(`${testCase.what}: ${expected}`, async () => {
             const harness = await mount()
@@ -1574,9 +1761,11 @@ describe('ComposerRenderer repaints from a diff of two moments, on one stable so
                 harness.push()
                 testCase.change(harness.context)
                 const repainted = harness.push()
+                const paintedColumns = expectedColumnPaints(testCase, harness)
                 expect(repainted).toEqual({
                     renders: {notes: testCase.renders, timeline: testCase.renders},
-                    columnPaints: expectedColumnPaints(testCase, harness),
+                    columnPaints: paintedColumns.length,
+                    paintedColumns,
                     timelineRebuilds: testCase.timelineRebuilds,
                     //the pool is warm after the baseline push, so no row may grow it or throw it
                     //away - a released view is reused, never destroyed
@@ -1650,6 +1839,42 @@ interface WindowCase {
     drive: (harness: Harness) => void
 }
 
+/**
+ * A column LEAVES the drawn window, something that is not the column graph changes while it is
+ * parked, and an edit brings it back - i.e. through the narrowed repaint, where the per-column skip
+ * is the thing deciding whether it is painted.
+ *
+ * This is the sequence the phase-4 skip is easiest to get wrong on, and none of the scrolling rows
+ * below reach it. A released view keeps every pixel it painted and waits outside the scene graph,
+ * where an unconditional repaint - which repaints the WINDOW - cannot reach it. Its column's own
+ * counter has not moved either, so a skip that could consult a parked view's key would skip it on
+ * the way back in and leave the old layer's note textures, the old roster's dimming, a missing
+ * breakpoint marker, a stale overlay or the wrong bar grouping on screen indefinitely. Two things
+ * rule that out, and these rows pass against either alone: a returning column has no view in the
+ * on-screen map, so it is acquired and painted by its acquirer before any key is consulted, and
+ * ComposerRenderer.releaseColumnView nulls the key as well. The whole scene is compared against the
+ * rules afterwards, so whichever kind of staleness it would be shows up.
+ */
+function parkedAcross(what: string, change: (harness: Harness) => void): WindowCase {
+    return {
+        what: `after a drawn column was parked across a change to ${what}`,
+        drive: harness => {
+            const song = harness.context.song
+            const returnTo = song.selected
+            //away, far enough that no view of the original window survives in the on-screen map
+            song.selected += 50
+            harness.push()
+            change(harness)
+            harness.push()
+            //...and back, on an update that also edits the graph: that is what selects the narrowed
+            //repaint rather than the playback fast path
+            song.selected = returnTo
+            song.addNoteAt(returnTo, 0, idOf(3))
+            harness.push()
+        },
+    }
+}
+
 const WINDOWS: WindowCase[] = [
     {
         what: 'as mounted',
@@ -1669,6 +1894,21 @@ const WINDOWS: WindowCase[] = [
                 harness.context.song.selected += 1
                 harness.push()
             }
+        },
+    },
+    {
+        //The narrowed repaint's selection fix-up, from the side that bites. An edit arrives in the
+        //same update() as a moved playhead (note entry is not gated on isPlaying), and the loop
+        //repaints only the edited column - so both the column that LOST the selection and the one
+        //that GAINED it are painted by paintSelectionOverlay afterwards, not by the loop. Deleting
+        //either call leaves the whole suite green without this row: the REPAINTS counters do not
+        //move (an overlay is not a column paint), so only a content comparison can see it.
+        what: 'after an edit arrived in the same update as a moved playhead',
+        drive: harness => {
+            const edited = harness.context.song.selected + 3
+            harness.context.song.addNoteAt(edited, 0, idOf(edited % 7))
+            harness.context.song.selected += 1
+            harness.push()
         },
     },
     {
@@ -1781,6 +2021,82 @@ const WINDOWS: WindowCase[] = [
             harness.push()
         },
     },
+    {
+        //the structure and the playhead moving in ONE update - a keypress during playback. The
+        //repaint table has the matching row for how much it repainted; this is what it looks like,
+        //and it is where the two selection overlays the narrowed repaint writes are compared: 40
+        //has to have lost the flag without being repainted, 41 to have gained it.
+        what: 'after a note was added in the same update that moved the playhead',
+        drive: harness => {
+            harness.context.song.addNoteAt(41, 0, idOf(3))
+            harness.context.song.selected += 1
+            harness.push()
+        },
+    },
+    {
+        /**
+         * A span edited from OUTSIDE the drawn window, whose bars are inside it.
+         *
+         * A per-column skip that is right about a column's own notes and wrong about its TAILS is
+         * invisible until this happens - which is what a user dragging a duration slider on a note
+         * that has scrolled off the left edge does. It works only because
+         * ComposedSong.#touchColumns marks the range a span COVERS, the union of the old and the
+         * new on a shrink; a narrowing of that rule to "the column that owns the note" leaves every
+         * in-window bar of the old span on screen.
+         */
+        what: 'after a span reaching into the window was shortened from off-screen',
+        drive: harness => {
+            const song = harness.context.song
+            const tailOpsAt = (index: number) =>
+                harness.paintedScene().notes.columns.find(column => column.index === index)?.tails
+                    .ops.length
+            //column 5 is far outside the window (29..51); the span covers 5..44. idOf(12) is a note
+            //id makeSong never uses, so nothing truncates it, and makeSong's own spans (every 8th
+            //column, 3 long) reach 42 at the furthest - so column 44's bars come from this note
+            //alone.
+            song.addNoteAt(5, 1, idOf(12), 40)
+            harness.push()
+            expect(tailOpsAt(44)).toBeGreaterThan(0)
+            song.setNoteSpan(5, 1, idOf(12), 1)
+            harness.push()
+            expect(tailOpsAt(44)).toBe(0)
+        },
+    },
+    {
+        //the two index-shifting edits, for their CONTENT: both splice the live array in place, so
+        //they reach the narrowed repaint with column objects at new indexes and every counter one
+        //higher. The repaint table's two rows assert the collisions they are built on; this is
+        //where a column drawn at another column's position shows up as pixels.
+        what: 'after a column was inserted mid-song',
+        drive: harness => {
+            harness.context.song.addColumns(1, 39)
+            harness.push()
+        },
+    },
+    {
+        what: 'after a column was removed mid-song',
+        drive: harness => {
+            harness.context.song.removeColumns(1, 34)
+            harness.push()
+        },
+    },
+    parkedAcross('the current layer', harness => {
+        harness.context.props.currentLayer = 1
+    }),
+    parkedAcross('the instrument roster', harness => {
+        const song = harness.context.song
+        song.setInstrument(1, song.instruments[1].set({visible: false}))
+    }),
+    parkedAcross('the breakpoints', harness => {
+        //45 is inside the window that comes back and is not the column the return edits
+        harness.context.song.toggleBreakpoint(45)
+    }),
+    parkedAcross('the tools selection', harness => {
+        harness.context.props.selectedColumns = [44, 45, 46]
+    }),
+    parkedAcross('the bar grouping', harness => {
+        harness.context.props.beatMarks = 4
+    }),
 ]
 
 describe('the painted scene is what the drawing rules say it is', () => {
@@ -1884,10 +2200,14 @@ describe('the pooled column views', () => {
             const ticks = 25
             for (let tick = 0; tick < ticks; tick++) {
                 harness.context.song.selected += 1
-                //one column leaves the window and one enters, and the entering one is painted
+                //one column leaves the window and one enters, and the entering one - the last of
+                //the drawn range, since the step is forward and the window is nowhere near the end
+                //of the song - is the one painted
+                const drawn = harness.drawnColumns()
                 expect(harness.push()).toEqual({
                     renders: {notes: 1, timeline: 1},
                     columnPaints: 1,
+                    paintedColumns: [drawn[drawn.length - 1]],
                     timelineRebuilds: 0,
                     viewsCreated: 0,
                     viewsDestroyed: 0,
@@ -2135,19 +2455,25 @@ describe('the notes canvas clear colour and inline style follow the theme', () =
     })
 })
 
-describe('NoteColumn.version is not read yet', () => {
-    it('a repaint decision ignores it - that wiring is phase 4', async () => {
+/**
+ * The per-column counters NARROW a repaint; they do not trigger one. The structure version is the
+ * entry condition and the counters only decide how much of the window it costs.
+ *
+ * That split is what lets phase 4 assume every counter it reads is accompanied by a structure bump,
+ * which is the contract test/reactivePublish.test.ts pins from the model side - every #touchColumns
+ * and #touchAllColumns pass there is paired with a #bumpStructure.
+ */
+describe('the entry condition is the structure version, not the per-column counters', () => {
+    it('a counter that moves without a structure bump repaints nothing', async () => {
         const harness = await mount()
         try {
             harness.push()
-            //bumping a counter by hand, the way a mutator does, must not repaint anything on its
-            //own: phase 3 decides from the structure version, and phase 4 is where the per-column
-            //counter starts narrowing that down. Stated as a test so the two phases stay separately
-            //verifiable.
+            //bumping a counter by hand, which no mutator does without also bumping the structure
             for (const column of harness.context.song.columns) column.version++
             expect(harness.push()).toEqual({
                 renders: {notes: 0, timeline: 0},
                 columnPaints: 0,
+                paintedColumns: [],
                 timelineRebuilds: 0,
                 viewsCreated: 0,
                 viewsDestroyed: 0,

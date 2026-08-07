@@ -73,7 +73,7 @@ interface ComposerRendererTheme {
 // EVERY FIELD HERE IS A VALUE OR A PLAIN ARRAY - no `$state` proxy, and nothing reached through the
 // song. Two separate reasons, both load-bearing:
 //
-//  - update() DIFFS these fields (see needsFullRepaint). A field reached through a live song is the
+//  - update() DIFFS these fields (see needsUnconditionalRepaint, and update() for the version half). A field reached through a live song is the
 //    same object on both sides of the comparison, so the branch it gates is permanently false -
 //    silently. `structureVersion` exists because the column array keeps one identity across the
 //    edits that mutate it in place, so an identity comparison does not see those; `columns`'
@@ -119,7 +119,7 @@ export interface ComposerRendererState {
   // Read by computeCanvasSize, which runs at init and on the resize/theme path rather than per
   // draw. It scales BOTH canvas dimensions, so it decides every column's x, every note's y and the
   // size of both canvases. Composer.svelte passes it as a static prop, which is the reason
-  // needsFullRepaint does not compare it.
+  // needsUnconditionalRepaint does not compare it.
   inPreview?: boolean;
   /** ComposerSettings' `beatMarks`, as a number: decides the light/dark bar-group alternation. */
   beatMarks: number;
@@ -170,6 +170,47 @@ interface ColumnPaintParams {
 }
 
 /**
+ * WHICH COLUMN a pooled view last painted, as the PAIR that identifies it - written by
+ * ComposerRenderer.paintColumn, read by columnIsAlreadyPainted (2026-08-06 reactive-model plan,
+ * phase 4).
+ *
+ * Both halves are load-bearing, and neither is sufficient alone:
+ *  - `version` is NoteColumn's plain render counter, bumped by ComposedSong's mutators over the
+ *    range a changed note COVERS. It is what says the same column's CONTENT moved.
+ *  - `column` is the NoteColumn object itself, because the counter is monotonic per INSTANCE and
+ *    two different columns' counters are unrelated numbers (see the CONSUMER CONTRACT at
+ *    NoteColumn.version). addColumns, removeColumns and pasteColumns splice the live array IN
+ *    PLACE, so column objects move to new indexes under an array identity that never changed -
+ *    and two of them sitting at the same number is an ordinary coincidence, not a rare one.
+ *    test/composerRenderer.test.ts builds both collisions deliberately and asserts them, because
+ *    the row that merely inserts a column does not happen to produce either.
+ *
+ * The version comparison is `!==` and not `>`, which is what NoteColumn.version's CONSUMER CONTRACT
+ * asks of a consumer - a restored or freshly inserted column carries a counter BELOW every live
+ * one. Stated as it actually stands: while `column` is in the key the two forms cannot differ,
+ * because a given NoteColumn's counter only ever increments, so the version read at paint time is
+ * never above the one read now. `!==` is what keeps that from being load-bearing - the equivalence
+ * disappears the moment the object half does, and both version-only forms (with `!==` and with `>`)
+ * fail the collision rows.
+ */
+interface ColumnPaintKey {
+  column: NoteColumn;
+  version: number;
+}
+
+/**
+ * The opt-in that turns draw() into the phase-4 narrowed repaint - see draw() and
+ * ComposerRenderer.columnIsAlreadyPainted.
+ *
+ * It carries the one thing the narrowed path needs and the state object does not hold: `selected`
+ * AS OF THE LAST PAINT. draw() otherwise reads everything from this.state, and reaching back into
+ * this.paintedState from inside it would make the same value arrive by two routes.
+ */
+interface NarrowedRepaint {
+  previousSelected: number;
+}
+
+/**
  * One column of the notes stage, owned by ComposerRenderer's pool and REUSED: acquired when a
  * column enters the drawn window, released back to the free list when it leaves, never destroyed
  * in between. Before the pool existed, drawNotesStage destroyed and rebuilt every display object
@@ -206,6 +247,32 @@ class ColumnView {
   readonly container = new Container();
   /** Cleared and refilled by ComposerRenderer.paintTails - the view owns the object, not the drawing. */
   readonly tailGraphics = new Graphics();
+  /**
+   * What this view last painted, or null for "there is nothing here to compare a column against".
+   * Owned by ComposerRenderer rather than by paint(): it is written by paintColumn immediately
+   * after paint() + paintTails, so the key and the pixels are recorded in one place, and cleared by
+   * releaseColumnView.
+   *
+   * WHAT MAKES A NON-NULL KEY MEAN "this view is showing that column, at the index it is mapped to"
+   * is the acquire/paint pairing: columnIsAlreadyPainted only ever reads a view found in
+   * `columnViews`, a view only enters that map through acquireColumnView, and acquireColumnView's
+   * one caller is paintColumn, which paints it at that index and writes this field on the next
+   * line. So the key cannot describe a different column, a different index, or a moment before the
+   * view's current occupancy.
+   *
+   * It carries no index for that reason - the map key is the index - and the index-derived half of
+   * a column's paint (its x, its bar-group slot, the every-4th larger variant) cannot have moved
+   * under a view that has been at one map index since it was painted.
+   *
+   * CLEARING IT ON RELEASE IS REDUNDANT AGAINST THAT PAIRING, and kept anyway: a released view
+   * keeps every pixel it painted and can wait out arbitrarily many updates outside the scene graph,
+   * including the full repaints that would have corrected it, so if a future path ever acquired a
+   * view WITHOUT painting it, a stale key would be the difference between a repaint and another
+   * column's pixels. Stated as a redundancy rather than as the mechanism because no test in
+   * test/composerRenderer.test.ts distinguishes the two - measured: removing this line alone leaves
+   * the file green.
+   */
+  paintKey: ColumnPaintKey | null = null;
   private readonly background: Sprite;
   private readonly overlay: Sprite;
   private readonly breakpointMarker: Sprite;
@@ -325,7 +392,8 @@ export class ComposerRenderer {
    * on screen can be trusted to match a state at all - no cache yet, recording audio, or the pool
    * just dropped. Null forces the next update onto the full path.
    *
-   * It is the left-hand side of every comparison in needsFullRepaint; `this.state` is NOT, because
+   * It is the left-hand side of every comparison in needsUnconditionalRepaint and of update()'s
+   * version comparison; `this.state` is NOT, because
    * that one is overwritten on every call including the ones that paint nothing - diffing against
    * it would compare the incoming state against a moment that never reached the screen.
    *
@@ -335,7 +403,9 @@ export class ComposerRenderer {
   private paintedState: ComposerRendererState | null = null;
   /**
    * The longest span in the song, cached against (columns identity, structure version) - the same
-   * pair needsFullRepaint diffs, for the same reason. The version moves on a graph edit but reads 0
+   * pair the two sites diff, for the same reason: needsUnconditionalRepaint holds the array
+   * identity, update() holds the version, because a moved version narrows the repaint instead of
+   * forcing it. The version moves on a graph edit but reads 0
    * on two different songs; the array identity moves on a song swap but not on every edit. Dropping
    * either half of the key returns a bound from the previous graph for the case the other half
    * covers, and test/composerRenderer.test.ts has a row for each.
@@ -730,16 +800,21 @@ export class ComposerRenderer {
   // instance instead, because the parent wraps this component in
   // {#key settings.columnsPerCanvas.value}.
   //
-  // THREE OUTCOMES, cheapest last:
-  //  - full repaint, when needsFullRepaint reports a change - or when there is no trustworthy
-  //    baseline to compare against at all (see paintedState);
-  //  - `selected` moved and needsFullRepaint reported nothing: drawSelectedMoved, which applies
+  // FOUR OUTCOMES, cheapest last:
+  //  - full repaint, when needsUnconditionalRepaint reports a change - or when there is no
+  //    trustworthy baseline to compare against at all (see paintedState);
+  //  - the column GRAPH moved and nothing else did: the same full-repaint path, narrowed to the
+  //    columns whose own `version` counter differs from what their view last painted (phase 4).
+  //    Both scenes are still walked - the timeline content is rebuilt whole, and every drawn
+  //    column is still visited - so what this saves is the paint of the columns an edit did not
+  //    reach, which for a one-note edit is the whole window but one;
+  //  - `selected` moved and neither of the above: drawSelectedMoved, which applies
   //    the shift to the scene already on screen. That is the playback tick, and it is the reason
   //    this diff exists - during playback the structure does not change, so the diff has nothing
   //    to report and the tick costs O(window) rather than O(song).
   //  - `selected` did not move either: return without rendering. A state differing from the last
-  //    painted one only in fields needsFullRepaint does not compare lands here; that method's
-  //    closing paragraph says what each of those is doing on the state object.
+  //    painted one only in fields needsUnconditionalRepaint does not compare lands here; that
+  //    method's closing paragraph says what each of those is doing on the state object.
   update(state: ComposerRendererState): void {
     const previous = this.paintedState;
     // FIRST, unconditionally, and before any early return: the pointer/wheel/hitarea handlers all
@@ -748,14 +823,42 @@ export class ComposerRenderer {
     if (previous === null) return this.draw();
     const cacheData = this.cache?.cache;
     if (!cacheData) return this.draw();
-    if (this.needsFullRepaint(previous, state)) return this.draw();
+    if (this.needsUnconditionalRepaint(previous, state)) return this.draw();
+    if (previous.structureVersion !== state.structureVersion) {
+      // `selected` may have moved in the same batch - note entry is not gated on isPlaying - and a
+      // skipped column that gained or lost the flag would keep the wrong overlay, so the narrowed
+      // repaint is told which column had it.
+      return this.draw({ previousSelected: previous.selected });
+    }
     if (previous.selected === state.selected) return;
     this.drawSelectedMoved(previous.selected, cacheData);
   }
 
   /**
-   * Everything the painted output depends on EXCEPT `selected` - which is the one input the fast
-   * path knows how to apply incrementally.
+   * Everything the painted output depends on EXCEPT `selected` and the column graph - the two
+   * inputs the paths below know how to apply to less than the whole window.
+   *
+   * The fields listed here stay on the full repaint, as a decision rather than a gap - but for two
+   * different reasons, so the bullets say which applies. The first five change the pixels of a
+   * column whose own `version` counter did not move, so the per-column skip cannot see them; the
+   * last two are cheap gates that a narrowed path would reach a different way:
+   *  - `instruments` decides note textures (computeRowLayerStatuses), the dimming of stranded rows
+   *    (computeStrandedRows) and which tails draw at all, for every column;
+   *  - `currentLayer` is bit 0 of every layer status plus the tail accent/dim, for every column;
+   *  - `beatMarks` is the bar-group alternation, i.e. the background slot of every column;
+   *  - `breakpoints` and `selectedColumns` are arbitrary index SETS. Narrowing either would mean
+   *    diffing two arrays into a symmetric difference to repaint one marker or one overlay sprite,
+   *    which costs about what it saves;
+   *  - `columns` (array identity) rules out a NoteColumn object being re-installed at an index a
+   *    view already holds a paint key for - restoreColumns (undo) and deleteColumns both assign a
+   *    new array, and a song swap hands over a different song's. Measured: moving this one onto the
+   *    narrowed path instead leaves every test green, because the key's object half catches those
+   *    cases anyway. It stays here as the cheap gate, so the argument for undo does not have to run
+   *    through counters that restart at 0;
+   *  - `isRecordingAudio` hides the stage, which paints nothing and records no baseline.
+   *
+   * Each of the first five is pinned by test/composerRenderer.test.ts: moving any one of them onto
+   * the narrowed path fails between three and five of its tests.
    *
    * The comparisons are identity comparisons on purpose, and they are only sound because each of
    * `instruments`, `breakpoints` and `selectedColumns` is REPLACED rather than edited in place by
@@ -763,11 +866,12 @@ export class ComposerRenderer {
    * Composer.svelte.
    *
    * `columns` is the one that does NOT work that way, and it is why `structureVersion` is compared
-   * beside it. Some of ComposedSong's mutators install a new array and some edit the one that is
-   * there, so the identity moves on an edit sometimes and not others - a moved identity forces a
-   * full repaint, which is the safe direction, but an unmoved one proves nothing. The version moves
-   * on every graph edit and cannot see a song SWAP (a freshly loaded song sits at 0, which the
-   * previous song may too). Neither alone is sufficient.
+   * beside it - in update() rather than here, since a moved structure version is the one change
+   * this class can narrow. Some of ComposedSong's mutators install a new array and some edit the
+   * one that is there, so the identity moves on an edit sometimes and not others - a moved identity
+   * forces a full repaint, which is the safe direction, but an unmoved one proves nothing. The
+   * version moves on every graph edit and cannot see a song SWAP (a freshly loaded song sits at 0,
+   * which the previous song may too). Neither alone is sufficient.
    *
    * Not compared, and why. `isPlaying` is read nowhere in this class - see its field. `inPreview`
    * and `columnsPerCanvas` both decide geometry, and `inPreview` decides a great deal of it (it
@@ -779,7 +883,10 @@ export class ComposerRenderer {
    * to compare at all; they reach the scene through recalculateCacheAndSizes, which drops the pool
    * and, with it, the baseline this diffs against.
    */
-  private needsFullRepaint(previous: ComposerRendererState, next: ComposerRendererState): boolean {
+  private needsUnconditionalRepaint(
+    previous: ComposerRendererState,
+    next: ComposerRendererState
+  ): boolean {
     return (
       // not `previous.isRecordingAudio !== next.isRecordingAudio`: a baseline is only recorded by a
       // run that painted, which cannot be one where this was true. Written as an absolute so that
@@ -787,7 +894,6 @@ export class ComposerRenderer {
       // incrementally while the container it lives in is hidden.
       next.isRecordingAudio ||
       previous.columns !== next.columns ||
-      previous.structureVersion !== next.structureVersion ||
       previous.instruments !== next.instruments ||
       previous.breakpoints !== next.breakpoints ||
       previous.selectedColumns !== next.selectedColumns ||
@@ -834,6 +940,10 @@ export class ComposerRenderer {
   private releaseColumnView(index: number, view: ColumnView): void {
     this.notesColumnsContainer.removeChild(view.container);
     this.columnViews.delete(index);
+    // The view keeps its pixels - that is the pool - but it stops claiming to be showing a column,
+    // because nothing repaints it while it waits outside the scene graph. Redundant against the
+    // acquire/paint pairing today, and kept for the reason written at ColumnView.paintKey.
+    view.paintKey = null;
     this.freeColumnViews.push(view);
   }
 
@@ -891,6 +1001,34 @@ export class ComposerRenderer {
       isBreakpoint: state.breakpoints.includes(index),
     });
     this.paintTails(view.tailGraphics, index, sizes);
+    // Recorded with the pixels, in one place, rather than by whoever asked for the paint.
+    view.paintKey = { column, version: column.version };
+  }
+
+  /**
+   * Whether the view at `index` is already showing this column, for the narrowed repaint - see
+   * ColumnPaintKey for what the pair means and why it is a pair.
+   *
+   * WHAT MAKES THIS SOUND is that everything else a column's pixels depend on is held still by the
+   * branch that reaches it. paintColumn + ColumnView.paint + paintTails read exactly: the column's
+   * own notes and tempoChanger (this counter); the tails of every span STARTING up to maxSpan
+   * columns to the left (also this counter - ComposedSong.#touchColumns bumps the whole range a
+   * span covers, the union of old and new on a shrink, so a note that draws on column i always
+   * bumps column i); the index (see ColumnView.paintKey); `selected` (the two overlays
+   * drawNotesStage repaints after the loop); `currentLayer`, `instruments`, `selectedColumns`,
+   * `breakpoints` and `beatMarks` (all of them forced onto the unconditional path - see
+   * needsUnconditionalRepaint); and the textures, the column geometry and paintTailAccent, which
+   * only recalculateCacheAndSizes moves - and it drops the pool AND nulls the baseline in the same
+   * function, so a narrowed run cannot straddle a change to any of them.
+   *
+   * maxSpan() is the one input not in that list: it only bounds how far back a column that IS being
+   * painted scans, so it cannot make a SKIPPED column wrong.
+   */
+  private columnIsAlreadyPainted(index: number, column: NoteColumn): boolean {
+    const key = this.columnViews.get(index)?.paintKey;
+    if (!key) return false;
+    // `!==`, never `>`: see ColumnPaintKey, and NoteColumn.version's CONSUMER CONTRACT.
+    return key.column === column && key.version === column.version;
   }
 
   /**
@@ -966,8 +1104,17 @@ export class ComposerRenderer {
    * The full repaint: both scenes, from scratch. Reached on the first update, on every edit, and
    * from recalculateCacheAndSizes (which is a second entry point into drawing, bypassing update()
    * entirely - theme and resize have no state channel).
+   *
+   * `narrowed` is the phase-4 opt-in: when it is passed, a drawn column whose view is already
+   * showing it is skipped (columnIsAlreadyPainted), and the two columns whose selection flag can
+   * have changed get their overlay repainted afterwards. It DEFAULTS TO OFF so that
+   * recalculateCacheAndSizes' call cannot enable it - that path has just dropped the pool, and
+   * every key with it, but the default is what makes "only update() narrows" a property of the
+   * signature rather than of its call sites. Everything else here runs identically either way:
+   * the container offset, the release/acquire pass, the whole timeline rebuild, both renders and
+   * the baseline record.
    */
-  private draw(): void {
+  private draw(narrowed: NarrowedRepaint | null = null): void {
     if (!this.notesApp || !this.timelineApp) return;
     const cacheData = this.cache?.cache;
     const sizes = this.columnSize;
@@ -979,7 +1126,7 @@ export class ComposerRenderer {
       relativeColumnWidth * state.selected -
       relativeColumnWidth * (this.numberOfColumnsPerCanvas / 2);
 
-    const painted = this.drawNotesStage(cacheData, sizes, xPosition);
+    const painted = this.drawNotesStage(cacheData, sizes, xPosition, narrowed);
     this.drawTimelineStage(cacheData, relativeColumnWidth, timelineWidth, timelinePosition);
     this.notesApp.render();
     this.timelineApp.render();
@@ -994,7 +1141,8 @@ export class ComposerRenderer {
   private drawNotesStage(
     cacheData: ComposerCacheData | undefined,
     sizes: { width: number; height: number },
-    xPosition: number
+    xPosition: number,
+    narrowed: NarrowedRepaint | null
   ): boolean {
     this.notesColumnsContainer.x = xPosition;
     const visible = Boolean(cacheData) && !this.state.isRecordingAudio;
@@ -1013,7 +1161,18 @@ export class ComposerRenderer {
     // song and filtered with isColumnVisible inside the callback - a second O(song) pass per draw,
     // on top of the tail scan.
     for (let index = first; index <= last; index++) {
+      // The skip is HERE, before paintColumn, and never inside ColumnView.paint: paint() writing
+      // every property it owns unconditionally is what makes a reused view safe (see that class),
+      // and a "set it only if it changed" paint would invert exactly that.
+      if (narrowed && this.columnIsAlreadyPainted(index, this.state.columns[index])) continue;
       this.paintColumn(index, cacheData, sizes, counterLimit);
+    }
+    if (narrowed) {
+      // The two columns whose selection flag can have moved while the graph changed, in the same
+      // shape drawSelectedMoved uses: both are no-ops when the column is off-window, and both are
+      // idempotent on a column the loop above repainted anyway.
+      this.paintSelectionOverlay(narrowed.previousSelected, cacheData);
+      this.paintSelectionOverlay(this.state.selected, cacheData);
     }
     return true;
   }
@@ -1030,7 +1189,7 @@ export class ComposerRenderer {
    *
    * Reached from update() with a baseline recorded (a cache regeneration clears that along with the
    * pool, so the views here hold the current textures and the current geometry), with a cache, with
-   * `selected` moved, and with needsFullRepaint reporting nothing.
+   * `selected` moved, and with needsUnconditionalRepaint reporting nothing.
    */
   private drawSelectedMoved(previousSelected: number, cacheData: ComposerCacheData): void {
     if (!this.notesApp || !this.timelineApp) return;

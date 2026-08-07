@@ -208,8 +208,8 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 4> 
     /**
      * Used by every bulk/structural mutator. Deliberately coarse: once column INDEXES shift, or a
      * pass can retouch any note's span (normalizeSpans), the changed set really is "all of them" -
-     * and the phase-4 consumer only repaints the visible window anyway, which is what happens
-     * today for every edit.
+     * and the renderer only repaints the visible window in any case, so the cost of the coarseness
+     * is bounded by the window rather than by the song.
      */
     #touchAllColumns() {
         for (const column of this.#columns) column.version++
@@ -224,7 +224,9 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 4> 
      * The name is deliberately not `initColumns`: that was one word away from restoreColumns and
      * gave no hint that calling it on the LIVE song silently freezes the canvas at whatever it last
      * painted. On a song someone is already watching, the method you want is restoreColumns() -
-     * it bumps and re-clamps `selected`.
+     * it bumps and re-clamps `selected`. It is not only the structure signal that is skipped here:
+     * no per-column `version` moves either, and the renderer's narrowed repaint reads those, so a
+     * live-song call leaves columns whose contents changed with nothing saying so.
      *
      * Copies the array it is given, for a WEAKER reason than restoreColumns' copy - stated
      * precisely because the two look identical. Its callers build a plain array and hand it over,

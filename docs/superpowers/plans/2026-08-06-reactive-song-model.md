@@ -698,9 +698,81 @@ NOTES_PER_COLUMN`).
 
 ## Phase 4 (R2) — fine-grained repaint
 
-- [ ] **Step 1:** Repaint only the columns whose `version` counter differs from what the view
+**Files:** `src/lib/components/pages/Composer/ComposerRenderer.ts`,
+`src/lib/core/Songs/SongClasses.ts`, `ComposedSong.svelte.ts`, `test/composerRenderer.test.ts`,
+`test/reactivePublish.test.ts`
+
+- [x] **Step 1:** Repaint only the columns whose `version` counter differs from what the view
       last painted, instead of every visible column on a structure change.
-- [ ] **Step 2: Verify.**
+      _Done as a FOURTH outcome in `update()` rather than as a change to the existing three:
+      `needsFullRepaint` lost its `structureVersion` term (and became `needsUnconditionalRepaint`),
+      and a moved structure version with nothing else moved now calls `draw({previousSelected})`._
+  - **`draw()` is identical either way** - same container offset, same release/acquire pass, same
+    whole timeline rebuild, both renders, same baseline record - and its parameter DEFAULTS to off,
+    so `recalculateCacheAndSizes`' call cannot enable it. The skip sits in `drawNotesStage`'s window
+    loop, BEFORE `paintColumn` and never inside `ColumnView.paint`: that class writing every
+    property it owns unconditionally is what makes a reused view safe, and a "set it only if it
+    changed" paint would invert exactly that.
+  - **The key a view holds is the PAIR (column object, version)**, written by `paintColumn` beside
+    the pixels. The object half is not belt and braces:
+    `addColumns`/`removeColumns`/`pasteColumns` splice the live array IN PLACE, so column objects
+    move to new indexes with the array identity unmoved - i.e. through the narrowed path - and two
+    counters sitting at the same number is ordinary. It carries no index: `columnViews` is keyed by
+    index, a view enters that map only via `acquireColumnView`, and its one caller paints it there
+    immediately.
+  - **Everything else stays on the full repaint, as decisions:** `instruments`, `currentLayer`,
+    `beatMarks`, `breakpoints`, `selectedColumns`, the `columns` array identity, `isRecordingAudio`,
+    a null baseline, and every entry from `recalculateCacheAndSizes`. Narrowing
+    `breakpoints`/`selectedColumns` would need a symmetric-difference diff costing about what it
+    saves; the rest change the pixels of columns whose own counter did not move. `selected` is the
+    one exception, handled the way `drawSelectedMoved` does it - the two overlays are repainted after
+    the loop, because note entry is not gated on `isPlaying` and a structural edit really does arrive
+    with a moved playhead.
+  - **Two redundancies found while proving the guards**, both kept and both now stated as
+    redundancies at their declaration rather than as the mechanism: clearing a released view's key
+    (the acquire/paint pairing already means an entering column is painted before any key is read -
+    removing the line alone leaves the file green), and `!==` versus `>` (while the object half is in
+    the key the two cannot differ, since a given column's counter only increments).
+    `NoteColumn.version`'s CONSUMER CONTRACT is re-written around that: rule 1 is the pair, rule 2 is
+    `!==`, and the `>` hazard is named for a version-only consumer - the undo case it used to cite
+    cannot reach the skip at all, because `restoreColumns` installs a new array.
+
+- [x] **Step 2: Verify.**
+      _All six gates green; no fixture moved._
+  - **`Repainted` gained `paintedColumns: number[]`** - the same channel `columnPaints` already
+    counted (a paint clears that view's tail `Graphics`), read per view instead of globally, with
+    `push()` asserting the two agree so neither reading can narrow on its own. The four
+    `#touchColumns` rows now state exact index sets, the same ranges
+    `test/reactivePublish.test.ts`'s `touches` column states from the model side; the two headers
+    cross-reference each other.
+  - **Three REPAINTS rows are new:** a note added while `selected` also moved, and the two
+    deliberately-constructed version collisions - `addColumns(1, 39)` puts a brand-new column at
+    version 1 where the view painted 2, and old-column-40 at index 41 at exactly the version index
+    41's view painted; `removeColumns(1, 34)` is the mirror. Each asserts its preconditions, so a
+    drift in `makeSong` fails loudly instead of quietly turning them into rows that prove nothing.
+  - **Nine WINDOWS rows are new:** a span shortened from OFF-SCREEN whose bars are inside the window
+    (the only thing driving `#touchColumns`' range rule from the far side), the two index-shifting
+    edits for their content, an edit in the same update as a playhead move, and five for a column
+    parked across a change to each of
+    `currentLayer`/`instruments`/`breakpoints`/`selectedColumns`/`beatMarks`.
+  - **Sabotages, one at a time:** a version-only key fails 10 tests with `!==` and 10 with `>`;
+    ignoring the covered range (marking only the column that owns the note) fails 14 in
+    `composerRenderer.test.ts` and 18 across `test:sky` — the figure first recorded here was 23,
+    which did not reproduce; re-measured after the selection-fix-up row below was added; skipping every
+    column already on screen fails 29; dropping the `previousSelected` overlay fails 3 and the
+    `state.selected` one fails 1 (that half was pinned by NOTHING until a content row for "an edit
+    arrived in the same update as a moved playhead" was added — an overlay is not a column paint, so
+    only a content comparison sees it); moving any one of
+    `currentLayer`/`instruments`/`breakpoints`/`selectedColumns`/`beatMarks` onto the narrowed path
+    fails 3-5; deleting the `columns`-identity comparison fails 2. The two redundancies above are the
+    two that fail nothing, and say so where they live.
+  - **Measured** on the file's own harness (window 23), 800-column song, one-note add/remove: 23
+    column paints per edit -> 1, and `update()` 0.169 ms -> 0.086 ms. On the 100-column song: add
+    23->1, remove 23->1, a span 3->4 23->4 (the union of the old and new ranges), a tempo changer
+    23->1, and an edit arriving with a playhead move 23->2. The residual per structural edit is
+    `maxSpan()`'s O(notes) rescan and the timeline's full rebuild, both unchanged by this phase. It
+    is not the performance win - phase 3 took the playback tick to zero allocations and structural
+    edits are user-paced - it is a smaller repaint on edits.
 
 ## Risks
 
