@@ -855,6 +855,17 @@ export const i18n_en = {
     HarmonicKey: 'Harmonic Key',
   } satisfies Record<InstrumentName, string>,
   versions: {
+    '4-0-0': {
+      title: 'New app, sustained notes, smooth scrolling, new instruments',
+      'change-1':
+        'The whole app has been rewritten from scratch. Performance should be improved everywhere.',
+      'change-2':
+        'Sustained notes have been added. In the composer, long press a note on the keyboard to open the duration popover and choose how many columns it should last. In the player and zen keyboard, just hold the note button to sustain the note.',
+      'change-3':
+        'While playing, the composer now scrolls smoothly with a line marking where you are in the song. Dragging and scrolling the canvas is smooth too. You can turn this off in the composer settings.',
+      'change-4': 'Slight redesigns throughout the app to improve User Experience',
+      'change-5': 'Many other bug fixes and improvements',
+    },
     '3-7-0': {
       title: 'New instruments (Genshin)',
       'change-1': 'Added Harmonic Key (Genshin)',

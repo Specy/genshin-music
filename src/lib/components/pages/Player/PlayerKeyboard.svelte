@@ -133,8 +133,14 @@
     const startOffset = song.notes[start] !== undefined ? song.notes[start].time : 0;
     for (let i = start; i < end && i < song.notes.length; i++) {
       const note = song.notes[i];
-      //stranded/out-of-grid notes can't be practiced — skip (they were unplayable rows before too)
-      if (note.displayButton < 0 || note.displayButton >= game.notes.perColumn) continue;
+      // Stranded/out-of-grid notes can't be practiced — skip (they were unplayable rows before
+      // too). Against the DISPLAY KEYBOARD's length and not game.notes.perColumn: the two were the
+      // same number back when this keyboard was always the game's full-size one, and stopped being
+      // once the grid started following the song's instrument. A note on a row this grid does not
+      // have is never rendered and can never be clicked, so admitting it here would only queue it
+      // up to expire and be scored as a MISS. practiceSong already filters on the same length.
+      if (note.displayButton < 0 || note.displayButton >= data.songDisplayInstrument.notes.length)
+        continue;
       const obj = new ApproachingNote({
         time: Song.roundTime((note.time - startOffset) / speedChanger.value + startDelay),
         index: note.displayButton,
@@ -203,7 +209,14 @@
       }
     });
     if (!hasChanges) return;
-    if (playerControlsStore.current + removed === playerControlsStore.size) {
+    // Finished when the approach queue is EMPTY, asked of the queue directly rather than inferred
+    // from note indices. The previous test was `current + removed === size`: `removed` counts only
+    // notes that actually reached a row, while `size` is the song's full note count - PlayerSlider
+    // divides `position` and `end` by it, so `size` has to stay the song's length. The two meet
+    // only when every note of the song reaches the grid, so anything that drops a note stalls the
+    // test one short forever: a user-selected `end` below the song's length, and now also a note
+    // the out-of-grid filter above skips because a wider track put it on a row this grid lacks.
+    if (notes.length === 0 && stateNotes.every((row) => row.length === 0)) {
       setTicker(false);
       functions.onSongFinished();
     }
@@ -509,11 +522,14 @@
         } else {
           if (!song) return;
           const lostReference = song.isComposed ? song.toRecordedSong().clone() : song.clone();
+          // THE BUTTON COUNT AND THE SHAPE COME FROM THE SAME INSTRUMENT - this line is the count,
+          // the `shape` derived below is the grid - so a song on a 2x4 drum kit gets 8 buttons in
+          // 4 columns rather than 8 buttons in a piano's 5.
           playerStore.setKeyboardLayout(data.songDisplayInstrument.notes);
-          // Resolve each note's display button once, from its own track's instrument. The
-          // full-size display keyboard keeps every game row available even when track 0 uses
-          // a shorter instrument; truly unrenderable notes remain in the timing stream and
-          // are skipped instead of changing the user's requested note range.
+          // Resolve each note's display button once, from its own track's instrument. The display
+          // keyboard follows track 0 (see displayInstrumentNameFor), so a note belonging to a
+          // WIDER track can land on a row this grid does not have; such notes remain in the timing
+          // stream and are skipped instead of changing the user's requested note range.
           const songInstruments = lostReference.instruments;
           sustainingTracks = songInstruments.map(
             (instrument) => game.instruments.data[instrument.name]?.sustain !== undefined
@@ -581,7 +597,24 @@
   const size = $derived(clamp(data.keyboardSize / 100, 0.5, 1.5));
   // Geometry follows the displayed instrument's Shape (ADR-0003) — the same
   // instrument whose notes fill playerStore.keyboard; no more length sniffing.
-  const shape = $derived((data.hasSong ? data.songDisplayInstrument : data.instrument).shape);
+  const displayInstrument = $derived(data.hasSong ? data.songDisplayInstrument : data.instrument);
+  const shape = $derived(displayInstrument.shape);
+  /**
+   * The two numbers this grid is drawn from arrive on different clocks: the Shape above changes
+   * the moment Player.svelte reassigns `songDisplayInstrument`, while `playerStore.keyboard` is
+   * republished by the 4ms debounce below, after an `await stopSong()`. Switching between two
+   * songs therefore leaves a window in which they disagree, and the paint can land inside it.
+   *
+   * The `min` makes the disagreement unrepresentable in the direction that renders wrongly:
+   * capping at the Shape's own instrument keeps the count from exceeding the grid it is being
+   * laid out on (15 piano buttons wrapped into a drum kit's 4 columns was the visible symptom),
+   * and capping at the published keyboard keeps `keyboard[index]` inside the array the button
+   * snippet indexes. Both are identities once the two clocks have met, which is every frame but
+   * those few milliseconds.
+   */
+  const buttonCount = $derived(
+    Math.min(displayInstrument.notes.length, playerStore.keyboard.length)
+  );
   const keyboardClass = $derived(
     'keyboard' + (playerStore.eventType === 'play' ? ' keyboard-playback' : '')
   );
@@ -597,15 +630,10 @@
 
 {#if data.isLoading}
   <div class={keyboardClass} style={wrapperStyle}>
-    <div class="loading">{t('common:loading')}...</div>
+    <div class="loading" style="min-height: 20vh;">{t('common:loading')}...</div>
   </div>
 {:else}
-  <ShapeKeyboard
-    {shape}
-    count={playerStore.keyboard.length}
-    class={keyboardClass}
-    style={wrapperStyle}
-  >
+  <ShapeKeyboard {shape} count={buttonCount} class={keyboardClass} style={wrapperStyle}>
     {#snippet button(index)}
       {@const note = playerStore.keyboard[index]}
       <PlayerNote

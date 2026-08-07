@@ -15,6 +15,7 @@
         "error_importing_file_generic": "文件导入失败",
         "error_importing_invalid_format": "文件导入失败, 文件格式错误",
         "song_backup_downloaded": "已下载歌曲备份",
+        "old_format_export_dropped_notes": "有 {{count}} 个音符无法写入旧格式文件（它们在默认乐器上没有对应的位置）",
         "no_songs_to_backup": "没有要备份的歌曲",
         "no_empty_name": "请填写一个非空白的名称",
         "cloned_song": "复制歌曲：“{{song_name}}”",
@@ -37,6 +38,8 @@
         "imported_theme": "已导入主题“{{theme_name}}”",
         "imported_folder": "已导入文件夹“{{folder_name}}”",
         "imported_song": "已导入{{song_type}}歌曲“{{song_name}}”",
+        "changing_language": "切换语言中...",
+        "error_changing_language": "语言切换失败",
         "error_loading_song": "加载此歌曲时出错",
         "error_loading_theme": "加载此主题时出错"
     },
@@ -88,6 +91,7 @@
         "search": "搜索",
         "rename": "重命名",
         "create_song": "创作歌曲",
+        "select_song": "选择歌曲",
         "edit_song": "编辑歌曲",
         "none": "无",
         "instrument": "乐器",
@@ -213,6 +217,8 @@
             "composer_autosave_description": "每 5 次编辑以及当您更改页面/更改歌曲时自动保存对歌曲的更改。",
             "composer_use_keyboard_side_buttons": "在键盘周围放置下一列/上一列按钮",
             "composer_use_keyboard_side_buttons_description": "将切换下一列/上一列的按钮添加在键盘右侧/左侧。",
+            "composer_smooth_scroll": "平滑滚动",
+            "composer_smooth_scroll_description": "播放时，画布会跟随节奏变换器连续平滑地划过每一列，而不是直接跳到下一列。",
             "composer_sync_tabs": "在所有选项卡中自动播放（仅限电脑）",
             "composer_sync_tabs_description": "高级功能，它同步其他浏览器选项卡以同时播放。",
             "composer_lookahead_time": "前窥时长",
@@ -405,10 +411,14 @@
         "approach_mode_description": "在节奏判定圈模式下演奏歌曲“{{song_name}}”",
         "song_search_no_results": "没有结果",
         "song_search_description": "在这里你可以找到要学习的歌曲，这些歌曲由sky-music library提供。",
-        "midi_or_audio_import_redirect_warning": "您不能直接导入此文件格式。MIDI、视频和音频文件需要在composer中转换，是否要打开它？"
+        "midi_or_audio_import_redirect_warning": "您不能直接导入此文件格式。MIDI、视频和音频文件需要在composer中转换，是否要打开它？",
+        "loop": "循环",
+        "loop_tooltip": "循环播放歌曲",
+        "hide_practice_notes": "在练习模式下隐藏文字"
     },
     "keybinds": {
         "already_used_keybind": "这个按键绑定已经被音符“{{note_name}}”使用。",
+        "already_used_shortcut": "这个快捷键已经被“{{shortcut_name}}”操作使用。",
         "midi_keybinds": "MIDI 按键绑定",
         "keyboard_keybinds": "键盘按键绑定",
         "keyboard_keybinds_description": "您可以将键盘按键重新映射到键盘上的任何键，按下要重新映射的音符，然后按下要分配给它的键。",
@@ -536,6 +546,7 @@
         "previous_breakpoint": "上一个断点",
         "next_breakpoint": "下一个断点",
         "tempo": "时值",
+        "note_duration": "音符时长",
         "error_with_this_layer": "该层出现错误",
         "recording_audio": "录制音频",
         "tools": {
@@ -704,6 +715,7 @@
         "HarmonicKey": "谐律键琴",
         "Piano": "钢琴",
         "Grand Piano": "大钢琴",
+        "GrandPiano": "大钢琴",
         "Contrabass": "屁琴",
         "Guitar": "吉他",
         "LightGuitar": "电吉他",
@@ -718,6 +730,7 @@
         "Ocarina": "陶笛",
         "MantaOcarina": "鲲笛",
         "Aurora": "Aurora",
+        "sustained_recorder": "延音竖笛",
         "Kalimba": "拇指琴",
         "ToyUkulele": "玩具尤克里里",
         "Drum": "鼓组",
@@ -737,6 +750,14 @@
         "SFX_MothCall": "幼童之声"
     },
     "versions": {
+        "4-0-0": {
+            "title": "全新应用、延音音符、平滑滚动、新乐器",
+            "change-1": "整个应用已从零重写，各处的性能都应有所提升。",
+            "change-2": "新增了延音音符。在作曲器中，长按键盘上的音符即可打开时长弹窗，选择它持续多少列。在演奏器和纯键盘模式中，只需按住音符按键即可让音符延音。",
+            "change-3": "播放时，作曲器现在会平滑滚动，并用一条竖线标示您在歌曲中的位置。拖动和滚动画布也同样平滑。您可以在作曲器设置中关闭此功能。",
+            "change-4": "对应用各处进行了小幅重新设计，以改善使用体验",
+            "change-5": "修复其他问题并优化"
+        },
         "3-7-0": {
             "title": "新乐器(原神)",
             "change-1": "新增了谐律键琴（原神）",
@@ -746,8 +767,9 @@
             "title": "翻译文本更新",
             "change-1": "新增中国台湾地区与中国香港特别行政区的繁体中文翻译",
             "change-2": "新增韩语翻译，并修复一些其他翻译的错误",
-            "change-3": "新增日语翻译 (之前大更新时丢失了已被寻回)"
-        },        
+            "change-3": "新增日语翻译 (之前大更新时丢失了已被寻回)",
+            "chance-2": "改进了土耳其语翻译"
+        },
         "3-6-3": {
             "title": "原神新乐器",
             "change-1": "新增乐器：跃律琴 (原神)"

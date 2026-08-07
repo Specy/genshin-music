@@ -15,6 +15,7 @@
         "error_importing_file_generic": "ファイルのインポート中にエラーが発生しました",
         "error_importing_invalid_format": "ファイルのインポート中にエラーが発生しました。無効な形式です",
         "song_backup_downloaded": "曲のバックアップがダウンロードされました",
+        "old_format_export_dropped_notes": "{{count}} 個のノートを旧形式のファイルに含めることができませんでした（デフォルトの楽器に対応する位置がありません）",
         "no_songs_to_backup": "バックアップする曲がありません",
         "no_empty_name": "空白でない名前を入力してください",
         "cloned_song": "クローン曲: \"{{song_name}}\"",
@@ -38,7 +39,9 @@
         "imported_folder": "フォルダ \"{{folder_name}}\" がインポートされました",
         "imported_song": "曲 \"{{song_name}}\" が {{song_type}} リストにインポートされました",
         "error_loading_song": "この曲の読み込み中にエラーが発生しました",
-        "error_loading_theme": "このテーマの読み込み中にエラーが発生しました"
+        "error_loading_theme": "このテーマの読み込み中にエラーが発生しました",
+        "changing_language": "言語を変更中...",
+        "error_changing_language": "言語の変更中にエラーが発生しました"
     },
     "question": {
         "unsaved_song_save": "保存されていない変更があります: \"{{song_name}}\" を今すぐ保存しますか？ 保存されていない変更は失われます。",
@@ -88,6 +91,7 @@
         "search": "検索",
         "rename": "名前を変更",
         "create_song": "曲を作成",
+        "select_song": "曲を選択",
         "edit_song": "曲を編集",
         "none": "なし",
         "instrument": "楽器",
@@ -213,6 +217,8 @@
             "composer_autosave_description": "5回編集するごと、およびページ/曲を変更する際に、曲への変更を自動的に保存します。",
             "composer_use_keyboard_side_buttons": "キーボードの横に次/前の列ボタンを配置する",
             "composer_use_keyboard_side_buttons_description": "次/前の列に切り替えるボタンをキーボードの右/左に追加します。",
+            "composer_smooth_scroll": "スムーズスクロール",
+            "composer_smooth_scroll_description": "再生中、キャンバスが次の列へジャンプするのではなく、テンポ変換ツールに合わせて各列を滑らかに移動していきます",
             "composer_sync_tabs": "すべてのタブで自動再生（PCのみ）",
             "composer_sync_tabs_description": "他のブラウザタブを同期して同時に再生する高度な機能です。",
             "composer_lookahead_time": "先読み時間",
@@ -405,10 +411,14 @@
         "approach_mode_description": "アプローチサークルモードで曲 \"{{song_name}}\" をプレイ",
         "song_search_no_results": "結果がありません",
         "song_search_description": "ここでは、sky-music libraryが提供する曲から学ぶことができます。",
-        "midi_or_audio_import_redirect_warning": "このファイル形式は直接インポートできません。MIDI、ビデオ、オーディオファイルはコンポーザーで変換する必要があります。開きますか？"
+        "midi_or_audio_import_redirect_warning": "このファイル形式は直接インポートできません。MIDI、ビデオ、オーディオファイルはコンポーザーで変換する必要があります。開きますか？",
+        "loop": "ループ",
+        "loop_tooltip": "曲をループ再生",
+        "hide_practice_notes": "プラクティスモードでテキストを非表示"
     },
     "keybinds": {
         "already_used_keybind": "このキーバインドはすでにノート \"{{note_name}}\" で使用されています。",
+        "already_used_shortcut": "このショートカットはすでに \"{{shortcut_name}}\" のアクションで使用されています。",
         "midi_keybinds": "MIDI キーバインド",
         "keyboard_keybinds": "キーボード キーバインド",
         "keyboard_keybinds_description": "キーボードのキーをキーボード上の任意のキーに再マップできます。再マップする音符を押し、それに割り当てるキーを押します。",
@@ -536,6 +546,7 @@
         "previous_breakpoint": "前のブレークポイント",
         "next_breakpoint": "次のブレークポイント",
         "tempo": "テンポ",
+        "note_duration": "ノートの長さ",
         "error_with_this_layer": "このレイヤーでエラーが発生しました",
         "recording_audio": "オーディオ録音中",
         "tools": {
@@ -710,6 +721,7 @@
         "Ocarina": "オカリナ",
         "MantaOcarina": "マンタオカリナ",
         "Aurora": "オーロラ",
+        "sustained_recorder": "サステインリコーダー",
         "Kalimba": "カリンバ",
         "ToyUkulele": "おもちゃのウクレレ",
         "Drum": "ドラム",
@@ -726,18 +738,30 @@
         "SFX_SpiritMantaCall": "スピリットマンタの鳴き声",
         "SFX_JellyCall": "クラゲの鳴き声",
         "SFX_MantaCall": "マンタの鳴き声",
-        "SFX_MothCall": "蛾の鳴き声"
+        "SFX_MothCall": "蛾の鳴き声",
+        "GrandPiano": "グランドピアノ",
+        "HarmonicKey": "諧律のチェンバロ"
     },
     "versions": {
+        "4-0-0": {
+            "title": "新しいアプリ、サステインノート、スムーズスクロール、新しい楽器",
+            "change-1": "アプリ全体を一から書き直しました。あらゆる場所でパフォーマンスが向上しているはずです。",
+            "change-2": "サステインノート（音を伸ばせるノート）を追加しました。コンポーザーでは、キーボード上のノートを長押しすると長さのポップオーバーが開き、そのノートが何列分続くかを選択できます。プレイヤーと禅キーボードでは、ノートのボタンを押し続けるだけで音を伸ばせます。",
+            "change-3": "再生中、コンポーザーが滑らかにスクロールするようになり、曲のどこを再生しているかを示す線が表示されます。キャンバスのドラッグやスクロールも滑らかになりました。この機能はコンポーザー設定でオフにできます。",
+            "change-4": "ユーザー体験を向上させるため、アプリ全体のデザインを少し見直しました",
+            "change-5": "その他多数の問題を修正し改善しました"
+        },
         "3-7-0": {
             "title": "新しい楽器と翻訳",
-            "change-1": "新しい楽器: 諧律のチェンバロ (原神)"
+            "change-1": "新しい楽器: 諧律のチェンバロ (原神)",
+            "change-2": "数字譜レイアウトを追加しました"
         },
         "3-6-4": {
             "title": "翻訳テキスト更新",
             "change-1": "中国の台湾地区と中国の香港特別行政区の繁体字中国語翻訳を追加",
             "change-2": "韓国語翻訳を追加し、その他の翻訳の誤りを一部修正",
-            "change-3": "日本語翻訳を追加（以前の大規模更新時に紛失していたものを復元）"
+            "change-3": "日本語翻訳を追加（以前の大規模更新時に紛失していたものを復元）",
+            "chance-2": "トルコ語翻訳を改善しました"
         },
         "3-6-3": {
             "title": "原神 新しい楽器",

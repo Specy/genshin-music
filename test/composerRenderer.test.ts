@@ -3216,9 +3216,9 @@ describe('the smooth scroll', () => {
             //when the next one's travel begins, so it arrives at the boundary late and stays late -
             //measured at a third of a column behind the music, for the rest of the song.
             //past the truncated segment's end by more than one emitted frame, so the reading cannot
-            //be a stale frame rather than a lagging playhead - at 30fps an emitted frame is 33ms,
-            //which on a 273ms column is 0.12 of one, against the third of a column an untruncated
-            //segment leaves behind
+            //be a stale frame rather than a lagging playhead - an emitted frame is at most two
+            //display frames, which on a 273ms column is a small fraction of one, against the third
+            //of a column an untruncated segment leaves behind
             await vi.advanceTimersByTimeAsync(LOOKAHEAD_MS + 100)
             expect(harness.scrollPosition()).toBeGreaterThanOrEqual(SELECTED + 1)
         } finally {
@@ -3254,9 +3254,7 @@ describe('the smooth scroll', () => {
             //while a skipped column is what the queue exists to rule out and shows up here
             //directly.
             const seen: number[] = [Math.floor(harness.scrollPosition())]
-            //five columns' worth of sampling for four columns of travel: the cap emits unevenly,
-            //so the frame that lands ON the final boundary may be up to one frame late
-            for (let step = 0; step < 5 * 8; step++) {
+            for (let step = 0; step < 4 * 8; step++) {
                 await vi.advanceTimersByTimeAsync(QUARTER / 8)
                 const at = Math.floor(harness.scrollPosition())
                 if (seen[seen.length - 1] !== at) seen.push(at)
@@ -3387,6 +3385,47 @@ describe('the smooth scroll', () => {
             await vi.advanceTimersByTimeAsync(SCROLL_EASE_MS + 32)
             expect(harness.scrollPosition()).toBe(SELECTED)
             //and the selectColumn round-trip it made itself did not undo the ease on the way past
+            expect(harness.frameLoop().started).toBe(false)
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    it('parks on the LAST column when the song runs out, not a lookahead short of it', async () => {
+        const harness = await mountGliding()
+        try {
+            const last = harness.context.song.columns.length - 1
+            //1/8 columns at the end, which is the reported reproduction: they last 34ms against a
+            //250ms lookahead, so the transport runs out of song while the playhead is still eight
+            //columns back, and every one of those columns is in the queue rather than on screen.
+            for (let index = last - 8; index <= last; index++) {
+                harness.context.song.setTempoChangerAt(index, TEMPO_CHANGERS[3])
+            }
+            harness.context.song.selected = last - 8
+            harness.push()
+            startPlaying(harness)
+
+            //run the transport to the end on the eighth-note cadence
+            const EIGHTH = columnMs(0.125)
+            for (let i = 0; i < 8; i++) {
+                await vi.advanceTimersByTimeAsync(EIGHTH)
+                harness.context.song.selected += 1
+                harness.push()
+            }
+            expect(harness.context.song.selected).toBe(last)
+            //the playhead is still well short of the end here - that part is correct, the audio for
+            //those columns has not sounded yet
+            expect(harness.scrollPosition()).toBeLessThan(last)
+
+            //THE SONG ENDS. Composer.svelte's tick calls togglePlay(false) without advancing
+            //`selected`, so this is the same isPlaying transition a manual pause makes - but the
+            //answer is not the same. A pause parks on the last column that was HEARD so play can
+            //resume there; running out of song has no resume, and the notes still scheduled will
+            //sound, so the playhead belongs at the end of the song rather than a lookahead short.
+            harness.context.props.isPlaying = false
+            harness.push()
+            await vi.advanceTimersByTimeAsync(SCROLL_EASE_MS + 32)
+            expect(harness.scrollPosition()).toBe(last)
             expect(harness.frameLoop().started).toBe(false)
         } finally {
             harness.destroy()
@@ -3524,6 +3563,49 @@ describe('the frame loop', () => {
         return harness
     }
 
+    it('takes no frames at all while audio is recording', async () => {
+        const harness = await mountGliding()
+        try {
+            harness.context.props.isPlaying = true
+            harness.push()
+            await vi.advanceTimersByTimeAsync(LOOKAHEAD_MS)
+            expect(harness.frameLoop().started).toBe(true)
+
+            //AudioRecorder captures in real time, so a main-thread stall is a dropout in the file
+            //the user is recording. Nothing the frames computed could reach the screen anyway -
+            //applyScrollPosition returns before touching the scene while this is set, and the
+            //columns are hidden - so before this branch existed the loop ran for the whole length
+            //of a recording producing nothing: measured at 62 rAF callbacks and 29 emits a second
+            //on this file's 60Hz fake clock.
+            harness.context.props.isRecordingAudio = true
+            harness.push()
+            expect(harness.frameLoop().started).toBe(false)
+
+            const before = {loop: harness.frameLoop(), notes: harness.notesRenders()}
+            //...and the TRANSPORT keeps running through a recording - it is playing the song into
+            //the file - so the ticks have to stay silent too, not just the moment the flag is set
+            for (let i = 0; i < 4; i++) {
+                await vi.advanceTimersByTimeAsync(WHOLE)
+                harness.context.song.selected += 1
+                harness.push()
+            }
+            await vi.advanceTimersByTimeAsync(1000)
+            const after = harness.frameLoop()
+            expect(after.started).toBe(false)
+            expect(after.frames - before.loop.frames).toBe(0)
+            expect(after.emits - before.loop.emits).toBe(0)
+
+            //and coming out of a recording brings the canvas back, at the column the transport
+            //reached rather than wherever the schedule had been left
+            harness.context.props.isRecordingAudio = false
+            harness.push()
+            expect(harness.scrollPosition()).toBe(harness.context.song.selected)
+            expect(harness.notesRenders()).toBeGreaterThan(before.notes)
+        } finally {
+            harness.destroy()
+        }
+    })
+
     it('asks for the column container to be its own render group', async () => {
         const harness = await mount()
         try {
@@ -3567,13 +3649,13 @@ describe('the frame loop', () => {
     it('caps the loop, and a second of gliding emits fewer frames than the display offers', async () => {
         const harness = await mountGliding()
         try {
-            expect(harness.frameLoop().maxFPS).toBe(30)
+            expect(harness.frameLoop().maxFPS).toBe(48)
             //...and the cap is on the ticker the renderer actually runs. The value alone cannot say
             //that: setting it on the timeline's ticker, or running a private rAF beside this one,
-            //leaves it reading 30 while the frames arrive at the display's rate. Under the fake
+            //leaves it reading 48 while the frames arrive at the display's rate. Under the fake
             //clock a display frame is every 16ms, so 62 arrive in a second and the gate lets fewer
-            //through - near 30 but not exactly, because it is a frame SKIP against that grid rather
-            //than a clock (see expectPosition).
+            //through - not 48 exactly, because it is a frame SKIP against that grid rather than a
+            //clock (see expectPosition).
             harness.context.props.isPlaying = true
             harness.push()
             const before = harness.frameLoop()
@@ -3584,8 +3666,8 @@ describe('the frame loop', () => {
             expect(frames).toBeGreaterThan(58)
             //bounded on BOTH sides: a gate that let everything through would read ~62, and one that
             //had stopped emitting would read 0. Neither bound is the cap restated - they bracket it.
-            expect(emits).toBeGreaterThan(24)
-            expect(emits).toBeLessThan(36)
+            expect(emits).toBeGreaterThan(40)
+            expect(emits).toBeLessThan(52)
         } finally {
             harness.destroy()
         }
@@ -3683,9 +3765,9 @@ describe('the frame loop', () => {
         try {
             //A LONG SONG, because the saving is a function of how slowly the outline moves and
             //makeSong's 100 columns are not slow: the whole song spans the timeline's width, so at
-            //100 columns the outline travels 16px per column against the ~8 frames a column gets at
-            //30fps, and a per-pixel gate fires on every one of them. At 400 it travels 4px, which is
-            //where the gate starts saving - and 400 is also the shipped default's neighbourhood.
+            //100 columns the outline travels 16px per column, which a per-pixel gate has to render
+            //nearly every frame of. At 400 it travels 4px per column, which is where the gate
+            //starts saving - and 400 is also the shipped default's neighbourhood.
             harness.context.song.addColumns(300, harness.context.song.columns.length - 1)
             harness.push()
             harness.context.props.isPlaying = true
@@ -3729,16 +3811,22 @@ describe('the frame loop', () => {
 // ---------------------------------------------------------------------------------------------
 // PART SEVEN: MANUAL SCROLLING.
 //
-// A drag and a wheel, which are about INPUT and not about playback - so both are run in BOTH scroll
-// modes. `smoothScroll` decides whether a playback TICK glides; it has never decided whether the
-// canvas follows a finger, and the rows below are what keeps that distinction from quietly
-// collapsing back into "smoothScroll means nothing animates".
+// A drag and a wheel, which are about INPUT and not about playback - and `smoothScroll` decides how
+// they move the canvas, so every row runs in BOTH modes and the two modes make DIFFERENT claims:
+//   ON  - the drag follows the pointer continuously, the wheel eases, the release settles with an
+//         ease, and the position spends most of a gesture strictly between two columns;
+//   OFF - the drag steps a whole column at a time, the wheel and every settle arrive at once, and
+//         the position is a whole column at every instant.
+// This REVERSES an earlier round in which manual motion was continuous in both modes and only a
+// playback tick was gated on the setting. The rows below are what keeps the two modes from
+// collapsing into each other in either direction; where the two claims are opposites they are
+// written out as separate rows rather than parametrised, so both sit readable side by side.
 //
-// What each row is aimed at is written at the row. Between them they cover the three ways this can
-// go wrong that no scene comparison can see: motion that is quantised rather than continuous, a
-// motion FOUGHT by the selectColumn round-trip it makes itself, and a motion that never settles -
-// which leaves the composer permanently half a column off `selected`, and every click, edit and
-// jump downstream reasons in terms of `selected`.
+// What each row is aimed at is written at the row. Between them they cover the four ways this can
+// go wrong that no scene comparison can see: motion quantised where it should be continuous, motion
+// continuous where it should be quantised, a motion FOUGHT by the selectColumn round-trip it makes
+// itself, and a motion that never settles - which leaves the composer permanently half a column off
+// `selected`, and every click, edit and jump downstream reasons in terms of `selected`.
 describe('manual scrolling', () => {
     for (const smoothScroll of [false, true]) {
         const mode = smoothScroll ? 'with smooth scrolling on' : 'with smooth scrolling off'
@@ -3766,44 +3854,96 @@ describe('manual scrolling', () => {
             return scene.notes.x + column.x + columnWidth / 2
         }
 
-        it(`${mode}, a drag moves the canvas by the pointer's real distance, not a column at a time`, async () => {
-            const harness = await mountManual()
-            try {
-                const {columnWidth} = harness.geometry()
-                const start = canvasXOfColumn(harness, SELECTED)
-                harness.pressPointerOverNotes(start)
-                //A THIRD of a column. The old handler returned early below a whole column of
-                //accumulated movement, so the canvas did not move at all until a full column had
-                //been dragged and then jumped that whole column at once.
-                harness.movePointerOverNotes(start - columnWidth / 3)
-                await frame()
-                expect(harness.scrollPosition()).toBeCloseTo(SELECTED + 1 / 3, 6)
-                //...and it keeps following, at two thirds and past a whole column, so the motion is
-                //continuous rather than quantised on some finer grid
-                harness.movePointerOverNotes(start - (columnWidth * 2) / 3)
-                await frame()
-                expect(harness.scrollPosition()).toBeCloseTo(SELECTED + 2 / 3, 6)
-                harness.movePointerOverNotes(start - (columnWidth * 4) / 3)
-                await frame()
-                expect(harness.scrollPosition()).toBeCloseTo(SELECTED + 4 / 3, 6)
-            } finally {
-                harness.destroy()
-            }
-        })
+        if (smoothScroll) {
+            it(`${mode}, a drag moves the canvas by the pointer's real distance, not a column at a time`, async () => {
+                const harness = await mountManual()
+                try {
+                    const {columnWidth} = harness.geometry()
+                    const start = canvasXOfColumn(harness, SELECTED)
+                    harness.pressPointerOverNotes(start)
+                    //A THIRD of a column. The old handler returned early below a whole column of
+                    //accumulated movement, so the canvas did not move at all until a full column
+                    //had been dragged and then jumped that whole column at once.
+                    harness.movePointerOverNotes(start - columnWidth / 3)
+                    await frame()
+                    expect(harness.scrollPosition()).toBeCloseTo(SELECTED + 1 / 3, 6)
+                    //...and it keeps following, at two thirds and past a whole column, so the
+                    //motion is continuous rather than quantised on some finer grid
+                    harness.movePointerOverNotes(start - (columnWidth * 2) / 3)
+                    await frame()
+                    expect(harness.scrollPosition()).toBeCloseTo(SELECTED + 2 / 3, 6)
+                    harness.movePointerOverNotes(start - (columnWidth * 4) / 3)
+                    await frame()
+                    expect(harness.scrollPosition()).toBeCloseTo(SELECTED + 4 / 3, 6)
+                } finally {
+                    harness.destroy()
+                }
+            })
+        } else {
+            it(`${mode}, a drag moves the canvas a whole column at a time`, async () => {
+                const harness = await mountManual()
+                try {
+                    const {columnWidth} = harness.geometry()
+                    const start = canvasXOfColumn(harness, SELECTED)
+                    harness.pressPointerOverNotes(start)
+                    //A THIRD of a column: well past DRAG_SLOP_PX, so this IS a drag - but short of
+                    //the half, so the NEAREST whole column is still the one it started on and the
+                    //canvas has not moved. `toBe` and not `toBeCloseTo` throughout: the exactness
+                    //is the claim, and a continuous drag lands on 1/3 here.
+                    harness.movePointerOverNotes(start - columnWidth / 3)
+                    await frame()
+                    expect(harness.scrollPosition()).toBe(SELECTED)
+                    expect(harness.selectColumnCalls).toEqual([])
+                    //past the half, so it steps a whole column at once
+                    harness.movePointerOverNotes(start - (columnWidth * 2) / 3)
+                    await frame()
+                    expect(harness.scrollPosition()).toBe(SELECTED + 1)
+                    expect(harness.selectColumnCalls).toEqual([
+                        {index: SELECTED + 1, ignoreAudio: true},
+                    ])
+                    //that call's round-trip, flushed where Svelte flushes it. Without it
+                    //`state.selected` stays on the press column and the "at most once per column
+                    //crossed" test below compares against a stale value, so every later move
+                    //re-issues the same call and the count says nothing.
+                    harness.context.song.selected = SELECTED + 1
+                    harness.push()
+                    //...and then HOLDS that column across the next two thirds of travel rather than
+                    //creeping through it, which is what "a column at a time" means and what a
+                    //quantiser applied only to the selectColumn argument would fail
+                    harness.movePointerOverNotes(start - (columnWidth * 4) / 3)
+                    await frame()
+                    expect(harness.scrollPosition()).toBe(SELECTED + 1)
+                    expect(harness.selectColumnCalls).toEqual([
+                        {index: SELECTED + 1, ignoreAudio: true},
+                    ])
+                    harness.movePointerOverNotes(start - (columnWidth * 5) / 3)
+                    await frame()
+                    expect(harness.scrollPosition()).toBe(SELECTED + 2)
+                } finally {
+                    harness.destroy()
+                }
+            })
+        }
 
         it(`${mode}, a drag is not yanked back by the selectColumn round-trip it makes itself`, async () => {
             const harness = await mountManual()
             try {
                 const {columnWidth} = harness.geometry()
                 const start = canvasXOfColumn(harness, SELECTED)
-                harness.pressPointerOverNotes(start)
-                harness.movePointerOverNotes(start - columnWidth * 1.5)
-                await frame()
-                expect(harness.scrollPosition()).toBeCloseTo(SELECTED + 1.5, 6)
+                //1.6 rather than 1.5 while snapping: 1.5 sits exactly on the rounding boundary,
+                //where this row could not tell a step from a stall.
+                const travel = smoothScroll ? 1.5 : 1.6
+                const dragged = smoothScroll ? SELECTED + 1.5 : SELECTED + 2
                 //the drag calls selectColumn with the FLOOR of the position - the column under the
-                //line - at most once per column crossed
+                //line - at most once per column crossed. Snapping, the position is already whole,
+                //so that floor is the identity and the two agree at every instant.
+                const selectedByDrag = Math.floor(dragged)
+                harness.pressPointerOverNotes(start)
+                harness.movePointerOverNotes(start - columnWidth * travel)
+                await frame()
+                expect(harness.scrollPosition()).toBeCloseTo(dragged, 6)
                 expect(harness.selectColumnCalls).toEqual([
-                    {index: SELECTED + 1, ignoreAudio: true},
+                    {index: selectedByDrag, ignoreAudio: true},
                 ])
 
                 //AND NOW THE UPDATE THAT CALL PRODUCES. Svelte flushes it in a microtask, i.e.
@@ -3811,9 +3951,21 @@ describe('manual scrolling', () => {
                 //it lands on the snap path and assigns the position from `selected` - an integer -
                 //once per column crossed, which is the canvas stuttering back to the boundary the
                 //finger just left.
-                harness.context.song.selected = SELECTED + 1
+                harness.context.song.selected = selectedByDrag
                 harness.push()
-                expect(harness.scrollPosition()).toBeCloseTo(SELECTED + 1.5, 6)
+                expect(harness.scrollPosition()).toBeCloseTo(dragged, 6)
+
+                //THE GESTURE IS STILL LIVE, which is what that guard really buys while snapping:
+                //there the canvas and `selected` already agree, so a rest() on this update would be
+                //invisible to the assertion above - but it clears `motion`, and the next pointermove
+                //then re-anchors while `pointer.x` is still the press x, applies the whole offset a
+                //second time and runs the drag away. One more move is what says which happened.
+                harness.movePointerOverNotes(start - columnWidth * (travel + 1.6))
+                await frame()
+                expect(harness.scrollPosition()).toBeCloseTo(
+                    smoothScroll ? SELECTED + 3.1 : SELECTED + 3,
+                    6
+                )
 
                 //...and the drawn window follows the CANVAS rather than the state, which is a
                 //different claim: a pool advanced from `selected` holds a window half a column off
@@ -3840,6 +3992,12 @@ describe('manual scrolling', () => {
                 //they disagree, and the disagreement is the whole claim.
                 harness.movePointerOverNotes(start - columnWidth * 1.6)
                 await frame()
+                if (!smoothScroll) {
+                    //ALREADY THERE. Snapping, the drag has been writing that same rounded position
+                    //all along, so the release has nothing left to move - which is exactly why the
+                    //settle below has to be asserted with no timer advance at all.
+                    expect(harness.scrollPosition()).toBe(SELECTED + 2)
+                }
                 harness.releasePointerOverNotes(start - columnWidth * 1.6)
                 //ROUND, not floor: 1.6 settles FORWARD to 2, where a floor-settle would give back
                 //0.6 of a column - up to a whole one on every release, which reads as sticky
@@ -3850,9 +4008,18 @@ describe('manual scrolling', () => {
                 harness.context.song.selected = SELECTED + 2
                 harness.push()
 
-                //the ease the release starts has to finish before the position is whole; leaving
-                //the composer parked on a fraction is what this rules out
-                await vi.advanceTimersByTimeAsync(400)
+                if (smoothScroll) {
+                    //the ease the release starts has to finish before the position is whole;
+                    //leaving the composer parked on a fraction is what this rules out
+                    await vi.advanceTimersByTimeAsync(400)
+                } else {
+                    //NO TIMER ADVANCE. Snapping, the settle is instantaneous and the loop is
+                    //already stopped; waiting 400ms first would pass just as well against an
+                    //implementation that still eased, so the wait is the assertion's whole point.
+                    expect(harness.scrollPosition()).toBe(SELECTED + 2)
+                    expect(harness.frameLoop().started).toBe(false)
+                    await vi.advanceTimersByTimeAsync(400)
+                }
                 expect(harness.scrollPosition()).toBe(SELECTED + 2)
                 //...and the loop is stopped again, which is the idle requirement after a gesture
                 expect(harness.frameLoop().started).toBe(false)
@@ -3881,6 +4048,12 @@ describe('manual scrolling', () => {
                 //at, so the canvas stops following `selected` for the life of the renderer and the
                 //capped loop runs forever.
                 harness.releasePointerOutsideTheCanvas()
+                if (!smoothScroll) {
+                    //before any timer advance, which is what separates "arrived at once" from
+                    //"eased, and we waited long enough not to notice"
+                    expect(harness.scrollPosition()).toBe(SELECTED + 2)
+                    expect(harness.frameLoop().started).toBe(false)
+                }
                 await vi.advanceTimersByTimeAsync(400)
                 expect(harness.scrollPosition()).toBe(SELECTED + 2)
                 expect(harness.frameLoop().started).toBe(false)
@@ -3907,6 +4080,11 @@ describe('manual scrolling', () => {
                 //listener for cancel at all (EventSystem._addEvents), so neither the stage handler
                 //nor a window pointerup can rescue this one.
                 harness.cancelPointer()
+                if (!smoothScroll) {
+                    //instant, as everywhere else this mode settles
+                    expect(harness.scrollPosition()).toBe(SELECTED + 2)
+                    expect(harness.frameLoop().started).toBe(false)
+                }
                 await vi.advanceTimersByTimeAsync(400)
                 expect(harness.scrollPosition()).toBe(SELECTED + 2)
                 expect(harness.frameLoop().started).toBe(false)
@@ -3934,8 +4112,11 @@ describe('manual scrolling', () => {
                 expect(harness.scrollPosition()).toBe(lastColumn)
                 harness.movePointerOverNotes(start - columnWidth * (overshoot - 1))
                 await frame()
-                //one column back for one column of pointer travel, not zero
-                expect(harness.scrollPosition()).toBeCloseTo(lastColumn - 1, 6)
+                //one column back for one column of pointer travel, not zero. Both readings are
+                //integral at the clamp, so this row does NOT pin "quantise the write, never the
+                //anchor" - that rule is only observable across a mid-gesture mode flip.
+                if (smoothScroll) expect(harness.scrollPosition()).toBeCloseTo(lastColumn - 1, 6)
+                else expect(harness.scrollPosition()).toBe(lastColumn - 1)
             } finally {
                 harness.destroy()
             }
@@ -3957,8 +4138,13 @@ describe('manual scrolling', () => {
                 harness.wheelOverNotes(100)
                 harness.releasePointerOverNotes(start - columnWidth * 1.6)
                 await vi.advanceTimersByTimeAsync(400)
+                //Snapping, the drag itself already asked for column 42 (1.6 rounds up), so the two
+                //calls are the drag's and the settle's restatement of it. NOT to be "cleaned up"
+                //by having settleStageDrag skip an unchanged index: that would key off
+                //`this.state.selected`, which lags by a microtask, so the skip would fire in the
+                //app and not in this harness - a behaviour no test can state.
                 expect(harness.selectColumnCalls).toEqual([
-                    {index: SELECTED + 1, ignoreAudio: true},
+                    {index: smoothScroll ? SELECTED + 1 : SELECTED + 2, ignoreAudio: true},
                     {index: SELECTED + 2, ignoreAudio: true},
                 ])
                 expect(harness.scrollPosition()).toBe(SELECTED + 2)
@@ -3989,38 +4175,75 @@ describe('manual scrolling', () => {
             }
         })
 
-        it(`${mode}, the wheel eases to the next column rather than jumping to it`, async () => {
-            const harness = await mountManual()
-            try {
-                harness.wheelOverNotes(100)
-                expect(harness.selectColumnCalls).toEqual([
-                    {index: SELECTED + 1, ignoreAudio: true},
-                ])
-                //STRICTLY BETWEEN, on the very next frame: a "set the target and jump there"
-                //implementation passes every endpoint assertion and fails this one
-                await frame()
-                const midway = harness.scrollPosition()
-                expect(midway).toBeGreaterThan(SELECTED)
-                expect(midway).toBeLessThan(SELECTED + 1)
+        if (smoothScroll) {
+            it(`${mode}, the wheel eases to the next column rather than jumping to it`, async () => {
+                const harness = await mountManual()
+                try {
+                    harness.wheelOverNotes(100)
+                    expect(harness.selectColumnCalls).toEqual([
+                        {index: SELECTED + 1, ignoreAudio: true},
+                    ])
+                    //STRICTLY BETWEEN, on the very next frame: a "set the target and jump there"
+                    //implementation passes every endpoint assertion and fails this one
+                    await frame()
+                    const midway = harness.scrollPosition()
+                    expect(midway).toBeGreaterThan(SELECTED)
+                    expect(midway).toBeLessThan(SELECTED + 1)
 
-                //AND NOW THE UPDATE THAT SELECTCOLUMN PRODUCES, the same round-trip the drag row
-                //models: Svelte flushes it a microtask later, i.e. in the middle of the 140ms ease.
-                //syncScrollSchedule keeps a running ease alive only while `selected` is still its
-                //own target; without that test it rests, which assigns the position from `selected`
-                //and replaces the ease with the instant jump it exists to avoid.
-                harness.context.song.selected = SELECTED + 1
-                harness.push()
-                expect(harness.scrollPosition()).toBeGreaterThanOrEqual(midway)
-                expect(harness.scrollPosition()).toBeLessThan(SELECTED + 1)
-                expect(harness.frameLoop().started).toBe(true)
+                    //AND NOW THE UPDATE THAT SELECTCOLUMN PRODUCES, the same round-trip the drag
+                    //row models: Svelte flushes it a microtask later, i.e. in the middle of the
+                    //140ms ease. syncScrollSchedule keeps a running ease alive only while
+                    //`selected` is still its own target; without that test it rests, which assigns
+                    //the position from `selected` and replaces the ease with the instant jump it
+                    //exists to avoid.
+                    harness.context.song.selected = SELECTED + 1
+                    harness.push()
+                    expect(harness.scrollPosition()).toBeGreaterThanOrEqual(midway)
+                    expect(harness.scrollPosition()).toBeLessThan(SELECTED + 1)
+                    expect(harness.frameLoop().started).toBe(true)
 
-                await vi.advanceTimersByTimeAsync(400)
-                expect(harness.scrollPosition()).toBe(SELECTED + 1)
-                expect(harness.frameLoop().started).toBe(false)
-            } finally {
-                harness.destroy()
-            }
-        })
+                    await vi.advanceTimersByTimeAsync(400)
+                    expect(harness.scrollPosition()).toBe(SELECTED + 1)
+                    expect(harness.frameLoop().started).toBe(false)
+                } finally {
+                    harness.destroy()
+                }
+            })
+        } else {
+            it(`${mode}, the wheel jumps a whole column at once rather than easing`, async () => {
+                const harness = await mountManual()
+                try {
+                    const framesBefore = harness.frameLoop().frames
+                    harness.wheelOverNotes(100)
+                    expect(harness.selectColumnCalls).toEqual([
+                        {index: SELECTED + 1, ignoreAudio: true},
+                    ])
+                    //ARRIVED, before any frame at all - the exact inverse of the ON row's "strictly
+                    //between on the very next frame"
+                    expect(harness.scrollPosition()).toBe(SELECTED + 1)
+                    expect(harness.frameLoop().started).toBe(false)
+                    await frame()
+                    expect(harness.scrollPosition()).toBe(SELECTED + 1)
+
+                    //the same selectColumn round-trip the ON row models. Here it must move nothing:
+                    //the settle already put the canvas on the column the update is about to name.
+                    harness.context.song.selected = SELECTED + 1
+                    harness.push()
+                    expect(harness.scrollPosition()).toBe(SELECTED + 1)
+
+                    await vi.advanceTimersByTimeAsync(400)
+                    expect(harness.scrollPosition()).toBe(SELECTED + 1)
+                    //NO ANIMATION FRAMES WERE TAKEN. Every position assertion above would pass
+                    //against an implementation that eased for 140ms and finished; only the frame
+                    //count says it never animated, and it is what catches an easeTo gated at some
+                    //of its call sites and not at the one this path reaches.
+                    expect(harness.frameLoop().frames).toBe(framesBefore)
+                    expect(harness.frameLoop().started).toBe(false)
+                } finally {
+                    harness.destroy()
+                }
+            })
+        }
 
         /**
          * THE MINI-TIMELINE'S OWN DRAG, which is a second pointer surface with a different rule:
@@ -4055,28 +4278,68 @@ describe('manual scrolling', () => {
                 //enters the drag at once rather than waiting for a slop
                 harness.pressPointerOverTimeline(timelineXOfColumn(harness, 10))
                 await frame()
-                expect(harness.scrollPosition()).toBeCloseTo(10, 6)
+                if (smoothScroll) expect(harness.scrollPosition()).toBeCloseTo(10, 6)
+                else expect(harness.scrollPosition()).toBe(10)
                 expect(harness.selectColumnCalls).toEqual([{index: 10, ignoreAudio: true}])
             } finally {
                 harness.destroy()
             }
         })
 
-        it(`${mode}, a timeline drag moves the canvas continuously, not a column at a time`, async () => {
-            const harness = await mountManual()
-            try {
-                harness.pressPointerOverTimeline(timelineXOfColumn(harness, 10))
-                await frame()
-                //HALF A COLUMN of the strip. The throttled version this replaced floored the
-                //position, so the canvas could only sit on whole columns however finely the pointer
-                //moved - and on a 100-column song one timeline pixel is a sixteenth of a column.
-                harness.movePointerOverTimeline(timelineXOfColumn(harness, 10.5))
-                await frame()
-                expect(harness.scrollPosition()).toBeCloseTo(10.5, 6)
-            } finally {
-                harness.destroy()
-            }
-        })
+        if (smoothScroll) {
+            it(`${mode}, a timeline drag moves the canvas continuously, not a column at a time`, async () => {
+                const harness = await mountManual()
+                try {
+                    harness.pressPointerOverTimeline(timelineXOfColumn(harness, 10))
+                    await frame()
+                    //HALF A COLUMN of the strip. The throttled version this replaced floored the
+                    //position, so the canvas could only sit on whole columns however finely the
+                    //pointer moved - and on a 100-column song one timeline pixel is a sixteenth of
+                    //a column.
+                    harness.movePointerOverTimeline(timelineXOfColumn(harness, 10.5))
+                    await frame()
+                    expect(harness.scrollPosition()).toBeCloseTo(10.5, 6)
+                } finally {
+                    harness.destroy()
+                }
+            })
+        } else {
+            it(`${mode}, a timeline drag moves the canvas a whole column at a time`, async () => {
+                const harness = await mountManual()
+                try {
+                    //THE SECOND DRAG SURFACE, snapping with the first. Leaving this one continuous
+                    //would make the setting mean "snap here, glide there".
+                    harness.pressPointerOverTimeline(timelineXOfColumn(harness, 10))
+                    await frame()
+                    expect(harness.scrollPosition()).toBe(10)
+                    //the press's own round-trip, so the "once per column crossed" test below
+                    //compares against a `selected` that is not still on the mount column
+                    harness.context.song.selected = 10
+                    harness.push()
+                    //short of the half: the nearest column has not changed, so nothing moves
+                    harness.movePointerOverTimeline(timelineXOfColumn(harness, 10.4))
+                    await frame()
+                    expect(harness.scrollPosition()).toBe(10)
+                    expect(harness.selectColumnCalls).toEqual([{index: 10, ignoreAudio: true}])
+                    //past it: one whole column at once
+                    harness.movePointerOverTimeline(timelineXOfColumn(harness, 10.6))
+                    await frame()
+                    expect(harness.scrollPosition()).toBe(11)
+                    harness.context.song.selected = 11
+                    harness.push()
+                    //...and then holds it rather than creeping
+                    harness.movePointerOverTimeline(timelineXOfColumn(harness, 10.9))
+                    await frame()
+                    expect(harness.scrollPosition()).toBe(11)
+                    expect(harness.selectColumnCalls).toEqual([
+                        {index: 10, ignoreAudio: true},
+                        {index: 11, ignoreAudio: true},
+                    ])
+                } finally {
+                    harness.destroy()
+                }
+            })
+        }
 
         it(`${mode}, grabbing the timeline's viewport rectangle keeps it under the pointer`, async () => {
             const harness = await mountManual()
@@ -4088,8 +4351,10 @@ describe('manual scrolling', () => {
                 //jump the canvas by the distance from that centre - about 6 columns here.
                 harness.pressPointerOverTimeline(viewport.x + viewport.width * 0.25)
                 await frame()
-                //to within the half-pixel the rectangle's floored width costs at the grab point
-                expect(harness.scrollPosition()).toBeCloseTo(SELECTED, 1)
+                //to within the half-pixel the rectangle's floored width costs at the grab point -
+                //which is exactly the slop rounding absorbs, so snapping can assert it exactly
+                if (smoothScroll) expect(harness.scrollPosition()).toBeCloseTo(SELECTED, 1)
+                else expect(harness.scrollPosition()).toBe(SELECTED)
                 expect(harness.selectColumnCalls).toEqual([])
             } finally {
                 harness.destroy()
@@ -4101,8 +4366,19 @@ describe('manual scrolling', () => {
             try {
                 harness.pressPointerOverTimeline(timelineXOfColumn(harness, 10.6))
                 await frame()
+                //the ticker runs during a drag in EITHER mode - the Ticker rule is keyed on the
+                //motion, not on how far each frame moves the canvas
                 expect(harness.frameLoop().started).toBe(true)
+                if (!smoothScroll) {
+                    //10.6 rounded up at the press, so the release has nothing left to move
+                    expect(harness.scrollPosition()).toBe(11)
+                }
                 harness.releasePointerOverTimeline(timelineXOfColumn(harness, 10.6))
+                if (!smoothScroll) {
+                    //instant, before any timer advance
+                    expect(harness.scrollPosition()).toBe(11)
+                    expect(harness.frameLoop().started).toBe(false)
+                }
                 await vi.advanceTimersByTimeAsync(400)
                 //ROUND, like the stage's settle, and the same reason
                 expect(harness.scrollPosition()).toBe(11)
@@ -4114,33 +4390,46 @@ describe('manual scrolling', () => {
             }
         })
 
-        it(`${mode}, a burst of wheel events composes into one glide rather than fighting`, async () => {
+        it(`${mode}, a burst of wheel events steps once per event rather than fighting`, async () => {
             const harness = await mountManual()
             try {
+                const framesBefore = harness.frameLoop().frames
                 //three events inside one frame, which is what a real wheel produces: they arrive at
                 //about 10ms intervals and the frame is 21ms at the cap
                 harness.wheelOverNotes(100)
                 harness.wheelOverNotes(100)
                 harness.wheelOverNotes(100)
-                //each step is measured from the running ease's own TARGET. Measured from the
-                //CURRENT position instead, all three would aim at the same column and the burst
-                //would move one column in total; read off `this.state.selected`, which Svelte
-                //refreshes a microtask later, it would move one as well.
+                //each step is measured from the running ease's own TARGET, or - with no ease to
+                //have one - from the position the previous event's settle already installed.
+                //Measured from a position that only moved on the next frame, all three would aim at
+                //the same column and the burst would move one column in total; read off
+                //`this.state.selected`, which Svelte refreshes a microtask later, it would move one
+                //as well. This is the row that says `settleAt` rather than "do nothing and let the
+                //round-trip move it" is the right primitive for the snapping half.
                 expect(harness.selectColumnCalls).toEqual([
                     {index: SELECTED + 1, ignoreAudio: true},
                     {index: SELECTED + 2, ignoreAudio: true},
                     {index: SELECTED + 3, ignoreAudio: true},
                 ])
 
-                //MONOTONIC on the way there, which is the cheapest statement that catches an ease
-                //restarted with a fresh one-column target from the current position: that reverses
-                //direction, and both endpoints still agree
-                let previous = harness.scrollPosition()
-                for (let step = 0; step < 20; step++) {
-                    await frame()
-                    const position = harness.scrollPosition()
-                    expect(position).toBeGreaterThanOrEqual(previous)
-                    previous = position
+                if (smoothScroll) {
+                    //MONOTONIC on the way there, which is the cheapest statement that catches an
+                    //ease restarted with a fresh one-column target from the current position: that
+                    //reverses direction, and both endpoints still agree
+                    let previous = harness.scrollPosition()
+                    for (let step = 0; step < 20; step++) {
+                        await frame()
+                        const position = harness.scrollPosition()
+                        expect(position).toBeGreaterThanOrEqual(previous)
+                        previous = position
+                    }
+                } else {
+                    //ARRIVED ALREADY, and no frames were taken getting there. There is no glide to
+                    //be monotonic through, so the frame count is what carries the claim.
+                    expect(harness.scrollPosition()).toBe(SELECTED + 3)
+                    await vi.advanceTimersByTimeAsync(400)
+                    expect(harness.frameLoop().frames).toBe(framesBefore)
+                    expect(harness.frameLoop().started).toBe(false)
                 }
                 expect(harness.scrollPosition()).toBe(SELECTED + 3)
             } finally {
@@ -4148,6 +4437,173 @@ describe('manual scrolling', () => {
             }
         })
     }
+
+    /**
+     * THE MODE ITSELF, rather than one behaviour at a time.
+     *
+     * The rows in the loop above each pin one gesture in one mode. These pin the PROPERTY the mode
+     * is supposed to be - "with smooth scrolling off the canvas is on a whole column, always" - and
+     * the relation between the two modes, so a smooth path added later has to break one of them
+     * rather than merely not having a row of its own.
+     */
+    async function mountIn(smoothScroll: boolean) {
+        const context = makeContext()
+        context.props.smoothScroll = smoothScroll
+        context.props.isPlaying = false
+        const harness = await mount(context)
+        harness.push()
+        return harness
+    }
+
+    const aFrame = () => vi.advanceTimersByTimeAsync(64)
+
+    it('with smooth scrolling off, the scroll position is a whole column at every sample', async () => {
+        const harness = await mountIn(false)
+        try {
+            const {columnWidth} = harness.geometry()
+            const start = CANVAS_WIDTH / 2
+            const seen: number[] = []
+            const sample = () => seen.push(harness.scrollPosition())
+            //ONE LONG MIXED GESTURE - press, six moves across three columns, a wheel, a release -
+            //sampled after every step AND after every frame in between. Deliberately on offsets
+            //that are not multiples of a column, so a continuous implementation lands on fractions.
+            harness.pressPointerOverNotes(start)
+            sample()
+            for (const travel of [0.2, 0.45, 0.8, 1.35, 2.1, 2.7]) {
+                harness.movePointerOverNotes(start - columnWidth * travel)
+                sample()
+                await aFrame()
+                sample()
+            }
+            harness.wheelOverNotes(100)
+            sample()
+            await aFrame()
+            sample()
+            harness.releasePointerOverNotes(start - columnWidth * 2.7)
+            sample()
+            await vi.advanceTimersByTimeAsync(400)
+            sample()
+            //CATCHES ANY SMOOTH MOTION IN THIS MODE FROM ANY SOURCE, including one added after this
+            //change: a new eased path, a third drag surface, a future "scroll to breakpoint" slide.
+            //An endpoint-only assertion sees none of them, because every ease has finished by the
+            //time the gesture is over.
+            expect(seen.every(Number.isInteger)).toBe(true)
+            //...and it did move, so the row is not passing on a canvas that never went anywhere
+            expect(new Set(seen).size).toBeGreaterThan(1)
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    it('the two scroll modes place the same drag a stated distance apart', async () => {
+        const glide = await mountIn(true)
+        const snap = await mountIn(false)
+        try {
+            const {columnWidth} = glide.geometry()
+            const start = CANVAS_WIDTH / 2
+            //0.7 of a column: deliberately off a boundary, so the two modes MUST disagree
+            for (const harness of [glide, snap]) {
+                harness.pressPointerOverNotes(start)
+                harness.movePointerOverNotes(start - columnWidth * 0.7)
+                await aFrame()
+            }
+            const on = glide.scrollPosition()
+            const off = snap.scrollPosition()
+            //THE RELATION, as one equation: the snapping drag sits exactly where the gliding one
+            //would settle to from the same pointer. That is what makes the release a no-op rather
+            //than a jump, and it is what a floor or a trunc would fail.
+            expect(off).toBe(Math.round(on))
+            //...and the two really are different here, so neither mode has collapsed into the
+            //other. The likeliest way that happens is the gate wired to `isPlaying && smoothScroll`
+            //rather than to the setting alone - `transportOwned` is a live idiom in this file - and
+            //these rows mount STOPPED, where that mistake makes snap mode glide.
+            expect(off).not.toBe(on)
+        } finally {
+            glide.destroy()
+            snap.destroy()
+        }
+    })
+
+    it('with smooth scrolling off, a drag renders once per column crossed, not once per frame', async () => {
+        const harness = await mountIn(false)
+        try {
+            const {columnWidth} = harness.geometry()
+            const start = CANVAS_WIDTH / 2
+            harness.pressPointerOverNotes(start)
+            const before = harness.notesRenders()
+            //THREE COLUMNS over twelve moves and twelve frames. A quantiser applied only to the
+            //value handed to selectColumn - leaving the canvas itself following the finger - passes
+            //every position assertion sampled on a column boundary, and only a render count sees
+            //it: it would render on nearly every one of these frames.
+            for (let step = 1; step <= 12; step++) {
+                harness.movePointerOverNotes(start - (columnWidth * 3 * step) / 12)
+                await aFrame()
+            }
+            expect(harness.scrollPosition()).toBe(SELECTED + 3)
+            expect(harness.notesRenders() - before).toBeLessThanOrEqual(4)
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    it('turning smooth scrolling off mid-ease finishes the ease at once', async () => {
+        const harness = await mountIn(true)
+        try {
+            harness.wheelOverNotes(100)
+            await aFrame()
+            //STRICTLY BETWEEN two columns, with the ease still running
+            const midway = harness.scrollPosition()
+            expect(midway).toBeGreaterThan(SELECTED)
+            expect(midway).toBeLessThan(SELECTED + 1)
+            expect(harness.frameLoop().started).toBe(true)
+
+            harness.context.props.smoothScroll = false
+            harness.push()
+            //NO TIMER ADVANCE. syncScrollSchedule's pre-existing `easing && selected === to` branch
+            //returns and leaves the ease RUNNING, which is 140ms of smooth motion in the mode whose
+            //whole point is that there is none; the mode-collapse statement is what settles it.
+            //Its own TARGET rather than `state.selected`, which is still a microtask behind - so
+            //resting here would yank the canvas back a column and push it forward again.
+            expect(harness.scrollPosition()).toBe(SELECTED + 1)
+            expect(harness.frameLoop().started).toBe(false)
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    it('turning smooth scrolling off mid-drag puts the canvas and the mark on one whole column', async () => {
+        const harness = await mountIn(true)
+        try {
+            const {columnWidth} = harness.geometry()
+            const start = CANVAS_WIDTH / 2
+            harness.pressPointerOverNotes(start)
+            harness.movePointerOverNotes(start - columnWidth * 1.6)
+            await aFrame()
+            expect(harness.scrollPosition()).toBeCloseTo(SELECTED + 1.6, 6)
+            //the drag's own selectColumn, flushed as Svelte flushes it, plus the mode flip - which
+            //is reachable in the app with a second touch on the settings panel
+            harness.context.song.selected = SELECTED + 1
+            harness.context.props.smoothScroll = false
+            harness.push()
+            await aFrame()
+            //THE GESTURE CONTINUES: the anchor is what the finger grabbed and is not re-taken. Only
+            //the grid changes, and the guard that returns for the whole drag has to re-quantise the
+            //live position on its way out or the canvas sits on 1.6 until the next pointermove.
+            //FLOOR here and not the round every later move uses: 1.6 lands on 41 rather than 42,
+            //because 41 is the column the drag already handed to selectColumn and so the one the
+            //mark is on. Rounding instead puts the canvas one column past the highlight.
+            expect(harness.scrollPosition()).toBe(SELECTED + 1)
+            //...AND THE MARK IS ON THAT SAME COLUMN. The overlay comes back on in this update and
+            //is painted by a different path than the position, so the position alone cannot say it.
+            expect(selectedColumnOf(harness)).toBe(SELECTED + 1)
+            //and the drag is still live, still anchored where the finger grabbed, now rounding
+            harness.movePointerOverNotes(start - columnWidth * 2.6)
+            await aFrame()
+            expect(harness.scrollPosition()).toBe(SELECTED + 3)
+        } finally {
+            harness.destroy()
+        }
+    })
 
     /**
      * THE ROWS ABOVE ALL MOUNT STOPPED, deliberately: they are about input, and a running transport

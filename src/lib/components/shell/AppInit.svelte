@@ -331,6 +331,9 @@
       AudioProvider.destroy();
       KeyboardProvider.destroy();
       MIDIProvider.destroy();
+      // Symmetry with the init() above. metronome.destroy() stops the scheduler and cancels
+      // beats already committed to the audio clock before it drops the gain node.
+      metronome.destroy();
     };
   });
 

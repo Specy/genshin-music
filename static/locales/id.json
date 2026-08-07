@@ -16,6 +16,7 @@
         "error_importing_file_generic": "Terjadi kesalahan saat mengimpor file",
         "error_importing_invalid_format": "Terjadi kesalahan mengimpor file, format tidak valid",
         "song_backup_downloaded": "Cadangan lagu terunduh",
+        "old_format_export_dropped_notes": "{{count}} note tidak dapat disertakan dalam file format lama (note tersebut tidak memiliki posisi pada instrumen default)",
         "no_songs_to_backup": "Tidak ada lagu untuk dicadangkan",
         "no_empty_name": "Harap tulis nama yang tidak kosong",
         "cloned_song": "Lagu terkloning: \"{{song_name}}\"",
@@ -90,6 +91,7 @@
         "search": "Cari",
         "rename": "Ganti nama",
         "create_song": "Buat lagu",
+        "select_song": "Pilih lagu",
         "edit_song": "Edit lagu",
         "none": "Tidak ada",
         "instrument": "instrumen",
@@ -215,6 +217,8 @@
             "composer_autosave_description": "Simpan perubahan lagu secara otomatis setiap 5 kali pengeditan dan saat Anda mengubah halaman/lagu",
             "composer_use_keyboard_side_buttons": "Letakkan tombol kolom berikutnya/sebelumnya di sekitar keyboard",
             "composer_use_keyboard_side_buttons_description": "Tempatkan tombol untuk memilih kolom berikutnya/sebelumnya di sebelah kiri/kanan keyboard",
+            "composer_smooth_scroll": "Scroll halus",
+            "composer_smooth_scroll_description": "Selama pemutaran, kanvas bergerak mulus melewati setiap kolom alih-alih melompat ke kolom berikutnya, mengikuti pengubah tempo",
             "composer_sync_tabs": "Putar otomatis di semua tab (hanya untuk komputer)",
             "composer_sync_tabs_description": "Fitur lanjutan, fitur ini menyinkronkan tab browser lain untuk bermain secara bersamaan",
             "composer_lookahead_time": "Waktu lookahead",
@@ -414,6 +418,7 @@
     },
     "keybinds": {
         "already_used_keybind": "Tata keyboard ini sudah digunakan oleh note \"{{note_name}}\"",
+        "already_used_shortcut": "Pintasan ini sudah digunakan oleh aksi \"{{shortcut_name}}\"",
         "midi_keybinds": "Tata keyboard MIDI",
         "keyboard_keybinds": "Tata keyboard",
         "keyboard_keybinds_description": "Anda dapat memetakan ulang tombol keyboard ke tombol apa pun pada keyboard Anda, tekan note yang ingin Anda petakan ulang, lalu tekan tombol yang ingin Anda tetapkan.",
@@ -541,6 +546,7 @@
         "previous_breakpoint": "Breakpoint Sebelumnnya",
         "next_breakpoint": "Breakpoint Selanjutnya",
         "tempo": "Tempo",
+        "note_duration": "Durasi note",
         "error_with_this_layer": "Ada kesalahan dengan lapisan ini",
         "recording_audio": "Merekam Audio",
         "tools": {
@@ -711,6 +717,7 @@
         "Ocarina": "Ocarina",
         "MantaOcarina": "Manta Ocarina",
         "Aurora": "Aurora",
+        "sustained_recorder": "Sustained recorder",
         "Kalimba": "Kalimba",
         "ToyUkulele": "Toy Ukulele",
         "Drum": "Drum",
@@ -727,6 +734,284 @@
         "SFX_SpiritMantaCall": "Spirit Manta Call",
         "SFX_JellyCall": "Jelly Call",
         "SFX_MantaCall": "Manta Call",
-        "SFX_MothCall": "Moth Call"
+        "SFX_MothCall": "Moth Call",
+        "GrandPiano": "Grand Piano",
+        "LingeringEuphonia": "Lingering Euphonia",
+        "LeapingSpiritPiano": "Leaping Spirit Piano",
+        "HarmonicKey": "Harmonic Key"
+    },
+    "versions": {
+        "4-0-0": {
+            "title": "Aplikasi baru, note tertahan, scroll halus, instrumen baru",
+            "change-1": "Seluruh aplikasi telah ditulis ulang dari awal. Kinerja seharusnya meningkat di semua bagian.",
+            "change-2": "Note tertahan telah ditambahkan. Di komposer, tekan lama sebuah note pada keyboard untuk membuka popover durasi dan pilih berapa kolom note tersebut akan bertahan. Di pemain dan keyboard Zen, cukup tahan tombol note untuk menahan note tersebut.",
+            "change-3": "Saat memutar lagu, komposer kini melakukan scroll dengan mulus, disertai garis yang menandai posisi Anda di dalam lagu. Menyeret dan menggeser kanvas juga terasa mulus. Anda dapat mematikannya di pengaturan komposer.",
+            "change-4": "Sedikit perubahan desain di seluruh aplikasi untuk meningkatkan Pengalaman Pengguna",
+            "change-5": "Banyak perbaikan bug dan peningkatan lainnya"
+        },
+        "3-7-0": {
+            "title": "Instrumen baru (Genshin)",
+            "change-1": "Menambahkan Harmonic Key (Genshin)",
+            "change-2": "Menambahkan tata letak Number Music Notion"
+        },
+        "3-6-4": {
+            "title": "Perluasan lokalisasi bahasa Tionghoa",
+            "change-1": "Menambahkan terjemahan bahasa Tionghoa (Hong Kong), Tionghoa (Taiwan), Jepang, dan Korea",
+            "chance-2": "Meningkatkan terjemahan bahasa Turki"
+        },
+        "3-6-3": {
+            "title": "Instrumen baru (Genshin)",
+            "change-1": "Menambahkan Leaping Spirit Piano (Genshin)"
+        },
+        "3-6-2": {
+            "title": "Terjemahan dan instrumen baru",
+            "change-1": "Menambahkan terjemahan untuk changelog",
+            "change-2": "Menambahkan GrandPiano (Sky)",
+            "change-3": "Menambahkan Lingering Euphonia (Genshin)"
+        },
+        "3-6-1": {
+            "title": "Pengaturan waktu yang lebih baik",
+            "change-1": "Pengaturan waktu di seluruh aplikasi telah diperbaiki, lagu mungkin kini diputar sedikit lebih cepat karena lebih akurat mengikuti BPM. Anda mungkin perlu menurunkan BPM, terutama untuk lagu yang nilainya sangat tinggi."
+        },
+        "3-6-0": {
+            "title": "Baris multi warna dan instrumen baru",
+            "change-1": "Di Lembar Visualisator, Anda kini dapat memilih agar baris memiliki warna latar belakang yang berbeda",
+            "change-2": "Menambahkan Ukulele dan Djem Djem Drum"
+        },
+        "3-5-0": {
+            "title": "Loop, pengaturan lembar visual, terjemahan bahasa Turki",
+            "change-1": "Menambahkan pengulangan bagian untuk mode latihan/bermain/pendekatan",
+            "change-2": "Note dari bagian yang akan diulang kini juga dapat ditulis sebagai angka",
+            "change-3": "Menambahkan kemampuan untuk menyembunyikan note dalam mode latihan, untuk membantu Anda menguji ingatan Anda tentang lagu tersebut",
+            "change-4": "Anda kini dapat memilih berapa banyak bagian yang ditampilkan di lembar visual",
+            "change-5": "Menambahkan terjemahan bahasa Turki"
+        },
+        "3-4-1": {
+            "title": "Terjemahan bahasa Indonesia dan Portugis",
+            "change-1": "Menambahkan terjemahan bahasa Indonesia dan Portugis",
+            "change-2": "Perbaikan bug pada koneksi MIDI",
+            "change-3": "Perbaikan bug pada perangkat iOS lama"
+        },
+        "3-4-0": {
+            "title": "Terjemahan",
+            "change-1": "Menambahkan terjemahan bahasa Tionghoa, kami sedang mencari penerjemah!",
+            "change-2": "Menambahkan tombol untuk memasang aplikasi ke layar beranda",
+            "change-3": "Menambahkan tata letak keyboard kustom sebagai jenis nama note",
+            "change-4": "Menambahkan jenis nama note \"tata letak keyboard Anda\", yang menggunakan tata letak keyboard perangkat Anda",
+            "change-5": "Perbaikan bug dan peningkatan"
+        },
+        "3-3-0": {
+            "title": "Transkripsi audio/video, gema",
+            "change-1": "Menambahkan alat di komposer untuk mengonversi audio/video menjadi lembar lagu",
+            "change-2": "Gema kini dapat diatur untuk setiap instrumen",
+            "change-3": "Menambahkan pengaturan cepat di keyboard Zen",
+            "change-4": "Menambahkan preset yang dapat dikustomisasi di pengaturan MIDI",
+            "change-5": "Koneksi MIDI yang lebih baik",
+            "change-6": "Keyboard Zen kini mengirimkan event note MIDI saat ditekan",
+            "change-7": "Mengubah ikon Sky Music Nightly",
+            "change-8": "Menambahkan blog aplikasi",
+            "change-9": "Perbaikan bug dan peningkatan lainnya"
+        },
+        "3-2-0": {
+            "title": "Pintasan, Do Re Mi, kinerja, Lapisan",
+            "change-1": "Semua pintasan dan tata letak keyboard kini dapat dikustomisasi",
+            "change-2": "Menambahkan tata letak Do Re Mi dengan penggeseran note",
+            "change-3": "Menulis ulang aplikasi dengan next.js, meningkatkan kinerja dan navigasi",
+            "change-4": "Meningkatkan pengaturan tema di komposer",
+            "change-5": "Menambahkan opasitas pada komposer dan warna lapisan kustom",
+            "change-6": "Menambahkan format lembar visual baru dengan lebih banyak info",
+            "change-7": "Menambahkan pencarian lagu",
+            "change-8": "Menaikkan batas lapisan komposer menjadi 52",
+            "change-9": "Meningkatkan kontrol geser komposer",
+            "change-10": "(Sky) Menambahkan instrumen baru: TR-909, BassSynth, SineSynth dan ChimesSynth",
+            "change-11": "Mengubah format file agar dapat dibuka dengan klik ganda",
+            "change-12": "Menambahkan ekspor sebagai file zip",
+            "change-13": "Menambahkan dua tema default baru",
+            "change-14": "Menambahkan pengaturan lookahead pada komposer untuk meningkatkan akurasi audio",
+            "change-15": "Perbaikan bug dan peningkatan lainnya"
+        },
+        "3-1-0": {
+            "title": "Aurora, transparansi dan tata letak",
+            "change-1": "Menambahkan aurora (Sky)",
+            "change-2": "Menambahkan tata letak switch/playstation (Sky)",
+            "change-3": "Menambahkan peringatan pencadangan",
+            "change-4": "Menambahkan transparansi pada tema",
+            "change-5": "Perbaikan bug dan peningkatan lainnya"
+        },
+        "3-0-1": {
+            "title": "Kinerja dan perbaikan bug",
+            "change-1": "Memperbaiki bug iOS yang membuat audio tidak dapat diputar",
+            "change-2": "Meningkatkan kinerja untuk pengguna yang memiliki banyak lagu",
+            "change-3": "Menambahkan pemilihan cepat pengubah tempo di alat komposer",
+            "change-4": "Perbaikan bug dan peningkatan lainnya"
+        },
+        "3-0": {
+            "title": "Mode VSRG, keyboard Zen, Call dan lainnya!",
+            "change-1": "Menambahkan mode VSRG untuk membuat dan memainkan lagu vsrg",
+            "change-2": "Menambahkan keyboard Zen, tempat Anda dapat fokus bermain dengan tangan",
+            "change-3": "Menambahkan lembar visual ke pemain",
+            "change-4": "Menambahkan penskalaan aplikasi",
+            "change-5": "Menambahkan pengurutan folder secara abjad",
+            "change-6": "Menambahkan halaman pencadangan",
+            "change-7": "(Genshin) menambahkan vintage lyre",
+            "change-8": "(Sky) Menambahkan SFX call dan emote dance",
+            "change-9": "Mengubah suara metronom",
+            "change-10": "Meningkatkan kinerja pemain",
+            "change-11": "Ekspor multi tipe, Anda kini dapat mengekspor/mengimpor lagu, folder, tema dll",
+            "change-12": "Memperbaiki bug yang menghapus lagu dari folder saat disimpan",
+            "change-13": "Memperbaiki bug yang membuat audio tidak diputar",
+            "change-14": "Memperbaiki masalah saat membuka/menyimpan lagu di komposer",
+            "change-15": "Memperbaiki bug saat menempel note di komposer",
+            "change-16": "Mengekspor lagu tidak berfungsi di sky music dan sky studio",
+            "change-17": "Perbaikan bug dan peningkatan lainnya"
+        },
+        "2-8": {
+            "title": "Lebih banyak lapisan komposer dan perombakan UI",
+            "change-1": "Menaikkan batas instrumen di komposer menjadi 30",
+            "change-2": "Mendesain ulang alat di komposer",
+            "change-3": "Menambahkan UNDO pada alat komposer",
+            "change-4": "Menambahkan tempel/sisipkan ke lapisan tertentu",
+            "change-5": "Menambahkan alat untuk memindahkan note ke atas/bawah",
+            "change-6": "Menambahkan metronom di pemain",
+            "change-7": "Menambahkan banyak instrumen di pemain",
+            "change-8": "Menambahkan lebih banyak tooltip, juga untuk perangkat seluler",
+            "change-9": "Perbaikan bug dan peningkatan"
+        },
+        "2-7": {
+            "title": "Ganti nama lagu, ekspor MIDI, folder",
+            "change-1": "Menambahkan opsi untuk mengganti nama lagu",
+            "change-2": "Nama lagu tidak lagi harus unik",
+            "change-3": "Menambahkan folder dan UI menu lagu yang baru",
+            "change-4": "Menambahkan ekspor MIDI dari sebuah lagu (JANGAN GUNAKAN SEBAGAI PENGGANTI FORMAT NORMAL)",
+            "change-5": "Meningkatkan pemutaran lagu di pemain",
+            "change-6": "Memperbaiki beberapa bug"
+        },
+        "2-6": {
+            "title": "Light guitar & Tooltip",
+            "change-1": "Menambahkan tooltip",
+            "change-2": "Menambahkan tombol bantuan",
+            "change-3": "Menambahkan Light guitar (Sky, note tidak dapat ditahan)",
+            "change-4": "Perbaikan bug pada halaman utama saat memuat lagu",
+            "change-5": "Menambahkan seret dan lepas di komposer",
+            "change-6": "Komposer di pc kini menyesuaikan ukuran dengan halaman",
+            "change-7": "Memperbaiki beberapa bug"
+        },
+        "2-5": {
+            "title": "Peningkatan komposer",
+            "change-1": "Meningkatkan rendering komposer agar lebih tajam dan lebih mudah dilihat di perangkat seluler",
+            "change-2": "Meningkatkan kinerja di komposer",
+            "change-3": "Menambahkan lapisan ke-4 di komposer",
+            "change-4": "Menambahkan pengaturan tema untuk lebih banyak bagian komposer",
+            "change-5": "Menulis ulang aplikasi dalam TypeScript",
+            "change-6": "Perbaikan bug"
+        },
+        "2-4": {
+            "title": "Multi Slider dan Tema",
+            "change-1": "Menambahkan tema aplikasi, kustomisasi tampilan aplikasi sepenuhnya",
+            "change-2": "Menambahkan slider awal dan akhir untuk memilih bagian lagu mana yang akan diputar/dilatih",
+            "change-3": "Perbaikan bug"
+        },
+        "2-3": {
+            "title": "Keyboard MIDI dan Kinerja",
+            "change-1": "Menambahkan dukungan Keyboard MIDI di semua halaman dengan tata letak dan pintasan kustom",
+            "change-2": "Peningkatan kinerja yang besar pada halaman utama",
+            "change-3": "Menambahkan nama note ke Lembar Visualisator dan sel kosong",
+            "change-4": "Menambahkan format ABC",
+            "change-5": "Menambahkan Panflute (Sky)",
+            "change-6": "Peningkatan UI dan perbaikan bug"
+        },
+        "2-2": {
+            "title": "Lembar Visualisator",
+            "change-1": "Menambahkan Lembar Visualisator",
+            "change-2": "Mengubah perilaku timeline saat menyeret bilah scroll",
+            "change-3": "Meningkatkan kinerja hingga 2 kali lipat di beberapa bagian",
+            "change-4": "Peningkatan UI dan perbaikan bug"
+        },
+        "2-1-1": {
+            "title": "Zither dan ikon",
+            "change-1": "Mengubah ikon dan animasi note (Genshin)",
+            "change-2": "Menambahkan halaman Bantuan",
+            "change-3": "Mengubah audio zither (Genshin)",
+            "change-4": "Peningkatan UI"
+        },
+        "2-1": {
+            "title": "Menu beranda dan halaman",
+            "change-1": "Merestrukturisasi kode",
+            "change-2": "Menambahkan opasitas pada beberapa elemen",
+            "change-3": "Mengubah margin dan padding beberapa elemen",
+            "change-4": "Menambahkan halaman beranda",
+            "change-5": "Menambahkan halaman Mitra",
+            "change-6": "Menambahkan pintasan untuk halaman utama",
+            "change-7": "Memperbaiki bug pemuatan di komposer dan halaman utama",
+            "change-8": "Menambahkan halaman Donasi"
+        },
+        "2-0": {
+            "title": "Lingkaran pendekatan",
+            "change-1": "Menambahkan mode Lingkaran pendekatan, cara baru untuk mempelajari lagu, atau cara untuk menantang diri Anda. Anda dapat menemukannya di halaman utama, di sebelah tombol latihan",
+            "change-2": "Menulis ulang halaman utama untuk meningkatkan kinerja secara keseluruhan",
+            "change-3": "Menambahkan halaman changelog",
+            "change-4": "Menambahkan fitur perekaman audio di halaman utama dan komposer",
+            "change-5": "Menambahkan putar otomatis di semua tab (komposer) pada pc sebagai pengaturan",
+            "change-6": "Menambahkan animasi note saat note ditekan",
+            "change-7": "Menambahkan kemungkinan untuk mengubah gambar latar belakang dari URL",
+            "change-8": "Memperbarui halaman info",
+            "change-9": "Di komposer Anda kini dapat menekan shift + nama note untuk menambahkan note",
+            "change-10": "Di komposer Anda dapat menekan tombol atas/bawah untuk mengubah lapisan",
+            "change-11": "Saat berada di komposer pada PC, Anda kini dapat menambahkan note baru cukup dengan menekan keyboard PC selagi berada dalam mode \"bermain\""
+        },
+        "1-7": {
+            "title": "Zither",
+            "change-1": "(Untuk genshin) Menambahkan Zither",
+            "change-2": "Mengembalikan format \"do re mi\""
+        },
+        "1-6": {
+            "title": "Penyesuaian kinerja",
+            "change-1": "Kinerja komposer meningkat 2x lipat",
+            "change-2": "Menambahkan nama note untuk genshin (dijadikan sebuah pengaturan)",
+            "change-3": "Memperbaiki bug volume instrumen",
+            "change-4": "Memperbaiki masalah tata letak keyboard",
+            "change-5": "Memperbaiki bug kecil lainnya"
+        },
+        "1-5": {
+            "title": "Impor MIDI",
+            "change-1": "Menambahkan fitur impor MIDI pada Sky dan Genshin music nightly",
+            "change-2": "Pemilihan trek musik (pilih atau batalkan pilihan trek mana yang akan disertakan)",
+            "change-3": "Pemilihan instrumen trek (pilih instrumen apa yang diberikan untuk setiap trek)",
+            "change-4": "Info trek (dapatkan info tentang seberapa berhasil penguraian Anda, kecelakaan dan note di luar jangkauan)",
+            "change-5": "Mengubah offset note (jika lagu berada di luar oktaf yang tersedia)"
+        },
+        "1-4": {
+            "title": "Library lagu",
+            "change-1": "Menambahkan integrasi library lagu, impor lagu langsung dari aplikasi (700+ lagu)",
+            "change-2": "Perbaikan bug"
+        },
+        "1-3": {
+            "title": "File audio baru",
+            "change-1": "Mengubah file audio",
+            "change-2": "Menambahkan ocarina",
+            "change-3": "Menghapus tombol dukungan di TWA",
+            "change-4": "Perbaikan bug"
+        },
+        "1-2": {
+            "title": "Perbaikan bug dan PWA",
+            "change-1": "(Untuk sky) Memperbaiki bug yang membuat lembar tidak dapat diimpor di sky studio",
+            "change-2": "Mengubah pemasangan aplikasi ke pendekatan yang lebih modern dengan deskripsi dan gambar"
+        },
+        "1-1": {
+            "title": "Kompatibilitas lembar",
+            "change-1": "(Untuk sky) Menambahkan kompatibilitas mundur untuk lembar, kini lembar yang dibuat di sky music nightly dapat diimpor ke sky music dan sky studio (dengan beberapa kehilangan)",
+            "change-2": "Perbaikan bug",
+            "change-3": "Peningkatan kinerja secara umum"
+        },
+        "1-0": {
+            "title": "Rilis",
+            "change-1": "Komposisi 3 instrumen",
+            "change-2": "Kinerja lebih baik dari versi sebelumnya",
+            "change-3": "Alat latihan yang lebih baik",
+            "change-4": "Antarmuka yang lebih baik",
+            "change-5": "Breakpoint untuk komposer",
+            "change-6": "Fitur baru untuk komposer dan halaman utama",
+            "change-7": "Kustomisasi yang kaya fitur untuk membuat pembelajaran dan komposisi lebih mudah"
+        }
     }
 }

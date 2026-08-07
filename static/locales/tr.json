@@ -17,6 +17,7 @@
         "error_importing_file_generic": "Dosya içe aktarılırken hata oluştu",
         "error_importing_invalid_format": "Dosya içe aktarılırken hata oluştu, hatalı format",
         "song_backup_downloaded": "Yedeklenen şarkılar indirildi",
+        "old_format_export_dropped_notes": "{{count}} nota eski format dosyaya dahil edilemedi (varsayılan enstrümanda konumları yok)",
         "no_songs_to_backup": "Yedeklenecek şarkı yok",
         "no_empty_name": "Lütfen isim alanını boş bırakmayın",
         "cloned_song": "\"{{song_name}}\" adlı şarkı klonlandı.",
@@ -90,6 +91,7 @@
         "search": "Ara",
         "rename": "Yeniden adlandır",
         "create_song": "Şarkı oluştur",
+        "select_song": "Şarkı seç",
         "edit_song": "Şarkıyı düzenle",
         "none": "Yok",
         "instrument": "Enstrüman",
@@ -214,6 +216,8 @@
             "composer_autosave_description": "Her 5 düzenleme ve sayfa/şarkı değiştirdiğinizde değişiklikleri otomatik olarak kaydeder",
             "composer_use_keyboard_side_buttons": "Klavyenin etrafına önceki/sonraki sütun butonlarını yerleştirin",
             "composer_use_keyboard_side_buttons_description": "Önceki/sonraki sütunu seçmek için butonları klavyenin sağına/soluna yerleştirir",
+            "composer_smooth_scroll": "Yumuşak kaydırma",
+            "composer_smooth_scroll_description": "Çalma sırasında besteleyici, bir sonraki sütuna atlamak yerine tempo değiştiricileri takip ederek her sütunun içinden sürekli olarak kayar",
             "composer_sync_tabs": "Tüm sekmelerde otomatik oynatma (yalnızca bilgisayar)",
             "composer_sync_tabs_description": "Gelişmiş özellik: diğer tarayıcı sekmelerini aynı anda çalacak şekilde senkronize eder.",
             "composer_lookahead_time": "Ön görülen zaman",
@@ -414,6 +418,7 @@
     },
     "keybinds": {
         "already_used_keybind": "Bu tuş düzeni zaten \"{{note_name}}\" notasında kullanılıyor",
+        "already_used_shortcut": "Bu kısayol zaten \"{{shortcut_name}}\" işleminde kullanılıyor",
         "midi_keybinds": "MIDI tuş düzenleri",
         "keyboard_keybinds": "Klavye tuş düzenleri",
         "keyboard_keybinds_description": "Klavyenizdeki tuşları yeniden atayabilirsiniz,\n  Yeniden eşlemek istediğiniz notayı seçin, ardından atamak istediğiniz tuşa basın.",
@@ -541,6 +546,7 @@
         "previous_breakpoint": "Önceki yer imi",
         "next_breakpoint": "Sonraki yer imi",
         "tempo": "Tempo",
+        "note_duration": "Nota süresi",
         "error_with_this_layer": "Bu katmanla ilgili bir sorun oluştu",
         "recording_audio": "Ses kaydediliyor",
         "tools": {
@@ -711,6 +717,7 @@
         "Ocarina": "Okarina",
         "MantaOcarina": "Manta Okarina",
         "Aurora": "Aurora",
+        "sustained_recorder": "Uzatmalı Blok Flüt",
         "Kalimba": "Kalimba",
         "ToyUkulele": "Oyuncak Ukulele",
         "Drum": "Davul",
@@ -731,12 +738,27 @@
         "GrandPiano": "Kuyruklu Piyano",
         "LingeringEuphonia": "Hiç Bitmeyen Ezgi",
         "Harmonic Key":"Harmonik Klavye",
-        "LeapingSpiritPiano": "Sıçrayan Ruh Piyanosu"        
+        "LeapingSpiritPiano": "Sıçrayan Ruh Piyanosu",
+        "HarmonicKey": "Harmonik Klavye"
     },
     "versions": {
+        "4-0-0": {
+            "title": "Yeni uygulama, uzatılan notalar, yumuşak kaydırma, yeni enstrümanlar",
+            "change-1": "Uygulamanın tamamı sıfırdan yeniden yazıldı. Performans her yerde iyileşmiş olmalı.",
+            "change-2": "Uzatılan notalar eklendi. Besteleyicide, süre penceresini açmak için klavyedeki bir notaya uzun basın ve notanın kaç sütun boyunca süreceğini seçin. Oynatıcıda ve zen klavyede ise notayı uzatmak için nota butonunu basılı tutmanız yeterli.",
+            "change-3": "Çalma sırasında besteleyici artık, şarkının neresinde olduğunuzu gösteren bir çizgiyle birlikte yumuşak bir şekilde kayıyor. Sürükleme ve kaydırma da yumuşak hale geldi. Bunu besteleyici ayarlarından kapatabilirsiniz.",
+            "change-4": "Kullanıcı deneyimini iyileştirmek için uygulama genelinde küçük tasarım değişiklikleri yapıldı",
+            "change-5": "Diğer birçok hata düzeltmesi ve iyileştirme"
+        },
         "3-7-0": {
             "title": "Yeni enstrümanlar (Genshin)",
-            "change-1": "Harmonik Klavye eklendi (Genshin)"
+            "change-1": "Harmonik Klavye eklendi (Genshin)",
+            "change-2": "Sayısal müzik notasyonu düzeni eklendi"
+        },
+        "3-6-4": {
+            "title": "Çince yerelleştirmenin genişletilmesi",
+            "change-1": "Çince (Hong Kong), Çince (Tayvan), Japonca ve Korece çeviri eklendi",
+            "chance-2": "Türkçe çeviri iyileştirildi"
         },
         "3-6-3": {
             "title": "Yeni enstrümanlar (Genshin)",

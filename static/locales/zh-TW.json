@@ -15,6 +15,7 @@
         "error_importing_file_generic": "檔案匯入失敗",
         "error_importing_invalid_format": "檔案匯入失敗，檔案格式錯誤",
         "song_backup_downloaded": "已下載歌曲備份",
+        "old_format_export_dropped_notes": "有 {{count}} 個音符無法包含在舊格式的檔案中（它們在預設樂器上沒有對應的位置）",
         "no_songs_to_backup": "沒有要備份的歌曲",
         "no_empty_name": "請填寫一個非空白的名稱",
         "cloned_song": "複製歌曲：「{{song_name}}」",
@@ -37,6 +38,8 @@
         "imported_theme": "已匯入主題「{{theme_name}}」",
         "imported_folder": "已匯入資料夾「{{folder_name}}」",
         "imported_song": "已匯入{{song_type}}歌曲「{{song_name}}」",
+        "changing_language": "正在變更語言...",
+        "error_changing_language": "變更語言時發生錯誤",
         "error_loading_song": "載入此歌曲時發生錯誤",
         "error_loading_theme": "載入此主題時發生錯誤"
     },
@@ -88,6 +91,7 @@
         "search": "搜尋",
         "rename": "重新命名",
         "create_song": "創作歌曲",
+        "select_song": "選擇歌曲",
         "edit_song": "編輯歌曲",
         "none": "無",
         "instrument": "樂器",
@@ -213,6 +217,8 @@
             "composer_autosave_description": "每 5 次編輯以及當您變更頁面/變更歌曲時自動儲存對歌曲的變更。",
             "composer_use_keyboard_side_buttons": "在鍵盤周圍放置下一列/上一列按鈕",
             "composer_use_keyboard_side_buttons_description": "將切換下一列/上一列的按鈕新增在鍵盤右側/左側。",
+            "composer_smooth_scroll": "平滑捲動",
+            "composer_smooth_scroll_description": "播放時，畫面會跟隨節奏變換器連續平滑地捲過每一列，而不是直接跳到下一列",
             "composer_sync_tabs": "在所有分頁中自動播放（僅限電腦）",
             "composer_sync_tabs_description": "進階功能，它同步其他瀏覽器分頁以同時播放。",
             "composer_lookahead_time": "前窺時長",
@@ -405,10 +411,14 @@
         "approach_mode_description": "在節奏判定圈模式下演奏歌曲「{{song_name}}」",
         "song_search_no_results": "沒有結果",
         "song_search_description": "在這裡你可以找到要學習的歌曲，這些歌曲由 sky-music 資料庫提供。",
-        "midi_or_audio_import_redirect_warning": "您不能直接匯入此檔案格式。MIDI、影片和音訊檔案需要在作曲器中轉換，是否要開啟它？"
+        "midi_or_audio_import_redirect_warning": "您不能直接匯入此檔案格式。MIDI、影片和音訊檔案需要在作曲器中轉換，是否要開啟它？",
+        "loop": "循環",
+        "loop_tooltip": "循環播放歌曲",
+        "hide_practice_notes": "在練習模式下隱藏文字"
     },
     "keybinds": {
         "already_used_keybind": "這個按鍵綁定已經被音符「{{note_name}}」使用。",
+        "already_used_shortcut": "這個快捷鍵已經被「{{shortcut_name}}」操作使用。",
         "midi_keybinds": "MIDI 按鍵綁定",
         "keyboard_keybinds": "鍵盤按鍵綁定",
         "keyboard_keybinds_description": "您可以將鍵盤按鍵重新對應到鍵盤上的任何鍵，按下要重新對應的音符，然後按下要分配給它的鍵。",
@@ -536,6 +546,7 @@
         "previous_breakpoint": "上一個斷點",
         "next_breakpoint": "下一個斷點",
         "tempo": "時值",
+        "note_duration": "音符時長",
         "error_with_this_layer": "該層發生錯誤",
         "recording_audio": "錄製音訊",
         "tools": {
@@ -710,6 +721,7 @@
         "Ocarina": "陶笛",
         "MantaOcarina": "鯤笛",
         "Aurora": "Aurora",
+        "sustained_recorder": "延音直笛",
         "Kalimba": "拇指琴",
         "ToyUkulele": "玩具尤克里里",
         "Drum": "鼓組",
@@ -726,17 +738,29 @@
         "SFX_SpiritMantaCall": "光鯤之聲",
         "SFX_JellyCall": "水母之聲",
         "SFX_MantaCall": "遙鯤之聲",
-        "SFX_MothCall": "幼童之聲"
+        "SFX_MothCall": "幼童之聲",
+        "GrandPiano": "大鋼琴",
+        "HarmonicKey": "諧律鍵琴"
     },
     "versions": {
+        "4-0-0": {
+            "title": "全新應用程式、延音音符、平滑捲動、新樂器",
+            "change-1": "整個應用程式已從頭重新編寫，各處的效能都應有所提升。",
+            "change-2": "新增了延音音符。在作曲器中，長按鍵盤上的音符即可開啟音符時長選單，選擇該音符要持續幾列。在演奏器和純鍵盤模式中，只要按住音符按鍵就能讓音符持續發聲。",
+            "change-3": "播放時，作曲器現在會平滑地捲動，並以一條線標示您目前在歌曲中的位置。拖曳與捲動畫布同樣變得平滑。您可以在作曲器設定中關閉此功能。",
+            "change-4": "在應用程式各處進行了小幅重新設計，以改善使用者體驗",
+            "change-5": "許多其他問題修復與最佳化"
+        },
         "3-7-0": {
             "title": "原神新樂器",
-            "change-1": "新增樂器：諧律鍵琴 (原神)"
+            "change-1": "新增樂器：諧律鍵琴 (原神)",
+            "change-2": "新增了簡譜（數字譜）佈局"
         },
         "3-6-4": {
             "title": "更新翻譯檔案",
             "change-1": "新增台灣、香港的繁體中文翻譯",
-            "change-2":"新增韓文翻譯，並修正部分翻譯錯誤"
+            "change-2":"新增韓文翻譯，並修正部分翻譯錯誤",
+            "chance-2": "改進了土耳其語翻譯"
         },
         "3-6-3": {
             "title": "原神新樂器",

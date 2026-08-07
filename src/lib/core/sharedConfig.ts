@@ -3,7 +3,7 @@
 // documented exception; both games' config-surface fixtures carry 52).
 import type { BaseNote } from '$lib/games/types';
 
-export const APP_VERSION = '3.7.0' as const
+export const APP_VERSION = '4.0.0' as const
 
 export const HAS_BIGINT = typeof BigInt !== 'undefined'
 
