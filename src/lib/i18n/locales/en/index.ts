@@ -249,6 +249,9 @@ export const i18n_en = {
       composer_use_keyboard_side_buttons: 'Put next/previous column buttons around keyboard',
       composer_use_keyboard_side_buttons_description:
         'Puts the buttons to select the next/previous column on the left/right of the keyboard',
+      composer_smooth_scroll: 'Smooth scrolling',
+      composer_smooth_scroll_description:
+        'During playback the canvas glides continuously through each column instead of jumping to the next one, following the tempo changers',
       composer_sync_tabs: 'Autoplay in all tabs (pc only)',
       composer_sync_tabs_description:
         'Advanced feature, it syncs other browser tabs to all play at the same time',

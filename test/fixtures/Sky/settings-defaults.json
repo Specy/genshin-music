@@ -1,7 +1,7 @@
 {
   "composer": {
     "other": {
-      "settingVersion": "Sky71"
+      "settingVersion": "Sky72"
     },
     "data": {
       "bpm": {
@@ -110,6 +110,14 @@
         "category": "composer_settings",
         "songSetting": false,
         "value": false
+      },
+      "smoothScroll": {
+        "name": "composer_smooth_scroll",
+        "tooltip": "composer_smooth_scroll_description",
+        "type": "checkbox",
+        "category": "composer_settings",
+        "songSetting": false,
+        "value": true
       },
       "syncTabs": {
         "name": "composer_sync_tabs",

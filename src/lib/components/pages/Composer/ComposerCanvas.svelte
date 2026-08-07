@@ -98,6 +98,9 @@
           columnsPerCanvas: Number(settings.columnsPerCanvas.value),
           breakpoints,
           selectedColumns,
+          bpm: Number(settings.bpm.value),
+          smoothScroll: Boolean(settings.smoothScroll.value),
+          lookaheadMs: Number(settings.lookaheadTime.value),
         },
         {
           selectColumn,
@@ -169,6 +172,9 @@
       columnsPerCanvas: Number(settings.columnsPerCanvas.value),
       breakpoints,
       selectedColumns,
+      bpm: Number(settings.bpm.value),
+      smoothScroll: Boolean(settings.smoothScroll.value),
+      lookaheadMs: Number(settings.lookaheadTime.value),
     });
   });
 </script>
