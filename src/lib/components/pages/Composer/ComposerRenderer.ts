@@ -79,17 +79,17 @@ const PLAYHEAD_ARROW_LENGTH = 8;
  * this. This class derives every position from the wall clock rather than by integrating a delta,
  * so uneven gaps cost smoothness and never accumulate into drift - see motionPositionAt.
  *
- * 30 divides a 60Hz display exactly, so there the gate emits every other frame and the spacing is
- * even; it does not divide 120 or 144Hz, where it is uneven again. What it does NOT reduce on any
- * display is the number of times the browser wakes the page: pixi's `_tick` still runs on every
- * requestAnimationFrame and the gate only skips the listener body.
+ * At 48 on a 60Hz display the gaps alternate between one and two display frames. What the cap does
+ * NOT reduce on any display is the number of times the browser wakes the page: pixi's `_tick` still
+ * runs on every requestAnimationFrame and the gate only skips the listener body.
  *
  * Setting it ABOVE the display's refresh rate is a no-op, because the gate never fires.
  */
 const COMPOSER_MOTION_MAX_FPS = 48;
 
 /**
- * How long the canvas takes to reach a column it was asked to ease to - see easeTo.
+ * How long the canvas takes to reach a column it was asked to ease to WHILE SMOOTH SCROLLING IS ON
+ * - see easeTo, whose gate makes every ease an instant settle while it is off.
  *
  * FIXED rather than proportional to the distance, which is what makes the wheel feel faster the
  * harder it is spun: a burst of events that moves the target eight columns takes the same wall time
@@ -104,6 +104,11 @@ const SCROLL_EASE_MS = 140;
  * Before this it was a whole column: `handleStageSlide` only acted once the accumulated movement
  * crossed `columnSize.width`, so a 0.9-column drag still released as a click and jumped the canvas
  * to wherever the pointer happened to be. A few pixels is enough to keep a jittery click a click.
+ *
+ * The whole-column threshold is back for the drag's STEP while smooth scrolling is off (see
+ * snapManualPosition), and deliberately NOT for this discriminator, which is a few px in both
+ * modes: what counts as a click rather than a scroll is a question about the hand, not about the
+ * grid the scroll then moves on.
  */
 const DRAG_SLOP_PX = 3;
 
@@ -261,16 +266,21 @@ export interface ComposerRendererState {
   selectedColumns: number[];
   /**
    * ComposerSettings' `smoothScroll`, which chooses between TWO MUTUALLY EXCLUSIVE ways of marking
-   * where the composer is. It decides four things:
+   * where the composer is - and, since it also gates manual motion, between a canvas that moves
+   * continuously and one that moves in whole columns. It decides six things:
    *  - whether a playback tick GLIDES through its column or snaps to it (syncScrollSchedule);
    *  - whether the playhead line is on screen (playheadIsVisible, which also gates it on the
    *    recording flag, written onto playheadGraphics.visible by init() and update());
    *  - whether the SELECTED-column overlay exists at all (overlayColumn, which is
    *    NO_OVERLAY_COLUMN while this is on);
    *  - whether the WHEEL eases the canvas itself or only moves `selected` and lets the transport
-   *    re-anchor (handleWheel) - which is the one of the four that is not about a mark on screen.
-   * The tools-selection overlay is a different sprite state and is unaffected by this in either
-   * direction - see ColumnView.paintSelection.
+   *    re-anchor (handleWheel) - which is the one that is not about a mark on screen;
+   *  - whether a manual DRAG follows the pointer continuously or moves a whole column at a time,
+   *    on the notes stage and on the mini-timeline alike (snapManualPosition);
+   *  - whether the wheel and every settle EASE or arrive at once (the gate at the top of easeTo).
+   * The last two are a deliberate reversal: manual motion was continuous in both modes for one
+   * round, and the setting now covers it. The tools-selection overlay is a different sprite state
+   * and is unaffected by this in either direction - see ColumnView.paintSelection.
    *
    * It does NOT change the layout: the container offset puts the start of the scrolled-to column
    * under the canvas centre in both modes, so the two are comparable at one layout.
@@ -404,25 +414,41 @@ interface ColumnPaintKey {
  *
  * THE RESTING INVARIANT: `resting` means the position is the whole column index this class last
  * asked `selectColumn` for, and every transition into it that anything can observe goes through
- * rest() or settleAt() - destroy() is the third and nothing reads the field after it. What
- * changed when manual scrolling became continuous is the invariant's SCOPE, not its content - "at
- * rest" used to be the same set of moments as "the position is an integer", and a drag or an ease
- * splits them for the length of the gesture. `resting` is the name for when they are back together.
- * rest() assigns from `state.selected` rather than from the position, because `selected` is what
- * every click, edit and jump downstream reasons in terms of; settleAt() assigns the position a
- * finished motion reached, which is the index it handed `selectColumn` on the way in.
+ * rest() or settleAt() - destroy() is the third and nothing reads the field after it. rest()
+ * assigns from `state.selected` rather than from the position, because `selected` is what every
+ * click, edit and jump downstream reasons in terms of; settleAt() assigns the position a finished
+ * motion reached, which is the index it handed `selectColumn` on the way in.
+ *
+ * ITS SCOPE IS WHAT `smoothScroll` DECIDES, and the invariant's content is the same either way:
+ *  - GLIDING: "at rest" is a strictly smaller set of moments than "the position is an integer" - a
+ *    playback glide, a drag or an ease splits them for the length of the gesture, and `resting` is
+ *    the name for when they are back together.
+ *  - SNAPPING: the two are the same set again. `playback` is unreachable (its only entry is inside
+ *    `isPlaying && smoothScroll`) and so is `easing` (easeTo settles instead), which collapses this
+ *    union to `resting | dragging`; and `dragging` holds only quantised values. So the position is
+ *    a whole column at EVERY instant, not merely at rest - one assertion that catches any smooth
+ *    motion in that mode from any source, including one added later.
  */
 type Motion =
   /** Nothing is moving the position. */
   | { kind: 'resting' }
-  /** The scrollSegments queue owns the position - see ScrollSegment and scrollPositionAt. */
+  /**
+   * The scrollSegments queue owns the position - see ScrollSegment and scrollPositionAt. Entered
+   * only while smooth scrolling is on.
+   */
   | { kind: 'playback' }
-  /** A wheel or a drag release, running to a whole column over SCROLL_EASE_MS. */
+  /**
+   * A wheel or a drag release, running to a whole column over SCROLL_EASE_MS. Entered only while
+   * smooth scrolling is on - see the gate at the top of easeTo.
+   */
   | { kind: 'easing'; from: number; to: number; startMs: number; durationMs: number }
   /**
    * A pointer is down and the canvas is following it. `position` is written by the pointermove
    * handler and read by the frame - the handler paints nothing itself, so a pointer stream faster
    * than the frame rate coalesces into one applyScrollPosition per frame instead of one per event.
+   *
+   * It is the one motion both modes reach. While smooth scrolling is OFF the handlers write it
+   * through snapManualPosition, so it holds a whole column and moves once per column crossed.
    */
   | { kind: 'dragging'; surface: 'stage' | 'timeline'; position: number };
 
@@ -1191,22 +1217,69 @@ export class ComposerRenderer {
    * alternative is leaving the playhead somewhere `selected` is not, and every click, edit and jump
    * downstream reasons in terms of `selected`.
    *
-   * TWO MANUAL MOTIONS OUTRANK PARTS OF THAT, and both are guarded at the top:
+   * THREE STATEMENTS ABOUT THE MANUAL MOTIONS OUTRANK PARTS OF THAT, all guarded near the top:
    *  - a DRAG outranks everything for its duration. It is the user's hand on the canvas, so a tick
    *    arriving mid-drag is dropped rather than queued and the snap below cannot yank the canvas
    *    back to a column boundary the drag has just left - which would fire once per column crossed,
    *    Svelte flushing the selectColumn round-trip in a microtask between two pointermove events.
    *    The release settles, and the next tick after it takes the discontinuity branch and resumes.
-   *  - an EASE outranks the SNAP but not the transport. It is already heading for a column it asked
-   *    for, so resting would just jump it to its own destination; but a playback tick, a breakpoint
-   *    jump or an undo moving `selected` off that target abandons it, which is the snap those paths
-   *    expect. `state.selected === motion.to` is what tells the two apart.
+   *    The one thing that branch DOES do is re-quantise the live position when `smoothScroll` went
+   *    off mid-gesture.
+   *  - an EASE CANNOT OUTLIVE THE MODE it belongs to: with `smoothScroll` off there is no eased
+   *    motion, so a running one finishes at its own target at once.
+   *  - an EASE otherwise outranks the SNAP but not the transport. It is already heading for a column
+   *    it asked for, so resting would just jump it to its own destination; but a playback tick, a
+   *    breakpoint jump or an undo moving `selected` off that target abandons it, which is the snap
+   *    those paths expect. `state.selected === motion.to` is what tells the two apart.
    */
   private syncScrollSchedule(
     previous: ComposerRendererState | null,
     state: ComposerRendererState
   ): void {
-    if (this.motion.kind === 'dragging') return;
+    if (this.motion.kind === 'dragging') {
+      // A MODE FLIP MID-GESTURE. The gesture continues - the anchor is what the finger grabbed, and
+      // re-taking it would jump the canvas under a pointer that never moved - so all that changes
+      // is the grid the position is written on. Without this the canvas would sit on a fraction
+      // until the next pointermove or the release, while the overlay the same update just turned
+      // back on sits on a whole column.
+      //
+      // FLOOR, and not the round every later move uses: floor is the column the drag has ALREADY
+      // handed to selectColumn, so it is the column the mark is on, and landing there is how the
+      // canvas and the mark end up on the same one without this method calling selectColumn from
+      // inside an update. From the next pointermove onwards snapManualPosition rounds, and that
+      // move publishes its own column in the ordinary way.
+      //
+      // Written unconditionally rather than behind a change test, for the reason ColumnView.paint
+      // writes properties the object already holds: flooring an integer is a no-op. (OFF->ON needs
+      // nothing at all: the next move writes a continuous position, and the anchor was never
+      // quantised - see snapManualPosition.)
+      if (!state.smoothScroll) this.motion.position = Math.floor(this.motion.position);
+      return;
+    }
+    // RECORDING OUTRANKS EVERYTHING, including a drag - the guard above it is the one exception
+    // this branch is deliberately placed after, since a pointer cannot be down during a recording
+    // the user started with the same pointer.
+    //
+    // The transport runs the whole song while AudioRecorder captures it in real time, so every tick
+    // below would schedule a segment and keep the ticker emitting for the length of the recording.
+    // Nothing it computed would reach the screen - applyScrollPosition returns before touching the
+    // scene while this flag is set, and drawNotesStage hides the columns - but the frames were still
+    // taken: measured at 62 rAF callbacks and 29 emits per second on a 60Hz clock, against a capture
+    // that dropouts if the main thread stalls. rest() is what makes both zero.
+    //
+    // What it does NOT stop is the once-per-tick repaint: `isRecordingAudio` is on
+    // needsUnconditionalRepaint, so every transport tick still reaches draw(), which hides the
+    // columns, rebuilds the timeline content and renders both Applications once - measured at one
+    // render of each per tick. That is the rate the composer ran at before any of the smooth-scroll
+    // work existed, and the timeline strip stays visible during a recording, so it is also the only
+    // sign the recording is progressing.
+    if (state.isRecordingAudio) return this.rest();
+    // AN EASE CANNOT SURVIVE THE MODE IT BELONGS TO. Turning smooth scrolling off mid-ease would
+    // otherwise leave 140ms of smooth motion running in the mode whose whole point is that there is
+    // none. settleAt(motion.to) rather than falling through to rest(): the ease's target is the
+    // column that was ASKED for, and `selected` may still be a microtask behind it, so resting
+    // would yank the canvas back and the next update would push it forward again.
+    if (!state.smoothScroll && this.motion.kind === 'easing') return this.settleAt(this.motion.to);
     if (state.isPlaying && state.smoothScroll && previous !== null) {
       const advancedOneColumn = previous.isPlaying && state.selected === previous.selected + 1;
       if (advancedOneColumn) {
@@ -1254,14 +1327,32 @@ export class ComposerRenderer {
       // So pressing play again resumes on the column the line is parked at, rather than skipping
       // the one that was only half heard.
       //
-      // Reaching the END of the song is the same transition (Composer.svelte's playback tick calls
-      // togglePlay(false) when it runs out of columns) and takes this branch too.
+      // REACHING THE END OF THE SONG arrives as the same isPlaying transition - Composer.svelte's
+      // playback tick calls togglePlay(false) when it runs out of columns, WITHOUT advancing
+      // `selected` past the last one - but it is the one stop that must not settle backward. There
+      // is no resume to park for, and the notes the transport already scheduled are on the audio
+      // clock and will sound; the playhead belongs where the song ends. Settling backward left it a
+      // lookahead short, which is invisible at tempo 1 (a lookahead is about one column) and gross
+      // where the song ends in fast tempo changers: eight 1/8 columns last 34ms each against a
+      // 250ms lookahead, so the line parked eight columns from the end. At lookahead 0 the playhead
+      // and `selected` never diverge, which is why that case never showed it.
       //
       // SWITCHING SMOOTH SCROLLING OFF mid-glide also leaves the playhead mid-column, and does NOT
-      // ease - it falls through to rest(). That is a mode change rather than a transport one: the
-      // line disappears and the overlay appears in the same update, so there is nothing left on
-      // screen for a 140ms slide to be a slide OF.
-      const target = clamp(Math.floor(this.scrollPosition), 0, state.columns.length - 1);
+      // ease. That is a mode change rather than a transport one: the line disappears and the
+      // overlay appears in the same update, so there is nothing left on screen for a 140ms slide to
+      // be a slide OF. It normally falls through to rest() (this branch needs `motion.kind ===
+      // 'playback'`, which the mode change does not produce on its own); when the setting goes off
+      // and the song pauses in the SAME update it reaches here instead, and easeTo's own gate
+      // settles it. Either way it does not ease.
+      const lastColumn = Math.max(0, state.columns.length - 1);
+      // `selected` sitting on the last column is what "ran out of song" looks like from here. A
+      // manual pause ON that column reads the same and is treated the same, deliberately: the
+      // difference between the two answers is at most the lookahead, and at the end of a song
+      // parking on the end is the better of them either way.
+      const ranToTheEnd = state.selected >= lastColumn;
+      const target = ranToTheEnd
+        ? lastColumn
+        : clamp(Math.floor(this.scrollPosition), 0, lastColumn);
       // Ordered as handleWheel and settleStageDrag order it, and for the same reason: this write
       // reaches Svelte, and the update it schedules arrives after this call has installed the
       // motion - where the `easing && selected === to` branch above is what keeps it from being
@@ -1337,6 +1428,11 @@ export class ComposerRenderer {
    * next target from the ease's own `to` (see handleWheel) so the burst composes rather than stalls.
    */
   private easeTo(target: number): void {
+    // SNAP MODE HAS NO EASED MOTION AT ALL. Every caller here is a manual settle or a pause, and
+    // with the setting off the canvas moves in whole columns and arrives at once. The gate is here
+    // rather than at the four call sites so a fifth caller inherits it instead of having to
+    // remember it, and so no caller can reach an ease by calling easeTo directly.
+    if (!this.state.smoothScroll) return this.settleAt(target);
     if (target === this.scrollPosition) return this.settleAt(target);
     this.enterMotion({
       kind: 'easing',
@@ -1394,6 +1490,12 @@ export class ComposerRenderer {
    * One applyScrollPosition per frame at most, for playback, drag and ease alike, and none at all
    * on a frame where the position did not move: a pointer stream faster than the frame rate
    * coalesces here, and a schedule stalled on a late tick costs this call and nothing else.
+   *
+   * A SNAP-MODE DRAG moves the position only once per column crossed, so most of its frames do
+   * nothing here - and the overlay that mode draws can move while the position does not. That is
+   * not this method's problem to solve: `overlayColumn` is written in the constructor and by
+   * update(), and the constructor's write precedes any frame - so once the loop is running, an
+   * update is the only thing that can make it stale, and update() carries the matching condition.
    */
   private onMotionFrame = (): void => {
     const now = this.now();
@@ -1493,13 +1595,32 @@ export class ComposerRenderer {
     };
   }
 
+  /**
+   * A POINTER-DERIVED POSITION, on the grid the mode asks for: unchanged while smooth scrolling is
+   * on, the NEAREST whole column while it is off.
+   *
+   * ROUND rather than floor, and that is a property rather than a taste: the snap-mode drag sits at
+   * any instant exactly where the glide-mode drag would SETTLE to from the same pointer position
+   * (settleStageDrag and handleTimelineUp both round), so the release is a no-op instead of a jump
+   * and the two modes are related by one equation the tests can state. The cost is that the canvas
+   * can lead the finger by up to half a column, which is what snapping to a grid does everywhere.
+   *
+   * Applied to the position WRITTEN INTO THE MOTION and never to the anchor. An anchor rounded once
+   * per move accumulates its own rounding and the canvas walks away from the finger.
+   */
+  private snapManualPosition(position: number): number {
+    return this.state.smoothScroll ? position : Math.round(position);
+  }
+
   /** The column under a canvas x, fractional - the inverse of the offset containerX() applies. */
   private columnAtCanvasX(x: number): number {
     return this.scrollPosition + (x - this.playheadX()) / this.columnSize.width;
   }
 
   /**
-   * THE WHEEL: one column per event, EASED rather than snapped.
+   * THE WHEEL: one column per event - EASED while smooth scrolling is on, arriving at once while it
+   * is off. Nothing here tests the setting; the gate is inside easeTo, which every non-transport
+   * path below ends in.
    *
    * WHAT THE STEP IS MEASURED FROM depends on who owns the position, and it has to, because the
    * value this produces is compared by Svelte against `selected`:
@@ -1550,9 +1671,10 @@ export class ComposerRenderer {
   };
 
   /**
-   * THE STAGE DRAG: the canvas follows the pointer continuously, in pixels rather than in whole
-   * columns. Before this it accumulated movement and only acted when it crossed a whole column, so
-   * the canvas jumped a column at a time and a 0.9-column drag moved nothing at all.
+   * THE STAGE DRAG, on the grid `smoothScroll` asks for: with it ON the canvas follows the pointer
+   * continuously, in pixels rather than whole columns; with it OFF the position is quantised to the
+   * nearest column and the canvas steps once per column crossed. snapManualPosition is the whole of
+   * that difference, and it is applied to the position but never to the anchor.
    *
    * It paints nothing. The position is written into the motion and the frame applies it, which is
    * what keeps a pointer stream faster than the frame rate from producing a render per event.
@@ -1560,7 +1682,8 @@ export class ComposerRenderer {
    * `selectColumn` is called with the FLOOR of the position, and only when that floor changes -
    * at most once per column crossed. Floor because the playhead marks the START of the column it is
    * in, so at position 40.9 the column under the line is 40 and `selected` must agree with the line
-   * at every instant. (The release rounds instead - see settleStageDrag.)
+   * at every instant. (The release rounds instead - see settleStageDrag.) While snapping, the
+   * position is already whole and the floor is the identity.
    */
   private handleStageSlide = (e: FederatedPointerEvent) => {
     const pointer = this.stagePointer;
@@ -1579,15 +1702,20 @@ export class ComposerRenderer {
     }
     const lastColumn = this.state.columns.length - 1;
     const raw = pointer.anchorPosition + (pointer.x - e.globalX) / this.columnSize.width;
-    const position = clamp(raw, 0, lastColumn);
+    const clamped = clamp(raw, 0, lastColumn);
     // RE-ANCHORED at either end: without this, dragging past the end and back leaves a dead zone
-    // the size of the overshoot before the canvas moves again.
-    if (position !== raw) {
+    // the size of the overshoot before the canvas moves again. On the CONTINUOUS value, before the
+    // quantiser below - see snapManualPosition for why the anchor is never rounded.
+    if (clamped !== raw) {
       pointer.x = e.globalX;
-      pointer.anchorPosition = position;
+      pointer.anchorPosition = clamped;
     }
+    const position = this.snapManualPosition(clamped);
     if (dragging) motion.position = position;
     else this.enterMotion({ kind: 'dragging', surface: 'stage', position });
+    // With smooth scrolling off the position is already integral, so this floor is the identity and
+    // `selected` agrees with the canvas at every instant of the drag - which is what the selected
+    // overlay, drawn on `selected` in that mode, needs.
     const column = Math.floor(position);
     // NOT FREE, and left as it is deliberately: Composer.svelte's selectColumn ALSO extends the
     // tools selection while that panel is open, which replaces `selectedColumns` and so lands on
@@ -1620,12 +1748,14 @@ export class ComposerRenderer {
   };
 
   /**
-   * Where a stage drag comes to rest: the NEAREST column, eased to.
+   * Where a stage drag comes to rest: the NEAREST column - eased to while smooth scrolling is on,
+   * arrived at instantly while it is off (the gate lives in easeTo).
    *
    * Round rather than floor, unlike the `selectColumn` calls the drag itself makes. A floor-settle
    * always gives movement back, up to a full column on every single release, which reads as sticky;
    * round splits the give-back and caps it at half a column, which is what snapping to a grid does
-   * everywhere else.
+   * everywhere else. While snapping, the drag has been writing that same rounded value all along,
+   * so this release moves nothing at all.
    */
   private settleStageDrag(): void {
     const motion = this.motion;
@@ -1668,7 +1798,9 @@ export class ComposerRenderer {
    * THE TIMELINE DRAG: absolute rather than an offset from an anchor, since the whole song spans
    * the strip. The position is `(x / width) * columns.length`, which is the expression the throttled
    * version already computed (`totalWidth / columnSize.width` cancels to `columns.length`) with its
-   * floor removed.
+   * floor replaced by snapManualPosition - so it is continuous while smooth scrolling is on and
+   * quantised to whole columns while it is off. The timeline snaps with the notes stage rather than
+   * on its own rule: the setting would otherwise mean "snap here, glide there".
    *
    * The four-event THROTTLE is gone with it. Its purpose was to rate-limit `selectColumn`, because
    * each call was a Svelte round-trip ending in a snap-repaint; a move now writes a number and
@@ -1684,7 +1816,8 @@ export class ComposerRenderer {
     if (motion.kind !== 'dragging' || motion.surface !== 'timeline') return;
     const lastColumn = this.state.columns.length - 1;
     const x = this.onSlider ? e.globalX + this.sliderOffset : e.globalX;
-    const position = clamp((x / this.width) * this.state.columns.length, 0, lastColumn);
+    const raw = clamp((x / this.width) * this.state.columns.length, 0, lastColumn);
+    const position = this.snapManualPosition(raw);
     motion.position = position;
     const column = Math.floor(position);
     if (column !== this.state.selected) this.callbacks.selectColumn(column, true);
@@ -1798,7 +1931,8 @@ export class ComposerRenderer {
   //    jump the user sees a capped frame late;
   //  - a MOTION is running and this update did not move the position: the frame owns the offset,
   //    the window and the overlay from here, and this records the baseline and returns. That is
-  //    the steady playback tick with smooth scrolling on, and every update that lands mid-gesture;
+  //    the steady playback tick with smooth scrolling on, and every update that lands mid-gesture
+  //    whose overlay did not move either;
   //  - neither: return without rendering. A state differing from the last painted one only in
   //    fields needsUnconditionalRepaint does not compare lands here; that method's closing
   //    paragraph says what each of those is doing on the state object.
@@ -1837,10 +1971,22 @@ export class ComposerRenderer {
     // different in the one case that matters: playback STOPPING mid-glide moves the position from
     // wherever the playhead had reached to `selected`, without `selected` itself moving.
     //
-    // It covers the OVERLAY too. In snap mode `overlayColumn` IS `state.selected` and rest() has
-    // just put the position there as well, so the two move together; in glide mode it is
-    // NO_OVERLAY_COLUMN and does not move at all.
-    if (previousScrollPosition !== this.scrollPosition) {
+    // THE OVERLAY IS THE SECOND HALF of the test, and not a redundant one. Usually the two move
+    // together - in snap mode `overlayColumn` IS `state.selected` and rest() has just put the
+    // position there as well, and in glide mode it is NO_OVERLAY_COLUMN and never moves - but a
+    // SETTLE arrives at its target BEFORE the selectColumn it asked for comes back through Svelte.
+    // While snapping that settle is instantaneous, so by the time this update lands the position is
+    // already right and only the highlight is stale; with nothing here to catch it, control falls
+    // to the motion branch (which is resting) and returns, leaving the highlight on the column the
+    // gesture started from until something else moves the canvas. This is also what keeps the
+    // overlay following a SNAP-MODE DRAG, whose frames move the position only once per column
+    // crossed: `overlayColumn` is written here and in the constructor, and the constructor's write
+    // happens before any frame or any later update - so an update is the only thing that can make
+    // it stale once the renderer is live, and this is the only place that has to notice.
+    if (
+      previousScrollPosition !== this.scrollPosition ||
+      this.paintedOverlayColumn !== this.overlayColumn
+    ) {
       this.applyScrollPosition(this.scrollPosition);
       this.paintedState = state;
       return;

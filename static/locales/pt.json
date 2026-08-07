@@ -17,6 +17,7 @@
     "error_importing_file_generic": "Erro ao importar o arquivo",
     "error_importing_invalid_format": "Erro ao importar o arquivo, formato inválido",
     "song_backup_downloaded": "Backup da música baixado",
+    "old_format_export_dropped_notes": "{{count}} nota(s) não puderam ser incluídas no arquivo de formato antigo (elas não têm posição no instrumento padrão)",
     "no_songs_to_backup": "Não há músicas para backup",
     "no_empty_name": "Por favor, escreva um nome não vazio",
     "cloned_song": "Música clonada: \"{{song_name}}\"",
@@ -90,6 +91,7 @@
     "search": "Pesquisar",
     "rename": "Renomear",
     "create_song": "Criar música",
+    "select_song": "Selecionar música",
     "edit_song": "Editar música",
     "none": "Nenhum",
     "instrument": "Instrumento",
@@ -214,6 +216,8 @@
       "composer_autosave_description": "Salva automaticamente as alterações de uma música a cada 5 edições e quando você muda de página/música",
       "composer_use_keyboard_side_buttons": "Colocar botões de próxima/coluna anterior ao redor do teclado",
       "composer_use_keyboard_side_buttons_description": "Coloca os botões para selecionar a próxima/coluna anterior à esquerda/direita do teclado",
+      "composer_smooth_scroll": "Rolagem suave",
+      "composer_smooth_scroll_description": "Durante a reprodução, a área do compositor desliza continuamente por cada coluna em vez de pular para a próxima, seguindo as mudanças de tempo",
       "composer_sync_tabs": "Reproduzir automaticamente em todas as abas (apenas PC)",
       "composer_sync_tabs_description": "Recurso avançado, sincroniza outras abas do navegador para todas tocarem ao mesmo tempo",
       "composer_lookahead_time": "Tempo de antecipação",
@@ -231,6 +235,14 @@
       "player_metronome_volume": "Volume do metrônomo",
       "player_metronome_volume_description": "O volume do metrônomo",
       "player_reverb": "Reverberação (modo caverna)",
+      "player_number_of_visual_rows": "Número de linhas na partitura visual",
+      "player_number_of_visual_columns": "Número de colunas na partitura visual",
+      "player_loop_practice": "Repetir a seleção da música no modo de prática",
+      "player_hide_practice_notes": "Ocultar notas no modo de prática",
+      "player_loop_practice_description": "Quando você chegar ao fim das notas selecionadas da música no modo de prática, ela voltará ao início",
+      "player_number_of_visual_columns_description": "O número de colunas na partitura visual, mais colunas podem causar lentidão",
+      "player_number_of_visual_rows_description": "O número de linhas na partitura visual, mais linhas podem causar lentidão",
+      "player_hide_practice_notes_description": "Durante o modo de prática, oculta as notas para que você possa testar sua memória, a partitura visual continuará visível",
       "player_reverb_description": "Faz soar como se você estivesse tocando em uma caverna",
       "player_note_name_type": "Tipo de nome da nota",
       "player_note_name_type_description": "O tipo de texto que será escrito na nota",
@@ -379,6 +391,7 @@
     "no_song_selected": "Nenhuma música selecionada",
     "print_as_pdf": "Imprimir como PDF",
     "sheet_visualizer_instructions": "Selecione uma música no menu à esquerda.\n                    Lembre-se de que você pode aprender uma música com a ferramenta de prática\n                    interativa no Reprodutor",
+    "different_color_rows": "Alternar cores das linhas",
     "per_row": "Por linha",
     "invalid_song_to_visualize": "Música inválida, não está composta ou gravada",
     "error_converting_to_visual_song_try_convert_in_recorded": "Erro ao converter música para visual, tentando converter para gravada primeiro...",
@@ -398,10 +411,14 @@
     "approach_mode_description": "Tocar em Modo de Aproximação a música \"{{song_name}}\"",
     "song_search_no_results": "Nenhum resultado",
     "song_search_description": "Aqui você pode encontrar músicas para aprender, elas são fornecidas pela biblioteca sky-music.",
-    "midi_or_audio_import_redirect_warning": "Você não pode importar este formato de arquivo diretamente. Arquivos MIDI, Vídeo e Áudio precisam ser convertidos no compositor, deseja abri-lo?"
+    "midi_or_audio_import_redirect_warning": "Você não pode importar este formato de arquivo diretamente. Arquivos MIDI, Vídeo e Áudio precisam ser convertidos no compositor, deseja abri-lo?",
+    "loop": "Repetir",
+    "loop_tooltip": "Repetir a música",
+    "hide_practice_notes": "Ocultar notas no modo de prática"
   },
   "keybinds": {
     "already_used_keybind": "Este atalho já está sendo usado pela nota \"{{note_name}}\"",
+    "already_used_shortcut": "Este atalho já está sendo usado pela ação \"{{shortcut_name}}\"",
     "midi_keybinds": "Atalhos MIDI",
     "keyboard_keybinds": "Atalhos de teclado",
     "keyboard_keybinds_description": "Você pode remapear as teclas do teclado para qualquer tecla do seu teclado. Pressione a nota que deseja remapear e\n                    em seguida, pressione a tecla que deseja atribuir a ela.",
@@ -529,6 +546,7 @@
     "previous_breakpoint": "Ponto de interrupção anterior",
     "next_breakpoint": "Próximo ponto de interrupção",
     "tempo": "Tempo",
+    "note_duration": "Duração da nota",
     "error_with_this_layer": "Houve um erro com esta camada",
     "recording_audio": "Gravando Áudio",
     "tools": {
@@ -681,9 +699,11 @@
     "Vintage-Lyre": "Lira Vintage",
     "Zither": "Cítara",
     "Old-Zither": "Cítara Antiga",
+    "DjemDjemDrum": "Tambor DjemDjem",
     "DunDun": "DunDun",
     "Piano": "Piano",
     "Contrabass": "Contrabaixo",
+    "Ukulele": "Ukulele",
     "Guitar": "Violão",
     "LightGuitar": "Guitarra",
     "Harp": "Harpa",
@@ -697,6 +717,7 @@
     "Ocarina": "Ocarina",
     "MantaOcarina": "Ocarina Manta",
     "Aurora": "Aurora",
+    "sustained_recorder": "Flauta Doce Sustentada",
     "Kalimba": "Kalimba",
     "ToyUkulele": "Ukulele de Brinquedo",
     "Drum": "Tambor",
@@ -713,6 +734,284 @@
     "SFX_SpiritMantaCall": "Som de Manta Espiritual",
     "SFX_JellyCall": "Som de Água-viva",
     "SFX_MantaCall": "Som de Manta",
-    "SFX_MothCall": "Som de Mariposa"
+    "SFX_MothCall": "Som de Mariposa",
+    "GrandPiano": "Piano de Cauda",
+    "LingeringEuphonia": "Eufonia Persistente",
+    "LeapingSpiritPiano": "Piano do Espírito Saltitante",
+    "HarmonicKey": "Teclado Harmônico"
+  },
+  "versions": {
+    "4-0-0": {
+      "title": "Novo aplicativo, notas sustentadas, rolagem suave, novos instrumentos",
+      "change-1": "Todo o aplicativo foi reescrito do zero. O desempenho deve estar melhor em toda parte.",
+      "change-2": "Foram adicionadas as notas sustentadas. No compositor, pressione e segure uma nota no teclado para abrir o menu de duração e escolher por quantas colunas ela deve durar. No reprodutor e no teclado Zen, basta manter o botão da nota pressionado para sustentar a nota.",
+      "change-3": "Durante a reprodução, o compositor agora rola suavemente, com uma linha marcando onde você está na música. Arrastar e rolar a área de edição também ficou suave. Você pode desativar isso nas configurações do compositor.",
+      "change-4": "Pequenas mudanças de design em todo o aplicativo para melhorar a experiência do usuário",
+      "change-5": "Muitas outras correções de bugs e melhorias"
+    },
+    "3-7-0": {
+      "title": "Novos instrumentos (Genshin)",
+      "change-1": "Adicionado o Teclado Harmônico (Genshin)",
+      "change-2": "Adicionado o layout de notação musical numérica"
+    },
+    "3-6-4": {
+      "title": "Expansão da localização em chinês",
+      "change-1": "Adicionadas as traduções em chinês (Hong Kong), chinês (Taiwan), japonês e coreano",
+      "chance-2": "Tradução em turco melhorada"
+    },
+    "3-6-3": {
+      "title": "Novos instrumentos (Genshin)",
+      "change-1": "Adicionado o Piano do Espírito Saltitante (Genshin)"
+    },
+    "3-6-2": {
+      "title": "Traduções e novos instrumentos",
+      "change-1": "Adicionadas traduções para o registro de atualizações",
+      "change-2": "Adicionado o Piano de Cauda (Sky)",
+      "change-3": "Adicionada a Eufonia Persistente (Genshin)"
+    },
+    "3-6-1": {
+      "title": "Sincronização melhorada",
+      "change-1": "A sincronização foi melhorada em todo o aplicativo, as músicas podem tocar um pouco mais rápido agora, já que seguem o BPM com mais precisão. Você pode precisar diminuir o BPM, especialmente nas músicas em que ele está muito alto."
+    },
+    "3-6-0": {
+      "title": "Linhas com várias cores e novos instrumentos",
+      "change-1": "No visualizador de partituras agora você pode fazer com que as linhas tenham cores de fundo diferentes",
+      "change-2": "Adicionados o Ukulele e o Tambor DjemDjem"
+    },
+    "3-5-0": {
+      "title": "Repetição, configurações da partitura visual, tradução em turco",
+      "change-1": "Adicionada a repetição de um trecho nos modos de prática/reprodução/aproximação",
+      "change-2": "As notas do trecho a repetir agora também podem ser escritas como número",
+      "change-3": "Adicionada a opção de ocultar as notas no modo de prática, para ajudar você a testar sua memória da música",
+      "change-4": "Agora você pode escolher quantos blocos mostrar na partitura visual",
+      "change-5": "Adicionada a tradução em turco"
+    },
+    "3-4-1": {
+      "title": "Traduções em indonésio e português",
+      "change-1": "Adicionadas as traduções em indonésio e português",
+      "change-2": "Correções de bugs na conexão MIDI",
+      "change-3": "Correções de bugs em dispositivos iOS antigos"
+    },
+    "3-4-0": {
+      "title": "Traduções",
+      "change-1": "Adicionada a tradução em chinês, estamos procurando tradutores!",
+      "change-2": "Adicionado um botão para instalar o aplicativo na tela inicial",
+      "change-3": "Adicionado o layout de teclado personalizado como tipo de nome da nota",
+      "change-4": "Adicionado o tipo de nome da nota \"seu layout de teclado\", que usa o layout de teclado do seu dispositivo",
+      "change-5": "Correções de bugs e melhorias"
+    },
+    "3-3-0": {
+      "title": "Transcrição de áudio/vídeo, reverberação",
+      "change-1": "Adicionada uma ferramenta no compositor para converter áudio/vídeo em uma partitura",
+      "change-2": "A reverberação agora pode ser definida para cada instrumento",
+      "change-3": "Adicionadas configurações rápidas no teclado Zen",
+      "change-4": "Adicionadas predefinições personalizáveis nas configurações MIDI",
+      "change-5": "Conexão MIDI melhorada",
+      "change-6": "O teclado Zen agora emite eventos de notas MIDI quando pressionado",
+      "change-7": "Ícone do Sky Music Nightly alterado",
+      "change-8": "Adicionado o blog do aplicativo",
+      "change-9": "Outras correções de bugs e melhorias"
+    },
+    "3-2-0": {
+      "title": "Atalhos, Dó Ré Mi, desempenho, camadas",
+      "change-1": "Todos os atalhos e o layout do teclado agora são personalizáveis",
+      "change-2": "Adicionado o layout Dó Ré Mi com deslocamento de notas",
+      "change-3": "Aplicativo reescrito em next.js, melhorando o desempenho e a navegação",
+      "change-4": "Personalização de temas melhorada no compositor",
+      "change-5": "Adicionada opacidade ao compositor e cores personalizadas para as camadas",
+      "change-6": "Adicionado um novo formato de partitura visual com mais informações",
+      "change-7": "Adicionada a pesquisa de músicas",
+      "change-8": "Limite de camadas do compositor aumentado para 52",
+      "change-9": "Controles deslizantes do compositor melhorados",
+      "change-10": "(Sky) Adicionados novos instrumentos: TR-909, BassSynth, SineSynth e ChimesSynth",
+      "change-11": "Os formatos de arquivo foram alterados para que possam ser abertos com um clique duplo",
+      "change-12": "Adicionada a exportação como arquivo zip",
+      "change-13": "Adicionados dois novos temas padrão",
+      "change-14": "Adicionada a configuração de tempo de antecipação no compositor para melhorar a precisão do áudio",
+      "change-15": "Outras correções de bugs e melhorias"
+    },
+    "3-1-0": {
+      "title": "Aurora, transparência e layouts",
+      "change-1": "Adicionada a Aurora (Sky)",
+      "change-2": "Adicionados os layouts de switch/playstation (Sky)",
+      "change-3": "Adicionados avisos de backup",
+      "change-4": "Adicionada transparência aos temas",
+      "change-5": "Outras correções de bugs e melhorias"
+    },
+    "3-0-1": {
+      "title": "Desempenho e correções de bugs",
+      "change-1": "Corrigido um bug do iOS que impedia a reprodução do áudio",
+      "change-2": "Desempenho melhorado para usuários que têm muitas músicas",
+      "change-3": "Adicionada a seleção rápida de mudança de tempo nas ferramentas do compositor",
+      "change-4": "Outras correções de bugs e melhorias"
+    },
+    "3-0": {
+      "title": "Modo VSRG, teclado Zen, sons de chamado e mais!",
+      "change-1": "Adicionado o modo VSRG para compor e tocar músicas vsrg",
+      "change-2": "Adicionado o teclado Zen, onde você pode simplesmente focar em tocar à mão",
+      "change-3": "Adicionada a partitura visual ao reprodutor",
+      "change-4": "Adicionado o dimensionamento do aplicativo",
+      "change-5": "Adicionada a ordenação alfabética das pastas",
+      "change-6": "Adicionada a página de backup",
+      "change-7": "(Genshin) adicionada a Lira Vintage",
+      "change-8": "(Sky) Adicionados os efeitos sonoros dos chamados e do emote de dança",
+      "change-9": "Sons do metrônomo alterados",
+      "change-10": "Desempenho do reprodutor melhorado",
+      "change-11": "Exportação de vários tipos, agora você pode exportar/importar músicas, pastas, temas etc",
+      "change-12": "Corrigido um bug que removia uma música da pasta ao salvá-la",
+      "change-13": "Corrigido um bug que impedia a reprodução do áudio",
+      "change-14": "Corrigidos problemas ao abrir/salvar músicas no compositor",
+      "change-15": "Corrigido um bug ao colar notas no compositor",
+      "change-16": "A exportação de uma música não funcionava no sky music e no sky studio",
+      "change-17": "Outras correções de bugs e melhorias"
+    },
+    "2-8": {
+      "title": "Mais camadas no compositor e reformulação da interface",
+      "change-1": "Limite de instrumentos no compositor aumentado para 30",
+      "change-2": "Ferramentas do compositor redesenhadas",
+      "change-3": "Adicionado DESFAZER às ferramentas do compositor",
+      "change-4": "Adicionada a opção de colar/inserir em uma camada específica",
+      "change-5": "Adicionada a ferramenta para mover notas para cima/baixo",
+      "change-6": "Adicionado o metrônomo no reprodutor",
+      "change-7": "Adicionados vários instrumentos no reprodutor",
+      "change-8": "Adicionadas mais dicas de ferramenta, também para dispositivos móveis",
+      "change-9": "Correções de bugs e melhorias"
+    },
+    "2-7": {
+      "title": "Renomear músicas, exportação MIDI, pastas",
+      "change-1": "Adicionada a opção de renomear músicas",
+      "change-2": "Os nomes das músicas não são mais únicos",
+      "change-3": "Adicionadas pastas e uma nova interface para o menu de músicas",
+      "change-4": "Adicionada a exportação de uma música como MIDI (NÃO USE NO LUGAR DO FORMATO NORMAL)",
+      "change-5": "Reprodução das músicas melhorada no reprodutor",
+      "change-6": "Corrigidos alguns bugs"
+    },
+    "2-6": {
+      "title": "Guitarra e dicas de ferramenta",
+      "change-1": "Adicionadas dicas de ferramenta",
+      "change-2": "Adicionados botões de ajuda",
+      "change-3": "Adicionada a Guitarra (Sky, as notas não podem ser sustentadas)",
+      "change-4": "Correções de bugs no carregamento de músicas na página principal",
+      "change-5": "Adicionado o arrastar e soltar no compositor",
+      "change-6": "No PC, o compositor agora se redimensiona junto com a página",
+      "change-7": "Corrigidos alguns bugs"
+    },
+    "2-5": {
+      "title": "Melhorias no compositor",
+      "change-1": "A renderização do compositor foi melhorada para ficar mais nítida e mais fácil de ver em dispositivos móveis",
+      "change-2": "Desempenho melhorado no compositor",
+      "change-3": "Adicionada a 4ª camada no compositor",
+      "change-4": "Adicionada a personalização de tema para mais partes do compositor",
+      "change-5": "Aplicativo reescrito em TypeScript",
+      "change-6": "Correções de bugs"
+    },
+    "2-4": {
+      "title": "Controle deslizante múltiplo e temas",
+      "change-1": "Adicionados os temas do aplicativo, personalize completamente a aparência do aplicativo",
+      "change-2": "Adicionados controles deslizantes de início e fim para selecionar qual parte da música tocar/praticar",
+      "change-3": "Correções de bugs"
+    },
+    "2-3": {
+      "title": "Teclado MIDI e desempenho",
+      "change-1": "Adicionado o suporte a teclado MIDI em todas as páginas, com layouts e atalhos personalizados",
+      "change-2": "Grandes melhorias de desempenho na página principal",
+      "change-3": "Adicionados os nomes das notas e as células vazias ao visualizador de partituras",
+      "change-4": "Adicionado o formato ABC",
+      "change-5": "Adicionada a Flauta de Pan (Sky)",
+      "change-6": "Melhorias na interface e correções de bugs"
+    },
+    "2-2": {
+      "title": "Visualizador de partituras",
+      "change-1": "Adicionado o visualizador de partituras",
+      "change-2": "Alterado o comportamento da linha do tempo ao arrastar a barra de rolagem",
+      "change-3": "Desempenho 2 vezes melhor em alguns lugares",
+      "change-4": "Melhorias na interface e correções de bugs"
+    },
+    "2-1-1": {
+      "title": "Cítara e ícones",
+      "change-1": "Ícone e animação das notas alterados (Genshin)",
+      "change-2": "Adicionada a página de Ajuda",
+      "change-3": "Áudio da Cítara alterado (Genshin)",
+      "change-4": "Melhorias na interface"
+    },
+    "2-1": {
+      "title": "Menu inicial e páginas",
+      "change-1": "Código reestruturado",
+      "change-2": "Adicionada opacidade a alguns elementos",
+      "change-3": "Alteradas as margens e o espaçamento de alguns elementos",
+      "change-4": "Adicionada a página inicial",
+      "change-5": "Adicionada a página de Parceiros",
+      "change-6": "Adicionados atalhos para a página principal",
+      "change-7": "Corrigido um bug de carregamento no compositor e na página principal",
+      "change-8": "Adicionada a página de Doação"
+    },
+    "2-0": {
+      "title": "Círculos de aproximação",
+      "change-1": "Adicionado o modo de círculos de aproximação, uma nova maneira de aprender uma música ou de se desafiar. Você o encontra na página principal, ao lado do botão de prática",
+      "change-2": "Página principal reescrita para aumentar o desempenho geral",
+      "change-3": "Adicionada a página de registro de atualizações",
+      "change-4": "Adicionado o recurso de gravação de áudio na página principal e no compositor",
+      "change-5": "Adicionada, como configuração, a reprodução automática em todas as abas (compositor) no PC",
+      "change-6": "Adicionadas animações da nota ao pressioná-la",
+      "change-7": "Adicionada a possibilidade de mudar a imagem de fundo por URL",
+      "change-8": "Página de informações atualizada",
+      "change-9": "No compositor, agora você pode pressionar shift + nome da nota para adicionar uma nota",
+      "change-10": "No compositor, você pode pressionar as teclas para cima/baixo para mudar de camada",
+      "change-11": "No compositor no PC, agora você pode adicionar novas notas simplesmente pressionando o teclado do PC enquanto estiver no modo \"tocar\""
+    },
+    "1-7": {
+      "title": "Cítara",
+      "change-1": "(Para o genshin) Adicionada a Cítara",
+      "change-2": "Formato \"dó ré mi\" adicionado de volta"
+    },
+    "1-6": {
+      "title": "Ajustes de desempenho",
+      "change-1": "Desempenho do compositor 2x melhor",
+      "change-2": "Adicionados os nomes das notas para o genshin (virou uma configuração)",
+      "change-3": "Corrigido o bug de volume do instrumento",
+      "change-4": "Corrigidos problemas no layout do teclado",
+      "change-5": "Corrigidos outros pequenos bugs"
+    },
+    "1-5": {
+      "title": "Importação MIDI",
+      "change-1": "Adicionado o recurso de importação MIDI tanto no Sky quanto no Genshin music nightly",
+      "change-2": "Seleção das faixas da música (selecione ou desmarque quais faixas incluir)",
+      "change-3": "Seleção de instrumento por faixa (escolha qual instrumento dar a cada faixa)",
+      "change-4": "Informações da faixa (veja como foi a conversão, os acidentais e as notas fora do alcance)",
+      "change-5": "Mudar o deslocamento das notas (caso a música esteja fora das oitavas disponíveis)"
+    },
+    "1-4": {
+      "title": "Biblioteca de músicas",
+      "change-1": "Adicionada a integração com a biblioteca de músicas, importe músicas diretamente pelo aplicativo (mais de 700 músicas)",
+      "change-2": "Correções de bugs"
+    },
+    "1-3": {
+      "title": "Novos arquivos de áudio",
+      "change-1": "Arquivos de áudio alterados",
+      "change-2": "Adicionada a Ocarina",
+      "change-3": "Removido o botão de apoio no TWA",
+      "change-4": "Correções de bugs"
+    },
+    "1-2": {
+      "title": "Correções de bugs e PWA",
+      "change-1": "(Para o sky) Corrigido um bug em que as partituras não podiam ser importadas no sky studio",
+      "change-2": "A instalação do aplicativo foi modernizada, com descrição e imagens"
+    },
+    "1-1": {
+      "title": "Compatibilidade de partituras",
+      "change-1": "(Para o sky) Adicionada a compatibilidade retroativa das partituras, agora as partituras feitas no sky music nightly podem ser importadas no sky music e no sky studio (com algumas perdas)",
+      "change-2": "Correções de bugs",
+      "change-3": "Melhoria geral no desempenho"
+    },
+    "1-0": {
+      "title": "Lançamento",
+      "change-1": "Composição com 3 instrumentos",
+      "change-2": "Melhor desempenho que a versão anterior",
+      "change-3": "Melhor ferramenta de prática",
+      "change-4": "Melhor interface",
+      "change-5": "Pontos de interrupção para o compositor",
+      "change-6": "Novos recursos tanto para o compositor quanto para a página principal",
+      "change-7": "Personalização cheia de recursos para facilitar o aprendizado e a composição"
+    }
   }
 }

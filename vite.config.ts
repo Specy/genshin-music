@@ -43,6 +43,7 @@ export default defineConfig({
   // Golden-fixture suite (live since Phase 2; fixtures are ground truth — never regenerate).
   // jsdom's default UA is desktop — REQUIRED: settings fixtures were
   // captured with desktop defaults (see test/README.md).
+  resolve: { conditions: ['browser'] },
   test: {
     environment: 'jsdom',
     setupFiles: ['./test/setup.ts'],

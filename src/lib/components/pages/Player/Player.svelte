@@ -25,13 +25,28 @@
   import { RecordedSong } from '$core/Songs/RecordedSong';
   import type { ComposedSong } from '$core/Songs/ComposedSong.svelte';
   import type { InstrumentName } from '$core/types';
+  import { displayInstrumentNameFor } from '$core/Songs/displayInstrument';
   import type { Pitch } from '$core/legacyConfig';
   import type { PlayerSettingsDataType } from '$core/BaseSettings';
   import type { SettingUpdate, SettingVolumeUpdate } from '$core/types/SettingsPropriety';
 
   let settings: PlayerSettingsDataType = $state(settingsService.getDefaultPlayerSettings());
   let instruments: Instrument[] = $state([new Instrument(game.instruments.list[0])]);
-  const songDisplayInstrument = new Instrument(game.instruments.list[0]);
+  /**
+   * The instrument the on-screen keyboard is SHAPED like - its grid, its labels and its button
+   * count - as opposed to `instruments`, which is what the keyboard SOUNDS like.
+   *
+   * The two are separate objects because they arrive at different times: `instruments` is rebuilt
+   * behind an await on `instrument.load()` (a sample fetch), while this is needed synchronously the
+   * moment a song is selected, and building one costs nothing but a note list. It used to be a
+   * plain `const` pinned to the game's first instrument for the life of the page, which is why the
+   * sound followed a song onto a 2x4 drum kit while the keyboard stayed a 3x5 piano.
+   *
+   * Reassigned, never mutated: PlayerKeyboard derives its Shape from this, and a $derived only
+   * re-runs when the reference it read changes. It is never `.load()`ed, so replacing it leaks no
+   * audio nodes - see displayInstrumentNameFor for which instrument it follows and why.
+   */
+  let songDisplayInstrument = $state(new Instrument(game.instruments.list[0]));
   let instrumentsData: InstrumentData[] = [new InstrumentData({ name: game.instruments.list[0] })];
   let isLoadingInstrument = $state(true);
   let isRecording = $state(false);
@@ -98,8 +113,28 @@
       // throws effect_update_depth_exceeded once a song actually plays.
       untrack(() => {
         const { eventType, song } = playerStore.state;
+        const isSongEvent =
+          song !== null && ['play', 'practice', 'approaching'].includes(eventType);
+        // AHEAD OF THE syncSongData GUARD, and deliberately. Everything below this point swaps in
+        // the SONG's pitch, reverb and instruments, which is exactly what the setting turns off -
+        // but the keyboard's SHAPE is not the song's data, it is a question about which instrument
+        // the buttons on screen belong to, and that has an answer either way. With the setting off
+        // the song's instruments are never loaded, so the answer is the user's own instrument;
+        // behind the guard it was never asked at all and the keyboard kept the GAME DEFAULT's grid
+        // while the user's instrument sounded - the reported symptom, in the case where the sound
+        // does not change. displayInstrumentNameFor is handed the setting and makes that choice.
+        //
+        // Synchronous, and ahead of loadInstruments below: that call is queued behind
+        // `instrumentsTasks` and awaits a sample fetch, but PlayerKeyboard publishes the keyboard
+        // layout from this instrument on a 4ms debounce - so the shape has to be right now, not
+        // whenever the audio finishes loading. A song's own track names need none of that.
+        if (isSongEvent) {
+          syncDisplayInstrument(song.instruments.map((instrument) => instrument.name));
+        } else if (eventType === 'stop') {
+          syncDisplayInstrument([]);
+        }
         if (!settings.syncSongData.value) return;
-        if (song !== null && ['play', 'practice', 'approaching'].includes(eventType)) {
+        if (isSongEvent) {
           //remember the user's own values before the first song overrides them (a second song
           //replacing the first must not snapshot the previous song's values)
           settingsBeforeSong ??= { pitch: settings.pitch.value, reverb: settings.reverb.value };
@@ -117,6 +152,7 @@
             //cleared last: while it is set, updateSettings substitutes it into what it saves
             settingsBeforeSong = null;
           }
+          //back to the user's own instrument, the same way the pitch and reverb above go back
           loadInstruments([
             new InstrumentData({
               name: settings.instrument.value,
@@ -157,6 +193,31 @@
       instruments.forEach((ins) => ins.changeVolume(obj.value));
     }
     updateSettings();
+  }
+
+  /**
+   * Point the display keyboard at the instrument the song's track 0 uses, or back at the user's own
+   * when there is no song. Rebuilds only on a CHANGED name: the reassignment is what publishes to
+   * PlayerKeyboard's $derived, so an unconditional one would rebuild the note list on every
+   * play/practice/restart event for no change on screen.
+   */
+  function syncDisplayInstrument(songInstrumentNames: InstrumentName[]) {
+    const name = displayInstrumentNameFor(
+      songInstrumentNames,
+      settings.instrument.value,
+      settings.syncSongData.value
+    );
+    if (songDisplayInstrument.name === name) return;
+    songDisplayInstrument = new Instrument(name);
+    // THE SHAPE AND THE BUTTON COUNT, PUBLISHED BY THE SAME WRITE. PlayerKeyboard derives its grid
+    // from this instrument's `shape` but takes how many buttons to put in it from
+    // `playerStore.keyboard`, and that array was only written inside PlayerKeyboard's own 4ms
+    // debounce - which waits on `await stopSong()`. Switching directly from one song to another
+    // therefore drew the NEW instrument's grid holding the OLD instrument's buttons for that
+    // window: 15 piano buttons flowed into a drum's 4 columns. Writing it here makes the pair
+    // atomic; the debounce still runs and sets the same array, which is why this is safe to add
+    // rather than a second source of truth.
+    playerStore.setKeyboardLayout(songDisplayInstrument.notes);
   }
 
   let instrumentsTasks: Promise<unknown> = Promise.resolve();

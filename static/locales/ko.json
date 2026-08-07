@@ -17,6 +17,7 @@
     "error_importing_file_generic": "파일을 불러오는데 에러가 발생했습니다",
     "error_importing_invalid_format": "파일을 불러오는데 에러가 있습니다: 지원되지 않는 형식의 파일",
     "song_backup_downloaded": "노래 백업 파일이 다운로드 되었습니다.",
+    "old_format_export_dropped_notes": "{{count}}개의 노트를 이전 형식의 파일에 포함할 수 없었습니다 (기본 악기에 해당하는 위치가 없습니다)",
     "no_songs_to_backup": "백업 할 노래가 없습니다",
     "no_empty_name": "이름을 채워서 적어주세요",
     "cloned_song": "노래: \"{{song_name}}\"를 복제하였습니다",
@@ -90,6 +91,7 @@
     "search": "검색",
     "rename": "이름 바꾸기",
     "create_song": "노래 만들기",
+    "select_song": "노래 선택하기",
     "edit_song": "노래 수정하기",
     "none": "비어있음",
     "instrument": "악기",
@@ -214,6 +216,8 @@
       "composer_autosave_description": "5번의 수정마다, 또는 페이지를 넘기거나 곡을 바꿀때 마다 곡의 변경사항을 저장합니다",
       "composer_use_keyboard_side_buttons": "키보드 주변에 열을 이동시키는 버튼을 추가합니다",
       "composer_use_keyboard_side_buttons_description": "키보드의 양쪽에 열을 이동시키는 버튼을 추가합니다",
+      "composer_smooth_scroll": "부드러운 스크롤",
+      "composer_smooth_scroll_description": "재생하는 동안 화면이 다음 열로 바로 건너뛰지 않고, 템포 조절기를 따라 각 열을 부드럽게 지나갑니다",
       "composer_sync_tabs": "모든 탭에서 자동 재생 (컴퓨터 전용)",
       "composer_sync_tabs_description": "고급 기능으로, 다른 탭이 동시에 연주하도록 합니다",
       "composer_lookahead_time": "미리보기 시간",
@@ -414,6 +418,7 @@
   },
   "keybinds": {
     "already_used_keybind": "이 키는 이미 노트: \"{{note_name}}\"에서 사용중인 키입니다",
+    "already_used_shortcut": "이 단축키는 이미 \"{{shortcut_name}}\" 동작에서 사용중입니다",
     "midi_keybinds": "MIDI 키 설정",
     "keyboard_keybinds": "키보드 키 설정",
     "keyboard_keybinds_description": "노트를 원하는 어떤 키로든 다시 지정할 수 있습니다. 다시 지정하고 싶은 노트를 클릭한 후, 지정하고 싶은 키를 누르세요.",
@@ -541,6 +546,7 @@
     "previous_breakpoint": "이전 제어점으로 이동하기",
     "next_breakpoint": "다음 제어점으로 이동하기",
     "tempo": "템포",
+    "note_duration": "노트 길이",
     "error_with_this_layer": "이 레이어에 에러가 발생했습니다",
     "recording_audio": "오디오를 녹음하는중",
     "tools": {
@@ -711,6 +717,7 @@
     "Ocarina": "오카리나",
     "MantaOcarina": "가오리 모양 오카리나",
     "Aurora": "Aurora",
+    "sustained_recorder": "지속음 리코더",
     "Kalimba": "칼림바",
     "ToyUkulele": "장난감 우크렐레",
     "Drum": "드럼",
@@ -731,9 +738,28 @@
     "GrandPiano": "그랜드 피아노",
     "LingeringEuphonia": "여음",
     "LeapingSpiritPiano": "리듬 건반",
+    "HarmonicKey": "화음 건반",
     "Harmonic Key":"화음 건반"
   },
   "versions": {
+    "4-0-0": {
+      "title": "새로워진 앱, 지속 노트, 부드러운 스크롤, 새로운 악기",
+      "change-1": "앱 전체를 처음부터 새로 만들었습니다. 모든 곳에서 성능이 개선되었을 것입니다.",
+      "change-2": "지속 노트가 추가되었습니다. 작곡 모드에서는 키보드의 노트를 길게 눌러 노트 길이 설정 창을 연 후, 몇 개의 열만큼 이어질지 정할 수 있습니다. 플레이어와 Zen 키보드에서는 노트 버튼을 누르고 있기만 하면 노트가 계속 이어집니다.",
+      "change-3": "재생하는 동안 작곡 모드 화면이 부드럽게 스크롤되며, 곡의 현재 위치를 선으로 표시합니다. 화면을 드래그하거나 스크롤하는 것도 부드러워졌습니다. 이 기능은 작곡 모드 설정에서 끌 수 있습니다.",
+      "change-4": "사용자 경험을 개선하기 위해 앱 전반의 디자인을 조금씩 다듬었습니다.",
+      "change-5": "그 외 많은 버그 수정과 개선이 있습니다."
+    },
+    "3-7-0": {
+      "title": "새로운 악기 추가 (원신)",
+      "change-1": "화음 건반이 추가되었습니다. (원신)",
+      "change-2": "숫자 악보(Number Music Notion) 레이아웃을 추가하였습니다."
+    },
+    "3-6-4": {
+      "title": "중국어 번역 확대",
+      "change-1": "중국어(홍콩), 중국어(대만), 일본어, 한국어 번역을 추가하였습니다.",
+      "chance-2": "터키어 번역을 개선하였습니다."
+    },
     "3-6-3": {
       "title": "새로운 악기 추가 (원신)",
       "change-1": "리듬건반이 추가되었습니다. (원신)"
