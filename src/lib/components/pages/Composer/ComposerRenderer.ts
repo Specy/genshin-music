@@ -53,10 +53,21 @@ const COMPOSER_NOTE_POSITIONS = game.notes.composerPositions;
  *
  * WHETHER THE LINE IS ON SCREEN is playheadIsVisible, written onto playheadGraphics.visible by
  * init() and by update() - see overlayColumn for the overlay it is mutually exclusive with.
+ *
+ * WHAT IS DRAWN is a bar spanning the canvas' height plus a triangle at each end pointing INWARDS
+ * along it - down from the top, up from the bottom. The bar alone is a thin line over a busy grid
+ * of note icons and bar shading, and it is the only column marker in glide mode; the arrowheads are
+ * what make it findable at a glance without widening the bar enough to hide the notes beside it.
+ *
+ * The colour is the theme's `accent` and comes through ComposerRendererTheme.playhead rather than
+ * being read here - see that field, and note that the whole line is redrawn only by drawPlayhead's
+ * two callers, so it trails a theme edit by the same debounce the textures do.
  */
-const PLAYHEAD_COLOR = 0xff3b30;
-const PLAYHEAD_WIDTH = 2;
+const PLAYHEAD_WIDTH = 3;
 const PLAYHEAD_ALPHA = 0.9;
+/** Half-width and length of each arrowhead, in px. */
+const PLAYHEAD_ARROW_HALF_WIDTH = 6;
+const PLAYHEAD_ARROW_LENGTH = 8;
 
 /**
  * The cap put on the notes Application's Ticker while a motion is running - see startMotionFrames.
@@ -65,9 +76,13 @@ const PLAYHEAD_ALPHA = 0.9;
  * `delta = (now - lastFrame) | 0` and returns without emitting when that is below `1000 / maxFPS`
  * (node_modules/pixi.js/lib/ticker/Ticker.mjs, the maxFPS setter and update()'s early return). So
  * the executed frames are unevenly spaced on a display whose refresh rate is not a multiple of
- * this: at 48 on a 60Hz display the gaps alternate between one and two display frames. This class
- * derives every position from the wall clock rather than by integrating a delta, so uneven gaps
- * cost smoothness and never accumulate into drift - see motionPositionAt.
+ * this. This class derives every position from the wall clock rather than by integrating a delta,
+ * so uneven gaps cost smoothness and never accumulate into drift - see motionPositionAt.
+ *
+ * 30 divides a 60Hz display exactly, so there the gate emits every other frame and the spacing is
+ * even; it does not divide 120 or 144Hz, where it is uneven again. What it does NOT reduce on any
+ * display is the number of times the browser wakes the page: pixi's `_tick` still runs on every
+ * requestAnimationFrame and the gate only skips the listener body.
  *
  * Setting it ABOVE the display's refresh rate is a no-op, because the gate never fires.
  */
@@ -157,6 +172,18 @@ interface ComposerRendererTheme {
    * reads instead and why the two are updated at different moments.
    */
   tailAccent: number;
+  /**
+   * The playhead's colour, captured for the same reason tailAccent is: drawPlayhead must not do a
+   * live `ThemeProvider.get(...)`.
+   *
+   * It is the SAME theme key as tailAccent - `accent`, which is what the current layer's span tails
+   * are drawn in - so the line matches the layer being edited rather than being a colour of its
+   * own. They are separate fields because tailAccent has a second copy that moves at a different
+   * moment (paintTailAccent), and this one does not: drawPlayhead's callers are init() and
+   * recalculateCacheAndSizes, and the second of those is the theme path, so the line and the pool
+   * are recoloured by the same call.
+   */
+  playhead: number;
 }
 
 // The reactive input ComposerCanvas.svelte pushes into update() on every relevant change via its
@@ -803,6 +830,7 @@ export class ComposerRenderer {
         backgroundOpacity: ThemeProvider.get('primary').alpha(),
       },
       tailAccent: ThemeProvider.get('accent').rgbNumber(),
+      playhead: ThemeProvider.get('accent').rgbNumber(),
     };
     this.paintTailAccent = this.theme.tailAccent;
   }
@@ -964,15 +992,37 @@ export class ComposerRenderer {
     return state.smoothScroll && !state.isRecordingAudio;
   }
 
+  /**
+   * The bar and its two arrowheads, in ONE fill: three shapes queued against the same Graphics and
+   * filled together, so the colour and alpha cannot drift apart between them.
+   *
+   * Each arrowhead is a triangle whose apex points INWARDS along the bar - the top one down, the
+   * bottom one up - with its base flush against the canvas edge, so nothing is drawn outside the
+   * canvas and neither arrow needs clipping. Both are centred on the same x the bar is, which is
+   * what makes the whole mark read as one object rather than three.
+   */
   private drawPlayhead(): void {
+    const centre = this.playheadX();
+    const bottom = this.height;
     this.playheadGraphics.clear();
-    this.playheadGraphics.rect(
-      this.playheadX() - PLAYHEAD_WIDTH / 2,
+    this.playheadGraphics.rect(centre - PLAYHEAD_WIDTH / 2, 0, PLAYHEAD_WIDTH, bottom);
+    this.playheadGraphics.poly([
+      centre - PLAYHEAD_ARROW_HALF_WIDTH,
       0,
-      PLAYHEAD_WIDTH,
-      this.height
-    );
-    this.playheadGraphics.fill({ color: PLAYHEAD_COLOR, alpha: PLAYHEAD_ALPHA });
+      centre + PLAYHEAD_ARROW_HALF_WIDTH,
+      0,
+      centre,
+      PLAYHEAD_ARROW_LENGTH,
+    ]);
+    this.playheadGraphics.poly([
+      centre - PLAYHEAD_ARROW_HALF_WIDTH,
+      bottom,
+      centre + PLAYHEAD_ARROW_HALF_WIDTH,
+      bottom,
+      centre,
+      bottom - PLAYHEAD_ARROW_LENGTH,
+    ]);
+    this.playheadGraphics.fill({ color: this.theme.playhead, alpha: PLAYHEAD_ALPHA });
   }
 
   private recalculateCacheAndSizes = () => {
@@ -1189,6 +1239,37 @@ export class ComposerRenderer {
     }
     if (this.motion.kind === 'easing' && state.selected === this.motion.to) {
       this.scrollSegments.length = 0;
+      return;
+    }
+    if (
+      this.motion.kind === 'playback' &&
+      previous !== null &&
+      previous.isPlaying &&
+      !state.isPlaying
+    ) {
+      // PAUSING, which is the one stop that is not a discontinuity: the playhead is mid-column and
+      // halting it dead is the jump this eases away. It settles BACKWARD onto the column it is
+      // inside - the last one whose notes were played - and not onto `selected`, which the
+      // transport had already advanced to but whose notes are still a lookahead from being heard.
+      // So pressing play again resumes on the column the line is parked at, rather than skipping
+      // the one that was only half heard.
+      //
+      // Reaching the END of the song is the same transition (Composer.svelte's playback tick calls
+      // togglePlay(false) when it runs out of columns) and takes this branch too.
+      //
+      // SWITCHING SMOOTH SCROLLING OFF mid-glide also leaves the playhead mid-column, and does NOT
+      // ease - it falls through to rest(). That is a mode change rather than a transport one: the
+      // line disappears and the overlay appears in the same update, so there is nothing left on
+      // screen for a 140ms slide to be a slide OF.
+      const target = clamp(Math.floor(this.scrollPosition), 0, state.columns.length - 1);
+      // Ordered as handleWheel and settleStageDrag order it, and for the same reason: this write
+      // reaches Svelte, and the update it schedules arrives after this call has installed the
+      // motion - where the `easing && selected === to` branch above is what keeps it from being
+      // undone. Skipped when the column is already selected, which is the common case (the
+      // transport advances `selected` a lookahead early, so a pause in the first part of a column
+      // finds them already equal).
+      if (target !== state.selected) this.callbacks.selectColumn(target, true);
+      this.easeTo(target);
       return;
     }
     this.rest();
@@ -1682,6 +1763,7 @@ export class ComposerRenderer {
         backgroundOpacity: Math.max(ThemeProvider.get('primary').alpha(), 0.8),
       },
       tailAccent: ThemeProvider.get('accent').rgbNumber(),
+      playhead: ThemeProvider.get('accent').rgbNumber(),
     };
     this.recalculateCacheAndSizes();
     if (this.notesApp) this.notesApp.renderer.background.color = this.theme.main.background;
