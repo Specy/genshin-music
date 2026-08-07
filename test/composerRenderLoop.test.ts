@@ -130,6 +130,10 @@ const pixi = vi.hoisted(() => {
             return this
         }
 
+        poly() {
+            return this
+        }
+
         circle() {
             return this
         }
@@ -321,7 +325,7 @@ describe('ComposerRenderer rendering', () => {
         expect([notes.ticker.framesRequested, timeline.ticker.framesRequested]).toEqual([0, 0])
 
         //THE CAP lives on the notes ticker, which is the one the renderer runs
-        expect(notes.ticker.maxFPS).toBe(48)
+        expect(notes.ticker.maxFPS).toBe(30)
         expect(timeline.ticker.maxFPS).toBe(0)
 
         //PIXI'S OWN RENDER LISTENER IS GONE from the notes ticker, and the renderer's own callback

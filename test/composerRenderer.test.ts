@@ -301,6 +301,11 @@ const pixi = vi.hoisted(() => {
             return this
         }
 
+        poly(points: number[]) {
+            this.ops.push(['poly', points])
+            return this
+        }
+
         circle() {
             return this
         }
@@ -741,6 +746,11 @@ interface Props {
  */
 const BPM = 220
 const LOOKAHEAD_MS = 250
+/**
+ * ComposerRenderer's SCROLL_EASE_MS, restated rather than imported - it is not exported, and a
+ * shared constant would move both sides of every expectation together.
+ */
+const SCROLL_EASE_MS = 140
 
 interface Context {
     song: ComposedSong
@@ -1778,17 +1788,36 @@ function expectedTimeline(context: Context, geometry: Geometry): PaintedScene['t
  * rather than a child, so hiding the columns for a recording leaves it standing on an empty
  * background. That is the whole of the second term here.
  *
- * Stating it as a full rectangle rather than as "a line somewhere near the middle" is what makes it
+ * Stating the geometry exactly rather than as "a line somewhere near the middle" is what makes it
  * meaningful beside the scroll offset: expectedNotesOffset says which column sits under this x, so
- * a playhead drawn at the wrong x would leave the offset formula right and the composer wrong. The
- * bar is centred ON the boundary, so it straddles it by a pixel either side.
+ * a playhead drawn at the wrong x would leave the offset formula right and the composer wrong.
+ *
+ * THREE SHAPES AND ONE FILL, in that order. The bar is centred ON the column boundary, so it
+ * straddles it by 1.5px either side; each arrowhead is a triangle with its base flush against a
+ * canvas edge and its apex pointing inwards along the bar, on the same centre. The single trailing
+ * fill is a claim in its own right - three shapes filled together cannot drift apart in colour or
+ * alpha the way three fills could.
+ *
+ * The COLOUR is the `accent` PARAMETER, the same one expectedWindow paints the current layer's span
+ * tails in - not a literal, and not a live read. The line and the tails are recoloured by the same
+ * call (recalculateCacheAndSizes), so a theme edit leaves both showing the old colour until that
+ * debounce fires, and the theme test drives exactly that window. A literal here would keep passing
+ * if the line stopped following the theme at all; a live read would keep passing if it recoloured
+ * ahead of the pool.
  */
-function expectedPlayhead(context: Context, geometry: Geometry): PaintedTimelineChild {
+function expectedPlayhead(
+    context: Context,
+    geometry: Geometry,
+    accent: number
+): PaintedTimelineChild {
     const {canvasWidth, height} = geometry
+    const centre = canvasWidth / 2
     return {
         ...expectedGraphicsChild(0, 0, [
-            ['rect', canvasWidth / 2 - 1, 0, 2, height],
-            ['fill', {color: 0xff3b30, alpha: 0.9}],
+            ['rect', centre - 1.5, 0, 3, height],
+            ['poly', [centre - 6, 0, centre + 6, 0, centre, 8]],
+            ['poly', [centre - 6, height, centre + 6, height, centre, height - 8]],
+            ['fill', {color: accent, alpha: 0.9}],
         ]),
         visible: context.props.smoothScroll && !context.props.isRecordingAudio,
     }
@@ -1811,7 +1840,7 @@ function expectedScene(
             //init() appends each Application's canvas to the element it was constructed with
             canvasParent: 'notes',
             columns: expectedWindow(context, geometry, accent),
-            playhead: expectedPlayhead(context, geometry),
+            playhead: expectedPlayhead(context, geometry, accent),
         },
         timeline: expectedTimeline(context, geometry),
     }
@@ -3147,8 +3176,12 @@ describe('the smooth scroll', () => {
             //the start of the scrolled-to column here, so a line drawn anywhere else marks a column
             //the composer is not on while every other value in the scene stays right.
             expect(drawn().ops).toEqual([
-                ['rect', canvasWidth / 2 - 1, 0, 2, height],
-                ['fill', {color: 0xff3b30, alpha: 0.9}],
+                ['rect', canvasWidth / 2 - 1.5, 0, 3, height],
+                //the arrowheads, each based on a canvas edge and pointing inwards along the bar
+                ['poly', [canvasWidth / 2 - 6, 0, canvasWidth / 2 + 6, 0, canvasWidth / 2, 8]],
+                ['poly', [canvasWidth / 2 - 6, height, canvasWidth / 2 + 6, height, canvasWidth / 2, height - 8]],
+                //ONE fill for all three, so the bar and its arrows cannot drift apart in colour
+                ['fill', {color: ThemeProvider.get('accent').rgbNumber(), alpha: 0.9}],
             ])
 
             harness.context.props.isRecordingAudio = true
@@ -3160,7 +3193,7 @@ describe('the smooth scroll', () => {
             expect(drawn().visible).toBe(false)
             //hidden, not cleared: the drawing survives, so bringing the stage back costs no
             //GraphicsContext rebuild
-            expect(drawn().ops).toHaveLength(2)
+            expect(drawn().ops).toHaveLength(4)
         } finally {
             harness.destroy()
         }
@@ -3182,7 +3215,11 @@ describe('the smooth scroll', () => {
             //there. Without the cut the playhead is still travelling through the previous column
             //when the next one's travel begins, so it arrives at the boundary late and stays late -
             //measured at a third of a column behind the music, for the rest of the song.
-            await vi.advanceTimersByTimeAsync(LOOKAHEAD_MS + 32)
+            //past the truncated segment's end by more than one emitted frame, so the reading cannot
+            //be a stale frame rather than a lagging playhead - at 30fps an emitted frame is 33ms,
+            //which on a 273ms column is 0.12 of one, against the third of a column an untruncated
+            //segment leaves behind
+            await vi.advanceTimersByTimeAsync(LOOKAHEAD_MS + 100)
             expect(harness.scrollPosition()).toBeGreaterThanOrEqual(SELECTED + 1)
         } finally {
             harness.destroy()
@@ -3217,7 +3254,9 @@ describe('the smooth scroll', () => {
             //while a skipped column is what the queue exists to rule out and shows up here
             //directly.
             const seen: number[] = [Math.floor(harness.scrollPosition())]
-            for (let step = 0; step < 4 * 8; step++) {
+            //five columns' worth of sampling for four columns of travel: the cap emits unevenly,
+            //so the frame that lands ON the final boundary may be up to one frame late
+            for (let step = 0; step < 5 * 8; step++) {
                 await vi.advanceTimersByTimeAsync(QUARTER / 8)
                 const at = Math.floor(harness.scrollPosition())
                 if (seen[seen.length - 1] !== at) seen.push(at)
@@ -3294,9 +3333,13 @@ describe('the smooth scroll', () => {
 
             harness.context.props.isPlaying = false
             harness.push()
-            //the position `selected` names, exactly - not the fraction the playhead had reached.
-            //Every click, edit and jump downstream reasons in terms of `selected`, so leaving the
-            //two apart while stopped is what this rules out.
+            //PAUSING EASES, it does not jump. The position is still the fraction the playhead had
+            //reached at the moment of the pause, and the 140ms ease is what carries it to a column.
+            expect(harness.scrollPosition()).toBeGreaterThan(SELECTED)
+            await vi.advanceTimersByTimeAsync(SCROLL_EASE_MS + 32)
+            //...and it lands BACKWARD, on the column the line was inside - the last one whose notes
+            //were played - rather than forward on `selected`, which the transport had advanced to a
+            //lookahead before its notes would have been heard.
             expect(harness.scrollPosition()).toBe(SELECTED)
             //...and STILL no overlay, because the mode is keyed on the SETTING and not on whether
             //the song is playing. A stopped composer with smooth scrolling on shows the line on the
@@ -3308,6 +3351,43 @@ describe('the smooth scroll', () => {
             //than running against an empty schedule
             await vi.advanceTimersByTimeAsync(WHOLE * 2)
             expect(harness.scrollPosition()).toBe(SELECTED)
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    it('pauses onto the last column that was PLAYED, not the one the transport had reached', async () => {
+        const harness = await mountGliding()
+        try {
+            startPlaying(harness)
+            //one tick, so `selected` is a column ahead of the line - which is the ordinary state
+            //during playback, not an edge case: the transport advances a lookahead before the
+            //notes it announces are heard. Pausing here is where snapping to `selected` would jump
+            //the canvas FORWARD onto a column nothing has played yet.
+            await vi.advanceTimersByTimeAsync(WHOLE)
+            tick(harness)
+            await vi.advanceTimersByTimeAsync(WHOLE / 2)
+            expect(harness.context.song.selected).toBe(SELECTED + 1)
+            const midColumn = harness.scrollPosition()
+            expect(midColumn).toBeGreaterThan(SELECTED)
+            expect(midColumn).toBeLessThan(SELECTED + 1)
+
+            harness.selectColumnCalls.length = 0
+            harness.context.props.isPlaying = false
+            harness.push()
+            //the composer is told to go back to the column the line is inside, with ignoreAudio -
+            //a pause that sounded a note would be its own bug - and the app state follows the
+            //canvas rather than the canvas being dragged to the state
+            expect(harness.selectColumnCalls).toEqual([{index: SELECTED, ignoreAudio: true}])
+            //...and it EASES there rather than arriving, which is the whole point of the branch
+            expect(harness.scrollPosition()).toBe(midColumn)
+
+            harness.context.song.selected = SELECTED
+            harness.push()
+            await vi.advanceTimersByTimeAsync(SCROLL_EASE_MS + 32)
+            expect(harness.scrollPosition()).toBe(SELECTED)
+            //and the selectColumn round-trip it made itself did not undo the ease on the way past
+            expect(harness.frameLoop().started).toBe(false)
         } finally {
             harness.destroy()
         }
@@ -3487,13 +3567,13 @@ describe('the frame loop', () => {
     it('caps the loop, and a second of gliding emits fewer frames than the display offers', async () => {
         const harness = await mountGliding()
         try {
-            expect(harness.frameLoop().maxFPS).toBe(48)
+            expect(harness.frameLoop().maxFPS).toBe(30)
             //...and the cap is on the ticker the renderer actually runs. The value alone cannot say
             //that: setting it on the timeline's ticker, or running a private rAF beside this one,
-            //leaves it reading 48 while the frames arrive at the display's rate. Under the fake
+            //leaves it reading 30 while the frames arrive at the display's rate. Under the fake
             //clock a display frame is every 16ms, so 62 arrive in a second and the gate lets fewer
-            //through - not 48 exactly, because it is a frame SKIP against that grid rather than a
-            //clock (see expectPosition).
+            //through - near 30 but not exactly, because it is a frame SKIP against that grid rather
+            //than a clock (see expectPosition).
             harness.context.props.isPlaying = true
             harness.push()
             const before = harness.frameLoop()
@@ -3502,8 +3582,10 @@ describe('the frame loop', () => {
             const frames = after.frames - before.frames
             const emits = after.emits - before.emits
             expect(frames).toBeGreaterThan(58)
-            expect(emits).toBeLessThan(frames)
-            expect(emits).toBeGreaterThan(40)
+            //bounded on BOTH sides: a gate that let everything through would read ~62, and one that
+            //had stopped emitting would read 0. Neither bound is the cap restated - they bracket it.
+            expect(emits).toBeGreaterThan(24)
+            expect(emits).toBeLessThan(36)
         } finally {
             harness.destroy()
         }
@@ -3579,6 +3661,11 @@ describe('the frame loop', () => {
 
             harness.context.props.isPlaying = false
             harness.push()
+            //the pause hands the position to an EASE rather than snapping it, so the loop is still
+            //running here - what this test is about is that it stops once that ease is done, which
+            //is the same requirement one motion later than it used to be
+            expect(harness.frameLoop().started).toBe(true)
+            await vi.advanceTimersByTimeAsync(SCROLL_EASE_MS + 32)
             expect(harness.frameLoop().started).toBe(false)
             const after = {loop: harness.frameLoop(), renders: harness.notesRenders()}
             await vi.advanceTimersByTimeAsync(1000)
@@ -3594,6 +3681,13 @@ describe('the frame loop', () => {
     it('keeps the timeline off the per-frame path while still following the canvas', async () => {
         const harness = await mountGliding()
         try {
+            //A LONG SONG, because the saving is a function of how slowly the outline moves and
+            //makeSong's 100 columns are not slow: the whole song spans the timeline's width, so at
+            //100 columns the outline travels 16px per column against the ~8 frames a column gets at
+            //30fps, and a per-pixel gate fires on every one of them. At 400 it travels 4px, which is
+            //where the gate starts saving - and 400 is also the shipped default's neighbourhood.
+            harness.context.song.addColumns(300, harness.context.song.columns.length - 1)
+            harness.push()
             harness.context.props.isPlaying = true
             harness.push()
             const before = {
