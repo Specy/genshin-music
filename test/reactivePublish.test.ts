@@ -1172,3 +1172,83 @@ describe('a derived only propagates when its VALUE changes', () => {
         }
     })
 })
+
+/**
+ * `structureVersion`, on both classes, hand-written because NOTHING ELSE IN THIS FILE CAN SEE IT.
+ * It is a getter with no setter, so `reactiveFieldNames` (which keeps get+set pairs) skips it, and
+ * its descriptor's `value` is undefined rather than a function, so `instanceCallables` skips it too
+ * - it would ship through both reflective completeness gates untouched. The rows below are what a
+ * row in CASES/READERS would have been.
+ *
+ * What it is for: the two renderers DIFF the graph version rather than merely subscribing to it
+ * (`previous.structureVersion !== next.structureVersion`). The `columns`/`tracks` getter cannot
+ * serve that - phases 1 and 2 made the array identity STABLE within a song, which is what the last
+ * case here pins from the other side.
+ */
+describe('structureVersion is the graph version as a value, on both classes', () => {
+    it('ComposedSong: reading it publishes nothing and touches no column counters', async () => {
+        const song = makeSong()
+        const versions = new Map(song.columns.map(column => [column, column.version]))
+        const fired = await firedSignals(song, SIGNALS, SIGNAL_READERS, () => {
+            void song.structureVersion
+        })
+        expect(fired).toEqual([])
+        song.columns.forEach(column => expect(column.version).toBe(versions.get(column)))
+    })
+
+    it('ComposedSong: it moves on a graph mutation and stands still on a scalar one', async () => {
+        const song = makeSong()
+        const before = song.structureVersion
+        song.selected = 3
+        song.bpm = 90
+        expect(song.structureVersion).toBe(before)
+        song.addNoteAt(7, 0, idOf(2))
+        expect(song.structureVersion).not.toBe(before)
+    })
+
+    it('ComposedSong: reading it is a subscription, exactly like reading `columns`', async () => {
+        const song = makeSong()
+        const observer = observeSignal(() => song.structureVersion)
+        try {
+            await flushEffects()
+            const baseline = observer.runs()
+            song.addNoteAt(8, 0, idOf(3))
+            await flushEffects()
+            expect(observer.runs()).toBe(baseline + 1)
+        } finally {
+            observer.dispose()
+        }
+    })
+
+    it('VsrgSong: the twin behaves the same - it moves on a graph mutation, not on a scalar one', () => {
+        const song = makeVsrgSong()
+        const before = song.structureVersion
+        song.set({bpm: 90})
+        expect(song.structureVersion).toBe(before)
+        song.createHitObjectInTrack(0, 4000, 0)
+        expect(song.structureVersion).not.toBe(before)
+    })
+
+    it('it is only comparable WITHIN one song - two instances both start at 0', () => {
+        //the reason ComposerRenderer.needsFullRepaint pairs the version with the `columns` ARRAY
+        //IDENTITY: a song swap (load, new song, MIDI import) installs a graph whose version is 0,
+        //so a version-only diff of an untouched song replacing an untouched song reports "nothing
+        //changed". VsrgSong's version is captured by VsrgSongRenderState too, but nothing over
+        //there diffs it - see that file's `structure` docstring.
+        const a = new ComposedSong('a')
+        const b = new ComposedSong('b')
+        expect(a.structureVersion).toBe(0)
+        expect(b.structureVersion).toBe(0)
+        expect(a.columns).not.toBe(b.columns)
+        //...and the array identity is what does not see an edit made IN PLACE, which is what the
+        //version is there for. (Other mutators install a new array - restoreColumns, deleteColumns -
+        //so the identity moving is not evidence of a swap either; each half covers what the other
+        //cannot.)
+        const columns = a.columns
+        a.addNoteAt(0, 0, idOf(0))
+        expect(a.columns).toBe(columns)
+        expect(a.structureVersion).not.toBe(0)
+        a.deleteColumns([1])
+        expect(a.columns).not.toBe(columns)
+    })
+})

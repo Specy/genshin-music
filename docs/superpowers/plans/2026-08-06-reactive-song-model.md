@@ -455,29 +455,246 @@ gains `.svelte`, per the existing `Instrument.svelte.ts` precedent), `Composer.s
 
 ## Phase 3 (R1) — composer renderer: pooling and window diffing
 
-**Files:** `src/lib/components/pages/Composer/ComposerRenderer.ts`
+**Files:** `src/lib/components/pages/Composer/ComposerRenderer.ts`, `ComposerCanvas.svelte`,
+`Composer.svelte`, `src/lib/core/Songs/ComposedSong.svelte.ts`, `test/reactivePublish.test.ts`,
+`test/composerRenderLoop.test.ts`; step 5 adds `test/composerRenderer.test.ts`
 
-- [ ] **Step 1: `ColumnView` + pool.** A view owns its background sprite, selection overlay,
+- [x] **Step 0 (not in the plan, needed by step 2): `ComposedSong.structureVersion`.** `VsrgSong`
+      grew a public `structureVersion` getter in phase 2 for exactly this reason and its twin did
+      not, so the composer diff had no scalar to compare — only `columns`, whose identity phases 0–1
+      made STABLE within a song. Added in the twin's shape. A getter with no setter is invisible to
+      both reflective completeness gates (`instanceCallables` keeps function-VALUED descriptors,
+      `reactiveFieldNames` keeps get+set pairs), so `test/reactivePublish.test.ts` carries a
+      hand-written section covering BOTH classes' getters — reading publishes nothing and touches no
+      column counter, it moves on a graph mutation and not on a scalar one, reading it subscribes,
+      and two fresh instances both read 0 (the reason the columns identity is diffed beside it).
+- [x] **Step 1: `ColumnView` + pool.** A view owns its background sprite, selection overlay,
       breakpoint marker, tail `Graphics` and note sprites. Keep `Map<columnIndex, ColumnView>`
       for what is on screen plus a free list. Columns leaving the window are _released_, not
       destroyed; entering columns are acquired and repainted by setting `.texture` / `.y` /
       `.alpha` / `.visible` on existing sprites, growing the sprite array only when a column
       needs more notes than the view already has. Tail `Graphics` get `.clear()` and redraw.
-- [ ] **Step 2: Diff in `update()`.** Now meaningful, because identities are stable. Compare the
+      _Done. Three additions: the overlay and breakpoint marker are FLATTENED to siblings of the
+      background rather than its children (same draw order, since pixi renders children in array
+      order — the nesting only existed to force that order, and it logged a v8 deprecation); views
+      are inserted with `addChildAt` at their sorted position, so the pooled scene graph is the same
+      tree a full rebuild would build rather than merely a visually equivalent one; and `paint()`
+      writes every property it owns unconditionally, which is what makes a reused view safe._
+- [x] **Step 2: Diff in `update()`.** Now meaningful, because identities are stable. Compare the
       structure version, `selected`, `currentLayer`, `breakpoints`, `selectedColumns`,
       `isRecordingAudio` and the settings-derived values. Structure unchanged + `selected` moved
       ⇒ shift the container, release/acquire the columns that left/entered, repaint the two
       backgrounds whose selection flag changed, move the timeline viewport, render. No content
       rebuild.
-- [ ] **Step 3: Per-column tails.** Replace `computeTailsByColumn()`'s `0 .. visibleEnd` scan
+      _Done, with four corrections to the list above. (1) `instruments` is a diffed field too — it
+      decides note textures, stranded dimming and which tails draw, and no structure bump
+      accompanies an instrument edit. (2) The structure version alone cannot see a song swap (a
+      freshly loaded song sits at 0), so the `columns` array identity is compared beside it. (3)
+      `settings` is GONE from `ComposerRendererState`, replaced by `beatMarks` and
+      `columnsPerCanvas` scalars: the settings object's identity never moves on an edit, so a diff
+      could not have seen `beatMarks` — and worse, it reached the draw path only through a read
+      inside `update()`, so the first skipping run would have dropped it from the canvas $effect's
+      dependency set entirely. Same reasoning retired the live `ThemeProvider.get('accent')` read in
+      the draw loop, now captured in `handleThemeChange` beside the other theme values. (4) The
+      left-hand side of the diff is the last state that ACTUALLY PAINTED, not the last state
+      received: a run that painted nothing (no cache yet, recording audio) records no baseline, so
+      the next paintable one rebuilds. Also: the "backgrounds whose selection flag changed" are in
+      practice two overlay sprites toggled — selection never touched the background texture — and an
+      update where nothing observable moved now returns without rendering at all._
+- [x] **Step 3: Per-column tails.** Replace `computeTailsByColumn()`'s `0 .. visibleEnd` scan
       with `tailsForColumn(index)`, a backward scan bounded by the song's maximum span
       (`max(0, index - maxSpan + 1) .. index`), computed when a column is painted. Exact — no
       note can reach further than `maxSpan` columns — and it turns O(song) per draw into
       O(window + maxSpan) per entering column.
-- [ ] **Step 4: Texture invalidation.** Theme, resize and cache regeneration change textures, so
+      _Done as `paintTails(graphics, index, sizes)`, which draws straight into the pooled Graphics —
+      the `TailSegment` intermediate is gone. `maxSpan` does not exist on `ComposedSong`
+      (`maxSpanAt` is a different quantity) and is cached on the renderer against the (columns
+      identity, structure version) pair: O(notes) once per structural edit, never during playback.
+      The second O(song) walk the step did not mention is gone too — `drawNotesStage` iterated the
+      whole column array and filtered with `isColumnVisible` inside the callback; it now indexes the
+      window range, derived in closed form and pinned against `isColumnVisible` by test._
+- [x] **Step 4: Texture invalidation.** Theme, resize and cache regeneration change textures, so
       that path drops the pool and rebuilds.
-- [ ] **Step 5: Verify**, plus a test asserting the steady-state playback tick allocates no new
+      _Done in `recalculateCacheAndSizes`, which destroys both halves of the pool (the free list is
+      parked outside the scene graph, so `app.destroy({children: true})` would not have reached it —
+      `destroy()` drops the pool for the same reason) and nulls the paint baseline with it. Views are
+      destroyed rather than released because the geometry changed as well as the textures, and the
+      previous cache's textures are destroyed 500ms later._
+- [x] **Step 5: Verify**, plus a test asserting the steady-state playback tick allocates no new
       sprites (extend the `composerRenderLoop` fakes with construction counters).
+      _All six gates green; no fixture moved. New `test/composerRenderer.test.ts` instead
+      of extending `composerRenderLoop`, which deliberately never generates a cache — its numbers are
+      render-call counts, and measuring on top of it reads 0 for everything. Three halves: a
+      repaint table over one stable song (a row per kind of change, including "nothing changed" and
+      "only isPlaying changed" at zero renders); an equivalence half asserting the scene an
+      incremental path left is the scene a full rebuild paints, down to the tail rectangles, with the
+      drawn window re-derived from the exported `isColumnVisible` on every row; and the absolute
+      tests the other two structurally cannot make (a span starting far off-screen, a span grown
+      after the first paint, the allocation claim, cache regeneration, teardown). Twenty sabotages
+      were run one at a time against it; each fails at least one test. **Step 6 below replaced the
+      equivalence half's reference and added a content half — see there for what this one missed.**
+      Measured before/after on one 800×4 song, back to
+      back: 276 pixi nodes constructed and 276 destroyed per playback tick → 0 and 0; `column.notes`
+      reads per tick 119 at column 60 rising to 839 at column 780 → a constant 5; ms per update()
+      0.075→0.095 across a playthrough and 0.072/0.099/0.157 at 200/800/2000 columns → 0.005–0.008,
+      flat in both._
+
+- [x] **Step 6: Sixth adversarial-review remediation.** Step 5's tests counted EVENTS (how many
+      renders, paints, views created/destroyed) and never asserted CONTENT, which is the wrong shape
+      of guard for a pool whose failure mode is a reused view showing the previous occupant's
+      pixels. The two structural findings, then the smaller ones.
+  - **The equivalence part's reference was not independent.** It produced its "full rebuild" by
+    toggling `isRecordingAudio` on the SAME renderer — and `drawNotesStage` deliberately neither
+    releases nor destroys the pool while the stage is hidden, so that rebuild repainted through the
+    very views the incremental path had just left behind. Any property `paint()` failed to write was
+    stale identically on both sides and compared equal. Measured: with `ColumnView.paint` no longer
+    hiding the note sprites a shorter column does not need — the pool's textbook bug — the whole
+    file still passed. The reference is now a SECOND ComposerRenderer mounted at the same final
+    state, with its own pool and its own ComposerCache; textures compare across the two caches
+    because the scene names them by cache SLOT (`standardLarger[1]`, `notes[3]`) rather than by
+    object. That same naming is what lets the content part state which slot it expects.
+  - **Nothing asserted WHAT was painted.** New content part: `expectedWindow()` states the drawing
+    rules from the song and the props — background slot per column (bar-group alternation, the
+    every-4th larger variant, tempo-changer columns), overlay texture and alpha, breakpoint marker,
+    one note sprite per non-zero layer-status row at that row's y with stranded rows dimmed, and
+    every tail rectangle — and a table of scenarios drives the renderer INCREMENTALLY (playback
+    ticks, scrolls, edits, a hidden instrument, a stranded row, a song swap) before comparing. The
+    tail reference scans the whole song from column 0 where the renderer scans backwards from
+    `maxSpan`, so a wrong bound is a difference rather than a shared blind spot. Content sabotages
+    were run one at a time — note texture, note y, stranded alpha, tail colour, tail alpha, tail
+    stub geometry, hidden-instrument tails, background variant, overlay branch, breakpoint marker,
+    bar grouping, each half of the maxSpan cache key, and the stale-sprite bug above — and each
+    fails at least one test that passes without it.
+  - **The tail scan bound has a case at its exact edge** — a note whose span is the song's longest
+    and whose LAST covered column is the one being painted starts at precisely `index - maxSpan + 1`,
+    so `first + 1` drops the final bar of every maximum-length span. And **the maxSpan cache's
+    `columns`-identity half has one**: a swap to a different song built to the same
+    `structureVersion`, where a version-only key would keep the previous song's bound.
+  - **The allocation test has a witness.** It asserted only that the construction counters were
+    zero, which is also what a renderer that painted nothing produces; every measured tick now
+    asserts `renders=1, columnPaints=1` and the window it arrives at is checked against the rules.
+  - **A theme edit reaches the pool as one repaint.** `handleThemeChange` replaces `this.theme`
+    synchronously while the repaint is behind `recalculateCacheAndSizes`' 50ms debounce, so an
+    update() in that window painted an ENTERING column's tails in the new accent beside a window
+    still in the old one. `paintTails` now reads `paintTailAccent`, a copy that moves with the
+    repaint; pinned by a test that fails against the old field.
+  - **Corrected comments**, the same over-claiming kinds as every round before: the file header's
+    "diffs the state it was handed last time", which is the rule the code deliberately does not use
+    and contradicted `paintedState`'s own docstring; a cross-reference to `cacheEpoch`, an
+    identifier that exists nowhere; the "`columns` only ever changes identity across a song swap"
+    claim wherever it appeared — `needsFullRepaint`, `ComposerRendererState`,
+    `ComposerCanvas.svelte`'s `structureVersion` prop and `test/reactivePublish.test.ts`
+    (`restoreColumns` and `deleteColumns` install a new array within one song; no behavioural
+    consequence, since a moved identity forces the safe direction, but the stated reason for the
+    pair was false), the last of which also credited `VsrgSongRenderState` with a diff its own
+    docstring says does not exist;
+    `Composer.svelte`'s BEHAVIOR NOTE claiming the canvas still repaints when `isPlaying` flips
+    (phase 3 excludes it from the diff); `ComposerCanvas.svelte`'s "every value the canvas draws
+    from is read here", contradicted by its own closing parenthetical about the theme channel; and
+    a wrong count of `inPreview`'s call sites.
+
+- [x] **Step 7: Seventh adversarial-review remediation.** Step 6 gave the guards a CONTENT reference,
+      but that reference read a SUBSET of what decides a pixel, and everything outside the subset fell
+      back to "two renderers agree" - which cannot see a defect both renderers share. An 18-mutation
+      sweep found ten blank-or-displace-the-canvas mutations that passed all 464 tests (a released
+      view left hidden or at alpha 0 and never restored on reuse, the notes container scrolled 5
+      columns off, note icons a column right, the breakpoint marker off the bottom of its column, the
+      selection overlay at the wrong x, transparent tail bars, every timeline breakpoint stacked at
+      x=0, the viewport 3x too wide, the viewport x offset, the canvas forced to opacity 0), plus two
+      catches that fired only accidentally, through non-vacuity assertions inside unrelated tests.
+  - **One description of the scene, and it holds what decides a pixel.** The equivalence half and the
+    content half read the same `paintedScene()` now, so what it carries is what either can see: for
+    every child of a pooled view and of the timeline, the cache slot its texture came from, its x,
+    its y, its alpha and whether it is shown; plus the placement and presentation of the containers
+    they hang off and the notes canvas' CSS opacity. The limits are written down rather than implied
+    (a hidden object's contents, pixi state the fakes do not model, and pixels themselves).
+  - **The timeline has an absolute reference at all**, where it had only two-renderers-agree: its
+    background, tools-selection band, breakpoint markers and viewport outline are stated from the
+    song and the props, and compared on every content row. The canvas width they need comes from the
+    renderer's own `onGeometryChange` - the channel the Svelte template takes it from - and the
+    strip height off the ComposerCache's props, rather than by re-deriving `computeCanvasSize`.
+  - **The notes container's scroll offset is derived, not just cross-checked.** Both copies of
+    `(selected - columnsPerCanvas / 2 + 1) * -columnWidth` used to be compared only against each
+    other; the reference now states the placement from `selected`, `columnsPerCanvas` and the cache's
+    column width, in the terms `handleClickStageUp` inverts it in.
+  - **`ColumnView.paint` writes the container's `y`, `alpha` and `visible`** beside its `x`. Nothing
+    writes them elsewhere today, so this is a write of the value they already hold - which is the
+    point: the property the pool's safety rests on now holds for the object the pool is keyed on, and
+    a release that starts hiding or fading a view needs no matching restore added elsewhere.
+  - **The two accidental catches are intentional:** the stage's own `visible` and the background
+    sprite are part of the description, with `visible: true` and a named cache slot stated as rules.
+  - **`applyNotesCanvasOpacity` is in scope after all** - the canvas' CSS opacity is a DOM style
+    rather than part of the pixi scene, so it is read off the canvas element beside the scene and
+    stated from ThemeProvider, and both files say so at the place a reader would look.
+  - **Sweep re-run against the fixed guards:** all eleven named mutations now fail (S2 and S15 in the
+    8 scenarios that recycle a view, the rest in 14-18 tests each), as do both accidental catches,
+    and the no-mutation control stays green.
+  - **Corrected comments**, the same over-claiming kinds as every round before: `ColumnView`'s
+    "writes EVERY property it owns" while `visible`/`alpha`/`y` were never written, and its counted
+    "the one thing paint() does not touch"; the `Scene` type's "compare equal iff the two scenes
+    render alike", which was false for anything outside the description; `drawSelectedMoved`'s "those
+    four things" after naming three, and "are all that is touched here" four lines above a release
+    pass; `update()`'s count of the fields that change no pixel (and its omission of
+    `columnsPerCanvas`); `ComposerCanvas.svelte`'s "EVERY REACTIVE VALUE THE CANVAS DRAWS FROM IS READ
+    HERE", contradicted by its own next sentence and by the three theme `$derived`s in the same file;
+    and the test header's fourth bullet, a name-list presented as covering the rest.
+
+- [x] **Step 8: Eighth adversarial-review remediation.** Step 7 widened the scene description DOWNWARD,
+      into the children of a column view, but not UPWARD to the roots those children hang off - and
+      three of the values the reference compared against were BORROWED FROM THE RENDERER's own
+      self-report, so a defect in one of them was endorsed rather than caught. One coherent class.
+  - **A borrowed reference value is worse than a missing one**, because it reads as coverage. The
+    sharpest case needed no test scenario at all: `geometry.columnWidth` was read off the
+    ComposerCache the renderer had just built, so doubling `computeCanvasSize`'s
+    `nearestEven(width / columnsPerCanvas)` - which shows 10 columns of a 20-column setting with the
+    playhead pinned to the right edge - left every comparison stated in terms of that same doubled
+    width, and all 464 tests passed. The harness derives it now, from the reported width by the rule
+    the renderer states, and asserts the derivation and the cache AGREE so a divergence is a failure
+    rather than a silent substitution. Same treatment for the row height (`height /
+NOTES_PER_COLUMN`).
+  - **The canvas DIMENSIONS are pinned.** `canvasWidth` is what the renderer reports through its own
+    `onGeometryChange`, and nothing checked the canvas it actually SIZED matched - a full-width scene
+    onto a half-width canvas passed. The resize mock records every call, and geometry() compares both
+    canvases' widths against the reported one and both heights against what the cache was handed. The
+    remaining limit is stated where it lives: this file does not re-derive `computeCanvasSize`, so a
+    size wrong the same way in all three places is outside what it sees.
+  - **Both Application stages and the timeline's content container are in the description.** It was
+    rooted one level too low, at `notesColumnsContainer` and at the timeline's children, so hiding,
+    fading or displacing the root of either pixi scene graph passed with every child of it still
+    reading correct. All three are recorded (x, y, alpha, visible) and stated as `AT_ORIGIN`.
+  - **The DOM channel is the element's whole inline style**, not one property: `cssText` compared
+    against a probe element carrying the one declaration the rules put there, so a `display:none`, a
+    `visibility:hidden` or a `transform` is a difference as much as a changed opacity is.
+  - **The notes stage's CLEAR COLOUR is carried**, from ThemeProvider - it was excused by a
+    "what it does not carry" list that named pixi state the fakes do not model, while this is state
+    they DO model. That list is now a set of omissions stated as omissions, each with the reason.
+    A new test moves `primary` and waits both debounces out, because init() and handleThemeChange
+    write both canvas-level channels from the same expressions: without an edit that moves them, a
+    live channel and a frozen one read alike (measured - deleting either write passed).
+  - **The scroll offset has a second, independent consequence.** `expectedNotesOffset` was the only
+    statement of it in the repo, and its stated anchor - `handleClickStageUp`, the inverse - had no
+    test at all. A pointerup is driven through the fake at the x the PAINTED SCENE puts the selected
+    column at: a click there selects nothing, one column-width either way selects the neighbour.
+  - **Comments**, the same over-claiming kinds as every round before: `needsFullRepaint`'s closing
+    paragraph gave a false reason for not diffing `inPreview` ("changes no pixel" - it decides both
+    canvas dimensions, so every column x, every note y and both canvas sizes) and contradicted
+    `inPreview`'s own field comment, which already had the honest one (a static prop); `update()`'s
+    second bullet asserted "`selected` moved and NOTHING else did", contradicted by its own third
+    bullet three lines later; `drawSelectedMoved`'s "and nothing beyond it" over an enumeration that
+    did not cover its body, and its "the preconditions are not restated" followed by restating all
+    three; a count of the columns whose selection flag can change; `ComposerCanvas.svelte`'s "every
+    value the renderer takes from this component is read here", which has exceptions in the same file;
+    `isColumnVisible`'s "over every columnsPerCanvas option", which named a test that hardcoded the
+    seven values - it reads them out of `ComposerSettings.data.columnsPerCanvas` now, and asserts the
+    value this file drives with is one of them; the file header's "the only values this class reports
+    back to the Svelte side", contradicted by `selectColumn`; a cross-reference to `canvasOpacity`,
+    an identifier the test no longer has; and the test header's channel list, now scoped to the
+    counters it is actually about.
+  - **Sweep re-run: 40 mutations, 39 caught.** The 14 survivors from the previous review (both
+    stages, the timeline container, the column width, the canvas dimensions, the canvas CSS, the
+    offset inverse) all fail now, in 1 to 46 tests each, as do 25 newly invented ones in the same
+    class. The one survivor is behaviour-preserving: a release that hides a view is undone by
+    `ColumnView.paint`, which writes `visible` on every paint - break that pairing and it fails 8.
 
 ## Phase 4 (R2) — fine-grained repaint
 

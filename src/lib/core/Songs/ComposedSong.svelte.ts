@@ -160,6 +160,20 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 4> 
     }
 
     /**
+     * The structure version as a VALUE, for consumers that have to DIFF it rather than just
+     * subscribe - ComposerRendererState snapshots it so `previous.structureVersion !==
+     * next.structureVersion` is a comparison between two moments instead of a field compared
+     * against itself. Reading it is a subscription too, exactly like reading `columns`.
+     *
+     * It is only comparable WITHIN one song: #structure starts at 0 on every instance, so two
+     * different songs can both sit at 0. The composer renderer pairs it with the `columns` array
+     * identity for that reason; VsrgSong's twin carries the same value with the same caveat.
+     */
+    get structureVersion(): number {
+        return this.#structure
+    }
+
+    /**
      * Publish a change to the column/note graph. Most methods below end in one of these. The ones
      * that reach the graph without publishing say why at their own declaration:
      * initColumnsForConstruction and appendColumnsForConstruction work on a song nobody is watching

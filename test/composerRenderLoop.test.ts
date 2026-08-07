@@ -143,12 +143,14 @@ describe('ComposerRenderer rendering', () => {
     const song = new ComposedSong('Composer render loop');
     const initialState = {
       columns: song.columns,
+      structureVersion: song.structureVersion,
       isPlaying: false,
       isRecordingAudio: false,
       instruments: song.instruments,
       selected: 0,
       currentLayer: 0,
-      settings: ComposerSettings.data,
+      beatMarks: Number(ComposerSettings.data.beatMarks.value),
+      columnsPerCanvas: Number(ComposerSettings.data.columnsPerCanvas.value),
       breakpoints: song.breakpoints,
       selectedColumns: [],
     } satisfies ComposerRendererState;
