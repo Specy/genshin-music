@@ -26,9 +26,10 @@ import {
   PIXI_CENTER_X_END_Y,
   PIXI_VERTICAL_ALIGN,
 } from '$core/legacyConfig';
-import type { VsrgSong, VsrgHitObject, VsrgTrack } from '$core/Songs/VsrgSong';
+import type { VsrgHitObject, VsrgTrack } from '$core/Songs/VsrgSong.svelte';
 import type { RecordedSong } from '$core/Songs/RecordedSong';
 import type { RecordedNote } from '$core/Songs/SongClasses';
+import type { VsrgSongRenderState } from './vsrgSongRenderState';
 import { VsrgCanvasCache } from './VsrgComposerCache';
 
 export type VsrgCanvasSizes = {
@@ -55,8 +56,26 @@ export type VsrgCanvasColors = {
 
 // The reactive input VsrgComposerCanvas.svelte pushes into update() on every relevant prop change
 // via its own $effect.
-export interface VsrgComposerRendererState {
-  vsrg: VsrgSong;
+//
+// THERE IS NO `vsrg` FIELD, and that is the load-bearing part of this interface (2026-08-06
+// reactive-model plan, phase 2 - ComposerRendererState dropped its `song` field in phase 1 for the
+// same reason). The fields of VsrgSongRenderState stand in for it, read off the song by
+// captureVsrgSongState() at the moment Svelte says something changed; that module's header has the
+// reasoning and the per-field notes. Two consequences, both of which the previous shape got wrong:
+//
+//  - update() can DIFF them. While this carried the VsrgSong itself, `needsSizes` compared
+//    `previous.vsrg.bpm !== next.vsrg.bpm` and `needsCache` compared `previous.vsrg.tracks[i].color`
+//    against `next.vsrg.tracks[i].color`. That only ever worked because refreshVsrg() cloned the
+//    song on every edit, so the two states held two different instances. With one stable instance
+//    those are fields compared against themselves - permanently false, silently, with no error and
+//    no failing test: bpm and key-count changes would stop recalculating `sizes`, and track colour
+//    and track add/delete would stop rebuilding the texture cache (every hit object falling back to
+//    VsrgCanvasCache's '#FF0000' error texture).
+//  - the canvas's $effect READS each of them, so its dependency set is explicit and run-independent.
+//    Reaching through a `vsrg` field made the dependencies implicit - they were registered only if a
+//    given update() call happened to draw deep enough to reach them, and draw() early-returns on a
+//    missing Application or cache.
+export interface VsrgComposerRendererState extends VsrgSongRenderState {
   isHorizontal: boolean;
   isPlaying: boolean;
   snapPoint: number;
@@ -205,10 +224,10 @@ export class VsrgComposerRenderer {
   // Bound to the resize listener and called directly here and from VsrgComposerStore events.
   private calculateSizes = () => {
     const wrapperSizes = this.container.getBoundingClientRect();
-    const { scaling, vsrg, snapPoint } = this.state;
+    const { scaling, keys, bpm, snapPoint } = this.state;
     const timelineSize = isMobile() ? 20 : 40;
     const height = wrapperSizes.height - timelineSize;
-    const keysLength = DEFAULT_VSRG_KEYS_MAP[vsrg.keys].length;
+    const keysLength = DEFAULT_VSRG_KEYS_MAP[keys].length;
     this.sizes = {
       el: wrapperSizes,
       rawWidth: wrapperSizes.width,
@@ -217,7 +236,7 @@ export class VsrgComposerRenderer {
       height,
       keyHeight: height / keysLength,
       keyWidth: wrapperSizes.width / keysLength,
-      snapPointWidth: ((60000 / vsrg.bpm / snapPoint) * scaling) / 100,
+      snapPointWidth: ((60000 / bpm / snapPoint) * scaling) / 100,
       scaling: scaling / 100,
       timelineSize,
     };
@@ -256,7 +275,7 @@ export class VsrgComposerRenderer {
 
   private generateCache = () => {
     if (!this.app) return;
-    const trackColors = this.state.vsrg.tracks.map((track) => track.color);
+    const trackColors = this.state.trackColors;
     // QUIRK: sets the background from the DARKENED color's hex string, not the un-darkened
     // numeric the Application was created with in init() - an apparent old mismatch, not a
     // runtime error (pixi's ColorSource accepts either form just as readily). Flagged, not fixed.
@@ -280,8 +299,9 @@ export class VsrgComposerRenderer {
     }, 500);
   };
 
-  // The store carries imperative COMMANDS only (seek to a breakpoint) - never state, which
-  // arrives exclusively through update() below.
+  // The store carries an imperative COMMAND (seek to a breakpoint), not props: those arrive
+  // through update() above, and keeping the two channels apart is what stopped the recalculations
+  // from running on values that had not landed yet.
   private handleEvent = (_event: VsrgComposerEvents, data?: unknown) => {
     this.setTimestamp(data as number);
   };
@@ -322,7 +342,7 @@ export class VsrgComposerRenderer {
       return;
     }
     const max = Math.max(0, this.timestamp + e.deltaY / 1.2);
-    const min = Math.min(max, this.state.vsrg.duration);
+    const min = Math.min(max, this.state.duration);
     this.setTimestamp(min);
     if (this.draggedHitObject && this.timestamp > 0) {
       this.callbacks.dragHitObject(this.draggedHitObject.timestamp + e.deltaY / 1.2);
@@ -368,7 +388,7 @@ export class VsrgComposerRenderer {
   handleDrag = (e: PointerEvent) => {
     if (!this.isPressing) return;
     const { sizes, timestamp, previousPosition, draggedHitObject, totalMovement } = this;
-    const { isHorizontal, vsrg } = this.state;
+    const { isHorizontal, duration } = this.state;
     const deltaOrientation = isHorizontal ? e.clientX : -e.clientY;
     const keyPosition = isHorizontal
       ? e.clientY - sizes.el.top - sizes.timelineSize
@@ -385,13 +405,22 @@ export class VsrgComposerRenderer {
       return;
     }
     const max = Math.max(0, timestamp + delta);
-    const min = Math.min(max, vsrg.duration);
+    const min = Math.min(max, duration);
     this.previousPosition = deltaOrientation;
     this.preventClick = newTotalMovement > 50;
     this.totalMovement = newTotalMovement;
     this.setTimestamp(min);
   };
 
+  // `draggedHitObject` is another retained reference to a hit object the SONG owns, alongside the
+  // ones the page keeps (see its forgetRemovedHitObjects) - and one refreshVsrg() did not know
+  // about, since it lives in this class rather than in the page. That silently fixed itself
+  // when the clone went away (2026-08-06 reactive-model plan, phase 2), which is a behaviour change
+  // worth stating: while the song was re-cloned on every edit, the first refresh of a drag left
+  // this pointing at a pre-clone orphan whose timestamp never advanced, so handleDrag/handleWheel
+  // kept computing `draggedHitObject.timestamp - delta` from a frozen base. It is now the same live
+  // object the page is moving. setIsNotDragging() still clears it, which is what keeps it from
+  // outliving a deletion.
   selectHitObject = (hitObject: VsrgHitObject, trackIndex: number, clickType: ClickType) => {
     if (clickType !== ClickType.Right) this.draggedHitObject = hitObject;
     this.callbacks.selectHitObject(hitObject, trackIndex, clickType);
@@ -407,8 +436,8 @@ export class VsrgComposerRenderer {
 
   private handleTimelineEvent = (e: FederatedPointerEvent, override = false) => {
     if (!this.isClickingTimeline && !override) return;
-    const time = (e.globalX / this.sizes.width) * this.state.vsrg.duration;
-    this.setTimestamp(clamp(time, 0, this.state.vsrg.duration));
+    const time = (e.globalX / this.sizes.width) * this.state.duration;
+    this.setTimestamp(clamp(time, 0, this.state.duration));
   };
 
   private handleTimelineClick = (e: FederatedPointerEvent) => {
@@ -428,8 +457,9 @@ export class VsrgComposerRenderer {
     });
   }
 
-  // The entry point VsrgComposerCanvas.svelte's $effect calls on every reactive-state change,
-  // and the ONLY way state reaches this class.
+  // The entry point VsrgComposerCanvas.svelte's $effect calls on every reactive-state change - the
+  // props channel; theme reaches this class separately, through subscribeTheme, and
+  // vsrgComposerStore delivers a seek COMMAND (see handleEvent).
   //
   // The React original drove the expensive recalculations below from vsrgComposerStore events
   // emitted inside `this.setState(..., callback)` - the callback ran after React had committed
@@ -450,7 +480,13 @@ export class VsrgComposerRenderer {
     this.draw();
   }
 
-  /** `sizes` is derived from these; the container's own size is handled by the resize listener. */
+  /**
+   * `sizes` is derived from these; the container's own size is handled by the resize listener.
+   *
+   * All four are values on the state object rather than fields reached through a shared song - see
+   * this file's VsrgComposerRendererState header for what that distinction cost, and
+   * test/vsrgComposerRenderer.test.ts for the gate that keeps it.
+   */
   private needsSizes(
     previous: VsrgComposerRendererState,
     next: VsrgComposerRendererState
@@ -458,22 +494,27 @@ export class VsrgComposerRenderer {
     return (
       previous.scaling !== next.scaling ||
       previous.snapPoint !== next.snapPoint ||
-      previous.vsrg.bpm !== next.vsrg.bpm ||
-      previous.vsrg.keys !== next.vsrg.keys
+      previous.bpm !== next.bpm ||
+      previous.keys !== next.keys
     );
   }
 
-  /** The cached textures are baked per orientation and per track color. */
+  /**
+   * The cached textures are baked per orientation and per track color.
+   *
+   * Element-wise over the two `trackColors` arrays, which is what makes the comparison mean
+   * anything: the track objects themselves are edited in place, and both states hold the SAME live
+   * array, so a comparison reaching through them (`next.tracks[i].color !== previous.tracks[i].color`)
+   * compares a value against itself for every edit made within one song.
+   */
   private needsCache(
     previous: VsrgComposerRendererState,
     next: VsrgComposerRendererState
   ): boolean {
     if (previous.isHorizontal !== next.isHorizontal) return true;
-    const previousTracks = previous.vsrg.tracks;
-    const nextTracks = next.vsrg.tracks;
     return (
-      previousTracks.length !== nextTracks.length ||
-      nextTracks.some((track, i) => track.color !== previousTracks[i].color)
+      previous.trackColors.length !== next.trackColors.length ||
+      next.trackColors.some((color, i) => color !== previous.trackColors[i])
     );
   }
 
@@ -503,8 +544,8 @@ export class VsrgComposerRenderer {
     this.keysContainer.x = 0;
     this.keysContainer.y = this.sizes.timelineSize;
 
-    const { isHorizontal, vsrg } = this.state;
-    const keys = DEFAULT_VSRG_KEYS_MAP[vsrg.keys];
+    const { isHorizontal, keys: keyCount } = this.state;
+    const keys = DEFAULT_VSRG_KEYS_MAP[keyCount];
     const sizes = this.sizes;
     const colors = this.canvasColors;
     const keyHeight = sizes.height / keys.length;
@@ -590,7 +631,7 @@ export class VsrgComposerRenderer {
       child.destroy({ children: true });
     const cache = this.cache;
     if (!cache) return;
-    const { isHorizontal, vsrg, snapPoint, snapPoints, selectedHitObject } = this.state;
+    const { isHorizontal, tracks, duration, snapPoint, snapPoints, selectedHitObject } = this.state;
     const sizes = this.sizes;
     const timestamp = this.timestamp;
     const preventClick = this.preventClick;
@@ -653,11 +694,11 @@ export class VsrgComposerRenderer {
       this.scrollableTrackContainer.addChild(sprite);
     }
 
-    vsrg.tracks.forEach((track, index) => {
+    tracks.forEach((track, index) => {
       this.drawTrack(track, index, cache, selectedHitObject);
     });
 
-    if (timestamp >= vsrg.duration - (isHorizontal ? sizes.width : sizes.height) / scale) {
+    if (timestamp >= duration - (isHorizontal ? sizes.width : sizes.height) / scale) {
       const textStyle = this.getTextStyle();
       const addTimeText = t('vsrg_composer:click_to_add_time');
       const removeTimeText = t('vsrg_composer:click_to_remove_time');
@@ -665,10 +706,10 @@ export class VsrgComposerRenderer {
       const addTimeContainer = new Container();
       addTimeContainer.eventMode = 'static';
       addTimeContainer.on('pointertap', () => this.callbacks.onAddTime());
-      addTimeContainer.x = isHorizontal ? vsrg.duration * scale : 0;
+      addTimeContainer.x = isHorizontal ? duration * scale : 0;
       addTimeContainer.y = isHorizontal
         ? 0
-        : -(vsrg.duration * scale - sizes.height + cache.textures.buttons.height);
+        : -(duration * scale - sizes.height + cache.textures.buttons.height);
       addTimeContainer.addChild(new Sprite(cache.textures.buttons.time!));
       addTimeContainer.addChild(
         new Text({
@@ -684,10 +725,10 @@ export class VsrgComposerRenderer {
       const removeTimeContainer = new Container();
       removeTimeContainer.eventMode = 'static';
       removeTimeContainer.on('pointertap', () => this.callbacks.onRemoveTime());
-      removeTimeContainer.x = isHorizontal ? vsrg.duration * scale : sizes.width / 2;
+      removeTimeContainer.x = isHorizontal ? duration * scale : sizes.width / 2;
       removeTimeContainer.y = isHorizontal
         ? sizes.height / 2
-        : -(vsrg.duration * scale - sizes.height + cache.textures.buttons.height);
+        : -(duration * scale - sizes.height + cache.textures.buttons.height);
       removeTimeContainer.addChild(new Sprite(cache.textures.buttons.time!));
       removeTimeContainer.addChild(
         new Text({
@@ -708,11 +749,10 @@ export class VsrgComposerRenderer {
     cache: VsrgCanvasCache,
     selectedHitObject: VsrgHitObject | null
   ): void {
-    const { isHorizontal, vsrg } = this.state;
+    const { isHorizontal, keys } = this.state;
     const sizes = this.sizes;
     const timestamp = this.timestamp;
     const scale = sizes.scaling;
-    const keys = vsrg.keys;
     const PLAY_BAR_OFFSET = globalConfigStore.get().PLAY_BAR_OFFSET;
     const positionSizeHorizontal = sizes.height / keys;
     const positionSizeVertical = sizes.width / keys;
@@ -803,7 +843,7 @@ export class VsrgComposerRenderer {
     for (const child of this.timelineContainer.removeChildren()) child.destroy({ children: true });
     const cache = this.cache;
     if (!cache) return;
-    const { vsrg: song, renderableNotes: notes } = this.state;
+    const { duration, breakpoints, renderableNotes: notes } = this.state;
     const sizes = this.sizes;
     const timestamp = this.timestamp;
     const PLAY_BAR_OFFSET = globalConfigStore.get().PLAY_BAR_OFFSET;
@@ -815,7 +855,7 @@ export class VsrgComposerRenderer {
     const lowerBound = timestamp - (PLAY_BAR_OFFSET + sizes.timelineSize) / sizes.scaling;
     const upperBound =
       timestamp + (sizes.width - PLAY_BAR_OFFSET + sizes.timelineSize) / sizes.scaling;
-    const relativeTimestampPosition = timestamp / song.duration;
+    const relativeTimestampPosition = timestamp / duration;
 
     this.timelineContainer.addChild(new Sprite(cache.textures.timeline.square!));
 
@@ -832,9 +872,9 @@ export class VsrgComposerRenderer {
     this.timelineContainer.addChild(notesContainer);
 
     const breakpointsContainer = new Container();
-    song.breakpoints.forEach((breakpoint) => {
+    breakpoints.forEach((breakpoint) => {
       const sprite = new Sprite(cache.textures.timeline.breakpoint!);
-      sprite.x = (breakpoint / song.duration) * sizes.width;
+      sprite.x = (breakpoint / duration) * sizes.width;
       breakpointsContainer.addChild(sprite);
     });
     this.timelineContainer.addChild(breakpointsContainer);

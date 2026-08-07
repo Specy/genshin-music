@@ -1,19 +1,19 @@
 // Ported subset of old src/types/GeneralTypes.ts + src/types/SongTypes.ts.
-// Only the types the old core files ported so far (ComposedSong.ts, RecordedSong.ts, VsrgSong.ts,
-// BaseSettings.ts) actually import are included here (YAGNI) - see task-4-report.md/task-7-report.md
-// for the grep evidence. Everything ported is verbatim from the old file except InstrumentName (see
-// its own comment below for the one permitted widening).
+// Only the types the old core files ported so far (ComposedSong.svelte.ts, RecordedSong.ts,
+// VsrgSong.svelte.ts, BaseSettings.ts) actually import are included here (YAGNI) - see
+// task-4-report.md/task-7-report.md for the grep evidence. Everything ported is verbatim from the
+// old file except InstrumentName (see its own comment below for the one permitted widening).
 //
-// The three imports below (SerializedSongKind's members) make this file and ComposedSong.ts/
-// RecordedSong.ts/VsrgSong.ts mutually import each other (those three already import
+// The three imports below (SerializedSongKind's members) make this file and ComposedSong.svelte.ts/
+// RecordedSong.ts/VsrgSong.svelte.ts mutually import each other (those three already import
 // InstrumentName/OldFormat/etc. from here). This is a type-only cycle - `import type` is fully
 // erased at compile time (no runtime module-init cycle exists), and TypeScript/svelte-check
 // resolve mutually-recursive type aliases like this routinely (verified: `npm run check`/
 // `check:sky` clean). No eslint import/no-cycle rule is configured in this repo's eslint.config.js
 // either.
-import type {UnknownSerializedComposedSong} from "./Songs/ComposedSong"
+import type {UnknownSerializedComposedSong} from "./Songs/ComposedSong.svelte"
 import type {UnknownSerializedRecordedSong} from "./Songs/RecordedSong"
-import type {SerializedVsrgSong} from "./Songs/VsrgSong"
+import type {SerializedVsrgSong} from "./Songs/VsrgSong.svelte"
 
 // ---- GeneralTypes.ts ----
 
@@ -69,15 +69,15 @@ export type OldNote = {
 
 // old SongTypes.ts: `export type SerializedSongKind = UnknownSerializedComposedSong |
 // SerializedRecordedSong | SerializedVsrgSong`. Deferred through Phase 2 (P2 Task 7: "no
-// Phase-2 consumer") - now constructible since ComposedSong.ts/RecordedSong.ts/VsrgSong.ts all
-// exist, and needed by FileService.ts (P3 Task 7), its first real consumer.
+// Phase-2 consumer") - now constructible since ComposedSong.svelte.ts/RecordedSong.ts/
+// VsrgSong.svelte.ts all exist, and needed by FileService.ts (P3 Task 7), its first real consumer.
 export type SerializedSongKind = UnknownSerializedComposedSong | UnknownSerializedRecordedSong | SerializedVsrgSong
 
 // ---- hoisted for BaseSettings.ts (Task 6) ----
 
-// old $lib/Songs/VsrgSong.ts: `export type VsrgSongKeys = 4 | 6`. VsrgSong.ts itself isn't ported
-// until Task 7, but BaseSettings.ts (Task 6) needs the type now - hoisted here as the single
-// source; Task 7's VsrgSong.ts re-imports it from here instead of redefining it.
+// old $lib/Songs/VsrgSong.ts: `export type VsrgSongKeys = 4 | 6`. VsrgSong.svelte.ts itself isn't
+// ported until Task 7, but BaseSettings.ts (Task 6) needs the type now - hoisted here as the single
+// source; Task 7's VsrgSong.svelte.ts re-imports it from here instead of redefining it.
 export type VsrgSongKeys = 4 | 6
 
 // old src/components/pages/VsrgPlayer/VsrgPlayerKeyboard.tsx: `export type VsrgKeyboardLayout =
@@ -85,10 +85,10 @@ export type VsrgSongKeys = 4 | 6
 // needs the type now for VsrgPlayerSettingsDataType - hoisted here, verbatim value union.
 export type VsrgKeyboardLayout = 'line' | 'circles'
 
-// ---- hoisted for VsrgSong.ts (Task 7) ----
+// ---- hoisted for VsrgSong.svelte.ts (Task 7) ----
 
 // old src/components/pages/VsrgComposer/VsrgBottom.tsx: `export type SnapPoint = 1 | 2 | 4 | 8 |
-// 16`. That component isn't ported until the UI phase; VsrgSong.ts (Task 7) needs the type now
+// 16`. That component isn't ported until the UI phase; VsrgSong.svelte.ts (Task 7) needs the type now
 // for SerializedVsrgSong.snapPoint/VsrgSong.snapPoint - hoisted here, verbatim value union (same
 // pattern as VsrgKeyboardLayout above).
 export type SnapPoint = 1 | 2 | 4 | 8 | 16

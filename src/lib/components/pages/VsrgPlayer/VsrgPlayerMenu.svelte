@@ -4,8 +4,8 @@
   import { songsStore } from '$stores/SongsStore.svelte';
   import { globalConfigStore } from '$stores/GlobalConfigStore.svelte';
   import { clickOutside } from '$lib/utils/clickOutside';
-  import type { VsrgSong } from '$core/Songs/VsrgSong';
-  import type { SongType } from '$core/Songs/Song';
+  import type { VsrgSong } from '$core/Songs/VsrgSong.svelte';
+  import type { SongType } from '$core/Songs/Song.svelte';
   import type { VsrgPlayerSettingsDataType } from '$core/BaseSettings';
   import type { SettingUpdate } from '$core/types/SettingsPropriety';
   import { t } from '$i18n/binding.svelte';

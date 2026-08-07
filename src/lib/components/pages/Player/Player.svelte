@@ -23,7 +23,7 @@
   import Analytics from '$core/Analytics';
   import { InstrumentData, Recording, type RecordedNote } from '$core/Songs/SongClasses';
   import { RecordedSong } from '$core/Songs/RecordedSong';
-  import type { ComposedSong } from '$core/Songs/ComposedSong';
+  import type { ComposedSong } from '$core/Songs/ComposedSong.svelte';
   import type { InstrumentName } from '$core/types';
   import type { Pitch } from '$core/legacyConfig';
   import type { PlayerSettingsDataType } from '$core/BaseSettings';

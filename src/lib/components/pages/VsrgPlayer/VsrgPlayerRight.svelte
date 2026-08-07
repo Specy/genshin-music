@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { VsrgSong } from '$core/Songs/VsrgSong';
+  import type { VsrgSong } from '$core/Songs/VsrgSong.svelte';
   import IconButton from '$cmp/inputs/IconButton.svelte';
   import VsrgPlayerScore from './VsrgPlayerScore.svelte';
 

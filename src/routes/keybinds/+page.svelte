@@ -5,7 +5,7 @@
   import BaseNote from '$cmp/BaseNote.svelte';
   import { KeyboardProvider } from '$lib/providers/KeyboardProvider';
   import type { KeyboardCode } from '$lib/providers/KeyboardProvider/KeyboardTypes';
-  import type { VsrgSongKeys } from '$core/Songs/VsrgSong';
+  import type { VsrgSongKeys } from '$core/Songs/VsrgSong.svelte';
   import { keyBinds, type Shortcut } from '$stores/KeybindsStore.svelte';
   import { Instrument } from '$lib/audio/Instrument.svelte';
   import { logger } from '$stores/LoggerStore.svelte';

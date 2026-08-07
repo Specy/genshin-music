@@ -9,7 +9,7 @@
 // instance, not a proxy.
 import { NOTE_ANIMATION_DELAY_MS } from '$core/legacyConfig';
 import { type NoteDataState, ObservableNote } from '$lib/audio/Instrument.svelte';
-import { ComposedSong } from '$core/Songs/ComposedSong';
+import { ComposedSong } from '$core/Songs/ComposedSong.svelte';
 import { RecordedSong } from '$core/Songs/RecordedSong';
 
 type eventType = 'play' | 'practice' | 'approaching' | 'stop';

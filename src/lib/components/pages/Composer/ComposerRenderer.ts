@@ -29,7 +29,6 @@ import {
   computeStrandedRows,
   displayButtonForId,
 } from '$core/Songs/noteIds';
-import type { ComposedSong } from '$core/Songs/ComposedSong';
 import type { ComposerSettingsDataType } from '$core/BaseSettings';
 import { ComposerCache, type ComposerCacheData } from './ComposerCache';
 
@@ -58,11 +57,28 @@ interface ComposerRendererTheme {
 
 // The reactive input ComposerCanvas.svelte pushes into update() on every relevant change via its
 // own $effect.
+//
+// EVERY ARRAY ON THIS INTERFACE HAS TO BE A PLAIN ARRAY, NOT A `$state` PROXY. draw() indexes them
+// per column and per note (hundreds of element reads per draw), and an element read through Svelte's
+// deep proxy is a Proxy trap plus a dependency registration - measured at ~20x a plain read, i.e.
+// a few hundred microseconds of pure overhead on every draw of a large song. `columns` comes from
+// ComposedSong's `#structure`-guarded getter; `instruments`, `breakpoints` and `selectedColumns`
+// are `$state.raw` at their declarations. `settings` is still a deep `$state` object, which is
+// fine: draw() reads exactly two property paths off it per call, not one per note. A future field
+// backed by a deep `$state` array must be hoisted into a plain copy in update() rather than
+// indexed in the loops.
 export interface ComposerRendererState {
   columns: NoteColumn[];
   isPlaying: boolean;
   isRecordingAudio: boolean;
-  song: ComposedSong;
+  // The instrument roster, passed as its OWN field rather than reached through the song. It used
+  // to be `song: ComposedSong` and the draw path read `state.song.instruments` - which meant the
+  // canvas's $effect depended on the roster only implicitly, through a read that happens deep
+  // inside renderer.update(). That worked while every edit handed the effect a freshly cloned
+  // `song`; with a stable song identity the effect would never re-run on an instrument change,
+  // and it is dropped entirely on any early-returning draw (see drawNotesStage's `visible` guard,
+  // and phase 3's selected-moved-only path). Explicit prop, explicit dependency.
+  instruments: InstrumentData[];
   selected: number;
   currentLayer: number;
   inPreview?: boolean;
@@ -534,9 +550,10 @@ export class ComposerRenderer {
     this.callbacks.onGeometryChange({ width: this.width, hasCache: this.cache !== null });
   }
 
-  // The one entry point ComposerCanvas.svelte's $effect calls on every reactive-state change.
-  // Does not re-read settings.columnsPerCanvas.value - a changed value always arrives via a
-  // fresh ComposerRenderer instance instead, because the parent wraps this component in
+  // The entry point ComposerCanvas.svelte's $effect calls on every reactive-state change - the
+  // props channel; theme reaches this class separately, through subscribeTheme.
+  // Does not re-read settings.columnsPerCanvas.value: a changed value arrives via a fresh
+  // ComposerRenderer instance instead, because the parent wraps this component in
   // {#key settings.columnsPerCanvas.value}.
   update(state: ComposerRendererState): void {
     this.state = state;
@@ -597,7 +614,7 @@ export class ComposerRenderer {
           accentColor,
           index: i,
           sizes,
-          instruments: this.state.song.instruments,
+          instruments: this.state.instruments,
           currentLayer: this.state.currentLayer,
           backgroundCache: background,
           isToolsSelected: this.state.selectedColumns.includes(i),
@@ -611,7 +628,7 @@ export class ComposerRenderer {
   /** Tail segments clipped to the visible column window, including spans that start off-screen. */
   private computeTailsByColumn(): Map<number, TailSegment[]> {
     const tails = new Map<number, TailSegment[]>();
-    const { columns, song, currentLayer } = this.state;
+    const { columns, instruments, currentLayer } = this.state;
     const threshold = this.numberOfColumnsPerCanvas / 2 + 2;
     const visibleStart = Math.max(0, Math.floor(this.state.selected - threshold) + 1);
     const visibleEnd = Math.min(columns.length, Math.ceil(this.state.selected + threshold));
@@ -619,7 +636,7 @@ export class ComposerRenderer {
       const column = columns[start];
       column.notes.forEach((note) => {
         if (note.span <= 1) return;
-        const instrument = song.instruments[note.trackIndex];
+        const instrument = instruments[note.trackIndex];
         const isCurrentLayer = note.trackIndex === currentLayer;
         if (!isCurrentLayer && !instrument?.visible) return;
         const button = displayButtonForId(instrument?.name ?? '', note.id);

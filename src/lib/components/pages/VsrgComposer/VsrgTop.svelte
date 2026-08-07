@@ -2,7 +2,7 @@
   import type { Snippet } from 'svelte';
   import Color from 'color';
   import { game } from '$game';
-  import type { VsrgHitObject, VsrgSong, VsrgTrack } from '$core/Songs/VsrgSong';
+  import type { VsrgHitObject, VsrgSong, VsrgTrack } from '$core/Songs/VsrgSong.svelte';
   import { noteIdToButton } from '$core/Songs/noteIds';
   import { ThemeProvider } from '$core/theme/ThemeProvider.svelte';
   import { t, tInstrument } from '$i18n/binding.svelte';
@@ -49,7 +49,49 @@
 
   let isTrackSettingsOpen = $state(false);
 
-  const currentTrack = $derived(vsrg.tracks[selectedTrack]);
+  /**
+   * THE RULE THIS FILE FOLLOWS, since the 2026-08-06 reactive-model plan's phase 2 replaced the
+   * page's `vsrg = vsrg.clone()` with signals: read `vsrg.tracks` at the POINT OF USE, and never
+   * hold a VsrgTrack in a `$derived`, a `{@const}` or an `{#each}` item binding.
+   *
+   * Verified against a mounted component rather than reasoned about, because the three shapes look
+   * identical in source. With the song's structure signal bumped and a track edited IN PLACE (which
+   * is what VsrgTrackSettings does):
+   *   `<Child track={vsrg.tracks[i]} />`          updates - the prop expression is a lazy getter
+   *                                               evaluated inside the child's own effect
+   *   `{@render snippet(vsrg.tracks[i], i)}`      updates - snippet arguments are thunks, same thing
+   *   `{...vsrg.tracks[i].color...}` in a template updates
+   *   `const t = $derived(vsrg.tracks[i])`        DOES NOT - the derived re-runs but its value is
+   *                                               `===` the old one, so Svelte skips downstream
+   *   `{@const t = vsrg.tracks[i]}`               DOES NOT - `{@const}` compiles to a $derived
+   *   `{#each vsrg.tracks as track}` item binding DOES NOT - an item whose value is unchanged is
+   *                                               not re-rendered
+   * A `$derived` is fine as long as its VALUE changes: a primitive that differs, or a freshly built
+   * array/object (see selectedNoteButtons below).
+   *
+   * This used to be `const currentTrack = $derived(vsrg.tracks[selectedTrack])`, which worked only
+   * because every refreshVsrg() rebuilt the tracks with .map() and gave it a new identity.
+   */
+  const trackIndexes = $derived([...vsrg.tracks.keys()]);
+
+  /**
+   * Which mini-keyboard buttons the selected hit object plays. A `$derived` rather than an inline
+   * prop expression for one reason: it must read `vsrg.tracks` UNCONDITIONALLY, before the
+   * selection check. Written inline, the read sat inside a `.map()` callback over
+   * `selectedHitObject.notes`, so with no notes yet the callback never ran, nothing subscribed to
+   * the structure signal, and adding the first note left the grid unlit.
+   *
+   * It returns a NEW array each run (so the value genuinely changes), and `undefined` rather than
+   * `[]` when nothing is selected - VsrgComposerKeyboard dims and disables itself on `undefined`,
+   * and an empty array is truthy.
+   */
+  const selectedNoteButtons = $derived.by(() => {
+    const instrumentName = vsrg.tracks[selectedTrack]?.instrument.name ?? '';
+    if (selectedHitObject === null) return undefined;
+    return selectedHitObject.notes
+      .map((id) => noteIdToButton(instrumentName, id))
+      .filter((button) => button !== -1);
+  });
 </script>
 
 {#snippet faStepBackwardIcon()}
@@ -178,7 +220,7 @@
 <div class={['vsrg-top-right', lastCreatedHitObject !== null && 'vsrg-top-right-disabled']}>
   {#if isTrackSettingsOpen}
     <VsrgTrackSettings
-      track={currentTrack}
+      track={vsrg.tracks[selectedTrack]}
       onSave={() => (isTrackSettingsOpen = false)}
       onDelete={() => onTrackDelete(selectedTrack)}
       onChange={(track) => onTrackChange(track, selectedTrack)}
@@ -193,8 +235,8 @@
     <AppButton onclick={() => onBreakpointSelect(1)}>{@render faStepForwardIcon()}</AppButton>
   </Row>
   <div class="vsrg-track-wrapper column">
-    {#each vsrg.tracks as track, index (index)}
-      {@render trackSelector(track, index)}
+    {#each trackIndexes as index (index)}
+      {@render trackSelector(vsrg.tracks[index], index)}
     {/each}
     <div style="width:100%;height:1.4rem"></div>
     <AppButton
@@ -225,9 +267,7 @@
   </div>
   <VsrgComposerKeyboard
     elements={keyboardElements}
-    selected={selectedHitObject?.notes
-      .map((id) => noteIdToButton(currentTrack?.instrument.name ?? '', id))
-      .filter((button) => button !== -1)}
+    selected={selectedNoteButtons}
     perRow={game.notes.perRow}
     onClick={onNoteSelect}
   />

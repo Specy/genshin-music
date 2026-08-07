@@ -2,10 +2,11 @@
   import { onMount } from 'svelte';
   import { preventDefault } from '$core/utils/Utilities';
   import type { ClickType } from '$core/utils/Utilities';
-  import type { VsrgSong, VsrgHitObject } from '$core/Songs/VsrgSong';
+  import type { VsrgSong, VsrgHitObject } from '$core/Songs/VsrgSong.svelte';
   import type { RecordedSong } from '$core/Songs/RecordedSong';
   import type { RecordedNote } from '$core/Songs/SongClasses';
   import type { VsrgComposerRenderer } from './VsrgComposerRenderer';
+  import { captureVsrgSongState } from './vsrgSongRenderState';
 
   // This file owns the wrapper DOM element and the renderer's lifecycle (construct/feed/destroy)
   // plus native wheel/pointer bindings; VsrgComposerRenderer owns the pixi objects.
@@ -74,7 +75,7 @@
       const instance = new VsrgComposerRendererClass(
         wrapperEl,
         {
-          vsrg,
+          ...captureVsrgSongState(vsrg),
           isHorizontal,
           isPlaying,
           snapPoint,
@@ -113,9 +114,42 @@
     };
   });
 
+  /**
+   * The whole reactive contract of this component (2026-08-06 reactive-model plan, phase 2).
+   *
+   * It used to hand the VsrgSong INSTANCE to the renderer and read nothing off it - which worked
+   * only because the page reassigned the `vsrg` prop after every edit (`vsrg = vsrg.clone()`). With
+   * one stable instance that reference never changes, so this effect would re-run only when some
+   * OTHER prop happened to change: adding a track, deleting a track, recolouring one, editing a hold
+   * tail or moving a hit object would simply stop repainting the canvas, with nothing failing
+   * anywhere.
+   *
+   * captureVsrgSongState's reads are what subscribe this effect to the song (see
+   * ./vsrgSongRenderState.ts for what it takes and why). `vsrg.tracks` and `vsrg.structureVersion`
+   * both read the structure signal, so any hit-object edit re-runs this; the scalars carry their
+   * own.
+   *
+   * A value taken off the SONG belongs in captureVsrgSongState, not written straight into the
+   * object literal below next to this component's own props. Subscribing works either way, so this
+   * is about where the rule can be checked: test/vsrgComposerRenderer.test.ts holds the capture's
+   * result to "a moment, not a view onto the song", and a song field spliced in here is outside
+   * what that check can see.
+   *
+   * Do not route one of those values through an object-valued `$derived` on the way: Svelte
+   * skips downstream updates when a derived's recomputed value is referentially identical to the
+   * previous one, and `tracks` is object-valued with an identity that does not move within a song,
+   * which is the value such a derived would swallow. (`breakpoints` is replaced on change and
+   * `trackColors` is rebuilt on every call, so those would survive the round trip; the rule is
+   * simplest applied to all of them.)
+   */
   $effect(() => {
+    //captured BEFORE the optional-chained update(), on purpose: the song's signals must be read on
+    //every run, including the runs where `renderer` is still null (the pixi Application is loaded
+    //asynchronously). A read inside the argument list of a call that never happens registers no
+    //dependency.
+    const song = captureVsrgSongState(vsrg);
     renderer?.update({
-      vsrg,
+      ...song,
       isHorizontal,
       isPlaying,
       snapPoint,

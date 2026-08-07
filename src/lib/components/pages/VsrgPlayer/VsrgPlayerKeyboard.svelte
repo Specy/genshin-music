@@ -24,6 +24,10 @@
     horizontalOffset,
   }: VsrgPlayerKeyboardProps = $props();
 
+  // `vsrgPlayerStore.keyboard` is `$state.raw` (see the field's comment: the player's renderer
+  // indexes it per hit object per frame), so a press publishes by ASSIGNING a new array carrying a
+  // new key object at the pressed index. This derived and the `{@const}` in the snippet below both
+  // read through that array, which is what makes a press repaint the key it belongs to.
   const layout = $derived(vsrgPlayerStore.keyboard);
   const perSide = $derived(Math.ceil(layout.length / 2));
   const left = $derived(layout.slice(0, perSide));

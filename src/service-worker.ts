@@ -7,6 +7,16 @@
 // game's .svelte glyph components, which cannot load in this DOM-free ServiceWorkerGlobalScope.
 // Rationale at GameIdentity in $lib/games/types.ts.
 //
+// Second, independent reason, and the one that fails SILENTLY: Kit builds this file with
+// `configFile: false`, so vite-plugin-svelte is absent and RUNES CANNOT BE COMPILED HERE. Reaching
+// a `.svelte.ts` module - $core/Songs/Song.svelte.ts, ComposedSong.svelte.ts and
+// VsrgSong.svelte.ts since the 2026-08-06 reactive-model plan, ThemeProvider.svelte.ts,
+// Instrument.svelte.ts - emits `$state(…)`
+// verbatim into the bundle. `$state` is a legal JS identifier, so the build stays green and the
+// worker dies at module-eval with `ReferenceError: $state is not defined`, i.e. it simply never
+// installs. Nothing enforces this; keep this file's import graph to erased `import type`s, virtual
+// modules and npm packages.
+//
 // PUBLIC_SW_VERSION must come from $env/static/public, not `import.meta.env`: Kit builds this
 // file in a second, isolated Vite build that never loads the project's vite.config.ts, so its
 // `envPrefix` does not apply there and `import.meta.env.PUBLIC_SW_VERSION` bakes in `undefined` —

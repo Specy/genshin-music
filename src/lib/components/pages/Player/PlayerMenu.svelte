@@ -19,9 +19,9 @@
   import { songService } from '$core/Services/SongService';
   import { _folderService } from '$core/Services/FolderService';
   import { ThemeProvider } from '$core/theme/ThemeProvider.svelte';
-  import { ComposedSong } from '$core/Songs/ComposedSong';
+  import { ComposedSong } from '$core/Songs/ComposedSong.svelte';
   import { RecordedSong } from '$core/Songs/RecordedSong';
-  import type { SerializedSong, SongType } from '$core/Songs/Song';
+  import type { SerializedSong, SongType } from '$core/Songs/Song.svelte';
   import type { SettingUpdate, SettingVolumeUpdate } from '$core/types/SettingsPropriety';
   import type { PlayerSettingsDataType } from '$core/BaseSettings';
   import { isAudioFormat, isMidiFormat, isVideoFormat } from '$core/utils/Utilities';

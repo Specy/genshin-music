@@ -23,8 +23,13 @@
   import { basicPitchLoader } from '$lib/audio/BasicPitchLoader';
   import { logger } from '$stores/LoggerStore.svelte';
   import { ThemeProvider } from '$core/theme/ThemeProvider.svelte';
-  import { ComposedSong } from '$core/Songs/ComposedSong';
-  import { ColumnNote, MidiNote, NoteColumn, type InstrumentData } from '$core/Songs/SongClasses';
+  import { ComposedSong } from '$core/Songs/ComposedSong.svelte';
+  import {
+    MidiNote,
+    NoteColumn,
+    type ColumnNote,
+    type InstrumentData,
+  } from '$core/Songs/SongClasses';
   import { delay, isAudioFormat, isVideoFormat } from '$core/utils/Utilities';
   import { t } from '$i18n/binding.svelte';
   import FilePicker, { type FileElement } from '$cmp/inputs/FilePicker.svelte';
@@ -252,7 +257,7 @@
         //the file's real note length becomes a column span (min 1; the invariant pass
         //below truncates spans that would overlap a following same-id note)
         const span = Math.max(1, Math.round(note.durationMs / bpmToMs));
-        return [new ColumnNote(note.layer, note.data.id, span)];
+        return [{ trackIndex: note.layer, id: note.data.id, span }];
       });
       columns.push(noteColumn);
     });
@@ -273,7 +278,9 @@
       });
     });
     const song = new ComposedSong('Untitled');
-    song.columns = columns;
+    //initColumnsForConstruction, not a mutator: this song is being BUILT here and is handed to loadSong below,
+    //so nothing is subscribed to it yet and there is no version to bump
+    song.initColumnsForConstruction(columns);
     //enforce the no-overlap Duration invariant over the imported spans
     song.normalizeSpans();
     song.bpm = bpm;

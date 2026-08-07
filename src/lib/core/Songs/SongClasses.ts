@@ -1,10 +1,10 @@
 import {APP_NAME, INSTRUMENTS, MIDI_BOUNDS, MIDI_MAP_TO_NOTE, type Pitch, TEMPO_CHANGERS, type TempoChanger} from "$core/legacyConfig"
 import type {InstrumentName} from "$core/types"
-// InstrumentNoteIcon used to live in Songs/ComposedSong.ts (old SongClasses.ts imported it FROM
-// there). Task 5 relocated the canonical definition here instead (needed for
-// InstrumentData/SerializedInstrumentData before ComposedSong.ts was ported). Task 7's
-// ComposedSong.ts now imports it from here, reversing the old direction for good - this is the
-// single source; do not duplicate the declaration.
+// InstrumentNoteIcon used to live in Songs/ComposedSong.svelte.ts (old SongClasses.ts imported it
+// FROM there). Task 5 relocated the canonical definition here instead (needed for
+// InstrumentData/SerializedInstrumentData before ComposedSong was ported). Task 7's
+// ComposedSong.svelte.ts now imports it from here, reversing the old direction for good - this is
+// the single source; do not duplicate the declaration.
 export type InstrumentNoteIcon = 'line' | 'circle' | 'border'
 
 // ---------------------------------------------------------------------------
@@ -42,26 +42,48 @@ export type SerializedRecordedTrack = {
 // each column holds track-tagged notes; serialization groups them per track.
 // ---------------------------------------------------------------------------
 
-export class ColumnNote {
+/**
+ * Plain data on purpose (2026-08-06 reactive-model plan, phase 0): a note had no logic
+ * left beyond clone(), and staying a class would have cost a `$state` proxy exemption
+ * nothing else needs.
+ *
+ * The standing invariant: the accessors hand back the note, they do not copy it.
+ * findNote/notesOfTrack/addNote and ComposedSong.getSpanCovering all return the live object still
+ * sitting in `column.notes`, and normalizeSpans/moveNotesBy/pasteColumns/toOtherGame plus
+ * RecordedSong.toComposedSong's span pass all mutate through those references — a defensive copy in
+ * an accessor would turn them into silent no-ops. Where a copy IS wanted it is written as a spread
+ * at the call site (NoteColumn.clone, ComposedSong.pasteColumns), so it reads as a decision.
+ */
+export type ColumnNote = {
     trackIndex: number
     id: number
     /** Duration in columns, ≥1. 1 = the pre-sustain behavior. */
     span: number
-
-    constructor(trackIndex: number, id: number, span: number = 1) {
-        this.trackIndex = trackIndex
-        this.id = id
-        this.span = span
-    }
-
-    clone() {
-        return new ColumnNote(this.trackIndex, this.id, this.span)
-    }
 }
 
 export class NoteColumn {
     notes: ColumnNote[]
     tempoChanger: number //TODO put the keys of the tempo changers here
+    /**
+     * Plain monotonic render counter - deliberately NOT a `$state` (2026-08-06 reactive-model
+     * plan, phase 1 step 2). The Svelte signal on ComposedSong tells the UI that *something*
+     * changed; this tells the RENDERER *what* changed, so it can repaint one column instead of
+     * the whole window. Two consumers, two mechanisms: a signal per column would mean thousands
+     * of sources and a proxy per column for a value no template ever reads.
+     *
+     * ComposedSong's mutators are what bump it, through the two marking passes there:
+     * #touchColumns marks the range a changed note's span COVERS, not just the column that owns the
+     * note - a tail is drawn on every column it crosses - and #touchAllColumns marks the whole song
+     * for the bulk/structural passes, where indexes shift or any span may be retouched. Nothing
+     * consumes the counter yet; ComposerRenderer picks it up in phase 4.
+     *
+     * CONSUMER CONTRACT: "monotonic" is true only PER INSTANCE, and clone() deliberately does not
+     * copy it (see below), so an undo restores columns whose counters start at 0 while the live
+     * ones have climbed. Phase 4 must therefore test `column.version !== lastPainted` and NEVER
+     * `>` - a `>` comparison silently skips the repaint of every restored column.
+     */
+    version: number = 0
+
     constructor() {
         this.notes = []
         this.tempoChanger = 0
@@ -70,18 +92,24 @@ export class NoteColumn {
     clone() {
         const clone = new NoteColumn()
         clone.tempoChanger = this.tempoChanger
-        clone.notes = this.notes.map(note => note.clone())
+        clone.notes = this.notes.map(note => ({...note}))
+        //deliberately NOT copied: a clone is a different painted object, and undo history
+        //snapshots must not carry a version that makes a restored column look unchanged
         return clone
     }
 
     addNote(note: ColumnNote): ColumnNote
     addNote(trackIndex: number, id: number, span?: number): ColumnNote
-    addNote(trackIndexOrNote: number | ColumnNote, id?: number, span?: number) {
-        if (trackIndexOrNote instanceof ColumnNote) {
+    addNote(trackIndexOrNote: number | ColumnNote, id: number = 0, span: number = 1) {
+        //ColumnNote is plain data, so the overloads discriminate on the primitive form
+        //rather than `instanceof`. The object branch stores (and returns) the CALLER's
+        //object by reference — RecordedSong.toComposedSong keys a Map by note identity
+        //across the whole conversion, so a copy here would silently drop every duration.
+        if (typeof trackIndexOrNote !== 'number') {
             this.notes.push(trackIndexOrNote)
             return trackIndexOrNote
         }
-        const note = new ColumnNote(trackIndexOrNote, id!, span ?? 1)
+        const note: ColumnNote = {trackIndex: trackIndexOrNote, id, span}
         this.notes.push(note)
         return note
     }
@@ -125,6 +153,14 @@ export interface SerializedInstrumentData {
     reverbOverride: boolean | null
 }
 
+/**
+ * Must stay free of `$state` (2026-08-06 reactive-model plan): the whole roster is covered by
+ * ComposedSong's single `instruments` signal, and both the constructor and set() below are
+ * `Object.assign(this, data)` with an INSTANCE as the source (clone() is `new InstrumentData(this)`).
+ * `$state` fields are non-enumerable prototype accessors, so a single reactive field here would
+ * make clone() silently return an object with default values for it - no error, no type error,
+ * just every instrument edit appearing to reset the layer.
+ */
 export class InstrumentData {
     name: InstrumentName = INSTRUMENTS[0]
     volume: number = APP_NAME === 'Genshin' ? 90 : 100

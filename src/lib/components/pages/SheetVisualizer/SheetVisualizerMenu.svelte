@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { SerializedSong } from '$core/Songs/Song';
+  import type { SerializedSong } from '$core/Songs/Song.svelte';
   import { songsStore } from '$stores/SongsStore.svelte';
   import { browserHistoryStore } from '$stores/BrowserHistoryStore';
   import { homeStore } from '$stores/HomeStore.svelte';

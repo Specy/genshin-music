@@ -22,8 +22,8 @@ import type {
 import { ThrottledEventLoop } from '$core/ThrottledEventLoop';
 import { isNumberCloseTo } from '$core/utils/Utilities';
 import { DEFAULT_DOM_RECT, PIXI_CENTER_X_END_Y } from '$core/legacyConfig';
-import { VsrgSong } from '$core/Songs/VsrgSong';
-import type { VsrgAccuracyBounds, VsrgHitObject } from '$core/Songs/VsrgSong';
+import { VsrgSong } from '$core/Songs/VsrgSong.svelte';
+import type { VsrgAccuracyBounds, VsrgHitObject } from '$core/Songs/VsrgSong.svelte';
 import type { VsrgKeyboardLayout } from './VsrgPlayerKeyboard.svelte';
 import { VsrgPlayerCache } from './VsrgPlayerCache';
 
@@ -376,6 +376,10 @@ export class VsrgPlayerRenderer {
     previousTimestamp: number
   ) => {
     const { accuracy } = this;
+    // hoisted once, and a PLAIN array: `vsrgPlayerStore.keyboard` is `$state.raw` so that the
+    // per-hit-object `keyboard[index]` / `key.isPressed` reads in the loop below - which run on
+    // every frame - are plain property reads rather than Proxy traps. Reading it here registers
+    // nothing: this runs from a ThrottledEventLoop callback, not a reactive context.
     const keyboard = vsrgPlayerStore.keyboard;
     for (let i = 0; i < renderableHitObjects.length; i++) {
       const ro = renderableHitObjects[i];

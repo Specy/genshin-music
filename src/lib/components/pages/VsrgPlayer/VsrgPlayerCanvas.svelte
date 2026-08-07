@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { ThemeProvider } from '$core/theme/ThemeProvider.svelte';
-  import type { VsrgHitObject } from '$core/Songs/VsrgSong';
+  import type { VsrgHitObject } from '$core/Songs/VsrgSong.svelte';
   import type { VsrgPlayerRenderer, VsrgPlayerCanvasSizes } from './VsrgPlayerRenderer';
   import type { VsrgKeyboardLayout } from './VsrgPlayerKeyboard.svelte';
   import VsrgPlayerCountDown from './VsrgPlayerCountDown.svelte';

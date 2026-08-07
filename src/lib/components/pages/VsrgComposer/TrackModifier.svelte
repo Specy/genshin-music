@@ -1,9 +1,14 @@
 <script lang="ts">
-  import type { VsrgTrackModifier } from '$core/Songs/VsrgSong';
+  import type { VsrgTrackModifier, VsrgTrackModifierPatch } from '$core/Songs/VsrgSong.svelte';
   import { ThemeProvider } from '$core/theme/ThemeProvider.svelte';
   import Row from '$cmp/layout/Row.svelte';
   import AppButton from '$cmp/inputs/AppButton.svelte';
 
+  // `data` is the song's own VsrgTrackModifier and is READ-ONLY here. onChange used to be handed
+  // `data.set({muted: ...})` - the same object, mutated in place - which the song could not see and
+  // which left this component's own icons showing the previous state, because an {#each} does not
+  // re-render an item whose value is unchanged. It reports a PATCH instead, and VsrgSong replaces
+  // the modifier (2026-08-06 reactive-model plan, phase 2).
   let {
     data,
     style = '',
@@ -12,7 +17,7 @@
   }: {
     data: VsrgTrackModifier;
     style?: string;
-    onChange: (data: VsrgTrackModifier) => void;
+    onChange: (patch: VsrgTrackModifierPatch) => void;
     onVisibilityChange: (visible: boolean) => void;
   } = $props();
 
@@ -102,7 +107,7 @@
     <AppButton
       class="flex-centered vsrg-track-modifier-button"
       style="margin-left:0.3rem"
-      onclick={() => onChange(data.set({ muted: !data.muted }))}
+      onclick={() => onChange({ muted: !data.muted })}
     >
       {#if data.muted}
         {@render faVolumeMuteIcon()}

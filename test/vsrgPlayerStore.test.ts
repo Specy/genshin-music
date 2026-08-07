@@ -1,6 +1,7 @@
 import {beforeEach, describe, expect, it, vi} from 'vitest'
 import {vsrgPlayerStore} from '../src/lib/stores/VsrgPlayerStore.svelte'
-import {VsrgSong} from '../src/lib/core/Songs/VsrgSong'
+import {VsrgSong} from '../src/lib/core/Songs/VsrgSong.svelte'
+import {flushEffects, observeSignal} from './signals.svelte'
 
 // vsrgPlayerStore is a module-level singleton (matches the old mobx store's own singleton export,
 // same convention as playerControlsStore.test.ts) - reset the sub-state each test actually reads
@@ -97,7 +98,7 @@ describe('setLayout (index/key assignment)', () => {
         ])
     })
 
-    it('replaces the layout in place (including shrinking) on a second call', () => {
+    it('replaces the layout (including shrinking) on a second call', () => {
         vsrgPlayerStore.setLayout(['A', 'S', 'D', 'G', 'H', 'J'])
         vsrgPlayerStore.setLayout(['A', 'S'])
         expect(vsrgPlayerStore.keyboard).toEqual([
@@ -162,6 +163,61 @@ describe('pressKey / releaseKey (keyboard-listener emission)', () => {
         expect(listener).toHaveBeenLastCalledWith({key: 'S', index: 1, isPressed: true}, 'down')
 
         vsrgPlayerStore.removeKeyboardListener({id: 'independent'})
+    })
+})
+
+/**
+ * `keyboard` is `$state.raw` (see the field's comment: the player's renderer indexes it per hit
+ * object per frame, so its elements have to be plain). Under raw, "published" means the FIELD was
+ * assigned - and for the keyboard UI it also means the touched element is a new object, because
+ * VsrgPlayerKeyboard reads each key through an identity-compared `{@const}`.
+ *
+ * Both halves are silent when they break - the store keeps reporting the right thing and the keys
+ * stop lighting up - and they break on DIFFERENT regressions, which is why the two are separate:
+ *  - 'a press installs a new array AND a new key' is the one that fails if a press goes back to
+ *    editing the KeyboardKey IN PLACE while still assigning the array. The array signal fires, so
+ *    nothing that watches the array notices anything is wrong; the identity-compared `{@const}`
+ *    still holds the same object and draws the key unpressed (verified: with that form in place it
+ *    is the only failing test in this file).
+ *  - 'a subscriber reading a key through the array is notified' is the one that fails if a press
+ *    stops ASSIGNING the array - under `$state.raw` an element write publishes nothing at all, so
+ *    no subscriber runs.
+ */
+describe('the keyboard publishes by assigning', () => {
+    beforeEach(() => {
+        vsrgPlayerStore.setLayout(['A', 'S'])
+    })
+
+    it('setLayout installs a new array', () => {
+        const before = vsrgPlayerStore.keyboard
+        vsrgPlayerStore.setLayout(['A', 'S', 'D', 'G'])
+        expect(vsrgPlayerStore.keyboard).not.toBe(before)
+    })
+
+    it('a press installs a new array AND a new key, leaving the previous ones as they were', () => {
+        const before = vsrgPlayerStore.keyboard
+        const beforeKey = before[0]
+        vsrgPlayerStore.pressKey(0)
+        expect(vsrgPlayerStore.keyboard).not.toBe(before)
+        expect(vsrgPlayerStore.keyboard[0]).not.toBe(beforeKey)
+        expect(beforeKey.isPressed).toBe(false)
+        //the untouched key is carried over as-is: only the pressed index is rebuilt
+        expect(vsrgPlayerStore.keyboard[1]).toBe(before[1])
+    })
+
+    it('a subscriber reading a key through the array is notified of a press', async () => {
+        //optional-chained so a failing run reports the count rather than crashing the effect on the
+        //next test's empty layout - the effect outlives a failed assertion, dispose() is below it
+        const observer = observeSignal(() => vsrgPlayerStore.keyboard[0]?.isPressed)
+        await flushEffects()
+        const baseline = observer.runs()
+        vsrgPlayerStore.pressKey(0)
+        await flushEffects()
+        expect(observer.runs()).toBe(baseline + 1)
+        vsrgPlayerStore.releaseKey(0)
+        await flushEffects()
+        expect(observer.runs()).toBe(baseline + 2)
+        observer.dispose()
     })
 })
 

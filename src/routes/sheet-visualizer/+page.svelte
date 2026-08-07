@@ -5,9 +5,9 @@
   import { isComposedOrRecorded } from '$core/utils/Utilities';
   import { songService } from '$core/Services/SongService';
   import { VisualSong } from '$core/Songs/VisualSong';
-  import { ComposedSong } from '$core/Songs/ComposedSong';
+  import { ComposedSong } from '$core/Songs/ComposedSong.svelte';
   import { RecordedSong } from '$core/Songs/RecordedSong';
-  import type { SerializedSong } from '$core/Songs/Song';
+  import type { SerializedSong } from '$core/Songs/Song.svelte';
   import type { NoteNameType } from '$lib/games/types';
   import Analytics from '$core/Analytics';
   import { logger } from '$stores/LoggerStore.svelte';

@@ -9,14 +9,15 @@ import {
     INSTRUMENTS,
     INSTRUMENTS_DATA,
     PITCHES,
-    TEMPO_CHANGERS
+    TEMPO_CHANGERS,
+    type TempoChanger
 } from "$core/legacyConfig"
 import type {InstrumentName} from "$core/types"
 import type {_LegacySongInstruments, OldFormat} from "$core/types"
 import {NoteLayer} from "./Layer"
 import {RecordedSong} from "./RecordedSong"
 import {
-    ColumnNote,
+    type ColumnNote,
     InstrumentData,
     NoteColumn,
     RecordedNote,
@@ -26,7 +27,7 @@ import {
     type SerializedInstrumentData,
     type SerializedTrackNote,
 } from "./SongClasses"
-import {type SerializedSong, Song} from "./Song"
+import {type SerializedSong, Song} from "./Song.svelte"
 import {clamp} from "../utils/Utilities"
 import {isLegacyAppName, LEGACY_NOTE_TABLES, legacyIndexToId} from "./legacyNoteTables"
 import {type ConversionGame, findSimilarInstrument} from "./instrumentSimilarity"
@@ -78,11 +79,56 @@ export type OldFormatComposed = BaseSerializedComposedSong & OldFormat
 
 export const defaultInstrumentMap: InstrumentNoteIcon[] = ['border', 'circle', 'line']
 
+/**
+ * `.svelte.ts` because of the signals below (2026-08-06 reactive-model plan, phase 1). Importers
+ * spell the specifier '$core/Songs/ComposedSong.svelte'; see Song.svelte.ts's header.
+ *
+ * The reactive shape, in one place:
+ * - `selected` and (on Song) `name`/`bpm`/`pitch`/`id`/`folderId` are ordinary `$state` fields.
+ *   Different parts of the UI watch them independently and they change at different cadences, so
+ *   each gets its own signal - and each keeps a public setter, which is what lets
+ *   `song.selected = i`, `song[key] = value` and Song.deserializeTo keep working.
+ * - `breakpoints` and (on Song) `instruments` are `$state.raw`: same whole-array signal, same
+ *   public setter, but the array itself stays PLAIN because the composer's renderer indexes both
+ *   per draw. Their mutators must ASSIGN, never splice/push - see each field's comment.
+ * - the column/note graph gets ONE signal, `#structure`, read inside the `columns` getter. Columns
+ *   and notes stay plain objects: the canvas repaints a whole window at a time, so per-note
+ *   granularity would buy nothing that any consumer could use, at a cost of ~3 sources per note.
+ * - `#columns` is PRIVATE, which is what keeps every mutator of the graph in this file, next to the
+ *   bump. It is not airtight and the `columns` getter says so: the array is handed back live and
+ *   mutable, so an outside push/splice edits the song and publishes nothing. What the private field
+ *   does rule out is REPLACING the array from outside, and it makes reaching for a method here the
+ *   path of least resistance - a missed bump goes stale silently, the same way a forgotten
+ *   refreshSong() did.
+ */
 export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 4> {
-    breakpoints: number[]
-    columns: NoteColumn[]
+    /**
+     * `$state.raw`, not `$state`, for the same reason as Song.instruments: the composer's renderer
+     * calls `breakpoints.includes(i)` once per visible column on every draw, and each element read
+     * through a deep proxy is a trap plus a dependency registration. Raw keeps the whole-array
+     * signal and drops the per-index sources.
+     *
+     * THE RULE THAT COMES WITH IT: every mutator ASSIGNS a new array (see toggleBreakpoint). An
+     * in-place splice/push compiles and publishes nothing at all.
+     */
+    breakpoints: number[] = $state.raw([])
+    /**
+     * NOT a signal, stated rather than inferred because it shares handleSettingChange's dynamic
+     * `song[key] = data.value` path with bpm and pitch, which are. Its readers do not need one: the
+     * composer pushes it straight to AudioProvider on change, the player reads it at load, and
+     * serialize() reads it on save.
+     */
     reverb: boolean = false
-    selected: number
+    selected: number = $state(0)
+
+    /**
+     * Structure version. A mutation of the column/note graph bumps it, and the `columns` getter
+     * reads it, so a consumer subscribes just by doing what it already did. Kept private alongside
+     * #columns so the two cannot drift. (Which methods reach the graph WITHOUT bumping, and why:
+     * see #bumpStructure.)
+     */
+    #structure = $state(0)
+    #columns: NoteColumn[] = []
 
     constructor(name: string, instruments: InstrumentName[] = []) {
         super(name, 4, 'composed', {
@@ -93,8 +139,104 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 4> 
         this.instruments = []
         this.breakpoints = [0]
         this.selected = 0
-        this.columns = new Array(100).fill(0).map(_ => new NoteColumn())
+        this.#columns = new Array(100).fill(0).map(_ => new NoteColumn())
         instruments.forEach(this.addInstrument)
+    }
+
+    /**
+     * The live column array. Reading `#structure` first is the whole trick: it makes every
+     * existing `song.columns` read - templates, deriveds, effects, the canvas prop - subscribe to
+     * structural changes without one call site changing.
+     *
+     * The array itself is handed back live and mutable (typing it `readonly` would ripple through
+     * ComposerRendererState, ComposerCanvas and calculateSongLength). What that costs: a
+     * push/splice/sort/element write from outside compiles, edits the song and publishes nothing,
+     * so consumers keep working from what they last read until something else publishes. Add a
+     * mutator here instead.
+     */
+    get columns(): NoteColumn[] {
+        this.#structure //intentional bare read: it is the subscription, the value is unused
+        return this.#columns
+    }
+
+    /**
+     * Publish a change to the column/note graph. Most methods below end in one of these. The ones
+     * that reach the graph without publishing say why at their own declaration:
+     * initColumnsForConstruction and appendColumnsForConstruction work on a song nobody is watching
+     * yet. Several of the rest skip the bump when the call turned out to change nothing.
+     * test/reactivePublish.test.ts carries a row per callable, so which of the two a method belongs
+     * to is written down there as well as here.
+     *
+     * The convention the rest of the class follows (same as VsrgSong's): a mutator of the LIVE
+     * graph addresses `#columns` directly, since it has no reason to subscribe to its own signal,
+     * while public READ methods (selectedColumn, maxSpanAt, getSpanCovering, serialize, ...) go
+     * through the `columns` getter on purpose, so that a caller reading one from inside a
+     * $derived/$effect subscribes to structural changes. The construction paths - a song being
+     * deserialized, a fresh clone being converted - edit through whichever is convenient, since
+     * nothing is watching those songs either way.
+     */
+    #bumpStructure() {
+        this.#structure++
+    }
+
+    /**
+     * Renderer-side marking (see NoteColumn.version): bump the plain per-column counters over
+     * [from, to), clamped to the song. Callers pass the range a changed note COVERS, not the
+     * column that owns it - a span is drawn on every column it crosses, and a shrink leaves stale
+     * bars behind on the ones it used to.
+     */
+    #touchColumns(from: number, to: number) {
+        const start = Math.max(0, from)
+        const end = Math.min(this.#columns.length, to)
+        for (let i = start; i < end; i++) this.#columns[i].version++
+    }
+
+    /**
+     * Used by every bulk/structural mutator. Deliberately coarse: once column INDEXES shift, or a
+     * pass can retouch any note's span (normalizeSpans), the changed set really is "all of them" -
+     * and the phase-4 consumer only repaints the visible window anyway, which is what happens
+     * today for every edit.
+     */
+    #touchAllColumns() {
+        for (const column of this.#columns) column.version++
+    }
+
+    /**
+     * CONSTRUCTION ONLY: install a column array on a song nothing observes yet - deserialize,
+     * clone, MIDI import, RecordedSong.toComposedSong. Deliberately does NOT bump #structure:
+     * there is no subscriber to notify, and a bumping "just set the columns" method is the shortcut
+     * a live-song mutation would reach for instead of a real mutator.
+     *
+     * The name is deliberately not `initColumns`: that was one word away from restoreColumns and
+     * gave no hint that calling it on the LIVE song silently freezes the canvas at whatever it last
+     * painted. On a song someone is already watching, the method you want is restoreColumns() -
+     * it bumps and re-clamps `selected`.
+     *
+     * Copies the array it is given, for a WEAKER reason than restoreColumns' copy - stated
+     * precisely because the two look identical. Its callers build a plain array and hand it over,
+     * so there is no proxy to launder here; the copy buys OWNERSHIP - the argument becomes this
+     * song's private graph, and a caller that kept it could otherwise push into #columns from
+     * outside, which is the write the private field exists to prevent. restoreColumns' copy is the
+     * load-bearing one: it IS handed a deep proxy.
+     */
+    initColumnsForConstruction(columns: NoteColumn[]) {
+        this.#columns = [...columns]
+    }
+
+    /**
+     * CONSTRUCTION ONLY, same contract as initColumnsForConstruction (silent, no version bump):
+     * append `amount` empty columns to the end of a song nothing observes yet.
+     *
+     * It exists because the public addColumns() is O(columns) per call - it ends in
+     * #touchAllColumns() plus a structure bump - and RecordedSong.toComposedSong grows the
+     * timeline one column at a time from inside a triple-nested loop while fitting durations to
+     * spans. Appending k columns to an n-column song through addColumns() is O(k*n) on the MIDI
+     * and recording import paths; this is O(k), which is what a raw `#columns.push()` from
+     * outside the class would have been - and that write is exactly what the private field exists
+     * to prevent.
+     */
+    appendColumnsForConstruction(amount: number) {
+        for (let i = 0; i < amount; i++) this.#columns.push(new NoteColumn())
     }
 
     /**
@@ -110,15 +252,17 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 4> 
         if (song.version === undefined) song.version = 1
         const parsed = Song.deserializeTo(new ComposedSong(song.name), song)
         parsed.reverb = song.reverb ?? false
-        parsed.breakpoints = (song.breakpoints ?? []).filter(Number.isFinite)
+        //untrusted input, and only COPIED here: validateBreakpoints() at the end of both branches
+        //below is what checks it, because "addresses a column" needs the columns to exist first
+        parsed.breakpoints = [...(song.breakpoints ?? [])]
         if (song.version === 4) {
             parsed.instruments = (song.tracks ?? []).map(track => InstrumentData.deserialize(track.instrument))
-            parsed.columns = (song.columnTempos ?? []).map(tempo => {
+            parsed.initColumnsForConstruction((song.columnTempos ?? []).map(tempo => {
                 const column = new NoteColumn()
                 //invalid tempo ids would dereference TEMPO_CHANGERS[undefined] at playback
                 column.tempoChanger = Number.isInteger(tempo) && TEMPO_CHANGERS[tempo] !== undefined ? tempo : 0
                 return column
-            })
+            }))
             ;(song.tracks ?? []).forEach((track, trackIndex) => {
                 //defensive: hand-edited/malformed files must import cleanly, not throw
                 (track.notes ?? []).forEach(([columnIndex, id, span]) => {
@@ -138,9 +282,12 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 4> 
             //file spans are untrusted input — sanitize + re-enforce the no-overlap invariant
             parsed.normalizeSpans()
             if (parsed.instruments.length > NoteLayer.MAX_LAYERS) throw new Error(`Sheet has ${parsed.instruments.length} instruments, but the max is ${NoteLayer.MAX_LAYERS}`)
+            parsed.validateBreakpoints()
             return parsed
         }
-        return ComposedSong.deserializeLegacy(song, parsed, importInto)
+        const legacy = ComposedSong.deserializeLegacy(song, parsed, importInto)
+        legacy.validateBreakpoints()
+        return legacy
     }
 
     /**
@@ -178,18 +325,26 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 4> 
             ins.icon = defaultInstrumentMap[i % 3]
             return ins
         })
-        //parsing instruments
+        //parsing instruments. Both branches overwrite (and possibly extend) the roster built above
+        //by index, then assign ONCE: `instruments` is a whole-array signal, so an in-place
+        //`parsed.instruments[i] = ins` publishes nothing. Nothing observes a song mid-deserialize,
+        //so either form works here - but leaving the in-place one is leaving a copy-paste template
+        //for the exact bug the field's rule forbids.
         if (song.version === 1 || song.version === 2) {
-            const instruments = (Array.isArray(song.instruments) ? song.instruments : []) as _LegacySongInstruments
-            instruments.forEach((name, i) => {
+            const legacyNames = (Array.isArray(song.instruments) ? song.instruments : []) as _LegacySongInstruments
+            const instruments = [...parsed.instruments]
+            legacyNames.forEach((name, i) => {
                 const ins = new InstrumentData({name})
                 ins.icon = defaultInstrumentMap[i % 3]
-                parsed.instruments[i] = ins
+                instruments[i] = ins
             })
+            parsed.instruments = instruments
         } else if (song.version === 3) {
+            const instruments = [...parsed.instruments]
             song.instruments.forEach((ins, i) => {
-                parsed.instruments[i] = InstrumentData.deserialize(ins)
+                instruments[i] = InstrumentData.deserialize(ins)
             })
+            parsed.instruments = instruments
         }
         if (parsed.instruments.length > NoteLayer.MAX_LAYERS) throw new Error(`Sheet has ${song.instruments.length} instruments, but the max is ${NoteLayer.MAX_LAYERS}`)
         const crossGame = importInto !== undefined && parsed.data.appName !== importInto
@@ -208,7 +363,7 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 4> 
         //expand (index, mask) into per-track Note Id notes
         const appName = isLegacyAppName(parsed.data.appName) ? parsed.data.appName : APP_NAME
         const importPositions = crossGame ? LEGACY_NOTE_TABLES[importInto].importPositions : null
-        parsed.columns = legacyColumns.map(legacyColumn => {
+        parsed.initColumnsForConstruction(legacyColumns.map(legacyColumn => {
             const column = new NoteColumn()
             column.tempoChanger = legacyColumn.tempoChanger
             legacyColumn.notes.forEach(note => {
@@ -222,7 +377,7 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 4> 
                 }
             })
             return column
-        })
+        }))
         return parsed
     }
 
@@ -257,6 +412,11 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 4> 
         const recordedSong = new RecordedSong(this.name)
         recordedSong.bpm = this.bpm
         recordedSong.pitch = this.pitch
+        //`reverb` used to be dropped here, the same data loss clone() had (see clone() below).
+        //This conversion is what the player loads a composed song through and what the midi/
+        //sheet exports are built from, so dropping it meant a song saved with reverb ON played
+        //and exported without it. The golden fixture captured that bug and was corrected with it.
+        recordedSong.reverb = this.reverb
         const msPerBeat = 60000 / this.bpm
         //per-column real durations, needed to turn spans into ms
         const columnDurations = this.columns.map(column =>
@@ -286,7 +446,33 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 4> 
     addInstrument = (name: InstrumentName) => {
         const newInstrument: InstrumentData = new InstrumentData({name})
         newInstrument.icon = defaultInstrumentMap[this.instruments.length % 3]
+        //every instruments mutator REPLACES the array rather than mutating it, because assigning
+        //the field is what publishes the roster signal (`$state.raw` on Song - see the field's
+        //comment). An in-place push would leave the layer panel, the keyboard and the canvas
+        //showing the previous roster until some unrelated edit forced a re-read.
         this.instruments = [...this.instruments, newInstrument]
+    }
+
+    /**
+     * Replace one layer's instrument (the layer panel's edit). Clones on the way in so the stored
+     * entry is not aliased to the panel's working copy, and assigns a new array - see
+     * addInstrument for why in-place is not an option.
+     */
+    setInstrument(index: number, instrument: InstrumentData) {
+        if (this.instruments[index] === undefined) return
+        const instruments = [...this.instruments]
+        instruments[index] = instrument.clone()
+        this.instruments = instruments
+    }
+
+    /** Swap two layers' instruments. Pair it with swapLayer(), which moves the notes to match. */
+    swapInstruments(a: number, b: number) {
+        if (this.instruments[a] === undefined || this.instruments[b] === undefined) return
+        const instruments = [...this.instruments]
+        const tmp = instruments[a]
+        instruments[a] = instruments[b]
+        instruments[b] = tmp
+        this.instruments = instruments
     }
 
     ensureInstruments() {
@@ -302,20 +488,39 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 4> 
         }
     }
 
-    static selection(start: number, end: number) {
-        return new Array(end - start).fill(0).map((_, i) => i - start)
-    }
+    //(the static `selection(start, end)` helper lived here and built an index list for
+    //removeInstrument's eraseColumns() call. Its last caller went away when removeInstrument
+    //stopped double-publishing, and it was only ever correct for start = 0 - it mapped
+    //`i - start`, not `i + start` - so it is deleted rather than left as a trap.)
 
+    //mutates BOTH families: the pass below clears the layer's notes and rewrites every remaining
+    //note's trackIndex (structure), then the roster shrinks (instruments)
     removeInstrument = async (index: number) => {
-        this.eraseColumns(ComposedSong.selection(0, this.columns.length), index)
-        this.columns.forEach(column => {
+        //deliberately NOT eraseColumns(): that ends in its own touch-all + bump, so calling it
+        //here and then bumping again for the retagging pass would advance every column's plain
+        //`version` by 2 for one logical edit - and phase 4 repaints off those counters. Same
+        //clearing rule, inlined, one publish for the whole method.
+        this.#columns.forEach(column => {
+            column.notes = column.notes.filter(note => note.trackIndex !== index)
             column.notes.forEach(note => {
                 if (note.trackIndex > index) note.trackIndex--
             })
         })
-        this.instruments.splice(index, 1)
-        this.instruments = [...this.instruments]
+        this.#touchAllColumns()
+        this.#bumpStructure()
+        const instruments = [...this.instruments]
+        instruments.splice(index, 1)
+        this.instruments = instruments
     }
+    //serialize() must return PLAIN, UNALIASED data: its result is handed straight to IndexedDB.
+    //Two distinct reasons to spread or .map() every array out rather than `return this.someArray`.
+    //(1) Aliasing: a returned live reference means a later edit mutates a snapshot someone is
+    //still holding (the download path, the autosave payload), and a mutation of that snapshot
+    //writes back into the song. Guarded by test/noAliasing.ts. (2) Proxies: a deep `$state` array
+    //IS a Svelte Proxy, which structuredClone refuses outright at the IndexedDB boundary. Guarded
+    //by test/noProxies.ts. Only (1) can actually bite on today's model - `breakpoints` and
+    //`instruments` are `$state.raw` and `#columns` is plain, so no proxy exists to leak - but (2)
+    //is one deep-`$state` field away from mattering, and the rule is one rule.
     serialize = (): SerializedComposedSong => {
         let bpm = parseInt(this.bpm as any)
         const tracks: SerializedComposedTrack[] = this.instruments.map((instrument, trackIndex) => {
@@ -447,6 +652,94 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 4> 
         return this.columns[this.selected]
     }
 
+    // -----------------------------------------------------------------------
+    // Leaf-graph entry points. The composer used to reach through `selectedColumn` /
+    // `columns[i]` and mutate a NoteColumn itself; every edit now goes through the song
+    // so that the reactive rewrite (2026-08-06 plan, phase 1) has one place to bump its
+    // structure version from. Reads from the page stay direct (findNote, notesOfTrack,
+    // getTempoChanger) - they change nothing, so there is nothing to publish.
+    // Out-of-range indexes are not normalized to one behaviour here: each form kept whatever
+    // the call site it replaced did - subscripting `#columns` directly, so a bad index throws
+    // (as `selectedColumn.addNote` did), optional-chaining to a null result, or skipping an
+    // index that addresses no column.
+    // (Which of these addresses #columns and which goes through the getter, and why:
+    // see #bumpStructure.)
+    // -----------------------------------------------------------------------
+
+    /** Add a note to `columnIndex`; returns the created note. Does NOT dedupe - callers pre-check with findNote. */
+    addNoteAt(columnIndex: number, trackIndex: number, id: number, span: number = 1): ColumnNote {
+        const note = this.#columns[columnIndex].addNote(trackIndex, id, span)
+        this.#touchColumns(columnIndex, columnIndex + note.span)
+        this.#bumpStructure()
+        return note
+    }
+
+    /** Remove a note from `columnIndex`. A note that isn't there is a no-op, as in NoteColumn.removeNote. */
+    removeNoteAt(columnIndex: number, trackIndex: number, id: number) {
+        const column = this.#columns[columnIndex]
+        //read the span BEFORE the note goes: it decides which columns had a tail drawn on them
+        const note = column.findNote(trackIndex, id)
+        //nothing there = nothing changed = nothing to publish (same rule as setNoteSpan's early
+        //return): a bump with no edit behind it re-runs every consumer for nothing
+        if (!note) return
+        this.#touchColumns(columnIndex, columnIndex + note.span)
+        column.removeNote(trackIndex, id)
+        this.#bumpStructure()
+    }
+
+    /**
+     * Apply a tempo changer to one column, or to a whole tools selection (missing indexes
+     * skipped). Columns already carrying that changer are skipped, and a call that changes
+     * nothing publishes nothing - a tools selection re-applying the same changer is a normal
+     * thing for the panel to do.
+     */
+    setTempoChangerAt(columnIndexes: number | number[], changer: TempoChanger) {
+        if (typeof columnIndexes === 'number') {
+            //bad index still throws here, as `selectedColumn.setTempoChanger` did
+            if (this.#columns[columnIndexes].tempoChanger === changer.id) return
+            this.#columns[columnIndexes].setTempoChanger(changer)
+            this.#touchColumns(columnIndexes, columnIndexes + 1)
+            this.#bumpStructure()
+            return
+        }
+        let changed = false
+        columnIndexes.forEach(index => {
+            const column = this.#columns[index]
+            if (column === undefined || column.tempoChanger === changer.id) return
+            column.setTempoChanger(changer)
+            this.#touchColumns(index, index + 1)
+            changed = true
+        })
+        if (changed) this.#bumpStructure()
+    }
+
+    /**
+     * Undo/history restore: swap in a previously cloned column set, re-clamp `selected` and drop
+     * breakpoints the shorter snapshot no longer has columns for. Deliberately no normalizeSpans()
+     * - the snapshot is a clone of an already-valid graph, and normalizing here would make undo
+     * produce something the user never had.
+     *
+     * The breakpoint pass is not decoration: undo is a column-array SHRINK like removeColumns, and
+     * skipping it leaves a breakpoint addressing a column that no longer exists, which serialize()
+     * then writes to IndexedDB (addColumns(3, 'end') -> toggleBreakpoint on one of the new columns
+     * -> undo, before the fix).
+     *
+     * NOT the construction path (that is initColumnsForConstruction): this one bumps, because the song it lands
+     * on is the live one the canvas is watching.
+     */
+    restoreColumns(columns: NoteColumn[]) {
+        //defensive copy. The composer's undo history is a `$state` array, so reading an entry back
+        //out yields a Svelte deep PROXY of the column array. Installing that as the live graph
+        //would make every columns[i] read for the rest of the session allocate/look up a per-index
+        //source - the clone used to launder it away, and nothing does now. NoteColumn instances
+        //are not themselves proxied (only plain objects/arrays are), so a shallow copy suffices.
+        this.#columns = [...columns]
+        this.selected = this.#columns.length > this.selected ? this.selected : this.#columns.length - 1
+        this.validateBreakpoints()
+        this.#touchAllColumns()
+        this.#bumpStructure()
+    }
+
     /**
      * The note whose span covers `columnIndex` from an EARLIER column, or null. Under
      * the no-overlap invariant the nearest same-(track, id) note going backwards is the
@@ -470,11 +763,23 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 4> 
         return this.columns.length - startColumn
     }
 
-    /** Set a note's Duration (column span), clamped to [1, maxSpanAt]. Returns the applied span, or null when no such note exists. */
+    /**
+     * Set a note's Duration (column span), clamped to [1, maxSpanAt]. Returns the applied span,
+     * or null when no such note exists.
+     *
+     * The single easiest bump to forget: the body contains nothing that LOOKS like a mutation of
+     * the song - just a field write on a plain note. Miss it and the slider moves, the model
+     * changes, and the canvas tails, heldButtons, songLength and the keyboard all keep showing
+     * the old span until some unrelated edit forces a redraw.
+     */
     setNoteSpan(startColumn: number, trackIndex: number, id: number, span: number): number | null {
-        const note = this.columns[startColumn]?.findNote(trackIndex, id)
+        const note = this.#columns[startColumn]?.findNote(trackIndex, id)
         if (!note) return null
+        const previousSpan = note.span
         note.span = clamp(Math.round(span), 1, this.maxSpanAt(startColumn, trackIndex, id))
+        //union of the old and new range: a shrink has to repaint the columns it abandoned
+        this.#touchColumns(startColumn, startColumn + Math.max(previousSpan, note.span))
+        this.#bumpStructure()
         return note.span
     }
 
@@ -487,7 +792,7 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 4> 
      */
     normalizeSpans() {
         const open = new Map<string, { note: ColumnNote, startColumn: number }>()
-        this.columns.forEach((column, columnIndex) => {
+        this.#columns.forEach((column, columnIndex) => {
             column.notes.forEach(note => {
                 note.span = Number.isFinite(note.span) ? Math.max(1, Math.round(note.span)) : 1
                 const key = `${note.trackIndex}-${note.id}`
@@ -499,10 +804,13 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 4> 
             })
         })
         open.forEach(({note, startColumn}) => {
-            if (startColumn + note.span > this.columns.length) {
-                note.span = Math.max(1, this.columns.length - startColumn)
+            if (startColumn + note.span > this.#columns.length) {
+                note.span = Math.max(1, this.#columns.length - startColumn)
             }
         })
+        //this pass can retouch any note in the song, so the changed set really is all of them
+        this.#touchAllColumns()
+        this.#bumpStructure()
     }
 
     /**
@@ -514,16 +822,18 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 4> 
     addColumns = (amount: number, position: number | 'end') => {
         const columns = new Array(amount).fill(0).map(() => new NoteColumn())
         if (position === "end") {
-            this.columns.push(...columns)
+            this.#columns.push(...columns)
         } else {
             const insertionIndex = position + 1
             this.adjustSpansForInsertedColumns(insertionIndex, amount)
-            this.columns.splice(insertionIndex, 0, ...columns)
+            this.#columns.splice(insertionIndex, 0, ...columns)
         }
+        this.#touchAllColumns()
+        this.#bumpStructure()
     }
 
     private adjustSpansForInsertedColumns(insertionIndex: number, amount: number) {
-        this.columns.forEach((column, startColumn) => {
+        this.#columns.forEach((column, startColumn) => {
             column.notes.forEach(note => {
                 if (startColumn < insertionIndex && insertionIndex < startColumn + note.span) {
                     note.span += amount
@@ -538,7 +848,8 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 4> 
      */
     removeColumns = (amount: number, position: number) => {
         this.adjustSpansForRemovedColumns(new Set(new Array(amount).fill(0).map((_, i) => position + i)))
-        this.columns.splice(position, amount)
+        this.#columns.splice(position, amount)
+        //two signal families in one call: breakpoints here, structure via normalizeSpans below
         this.validateBreakpoints()
         //removing columns shrinks distances — spans may now overlap a following note
         this.normalizeSpans()
@@ -546,7 +857,7 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 4> 
 
     /** Shrink every span by the number of its covered TAIL columns present in `removed` (decided 2026-08-04). Notes whose start column is removed die with it and are skipped. */
     private adjustSpansForRemovedColumns(removed: Set<number>) {
-        this.columns.forEach((column, startColumn) => {
+        this.#columns.forEach((column, startColumn) => {
             if (removed.has(startColumn)) return
             column.notes.forEach(note => {
                 if (note.span <= 1) return
@@ -561,7 +872,7 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 4> 
 
     /** Move every note of track `from` onto track `to` (ids kept — a note is a pitch identity, not a button), merging with existing notes. */
     switchLayer(amount: number, position: number, from: number, to: number) {
-        const columns = this.columns.slice(position, position + amount)
+        const columns = this.#columns.slice(position, position + amount)
         columns.forEach(column => {
             column.notesOfTrack(from).forEach(note => {
                 const existing = column.findNote(to, note.id)
@@ -573,42 +884,62 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 4> 
                 }
             })
         })
+        //normalizeSpans() below is what publishes this - it touches every column and bumps
         this.normalizeSpans()
     }
 
+    /** Rewrites note.trackIndex only - the second-easiest bump to miss, for the same reason as setNoteSpan. */
     swapLayer(amount: number, position: number, layer1: number, layer2: number) {
-        const columns = this.columns.slice(position, position + amount)
+        const columns = this.#columns.slice(position, position + amount)
         columns.forEach(column => {
             column.notes.forEach(note => {
                 if (note.trackIndex === layer1) note.trackIndex = layer2
                 else if (note.trackIndex === layer2) note.trackIndex = layer1
             })
         })
+        this.#touchAllColumns()
+        this.#bumpStructure()
     }
 
+    /**
+     * Toggle a breakpoint on `override` (default: the selected column). Publishes through the
+     * `breakpoints` signal alone - the column graph is untouched, so no structure bump.
+     *
+     * It ASSIGNS a new array rather than splicing/pushing, which is what publishing means for a
+     * `$state.raw` field. It used to mutate in place and rely on callers chaining
+     * validateBreakpoints() to reassign; that made the publish invisible at the call site, and
+     * under raw it would not have published at all.
+     *
+     * An index that is not a real column is a no-op - the SAME predicate validateBreakpoints
+     * filters by, which is the point: two different notions of "a valid breakpoint" in one class
+     * is how one of them ends up writing what the other exists to remove. The guard used to test
+     * the upper end only, so `toggleBreakpoint(-1)` added -1 to the array.
+     */
     toggleBreakpoint = (override?: number) => {
         const index = typeof override === "number" ? override : this.selected
+        if (!this.#addressesColumn(index)) return
         const breakpointIndex = this.breakpoints.indexOf(index)
-        if (breakpointIndex >= 0 && this.columns.length > index) {
-            this.breakpoints.splice(breakpointIndex, 1)
-        } else if (this.columns.length > index) {
-            this.breakpoints.push(index)
-        }
+        this.breakpoints = breakpointIndex >= 0
+            ? this.breakpoints.filter((_, i) => i !== breakpointIndex)
+            : [...this.breakpoints, index]
     }
     eraseColumns = (columns: number[], layer: number | 'all') => {
         if (layer === 'all') {
             columns.forEach(index => {
-                const column = this.columns[index]
-                if (column !== undefined) this.columns[index].notes = []
+                const column = this.#columns[index]
+                if (column !== undefined) column.notes = []
             })
         } else {
             columns.forEach(index => {
-                const column = this.columns[index]
+                const column = this.#columns[index]
                 if (column !== undefined) {
                     column.notes = column.notes.filter(note => note.trackIndex !== layer)
                 }
             })
         }
+        //erased notes may have had spans reaching well past the selection
+        this.#touchAllColumns()
+        this.#bumpStructure()
         return this
     }
 
@@ -636,21 +967,26 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 4> 
         const cloned: NoteColumn[] = copiedColumns.map(column => column.clone())
         if (!insert) {
             this.adjustSpansForInsertedColumns(this.selected, cloned.length)
-            this.columns.splice(this.selected, 0, ...cloned)
+            this.#columns.splice(this.selected, 0, ...cloned)
         } else {
             cloned.forEach((clonedColumn, i) => {
-                const column = this.columns[this.selected + i]
+                const column = this.#columns[this.selected + i]
                 if (column === undefined) return
                 clonedColumn.notes.forEach(clonedNote => {
                     const existing = column.findNote(clonedNote.trackIndex, clonedNote.id)
                     if (existing === null) {
-                        column.addNote(clonedNote.clone())
+                        //spread stands in for the old clonedNote.clone(): the pasted note has
+                        //to belong to the target column alone, not stay aliased to the scratch
+                        //column it was read from
+                        column.addNote({...clonedNote})
                     } else {
                         existing.span = Math.max(existing.span, clonedNote.span)
                     }
                 })
             })
         }
+        //ensureInstruments can APPEND to the roster, so this mutates instruments as well as
+        //structure; normalizeSpans below is what publishes the structural half
         this.ensureInstruments()
         this.normalizeSpans()
         return this
@@ -679,7 +1015,7 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 4> 
         }
         if (layer === 'all') {
             selectedColumns.forEach(index => {
-                const column = this.columns[index]
+                const column = this.#columns[index]
                 if (!column) return
                 column.notes = column.notes.flatMap(note => {
                     const newId = moveId(note)
@@ -702,7 +1038,7 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 4> 
             })
         } else {
             selectedColumns.forEach(index => {
-                const column = this.columns[index]
+                const column = this.#columns[index]
                 if (!column) return
                 const trackNotes = column.notesOfTrack(layer)
                     .sort((a, b) => amount < 0 ? a.id - b.id : b.id - a.id)
@@ -722,7 +1058,8 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 4> 
                 })
             })
         }
-        //shifted notes can land inside another same-id note's span
+        //shifted notes can land inside another same-id note's span - and normalizeSpans() is
+        //also what publishes this whole method
         this.normalizeSpans()
     }
 
@@ -743,16 +1080,52 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 4> 
     deleteColumns = (selectedColumns: number[]) => {
         //same rule as removeColumns: spans shrink by their removed tail columns
         this.adjustSpansForRemovedColumns(new Set(selectedColumns))
-        this.columns = this.columns.filter((e, i) => !selectedColumns.includes(i))
+        this.#columns = this.#columns.filter((e, i) => !selectedColumns.includes(i))
         let min = Math.min(...selectedColumns)
-        this.selected = clamp(min, 0, this.columns.length - 1)
-        if (this.columns.length === 0) this.addColumns(12, 0)
+        //structure AND selected; breakpoints too, when the pass below drops one
+        this.selected = clamp(min, 0, this.#columns.length - 1)
+        if (this.#columns.length === 0) this.addColumns(12, 0)
+        //the other column-array shrink, so the same breakpoint pass removeColumns runs. It used to
+        //be the CALLER's job (Composer.svelte chained it) - one caller away from a stale breakpoint
+        //reaching serialize()
+        this.validateBreakpoints()
+        //normalizeSpans() publishes the structural half; `selected` published itself above
         this.normalizeSpans()
         return this
     }
 
+    /**
+     * A real column index. toggleBreakpoint and validateBreakpoints both decide through this, so
+     * what a `breakpoints` entry may be is defined here rather than in each of them.
+     */
+    #addressesColumn(index: number): boolean {
+        return Number.isInteger(index) && index >= 0 && index < this.#columns.length
+    }
+
+    /**
+     * Drop every breakpoint that no longer addresses a column: the array holds column INDEXES, so
+     * shrinking the song strands them, and serialize() would write one pointing past the end.
+     *
+     * Called from the paths that SHRINK the live column array (removeColumns, deleteColumns,
+     * restoreColumns) and from deserialize, whose input is a file anyone may have hand-edited -
+     * that is what the integer/negative half of #addressesColumn is for. The in-app path,
+     * toggleBreakpoint, refuses an index this would filter rather than adding one.
+     *
+     * initColumnsForConstruction deliberately does NOT run this - it publishes nothing, by
+     * contract - and its callers either bring a valid song's breakpoints (clone) or are validated
+     * afterwards (both deserializers). A gap that leaves: a MIDI import or a recording conversion
+     * with no notes at all installs ZERO columns while the constructor's breakpoint [0] is still in
+     * place. Nothing can draw a marker for a column that does not exist, and the next deserialize
+     * filters it out, so it is written down here rather than papered over.
+     *
+     * Publishes through the `breakpoints` signal only - the column graph is untouched - and only
+     * when something was actually filtered: an unchanged array reassigned is a wasted invalidation.
+     * Where the same guard is worth having elsewhere it is there too, see setNoteSpan's and
+     * setTempoChangerAt's early returns.
+     */
     validateBreakpoints = () => {
-        this.breakpoints = this.breakpoints.filter(breakpoint => breakpoint < this.columns.length)
+        const valid = this.breakpoints.filter(breakpoint => this.#addressesColumn(breakpoint))
+        if (valid.length !== this.breakpoints.length) this.breakpoints = valid
     }
     /**
      * NEW-format cross-game conversion (v4 songs imported into another game's build,
@@ -827,10 +1200,19 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 4> 
         clone.data = {...this.data}
         clone.version = this.version
         clone.pitch = this.pitch
+        //`reverb` used to be dropped here, which was real data loss rather than a style point.
+        //clone() is what toOtherGame() converts through (the cross-game import path), what the
+        //library row's "duplicate song" saves, and what LibrarySearchedSong re-imports a cached
+        //song with - all three stored the song with reverb OFF after the user had turned it on.
+        clone.reverb = this.reverb
         clone.instruments = this.instruments.map(ins => ins.clone())
         clone.breakpoints = [...this.breakpoints]
         clone.selected = this.selected
-        clone.columns = this.columns.map(column => column.clone())
+        //initColumnsForConstruction, NOT restoreColumns: restore re-clamps `selected` against the array it is
+        //given, and doing that here would clamp against the constructor's 100 placeholder columns
+        //on any song longer than that. Still a deep copy (NoteColumn.clone spreads every note),
+        //which is what the composer's undo history depends on.
+        clone.initColumnsForConstruction(this.columns.map(column => column.clone()))
         return clone
     }
 }

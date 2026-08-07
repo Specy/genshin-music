@@ -1,4 +1,4 @@
-import {ComposedSong, type OldFormatComposed, type UnknownSerializedComposedSong} from "../Songs/ComposedSong"
+import {ComposedSong, type OldFormatComposed, type UnknownSerializedComposedSong} from "../Songs/ComposedSong.svelte"
 import {type OldFormatRecorded, RecordedSong, type UnknownSerializedRecordedSong} from "../Songs/RecordedSong"
 import {FileDownloader} from "../utils/Utilities"
 // restored P4a Task 2 (audio engine): AudioRecorder.ts (src/lib/audio/AudioRecorder.ts) is the
@@ -6,7 +6,7 @@ import {FileDownloader} from "../utils/Utilities"
 // audiobuffer-to-wav is now installed (^1.0.0, matching the old package.json version exactly).
 import toWav from 'audiobuffer-to-wav'
 import {songsStore} from "$stores/SongsStore.svelte"
-import {type SerializedSong, Song} from "../Songs/Song"
+import {type SerializedSong, Song} from "../Songs/Song.svelte"
 // type-only: @tonejs/midi's CJS build (`main` field) is a minified webpack bundle whose named
 // exports are assigned dynamically (Object.defineProperty), not via statically analyzable
 // `exports.X = ...` - Node's native ESM loader (used verbatim during adapter-static prerendering)
@@ -21,7 +21,7 @@ import {type SerializedTheme, Theme, ThemeProvider} from "../theme/ThemeProvider
 import {songService} from "./SongService"
 import {Folder, type SerializedFolder} from "../Folder"
 import {folderStore} from "$stores/FoldersStore.svelte"
-import {type SerializedVsrgSong, VsrgSong} from "../Songs/VsrgSong"
+import {type SerializedVsrgSong, VsrgSong} from "../Songs/VsrgSong.svelte"
 import {themeStore} from "$stores/ThemeStore.svelte"
 import {AppError} from "../Errors"
 import type {SerializedSongKind} from "../types"
