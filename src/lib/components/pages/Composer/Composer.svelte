@@ -854,8 +854,11 @@
     }
     // BEHAVIOR NOTE: refreshSong() used to clone unconditionally, so re-selecting the SAME index
     // still forced a repaint. Writing an unchanged value to the `selected` signal notifies
-    // nothing, which only matters for togglePlay's selectColumn(song.selected, ...) on play-start
-    // - the canvas effect reads `isPlaying`, which did change, so it still repaints.
+    // nothing. The case that used to depend on that is togglePlay's selectColumn(song.selected, ...)
+    // on play-start: the canvas effect does re-run, because it reads `isPlaying` - but the renderer
+    // excludes `isPlaying` from its repaint diff (it changes no pixel there), so update() returns
+    // without rendering and the canvas keeps what it had. Nothing about a column's appearance
+    // depends on whether the song is playing, so there is nothing to repaint.
     //add a bit of delay if recording audio to imrove the recording quality
     delay = delay ? delay + (isRecordingAudio ? 0.5 : 0) : 0;
     if (ignoreAudio) return;
@@ -1175,6 +1178,7 @@
       {#key settings.columnsPerCanvas.value}
         <ComposerCanvas
           columns={song.columns}
+          structureVersion={song.structureVersion}
           {isPlaying}
           {isRecordingAudio}
           instruments={song.instruments}

@@ -1,15 +1,17 @@
 // This class owns all pixi state: both Applications (notes stage + timeline stage), the
-// ComposerCache, the scroll/drag state machine, and the update(state) entry point that rebuilds
-// the visible-column container and timeline content every call. ComposerCanvas.svelte owns
-// lifecycle only - it constructs this class in onMount, awaits init(), feeds it state via
-// update(), and renders the surrounding DOM.
+// ComposerCache, the scroll/drag state machine, and the update(state) entry point. It keeps a POOL
+// of per-column views (see ColumnView below) and diffs the state it last PAINTED against the one it
+// was handed now to decide how much of the scene to repaint - see update() and paintedState.
+// ComposerCanvas.svelte owns lifecycle only - it constructs this class in onMount, awaits init(),
+// feeds it state via update(), and renders the surrounding DOM.
 //
 // Theme reaches this class via subscribeTheme(cb); ComposerCanvas.svelte separately derives the
 // handful of theme values its own DOM needs via $derived off the same ThemeProvider singleton.
 // This duplicates a few color formulas between the two files (numeric here for pixi draw calls,
-// CSS strings there) - deliberate, not an oversight. The only values this class reports back to
-// the Svelte side (via ComposerRendererCallbacks.onGeometryChange) are width and hasCache -
-// pixi/DOM-measurement-derived values the template cannot re-derive on its own.
+// CSS strings there) - deliberate, not an oversight. What this class hands back through
+// ComposerRendererCallbacks.onGeometryChange is width and hasCache: pixi/DOM-measurement-derived
+// values the template cannot re-derive on its own. The other callbacks carry user input the same
+// way round - a pointer on either canvas becomes a selectColumn or a toggleBreakpoint.
 import { game } from '$game';
 import { isMobile } from 'is-mobile';
 import {
@@ -29,7 +31,6 @@ import {
   computeStrandedRows,
   displayButtonForId,
 } from '$core/Songs/noteIds';
-import type { ComposerSettingsDataType } from '$core/BaseSettings';
 import { ComposerCache, type ComposerCacheData } from './ComposerCache';
 
 const NOTES_PER_COLUMN = game.notes.perColumn;
@@ -53,22 +54,53 @@ interface ComposerRendererTheme {
     backgroundHex: string;
     backgroundOpacity: number;
   };
+  /**
+   * The span-tail colour of the CURRENT layer. Captured here rather than read live in the draw
+   * path: a `ThemeProvider.get(...)` inside a draw is both an allocation per painted column and a
+   * reactive read, which would join (and, on any run that skipped it, leave) the canvas $effect's
+   * dependency set. The channel that repaints tails after a theme edit is subscribeTheme ->
+   * handleThemeChange -> recalculateCacheAndSizes, which drops the pool and repaints everything.
+   *
+   * paintTails does not read THIS field - see ComposerRenderer.paintTailAccent for the copy it
+   * reads instead and why the two are updated at different moments.
+   */
+  tailAccent: number;
 }
 
 // The reactive input ComposerCanvas.svelte pushes into update() on every relevant change via its
 // own $effect.
 //
-// EVERY ARRAY ON THIS INTERFACE HAS TO BE A PLAIN ARRAY, NOT A `$state` PROXY. draw() indexes them
-// per column and per note (hundreds of element reads per draw), and an element read through Svelte's
-// deep proxy is a Proxy trap plus a dependency registration - measured at ~20x a plain read, i.e.
-// a few hundred microseconds of pure overhead on every draw of a large song. `columns` comes from
-// ComposedSong's `#structure`-guarded getter; `instruments`, `breakpoints` and `selectedColumns`
-// are `$state.raw` at their declarations. `settings` is still a deep `$state` object, which is
-// fine: draw() reads exactly two property paths off it per call, not one per note. A future field
-// backed by a deep `$state` array must be hoisted into a plain copy in update() rather than
-// indexed in the loops.
+// EVERY FIELD HERE IS A VALUE OR A PLAIN ARRAY - no `$state` proxy, and nothing reached through the
+// song. Two separate reasons, both load-bearing:
+//
+//  - update() DIFFS these fields (see needsFullRepaint). A field reached through a live song is the
+//    same object on both sides of the comparison, so the branch it gates is permanently false -
+//    silently. `structureVersion` exists because the column array keeps one identity across the
+//    edits that mutate it in place, so an identity comparison does not see those; `columns`'
+//    identity is diffed beside it, because a structure version is per-instance and a freshly loaded
+//    song starts at 0.
+//  - draw() indexes the arrays per column and per note (hundreds of element reads per full
+//    repaint), and an element read through Svelte's deep proxy is a Proxy trap plus a dependency
+//    registration - measured at ~20x a plain read. `columns` comes from ComposedSong's
+//    `#structure`-guarded getter; `instruments`, `breakpoints` and `selectedColumns` are
+//    `$state.raw` at their declarations. A future field backed by a deep `$state` array must be
+//    hoisted into a plain copy in the canvas's $effect rather than indexed in the loops.
+//
+// `beatMarks` and `columnsPerCanvas` are the two settings values this class needs, taken as
+// scalars rather than as the `ComposerSettings.data` object they come from. That object's identity
+// never changes when a setting is edited, so a diff could not see one; and reading them in the
+// canvas's $effect - rather than deep inside a draw that may or may not run - is what subscribes
+// that effect to them at all.
 export interface ComposerRendererState {
   columns: NoteColumn[];
+  /**
+   * ComposedSong's graph version, captured. Comparable only against another capture from the SAME
+   * song, which is why `columns` above is diffed alongside it.
+   */
+  structureVersion: number;
+  // QUIRK: accepted for prop-shape parity but read nowhere in this class - the canvas needs it for
+  // its own DOM. Deliberately excluded from the repaint diff: it flips on every play/stop and
+  // changes no pixel here.
   isPlaying: boolean;
   isRecordingAudio: boolean;
   // The instrument roster, passed as its OWN field rather than reached through the song. It used
@@ -76,13 +108,28 @@ export interface ComposerRendererState {
   // canvas's $effect depended on the roster only implicitly, through a read that happens deep
   // inside renderer.update(). That worked while every edit handed the effect a freshly cloned
   // `song`; with a stable song identity the effect would never re-run on an instrument change,
-  // and it is dropped entirely on any early-returning draw (see drawNotesStage's `visible` guard,
-  // and phase 3's selected-moved-only path). Explicit prop, explicit dependency.
+  // and it is dropped entirely on any early-returning draw. Explicit prop, explicit dependency.
+  //
+  // Diffed BY ARRAY IDENTITY: InstrumentSettingsPopup edits the live InstrumentData in place and
+  // ComposedSong.setInstrument then publishes a clone of it, so a value comparison between two
+  // captures compares the mutated object against its own copy and reports equal.
   instruments: InstrumentData[];
   selected: number;
   currentLayer: number;
+  // Read by computeCanvasSize, which runs at init and on the resize/theme path rather than per
+  // draw. It scales BOTH canvas dimensions, so it decides every column's x, every note's y and the
+  // size of both canvases. Composer.svelte passes it as a static prop, which is the reason
+  // needsFullRepaint does not compare it.
   inPreview?: boolean;
-  settings: ComposerSettingsDataType;
+  /** ComposerSettings' `beatMarks`, as a number: decides the light/dark bar-group alternation. */
+  beatMarks: number;
+  /**
+   * ComposerSettings' `columnsPerCanvas`, as a number. Read ONCE, in the constructor: a changed
+   * value arrives as a fresh ComposerRenderer instead, because Composer.svelte wraps the canvas in
+   * {#key settings.columnsPerCanvas.value}. It is on the state object so the canvas's $effect
+   * reads it like every other input, not because update() re-reads it.
+   */
+  columnsPerCanvas: number;
   breakpoints: number[];
   selectedColumns: number[];
 }
@@ -95,97 +142,151 @@ export interface ComposerRendererCallbacks {
   onGeometryChange: (geometry: { width: number; hasCache: boolean }) => void;
 }
 
+/**
+ * Whether a column is inside the drawn window. This is the DEFINITION; visibleColumnRange() below
+ * is the closed form of the same set, and test/composerRenderer.test.ts pins the two against each
+ * other rather than assuming they agree, over the option list it reads out of
+ * ComposerSettings.data.columnsPerCanvas.
+ *
+ * Strict on both sides, so for an integer `currentPos` the window is 3 columns wider than the
+ * canvas shows when numberOfColumnsPerCanvas is even and 4 wider when it is odd (bleed).
+ */
 export function isColumnVisible(pos: number, currentPos: number, numberOfColumnsPerCanvas: number) {
   const threshold = numberOfColumnsPerCanvas / 2 + 2;
   return currentPos - threshold < pos && pos < currentPos + threshold;
 }
 
-/** One span-tail segment crossing (or starting in) a column, at a display row. */
-export interface TailSegment {
-  button: number;
-  isCurrentLayer: boolean;
-  /** true in the span's start column: draw only the right half (a stub out of the note icon). */
-  isStart: boolean;
-}
-
-interface RenderColumnParams {
+interface ColumnPaintParams {
+  index: number;
   notes: ColumnNote[];
-  tails: TailSegment[];
-  accentColor: number;
   currentLayer: number;
   instruments: InstrumentData[];
-  index: number;
   sizes: { width: number; height: number };
   cache: ComposerCacheData;
-  backgroundCache: Texture;
+  background: Texture;
   isBreakpoint: boolean;
   isSelected: boolean;
   isToolsSelected: boolean;
 }
 
-// background carries the selected/tools-selected overlay and the breakpoint marker as its own
-// children (not siblings) - note sprites are separate, siblings of background under the column
-// container.
-function renderColumn({
-  notes,
-  tails,
-  accentColor,
-  index,
-  sizes,
-  cache,
-  instruments,
-  backgroundCache,
-  isBreakpoint,
-  isSelected,
-  isToolsSelected,
-  currentLayer,
-}: RenderColumnParams): Container {
-  const columnContainer = new Container();
-  columnContainer.x = sizes.width * index;
+/**
+ * One column of the notes stage, owned by ComposerRenderer's pool and REUSED: acquired when a
+ * column enters the drawn window, released back to the free list when it leaves, never destroyed
+ * in between. Before the pool existed, drawNotesStage destroyed and rebuilt every display object
+ * in the window on every update - ~276 of them per playback tick at the default columnsPerCanvas.
+ *
+ * Four child slots are fixed for the life of the view - background, selection overlay, breakpoint
+ * marker, tail Graphics - followed by note sprites grown on demand. THAT ORDER IS THE DRAW ORDER:
+ * pixi renders a container's children in array order, and `zIndex` decides nothing unless the
+ * PARENT sets sortableChildren, which nothing here does. It is the same order the pre-pool code
+ * produced by nesting the overlay and the breakpoint marker inside the background Sprite and adding
+ * the rest as siblings.
+ *
+ * paint() writes the view's own placement and presentation (the container's x, y, alpha and
+ * visible) and every property of a child that varies from column to column - the background's
+ * texture, the overlay's texture, alpha and visibility, the marker's texture and visibility, and
+ * each note sprite's texture, row and alpha - whether or not THIS column uses it: an unused overlay
+ * is hidden, a surplus note sprite is hidden. Writing them without first checking what the view
+ * already holds is what makes a reused view safe; a "set it only if it changed" paint is how a pool
+ * ends up showing the previous occupant's texture, alpha or row.
+ *
+ * What it leaves alone: the child positions that are the same for every column (the background, the
+ * overlay and the marker sit at the container's origin, and a note sprite's x does too, so those
+ * are the constructor's zeroes), and the tail Graphics' DRAWING - ComposerRenderer.paintTails
+ * clears and refills that immediately after every paint(). Nothing writes that Graphics' own
+ * placement or alpha, so it draws from the container's origin at full opacity and the per-bar alpha
+ * lives in the fill ops.
+ *
+ * test/composerRenderer.test.ts is what keeps those two paragraphs honest rather than aspirational:
+ * it reads the placement, texture, position, alpha and visibility of every child off a pool that
+ * has been driven incrementally, and compares them both against the drawing rules and against a
+ * second renderer freshly mounted at the same state.
+ */
+class ColumnView {
+  readonly container = new Container();
+  /** Cleared and refilled by ComposerRenderer.paintTails - the view owns the object, not the drawing. */
+  readonly tailGraphics = new Graphics();
+  private readonly background: Sprite;
+  private readonly overlay: Sprite;
+  private readonly breakpointMarker: Sprite;
+  private readonly noteSprites: Sprite[] = [];
+  /** How many of noteSprites are currently shown; the rest are hidden, not removed. */
+  private paintedNotes = 0;
 
-  const background = new Sprite(backgroundCache);
-  if (isSelected || isToolsSelected) {
-    const overlay = new Sprite(
-      isToolsSelected && !isSelected ? cache.standard[3] : cache.standard[2]
-    );
-    overlay.alpha = isToolsSelected && !isSelected ? 0.4 : 0.8;
-    overlay.zIndex = 1;
-    // background is a Sprite; PixiJS v8 logs a one-time deprecation warning for addChild on
-    // non-Container nodes ("Only Containers will be allowed to add children in v8.0.0") but
-    // still supports it - nesting is kept here to match the intended child order above.
-    background.addChild(overlay);
+  constructor(cache: ComposerCacheData) {
+    this.background = new Sprite(cache.standard[0]);
+    this.overlay = new Sprite(cache.standard[2]);
+    this.overlay.visible = false;
+    this.breakpointMarker = new Sprite(cache.breakpoints[1]);
+    this.breakpointMarker.visible = false;
+    this.container.addChild(this.background);
+    this.container.addChild(this.overlay);
+    this.container.addChild(this.breakpointMarker);
+    this.container.addChild(this.tailGraphics);
   }
-  if (isBreakpoint) {
-    background.addChild(new Sprite(cache.breakpoints[1]));
-  }
-  columnContainer.addChild(background);
 
-  //span tails render UNDER the note icons: a connector bar through covered columns
-  //(right-half stub in the start column), accent for the current layer, dim otherwise
-  if (tails.length > 0) {
-    const rowHeight = sizes.height / NOTES_PER_COLUMN;
-    const tailHeight = Math.max(2, rowHeight * 0.22);
-    const tailGraphics = new Graphics();
-    for (const tail of tails) {
-      const y = COMPOSER_NOTE_POSITIONS[tail.button] * rowHeight + (rowHeight - tailHeight) / 2;
-      const x = tail.isStart ? sizes.width * 0.55 : 0;
-      tailGraphics.rect(x, y, sizes.width - x, tailHeight).fill({
-        color: tail.isCurrentLayer ? accentColor : 0x888888,
-        alpha: tail.isCurrentLayer ? 0.75 : 0.35,
-      });
+  paint(params: ColumnPaintParams): void {
+    const { cache, notes, instruments, currentLayer, sizes } = params;
+    this.container.x = sizes.width * params.index;
+    // The other three of the container's own presentation properties, written for the same reason
+    // the child properties below are: this object outlives the column it is painting for, and the
+    // pool is keyed on it. Nothing in this class writes them elsewhere today, so these are writes
+    // of the values they already hold - which is the point: a release/acquire cycle that starts
+    // hiding or fading a view does not need a matching restore added somewhere else to be safe.
+    this.container.y = 0;
+    this.container.alpha = 1;
+    this.container.visible = true;
+    this.background.texture = params.background;
+    this.paintSelection(cache, params.isSelected, params.isToolsSelected);
+    this.breakpointMarker.texture = cache.breakpoints[1];
+    this.breakpointMarker.visible = params.isBreakpoint;
+    const strandedRows = computeStrandedRows(notes, instruments);
+    let painted = 0;
+    for (const [button, layerStatus] of computeRowLayerStatuses(notes, currentLayer, instruments)) {
+      if (layerStatus === 0) continue;
+      const texture = cache.notes[layerStatus];
+      const sprite = this.noteSpriteAt(painted, texture);
+      sprite.texture = texture;
+      sprite.y = (COMPOSER_NOTE_POSITIONS[button] * sizes.height) / NOTES_PER_COLUMN;
+      //stranded notes (id has no button on its own instrument) are visibly dimmed
+      sprite.alpha = strandedRows.has(button) ? 0.45 : 1;
+      sprite.visible = true;
+      painted++;
     }
-    columnContainer.addChild(tailGraphics);
+    for (let i = painted; i < this.paintedNotes; i++) this.noteSprites[i].visible = false;
+    this.paintedNotes = painted;
   }
-  const strandedRows = computeStrandedRows(notes, instruments);
-  for (const [button, layerStatus] of computeRowLayerStatuses(notes, currentLayer, instruments)) {
-    if (layerStatus === 0) continue;
-    const noteSprite = new Sprite(cache.notes[layerStatus]);
-    noteSprite.y = (COMPOSER_NOTE_POSITIONS[button] * sizes.height) / NOTES_PER_COLUMN;
-    //stranded notes (id has no button on its own instrument) are visibly dimmed
-    if (strandedRows.has(button)) noteSprite.alpha = 0.45;
-    columnContainer.addChild(noteSprite);
+
+  /**
+   * The selection overlay, which is the only thing a playback tick changes on a column that stays
+   * in the window. Texture AND alpha depend on the (isSelected, isToolsSelected) PAIR - selected
+   * wins over a tools selection covering the same column.
+   */
+  paintSelection(cache: ComposerCacheData, isSelected: boolean, isToolsSelected: boolean): void {
+    const toolsOnly = isToolsSelected && !isSelected;
+    this.overlay.texture = toolsOnly ? cache.standard[3] : cache.standard[2];
+    this.overlay.alpha = toolsOnly ? 0.4 : 0.8;
+    this.overlay.visible = isSelected || isToolsSelected;
   }
-  return columnContainer;
+
+  private noteSpriteAt(index: number, texture: Texture): Sprite {
+    const existing = this.noteSprites[index];
+    if (existing) return existing;
+    //grown on demand and never shrunk: the array ends up as deep as the densest column this view
+    //has ever held, bounded by the number of display rows (game.notes.composerPositions.length)
+    const sprite = new Sprite(texture);
+    this.noteSprites.push(sprite);
+    this.container.addChild(sprite);
+    return sprite;
+  }
+
+  destroy(): void {
+    // `context: true` also destroys the tail Graphics' own GraphicsContext (and its GPU geometry);
+    // Container.destroy hands the same options to every child. There is no `texture` key, so the
+    // ComposerCache textures the sprites merely BORROW are left alone - the cache owns those and
+    // destroys them itself.
+    this.container.destroy({ children: true, context: true });
+  }
 }
 
 export class ComposerRenderer {
@@ -195,14 +296,70 @@ export class ComposerRenderer {
   private cache: ComposerCache | null = null;
   private themeDispose: (() => void) | null = null;
 
-  // Persistent scene objects (created once per renderer instance, children rebuilt and explicitly
-  // repainted by draw() - see that method for why a full rebuild is used instead of an incremental
-  // diff).
+  // Persistent scene objects, created once per renderer instance. notesColumnsContainer's children
+  // are the pooled ColumnViews currently on screen (see the pool below); timelineContentContainer's
+  // are rebuilt by drawTimelineStage, which only runs on the full-repaint path.
   private readonly notesColumnsContainer = new Container();
   private readonly timelineContentContainer = new Container();
   private readonly viewportGraphics = new Graphics();
 
+  /**
+   * The column pool. `columnViews` is what is ON SCREEN, keyed by column index; `freeColumnViews`
+   * holds detached views waiting to be reused. The invariant, maintained by acquire/release and
+   * nothing else: a view is in exactly one of the two, views in the map are children of
+   * notesColumnsContainer in ASCENDING INDEX ORDER, and views in the free list have no parent.
+   *
+   * Ascending order is not cosmetic bookkeeping - it is what makes the pooled scene graph the same
+   * tree the pre-pool rebuild produced, so "the pool changed nothing visible" is a claim about the
+   * tree rather than about columns happening not to overlap.
+   *
+   * Every view holds textures from the CURRENT ComposerCache, so cache regeneration destroys the
+   * pool outright (dropColumnPool) rather than releasing it - see recalculateCacheAndSizes.
+   */
+  private readonly columnViews = new Map<number, ColumnView>();
+  private readonly freeColumnViews: ColumnView[] = [];
+
   private state: ComposerRendererState;
+  /**
+   * The state of the last update() that actually PAINTED the notes stage, or null when nothing
+   * on screen can be trusted to match a state at all - no cache yet, recording audio, or the pool
+   * just dropped. Null forces the next update onto the full path.
+   *
+   * It is the left-hand side of every comparison in needsFullRepaint; `this.state` is NOT, because
+   * that one is overwritten on every call including the ones that paint nothing - diffing against
+   * it would compare the incoming state against a moment that never reached the screen.
+   *
+   * Holding the object is safe: ComposerCanvas.svelte's $effect builds a fresh literal per run and
+   * never mutates one it has handed over.
+   */
+  private paintedState: ComposerRendererState | null = null;
+  /**
+   * The longest span in the song, cached against (columns identity, structure version) - the same
+   * pair needsFullRepaint diffs, for the same reason. The version moves on a graph edit but reads 0
+   * on two different songs; the array identity moves on a song swap but not on every edit. Dropping
+   * either half of the key returns a bound from the previous graph for the case the other half
+   * covers, and test/composerRenderer.test.ts has a row for each.
+   *
+   * It bounds the backward scan in paintTails; an underestimate silently drops tails, so it is
+   * recomputed rather than maintained incrementally. O(notes) once per structural edit, which is
+   * user-paced - a tick that only moves `selected` leaves both halves of the key alone and reuses
+   * the cached span.
+   */
+  private maxSpanCache: { columns: NoteColumn[]; structureVersion: number; span: number } | null =
+    null;
+  /**
+   * The tail accent the pool is painted in, which is a different moment from `theme.tailAccent`.
+   *
+   * handleThemeChange replaces `this.theme` synchronously and then schedules the repaint through
+   * recalculateCacheAndSizes' 50ms debounce. An update() landing in between takes the fast path and
+   * repaints only the column that entered the window - so reading the new accent there would put
+   * one column in the new colour beside a window still painted in the old one. This copy moves with
+   * the repaint instead, so the columns on screen agree with each other. (The notes stage as a
+   * whole still trails the DOM and the timeline for the length of that debounce; the textures do
+   * too, and both catch up in the same repaint.)
+   */
+  private paintTailAccent: number;
+
   private numberOfColumnsPerCanvas: number;
   private width: number;
   private height: number;
@@ -234,7 +391,7 @@ export class ComposerRenderer {
     private readonly callbacks: ComposerRendererCallbacks
   ) {
     this.state = initialState;
-    this.numberOfColumnsPerCanvas = Number(initialState.settings.columnsPerCanvas.value);
+    this.numberOfColumnsPerCanvas = initialState.columnsPerCanvas;
     // Placeholders - init() always overwrites width/height/columnSize with the real computed
     // size before any Application is created.
     this.width = 300;
@@ -259,7 +416,9 @@ export class ComposerRenderer {
         backgroundHex: ThemeProvider.get('primary').toString(),
         backgroundOpacity: ThemeProvider.get('primary').alpha(),
       },
+      tailAccent: ThemeProvider.get('accent').rgbNumber(),
     };
+    this.paintTailAccent = this.theme.tailAccent;
   }
 
   // ComposerCanvas.svelte's onMount must await this before ever calling update().
@@ -353,6 +512,15 @@ export class ComposerRenderer {
         isMobile() ? 2 : 4,
         isMobile() ? 25 : 30
       );
+      // EVERY input to a pooled view changed here: the column geometry AND every texture it holds
+      // (the old cache's textures are destroyed 500ms below, so a surviving pool would end up
+      // pointing at destroyed GPU resources). Nothing in the state diff can see any of this - theme
+      // and resize have no props channel - so the pool is dropped outright rather than released for
+      // reuse, and draw() below repaints from nothing.
+      this.dropColumnPool();
+      // ...and the accent the pool paints tails in moves here, with the repaint below, rather than
+      // when handleThemeChange replaced this.theme - see the field.
+      this.paintTailAccent = this.theme.tailAccent;
       this.notifyGeometry();
       // draw() rebuilds and explicitly repaints the static scenes after cache regeneration.
       this.draw();
@@ -399,6 +567,11 @@ export class ComposerRenderer {
     });
   }
 
+  // The notes canvas' own CSS opacity, taken from the theme's background alpha. It is a DOM style
+  // on the pixi canvas ELEMENT rather than anything in the pixi scene, so a scene description
+  // cannot see it while it drives the whole canvas to invisible on its own.
+  // test/composerRenderer.test.ts reads the element's whole inline style beside the scene, and
+  // states the declaration it expects from ThemeProvider - see its expectedCanvasStyle.
   private applyNotesCanvasOpacity = () => {
     if (this.wheelCanvas)
       this.wheelCanvas.style.opacity = String(this.theme.main.backgroundOpacity);
@@ -540,6 +713,7 @@ export class ComposerRenderer {
         backgroundHex: ThemeProvider.get('primary').hexa(),
         backgroundOpacity: Math.max(ThemeProvider.get('primary').alpha(), 0.8),
       },
+      tailAccent: ThemeProvider.get('accent').rgbNumber(),
     };
     this.recalculateCacheAndSizes();
     if (this.notesApp) this.notesApp.renderer.background.color = this.theme.main.background;
@@ -552,106 +726,348 @@ export class ComposerRenderer {
 
   // The entry point ComposerCanvas.svelte's $effect calls on every reactive-state change - the
   // props channel; theme reaches this class separately, through subscribeTheme.
-  // Does not re-read settings.columnsPerCanvas.value: a changed value arrives via a fresh
-  // ComposerRenderer instance instead, because the parent wraps this component in
+  // Does not re-read columnsPerCanvas: a changed value arrives via a fresh ComposerRenderer
+  // instance instead, because the parent wraps this component in
   // {#key settings.columnsPerCanvas.value}.
+  //
+  // THREE OUTCOMES, cheapest last:
+  //  - full repaint, when needsFullRepaint reports a change - or when there is no trustworthy
+  //    baseline to compare against at all (see paintedState);
+  //  - `selected` moved and needsFullRepaint reported nothing: drawSelectedMoved, which applies
+  //    the shift to the scene already on screen. That is the playback tick, and it is the reason
+  //    this diff exists - during playback the structure does not change, so the diff has nothing
+  //    to report and the tick costs O(window) rather than O(song).
+  //  - `selected` did not move either: return without rendering. A state differing from the last
+  //    painted one only in fields needsFullRepaint does not compare lands here; that method's
+  //    closing paragraph says what each of those is doing on the state object.
   update(state: ComposerRendererState): void {
+    const previous = this.paintedState;
+    // FIRST, unconditionally, and before any early return: the pointer/wheel/hitarea handlers all
+    // read this.state, and they must never see the state of a previous update.
     this.state = state;
-    this.draw();
+    if (previous === null) return this.draw();
+    const cacheData = this.cache?.cache;
+    if (!cacheData) return this.draw();
+    if (this.needsFullRepaint(previous, state)) return this.draw();
+    if (previous.selected === state.selected) return;
+    this.drawSelectedMoved(previous.selected, cacheData);
   }
 
-  // Rebuilds and explicitly repaints both static scenes on every call rather than diffing - the
-  // visible window is at most numberOfColumnsPerCanvas/2+2 columns per side, so a full rebuild is
-  // cheap and avoids stale-sprite bookkeeping after a resize/theme/cache change or a plain state
-  // update.
+  /**
+   * Everything the painted output depends on EXCEPT `selected` - which is the one input the fast
+   * path knows how to apply incrementally.
+   *
+   * The comparisons are identity comparisons on purpose, and they are only sound because each of
+   * `instruments`, `breakpoints` and `selectedColumns` is REPLACED rather than edited in place by
+   * whoever owns it: the first two are `$state.raw` on the song, the third is `$state.raw` in
+   * Composer.svelte.
+   *
+   * `columns` is the one that does NOT work that way, and it is why `structureVersion` is compared
+   * beside it. Some of ComposedSong's mutators install a new array and some edit the one that is
+   * there, so the identity moves on an edit sometimes and not others - a moved identity forces a
+   * full repaint, which is the safe direction, but an unmoved one proves nothing. The version moves
+   * on every graph edit and cannot see a song SWAP (a freshly loaded song sits at 0, which the
+   * previous song may too). Neither alone is sufficient.
+   *
+   * Not compared, and why. `isPlaying` is read nowhere in this class - see its field. `inPreview`
+   * and `columnsPerCanvas` both decide geometry, and `inPreview` decides a great deal of it (it
+   * scales both canvas dimensions in computeCanvasSize, so it moves every column's x, every note's
+   * y and the size of both canvases) - but neither reaches update() as a CHANGE: Composer.svelte
+   * passes `inPreview` as a static prop, and a changed `columnsPerCanvas` arrives as a fresh
+   * ComposerRenderer instead, because the parent wraps the canvas in
+   * {#key settings.columnsPerCanvas.value}. Theme, canvas size and textures have no props channel
+   * to compare at all; they reach the scene through recalculateCacheAndSizes, which drops the pool
+   * and, with it, the baseline this diffs against.
+   */
+  private needsFullRepaint(previous: ComposerRendererState, next: ComposerRendererState): boolean {
+    return (
+      // not `previous.isRecordingAudio !== next.isRecordingAudio`: a baseline is only recorded by a
+      // run that painted, which cannot be one where this was true. Written as an absolute so that
+      // stays true even if the baseline rule is ever loosened - the pool must never be advanced
+      // incrementally while the container it lives in is hidden.
+      next.isRecordingAudio ||
+      previous.columns !== next.columns ||
+      previous.structureVersion !== next.structureVersion ||
+      previous.instruments !== next.instruments ||
+      previous.breakpoints !== next.breakpoints ||
+      previous.selectedColumns !== next.selectedColumns ||
+      previous.currentLayer !== next.currentLayer ||
+      previous.beatMarks !== next.beatMarks
+    );
+  }
+
+  /** beatMarks is 3 or 4 in the shipped options; 0 would mean "off" and falls back to 12. */
+  private counterLimit(): number {
+    const beatMarks = this.state.beatMarks;
+    return beatMarks === 0 ? 12 : 4 * beatMarks;
+  }
+
+  /**
+   * The drawn window, clamped to the song. `last < first` means nothing is drawn (an empty song).
+   *
+   * Closed form of isColumnVisible's set: the smallest integer strictly greater than
+   * selected - threshold, and the largest strictly less than selected + threshold. The two are
+   * pinned against each other in test/composerRenderer.test.ts rather than assumed equal - the
+   * thresholds are half-integers for odd columnsPerCanvas values, which is where a naive
+   * `selected ± n/2` form stops agreeing.
+   */
+  private visibleColumnRange(): { first: number; last: number } {
+    const threshold = this.numberOfColumnsPerCanvas / 2 + 2;
+    const { selected, columns } = this.state;
+    return {
+      first: Math.max(0, Math.floor(selected - threshold) + 1),
+      last: Math.min(columns.length - 1, Math.ceil(selected + threshold) - 1),
+    };
+  }
+
+  private acquireColumnView(index: number, cacheData: ComposerCacheData): ColumnView {
+    const view = this.freeColumnViews.pop() ?? new ColumnView(cacheData);
+    //counted, not searched: the map holds only the drawn window, so this is at most a few dozen
+    //integer comparisons, and it is what keeps the container's children in ascending index order
+    let position = 0;
+    for (const attached of this.columnViews.keys()) if (attached < index) position++;
+    this.notesColumnsContainer.addChildAt(view.container, position);
+    this.columnViews.set(index, view);
+    return view;
+  }
+
+  private releaseColumnView(index: number, view: ColumnView): void {
+    this.notesColumnsContainer.removeChild(view.container);
+    this.columnViews.delete(index);
+    this.freeColumnViews.push(view);
+  }
+
+  /** Release every view outside [first, last]; the survivors keep whatever they last painted. */
+  private releaseColumnViewsOutside(first: number, last: number): void {
+    for (const [index, view] of this.columnViews) {
+      if (index < first || index > last) this.releaseColumnView(index, view);
+    }
+  }
+
+  /** The on-screen half of the pool, back into the free list. Deleting from a Map being iterated is
+   *  defined behaviour - an already-visited entry stays visited, an unvisited one is skipped. */
+  private releaseAllColumnViews(): void {
+    for (const [index, view] of this.columnViews) this.releaseColumnView(index, view);
+  }
+
+  /** Destroy the pool outright - both halves. Used when the textures the views hold stop existing. */
+  private dropColumnPool(): void {
+    this.releaseAllColumnViews();
+    for (const view of this.freeColumnViews) view.destroy();
+    this.freeColumnViews.length = 0;
+    // The pool and the paint baseline describe the same thing - "this window has been painted for
+    // this state" - so they are invalidated together and cannot drift apart. Its callers today
+    // either redraw immediately afterwards (recalculateCacheAndSizes) or are on their way out
+    // (destroy); what runs in between on the first of those calls back into Svelte
+    // (notifyGeometry) while the pool is empty and the baseline null.
+    this.paintedState = null;
+  }
+
+  private paintColumn(
+    index: number,
+    cacheData: ComposerCacheData,
+    sizes: { width: number; height: number },
+    counterLimit: number
+  ): void {
+    const state = this.state;
+    const column = state.columns[index];
+    const tempoChangersCache = (index + 1) % 4 === 0 ? cacheData.columnsLarger : cacheData.columns;
+    const standardCache = (index + 1) % 4 === 0 ? cacheData.standardLarger : cacheData.standard;
+    const background =
+      column.tempoChanger === 0
+        ? standardCache[Number(index % (counterLimit * 2) >= counterLimit)]
+        : tempoChangersCache[column.tempoChanger];
+    const view = this.columnViews.get(index) ?? this.acquireColumnView(index, cacheData);
+    view.paint({
+      index,
+      notes: column.notes,
+      currentLayer: state.currentLayer,
+      instruments: state.instruments,
+      sizes,
+      cache: cacheData,
+      background,
+      isToolsSelected: state.selectedColumns.includes(index),
+      isSelected: index === state.selected,
+      isBreakpoint: state.breakpoints.includes(index),
+    });
+    this.paintTails(view.tailGraphics, index, sizes);
+  }
+
+  /**
+   * Span tails render UNDER the note icons: a connector bar through covered columns (right-half
+   * stub in the start column), accent for the current layer, dim otherwise.
+   *
+   * Backward scan, bounded by the song's longest span, and EXACT rather than approximate. A note
+   * starting at `start` covers `index` iff `start <= index < start + span`; the pre-pool version
+   * derived the same set by scanning columns 0..visibleEnd and clipping each span to the window,
+   * which produced identical segments for a visible column (the clip collapses once
+   * visibleStart <= index < visibleEnd) at a cost that GREW as playback advanced - at column 700 of
+   * an 800-column song it read 720 columns and every note in them, to draw 39 columns.
+   *
+   * A column's tails therefore do not depend on the window position at all: shifting the window
+   * changes nothing inside a column that stays visible, which is what lets the fast path repaint
+   * only the column that entered.
+   */
+  private paintTails(
+    graphics: Graphics,
+    index: number,
+    sizes: { width: number; height: number }
+  ): void {
+    graphics.clear();
+    const { columns, instruments, currentLayer } = this.state;
+    const rowHeight = sizes.height / NOTES_PER_COLUMN;
+    const tailHeight = Math.max(2, rowHeight * 0.22);
+    const accentColor = this.paintTailAccent;
+    const first = Math.max(0, index - this.maxSpan() + 1);
+    for (let start = first; start <= index; start++) {
+      const notes = columns[start].notes;
+      for (const note of notes) {
+        if (note.span <= 1) continue;
+        if (start + note.span <= index) continue;
+        const instrument = instruments[note.trackIndex];
+        const isCurrentLayer = note.trackIndex === currentLayer;
+        if (!isCurrentLayer && !instrument?.visible) continue;
+        const button = displayButtonForId(instrument?.name ?? '', note.id);
+        if (button === -1) continue;
+        const y = COMPOSER_NOTE_POSITIONS[button] * rowHeight + (rowHeight - tailHeight) / 2;
+        const x = index === start ? sizes.width * 0.55 : 0;
+        graphics.rect(x, y, sizes.width - x, tailHeight).fill({
+          color: isCurrentLayer ? accentColor : 0x888888,
+          alpha: isCurrentLayer ? 0.75 : 0.35,
+        });
+      }
+    }
+  }
+
+  /**
+   * The longest span in the song. Recomputed when the graph moved (or when the song was swapped),
+   * never during playback - see the maxSpanCache declaration for why the key is that pair.
+   *
+   * ComposedSong has no maintained maximum: `maxSpanAt` is a different quantity (the longest span a
+   * note MAY take at a position), and normalizeSpans only clamps against the next same-(track, id)
+   * note, so one note may legally span the whole song. That degenerate case costs one full-song
+   * scan per structural edit here, not one per tick.
+   */
+  private maxSpan(): number {
+    const { columns, structureVersion } = this.state;
+    const cached = this.maxSpanCache;
+    if (cached && cached.columns === columns && cached.structureVersion === structureVersion) {
+      return cached.span;
+    }
+    let span = 1;
+    for (const column of columns) {
+      for (const note of column.notes) if (note.span > span) span = note.span;
+    }
+    this.maxSpanCache = { columns, structureVersion, span };
+    return span;
+  }
+
+  /**
+   * The full repaint: both scenes, from scratch. Reached on the first update, on every edit, and
+   * from recalculateCacheAndSizes (which is a second entry point into drawing, bypassing update()
+   * entirely - theme and resize have no state channel).
+   */
   private draw(): void {
     if (!this.notesApp || !this.timelineApp) return;
     const cacheData = this.cache?.cache;
     const sizes = this.columnSize;
     const state = this.state;
     const xPosition = (state.selected - this.numberOfColumnsPerCanvas / 2 + 1) * -sizes.width;
-    const beatMarks = Number(state.settings.beatMarks.value);
-    const counterLimit = beatMarks === 0 ? 12 : 4 * beatMarks;
     const relativeColumnWidth = this.width / state.columns.length;
     const timelineWidth = Math.floor(relativeColumnWidth * (this.width / sizes.width + 1));
     const timelinePosition =
       relativeColumnWidth * state.selected -
       relativeColumnWidth * (this.numberOfColumnsPerCanvas / 2);
 
-    this.drawNotesStage(cacheData, sizes, xPosition, counterLimit);
+    const painted = this.drawNotesStage(cacheData, sizes, xPosition);
     this.drawTimelineStage(cacheData, relativeColumnWidth, timelineWidth, timelinePosition);
     this.notesApp.render();
     this.timelineApp.render();
+    // The baseline is only the state of a run that ACTUALLY PAINTED the notes stage. Recording it
+    // after a run that painted nothing (no cache yet, recording audio) would let the next update
+    // diff against a moment that never reached the screen, and the pool would come back showing a
+    // window it had never been asked to repaint.
+    this.paintedState = painted ? state : null;
   }
 
+  /** @returns whether the notes stage actually painted (see draw() for what that decides). */
   private drawNotesStage(
     cacheData: ComposerCacheData | undefined,
     sizes: { width: number; height: number },
-    xPosition: number,
-    counterLimit: number
-  ) {
-    for (const child of this.notesColumnsContainer.removeChildren())
-      child.destroy({ children: true });
+    xPosition: number
+  ): boolean {
     this.notesColumnsContainer.x = xPosition;
     const visible = Boolean(cacheData) && !this.state.isRecordingAudio;
     this.notesColumnsContainer.visible = visible;
-    if (!visible || !cacheData) return;
-    const tailsByColumn = this.computeTailsByColumn();
-    const accentColor = ThemeProvider.get('accent').rgbNumber();
-    this.state.columns.forEach((column, i) => {
-      if (!isColumnVisible(i, this.state.selected, this.numberOfColumnsPerCanvas)) return;
-      const tempoChangersCache = (i + 1) % 4 === 0 ? cacheData.columnsLarger : cacheData.columns;
-      const standardCache = (i + 1) % 4 === 0 ? cacheData.standardLarger : cacheData.standard;
-      const background =
-        column.tempoChanger === 0
-          ? standardCache[Number(i % (counterLimit * 2) >= counterLimit)]
-          : tempoChangersCache[column.tempoChanger];
-      this.notesColumnsContainer.addChild(
-        renderColumn({
-          cache: cacheData,
-          notes: column.notes,
-          tails: tailsByColumn.get(i) ?? [],
-          accentColor,
-          index: i,
-          sizes,
-          instruments: this.state.instruments,
-          currentLayer: this.state.currentLayer,
-          backgroundCache: background,
-          isToolsSelected: this.state.selectedColumns.includes(i),
-          isSelected: i === this.state.selected,
-          isBreakpoint: this.state.breakpoints.includes(i),
-        })
-      );
-    });
+    if (!visible || !cacheData) {
+      // The pool is left exactly as it is - hidden, not released and not destroyed, so the stage
+      // costs nothing to bring back. What keeps that from showing a stale window is draw()'s rule
+      // that a run reaching here records NO baseline: the next paintable update has nothing to diff
+      // against and repaints every column of the window, whatever the views happen to be holding.
+      return false;
+    }
+    const counterLimit = this.counterLimit();
+    const { first, last } = this.visibleColumnRange();
+    this.releaseColumnViewsOutside(first, last);
+    // Iterates the WINDOW, not the whole song. The pre-pool version walked every column of the
+    // song and filtered with isColumnVisible inside the callback - a second O(song) pass per draw,
+    // on top of the tail scan.
+    for (let index = first; index <= last; index++) {
+      this.paintColumn(index, cacheData, sizes, counterLimit);
+    }
+    return true;
   }
 
-  /** Tail segments clipped to the visible column window, including spans that start off-screen. */
-  private computeTailsByColumn(): Map<number, TailSegment[]> {
-    const tails = new Map<number, TailSegment[]>();
-    const { columns, instruments, currentLayer } = this.state;
-    const threshold = this.numberOfColumnsPerCanvas / 2 + 2;
-    const visibleStart = Math.max(0, Math.floor(this.state.selected - threshold) + 1);
-    const visibleEnd = Math.min(columns.length, Math.ceil(this.state.selected + threshold));
-    for (let start = 0; start < visibleEnd; start++) {
-      const column = columns[start];
-      column.notes.forEach((note) => {
-        if (note.span <= 1) return;
-        const instrument = instruments[note.trackIndex];
-        const isCurrentLayer = note.trackIndex === currentLayer;
-        if (!isCurrentLayer && !instrument?.visible) return;
-        const button = displayButtonForId(instrument?.name ?? '', note.id);
-        if (button === -1) return;
-        const segmentStart = Math.max(start, visibleStart);
-        const end = Math.min(start + note.span, visibleEnd);
-        for (let i = segmentStart; i < end; i++) {
-          const segment: TailSegment = { button, isCurrentLayer, isStart: i === start };
-          const existing = tails.get(i);
-          if (existing) existing.push(segment);
-          else tails.set(i, [segment]);
-        }
-      });
+  /**
+   * The playback tick: applying a moved `selected` to a scene that is otherwise already painted.
+   *
+   * What a column paints is a function of its index and its content, so a view that stays in the
+   * window keeps what it already painted. This moves the notes container's offset and the timeline
+   * viewport's x; it changes the MEMBERSHIP of the window - views whose columns left go back to the
+   * free list, columns that entered are acquired and painted; it repaints the selection overlay of
+   * the column that gained the flag and of the one that lost it; then it renders both Applications
+   * and records the state it painted as the new baseline.
+   *
+   * Reached from update() with a baseline recorded (a cache regeneration clears that along with the
+   * pool, so the views here hold the current textures and the current geometry), with a cache, with
+   * `selected` moved, and with needsFullRepaint reporting nothing.
+   */
+  private drawSelectedMoved(previousSelected: number, cacheData: ComposerCacheData): void {
+    if (!this.notesApp || !this.timelineApp) return;
+    const sizes = this.columnSize;
+    const state = this.state;
+    this.notesColumnsContainer.x =
+      (state.selected - this.numberOfColumnsPerCanvas / 2 + 1) * -sizes.width;
+    const counterLimit = this.counterLimit();
+    const { first, last } = this.visibleColumnRange();
+    this.releaseColumnViewsOutside(first, last);
+    for (let index = first; index <= last; index++) {
+      // Columns that were already in the window keep what they painted: their content, their
+      // index-derived background and their tails are all unchanged by a window shift.
+      if (!this.columnViews.has(index)) this.paintColumn(index, cacheData, sizes, counterLimit);
     }
-    return tails;
+    // The column that lost the flag and the one that gained it. Neither changes its BACKGROUND -
+    // selection is a separate overlay sprite - and after a large jump either may be outside the
+    // window, in which case paintSelectionOverlay finds no view and does nothing.
+    this.paintSelectionOverlay(previousSelected, cacheData);
+    this.paintSelectionOverlay(state.selected, cacheData);
+    const relativeColumnWidth = this.width / state.columns.length;
+    this.viewportGraphics.x =
+      relativeColumnWidth * state.selected -
+      relativeColumnWidth * (this.numberOfColumnsPerCanvas / 2);
+    this.notesApp.render();
+    this.timelineApp.render();
+    this.paintedState = state;
+  }
+
+  private paintSelectionOverlay(index: number, cacheData: ComposerCacheData): void {
+    const view = this.columnViews.get(index);
+    if (!view) return;
+    view.paintSelection(
+      cacheData,
+      index === this.state.selected,
+      this.state.selectedColumns.includes(index)
+    );
   }
 
   private drawTimelineStage(
@@ -686,6 +1102,10 @@ export class ComposerRenderer {
         const sprite = new Sprite(breakpointsTexture);
         sprite.eventMode = 'passive';
         sprite.anchor.set(0.5, 0);
+        // QUIRK: `columns.length - 1` here while every other timeline value divides by
+        // `columns.length` (see draw()'s relativeColumnWidth). Preserved verbatim - it is a
+        // pixel-level difference that predates the pool, and it is why a one-column song puts a
+        // breakpoint at NaN.
         sprite.x = (this.width / (this.state.columns.length - 1)) * breakpoint;
         this.timelineContentContainer.addChild(sprite);
       });
@@ -707,6 +1127,9 @@ export class ComposerRenderer {
     if (this.cacheRecalculateDebounce) clearTimeout(this.cacheRecalculateDebounce);
     this.wheelCanvas?.removeEventListener('wheel', this.handleWheel);
     this.themeDispose?.();
+    // Before the Applications go: app.destroy({children: true}) only reaches what hangs off the
+    // STAGE, and a released view is parked outside the scene graph entirely.
+    this.dropColumnPool();
     this.cache?.destroy();
     this.notesApp?.destroy(true, { children: true });
     this.timelineApp?.destroy(true, { children: true });

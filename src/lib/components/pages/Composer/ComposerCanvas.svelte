@@ -20,6 +20,12 @@
   // Making this a static import would pull pixi.js into the prerendered/SSR build.
   interface ComposerCanvasProps {
     columns: NoteColumn[];
+    // ComposedSong's graph version. Its own prop for the same reason `instruments` is: the renderer
+    // DIFFS it, and `columns` cannot serve on its own - the mutators that edit the array in place
+    // leave its identity alone, so an identity comparison does not see those edits. (The renderer
+    // compares both; see needsFullRepaint for what each half covers.) Reading it here is also what
+    // subscribes this component to the graph.
+    structureVersion: number;
     isPlaying: boolean;
     isRecordingAudio: boolean;
     // The roster is its own prop, not reached through a `song` prop - see ComposerRendererState's
@@ -37,6 +43,7 @@
 
   let {
     columns,
+    structureVersion,
     isPlaying,
     isRecordingAudio,
     instruments,
@@ -80,13 +87,15 @@
         timelineContainerEl,
         {
           columns,
+          structureVersion,
           isPlaying,
           isRecordingAudio,
           instruments,
           selected,
           currentLayer,
           inPreview,
-          settings,
+          beatMarks: Number(settings.beatMarks.value),
+          columnsPerCanvas: Number(settings.columnsPerCanvas.value),
           breakpoints,
           selectedColumns,
         },
@@ -119,22 +128,45 @@
     };
   });
 
+  // THE PROPS CHANNEL. Reactive values are read for the renderer HERE, in the object below, rather
+  // than deeper inside it - that read is what subscribes this effect to them, and the paragraph
+  // after next is what goes wrong when one is read deeper instead. Theme is the renderer's other
+  // channel: it subscribes to ThemeProvider directly (see its file header), and that subscription,
+  // not this effect, is what repaints the canvas on a theme edit.
+  //
+  // Values also cross between this component and the renderer outside this effect - the same object
+  // shape is handed to the constructor once in onMount, and selectColumn/toggleBreakpoint/
+  // onGeometryChange/handleBreakpoints carry values in both directions. Those are calls rather than
+  // reactive reads, so keeping them current is not this effect's job.
+  //
+  // update() is free to skip work - it diffs its input and takes a fast path, or none at all, when
+  // little or nothing moved - and Svelte re-collects an effect's dependencies on every run, so a
+  // value first read inside renderer.update() would be dropped from this effect's dependency set by
+  // the first run that skipped it. `settings.beatMarks.value` was exactly that: it reached the draw
+  // path only through `state.settings`, whose identity never changes on a settings edit, so a
+  // skipping update() would have frozen the bar shading at the previous grouping with nothing to
+  // notice it. It is a scalar on the state object now; the same rule applies to anything added
+  // later. (ThemeProvider's `accent` was the same shape of problem on the theme channel, and moved
+  // out of the draw path for the same reason - see ComposerRendererTheme.tailAccent.)
+  //
   // `renderer?.update({...})` short-circuits the ARGUMENT while renderer is still null (before the
-  // dynamic pixi import resolves), so on those runs the state object is not built at all and this
-  // effect registers `renderer` alone. It self-heals - assigning renderer re-runs this, and that
-  // run does read every field - but it is why the dependency set is run-dependent, and why phase
-  // 3's diffing has to live inside update() rather than as an early return here.
-  // VsrgComposerCanvas.svelte hit the same edge and captures its song reads BEFORE the call.
+  // dynamic pixi import resolves), so on those runs the object is not built at all and this effect
+  // registers `renderer` alone. It self-heals - assigning renderer re-runs this, and that run does
+  // read every field - but it is why the diffing lives inside update() rather than as an early
+  // return here. VsrgComposerCanvas.svelte hit the same edge and captures its song reads BEFORE
+  // the call.
   $effect(() => {
     renderer?.update({
       columns,
+      structureVersion,
       isPlaying,
       isRecordingAudio,
       instruments,
       selected,
       currentLayer,
       inPreview,
-      settings,
+      beatMarks: Number(settings.beatMarks.value),
+      columnsPerCanvas: Number(settings.columnsPerCanvas.value),
       breakpoints,
       selectedColumns,
     });
