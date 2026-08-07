@@ -42,6 +42,7 @@ export type ComposerSettingsDataType = {
     autosave: SettingsCheckbox
     syncTabs: SettingsCheckbox
     useKeyboardSideButtons: SettingsCheckbox
+    smoothScroll: SettingsCheckbox
     lookaheadTime: SettingsNumber
 }
 export type ComposerSettingsType = BaseSettings<ComposerSettingsDataType>
@@ -49,7 +50,7 @@ export type ComposerSettingsType = BaseSettings<ComposerSettingsDataType>
 
 export const ComposerSettings = {
     other: {
-        settingVersion: APP_NAME + 71,
+        settingVersion: APP_NAME + 72,
     },
     data: {
         bpm: {
@@ -136,6 +137,14 @@ export const ComposerSettings = {
             category: "composer_settings",
             songSetting: false,
             value: false
+        },
+        smoothScroll: {
+            name: "composer_smooth_scroll",
+            tooltip: "composer_smooth_scroll_description",
+            type: "checkbox",
+            category: "composer_settings",
+            songSetting: false,
+            value: true
         },
         syncTabs: {
             name: "composer_sync_tabs",

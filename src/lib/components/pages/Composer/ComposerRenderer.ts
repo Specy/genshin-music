@@ -25,6 +25,7 @@ import {
 import { ThemeProvider, subscribeTheme } from '$core/theme/ThemeProvider.svelte';
 import { clamp, colorToRGB, nearestEven } from '$core/utils/Utilities';
 import type { Timer } from '$core/utils/Utilities';
+import { TEMPO_CHANGERS } from '$core/legacyConfig';
 import type { NoteColumn, ColumnNote, InstrumentData } from '$core/Songs/SongClasses';
 import {
   computeRowLayerStatuses,
@@ -36,7 +37,98 @@ import { ComposerCache, type ComposerCacheData } from './ComposerCache';
 const NOTES_PER_COLUMN = game.notes.perColumn;
 const COMPOSER_NOTE_POSITIONS = game.notes.composerPositions;
 
-type ClickEventType = 'up' | 'down-slider' | 'down-stage';
+/**
+ * THE PLAYHEAD, and the coordinate system the whole class is written in.
+ *
+ * A fixed vertical line at the canvas' horizontal centre. It is not a cursor that moves over the
+ * columns - the columns move under IT, and where it crosses them is the START of the column the
+ * composer is on. So `scrollPosition` (a FRACTIONAL column index, see the field) is by definition
+ * the column-space coordinate under this line, and the container offset that realises it is
+ * `playheadX - scrollPosition * columnWidth` - see containerX().
+ *
+ * The LAYOUT is the same in both scroll modes: the offset puts the START of the scrolled-to column
+ * at the centre either way. Before the playhead existed it put that column's RIGHT edge there, so
+ * the column being played sat left of the middle - that is the change this coordinate system made,
+ * and it applies whether or not the line is drawn.
+ *
+ * WHETHER THE LINE IS ON SCREEN is playheadIsVisible, written onto playheadGraphics.visible by
+ * init() and by update() - see overlayColumn for the overlay it is mutually exclusive with.
+ */
+const PLAYHEAD_COLOR = 0xff3b30;
+const PLAYHEAD_WIDTH = 2;
+const PLAYHEAD_ALPHA = 0.9;
+
+/**
+ * The cap put on the notes Application's Ticker while a motion is running - see startMotionFrames.
+ *
+ * pixi's cap is a frame-SKIP gate rather than a clock of its own: `Ticker.update` computes
+ * `delta = (now - lastFrame) | 0` and returns without emitting when that is below `1000 / maxFPS`
+ * (node_modules/pixi.js/lib/ticker/Ticker.mjs, the maxFPS setter and update()'s early return). So
+ * the executed frames are unevenly spaced on a display whose refresh rate is not a multiple of
+ * this: at 48 on a 60Hz display the gaps alternate between one and two display frames. This class
+ * derives every position from the wall clock rather than by integrating a delta, so uneven gaps
+ * cost smoothness and never accumulate into drift - see motionPositionAt.
+ *
+ * Setting it ABOVE the display's refresh rate is a no-op, because the gate never fires.
+ */
+const COMPOSER_MOTION_MAX_FPS = 48;
+
+/**
+ * How long the canvas takes to reach a column it was asked to ease to - see easeTo.
+ *
+ * FIXED rather than proportional to the distance, which is what makes the wheel feel faster the
+ * harder it is spun: a burst of events that moves the target eight columns takes the same wall time
+ * as one event moving it one.
+ */
+const SCROLL_EASE_MS = 140;
+
+/**
+ * How far a pointer must travel across the notes stage before the press becomes a DRAG rather than
+ * a click - see handleStageSlide.
+ *
+ * Before this it was a whole column: `handleStageSlide` only acted once the accumulated movement
+ * crossed `columnSize.width`, so a 0.9-column drag still released as a click and jumped the canvas
+ * to wherever the pointer happened to be. A few pixels is enough to keep a jittery click a click.
+ */
+const DRAG_SLOP_PX = 3;
+
+/**
+ * What ComposerRenderer.overlayColumn holds when NO column carries the selected overlay, which is
+ * the whole of R1's "the line and the highlight are mutually exclusive" in one value. A column index
+ * is a non-negative array index, so `index === NO_OVERLAY_COLUMN` is false for every drawn column
+ * and `columnViews.get(NO_OVERLAY_COLUMN)` is undefined - so paintColumn, paintSelectionOverlay and
+ * syncOverlayColumn all need no mode test of their own.
+ */
+const NO_OVERLAY_COLUMN = -1;
+
+/**
+ * Columns of over-draw kept on each side of the strip the canvas actually shows.
+ *
+ * With a snapping scroll one column of bleed would do - the window moved a whole column at a time,
+ * so a column was either drawn or off-screen. A gliding scroll spends most of its time BETWEEN two
+ * integer positions, with a column straddling each edge, and the frame that first needs the column
+ * beyond it is the frame it becomes visible on. The bleed is what makes entering columns get
+ * painted before they are on screen rather than on the frame they appear.
+ */
+const WINDOW_BLEED_COLUMNS = 2;
+
+/**
+ * The PIXEL half of what the drawn window is a function of - the other half is the scroll position,
+ * which is fractional and travels separately (see isColumnVisible). `columnsPerCanvas` is NOT in it
+ * and cannot be: `columnWidth` is `nearestEven(width / columnsPerCanvas)`, so a canvas fits between about
+ * `columnsPerCanvas` and `columnsPerCanvas + 2.5` whole columns depending on how that rounding
+ * landed, and at the small widths the mobile/preview canvases use the slack is the larger figure.
+ * The window is derived from the pixels for that reason rather than from a column count plus a
+ * margin that would have to be big enough for the worst rounding.
+ */
+export interface ColumnWindowGeometry {
+  /** The notes canvas' width, in px. */
+  width: number;
+  /** One column's width, in px. */
+  columnWidth: number;
+  /** The playhead's distance from the canvas' left edge, in px. */
+  playheadX: number;
+}
 
 interface ComposerRendererTheme {
   timeline: {
@@ -86,11 +178,13 @@ interface ComposerRendererTheme {
 //    `$state.raw` at their declarations. A future field backed by a deep `$state` array must be
 //    hoisted into a plain copy in the canvas's $effect rather than indexed in the loops.
 //
-// `beatMarks` and `columnsPerCanvas` are the two settings values this class needs, taken as
-// scalars rather than as the `ComposerSettings.data` object they come from. That object's identity
-// never changes when a setting is edited, so a diff could not see one; and reading them in the
-// canvas's $effect - rather than deep inside a draw that may or may not run - is what subscribes
-// that effect to them at all.
+// `beatMarks`, `columnsPerCanvas`, `bpm`, `smoothScroll` and `lookaheadMs` are the settings values
+// this class needs, taken as scalars rather than as the `ComposerSettings.data` object they come
+// from. That object's identity never changes when a setting is edited, so a diff could not see one;
+// and reading them in the canvas's $effect - rather than deep inside a draw that may or may not run
+// - is what subscribes that effect to them at all. ComposerCanvas.svelte's $effect is the one place
+// all five are read off `settings`, which is also what keeps `bpm` the same number the playback
+// loop waits by - see that field.
 export interface ComposerRendererState {
   columns: NoteColumn[];
   /**
@@ -98,9 +192,15 @@ export interface ComposerRendererState {
    * song, which is why `columns` above is diffed alongside it.
    */
   structureVersion: number;
-  // QUIRK: accepted for prop-shape parity but read nowhere in this class - the canvas needs it for
-  // its own DOM. Deliberately excluded from the repaint diff: it flips on every play/stop and
-  // changes no pixel here.
+  /**
+   * Whether the song is playing, which is half of the `isPlaying && smoothScroll` condition -
+   * "the transport owns the scroll position" - that syncScrollSchedule and handleWheel both gate
+   * on. It used to be read nowhere in this class and was excluded from the repaint diff on the
+   * grounds that it changed no pixel - true while the scroll snapped. It decides whether a moved
+   * `selected` is a glide or a jump now, so syncScrollSchedule reads it on every update; it is
+   * still not in needsUnconditionalRepaint, because what it changes is the SCHEDULE rather than any
+   * column's appearance.
+   */
   isPlaying: boolean;
   isRecordingAudio: boolean;
   // The instrument roster, passed as its OWN field rather than reached through the song. It used
@@ -132,6 +232,59 @@ export interface ComposerRendererState {
   columnsPerCanvas: number;
   breakpoints: number[];
   selectedColumns: number[];
+  /**
+   * ComposerSettings' `smoothScroll`, which chooses between TWO MUTUALLY EXCLUSIVE ways of marking
+   * where the composer is. It decides four things:
+   *  - whether a playback tick GLIDES through its column or snaps to it (syncScrollSchedule);
+   *  - whether the playhead line is on screen (playheadIsVisible, which also gates it on the
+   *    recording flag, written onto playheadGraphics.visible by init() and update());
+   *  - whether the SELECTED-column overlay exists at all (overlayColumn, which is
+   *    NO_OVERLAY_COLUMN while this is on);
+   *  - whether the WHEEL eases the canvas itself or only moves `selected` and lets the transport
+   *    re-anchor (handleWheel) - which is the one of the four that is not about a mark on screen.
+   * The tools-selection overlay is a different sprite state and is unaffected by this in either
+   * direction - see ColumnView.paintSelection.
+   *
+   * It does NOT change the layout: the container offset puts the start of the scrolled-to column
+   * under the canvas centre in both modes, so the two are comparable at one layout.
+   *
+   * It is keyed on the SETTING and not on `isPlaying`, so a stopped composer with this on shows the
+   * line and no overlay. needsUnconditionalRepaint compares it, because a toggle changes pixels on
+   * columns whose own `version` counter did not move.
+   */
+  smoothScroll: boolean;
+  /**
+   * ComposerSettings' `bpm`, as a number: what lets this class work out how long a column lasts and
+   * therefore how fast to travel through it - see columnDurationMs.
+   *
+   * THE SETTING AND NOT `song.bpm`, which is the one thing here that has to be right: the playback
+   * loop this glide has to keep time with waits `(60000 / settings.bpm.value) * changer` ms per
+   * column (Composer.svelte's togglePlay), so reading the same value is what makes them the same
+   * number by construction rather than by an argument that has to hold. It used to take the song's,
+   * on the argument that Composer.svelte keeps the two equal - it does not on two ordinary paths.
+   * `song.bpm` is seeded from the DEFAULT settings at declaration and re-seeded nowhere when the
+   * stored settings land in onMount, and createNewSong builds a ComposedSong at its own default; so
+   * a user with a persisted composer bpm who opens the composer with no songId, or makes a new
+   * song, had the glide running at one tempo and the transport at another.
+   */
+  bpm: number;
+  /**
+   * ComposerSettings' `lookaheadTime`, in ms - how far AHEAD of being heard a column's notes are
+   * scheduled with the audio clock.
+   *
+   * The composer selects column i and schedules its notes to sound `lookaheadMs` later, so the
+   * state has always run ahead of the audio by that much. While the scroll snapped this was
+   * invisible - a highlight appearing a quarter second early reads as a highlight - but a
+   * continuously moving playhead running a quarter second ahead of the music reads as being out of
+   * time, and at the shipped defaults (220bpm, 250ms) that is very nearly a whole column. So the
+   * glide for a column is scheduled to START `lookaheadMs` in the future, which is when that column
+   * is actually heard.
+   *
+   * Nothing else has to be held back to match: while smooth scrolling is on there is no selection
+   * overlay for the line to disagree with (see overlayColumn), so the line alone says where the
+   * music is.
+   */
+  lookaheadMs: number;
 }
 
 // onGeometryChange reports pixi/DOM-measurement-derived geometry back up to the Svelte template,
@@ -143,17 +296,30 @@ export interface ComposerRendererCallbacks {
 }
 
 /**
- * Whether a column is inside the drawn window. This is the DEFINITION; visibleColumnRange() below
- * is the closed form of the same set, and test/composerRenderer.test.ts pins the two against each
- * other rather than assuming they agree, over the option list it reads out of
- * ComposerSettings.data.columnsPerCanvas.
+ * Whether a column is inside the drawn window. This is the DEFINITION - stated as the overlap test
+ * it really is, over the strip the column occupies - and visibleColumnRange() below is the closed
+ * form of the same set. test/composerRenderer.test.ts pins the two against each other rather than
+ * assuming they agree, over the option list it reads out of ComposerSettings.data.columnsPerCanvas
+ * and over fractional scroll positions as well as integer ones.
  *
- * Strict on both sides, so for an integer `currentPos` the window is 3 columns wider than the
- * canvas shows when numberOfColumnsPerCanvas is even and 4 wider when it is odd (bleed).
+ * `scrollPosition` is fractional during a glide, which is what the two forms have to agree on:
+ * every column-counting shortcut that was exact while the scroll snapped stops being exact halfway
+ * between two columns.
+ *
+ * Strict on both sides, so a column touching the bleed boundary exactly is outside. That is a
+ * choice about a measure-zero case and not a claim that it matters; what matters is that both forms
+ * make the SAME choice.
  */
-export function isColumnVisible(pos: number, currentPos: number, numberOfColumnsPerCanvas: number) {
-  const threshold = numberOfColumnsPerCanvas / 2 + 2;
-  return currentPos - threshold < pos && pos < currentPos + threshold;
+export function isColumnVisible(
+  pos: number,
+  scrollPosition: number,
+  geometry: ColumnWindowGeometry
+) {
+  const { width, columnWidth, playheadX } = geometry;
+  const bleed = WINDOW_BLEED_COLUMNS * columnWidth;
+  //where the column's own strip lands on the canvas, in px from its left edge
+  const left = playheadX + (pos - scrollPosition) * columnWidth;
+  return left + columnWidth > -bleed && left < width + bleed;
 }
 
 interface ColumnPaintParams {
@@ -199,15 +365,64 @@ interface ColumnPaintKey {
 }
 
 /**
- * The opt-in that turns draw() into the phase-4 narrowed repaint - see draw() and
- * ComposerRenderer.columnIsAlreadyPainted.
+ * WHAT IS MOVING THE SCROLL POSITION, as four mutually exclusive states. One field holds it (see
+ * ComposerRenderer.motion), which is what makes "two sources wrote the position in the same frame"
+ * unrepresentable rather than merely unlikely.
  *
- * It carries the one thing the narrowed path needs and the state object does not hold: `selected`
- * AS OF THE LAST PAINT. draw() otherwise reads everything from this.state, and reaching back into
- * this.paintedState from inside it would make the same value arrive by two routes.
+ * THE TICKER RULE, and the whole of R2's idle requirement in one line: the notes Application's
+ * Ticker runs if and only if this is not `resting`. FOUR methods write the field - enterMotion,
+ * rest, settleAt and destroy - and each pairs its write with the matching startMotionFrames /
+ * stopMotionFrames call in the same statement pair, which is what keeps the two from drifting
+ * apart. enterMotion is the only one that starts them; the other three all assign `resting`.
+ *
+ * THE RESTING INVARIANT: `resting` means the position is the whole column index this class last
+ * asked `selectColumn` for, and every transition into it that anything can observe goes through
+ * rest() or settleAt() - destroy() is the third and nothing reads the field after it. What
+ * changed when manual scrolling became continuous is the invariant's SCOPE, not its content - "at
+ * rest" used to be the same set of moments as "the position is an integer", and a drag or an ease
+ * splits them for the length of the gesture. `resting` is the name for when they are back together.
+ * rest() assigns from `state.selected` rather than from the position, because `selected` is what
+ * every click, edit and jump downstream reasons in terms of; settleAt() assigns the position a
+ * finished motion reached, which is the index it handed `selectColumn` on the way in.
  */
-interface NarrowedRepaint {
-  previousSelected: number;
+type Motion =
+  /** Nothing is moving the position. */
+  | { kind: 'resting' }
+  /** The scrollSegments queue owns the position - see ScrollSegment and scrollPositionAt. */
+  | { kind: 'playback' }
+  /** A wheel or a drag release, running to a whole column over SCROLL_EASE_MS. */
+  | { kind: 'easing'; from: number; to: number; startMs: number; durationMs: number }
+  /**
+   * A pointer is down and the canvas is following it. `position` is written by the pointermove
+   * handler and read by the frame - the handler paints nothing itself, so a pointer stream faster
+   * than the frame rate coalesces into one applyScrollPosition per frame instead of one per event.
+   */
+  | { kind: 'dragging'; surface: 'stage' | 'timeline'; position: number };
+
+/**
+ * ONE COLUMN'S WORTH OF PLAYHEAD TRAVEL, as an absolute wall-clock schedule: between `startMs` and
+ * `endMs` the playhead moves from the start of column `from` to the start of column `from + 1`,
+ * linearly. Tempo changers need no special handling anywhere - a 1/4 column simply schedules a
+ * segment a quarter as long over the same distance, so the scroll speeds up through it.
+ *
+ * WHY A QUEUE OF THESE rather than a single "current glide". A segment is scheduled to start
+ * `lookaheadMs` in the FUTURE (see ComposerRendererState.lookaheadMs), so between scheduling it and
+ * it beginning, the previous segment must keep running. At the shipped defaults one column at
+ * tempo 1 lasts about as long as the lookahead, so that is one segment in flight - but a 1/8 column
+ * at 220bpm lasts 34ms against a 250ms lookahead, and then seven of them are pending at once. A
+ * two-slot "current + next" holds for tempo 1 and silently drops segments on a fast run.
+ *
+ * `endMs` starts as a PREDICTION from the bpm and the column's tempo changer, because the segment
+ * has to be drawable before the tick that ends it arrives. scheduleScrollSegment replaces the
+ * previous segment's prediction with the measurement when the next one is scheduled, so the
+ * timeline stays contiguous and the playback loop's own drift correction is inherited rather than
+ * fought.
+ */
+interface ScrollSegment {
+  /** The column whose START the playhead is at when this segment begins. */
+  from: number;
+  startMs: number;
+  endMs: number;
 }
 
 /**
@@ -325,9 +540,15 @@ class ColumnView {
   }
 
   /**
-   * The selection overlay, which is the only thing a playback tick changes on a column that stays
-   * in the window. Texture AND alpha depend on the (isSelected, isToolsSelected) PAIR - selected
-   * wins over a tools selection covering the same column.
+   * The selection overlay: ONE sprite carrying two different states, so texture AND alpha depend on
+   * the (isSelected, isToolsSelected) PAIR rather than on either alone. `toolsOnly` is what makes
+   * the selected column win over a tools selection covering it.
+   *
+   * With smooth scrolling ON, `isSelected` is false for every column (ComposerRenderer.overlayColumn
+   * is NO_OVERLAY_COLUMN, which no index equals), so `toolsOnly` collapses to `isToolsSelected` and
+   * this draws the tools band and nothing else. That is R1's mutual exclusion, and it needs no code
+   * here: a column that is both the playhead's column and tools-selected shows the tools band, with
+   * the line crossing it. The precedence above is what OFF mode still gets.
    */
   paintSelection(cache: ComposerCacheData, isSelected: boolean, isToolsSelected: boolean): void {
     const toolsOnly = isToolsSelected && !isSelected;
@@ -365,10 +586,24 @@ export class ComposerRenderer {
 
   // Persistent scene objects, created once per renderer instance. notesColumnsContainer's children
   // are the pooled ColumnViews currently on screen (see the pool below); timelineContentContainer's
-  // are rebuilt by drawTimelineStage, which only runs on the full-repaint path.
+  // are rebuilt by drawTimelineStage, which only runs from draw() - on the full repaint and on the
+  // narrowed one alike, which is why draw()'s own docstring lists the whole timeline rebuild among
+  // the things narrowing does not save.
   private readonly notesColumnsContainer = new Container();
   private readonly timelineContentContainer = new Container();
   private readonly viewportGraphics = new Graphics();
+  /**
+   * The playhead line. A sibling of notesColumnsContainer on the notes stage, added AFTER it so it
+   * renders on top, and never moved: it is the fixed thing in this coordinate system and the
+   * columns are what scroll. Only a resize redraws it (its height is the canvas'), which is why
+   * drawPlayhead is called from init and from recalculateCacheAndSizes and nowhere else.
+   *
+   * SHOWN AND HIDDEN through `visible`, written from playheadIsVisible by init() and by update().
+   * Not by skipping the drawing: `clear()` dirties the GraphicsContext, so a draw/clear toggle pays
+   * a geometry rebuild per click, while `visible` keeps the uploaded geometry and pixi skips an
+   * invisible container's whole subtree at render time.
+   */
+  private readonly playheadGraphics = new Graphics();
 
   /**
    * The column pool. `columnViews` is what is ON SCREEN, keyed by column index; `freeColumnViews`
@@ -397,10 +632,29 @@ export class ComposerRenderer {
    * that one is overwritten on every call including the ones that paint nothing - diffing against
    * it would compare the incoming state against a moment that never reached the screen.
    *
+   * THE FRAMES also paint, and do not touch this - which is not an omission. Everything this is
+   * compared for is CONTENT, and a frame changes none of it: it moves the scroll position, which is
+   * not a field of the state at all, and paints the columns that entered the window as a
+   * consequence. So the columns on screen after a frame still show what this state says they show.
+   *
    * Holding the object is safe: ComposerCanvas.svelte's $effect builds a fresh literal per run and
    * never mutates one it has handed over.
    */
   private paintedState: ComposerRendererState | null = null;
+  /**
+   * The state of the PREVIOUS update() call, whatever that call did - which is a different moment
+   * from paintedState, and the difference is load-bearing.
+   *
+   * paintedState is the baseline for "what do the pixels currently show", so it is deliberately
+   * only recorded by a run that painted. syncScrollSchedule is asking something else: "what did the
+   * composer last tell me", so that a `selected` one higher than last time reads as a playback tick
+   * and anything else reads as a jump. Those two questions had one answer while every update either
+   * painted or changed nothing - and stopped having one when a running MOTION gave update() a third
+   * outcome, the call that records a baseline and leaves the screen to the frame. Reading
+   * paintedState there made every update after a non-painting one look like a discontinuity, which
+   * re-anchored the schedule and snapped the playhead back to `selected` mid-column.
+   */
+  private previousState: ComposerRendererState | null = null;
   /**
    * The longest span in the song, cached against (columns identity, structure version) - the same
    * pair the two sites diff, for the same reason: needsUnconditionalRepaint holds the array
@@ -430,6 +684,55 @@ export class ComposerRenderer {
    */
   private paintTailAccent: number;
 
+  /**
+   * WHERE THE CANVAS IS SCROLLED TO, as a fractional column index: the column-space coordinate
+   * under the playhead (see PLAYHEAD_COLOR's note for the coordinate system). An integer while
+   * `motion` is `resting`, fractional for the length of any other motion.
+   *
+   * It is this class's own value and NOT a mirror of `state.selected`, which is the whole point:
+   * `selected` moves in whole columns at tick boundaries and runs ahead of the audio by the
+   * lookahead, while this moves continuously and in time with what is heard - and during a drag or
+   * an ease it moves with the user's hand while `selected` steps a column at a time behind it. See
+   * the Motion type for the invariant that says when the two are back together.
+   */
+  private scrollPosition = 0;
+  /**
+   * WHICH COLUMN CARRIES THE SELECTED OVERLAY, or NO_OVERLAY_COLUMN for "no column does". Recomputed
+   * from the incoming state by update() and by the constructor, and by nothing else; read by
+   * paintColumn, paintSelectionOverlay and syncOverlayColumn. The first two must agree, because the
+   * narrowed repaint reaches columns through both.
+   *
+   * It is `state.smoothScroll ? NO_OVERLAY_COLUMN : state.selected` - R1's mutual exclusion, keyed
+   * on the setting and not on whether the song is playing. In snap mode that is the rule the class
+   * had before the playhead existed; in glide mode there is no overlay for the line to disagree
+   * with, which is what retired the "follow the playhead, not `selected`" rule this field used to
+   * implement.
+   */
+  private overlayColumn: number;
+  /**
+   * WHICH COLUMN THE POOL CURRENTLY SHOWS THE OVERLAY ON, or null for "nothing on screen has been
+   * painted for a state at all". The painted counterpart of overlayColumn, in the same relation to
+   * it as paintedState is to state, and it is what lets a frame move the overlay without a caller
+   * having to hand it the previous value - see syncOverlayColumn.
+   *
+   * Reset by dropColumnPool alongside paintedState, because the pool it describes has stopped
+   * existing.
+   */
+  private paintedOverlayColumn: number | null = null;
+  /**
+   * The scheduled travel, oldest first and contiguous - see ScrollSegment. Empty means nothing is
+   * gliding and scrollPosition is wherever it was put.
+   */
+  private scrollSegments: ScrollSegment[] = [];
+  /** What is moving the scroll position, and with it whether the Ticker runs - see Motion. */
+  private motion: Motion = { kind: 'resting' };
+  /**
+   * The rounded viewport x the timeline Application was last RENDERED at, or NaN for "it has never
+   * been rendered". The gate that keeps the timeline off the per-frame path - see
+   * syncTimelineViewport.
+   */
+  private renderedViewportX = Number.NaN;
+
   private numberOfColumnsPerCanvas: number;
   private width: number;
   private height: number;
@@ -438,21 +741,30 @@ export class ComposerRenderer {
   private stageBackgroundColor: number;
   private theme: ComposerRendererTheme;
 
-  // Scroll/drag state machine.
-  private stageSelected = false;
-  private sliderSelected = false;
-  // QUIRK: hasSlided is write-only (set true in handleSliderSlide, never read) and
-  // currentBreakpoint below is never read or written past its initializer - both dead fields,
-  // preserved inert rather than removed.
-  private hasSlided = false;
-  private stagePreviousPositon = 0;
-  private stageXMovement = 0;
-  private stageMovementAmount = 0;
+  /**
+   * The press a stage drag may grow out of, or null for "no pointer is down on the notes stage".
+   *
+   * Separate from `motion` because a press is NOT yet a drag: the motion is entered only once the
+   * pointer has travelled DRAG_SLOP_PX (see handleStageSlide), so a click during playback leaves the
+   * glide it landed on completely alone. The drag is stated as an OFFSET from (`x`,
+   * `anchorPosition`) rather than accumulated per move - an accumulator drifts, and a drift here is
+   * a canvas that has slid out from under the finger.
+   *
+   * `x` is the press. `anchorPosition` is written twice and only the second write is the one that
+   * matters: handleStageSlide replaces it with the live scroll position at the instant the drag
+   * starts, which is what keeps a glide running under a hesitating finger from being given back.
+   * The press's value is what the field is initialised to.
+   */
+  private stagePointer: { x: number; anchorPosition: number } | null = null;
+  /**
+   * The distance, in timeline px, from the position the viewport rectangle stands for to where the
+   * pointer grabbed it - so the rectangle stays under the finger rather than jumping its centre
+   * there. Only meaningful while `onSlider` - the two are written together by handleTimelineDown.
+   */
   private sliderOffset = 0;
-  private throttleScroll = 0;
+  /** Whether the timeline press landed inside the viewport rectangle rather than beside it. */
   private onSlider = false;
   private cacheRecalculateDebounce: Timer = 0;
-  private currentBreakpoint = -1;
 
   constructor(
     private readonly notesContainer: HTMLElement,
@@ -461,6 +773,10 @@ export class ComposerRenderer {
     private readonly callbacks: ComposerRendererCallbacks
   ) {
     this.state = initialState;
+    this.scrollPosition = initialState.selected;
+    // Seeded here as well as in update() because a renderer can paint a whole scene without ever
+    // being handed a state: init() -> subscribeTheme -> recalculateCacheAndSizes -> draw().
+    this.overlayColumn = initialState.smoothScroll ? NO_OVERLAY_COLUMN : initialState.selected;
     this.numberOfColumnsPerCanvas = initialState.columnsPerCanvas;
     // Placeholders - init() always overwrites width/height/columnSize with the real computed
     // size before any Application is created.
@@ -517,10 +833,60 @@ export class ComposerRenderer {
     this.notesColumnsContainer.eventMode = 'static';
     this.notesColumnsContainer.interactiveChildren = false;
     this.notesColumnsContainer.hitArea = this.testStageHitarea;
-    this.notesColumnsContainer.on('pointerdown', this.handleClickStage);
-    this.notesColumnsContainer.on('pointerup', this.handleClickStageUp);
+    this.notesColumnsContainer.on('pointerdown', this.handleStageDown);
+    this.notesColumnsContainer.on('pointerup', this.handleStageUp);
     this.notesColumnsContainer.on('pointermove', this.handleStageSlide);
     this.notesApp.stage.addChild(this.notesColumnsContainer);
+    /**
+     * ITS OWN RENDER GROUP, which is what makes scrolling it cheap enough to do every frame.
+     *
+     * pixi applies a plain container's transform on the CPU: moving one marks it in its parent
+     * render group, and the next render runs updateTransformAndChildren over EVERY descendant,
+     * handing each one that has a render pipe to updateRenderable - which for a Sprite repacks its
+     * four vertices into the batch buffer (visibility is not tested there; RenderGroupPipe.execute
+     * does that later). The window here is a few hundred nodes, so that is a few hundred
+     * matrix appends and vertex repacks per frame. A render group root's transform is applied at
+     * draw time as a uniform instead, and updateTransformAndChildren does not recurse into one
+     * (node_modules/pixi.js/lib/scene/container/utils/updateRenderGroupTransforms.mjs, the
+     * `if (!container.renderGroup)` guard), so moving this costs one matrix update whatever it
+     * holds.
+     *
+     * What it costs back: the group cannot merge into the stage's batch, so the playhead beside it
+     * is a second draw call. And a column entering or leaving the pool now sets structureDidChange
+     * on THIS group rather than on the stage's, so the instruction rebuild it forces no longer
+     * invalidates the playhead's - the pool churn is if anything cheaper than before.
+     *
+     * Not cacheAsTexture: that also enables a render group, but its texture is only refreshed by an
+     * explicit updateCacheTexture() call, so the pool adding and removing views would show stale
+     * pixels until something asked.
+     */
+    this.notesColumnsContainer.enableRenderGroup();
+    //a sibling added after the columns, so it renders over them
+    this.notesApp.stage.addChild(this.playheadGraphics);
+    this.drawPlayhead();
+    //R1's half of the mode gate that update() cannot cover: a renderer can paint a whole scene
+    //without ever being handed a state, through subscribeTheme below
+    this.playheadGraphics.visible = this.playheadIsVisible(this.state);
+
+    /**
+     * THE FRAME LOOP, on the notes Application's own Ticker - see the Motion type for the rule that
+     * says when it runs, and startMotionFrames/stopMotionFrames for the only two callers of
+     * start/stop.
+     *
+     * pixi's TickerPlugin registers `app.render` on this ticker at UPDATE_PRIORITY.LOW during
+     * `Application.init`, regardless of `autoStart` - `autoStart` only decides whether `start()` is
+     * called (node_modules/pixi.js/lib/app/TickerPlugin.mjs). That listener is REMOVED here, so
+     * every render this class does is one it asked for: onMotionFrame renders only on a frame that
+     * actually moved the position, which is what makes a schedule stalled on a late tick cost no
+     * renders at all, and it leaves update()-driven repaints rendering synchronously rather than
+     * waiting up to a capped frame for the next tick.
+     *
+     * The timeline Application's ticker is never started and keeps pixi's listener; the timeline is
+     * rendered explicitly by syncTimelineViewport and draw().
+     */
+    this.notesApp.ticker.remove(this.notesApp.render, this.notesApp);
+    this.notesApp.ticker.maxFPS = COMPOSER_MOTION_MAX_FPS;
+    this.notesApp.ticker.add(this.onMotionFrame, this);
 
     this.timelineApp = new Application();
     await this.timelineApp.init({
@@ -536,15 +902,23 @@ export class ComposerRenderer {
     this.timelineContentContainer.eventMode = 'static';
     this.timelineContentContainer.interactiveChildren = false;
     this.timelineContentContainer.hitArea = this.testTimelineHitarea;
-    this.timelineContentContainer.on('pointerdown', this.handleClickDown);
-    this.timelineContentContainer.on('pointerup', this.handleClickUp);
-    this.timelineContentContainer.on('pointermove', this.handleSliderSlide);
+    this.timelineContentContainer.on('pointerdown', this.handleTimelineDown);
+    this.timelineContentContainer.on('pointerup', this.handleTimelineUp);
+    this.timelineContentContainer.on('pointermove', this.handleTimelineSlide);
     this.timelineApp.stage.addChild(this.timelineContentContainer);
     // viewportGraphics is a sibling added after the content container, so it renders on top.
     this.timelineApp.stage.addChild(this.viewportGraphics);
 
     window.addEventListener('resize', this.recalculateCacheAndSizes);
     window.addEventListener('pointerup', this.resetPointerDown);
+    // pointercancel, which pixi does not deliver at all: EventSystem._addEvents registers
+    // pointermove/down/leave/over/up on the DOM and nothing for cancel, so an OS gesture, an edge
+    // swipe or palm rejection ends the pointer stream with no event either handler can see. A drag
+    // is a MOTION now rather than a boolean, and a `dragging` motion nothing ends freezes the whole
+    // canvas: syncScrollSchedule returns at its first statement on every update after it, so the
+    // scene stops following `selected` while the song plays on, and the Ticker rule keeps the
+    // frames running for the life of the renderer.
+    window.addEventListener('pointercancel', this.resetPointerDown);
     window.addEventListener('blur', this.resetPointerDown);
 
     this.themeDispose = subscribeTheme(this.handleThemeChange);
@@ -563,6 +937,42 @@ export class ComposerRenderer {
     }
     const columnWidth = nearestEven(width / this.numberOfColumnsPerCanvas);
     return { width, height, columnWidth };
+  }
+
+  /** The playhead's x, and with it the anchor of every column position - see PLAYHEAD_COLOR. */
+  private playheadX(): number {
+    return this.width / 2;
+  }
+
+  private windowGeometry(): ColumnWindowGeometry {
+    return { width: this.width, columnWidth: this.columnSize.width, playheadX: this.playheadX() };
+  }
+
+  /** The notes container's offset that puts `scrollPosition` under the playhead. */
+  private containerX(): number {
+    return this.playheadX() - this.scrollPosition * this.columnSize.width;
+  }
+
+  /**
+   * WHETHER THE LINE IS ON SCREEN. `smoothScroll` is the mode gate R1 states; `isRecordingAudio` is
+   * there because the playhead is a SIBLING of notesColumnsContainer rather than a child of it, so
+   * drawNotesStage hiding the columns for a recording has no reach over it - without this the
+   * recording shows an empty background with a red line standing still in the middle of it, still
+   * because applyScrollPosition returns before touching anything while that flag is set.
+   */
+  private playheadIsVisible(state: ComposerRendererState): boolean {
+    return state.smoothScroll && !state.isRecordingAudio;
+  }
+
+  private drawPlayhead(): void {
+    this.playheadGraphics.clear();
+    this.playheadGraphics.rect(
+      this.playheadX() - PLAYHEAD_WIDTH / 2,
+      0,
+      PLAYHEAD_WIDTH,
+      this.height
+    );
+    this.playheadGraphics.fill({ color: PLAYHEAD_COLOR, alpha: PLAYHEAD_ALPHA });
   }
 
   private recalculateCacheAndSizes = () => {
@@ -591,6 +1001,8 @@ export class ComposerRenderer {
       // ...and the accent the pool paints tails in moves here, with the repaint below, rather than
       // when handleThemeChange replaced this.theme - see the field.
       this.paintTailAccent = this.theme.tailAccent;
+      //the line spans the canvas' height and sits at its centre, so both of its inputs just moved
+      this.drawPlayhead();
       this.notifyGeometry();
       // draw() rebuilds and explicitly repaints the static scenes after cache regeneration.
       this.draw();
@@ -647,71 +1059,554 @@ export class ComposerRenderer {
       this.wheelCanvas.style.opacity = String(this.theme.main.backgroundOpacity);
   };
 
+  // ── the scroll schedule ────────────────────────────────────────────────────────────────────────
+
+  /**
+   * How long column `index` lasts, by the arithmetic Composer.svelte's playback loop waits by: it
+   * rounds `(60000 / bpm) * changer` to whole ms, which is the same rounding Song.roundTime does.
+   * Matching the rounding is what keeps a glide the same length as the column it travels through,
+   * so the two do not drift apart within a column.
+   *
+   * What this deliberately leaves out is that loop's `delayOffset` drift term - the correction it
+   * carries from tick to tick for how late the last one was. A segment inherits that a different
+   * way, through the MEASURED instant scheduleScrollSegment writes as its start (see ScrollSegment),
+   * which is why the same arithmetic here does not have to know about it.
+   */
+  private columnDurationMs(index: number): number {
+    const column = this.state.columns[index];
+    const changer = column ? (TEMPO_CHANGERS[column.tempoChanger]?.changer ?? 1) : 1;
+    //a zero/absent bpm would make every segment infinitely long and freeze the playhead
+    const bpm = this.state.bpm > 0 ? this.state.bpm : 220;
+    return Math.max(1, Math.round((60000 / bpm) * changer));
+  }
+
+  private scheduleScrollSegment(column: number, startMs: number, durationMs: number): void {
+    const last = this.scrollSegments[this.scrollSegments.length - 1];
+    // The measurement replacing the prediction - see ScrollSegment - but ONLY WHERE IT SHORTENS
+    // the previous segment, which is the case where the tick came in early. Stretching it instead
+    // would move the playhead BACKWARDS: the position inside a segment is a fraction of its length,
+    // so lengthening one at a fixed instant puts the playhead behind where the frame before it
+    // already drew. A tick arriving LATE therefore leaves the prediction alone and the playhead
+    // clamps at the column boundary until the new segment's turn - a brief stall at the line, which
+    // reads as the music being late rather than as the canvas stepping back. Nothing accumulates
+    // either way, because every segment is anchored on the tick that scheduled it rather than on
+    // the one before.
+    if (last && startMs > last.startMs && startMs < last.endMs) last.endMs = startMs;
+    this.scrollSegments.push({ from: column, startMs, endMs: startMs + durationMs });
+  }
+
+  /**
+   * The scheduled position at a wall-clock instant, or null when nothing is scheduled.
+   *
+   * Expired segments are dropped as it goes, EXCEPT the last one, which is kept so a schedule that
+   * has run out holds the playhead at the end of the column it reached rather than snapping back to
+   * an integer or resetting to `selected`. That is what a late tick looks like: a brief stall at
+   * the line, which reads as the music being late rather than as the canvas glitching.
+   */
+  private scrollPositionAt(nowMs: number): number | null {
+    const segments = this.scrollSegments;
+    while (segments.length > 1 && segments[0].endMs <= nowMs) segments.shift();
+    const segment = segments[0];
+    if (!segment) return null;
+    if (nowMs <= segment.startMs) return segment.from;
+    const length = segment.endMs - segment.startMs;
+    const progress = length > 0 ? Math.min(1, (nowMs - segment.startMs) / length) : 1;
+    return segment.from + progress;
+  }
+
+  /**
+   * What update() decides about the scroll before anything paints, because every path below it
+   * reads `scrollPosition` for the container offset.
+   *
+   * WHILE THE SONG PLAYS WITH SMOOTH SCROLLING ON, three cases, and the schedule is the same
+   * statement in all of them: an update carrying `selected = i` means the playhead is at the START
+   * of column i one lookahead from now, and travels through it over that column's length.
+   *  - A PLAYBACK TICK - `selected` advancing by exactly one from a state that was ALSO playing -
+   *    appends that segment to the queue. The one before it ends where this one begins, which is
+   *    what makes the timeline contiguous.
+   *  - ANY OTHER MOVE - play being pressed, a click, the wheel, a drag, a breakpoint jump - is a
+   *    discontinuity, so the queue is dropped and the playhead re-anchored on the new column
+   *    before the same segment is scheduled from there. WITHOUT THAT SCHEDULE the next tick's
+   *    segment would be the only one in the queue, and since it starts a lookahead in the future,
+   *    the first frame would find nothing covering the present and jump the playhead to that
+   *    segment's start column. It is the same gap at play time and after a jump; both are here.
+   *  - `selected` NOT MOVING leaves the schedule alone, so an edit made during playback - note
+   *    entry is not gated on isPlaying - does not interrupt the glide.
+   *
+   * Everything else snaps: any move while smooth scrolling is off or the song is stopped. Stopping
+   * snaps to `selected` too, and the direction depends on where the playhead had got to: pausing
+   * mid-column pulls it FORWARD by up to a lookahead's worth of travel, while a song running off
+   * its own end pushes it BACK by the part of the last column it had already entered (the tick that
+   * ends playback comes a whole column after the one that selected that column). Either way the
+   * alternative is leaving the playhead somewhere `selected` is not, and every click, edit and jump
+   * downstream reasons in terms of `selected`.
+   *
+   * TWO MANUAL MOTIONS OUTRANK PARTS OF THAT, and both are guarded at the top:
+   *  - a DRAG outranks everything for its duration. It is the user's hand on the canvas, so a tick
+   *    arriving mid-drag is dropped rather than queued and the snap below cannot yank the canvas
+   *    back to a column boundary the drag has just left - which would fire once per column crossed,
+   *    Svelte flushing the selectColumn round-trip in a microtask between two pointermove events.
+   *    The release settles, and the next tick after it takes the discontinuity branch and resumes.
+   *  - an EASE outranks the SNAP but not the transport. It is already heading for a column it asked
+   *    for, so resting would just jump it to its own destination; but a playback tick, a breakpoint
+   *    jump or an undo moving `selected` off that target abandons it, which is the snap those paths
+   *    expect. `state.selected === motion.to` is what tells the two apart.
+   */
+  private syncScrollSchedule(
+    previous: ComposerRendererState | null,
+    state: ComposerRendererState
+  ): void {
+    if (this.motion.kind === 'dragging') return;
+    if (state.isPlaying && state.smoothScroll && previous !== null) {
+      const advancedOneColumn = previous.isPlaying && state.selected === previous.selected + 1;
+      if (advancedOneColumn) {
+        this.scheduleScrollSegment(
+          state.selected,
+          this.now() + state.lookaheadMs,
+          this.columnDurationMs(state.selected)
+        );
+        this.enterMotion({ kind: 'playback' });
+        return;
+      }
+      if (previous.isPlaying && state.selected === previous.selected) {
+        // The glide carries on untouched - an edit during playback is not a discontinuity. The
+        // QUEUE is what decides whether that is a motion at all: with nothing scheduled there is
+        // nothing to travel through, and entering `playback` anyway would leave the frames running
+        // against an empty schedule for as long as the song played.
+        if (this.scrollSegments.length > 0) this.enterMotion({ kind: 'playback' });
+        else this.rest();
+        return;
+      }
+      this.scrollSegments.length = 0;
+      this.scrollPosition = state.selected;
+      this.scheduleScrollSegment(
+        state.selected,
+        this.now() + state.lookaheadMs,
+        this.columnDurationMs(state.selected)
+      );
+      this.enterMotion({ kind: 'playback' });
+      return;
+    }
+    if (this.motion.kind === 'easing' && state.selected === this.motion.to) {
+      this.scrollSegments.length = 0;
+      return;
+    }
+    this.rest();
+  }
+
+  /** Wall clock, on the same timebase the frames read - see onMotionFrame. */
+  private now(): number {
+    return performance.now();
+  }
+
+  /**
+   * ENTER A MOTION, and with it start the frames. The only writer that enters a NON-resting motion
+   * and the only caller of startMotionFrames, which is what keeps the Ticker's running state from
+   * drifting out of step with `motion` (rest, settleAt and destroy are the three that leave one,
+   * and each stops the frames in the same statement pair).
+   *
+   * ANY MOTION THAT IS NOT `playback` DROPS THE QUEUE, which is what gives the union ownership of
+   * it. Without this a drag left the pre-drag segments lying there - syncScrollSchedule returns at
+   * its first statement for the whole drag, so nothing extends or clears them - and they describe
+   * columns the canvas left seconds ago. syncScrollSchedule's "an edit during playback is not a
+   * discontinuity" branch tests only whether the queue is NON-EMPTY, so it would re-enter
+   * `playback` on that dead queue, and scrollPositionAt keeps its last segment forever: measured at
+   * a jump from column 60.6 back to 42 on the next frame.
+   */
+  private enterMotion(next: Exclude<Motion, { kind: 'resting' }>): void {
+    if (next.kind !== 'playback') this.scrollSegments.length = 0;
+    this.motion = next;
+    this.startMotionFrames();
+  }
+
+  /**
+   * BACK TO REST ON `state.selected`. One of the three methods that assign `resting` (settleAt and
+   * destroy are the others) and the only one that assigns the position from the STATE rather than
+   * from where a motion got to - see the Motion type for why `selected` is the authority at rest.
+   *
+   * It does not paint, and it does not have to: its only caller is syncScrollSchedule, which runs
+   * before update()'s repaint decision, and update() applies the position it left behind when that
+   * position moved.
+   */
+  private rest(): void {
+    this.motion = { kind: 'resting' };
+    this.stopMotionFrames();
+    this.scrollSegments.length = 0;
+    this.scrollPosition = this.state.selected;
+  }
+
+  /**
+   * A MOTION FINISHING WHERE IT SAID IT WOULD: applies `position` and rests there, rather than on
+   * `state.selected`. The two are the same column - every settle asks selectColumn for exactly this
+   * index on its way in - and if that callback were ever ignored, the next update()'s rest() would
+   * assign `selected` and update() would apply it, so the disagreement cannot outlive one update.
+   */
+  private settleAt(position: number): void {
+    this.motion = { kind: 'resting' };
+    this.stopMotionFrames();
+    this.scrollSegments.length = 0;
+    this.applyScrollPosition(position);
+  }
+
+  /**
+   * Ease to a whole column over SCROLL_EASE_MS, starting from wherever the canvas is now.
+   *
+   * Restarting from the CURRENT position on every call is what makes a burst of wheel events one
+   * continuously accelerating glide rather than N eases fighting each other; the caller measures the
+   * next target from the ease's own `to` (see handleWheel) so the burst composes rather than stalls.
+   */
+  private easeTo(target: number): void {
+    if (target === this.scrollPosition) return this.settleAt(target);
+    this.enterMotion({
+      kind: 'easing',
+      from: this.scrollPosition,
+      to: target,
+      startMs: this.now(),
+      durationMs: SCROLL_EASE_MS,
+    });
+  }
+
+  private startMotionFrames(): void {
+    this.notesApp?.ticker.start();
+  }
+
+  private stopMotionFrames(): void {
+    this.notesApp?.ticker.stop();
+  }
+
+  /**
+   * WHERE THE CURRENT MOTION PUTS THE PLAYHEAD at a wall-clock instant, or null for "nowhere new".
+   *
+   * Read off the WALL CLOCK rather than integrated from the ticker's delta, in every branch. pixi
+   * clamps `deltaMS` to `minFPS` (100ms by default), so a hidden tab's worth of missed frames comes
+   * back as one 100ms step and an integrating animation would silently lose the rest; and the
+   * maxFPS gate makes the executed frames unevenly spaced, which a wall-clock position absorbs for
+   * free. Note `ticker.lastTime` is the PREVIOUS tick's timestamp inside a listener - the ticker
+   * writes it after emitting - so this uses now() and not that.
+   */
+  private motionPositionAt(nowMs: number): number | null {
+    const motion = this.motion;
+    switch (motion.kind) {
+      case 'resting':
+        //unreachable while the rule at Motion holds: the frames are stopped at rest
+        return null;
+      case 'playback':
+        return this.scrollPositionAt(nowMs);
+      case 'easing': {
+        const elapsed = nowMs - motion.startMs;
+        if (elapsed >= motion.durationMs) return motion.to;
+        const t = motion.durationMs > 0 ? elapsed / motion.durationMs : 1;
+        //easeOutCubic: leaves at speed and lands softly, which is what a flick should feel like
+        const eased = 1 - (1 - t) ** 3;
+        return motion.from + (motion.to - motion.from) * eased;
+      }
+      case 'dragging':
+        //the pointer handler already wrote it; the frame only applies it
+        return motion.position;
+    }
+  }
+
+  /**
+   * THE FRAME. Registered on the notes Application's Ticker at the default priority, and the only
+   * per-frame work this class does - see init() for the loop's wiring and Motion for when it runs.
+   *
+   * One applyScrollPosition per frame at most, for playback, drag and ease alike, and none at all
+   * on a frame where the position did not move: a pointer stream faster than the frame rate
+   * coalesces here, and a schedule stalled on a late tick costs this call and nothing else.
+   */
+  private onMotionFrame = (): void => {
+    const now = this.now();
+    const position = this.motionPositionAt(now);
+    if (position === null) return;
+    if (this.motion.kind === 'easing' && position === this.motion.to)
+      return this.settleAt(position);
+    if (position !== this.scrollPosition) this.applyScrollPosition(position);
+  };
+
+  /**
+   * MOVE THE SCENE TO A SCROLL POSITION, INCREMENTALLY. Brings the notes container's offset, the
+   * drawn window's membership, the selection overlay and the timeline viewport into agreement with
+   * `scrollPosition` without touching what any surviving column painted. draw() does the same four
+   * things from scratch on its own path; this is the version a frame can afford, and it is reached
+   * from the frame and, for everything that snaps, from update().
+   *
+   * It is the same work the pre-playhead drawSelectedMoved did, minus the assumption that the
+   * position is an integer. What a column paints is a function of its index and its content, so a
+   * view that stays in the window keeps what it has; only membership, the two overlays and the
+   * offsets move.
+   */
+  private applyScrollPosition(position: number): void {
+    if (!this.notesApp || !this.timelineApp) return;
+    const cacheData = this.cache?.cache;
+    this.scrollPosition = position;
+    if (!cacheData || this.state.isRecordingAudio) return;
+    this.notesColumnsContainer.x = this.containerX();
+    const { first, last } = this.visibleColumnRange();
+    this.releaseColumnViewsOutside(first, last);
+    const counterLimit = this.counterLimit();
+    for (let index = first; index <= last; index++) {
+      // Columns that were already in the window keep what they painted: their content, their
+      // index-derived background and their tails are all unchanged by a window shift.
+      if (!this.columnViews.has(index))
+        this.paintColumn(index, cacheData, this.columnSize, counterLimit);
+    }
+    this.syncOverlayColumn(cacheData);
+    this.syncTimelineViewport();
+    this.notesApp.render();
+  }
+
+  /**
+   * MOVE THE SELECTED OVERLAY to the column overlayColumn now names, if it is not already there.
+   *
+   * The two columns are the one that lost the overlay and the one that gained it. Neither changes
+   * its BACKGROUND - selection is a separate overlay sprite - and after a large jump either may be
+   * outside the window, in which case paintSelectionOverlay finds no view and does nothing; a column
+   * entering the window later is painted in full by paintColumn, which writes the overlay from the
+   * same field.
+   *
+   * With smooth scrolling on this repaints ONE column ONCE - the one that was carrying the overlay
+   * when the setting was turned on - and nothing after that: overlayColumn stays NO_OVERLAY_COLUMN
+   * for as long as the setting is on, so the comparison holds from the update after the toggle
+   * onwards. (`paintSelectionOverlay(NO_OVERLAY_COLUMN)` finds no view and is the no-op half.)
+   */
+  private syncOverlayColumn(cacheData: ComposerCacheData): void {
+    const previous = this.paintedOverlayColumn;
+    if (previous === this.overlayColumn) return;
+    this.paintedOverlayColumn = this.overlayColumn;
+    if (previous !== null) this.paintSelectionOverlay(previous, cacheData);
+    this.paintSelectionOverlay(this.overlayColumn, cacheData);
+  }
+
+  /**
+   * THE TIMELINE VIEWPORT, and the gate that keeps the timeline Application off the per-frame path.
+   *
+   * The rectangle's x is written every time, so the value the scene holds is always exact - what is
+   * gated is the RENDER. The whole song spans the canvas width here, so on a song of a few hundred
+   * columns the rectangle moves a fraction of a pixel per frame while the notes container moves
+   * several whole ones; rendering it on the frames where its rounded x did not move draws the same
+   * pixels again. At worst the outline trails the canvas by half a pixel.
+   */
+  private syncTimelineViewport(): void {
+    const x = this.timelineViewport().x;
+    this.viewportGraphics.x = x;
+    const rounded = Math.round(x);
+    if (rounded === this.renderedViewportX) return;
+    this.renderedViewportX = rounded;
+    this.timelineApp?.render();
+  }
+
+  /**
+   * The outline on the mini-timeline, as the span of the song the canvas is showing. Both numbers
+   * are derived from the pixel geometry for the reason ColumnWindowGeometry gives - the canvas does
+   * not hold exactly `columnsPerCanvas` columns - and both the drawn rectangle and the
+   * drag-the-viewport hit test in handleTimelineDown read them from here, so the thing the user
+   * grabs is the thing they see.
+   */
+  private timelineViewport(): { x: number; width: number } {
+    const relativeColumnWidth = this.width / this.state.columns.length;
+    const columnsOnScreen = this.width / this.columnSize.width;
+    const firstVisible = this.scrollPosition - this.playheadX() / this.columnSize.width;
+    return {
+      x: relativeColumnWidth * firstVisible,
+      width: Math.floor(relativeColumnWidth * columnsOnScreen),
+    };
+  }
+
+  /** The column under a canvas x, fractional - the inverse of the offset containerX() applies. */
+  private columnAtCanvasX(x: number): number {
+    return this.scrollPosition + (x - this.playheadX()) / this.columnSize.width;
+  }
+
+  /**
+   * THE WHEEL: one column per event, EASED rather than snapped.
+   *
+   * WHAT THE STEP IS MEASURED FROM depends on who owns the position, and it has to, because the
+   * value this produces is compared by Svelte against `selected`:
+   *  - WHILE THE TRANSPORT OWNS IT (playing with smooth scrolling on) the step is measured from
+   *    `selected` itself. The playhead is a LOOKAHEAD BEHIND `selected` by construction, so a step
+   *    measured from the playhead asks for a column the transport is already on - an unchanged
+   *    write, which notifies nothing and moves neither the canvas nor the music. Measured at the
+   *    shipped defaults, that swallowed a forward wheel for the first 113 of every 273ms column
+   *    while sending a backward one two columns back. `selected` is fresh here: the ticks that
+   *    move it are a column apart, so the microtask-staleness a burst suffers cannot arise.
+   *  - OTHERWISE from the running ease's own TARGET, which is the whole of how a burst composes:
+   *    wheel events arrive several to a frame, and a step measured from the current position would
+   *    give every event in a burst the same destination. `this.state.selected` cannot serve there -
+   *    it is a snapshot Svelte refreshes a microtask later, so inside a burst it is the value from
+   *    before the previous event.
+   *
+   * WHILE THE TRANSPORT OWNS THE POSITION it also does not ease: moving `selected` is enough,
+   * because the update that produces takes syncScrollSchedule's discontinuity branch, which
+   * re-anchors the playhead there and re-schedules. Easing as well would put the canvas behind
+   * music that has already jumped.
+   *
+   * A DRAG OUTRANKS IT, which is syncScrollSchedule's rule applied to the one input that can arrive
+   * mid-gesture: a mouse with a wheel can be scrolled with its button held, and easing from under a
+   * held pointer replaces the `dragging` motion, so the release would run handleStageUp's CLICK
+   * path and sound a note from a gesture the user performed as a drag.
+   */
   private handleWheel = (e: WheelEvent) => {
-    this.callbacks.selectColumn(this.state.selected + Math.sign(e.deltaY), true);
+    if (this.motion.kind === 'dragging') return;
+    const transportOwned = this.state.isPlaying && this.state.smoothScroll;
+    const from = transportOwned
+      ? this.state.selected
+      : this.motion.kind === 'easing'
+        ? this.motion.to
+        : this.scrollPosition;
+    const target = clamp(Math.round(from) + Math.sign(e.deltaY), 0, this.state.columns.length - 1);
+    this.callbacks.selectColumn(target, true);
+    if (transportOwned) return;
+    this.easeTo(target);
   };
 
-  private handleClick = (e: FederatedPointerEvent, type: ClickEventType) => {
-    const x = e.globalX;
-    const { width, numberOfColumnsPerCanvas, state } = this;
-    this.stageXMovement = 0;
-    this.stageMovementAmount = 0;
-    if (type === 'up') {
-      this.sliderSelected = false;
-    }
-    if (type === 'down-slider') {
-      this.sliderSelected = true;
-      const relativeColumnWidth = width / state.columns.length;
-      const stageSize = relativeColumnWidth * (numberOfColumnsPerCanvas + 1);
-      const stagePosition =
-        relativeColumnWidth * state.selected - (numberOfColumnsPerCanvas / 2) * relativeColumnWidth;
-      this.onSlider = x > stagePosition && x < stagePosition + stageSize;
-      this.sliderOffset = stagePosition + stageSize / 2 - x;
-      this.throttleScroll = Number.MAX_SAFE_INTEGER;
-      this.handleSliderSlide(e);
-    }
-    if (type === 'down-stage') {
-      this.stagePreviousPositon = x;
-      this.stageSelected = true;
-    }
+  /**
+   * A pointer going down on the notes stage. It records the press and NOTHING else - the drag
+   * motion is entered by the first move past DRAG_SLOP_PX (see handleStageSlide), so a click during
+   * playback leaves the glide it landed on running.
+   */
+  private handleStageDown = (e: FederatedPointerEvent) => {
+    this.stagePointer = { x: e.globalX, anchorPosition: this.scrollPosition };
   };
 
-  private handleClickStage = (e: FederatedPointerEvent) => {
-    this.handleClick(e, 'down-stage');
-  };
-
-  private handleClickStageUp = (e: FederatedPointerEvent) => {
-    this.stageSelected = false;
-    if (this.stageMovementAmount === 0) {
-      const middle = (this.numberOfColumnsPerCanvas / 2) * this.columnSize.width;
-      const clickedOffset = Math.floor((e.globalX - middle) / this.columnSize.width + 1);
-      if (clickedOffset === 0) return;
-      const newPosition = this.state.selected + Math.round(clickedOffset);
-      this.callbacks.selectColumn(clamp(newPosition, 0, this.state.columns.length - 1));
-    }
-  };
-
-  private handleClickDown = (e: FederatedPointerEvent) => {
-    this.handleClick(e, 'down-slider');
-  };
-
-  private handleClickUp = (e: FederatedPointerEvent) => {
-    this.handleClick(e, 'up');
-  };
-
+  /**
+   * THE STAGE DRAG: the canvas follows the pointer continuously, in pixels rather than in whole
+   * columns. Before this it accumulated movement and only acted when it crossed a whole column, so
+   * the canvas jumped a column at a time and a 0.9-column drag moved nothing at all.
+   *
+   * It paints nothing. The position is written into the motion and the frame applies it, which is
+   * what keeps a pointer stream faster than the frame rate from producing a render per event.
+   *
+   * `selectColumn` is called with the FLOOR of the position, and only when that floor changes -
+   * at most once per column crossed. Floor because the playhead marks the START of the column it is
+   * in, so at position 40.9 the column under the line is 40 and `selected` must agree with the line
+   * at every instant. (The release rounds instead - see settleStageDrag.)
+   */
   private handleStageSlide = (e: FederatedPointerEvent) => {
-    const x = e.globalX;
-    const amount = this.stagePreviousPositon - x;
-    this.stagePreviousPositon = x;
-    if (this.stageSelected) {
-      const threshold = this.columnSize.width;
-      this.stageXMovement += amount;
-      const amountToMove = (this.stageXMovement - this.stageMovementAmount * threshold) / threshold;
-      if (Math.abs(amountToMove) < 1) return;
-      this.stageMovementAmount += Math.round(amountToMove);
-      const newPosition = this.state.selected + Math.round(amountToMove);
-      this.callbacks.selectColumn(clamp(newPosition, 0, this.state.columns.length - 1), true);
+    const pointer = this.stagePointer;
+    if (!pointer) return;
+    const motion = this.motion;
+    const dragging = motion.kind === 'dragging' && motion.surface === 'stage';
+    if (!dragging) {
+      if (Math.abs(e.globalX - pointer.x) <= DRAG_SLOP_PX) return;
+      // THE ANCHOR IS TAKEN HERE, at the instant the drag actually starts, and not at the press.
+      // The press is not the grab - the slop test above is - and whatever was already moving the
+      // canvas keeps writing the position in between: a glide, or a wheel's ease. Anchoring on the
+      // press gives all of that back on the first drag frame, measured at 0.41 columns backward for
+      // a 0.4-column hesitation on a playing song, which is the most ordinary way to use the
+      // gesture. `this.scrollPosition` is what is on screen, which is the thing a finger grabs.
+      pointer.anchorPosition = this.scrollPosition;
     }
+    const lastColumn = this.state.columns.length - 1;
+    const raw = pointer.anchorPosition + (pointer.x - e.globalX) / this.columnSize.width;
+    const position = clamp(raw, 0, lastColumn);
+    // RE-ANCHORED at either end: without this, dragging past the end and back leaves a dead zone
+    // the size of the overshoot before the canvas moves again.
+    if (position !== raw) {
+      pointer.x = e.globalX;
+      pointer.anchorPosition = position;
+    }
+    if (dragging) motion.position = position;
+    else this.enterMotion({ kind: 'dragging', surface: 'stage', position });
+    const column = Math.floor(position);
+    // NOT FREE, and left as it is deliberately: Composer.svelte's selectColumn ALSO extends the
+    // tools selection while that panel is open, which replaces `selectedColumns` and so lands on
+    // needsUnconditionalRepaint - a full window repaint plus a whole timeline rebuild, once per
+    // column crossed. That is what dragging with the tools panel open has always done; making the
+    // drag able to say "move the cursor, do not extend the selection" would need a third argument
+    // on ComposerRendererCallbacks and would change what the gesture means.
+    if (column !== this.state.selected) this.callbacks.selectColumn(column, true);
+  };
+
+  /**
+   * A pointer coming up over the notes stage: a drag settles, a press that never became one is a
+   * CLICK and picks the column under it.
+   *
+   * A click is a pick rather than a scroll, so it snaps - and `selectColumn` here is called WITHOUT
+   * `ignoreAudio`, so the clicked column sounds at once; easing the canvas to a column the user has
+   * already heard would put the picture behind the sound.
+   */
+  private handleStageUp = (e: FederatedPointerEvent) => {
+    this.stagePointer = null;
+    const motion = this.motion;
+    if (motion.kind === 'dragging' && motion.surface === 'stage') return this.settleStageDrag();
+    // The column the pointer is actually OVER, inverted through the live scroll position rather
+    // than derived from `selected` and a fixed slot. The two agree whenever the scroll is at
+    // rest; during a glide `selected` is a column ahead of what is on screen, and this is what
+    // makes a click land where it was aimed.
+    const clicked = Math.floor(this.columnAtCanvasX(e.globalX));
+    if (clicked === this.state.selected) return;
+    this.callbacks.selectColumn(clamp(clicked, 0, this.state.columns.length - 1));
+  };
+
+  /**
+   * Where a stage drag comes to rest: the NEAREST column, eased to.
+   *
+   * Round rather than floor, unlike the `selectColumn` calls the drag itself makes. A floor-settle
+   * always gives movement back, up to a full column on every single release, which reads as sticky;
+   * round splits the give-back and caps it at half a column, which is what snapping to a grid does
+   * everywhere else.
+   */
+  private settleStageDrag(): void {
+    const motion = this.motion;
+    if (motion.kind !== 'dragging' || motion.surface !== 'stage') return;
+    const target = clamp(Math.round(motion.position), 0, this.state.columns.length - 1);
+    this.callbacks.selectColumn(target, true);
+    this.easeTo(target);
+  }
+
+  /**
+   * A pointer going down on the mini-timeline. Unlike the stage, this enters the drag AT ONCE and
+   * jumps to the pointer, because that is what the affordance does: pressing anywhere on the
+   * timeline navigates there.
+   */
+  private handleTimelineDown = (e: FederatedPointerEvent) => {
+    //the rectangle drawn on the timeline, so grabbing it and grabbing what is drawn agree
+    const viewport = this.timelineViewport();
+    this.onSlider = e.globalX > viewport.x && e.globalX < viewport.x + viewport.width;
+    // WHERE ON THE RECTANGLE the pointer landed, as an offset from the position that rectangle
+    // stands for. That position is `relativeColumnWidth * scrollPosition` - the playhead's own
+    // column - because the line sits at the canvas' horizontal middle, so `firstVisible +
+    // columnsOnScreen / 2` collapses to the scroll position identically (see timelineViewport).
+    // Taken from that identity rather than from the DRAWN centre, whose width is floored to whole
+    // pixels: half a pixel of the strip is a sixteenth of a column on a 100-column song, which is
+    // enough to make a grab that never moves ask for the column before the one it grabbed.
+    this.sliderOffset = (this.width / this.state.columns.length) * this.scrollPosition - e.globalX;
+    this.enterMotion({ kind: 'dragging', surface: 'timeline', position: this.scrollPosition });
+    this.handleTimelineSlide(e);
+  };
+
+  private handleTimelineUp = () => {
+    const motion = this.motion;
+    if (motion.kind !== 'dragging' || motion.surface !== 'timeline') return;
+    const target = clamp(Math.round(motion.position), 0, this.state.columns.length - 1);
+    this.callbacks.selectColumn(target, true);
+    this.easeTo(target);
+  };
+
+  /**
+   * THE TIMELINE DRAG: absolute rather than an offset from an anchor, since the whole song spans
+   * the strip. The position is `(x / width) * columns.length`, which is the expression the throttled
+   * version already computed (`totalWidth / columnSize.width` cancels to `columns.length`) with its
+   * floor removed.
+   *
+   * The four-event THROTTLE is gone with it. Its purpose was to rate-limit `selectColumn`, because
+   * each call was a Svelte round-trip ending in a snap-repaint; a move now writes a number and
+   * paints nothing, and `selectColumn` is limited by the floor changing instead - at most once per
+   * column crossed, which is a tighter limit at speed and a more responsive one at a crawl.
+   *
+   * Grabbing the rectangle resolves to the position it stands for, so a press on what is already
+   * on screen moves nothing at all: sliderOffset is the distance from that position to the pointer
+   * and this adds it straight back. See handleTimelineDown for where the offset comes from.
+   */
+  private handleTimelineSlide = (e: FederatedPointerEvent) => {
+    const motion = this.motion;
+    if (motion.kind !== 'dragging' || motion.surface !== 'timeline') return;
+    const lastColumn = this.state.columns.length - 1;
+    const x = this.onSlider ? e.globalX + this.sliderOffset : e.globalX;
+    const position = clamp((x / this.width) * this.state.columns.length, 0, lastColumn);
+    motion.position = position;
+    const column = Math.floor(position);
+    if (column !== this.state.selected) this.callbacks.selectColumn(column, true);
   };
 
   // Called by ComposerCanvas.svelte's prev/next-breakpoint buttons and its own
@@ -728,23 +1623,11 @@ export class ComposerRenderer {
     }
   };
 
-  private handleSliderSlide = (e: FederatedPointerEvent) => {
-    const globalX = e.globalX;
-    if (this.sliderSelected) {
-      if (this.throttleScroll++ < 4) return;
-      const { width, columnSize, state } = this;
-      this.hasSlided = true;
-      this.throttleScroll = 0;
-      const totalWidth = columnSize.width * state.columns.length;
-      const x = this.onSlider ? globalX + this.sliderOffset : globalX;
-      const relativePosition = Math.floor(((x / width) * totalWidth) / columnSize.width);
-      this.callbacks.selectColumn(clamp(relativePosition, 0, state.columns.length - 1), true);
-    }
-  };
-
   private testStageHitarea = {
     contains: (x: number, y: number) => {
-      if (this.stageSelected) return true; //if stage is selected, we want to be able to move it even if we are outside the timeline
+      //while the stage is being dragged the pointer must keep reaching this container even outside
+      //the canvas, which is what puts it on the composed path pixi dispatches pointerup along
+      if (this.stagePointer) return true;
       const width = this.columnSize.width * this.state.columns.length;
       if (x < 0 || x > width || y < 0 || y > this.height) return false;
       return true;
@@ -753,16 +1636,31 @@ export class ComposerRenderer {
 
   private testTimelineHitarea = {
     contains: (x: number, y: number) => {
-      if (this.sliderSelected) return true; //if slider is selected, we want to be able to move it even if we are outside the timeline
+      //same reason as the stage's, for the timeline's own drag
+      const motion = this.motion;
+      if (motion.kind === 'dragging' && motion.surface === 'timeline') return true;
       if (x < 0 || x > this.width || y < 0 || y > this.timelineHeight) return false;
       return true;
     },
   };
 
+  /**
+   * The window-level release: a pointerup anywhere, a pointercancel, and a blur - the last two
+   * produce no pixi event at all, and the cancel is the one that would otherwise strand the canvas
+   * in `dragging` for good (see init for what pixi does and does not listen to).
+   *
+   * IDEMPOTENT against the pixi handlers, which is what makes it safe to have both. pixi registers
+   * its own pointerup on `globalThis` in the CAPTURE phase and this listener is on `window` in the
+   * bubble phase, so handleStageUp/handleTimelineUp run first and have already left `dragging` by
+   * the time this does anything; settleStageDrag and the timeline's own settle both return when the
+   * motion is not theirs.
+   */
   private resetPointerDown = () => {
-    this.stageSelected = false;
-    this.sliderSelected = false;
-    this.stagePreviousPositon = 0;
+    this.stagePointer = null;
+    const motion = this.motion;
+    if (motion.kind !== 'dragging') return;
+    if (motion.surface === 'stage') this.settleStageDrag();
+    else this.handleTimelineUp();
   };
 
   private handleThemeChange = () => {
@@ -800,7 +1698,7 @@ export class ComposerRenderer {
   // instance instead, because the parent wraps this component in
   // {#key settings.columnsPerCanvas.value}.
   //
-  // FOUR OUTCOMES, cheapest last:
+  // FIVE OUTCOMES, cheapest last, and listed in the order the code tests them:
   //  - full repaint, when needsUnconditionalRepaint reports a change - or when there is no
   //    trustworthy baseline to compare against at all (see paintedState);
   //  - the column GRAPH moved and nothing else did: the same full-repaint path, narrowed to the
@@ -808,30 +1706,69 @@ export class ComposerRenderer {
   //    Both scenes are still walked - the timeline content is rebuilt whole, and every drawn
   //    column is still visited - so what this saves is the paint of the columns an edit did not
   //    reach, which for a one-note edit is the whole window but one;
-  //  - `selected` moved and neither of the above: drawSelectedMoved, which applies
-  //    the shift to the scene already on screen. That is the playback tick, and it is the reason
-  //    this diff exists - during playback the structure does not change, so the diff has nothing
-  //    to report and the tick costs O(window) rather than O(song).
-  //  - `selected` did not move either: return without rendering. A state differing from the last
-  //    painted one only in fields needsUnconditionalRepaint does not compare lands here; that
-  //    method's closing paragraph says what each of those is doing on the state object.
+  //  - the SCROLL POSITION moved - not `selected`, and the inline comment at that branch says why
+  //    the two are different questions: applyScrollPosition, which shifts the scene already on
+  //    screen. That is the playback tick with smooth scrolling off, and it is the reason this diff
+  //    exists - during playback the structure does not change, so the diff has nothing to report
+  //    and the tick costs O(window) rather than O(song). It is ALSO the jump that re-anchors a
+  //    running glide, which is why it is tested before the motion branch rather than after: that
+  //    update moves the position WHILE a motion runs, and making it wait for the next frame is a
+  //    jump the user sees a capped frame late;
+  //  - a MOTION is running and this update did not move the position: the frame owns the offset,
+  //    the window and the overlay from here, and this records the baseline and returns. That is
+  //    the steady playback tick with smooth scrolling on, and every update that lands mid-gesture;
+  //  - neither: return without rendering. A state differing from the last painted one only in
+  //    fields needsUnconditionalRepaint does not compare lands here; that method's closing
+  //    paragraph says what each of those is doing on the state object.
   update(state: ComposerRendererState): void {
     const previous = this.paintedState;
     // FIRST, unconditionally, and before any early return: the pointer/wheel/hitarea handlers all
     // read this.state, and they must never see the state of a previous update.
     this.state = state;
+    // BEFORE any repaint decision: every path below reads `scrollPosition` for the container offset
+    // and `overlayColumn` for the overlay, and these are what move them. R1's two mode-gated values
+    // are written unconditionally rather than behind a change test, for the reason ColumnView.paint
+    // writes properties the object already holds.
+    this.overlayColumn = state.smoothScroll ? NO_OVERLAY_COLUMN : state.selected;
+    this.playheadGraphics.visible = this.playheadIsVisible(state);
+    const previousScrollPosition = this.scrollPosition;
+    //the LAST UPDATE, not the last paint - see the field for why the schedule needs the other one
+    const previousUpdate = this.previousState;
+    this.previousState = state;
+    this.syncScrollSchedule(previousUpdate, state);
     if (previous === null) return this.draw();
     const cacheData = this.cache?.cache;
     if (!cacheData) return this.draw();
     if (this.needsUnconditionalRepaint(previous, state)) return this.draw();
     if (previous.structureVersion !== state.structureVersion) {
-      // `selected` may have moved in the same batch - note entry is not gated on isPlaying - and a
-      // skipped column that gained or lost the flag would keep the wrong overlay, so the narrowed
-      // repaint is told which column had it.
-      return this.draw({ previousSelected: previous.selected });
+      // The overlay may have moved in the same batch - note entry is not gated on isPlaying - and a
+      // skipped column that gained or lost it would keep the wrong sprite state, so the narrowed
+      // repaint ends in the same fix-up applyScrollPosition uses.
+      return this.draw(true);
     }
-    if (previous.selected === state.selected) return;
-    this.drawSelectedMoved(previous.selected, cacheData);
+    // DID THIS UPDATE MOVE THE POSITION ITSELF? That is the question, and not whether a motion is
+    // running - the two are independent, and syncScrollSchedule's discontinuity branch is where
+    // they come apart: it re-anchors a glide on a new column AND leaves the frames running, and a
+    // jump that waited for the next frame is a jump the user sees a capped frame late.
+    //
+    // The SCROLL POSITION rather than `selected`, which are the same test while both are snapped and
+    // different in the one case that matters: playback STOPPING mid-glide moves the position from
+    // wherever the playhead had reached to `selected`, without `selected` itself moving.
+    //
+    // It covers the OVERLAY too. In snap mode `overlayColumn` IS `state.selected` and rest() has
+    // just put the position there as well, so the two move together; in glide mode it is
+    // NO_OVERLAY_COLUMN and does not move at all.
+    if (previousScrollPosition !== this.scrollPosition) {
+      this.applyScrollPosition(this.scrollPosition);
+      this.paintedState = state;
+      return;
+    }
+    if (this.motion.kind !== 'resting') {
+      // The frame is what paints from here, and the ticker is already running. Recording the
+      // baseline is still this call's job: the next update diffs against the last state that
+      // reached the screen, and the frame that follows this one puts this one's columns there.
+      this.paintedState = state;
+    }
   }
 
   /**
@@ -839,13 +1776,17 @@ export class ComposerRenderer {
    * inputs the paths below know how to apply to less than the whole window.
    *
    * The fields listed here stay on the full repaint, as a decision rather than a gap - but for two
-   * different reasons, so the bullets say which applies. The first five change the pixels of a
+   * different reasons, so the bullets say which applies. The first six change the pixels of a
    * column whose own `version` counter did not move, so the per-column skip cannot see them; the
    * last two are cheap gates that a narrowed path would reach a different way:
    *  - `instruments` decides note textures (computeRowLayerStatuses), the dimming of stranded rows
    *    (computeStrandedRows) and which tails draw at all, for every column;
    *  - `currentLayer` is bit 0 of every layer status plus the tail accent/dim, for every column;
    *  - `beatMarks` is the bar-group alternation, i.e. the background slot of every column;
+   *  - `smoothScroll` decides whether the selected overlay exists at all and whether the playhead
+   *    line is drawn (see the state field). Without it here, toggling the setting while the song is
+   *    stopped on an exact column moves neither the scroll position nor any `version` counter, so
+   *    update()'s tail returns and the canvas keeps showing the mode it is no longer in;
    *  - `breakpoints` and `selectedColumns` are arbitrary index SETS. Narrowing either would mean
    *    diffing two arrays into a symmetric difference to repaint one marker or one overlay sprite,
    *    which costs about what it saves;
@@ -857,8 +1798,9 @@ export class ComposerRenderer {
    *    through counters that restart at 0;
    *  - `isRecordingAudio` hides the stage, which paints nothing and records no baseline.
    *
-   * Each of the first five is pinned by test/composerRenderer.test.ts: moving any one of them onto
-   * the narrowed path fails between three and five of its tests.
+   * Each of the first six is pinned by test/composerRenderer.test.ts: moving any one of them onto
+   * the narrowed path fails between three and five of its tests (measured one at a time:
+   * `instruments` 5, `selectedColumns` 4, the other four 3 each).
    *
    * The comparisons are identity comparisons on purpose, and they are only sound because each of
    * `instruments`, `breakpoints` and `selectedColumns` is REPLACED rather than edited in place by
@@ -873,7 +1815,9 @@ export class ComposerRenderer {
    * version moves on every graph edit and cannot see a song SWAP (a freshly loaded song sits at 0,
    * which the previous song may too). Neither alone is sufficient.
    *
-   * Not compared, and why. `isPlaying` is read nowhere in this class - see its field. `inPreview`
+   * Not compared, and why. `isPlaying` IS read now - syncScrollSchedule and handleWheel both take
+   * it - but what it changes is the SCHEDULE rather than any column's appearance, so it stays out
+   * of here; see its field. `bpm` and `lookaheadMs` are the same shape of thing. `inPreview`
    * and `columnsPerCanvas` both decide geometry, and `inPreview` decides a great deal of it (it
    * scales both canvas dimensions in computeCanvasSize, so it moves every column's x, every note's
    * y and the size of both canvases) - but neither reaches update() as a CHANGE: Composer.svelte
@@ -898,7 +1842,8 @@ export class ComposerRenderer {
       previous.breakpoints !== next.breakpoints ||
       previous.selectedColumns !== next.selectedColumns ||
       previous.currentLayer !== next.currentLayer ||
-      previous.beatMarks !== next.beatMarks
+      previous.beatMarks !== next.beatMarks ||
+      previous.smoothScroll !== next.smoothScroll
     );
   }
 
@@ -911,18 +1856,22 @@ export class ComposerRenderer {
   /**
    * The drawn window, clamped to the song. `last < first` means nothing is drawn (an empty song).
    *
-   * Closed form of isColumnVisible's set: the smallest integer strictly greater than
-   * selected - threshold, and the largest strictly less than selected + threshold. The two are
-   * pinned against each other in test/composerRenderer.test.ts rather than assumed equal - the
-   * thresholds are half-integers for odd columnsPerCanvas values, which is where a naive
-   * `selected ± n/2` form stops agreeing.
+   * Closed form of isColumnVisible's set, solved for `pos` from the two strict inequalities there:
+   * the smallest integer strictly greater than the low bound, and the largest strictly less than
+   * the high one. The two are pinned against each other in test/composerRenderer.test.ts rather
+   * than assumed equal, over every shipped columnsPerCanvas option and over fractional scroll
+   * positions - a column-counting form that is exact on integers is where the two stop agreeing
+   * once the scroll glides.
    */
   private visibleColumnRange(): { first: number; last: number } {
-    const threshold = this.numberOfColumnsPerCanvas / 2 + 2;
-    const { selected, columns } = this.state;
+    const { width, columnWidth, playheadX } = this.windowGeometry();
+    const bleed = WINDOW_BLEED_COLUMNS * columnWidth;
+    const position = this.scrollPosition;
+    const low = position - (playheadX + bleed) / columnWidth - 1;
+    const high = position + (width + bleed - playheadX) / columnWidth;
     return {
-      first: Math.max(0, Math.floor(selected - threshold) + 1),
-      last: Math.min(columns.length - 1, Math.ceil(selected + threshold) - 1),
+      first: Math.max(0, Math.floor(low) + 1),
+      last: Math.min(this.state.columns.length - 1, Math.ceil(high) - 1),
     };
   }
 
@@ -971,6 +1920,9 @@ export class ComposerRenderer {
     // (destroy); what runs in between on the first of those calls back into Svelte
     // (notifyGeometry) while the pool is empty and the baseline null.
     this.paintedState = null;
+    //...and so does the overlay's painted counterpart, for the same reason: the pool it described
+    //has stopped existing
+    this.paintedOverlayColumn = null;
   }
 
   private paintColumn(
@@ -997,7 +1949,8 @@ export class ComposerRenderer {
       cache: cacheData,
       background,
       isToolsSelected: state.selectedColumns.includes(index),
-      isSelected: index === state.selected,
+      //false everywhere while smooth scrolling is on - see the overlayColumn field
+      isSelected: index === this.overlayColumn,
       isBreakpoint: state.breakpoints.includes(index),
     });
     this.paintTails(view.tailGraphics, index, sizes);
@@ -1014,10 +1967,11 @@ export class ComposerRenderer {
    * own notes and tempoChanger (this counter); the tails of every span STARTING up to maxSpan
    * columns to the left (also this counter - ComposedSong.#touchColumns bumps the whole range a
    * span covers, the union of old and new on a shrink, so a note that draws on column i always
-   * bumps column i); the index (see ColumnView.paintKey); `selected` (the two overlays
-   * drawNotesStage repaints after the loop); `currentLayer`, `instruments`, `selectedColumns`,
-   * `breakpoints` and `beatMarks` (all of them forced onto the unconditional path - see
-   * needsUnconditionalRepaint); and the textures, the column geometry and paintTailAccent, which
+   * bumps column i); the index (see ColumnView.paintKey); `overlayColumn` (the overlay
+   * drawNotesStage moves through syncOverlayColumn after the loop); `currentLayer`, `instruments`,
+   * `selectedColumns`, `breakpoints`, `beatMarks` and `smoothScroll` (all of them forced onto the
+   * unconditional path - see needsUnconditionalRepaint); and the textures, the column geometry and
+   * paintTailAccent, which
    * only recalculateCacheAndSizes moves - and it drops the pool AND nulls the baseline in the same
    * function, so a narrowed run cannot straddle a change to any of them.
    *
@@ -1105,31 +2059,32 @@ export class ComposerRenderer {
    * from recalculateCacheAndSizes (which is a second entry point into drawing, bypassing update()
    * entirely - theme and resize have no state channel).
    *
-   * `narrowed` is the phase-4 opt-in: when it is passed, a drawn column whose view is already
-   * showing it is skipped (columnIsAlreadyPainted), and the two columns whose selection flag can
-   * have changed get their overlay repainted afterwards. It DEFAULTS TO OFF so that
-   * recalculateCacheAndSizes' call cannot enable it - that path has just dropped the pool, and
-   * every key with it, but the default is what makes "only update() narrows" a property of the
-   * signature rather than of its call sites. Everything else here runs identically either way:
-   * the container offset, the release/acquire pass, the whole timeline rebuild, both renders and
-   * the baseline record.
+   * `narrowed` is the phase-4 opt-in: when it is set, a drawn column whose view is already showing
+   * it is skipped (columnIsAlreadyPainted), and the columns whose selection flag can have changed
+   * get their overlay repainted afterwards. It DEFAULTS TO OFF so that recalculateCacheAndSizes'
+   * call cannot enable it - that path has just dropped the pool, and every key with it, but the
+   * default is what makes "only update() narrows" a property of the signature rather than of its
+   * call sites. Everything else here runs identically either way: the container offset, the
+   * release/acquire pass, the whole timeline rebuild, both renders and the baseline record.
+   *
+   * Both Applications render here unconditionally - the timeline's per-frame gate does not apply,
+   * because this rebuilt the timeline's whole content container.
    */
-  private draw(narrowed: NarrowedRepaint | null = null): void {
+  private draw(narrowed: boolean = false): void {
     if (!this.notesApp || !this.timelineApp) return;
     const cacheData = this.cache?.cache;
     const sizes = this.columnSize;
     const state = this.state;
-    const xPosition = (state.selected - this.numberOfColumnsPerCanvas / 2 + 1) * -sizes.width;
     const relativeColumnWidth = this.width / state.columns.length;
-    const timelineWidth = Math.floor(relativeColumnWidth * (this.width / sizes.width + 1));
-    const timelinePosition =
-      relativeColumnWidth * state.selected -
-      relativeColumnWidth * (this.numberOfColumnsPerCanvas / 2);
+    const viewport = this.timelineViewport();
 
-    const painted = this.drawNotesStage(cacheData, sizes, xPosition, narrowed);
-    this.drawTimelineStage(cacheData, relativeColumnWidth, timelineWidth, timelinePosition);
+    const painted = this.drawNotesStage(cacheData, sizes, this.containerX(), narrowed);
+    this.drawTimelineStage(cacheData, relativeColumnWidth, viewport.width, viewport.x);
     this.notesApp.render();
     this.timelineApp.render();
+    //the gate's baseline moves with the render that just happened, or the next frame would compare
+    //against a position two repaints old and skip a render the outline needs
+    this.renderedViewportX = Math.round(viewport.x);
     // The baseline is only the state of a run that ACTUALLY PAINTED the notes stage. Recording it
     // after a run that painted nothing (no cache yet, recording audio) would let the next update
     // diff against a moment that never reached the screen, and the pool would come back showing a
@@ -1142,7 +2097,7 @@ export class ComposerRenderer {
     cacheData: ComposerCacheData | undefined,
     sizes: { width: number; height: number },
     xPosition: number,
-    narrowed: NarrowedRepaint | null
+    narrowed: boolean
   ): boolean {
     this.notesColumnsContainer.x = xPosition;
     const visible = Boolean(cacheData) && !this.state.isRecordingAudio;
@@ -1167,56 +2122,12 @@ export class ComposerRenderer {
       if (narrowed && this.columnIsAlreadyPainted(index, this.state.columns[index])) continue;
       this.paintColumn(index, cacheData, sizes, counterLimit);
     }
-    if (narrowed) {
-      // The two columns whose selection flag can have moved while the graph changed, in the same
-      // shape drawSelectedMoved uses: both are no-ops when the column is off-window, and both are
-      // idempotent on a column the loop above repainted anyway.
-      this.paintSelectionOverlay(narrowed.previousSelected, cacheData);
-      this.paintSelectionOverlay(this.state.selected, cacheData);
-    }
+    // The columns whose selection flag can have moved, in the same call applyScrollPosition uses -
+    // needed only on the narrowed path, where a skipped column keeps the flag it last painted, and
+    // harmless on the full one, where the loop has just painted every drawn column from the same
+    // field and the comparison inside it holds.
+    this.syncOverlayColumn(cacheData);
     return true;
-  }
-
-  /**
-   * The playback tick: applying a moved `selected` to a scene that is otherwise already painted.
-   *
-   * What a column paints is a function of its index and its content, so a view that stays in the
-   * window keeps what it already painted. This moves the notes container's offset and the timeline
-   * viewport's x; it changes the MEMBERSHIP of the window - views whose columns left go back to the
-   * free list, columns that entered are acquired and painted; it repaints the selection overlay of
-   * the column that gained the flag and of the one that lost it; then it renders both Applications
-   * and records the state it painted as the new baseline.
-   *
-   * Reached from update() with a baseline recorded (a cache regeneration clears that along with the
-   * pool, so the views here hold the current textures and the current geometry), with a cache, with
-   * `selected` moved, and with needsUnconditionalRepaint reporting nothing.
-   */
-  private drawSelectedMoved(previousSelected: number, cacheData: ComposerCacheData): void {
-    if (!this.notesApp || !this.timelineApp) return;
-    const sizes = this.columnSize;
-    const state = this.state;
-    this.notesColumnsContainer.x =
-      (state.selected - this.numberOfColumnsPerCanvas / 2 + 1) * -sizes.width;
-    const counterLimit = this.counterLimit();
-    const { first, last } = this.visibleColumnRange();
-    this.releaseColumnViewsOutside(first, last);
-    for (let index = first; index <= last; index++) {
-      // Columns that were already in the window keep what they painted: their content, their
-      // index-derived background and their tails are all unchanged by a window shift.
-      if (!this.columnViews.has(index)) this.paintColumn(index, cacheData, sizes, counterLimit);
-    }
-    // The column that lost the flag and the one that gained it. Neither changes its BACKGROUND -
-    // selection is a separate overlay sprite - and after a large jump either may be outside the
-    // window, in which case paintSelectionOverlay finds no view and does nothing.
-    this.paintSelectionOverlay(previousSelected, cacheData);
-    this.paintSelectionOverlay(state.selected, cacheData);
-    const relativeColumnWidth = this.width / state.columns.length;
-    this.viewportGraphics.x =
-      relativeColumnWidth * state.selected -
-      relativeColumnWidth * (this.numberOfColumnsPerCanvas / 2);
-    this.notesApp.render();
-    this.timelineApp.render();
-    this.paintedState = state;
   }
 
   private paintSelectionOverlay(index: number, cacheData: ComposerCacheData): void {
@@ -1224,7 +2135,8 @@ export class ComposerRenderer {
     if (!view) return;
     view.paintSelection(
       cacheData,
-      index === this.state.selected,
+      //matching paintColumn, which the narrowed repaint reaches other columns through
+      index === this.overlayColumn,
       this.state.selectedColumns.includes(index)
     );
   }
@@ -1280,8 +2192,18 @@ export class ComposerRenderer {
   // Both Applications must be explicitly destroyed to avoid a WebGL/canvas leak on remount
   // (this component remounts via {#key settings.columnsPerCanvas.value}).
   destroy(): void {
+    // Before the Application goes: Application.destroy runs TickerPlugin.destroy, which destroys the
+    // ticker, and Ticker.destroy begins by stopping it - so this is not what keeps a frame from
+    // firing into a torn-down renderer. It is here so that the listener this class added is the
+    // listener this class removes, rather than something a plugin teardown happens to also cover.
+    this.stopMotionFrames();
+    //...and the union goes with it, so "the Ticker runs iff this is not resting" holds through
+    //teardown as well rather than only while the renderer is alive
+    this.motion = { kind: 'resting' };
+    this.notesApp?.ticker.remove(this.onMotionFrame, this);
     window.removeEventListener('resize', this.recalculateCacheAndSizes);
     window.removeEventListener('pointerup', this.resetPointerDown);
+    window.removeEventListener('pointercancel', this.resetPointerDown);
     window.removeEventListener('blur', this.resetPointerDown);
     if (this.cacheRecalculateDebounce) clearTimeout(this.cacheRecalculateDebounce);
     this.wheelCanvas?.removeEventListener('wheel', this.handleWheel);

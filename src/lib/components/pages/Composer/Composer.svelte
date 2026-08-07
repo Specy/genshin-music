@@ -857,8 +857,12 @@
     // nothing. The case that used to depend on that is togglePlay's selectColumn(song.selected, ...)
     // on play-start: the canvas effect does re-run, because it reads `isPlaying` - but the renderer
     // excludes `isPlaying` from its repaint diff (it changes no pixel there), so update() returns
-    // without rendering and the canvas keeps what it had. Nothing about a column's appearance
+    // without rendering and the canvas keeps what it had. Nothing about a column's APPEARANCE
     // depends on whether the song is playing, so there is nothing to repaint.
+    // What that same update DOES do, with smooth scrolling on, is start the glide: the renderer
+    // reads `isPlaying` in its syncScrollSchedule, and this is the transition that schedules the
+    // first column's travel and starts the ticker that animates it. A no-op for pixels, and not a
+    // no-op for the renderer.
     //add a bit of delay if recording audio to imrove the recording quality
     delay = delay ? delay + (isRecordingAudio ? 0.5 : 0) : 0;
     if (ignoreAudio) return;
