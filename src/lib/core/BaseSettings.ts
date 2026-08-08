@@ -163,7 +163,7 @@ export const ComposerSettings = {
             type: "number",
             category: "composer_settings",
             songSetting: false,
-            value: 250,
+            value: 200,
             increment: 50,
             threshold: [0, 500]
         }
@@ -827,6 +827,3 @@ export const ZenKeyboardSettings = {
         }
     }
 } as const satisfies ZenKeyboardSettingsType
-
-
-
