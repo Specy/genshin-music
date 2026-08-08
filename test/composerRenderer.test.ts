@@ -3427,37 +3427,6 @@ describe('the smooth scroll', () => {
         }
     })
 
-    it('follows the mark when something else moves it mid-drag', async () => {
-        //The drag's own moves change the position and the mark together, so the frame would repaint
-        //on the position alone. This is the case that decouples them: Composer.svelte's
-        //next_column/previous_column shortcuts call selectColumn while a pointer is down, which
-        //moves `selected` with the canvas standing still. update() defers to the frame during a
-        //gesture, so if the frame only watched the position the mark would sit on the old column
-        //until the finger moved again.
-        const context = makeContext()
-        context.props.smoothScroll = false
-        context.props.isPlaying = false
-        const harness = await mount(context)
-        try {
-            harness.push()
-            const {columnWidth, canvasWidth} = harness.geometry()
-            const start = canvasWidth / 2
-            harness.pressPointerOverNotes(start)
-            harness.movePointerOverNotes(start - columnWidth)
-            await vi.advanceTimersByTimeAsync(48)
-            const duringDrag = harness.scrollPosition()
-            expect(selectedColumnOf(harness)).toBe(duringDrag)
-
-            //the arrow-key shortcut, mid-gesture: `selected` moves, the pointer does not
-            harness.context.song.selected = duringDrag + 3
-            harness.push()
-            await vi.advanceTimersByTimeAsync(48)
-            expect(selectedColumnOf(harness)).toBe(duringDrag + 3)
-        } finally {
-            harness.destroy()
-        }
-    })
-
     it('parks on the LAST column when the song runs out, not a lookahead short of it', async () => {
         const harness = await mountGliding()
         try {

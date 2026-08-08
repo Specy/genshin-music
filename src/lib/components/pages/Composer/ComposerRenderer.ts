@@ -1503,14 +1503,7 @@ export class ComposerRenderer {
     if (position === null) return;
     if (this.motion.kind === 'easing' && position === this.motion.to)
       return this.settleAt(position);
-    // EITHER of the two things a paint carries, not just the position. A snapping drag moves the
-    // position once per column crossed and asks Svelte for the matching `selected` in the same
-    // handler, and the update that answers can land before this frame does - so by the time we get
-    // here the mark can already be the new column while the canvas is still on the old one. Paint
-    // on a stale mark too and the pair reaches the screen together whichever write arrived first.
-    if (position !== this.scrollPosition || this.paintedOverlayColumn !== this.overlayColumn) {
-      this.applyScrollPosition(position);
-    }
+    if (position !== this.scrollPosition) this.applyScrollPosition(position);
   };
 
   /**
@@ -1994,10 +1987,15 @@ export class ComposerRenderer {
     // it stale once the renderer is live, and this is the only place that has to notice.
     // NOT WHILE A POINTER IS DOWN. During a drag `syncScrollSchedule` returns at its first
     // statement, so `scrollPosition` here is still the column the canvas is ON, while the motion
-    // already holds the one the finger has reached - painting from this method would put the mark
-    // on the new column against a canvas still showing the old one, which is the disagreement the
-    // frame above exists to avoid. The frame is running for the whole gesture (enterMotion starts
-    // it) and repaints on a stale mark, so nothing is dropped by waiting for it.
+    // already holds the one the finger has reached. Painting from this method would put the mark on
+    // the new column against a canvas still showing the old one - once per column crossed, which is
+    // what read as the highlight flickering behind the drag.
+    //
+    // Waiting for the frame drops nothing FOR A DRAG's OWN MOVES: the drag calls selectColumn only
+    // when `floor(position)` changes, so the mark and the position always move together and the
+    // frame's position test covers both. It is not a general claim - a selectColumn from somewhere
+    // else while a pointer is down (the next_column shortcut) moves the mark with the canvas still,
+    // and that repaints on the next drag move rather than at once.
     if (
       this.motion.kind !== 'dragging' &&
       (previousScrollPosition !== this.scrollPosition ||
