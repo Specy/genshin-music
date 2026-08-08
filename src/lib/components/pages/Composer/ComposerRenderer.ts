@@ -1503,7 +1503,14 @@ export class ComposerRenderer {
     if (position === null) return;
     if (this.motion.kind === 'easing' && position === this.motion.to)
       return this.settleAt(position);
-    if (position !== this.scrollPosition) this.applyScrollPosition(position);
+    // EITHER of the two things a paint carries, not just the position. A snapping drag moves the
+    // position once per column crossed and asks Svelte for the matching `selected` in the same
+    // handler, and the update that answers can land before this frame does - so by the time we get
+    // here the mark can already be the new column while the canvas is still on the old one. Paint
+    // on a stale mark too and the pair reaches the screen together whichever write arrived first.
+    if (position !== this.scrollPosition || this.paintedOverlayColumn !== this.overlayColumn) {
+      this.applyScrollPosition(position);
+    }
   };
 
   /**
@@ -1713,9 +1720,11 @@ export class ComposerRenderer {
     const position = this.snapManualPosition(clamped);
     if (dragging) motion.position = position;
     else this.enterMotion({ kind: 'dragging', surface: 'stage', position });
-    // With smooth scrolling off the position is already integral, so this floor is the identity and
-    // `selected` agrees with the canvas at every instant of the drag - which is what the selected
-    // overlay, drawn on `selected` in that mode, needs.
+    // With smooth scrolling off the position is already integral, so this floor is the identity.
+    // What it does NOT do on its own is keep the mark and the canvas together: this call reaches
+    // Svelte and comes back as an update, while the position written above reaches the screen on
+    // the next frame, and the two orders are not the same picture. onMotionFrame and update() are
+    // where that is resolved - see both.
     const column = Math.floor(position);
     // NOT FREE, and left as it is deliberately: Composer.svelte's selectColumn ALSO extends the
     // tools selection while that panel is open, which replaces `selectedColumns` and so lands on
@@ -1983,9 +1992,16 @@ export class ComposerRenderer {
     // crossed: `overlayColumn` is written here and in the constructor, and the constructor's write
     // happens before any frame or any later update - so an update is the only thing that can make
     // it stale once the renderer is live, and this is the only place that has to notice.
+    // NOT WHILE A POINTER IS DOWN. During a drag `syncScrollSchedule` returns at its first
+    // statement, so `scrollPosition` here is still the column the canvas is ON, while the motion
+    // already holds the one the finger has reached - painting from this method would put the mark
+    // on the new column against a canvas still showing the old one, which is the disagreement the
+    // frame above exists to avoid. The frame is running for the whole gesture (enterMotion starts
+    // it) and repaints on a stale mark, so nothing is dropped by waiting for it.
     if (
-      previousScrollPosition !== this.scrollPosition ||
-      this.paintedOverlayColumn !== this.overlayColumn
+      this.motion.kind !== 'dragging' &&
+      (previousScrollPosition !== this.scrollPosition ||
+        this.paintedOverlayColumn !== this.overlayColumn)
     ) {
       this.applyScrollPosition(this.scrollPosition);
       this.paintedState = state;
