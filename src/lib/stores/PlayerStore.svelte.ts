@@ -56,6 +56,7 @@ class PlayerStore {
         status: '',
         delay: NOTE_ANIMATION_DELAY_MS,
         holdMs: 0,
+        holdTimerMs: 0,
       })
     );
   };

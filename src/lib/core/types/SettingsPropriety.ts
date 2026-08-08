@@ -13,7 +13,7 @@
 // only a type-level one TypeScript resolves fine), reproduced verbatim below.
 import type {InstrumentName} from '../types'
 import type {AppI18N} from '$i18n/i18n'
-import type {ComposerSettings, PlayerSettings, VsrgComposerSettings, ZenKeyboardSettings} from '$core/BaseSettings'
+import type {ComposerSettings, PlayerSettings, SheetVisualizerSettings, VsrgComposerSettings, ZenKeyboardSettings} from '$core/BaseSettings'
 
 export type SettingsCategory =
     'keyboard'
@@ -24,6 +24,7 @@ export type SettingsCategory =
     | 'composer_settings'
     | 'editor_settings'
     | 'player_practice_settings'
+    | 'sheet_visualizer_settings'
 
 export type NameOrDescriptionKey = keyof AppI18N['settings']['props']
 
@@ -82,6 +83,7 @@ export type SettingUpdateKey =
     | keyof typeof PlayerSettings.data
     | keyof typeof VsrgComposerSettings.data
     | keyof typeof ZenKeyboardSettings.data
+    | keyof typeof SheetVisualizerSettings.data
 export type SettingUpdate = {
     key: SettingUpdateKey
     data: SettingsPropriety

@@ -819,5 +819,66 @@
         ]
       }
     }
+  },
+  "sheetVisualizer": {
+    "other": {
+      "settingVersion": "Genshin1"
+    },
+    "data": {
+      "noteNames": {
+        "name": "sheet_visualizer_note_names",
+        "tooltip": "sheet_visualizer_note_names_description",
+        "type": "checkbox",
+        "songSetting": false,
+        "category": "sheet_visualizer_settings",
+        "value": false
+      },
+      "noteNameType": {
+        "name": "sheet_visualizer_note_name_type",
+        "tooltip": "sheet_visualizer_note_name_type_description",
+        "type": "select",
+        "songSetting": false,
+        "category": "sheet_visualizer_settings",
+        "value": "Keyboard layout",
+        "options": [
+          "Note name",
+          "Keyboard layout",
+          "Your Keyboard layout",
+          "Do Re Mi",
+          "ABC",
+          "No Text",
+          "1 2 3"
+        ]
+      },
+      "mergeEmptySpaces": {
+        "name": "sheet_visualizer_merge_empty_spaces",
+        "tooltip": "sheet_visualizer_merge_empty_spaces_description",
+        "type": "checkbox",
+        "songSetting": false,
+        "category": "sheet_visualizer_settings",
+        "value": false
+      },
+      "multiColorRows": {
+        "name": "sheet_visualizer_different_color_rows",
+        "tooltip": "sheet_visualizer_different_color_rows_description",
+        "type": "checkbox",
+        "songSetting": false,
+        "category": "layout_settings",
+        "value": false
+      },
+      "framesPerRow": {
+        "name": "sheet_visualizer_per_row",
+        "tooltip": "sheet_visualizer_per_row_description",
+        "type": "number",
+        "songSetting": false,
+        "category": "layout_settings",
+        "increment": 1,
+        "threshold": [
+          1,
+          30
+        ],
+        "value": 7
+      }
+    }
   }
 }

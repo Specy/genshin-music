@@ -1,4 +1,7 @@
 import {isMobile} from "is-mobile"
+// same tier as legacyConfig, which reaches for the GameDefinition the same way - this file needs
+// one per-game default (the sheet visualizer's note-name type) that legacyConfig does not re-export
+import {game} from "$game"
 import {
     APP_NAME,
     BASE_THEME_CONFIG,
@@ -651,6 +654,73 @@ export type ZenKeyboardSettingsDataType = {
     metronomeBpm: SettingsNumber
 }
 export type ZenKeyboardSettingsType = BaseSettings<ZenKeyboardSettingsDataType>
+
+export type SheetVisualizerSettingsDataType = {
+    noteNames: SettingsCheckbox
+    noteNameType: SettingsSelect<NoteNameType>
+    mergeEmptySpaces: SettingsCheckbox
+    multiColorRows: SettingsCheckbox
+    framesPerRow: SettingsNumber
+}
+export type SheetVisualizerSettingsType = BaseSettings<SheetVisualizerSettingsDataType>
+
+export const SheetVisualizerSettings = {
+    other: {
+        settingVersion: APP_NAME + 1
+    },
+    data: {
+        noteNames: {
+            name: "sheet_visualizer_note_names",
+            tooltip: "sheet_visualizer_note_names_description",
+            type: "checkbox",
+            songSetting: false,
+            category: "sheet_visualizer_settings",
+            value: false
+        },
+        noteNameType: {
+            name: "sheet_visualizer_note_name_type",
+            tooltip: "sheet_visualizer_note_name_type_description",
+            type: "select",
+            songSetting: false,
+            category: "sheet_visualizer_settings",
+            //the same per-game default the page used to seed its own local state with. Flat, unlike
+            //the composer/player/zen entries beside it in the GameDefinition, which are
+            //desktop/mobile pairs - this one has no mobile branch to pick.
+            value: game.settings.defaultNoteNameType.sheetVisualizer,
+            options: NOTE_NAME_TYPES
+        },
+        mergeEmptySpaces: {
+            name: "sheet_visualizer_merge_empty_spaces",
+            tooltip: "sheet_visualizer_merge_empty_spaces_description",
+            type: "checkbox",
+            songSetting: false,
+            category: "sheet_visualizer_settings",
+            value: false
+        },
+        multiColorRows: {
+            name: "sheet_visualizer_different_color_rows",
+            tooltip: "sheet_visualizer_different_color_rows_description",
+            type: "checkbox",
+            songSetting: false,
+            category: "layout_settings",
+            value: false
+        },
+        framesPerRow: {
+            name: "sheet_visualizer_per_row",
+            tooltip: "sheet_visualizer_per_row_description",
+            type: "number",
+            songSetting: false,
+            category: "layout_settings",
+            increment: 1,
+            //the upper bound is a guard against a value that renders unreadably narrow frames; the
+            //page ALSO refuses an increase once the frames it has measure under 50px, which is the
+            //check the old +/- buttons carried and which no static threshold can express
+            threshold: [1, 30],
+            value: 7
+        }
+    }
+
+} as const satisfies SheetVisualizerSettingsType
 
 export const ZenKeyboardSettings = {
     other: {

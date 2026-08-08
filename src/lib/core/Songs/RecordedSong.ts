@@ -12,15 +12,13 @@ import {ComposedSong, defaultInstrumentMap} from "./ComposedSong.svelte"
 import {groupByNotes} from "../utils/Utilities"
 import clonedeep from 'lodash.clonedeep'
 import {NoteLayer} from "./Layer"
-// P3 Task 7 fix: see the matching comment in $core/Services/FileService.ts - a value import of
-// `Midi` breaks under Node's native ESM loader once this file is reachable from the root layout's
-// SSR graph. Unlike FileService.ts/ComposedSong.svelte.ts, this file genuinely constructs `new Midi()`
-// below (toMidi()), so the type can't be the only import - `TonejsMidiPkg` (default import) is the
-// one CJS-interop shape every runtime here (Node native, Vite dev SSR, Vite prod SSR, Vite client)
-// agrees on unconditionally: "default import of a CJS module = its whole module.exports". `Midi`
-// stays imported as a type (erased) for the toMidi(): Midi return annotation, unchanged.
+// This file genuinely CONSTRUCTS a Midi below (toMidi()), so the type cannot be the only import.
+// The constructor comes from $core/Songs/midiConstructor, which explains why neither a named nor a
+// default import of '@tonejs/midi' works across all four runtimes - the default import this used to
+// use is what shipped the "Cannot read properties of undefined (reading 'Midi')" break to users.
+// `Midi` stays imported as a TYPE (erased) for the toMidi(): Midi return annotation.
 import type {Midi} from "@tonejs/midi"
-import TonejsMidiPkg from "@tonejs/midi"
+import {Midi as MidiConstructor} from "./midiConstructor"
 import type {InstrumentName} from "$core/types"
 import {type SerializedSong, Song} from "./Song.svelte"
 import type {OldFormat, OldNote} from "$core/types"
@@ -470,7 +468,7 @@ export class RecordedSong extends Song<RecordedSong, SerializedRecordedSong> {
     }
 
     toMidi(): Midi {
-        const midi = new TonejsMidiPkg.Midi()
+        const midi = new MidiConstructor()
         midi.header.setTempo(this.bpm / 4)
         midi.header.keySignatures.push({
             key: this.pitch,

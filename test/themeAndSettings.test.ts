@@ -1,7 +1,7 @@
 import {describe, it} from 'vitest'
 import {
-    BaseTheme, ComposerSettings, MIDISettings, PlayerSettings, ThemeProvider,
-    ThemeSettings, VsrgComposerSettings, VsrgPlayerSettings, ZenKeyboardSettings,
+    BaseTheme, ComposerSettings, MIDISettings, PlayerSettings, SheetVisualizerSettings,
+    ThemeProvider, ThemeSettings, VsrgComposerSettings, VsrgPlayerSettings, ZenKeyboardSettings,
 } from './imports'
 import {expectGolden} from './golden'
 
@@ -35,6 +35,7 @@ describe('per-game settings defaults', () => {
             vsrgComposer: VsrgComposerSettings,
             vsrgPlayer: VsrgPlayerSettings,
             zenKeyboard: ZenKeyboardSettings,
+            sheetVisualizer: SheetVisualizerSettings,
         })
     })
 })

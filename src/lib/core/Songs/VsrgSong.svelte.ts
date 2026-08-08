@@ -35,6 +35,30 @@ export type VsrgAccuracyBounds = [
     bad: number,
 ]
 
+/** Difficulty is a 1..10 song setting (BaseSettings VsrgComposerSettings.difficulty). */
+export const MIN_VSRG_DIFFICULTY = 1
+export const MAX_VSRG_DIFFICULTY = 10
+
+/**
+ * Judgment windows in ms at difficulty 1 — how far off a press may be and still earn each
+ * rating. Widen these to make every difficulty more forgiving at once.
+ *
+ * These replace a port of osu!mania's OD windows ([16, 64, 97, 127, 188] shrunk by a flat
+ * 2ms per difficulty step). That subtraction was absolute, so it moved every window by the
+ * same 18ms across the whole 1..10 range and never touched `awesome` at all, which left
+ * difficulty barely doing anything. Scaling is a proportion of the window instead, so a step
+ * of difficulty costs more where the window is wide and less where it is already tight.
+ */
+const BASE_ACCURACY_BOUNDS: VsrgAccuracyBounds = [46, 120, 175, 230, 285]
+
+/**
+ * Share of BASE_ACCURACY_BOUNDS still allowed at difficulty 10. Chosen so even the strictest
+ * setting stays at or above the OLD windows — the point of the difficulty weight is to make
+ * high difficulties demanding relative to low ones, not to make any of them harsher than
+ * before.
+ */
+const STRICTEST_WINDOW_SCALE = 0.55
+
 /**
  * Everything `set()` may assign. Deliberately NOT `Partial<VsrgSong>`: `tracks` and
  * `structureVersion` are getters with no setter since phase 2, and Object.assign onto one throws a
@@ -580,15 +604,27 @@ export class VsrgSong extends Song<VsrgSong, SerializedVsrgSong, 2> {
         this.trackModifiers = modifiers
     }
 
+    /**
+     * Timing windows for this song, widest (difficulty 1) to tightest (difficulty 10).
+     *
+     * The renderer takes the LAST entry as its overall hit tolerance too: a press further off
+     * than `bad` doesn't register against the note at all, and the note is left to be scored a
+     * miss when it passes. So this array alone decides how forgiving a song plays.
+     */
     getAccuracyBounds(): VsrgAccuracyBounds {
-        const {difficulty} = this
-        return [
-            16,
-            64 - (difficulty * 2),
-            97 - (difficulty * 2),
-            127 - (difficulty * 2),
-            188 - (difficulty * 2)
-        ]
+        //songs authored before the setting existed, or hand-edited files, can carry a difficulty
+        //outside the range the composer offers - clamp rather than extrapolate into windows that
+        //are negative (unhittable) or absurdly wide
+        const difficulty = Math.min(
+            Math.max(this.difficulty, MIN_VSRG_DIFFICULTY),
+            MAX_VSRG_DIFFICULTY
+        )
+        const steps = (difficulty - MIN_VSRG_DIFFICULTY) / (MAX_VSRG_DIFFICULTY - MIN_VSRG_DIFFICULTY)
+        const scale = 1 - steps * (1 - STRICTEST_WINDOW_SCALE)
+        //rounded so the windows stay whole milliseconds, and floored at 1ms so no rating tier can
+        //collapse to a window nothing can ever land in
+        return BASE_ACCURACY_BOUNDS.map(bound => Math.max(1, Math.round(bound * scale))) as
+            unknown as VsrgAccuracyBounds
     }
 
     changeKeys(keys: VsrgSongKeys) {

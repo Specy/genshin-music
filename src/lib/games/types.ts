@@ -192,6 +192,8 @@ export type ShapeDefinition = {
   /** Primary row length; grid shapes render this many columns. */
   columns: number;
   labels: ShapeLabels;
+  /** Button silhouette, echoed by overlays drawn around a button (the practice hold ring). */
+  noteShape: NoteShape;
   component: import('svelte').Component<ShapeComponentProps>;
 };
 
@@ -228,6 +230,20 @@ export type NotesCssClasses = {
   approachCircle: string;
   noteName: string;
 };
+
+/**
+ * The silhouette of a Shape's note buttons, so overlays drawn around one (today the practice
+ * hold ring) echo its outline instead of always being a circle. It lives on the Shape rather
+ * than the game because it is a property of the keyboard layout — today every Genshin layout
+ * is circular and every Sky one is a rounded square, but a new layout may be neither.
+ *
+ * Adding a silhouette is a new variant here plus a case in ringGeometry() — nothing else reads
+ * it, and the sweep is driven by the returned perimeter, so any outline animates correctly.
+ */
+export type NoteShape =
+  | { kind: 'circle' }
+  /** cornerRatio is the corner radius as a fraction of the side: 0 = square, 0.5 = circle. */
+  | { kind: 'rounded-rect'; cornerRatio: number };
 
 export type BaseThemeConfig = {
   // BASE_THEME_CONFIG

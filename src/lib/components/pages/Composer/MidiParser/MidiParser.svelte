@@ -41,13 +41,13 @@
   import Column from '$cmp/layout/Column.svelte';
   import TrackInfo from './TrackInfo.svelte';
   import NumericalInput from './NumericalInput.svelte';
-  // Midi/Track stay type-only imports; the runtime `new Midi(...)` calls below go through the
-  // default-import interop shape instead (TonejsMidiPkg.Midi). @tonejs/midi's CJS build assigns
-  // its named exports dynamically, which the ESM loader used during adapter-static prerendering
-  // can't resolve as a value import - only the default-import-of-the-whole-module-exports shape
-  // works. Same fix as RecordedSong.ts's toMidi().
+  // Midi/Track stay type-only imports (erased, so nothing to resolve at runtime); the two
+  // `new Midi(...)` calls below take the constructor from $core/Songs/midiConstructor, which is
+  // where the reason lives - no static import of '@tonejs/midi' as a value works in every runtime
+  // this app is evaluated in, and the default import that used to be here is what broke MIDI
+  // import for users in the built app.
   import type { Midi } from '@tonejs/midi';
-  import TonejsMidiPkg from '@tonejs/midi';
+  import { Midi as MidiConstructor } from '$core/Songs/midiConstructor';
 
   let {
     data,
@@ -93,7 +93,7 @@
         const audio = await extractAudio(file);
         parseAudioToMidi(audio, name);
       } else {
-        const midi = new TonejsMidiPkg.Midi(file.data as ArrayBuffer);
+        const midi = new MidiConstructor(file.data as ArrayBuffer);
         return mandleMidiFile(midi, name);
       }
     } catch (e) {
@@ -151,7 +151,7 @@
         true //smooth
       )
     );
-    const midi = new TonejsMidiPkg.Midi();
+    const midi = new MidiConstructor();
     const track = midi.addTrack();
     notes.forEach((note) => {
       track.addNote({
