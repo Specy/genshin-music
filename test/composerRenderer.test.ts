@@ -3391,6 +3391,73 @@ describe('the smooth scroll', () => {
         }
     })
 
+    it('keeps the mark on the column under the line at every instant of a snapping drag', async () => {
+        //SNAP MODE. The mark and the canvas are two different writes on two different clocks here:
+        //the drag puts the new position in the motion (a frame applies it) and asks Svelte for the
+        //new `selected` (an update applies the mark). Whichever lands first shows the pair
+        //disagreeing, and on a drag that is once per column crossed - which is what reads as the
+        //highlight flickering a column behind the canvas.
+        const context = makeContext()
+        context.props.smoothScroll = false
+        context.props.isPlaying = false
+        const harness = await mount(context)
+        try {
+            harness.push()
+            const {columnWidth, canvasWidth} = harness.geometry()
+            const start = canvasWidth / 2
+
+            harness.pressPointerOverNotes(start)
+            //three columns of travel, checked at both orderings of the two writes
+            for (let step = 1; step <= 3; step++) {
+                harness.movePointerOverNotes(start - columnWidth * step)
+                //Svelte handing `selected` back, BEFORE any frame - the instant the two writes are
+                //furthest apart, and the one the bug was visible in
+                const asked = harness.selectColumnCalls.at(-1)
+                if (asked) harness.context.song.selected = asked.index
+                harness.push()
+                expect(selectedColumnOf(harness)).toBe(harness.scrollPosition())
+                //...and after the frame, which is the other order
+                //three display frames on this file's 16ms fake clock, so the capped ticker has
+                //emitted at least once whatever the gate skipped
+                await vi.advanceTimersByTimeAsync(48)
+                expect(selectedColumnOf(harness)).toBe(harness.scrollPosition())
+            }
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    it('follows the mark when something else moves it mid-drag', async () => {
+        //The drag's own moves change the position and the mark together, so the frame would repaint
+        //on the position alone. This is the case that decouples them: Composer.svelte's
+        //next_column/previous_column shortcuts call selectColumn while a pointer is down, which
+        //moves `selected` with the canvas standing still. update() defers to the frame during a
+        //gesture, so if the frame only watched the position the mark would sit on the old column
+        //until the finger moved again.
+        const context = makeContext()
+        context.props.smoothScroll = false
+        context.props.isPlaying = false
+        const harness = await mount(context)
+        try {
+            harness.push()
+            const {columnWidth, canvasWidth} = harness.geometry()
+            const start = canvasWidth / 2
+            harness.pressPointerOverNotes(start)
+            harness.movePointerOverNotes(start - columnWidth)
+            await vi.advanceTimersByTimeAsync(48)
+            const duringDrag = harness.scrollPosition()
+            expect(selectedColumnOf(harness)).toBe(duringDrag)
+
+            //the arrow-key shortcut, mid-gesture: `selected` moves, the pointer does not
+            harness.context.song.selected = duringDrag + 3
+            harness.push()
+            await vi.advanceTimersByTimeAsync(48)
+            expect(selectedColumnOf(harness)).toBe(duringDrag + 3)
+        } finally {
+            harness.destroy()
+        }
+    })
+
     it('parks on the LAST column when the song runs out, not a lookahead short of it', async () => {
         const harness = await mountGliding()
         try {
