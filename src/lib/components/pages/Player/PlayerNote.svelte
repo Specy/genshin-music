@@ -9,6 +9,7 @@
   import GenshinNoteBorder from '$cmp/GenshinNoteBorder.svelte';
   import SvgNote from '$cmp/SvgNote.svelte';
   import { suppressNativeTouch } from '$cmp/suppressNativeTouch';
+  import { RING_SCALE, RING_STROKE, RING_VIEWBOX, ringGeometry } from '$lib/games/noteShape';
 
   let {
     note,
@@ -114,6 +115,15 @@
   const animationBorderColor = $derived(
     clickColor && theme.isDefault('accent') ? clickColor : undefined
   );
+  //the hold ring traces the silhouette of the layout being played, so it never reads as a
+  //foreign shape laid over the keyboard. Falls back to a circle for an instrument whose
+  //Shape can't be resolved - a ring of the wrong outline still beats no ring at all.
+  const ring = $derived.by(() => {
+    const shapeId = game.instruments.data[data.instrument]?.shape;
+    return ringGeometry(
+      (shapeId ? game.shapes[shapeId]?.noteShape : undefined) ?? { kind: 'circle' }
+    );
+  });
 </script>
 
 <button
@@ -149,6 +159,26 @@
       {/if}
     </div>
   {/each}
+  {#if note.data.holdTimerMs > 0}
+    <!-- keyed on holdTimerId so re-pressing the same button restarts the sweep instead of
+             leaving the previous (already unwound) animation in place -->
+    {#key note.data.holdTimerId}
+      <svg
+        class="hold-release-ring"
+        viewBox="0 0 {RING_VIEWBOX} {RING_VIEWBOX}"
+        style="--ring-scale:{RING_SCALE};--ring-stroke:{RING_STROKE}"
+        aria-hidden="true"
+      >
+        <path class="hold-release-ring-track" d={ring.d} />
+        <path
+          class="hold-release-ring-progress"
+          d={ring.d}
+          style="--ring-perimeter:{ring.perimeter};stroke-dasharray:{ring.perimeter};animation-duration:{note
+            .data.holdTimerMs}ms"
+        />
+      </svg>
+    {/key}
+  {/if}
   {#if note.data.animationId !== 0}
     <!-- {#key} forces a fresh DOM node per animationId so the CSS pulse animation restarts on
              every click - an unchanged element wouldn't replay it. -->

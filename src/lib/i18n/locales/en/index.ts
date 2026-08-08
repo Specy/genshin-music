@@ -259,6 +259,21 @@ export const i18n_en = {
       composer_lookahead_time_description:
         'How many milliseconds ahead the composer will look for notes to play, a higher value improves playback accuracy by reducing stutters, but feels less responsive',
 
+      sheet_visualizer_note_names: 'Show note names',
+      sheet_visualizer_note_names_description:
+        'Writes the name of each note inside it, using the layout selected below',
+      sheet_visualizer_note_name_type: 'Note name type',
+      sheet_visualizer_note_name_type_description:
+        'Which naming to write inside the notes, has no effect unless note names are shown',
+      sheet_visualizer_merge_empty_spaces: 'Merge empty spaces',
+      sheet_visualizer_merge_empty_spaces_description:
+        'Joins consecutive empty columns together, making the sheet shorter and easier to read',
+      sheet_visualizer_different_color_rows: 'Different color rows',
+      sheet_visualizer_different_color_rows_description:
+        'Gives each row of the keyboard its own background color, to tell them apart at a glance',
+      sheet_visualizer_per_row: 'Frames per row',
+      sheet_visualizer_per_row_description:
+        'How many frames of the sheet to fit on each row; more frames make each one smaller',
       player_instrument: 'Instrument',
       player_instrument_description:
         'The main (first) instrument of the player, will also be saved in the song you record',
@@ -373,6 +388,7 @@ export const i18n_en = {
       composer_settings: 'Composer settings',
       editor_settings: 'Editor settings',
       player_practice_settings: 'Practice settings',
+      sheet_visualizer_settings: 'Sheet settings',
     } satisfies Record<SettingsCategory, string>,
     select_language: 'Select language',
   },

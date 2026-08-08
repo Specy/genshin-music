@@ -399,6 +399,13 @@ export type NoteDataState = {
   animationId: number;
   /** Practice-mode hold hint (ms) shown as a bar on the button; 0 = none. */
   holdMs: number;
+  /**
+   * Practice-mode release timer (ms): how much longer this *currently pressed* button should
+   * be held, drawn as a ring outside the button so a fingertip can't cover it. 0 = no ring.
+   */
+  holdTimerMs: number;
+  /** Bumped per press so the ring's CSS animation restarts on a re-press of the same button. */
+  holdTimerId: number;
 };
 
 export class ObservableNote {
@@ -417,6 +424,8 @@ export class ObservableNote {
     delay: 0,
     animationId: 0,
     holdMs: 0,
+    holdTimerMs: 0,
+    holdTimerId: 0,
   });
 
   constructor(

@@ -1345,6 +1345,9 @@
           " ",
           " "
         ]
+      },
+      "noteShape": {
+        "kind": "circle"
       }
     },
     "genshin-2x4": {
@@ -1402,6 +1405,9 @@
           "Zl",
           "Zr"
         ]
+      },
+      "noteShape": {
+        "kind": "circle"
       }
     }
   },

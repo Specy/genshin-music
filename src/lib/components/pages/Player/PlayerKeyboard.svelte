@@ -257,6 +257,8 @@
   function handleRelease(note: ObservableNote) {
     if (!note) return;
     functions.releaseSound(note.index);
+    //finger lifted: the ring has nothing left to count down, whether or not it ran out
+    if (note.data.holdTimerMs !== 0) playerStore.setNoteState(note.index, { holdTimerMs: 0 });
     const held = heldVisualPresses.get(note.index);
     if (held) {
       heldVisualPresses.delete(note.index);
@@ -430,10 +432,15 @@
     const hasAnimation = data.hasAnimation;
     if (!note) return;
     const prevStatus = keyboard[note.index].status;
+    //the press below wipes the read-ahead hold hint, so carry its length into the release
+    //ring first - that ring is what tells the player when to lift the finger back off
+    const holdTimerMs = mode === 'practice' ? keyboard[note.index].data.holdMs : 0;
     playerStore.setNoteState(note.index, {
       status: 'clicked',
       delay: playerStore.eventType !== 'play' ? game.notes.animationDelayMs : 0,
       holdMs: 0,
+      holdTimerMs,
+      holdTimerId: keyboard[note.index].data.holdTimerId + 1,
       animationId:
         hasAnimation && playerStore.eventType !== 'approaching'
           ? Math.floor(Math.random() * 10000) + Date.now()

@@ -12,40 +12,49 @@
   import Analytics from '$core/Analytics';
   import { logger } from '$stores/LoggerStore.svelte';
   import { setPageVisited } from '$stores/PageVisitStore.svelte';
+  import { settingsService } from '$core/Services/SettingsService';
+  import type { SettingUpdate } from '$core/types/SettingsPropriety';
   import { t } from '$i18n/binding.svelte';
   import DefaultPage from '$cmp/shell/DefaultPage.svelte';
   import PageMetadata from '$cmp/shell/PageMetadata.svelte';
-  import Switch from '$cmp/inputs/Switch.svelte';
-  import Select from '$cmp/inputs/Select.svelte';
   import AppButton from '$cmp/inputs/AppButton.svelte';
-  import Row from '$cmp/layout/Row.svelte';
-  import Column from '$cmp/layout/Column.svelte';
-  import Card from '$cmp/layout/Card.svelte';
   import SheetVisualizerMenu from '$cmp/pages/SheetVisualizer/SheetVisualizerMenu.svelte';
   import SheetFrame2 from '$cmp/pages/SheetVisualizer/SheetFrame2.svelte';
 
   let sheet = $state<VisualSong | null>(null);
-  let framesPerRow = $state(7);
   let currentSong = $state<SerializedSong | null>(null);
-  let hasText = $state(false);
   let songAsText = $state('');
-  let flattenSpaces = $state(false);
-  let multiColor = $state(false);
-  let keyboardLayout = $state<NoteNameType>(game.settings.defaultNoteNameType.sheetVisualizer);
   let ref = $state<HTMLDivElement>();
+  // The page's settings, on the app's standard channel: defaults at module load, the persisted
+  // ones in onMount (localStorage is not readable during prerender), and every edit written back
+  // through handleSettingChange. The five values below are read off this rather than held
+  // separately, so there is one source for each.
+  let settings = $state(settingsService.getDefaultSheetVisualizerSettings());
+
+  const hasText = $derived(settings.noteNames.value);
+  const keyboardLayout = $derived(settings.noteNameType.value);
+  const flattenSpaces = $derived(settings.mergeEmptySpaces.value);
+  const multiColor = $derived(settings.multiColorRows.value);
+  const framesPerRow = $derived(settings.framesPerRow.value);
 
   onMount(() => {
+    settings = settingsService.getSheetVisualizerSettings();
     setPageVisited('sheetVisualizer');
   });
 
-  function setFrames(amount: number) {
-    if (!ref) return;
-    const newAmount = framesPerRow + amount;
-    const frame = ref.children[0]?.children[0] as HTMLDivElement | undefined;
-    if (!frame || newAmount < 1) return;
-    const width = frame.getBoundingClientRect().width;
-    if (width < 50 && amount === 1) return;
-    framesPerRow = newAmount;
+  function handleSettingChange({ key, data }: SettingUpdate) {
+    // REFUSED RATHER THAN CLAMPED, and only upward: the frames are laid out by a CSS grid, so how
+    // wide each one ends up is a measurement rather than something a threshold can express. This
+    // is the guard the old +/- buttons carried - asking for more frames does nothing once the ones
+    // on screen are already under 50px - kept here because it is the only place that can see them.
+    if (key === 'framesPerRow' && ref) {
+      const requested = data.value as number;
+      const frame = ref.children[0]?.children[0] as HTMLDivElement | undefined;
+      const width = frame?.getBoundingClientRect().width ?? Infinity;
+      if (requested > framesPerRow && width < 50) return;
+    }
+    settings = { ...settings, [key]: { ...settings[key as keyof typeof settings], ...data } };
+    settingsService.updateSheetVisualizerSettings(settings);
   }
 
   function loadSong(song: SerializedSong, layout: NoteNameType) {
@@ -101,6 +110,8 @@
       class="no-print"
       onSongLoaded={(song) => (currentSong = song)}
       {currentSong}
+      {settings}
+      onSettingsUpdate={handleSettingChange}
     />
   {/snippet}
   <PageMetadata
@@ -132,52 +143,6 @@
         {t('sheet_visualizer:sheet_visualizer_instructions')}
       </div>
     </div>
-    <Card
-      class="noprint"
-      background="none"
-      border="secondary"
-      row
-      gap="1.5rem"
-      style="width:100%;margin-top:1rem;justify-content:space-between;align-items:center;flex-wrap:wrap"
-    >
-      <Column gap="0.6rem">
-        <Row align="center" gap="0.5rem">
-          <div class="visualizer-setting-label">{t('sheet_visualizer:note_names')}</div>
-          <Switch checked={hasText} onchange={(v) => (hasText = v)} />
-          <!-- always rendered, merely disabled while the toggle is off, so the row keeps its
-               width instead of the controls jumping sideways as it is switched -->
-          <Select
-            disabled={!hasText}
-            value={keyboardLayout}
-            onchange={(e) => (keyboardLayout = e.currentTarget.value as NoteNameType)}
-          >
-            {#each game.notes.nameTypes as noteNameType (noteNameType)}
-              <option value={noteNameType}>{noteNameType}</option>
-            {/each}
-          </Select>
-        </Row>
-        <Row align="center" gap="0.5rem">
-          <div class="visualizer-setting-label">{t('sheet_visualizer:merge_empty_spaces')}</div>
-          <Switch checked={flattenSpaces} onchange={(v) => (flattenSpaces = v)} />
-        </Row>
-      </Column>
-
-      <Column gap="0.6rem">
-        <Row align="center" gap="0.5rem">
-          <div class="visualizer-setting-label">{t('sheet_visualizer:different_color_rows')}</div>
-          <Switch checked={multiColor} onchange={(v) => (multiColor = v)} />
-        </Row>
-        <!-- no gap on this Row: the steppers space themselves with their own margin-left, so a
-             gap here would double it and break their alignment with the switches above -->
-        <Row align="center">
-          <div class="visualizer-setting-label">
-            {t('sheet_visualizer:per_row')}: {framesPerRow}
-          </div>
-          <button class="visualizer-plus-minus" onclick={() => setFrames(-1)}> - </button>
-          <button class="visualizer-plus-minus" onclick={() => setFrames(1)}> + </button>
-        </Row>
-      </Column>
-    </Card>
     <div
       class="visualizer-frame-wrapper"
       style="grid-template-columns:repeat({framesPerRow},1fr)"
@@ -208,29 +173,6 @@
        deeper, SheetVisualizerMenu -> MenuSidebar's outer div), not elements this file's own
        template renders directly. The other selectors below target elements this file authors
        directly, so they keep normal Svelte scoping. */
-  /* one width for every setting label so the switches (and the frame steppers) line up in a
-     single vertical column, across both halves of the card */
-  .visualizer-setting-label {
-    min-width: 11rem;
-  }
-
-  .visualizer-plus-minus {
-    width: 2rem;
-    margin-left: 0.5rem;
-    height: 2rem;
-    padding: 0;
-    font-size: 1.4rem;
-    background-color: var(--primary);
-    color: var(--primary-text);
-    border: none;
-    border-radius: 0.2rem;
-    cursor: pointer;
-  }
-
-  .visualizer-plus-minus:hover {
-    background-color: var(--secondary-layer-10);
-  }
-
   .visualizer-frame-wrapper {
     width: 100%;
     margin-top: 1rem;

@@ -21,6 +21,10 @@
   import AppLink from '$cmp/AppLink.svelte';
   import AppButton from '$cmp/inputs/AppButton.svelte';
   import Header from '$cmp/header/Header.svelte';
+  import FilePicker, { type FileElement } from '$cmp/inputs/FilePicker.svelte';
+  import { fileService } from '$core/Services/FileService';
+  import { logger } from '$stores/LoggerStore.svelte';
+  import type { SerializedSong } from '$core/Songs/Song.svelte';
 
   // No shortcut listener in this file - the vsrg-player page route registers restart/stop
   // shortcuts instead.
@@ -35,6 +39,25 @@
   } = $props();
 
   const excludedSongs: SongType[] = ['composed', 'recorded'];
+
+  // Same shape as PlayerMenu/ComposerMenu's importer, minus their MIDI-redirect prompt: this menu
+  // only ever lists vsrg songs, and a dropped .mid is not one.
+  async function importSong(files: FileElement<SerializedSong[] | SerializedSong>[]) {
+    for (const file of files) {
+      try {
+        const songs = Array.isArray(file.data) ? file.data : [file.data];
+        await fileService.importAndLog(songs);
+      } catch (e) {
+        console.error(e);
+        logger.error(t('logs:error_importing_file_generic'), 8000);
+      }
+    }
+  }
+
+  function importError(error?: unknown) {
+    if (error) console.error(error);
+    logger.error(t('logs:error_importing_invalid_format'), 8000);
+  }
 
   //the page is useless without a song, so it opens straight onto the song list
   let isOpen = $state(true);
@@ -174,15 +197,20 @@
   {#snippet panel()}
     <MenuPanelWrapper>
       <MenuPanel id="Songs">
-        <Header type="h2" style="margin-bottom:0.6rem">
-          {t('common:select_song')}
-        </Header>
-        <div class="row">
-          <AppLink href="/vsrg-composer">
+        <div class="songs-title-row">
+          <Header type="h2" style="margin:0">
+            {t('common:select_song')}
+          </Header>
+          <AppLink href="/vsrg-composer" style="margin-left:auto">
             <AppButton>
               {t('common:create_song')}
             </AppButton>
           </AppLink>
+          <FilePicker onPick={importSong} onError={importError} as="json" multiple={true}>
+            <AppButton>
+              {t('menu:import_song_sheet')}
+            </AppButton>
+          </FilePicker>
         </div>
         <SongMenu
           songs={songsStore.songs}
@@ -212,3 +240,16 @@
     </MenuPanelWrapper>
   {/snippet}
 </MenuSidebar>
+
+<style>
+  /* Title and its two actions on ONE row, the actions pushed right by the link's margin-left:auto.
+     Wraps rather than shrinking: the panel is narrow on mobile and the buttons carry text, so at
+     small widths they drop under the title instead of squeezing it into an ellipsis. */
+  .songs-title-row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-bottom: 0.6rem;
+  }
+</style>

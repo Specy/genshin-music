@@ -120,7 +120,13 @@ export class VsrgPlayerRenderer {
   // ---- private fields, not pushed reactively via update() (see this class's own header note) ----
   private song: VsrgSong = new VsrgSong('');
   private timestamp = 0;
-  private readonly accuracy = 150;
+  // Overall hit tolerance: how far off a press may be and still register against a note, how
+  // late a hold may be released, and how long a note survives before being scored a miss.
+  // Kept in step with the song's WIDEST judgment window by generateAccuracyBounds(), because a
+  // press that registers but falls outside every window has no rating to be given. It used to
+  // be a fixed 150ms, which sat below the old `bad` window (168..186ms) at every difficulty —
+  // so `bad` was truncated to 150 and difficulty had no effect at all on the outermost window.
+  private accuracy = 150;
   private sizes: VsrgPlayerCanvasSizes = { ...defaultVsrgPlayerSizes };
   private colors: VsrgPlayerCanvasColors = {
     background_plain: ['#000000', 0],
@@ -314,6 +320,8 @@ export class VsrgPlayerRenderer {
 
   private generateAccuracyBounds = () => {
     this.accuracyBounds = this.song.getAccuracyBounds();
+    //the last bound is the `bad` window - the widest rating a press can still earn
+    this.accuracy = this.accuracyBounds[this.accuracyBounds.length - 1];
   };
 
   private getHitRating = (hitObject: VsrgHitObject, timestamp: number): VsrgPlayerHitType => {

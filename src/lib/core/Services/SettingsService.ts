@@ -10,6 +10,8 @@ import {
     type VsrgComposerSettingsDataType,
     VsrgPlayerSettings,
     type VsrgPlayerSettingsDataType,
+    SheetVisualizerSettings,
+    type SheetVisualizerSettingsDataType,
     ZenKeyboardSettings,
     type ZenKeyboardSettingsDataType
 } from "$core/BaseSettings"
@@ -99,6 +101,18 @@ class SettingsService {
         return ZenKeyboardSettings.data
     }
 
+    getSheetVisualizerSettings(): SheetVisualizerSettingsDataType {
+        const {data, hadUpdate} = this.getLatestSettings(SheetVisualizerSettings, APP_NAME + "_SheetVisualizer_Settings")
+        if (hadUpdate) {
+            this.updateSheetVisualizerSettings(data)
+        }
+        return data
+    }
+
+    getDefaultSheetVisualizerSettings(): SheetVisualizerSettingsDataType {
+        return SheetVisualizerSettings.data
+    }
+
     getVsrgComposerSettings(): VsrgComposerSettingsDataType {
         const {data, hadUpdate} = this.getLatestSettings(VsrgComposerSettings, APP_NAME + "_VsrgComposer_Settings")
         if (hadUpdate) {
@@ -167,6 +181,14 @@ class SettingsService {
             data: settings
         }
         localStorage.setItem(APP_NAME + "_ZenKeyboard_Settings", JSON.stringify(state))
+    }
+
+    updateSheetVisualizerSettings(settings: SheetVisualizerSettingsDataType) {
+        const state = {
+            other: SheetVisualizerSettings.other,
+            data: settings
+        }
+        localStorage.setItem(APP_NAME + "_SheetVisualizer_Settings", JSON.stringify(state))
     }
 
     updatePlayerSettings(settings: PlayerSettingsDataType) {

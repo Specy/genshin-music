@@ -3274,6 +3274,10 @@
           "❰R",
           "L❱"
         ]
+      },
+      "noteShape": {
+        "kind": "rounded-rect",
+        "cornerRatio": 0.21
       }
     },
     "sky-2x4": {
@@ -3331,6 +3335,10 @@
           "Zl",
           "Zr"
         ]
+      },
+      "noteShape": {
+        "kind": "rounded-rect",
+        "cornerRatio": 0.21
       }
     },
     "sky-2x3": {
@@ -3378,6 +3386,10 @@
           "⟰",
           "X"
         ]
+      },
+      "noteShape": {
+        "kind": "rounded-rect",
+        "cornerRatio": 0.21
       }
     }
   },
