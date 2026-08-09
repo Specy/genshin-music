@@ -65,6 +65,14 @@ describe('game config surface', () => {
         //    predates the freeze) deleted 2026-08-05 when `sustained_recorder`
         //    replaced it — removed from both the list and the data below
         const frozen = readFixture('config-surface')
+        // Deliberate VALUE divergence (2026-08-09, midi round-trip work) — the one place this
+        // proof no longer reproduces the frozen surface, because the frozen value was wrong.
+        // Genshin declared midi bounds.upper 84 while the highest key in its own mapToNote is
+        // 83. A C6 therefore counted as in range, was never octave-folded back, resolved to id
+        // -1 anyway, and was tallied under NEITHER out-of-range direction — silently dropped
+        // and invisible in the importer's counters. Corrected so the bound agrees with the map
+        // it guards. Sky's 84 is correct: its map really does go up to 84.
+        if (APP_NAME === 'Genshin') frozen.midiBounds.upper = 83
         delete frozen.layoutKinds
         delete frozen.layoutIconsKinds
         delete frozen.instrumentNoteLayoutKinds

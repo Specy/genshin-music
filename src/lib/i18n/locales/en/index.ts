@@ -699,6 +699,10 @@ export const i18n_en = {
       global_note_offset: 'Global note offset',
       global_note_offset_description: `The index of each note will be pushed up/down by this amount, you can use it to make
                             the song fit into the app range. You can also change the offset of each layer.`,
+      merged_notes: 'Merged repeats',
+      suggest_offset: 'Suggest',
+      suggested_offset:
+        'Offset {{offset}}: {{accidentals}} accidentals, {{stranded}} notes the instrument cannot play',
       local_note_offset: 'Local track notes offset',
       local_note_offset_description: ' Changes the index of each note by this amount.',
       max_octave_scaling: 'Max notes octave scaling',

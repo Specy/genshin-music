@@ -434,23 +434,32 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 4> 
         //and exported without it. The golden fixture captured that bug and was corrected with it.
         recordedSong.reverb = this.reverb
         const msPerBeat = 60000 / this.bpm
-        //per-column real durations, needed to turn spans into ms
-        const columnDurations = this.columns.map(column =>
-            Song.roundTime(msPerBeat * TEMPO_CHANGERS[column.tempoChanger].changer)
+        //Per-column real durations, needed to turn spans into ms. Kept EXACT and rounded only
+        //where a time is emitted: accumulating rounded ones drifts. At bpm 220 a column is
+        //272.727ms, which rounded to 273 gains 0.273ms per column, and by column 63 the song
+        //has slid a whole 1/8 of a beat — enough that a midi export re-imported onto an exact
+        //grid places every later note one column late and sprouts spurious sub-beat columns.
+        const columnDurations = this.columns.map(
+            column => msPerBeat * TEMPO_CHANGERS[column.tempoChanger].changer
         )
-        let totalTime = offset
+        let exactTime = offset
         this.columns.forEach((column, columnIndex) => {
+            const time = Song.roundTime(exactTime)
             column.notes.forEach(note => {
                 //span 1 = the pre-sustain one-shot behavior = no duration
                 let duration = 0
                 if (note.span > 1) {
+                    let exactEnd = exactTime
                     for (let i = columnIndex; i < columnIndex + note.span; i++) {
-                        duration += columnDurations[i] ?? 0
+                        exactEnd += columnDurations[i] ?? 0
                     }
+                    //measured between the two rounded endpoints, so a held note always ends
+                    //exactly where the column it reaches begins
+                    duration = Song.roundTime(exactEnd) - time
                 }
-                recordedSong.notes.push(new RecordedNote(note.id, totalTime, duration, note.trackIndex))
+                recordedSong.notes.push(new RecordedNote(note.id, time, duration, note.trackIndex))
             })
-            totalTime += columnDurations[columnIndex]
+            exactTime += columnDurations[columnIndex]
         })
         recordedSong.instruments = this.instruments.map(ins => ins.clone())
         return recordedSong
@@ -1196,7 +1205,21 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 4> 
     }
     toMidi = (): Midi => {
         const song = this.toRecordedSong()
-        const midi = song.toMidi()
+        //A tap carries no length of its own, so the export has to invent one — and it must not
+        //exceed the column the tap sits in, or it overlaps the columns after it and re-imports
+        //as a sustain. RecordedNote has nowhere to record which column it came from, so this is
+        //the shortest NOTE-BEARING column: conservative but always safe. The cost is that one
+        //sub-beat column shortens every tap in the file; that reads a little staccato in a DAW,
+        //which is the cheaper mistake of the two.
+        const msPerBeat = 60000 / this.bpm
+        const shortestColumnMs = this.columns.reduce(
+            (shortest, column) =>
+                column.notes.length === 0
+                    ? shortest
+                    : Math.min(shortest, msPerBeat * TEMPO_CHANGERS[column.tempoChanger].changer),
+            msPerBeat
+        )
+        const midi = song.toMidi(shortestColumnMs)
         const midiNames = [...new Set(this.instruments.map(i => INSTRUMENTS_DATA[i.name].midiName))]
         this.instruments.forEach((ins, i) => {
             const instrument = INSTRUMENTS_DATA[ins.name]
@@ -1204,7 +1227,11 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 4> 
             midi.tracks[i].instrument.name = instrument.midiName
             //this avoids duplicates if there are more than 16 instruments, which is the max for midi
             midi.tracks[i].channel = this.instruments.length < 16 ? i : midiNames.indexOf(instrument.midiName)
-            midi.tracks[i].name = `${ins.pitch} | ${ins.alias ?? ins.name}`
+            //`||`, not `??`: alias defaults to the empty string rather than undefined, so `??`
+            //kept it and every default layer used to export as the literal " | ". pitch is
+            //likewise "" unless the layer overrides it, so it only earns its separator.
+            const label = ins.alias || ins.name
+            midi.tracks[i].name = ins.pitch ? `${ins.pitch} | ${label}` : label
         })
         return midi
     }
