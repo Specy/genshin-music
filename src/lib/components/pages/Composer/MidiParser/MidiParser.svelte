@@ -210,8 +210,7 @@
       //`pitch` is a playback setting here, not a transposition of the written notes, so it
       //rides in the metadata alongside the rest of the instrument config. The key signature is
       //still preferred when a foreign file supplies one.
-      pitch =
-        PITCHES.find((candidate) => candidate === key) ?? importedMetadata?.pitch ?? 'C';
+      pitch = PITCHES.find((candidate) => candidate === key) ?? importedMetadata?.pitch ?? 'C';
       if (tracks.length) convertMidi();
     } catch (e) {
       console.error(e);
