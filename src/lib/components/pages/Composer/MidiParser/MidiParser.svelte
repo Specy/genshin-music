@@ -31,6 +31,7 @@
     playableIdsOf,
     suggestOffset,
   } from '$core/Songs/midiImport';
+  import { decodeMidiMetadata, type MidiMetadata } from '$core/Songs/midiMetadata';
   import { delay, isAudioFormat, isVideoFormat } from '$core/utils/Utilities';
   import { t } from '$i18n/binding.svelte';
   import FilePicker, { type FileElement } from '$cmp/inputs/FilePicker.svelte';
@@ -73,6 +74,8 @@
   let accidentals = $state(0);
   let outOfRange = $state(0);
   let merged = $state(0);
+  //instrument config recovered from one of our own exports; null for any foreign file
+  let importedMetadata: MidiMetadata | null = $state(null);
   let totalNotes = $state(0);
   let includeAccidentals = $state(true);
   // QUIRK: ignoreEmptytracks (not ignoreEmptyTracks) is an intentional preserved typo.
@@ -172,6 +175,10 @@
     try {
       const midiBpm = midi.header.tempos[0]?.bpm;
       const key = midi.header.keySignatures[0]?.key;
+      //Only the instrument configuration comes from metadata, and only when the file is one of
+      //ours. Everything musical below — tempo, placement, note lengths — is still read off the
+      //MIDI itself, so importing our own export exercises the same code a foreign file does.
+      importedMetadata = decodeMidiMetadata(midi.header.meta ?? []);
       tracks = midi.tracks.map((track, i) => {
         const customtrack: CustomTrack = {
           track,
@@ -179,7 +186,10 @@
           //one track per layer where the song has the layers for it, instead of stacking
           //everything on layer 0 — two layers sounding the same id in one column used to
           //collide and lose a note to the dedupe, which is unrecoverable
-          layer: Math.min(i, Math.max(0, data.instruments.length - 1)),
+          layer: Math.min(
+            i,
+            Math.max(0, (importedMetadata?.instruments ?? data.instruments).length - 1)
+          ),
           name: track.name || `Track n.${i + 1}`,
           numberOfAccidentals: 0,
           maxScaling: 0,
@@ -197,7 +207,11 @@
       //back can sit a hair under the original and lose a whole bpm to truncation
       bpm = Math.round(midiBpm * 4) || 220;
       offset = 0;
-      pitch = PITCHES.find((candidate) => candidate === key) ?? 'C';
+      //`pitch` is a playback setting here, not a transposition of the written notes, so it
+      //rides in the metadata alongside the rest of the instrument config. The key signature is
+      //still preferred when a foreign file supplies one.
+      pitch =
+        PITCHES.find((candidate) => candidate === key) ?? importedMetadata?.pitch ?? 'C';
       if (tracks.length) convertMidi();
     } catch (e) {
       console.error(e);
@@ -207,6 +221,9 @@
 
   function convertMidi() {
     const selectedTracks = tracks.filter((track) => track.selected);
+    //the file's own layer roster when it is one of our exports, otherwise the layers the open
+    //composer song already has — which is what this screen has always mapped tracks onto
+    const layers = importedMetadata?.instruments ?? data.instruments;
     const result = importMidiTracks(
       selectedTracks.map((track) => ({
         notes: track.track.notes,
@@ -220,7 +237,7 @@
         includeAccidentals,
         //capability comes from instrument config, so a game gains sustained imports the
         //moment it gains a sustaining instrument — nothing here knows which game is loaded
-        layerSustains: data.instruments.map((ins) => instrumentSupportsSustain(ins.name)),
+        layerSustains: layers.map((ins) => instrumentSupportsSustain(ins.name)),
       }
     );
     selectedTracks.forEach((track, index) => {
@@ -237,8 +254,9 @@
     //enforce the no-overlap Duration invariant over the imported spans
     song.normalizeSpans();
     song.bpm = bpm;
-    song.instruments = data.instruments.map((ins) => ins.clone());
+    song.instruments = layers.map((ins) => ins.clone());
     song.pitch = pitch;
+    if (importedMetadata) song.reverb = importedMetadata.reverb;
     const lastColumn = data.selectedColumn;
     song.selected = lastColumn < song.columns.length ? lastColumn : 0;
     if (song.columns.length === 0) {
