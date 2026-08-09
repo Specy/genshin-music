@@ -9,7 +9,7 @@ import {
     type SerializedRecordedTrack,
 } from "./SongClasses"
 import {ComposedSong, defaultInstrumentMap} from "./ComposedSong.svelte"
-import {groupByNotes} from "../utils/Utilities"
+import {clamp, groupByNotes} from "../utils/Utilities"
 import clonedeep from 'lodash.clonedeep'
 import {NoteLayer} from "./Layer"
 // This file genuinely CONSTRUCTS a Midi below (toMidi()), so the type cannot be the only import.
@@ -27,6 +27,13 @@ import {type ConversionGame, findSimilarInstrument} from "./instrumentSimilarity
 import {foldIdIntoRange} from "./noteIds"
 
 /** Legacy (≤v2): flat index+layer notes, top-level instruments. */
+/**
+ * Slowest tempo midi can represent. Tempo is stored as microseconds-per-quarter in three
+ * bytes, so anything under this overflows the field and decodes as a different tempo (bpm 3
+ * comes back as 18) — and the composer's bpm setting permits values well below it.
+ */
+export const MIN_MIDI_BPM = 15
+
 export type SerializedRecordedSongV2 = SerializedSong & {
     type: 'recorded'
     reverb: boolean
@@ -467,26 +474,52 @@ export class RecordedSong extends Song<RecordedSong, SerializedRecordedSong> {
         return this.clone()
     }
 
-    toMidi(): Midi {
+    /**
+     * @param tapDurationMs Length to give a note that has no duration of its own. Defaults to
+     * one beat; ComposedSong passes its SHORTEST column instead, because a tap sitting in a
+     * 1/8 column would otherwise be written a full beat long, overlap the columns after it,
+     * and re-import as a multi-column sustain.
+     */
+    toMidi(tapDurationMs?: number): Midi {
         const midi = new MidiConstructor()
-        midi.header.setTempo(this.bpm / 4)
+        //below ~15bpm the 3-byte microseconds-per-quarter field overflows and the tempo comes
+        //back as something else entirely (bpm 3 returns as 18)
+        const safeBpm = Number.isFinite(this.bpm) && this.bpm >= MIN_MIDI_BPM ? this.bpm : MIN_MIDI_BPM
+        midi.header.setTempo(safeBpm / 4)
         midi.header.keySignatures.push({
             key: this.pitch,
             scale: "major",
             ticks: 0,
         })
         midi.name = this.name
+        /**
+         * A tap is exported as exactly one column.
+         *
+         * It used to be a hard-coded 1 second, which re-imported as a SUSTAIN at any tempo
+         * where a column is shorter than 2/3s: import reads a span as round(ms / column), so
+         * at the default bpm 220 (272.7ms per column) every tap came back as span 4. One
+         * column is the only length that round-trips to span 1 at every tempo, and it is
+         * also what the note musically occupies, so the file reads correctly in a DAW.
+         */
+        const tapMs =
+            tapDurationMs !== undefined && Number.isFinite(tapDurationMs) && tapDurationMs > 0
+                ? tapDurationMs
+                : 60000 / safeBpm
         for (let trackIndex = 0; trackIndex < this.instruments.length; trackIndex++) {
             const notes = this.notes.filter(note => note.trackIndex === trackIndex)
-            if (!notes.length) continue
+            //an empty layer still gets a track: ComposedSong.toMidi assigns instrument, channel
+            //and name by index, so skipping one used to shift every later layer's metadata onto
+            //the wrong track
             const track = midi.addTrack()
             track.name = `Layer ${trackIndex + 1}`
             notes.forEach(note => {
                 track.addNote({
                     time: note.time / 1000,
-                    //held notes export their real length; taps keep the historical 1s
-                    duration: note.duration > 0 ? note.duration / 1000 : 1,
-                    midi: note.toMidi() || 0,
+                    duration: note.duration > 0 ? note.duration / 1000 : tapMs / 1000,
+                    //a Note Id is a nominal midi number, but nothing upstream guarantees it
+                    //fits midi's 0..127 — an out-of-range id used to be written verbatim and
+                    //produced a malformed file
+                    midi: clamp(Math.round(note.toMidi()) || 0, 0, 127),
                 })
             })
         }

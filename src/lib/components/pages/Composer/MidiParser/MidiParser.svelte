@@ -24,12 +24,13 @@
   import { logger } from '$stores/LoggerStore.svelte';
   import { ThemeProvider } from '$core/theme/ThemeProvider.svelte';
   import { ComposedSong } from '$core/Songs/ComposedSong.svelte';
+  import { type InstrumentData } from '$core/Songs/SongClasses';
   import {
-    MidiNote,
-    NoteColumn,
-    type ColumnNote,
-    type InstrumentData,
-  } from '$core/Songs/SongClasses';
+    importMidiTracks,
+    instrumentSupportsSustain,
+    playableIdsOf,
+    suggestOffset,
+  } from '$core/Songs/midiImport';
   import { delay, isAudioFormat, isVideoFormat } from '$core/utils/Utilities';
   import { t } from '$i18n/binding.svelte';
   import FilePicker, { type FileElement } from '$cmp/inputs/FilePicker.svelte';
@@ -71,6 +72,7 @@
   let pitch: Pitch = $state('C');
   let accidentals = $state(0);
   let outOfRange = $state(0);
+  let merged = $state(0);
   let totalNotes = $state(0);
   let includeAccidentals = $state(true);
   // QUIRK: ignoreEmptytracks (not ignoreEmptyTracks) is an intentional preserved typo.
@@ -174,7 +176,10 @@
         const customtrack: CustomTrack = {
           track,
           selected: true,
-          layer: 0,
+          //one track per layer where the song has the layers for it, instead of stacking
+          //everything on layer 0 — two layers sounding the same id in one column used to
+          //collide and lose a note to the dedupe, which is unrecoverable
+          layer: Math.min(i, Math.max(0, data.instruments.length - 1)),
           name: track.name || `Track n.${i + 1}`,
           numberOfAccidentals: 0,
           maxScaling: 0,
@@ -187,7 +192,10 @@
         return customtrack;
       });
       fileName = name;
-      bpm = Math.floor(midiBpm * 4) || 220;
+      //round, not floor: this is the inverse of toMidi's setTempo(bpm / 4), and the tempo
+      //survives serialization as an integer microseconds-per-quarter, so the value coming
+      //back can sit a hair under the original and lose a whole bpm to truncation
+      bpm = Math.round(midiBpm * 4) || 220;
       offset = 0;
       pitch = PITCHES.find((candidate) => candidate === key) ?? 'C';
       if (tracks.length) convertMidi();
@@ -199,84 +207,29 @@
 
   function convertMidi() {
     const selectedTracks = tracks.filter((track) => track.selected);
-    const notes: MidiNote[] = [];
-    let accidentalsCount = 0;
-    let outOfRangeCount = 0;
-    let totalNotesCount = 0;
-    selectedTracks.forEach((track) => {
-      track.numberOfAccidentals = 0;
-      track.outOfRangeBounds.upper = 0;
-      track.outOfRangeBounds.lower = 0;
-      track.track.notes.forEach((midiNote) => {
-        totalNotesCount++;
-        const note = MidiNote.fromMidi(
-          track.layer,
-          Math.floor(midiNote.time * 1000),
-          midiNote.midi - (track.localOffset ?? offset),
-          track.maxScaling,
-          Math.floor(midiNote.duration * 1000)
-        );
-        if (note.data.isAccidental) {
-          accidentalsCount++;
-          track.numberOfAccidentals++;
-        }
-        if (note.data.id !== -1) {
-          if (includeAccidentals || !note.data.isAccidental) {
-            notes.push(note);
-          }
-        } else {
-          outOfRangeCount++;
-          if (note.data.outOfRangeBound === -1) track.outOfRangeBounds.lower++;
-          if (note.data.outOfRangeBound === 1) track.outOfRangeBounds.upper++;
-        }
-      });
-    });
-    const sorted = notes.sort((a, b) => a.time - b.time);
-    const bpmToMs = 60000 / bpm;
-    const groupedNotes: MidiNote[][] = [];
-    while (sorted.length > 0) {
-      const row = [sorted.shift() as MidiNote];
-      let amount = 0;
-      for (let i = 0; i < sorted.length; i++) {
-        if (row[0].time > sorted[i].time - bpmToMs / 9) amount++;
+    const result = importMidiTracks(
+      selectedTracks.map((track) => ({
+        notes: track.track.notes,
+        layer: track.layer,
+        localOffset: track.localOffset,
+        maxScaling: track.maxScaling,
+      })),
+      {
+        bpm,
+        offset,
+        includeAccidentals,
+        //capability comes from instrument config, so a game gains sustained imports the
+        //moment it gains a sustaining instrument — nothing here knows which game is loaded
+        layerSustains: data.instruments.map((ins) => instrumentSupportsSustain(ins.name)),
       }
-      groupedNotes.push([...row, ...sorted.splice(0, amount)]);
-    }
-    const columns: NoteColumn[] = [];
-    let previousTime = 0;
-    groupedNotes.forEach((notes) => {
-      const note = notes[0];
-      if (!note) return;
-      const elapsedTime = note.time - previousTime;
-      const emptyColumns = Math.floor((elapsedTime - bpmToMs) / bpmToMs);
-      const noteColumn = new NoteColumn();
-      previousTime = note.time;
-      if (emptyColumns > -1)
-        new Array(emptyColumns).fill(0).forEach(() => columns.push(new NoteColumn())); // adds empty columns
-      noteColumn.notes = notes.flatMap((note) => {
-        //the file's real note length becomes a column span (min 1; the invariant pass
-        //below truncates spans that would overlap a following same-id note)
-        const span = Math.max(1, Math.round(note.durationMs / bpmToMs));
-        return [{ trackIndex: note.layer, id: note.data.id, span }];
-      });
-      columns.push(noteColumn);
+    );
+    selectedTracks.forEach((track, index) => {
+      const stats = result.perTrack[index];
+      track.numberOfAccidentals = stats.accidentals;
+      track.outOfRangeBounds.lower = stats.outOfRangeLower;
+      track.outOfRangeBounds.upper = stats.outOfRangeUpper;
     });
-    columns.forEach((column) => {
-      //merge duplicates (same track + id) coming from overlapping midi notes — the
-      //longest span wins
-      // eslint-disable-next-line svelte/prefer-svelte-reactivity -- transient local dedupe map, never UI-observed
-      const seen = new Map<string, ColumnNote>();
-      column.notes = column.notes.filter((note) => {
-        const key = `${note.trackIndex}-${note.id}`;
-        const existing = seen.get(key);
-        if (existing) {
-          existing.span = Math.max(existing.span, note.span);
-          return false;
-        }
-        seen.set(key, note);
-        return true;
-      });
-    });
+    const columns = result.columns;
     const song = new ComposedSong('Untitled');
     //initColumnsForConstruction, not a mutator: this song is being BUILT here and is handed to loadSong below,
     //so nothing is subscribed to it yet and there is no version to bump
@@ -292,9 +245,10 @@
       return logger.warn(t('composer:midi_parser.there_are_no_notes'));
     }
     functions.loadSong(song);
-    accidentals = accidentalsCount;
-    totalNotes = totalNotesCount;
-    outOfRange = outOfRangeCount;
+    accidentals = result.accidentals;
+    totalNotes = result.totalNotes;
+    outOfRange = result.outOfRange;
+    merged = result.merged;
   }
 
   // data here shadows this component's own data prop - fine today since this function only
@@ -303,6 +257,33 @@
   function editTrack(index: number, data: Partial<CustomTrack>) {
     Object.assign(tracks[index], data);
     if (tracks.length > 0) convertMidi();
+  }
+
+  function suggestGlobalOffset() {
+    const selected = tracks.filter((track) => track.selected);
+    const notes = selected.flatMap((track) => track.track.notes.map((n) => ({ midi: n.midi })));
+    if (notes.length === 0) {
+      //reachable with every track deselected, and a button that does nothing at all reads as
+      //broken rather than as "nothing to work on"
+      return logger.warn(t('composer:midi_parser.there_are_no_notes'));
+    }
+    //score against the instruments the selected tracks actually land on, so a gapped layout
+    //(Sky's Bells, its SFX sets) counts the notes it would strand rather than only the ones
+    //the game-wide map rejects
+    // eslint-disable-next-line svelte/prefer-svelte-reactivity -- transient local accumulator, never UI-observed
+    const playable = new Set<number>();
+    for (const track of selected) {
+      for (const id of playableIdsOf(data.instruments[track.layer]?.name ?? '')) playable.add(id);
+    }
+    const suggestion = suggestOffset(notes, playable);
+    changeOffset(suggestion.offset);
+    logger.success(
+      t('composer:midi_parser.suggested_offset', {
+        offset: `${suggestion.offset}`,
+        accidentals: `${suggestion.accidentals}`,
+        stranded: `${suggestion.stranded}`,
+      })
+    );
   }
 
   function changeOffset(value: number) {
@@ -367,13 +348,22 @@
           {t('composer:midi_parser.global_note_offset_description')}
         </HelpTooltip>
       </div>
-      <NumericalInput
-        value={offset}
-        onChange={changeOffset}
-        delay={600}
-        style={midiInputsStyle}
-        step={1}
-      />
+      <Row align="center" style="gap:0.4rem">
+        <button
+          class="midi-suggest-button"
+          disabled={tracks.length === 0}
+          onclick={suggestGlobalOffset}
+        >
+          {t('composer:midi_parser.suggest_offset')}
+        </button>
+        <NumericalInput
+          value={offset}
+          onChange={changeOffset}
+          delay={600}
+          style={midiInputsStyle}
+          step={1}
+        />
+      </Row>
     </Row>
     <Row justify="between" align="center">
       <div style="margin-right:0.5rem">{t('common:pitch')}:</div>
@@ -432,8 +422,32 @@
             <td></td>
             <td>{outOfRange}</td>
           </tr>
+          {#if merged > 0}
+            <tr>
+              <td>{t('composer:midi_parser.merged_notes')}:</td>
+              <td></td>
+              <td>{merged}</td>
+            </tr>
+          {/if}
         </tbody>
       </table>
     {/if}
   </Column>
 </DecoratedCard>
+
+<style>
+  .midi-suggest-button {
+    background-color: var(--primary);
+    color: var(--primary-text);
+    border: none;
+    border-radius: 0.3rem;
+    padding: 0.3rem 0.6rem;
+    cursor: pointer;
+    font-size: 0.8rem;
+    white-space: nowrap;
+  }
+  .midi-suggest-button:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+</style>
