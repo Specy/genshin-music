@@ -10,6 +10,7 @@ import {
 } from "./SongClasses"
 import {ComposedSong, defaultInstrumentMap} from "./ComposedSong.svelte"
 import {clamp, groupByNotes} from "../utils/Utilities"
+import {encodeMidiMetadata} from "./midiMetadata"
 import clonedeep from 'lodash.clonedeep'
 import {NoteLayer} from "./Layer"
 // This file genuinely CONSTRUCTS a Midi below (toMidi()), so the type cannot be the only import.
@@ -490,6 +491,14 @@ export class RecordedSong extends Song<RecordedSong, SerializedRecordedSong> {
             key: this.pitch,
             scale: "major",
             ticks: 0,
+        })
+        //Which app instrument each layer plays, and its audio settings — the only things MIDI
+        //cannot say. Everything musical stays in the file proper, so re-importing our own
+        //export runs the same derivation a foreign MIDI does. See midiMetadata.ts.
+        midi.header.meta.push({
+            ticks: 0,
+            type: "text",
+            text: encodeMidiMetadata({instruments: this.instruments, pitch: this.pitch, reverb: this.reverb}),
         })
         midi.name = this.name
         /**
