@@ -33,7 +33,10 @@ recordings that analysis can actually work with.
 1. Capture **lossless WAV** at the source rate (44.1/48 kHz). Encode to MP3
    only at the very end, if at all.
 2. Turn OFF reverb/echo/room effects in the source app if it allows it.
-3. One note per take (or slice later); never let tails overlap the next note.
+3. One note per take, or ONE sequential take of every note in button order with
+   generous silence between — `docs/skills/instrument-from-sequential-capture`
+   splits, trims, pitch-verifies and encodes it. Either way, never let tails
+   overlap the next note.
 4. Press, hold **6–10 seconds** (≥ 3 passes of any plausible loop length),
    release, then keep recording **through full silence**.
 5. Note each take's pitch (MIDI id) — the analyzer needs the fundamental, and
@@ -67,8 +70,12 @@ recordings that analysis can actually work with.
    plus per-note `loop` overrides; pick `loopMode` by source character —
    `loop-continuous` (fade out on release; safe default, ignores the tail) or
    `loop-sustain` (plays out into the recorded tail; wants `loop.end` near the
-   release so the play-out isn't seconds of leftover sustain).
-6. Wire and verify: add to `game.json` `instruments.list`, optional locale key,
-   add the name to the POST_FREEZE sets in `gameDefinitionConsistency.test.ts`
-   and `configSurface.test.ts`, regenerate fixtures
-   (`npm run test:update-fixtures`), then both game suites + a build.
+   release so the play-out isn't seconds of leftover sustain). Third option for
+   long natural holds that should simply END (wind/brass): omit `loop`
+   entirely — loopless sustain plays the file once and fades on note-off
+   (worked example: `genshin/instruments/NightwindHorn`).
+6. Wire and verify: follow the registration checklist in
+   `docs/skills/instrument-from-sequential-capture/SKILL.md` — it is the full
+   list (game.json roster, Shape/labels, i18n incl. static/locales, BOTH
+   BaseSettings version bumps, similarity map, smoke count, POST_FREEZE sets,
+   fixture regen, suites + build).

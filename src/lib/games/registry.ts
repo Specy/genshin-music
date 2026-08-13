@@ -205,7 +205,9 @@ function buildGameMeta(id: string): GameMeta {
       ) {
         fail(context, 'sustain.minLength must be a non-negative number');
       }
-      assertLoop(context, 'sustain.loop', meta.sustain.loop);
+      // Optional since the loopless-sustain authoring (schema.ts): no loop anywhere
+      // = held notes play their file once and note-off fades.
+      if (meta.sustain.loop !== undefined) assertLoop(context, 'sustain.loop', meta.sustain.loop);
     }
     instruments[name] = {
       name,

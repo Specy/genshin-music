@@ -142,7 +142,7 @@
   },
   "player": {
     "other": {
-      "settingVersion": "Genshin82"
+      "settingVersion": "Genshin83"
     },
     "data": {
       "instrument": {
@@ -163,6 +163,7 @@
           "HarmonicKey",
           "DunDun",
           "DjemDjemDrum",
+          "NightwindHorn",
           "sustained_recorder"
         ],
         "category": "song_settings"
@@ -673,7 +674,7 @@
   },
   "zenKeyboard": {
     "other": {
-      "settingVersion": "Genshin27"
+      "settingVersion": "Genshin28"
     },
     "data": {
       "instrument": {
@@ -694,6 +695,7 @@
           "HarmonicKey",
           "DunDun",
           "DjemDjemDrum",
+          "NightwindHorn",
           "sustained_recorder"
         ],
         "category": "keyboard"

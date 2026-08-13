@@ -67,8 +67,9 @@ import type {ComposerCache} from '$cmp/pages/Composer/ComposerCache'
  *    of a column over a driven clock. It fails on a chase-toward-a-target implementation, on a
  *    lookahead not honoured, and on a queue that drops segments.
  *  - PART SIX, THE FRAME LOOP, reads how often the renderer ASKED to render rather than what it
- *    painted - the half a scene description cannot see. It fails on a loop that runs while idle,
- *    on the cap set on the wrong ticker, and on a render per tick rather than per frame that moved.
+ *    painted - the half a scene description cannot see. It fails on a loop that runs while idle, on
+ *    a private rAF beside the capped ticker, and on a render per tick rather than per frame that
+ *    moved.
  *  - PART SEVEN, MANUAL SCROLLING, drives a drag, a wheel and the mini-timeline in BOTH scroll
  *    modes. It fails on quantised motion, on a gesture fought by its own selectColumn round-trip,
  *    on one that never settles, and on a gesture nothing ends.
@@ -77,16 +78,18 @@ import type {ComposerCache} from '$cmp/pages/Composer/ComposerCache'
  * DESCRIPTION CARRIES is what either of them can see. It carries, for every child of a pooled
  * column view and of the timeline: the cache slot its texture came from, its x, its y, its alpha
  * and whether it is shown at all. It carries the placement and presentation of every container
- * those children hang off, up to and including each Application's own stage - a scene displaced,
- * faded or hidden at its ROOT is a scene every child of which still reads correct. And it carries
- * the two things outside the pixi scene graph that blank the notes canvas on their own: what that
- * Application clears to behind the columns, and the canvas ELEMENT's whole inline style.
+ * those children hang off, up to and including the Application's stage - a scene displaced, faded
+ * or hidden at its ROOT is a scene every child of which still reads correct. That includes the
+ * TIMELINE STRIP, the root carrying the mini-timeline's offset down the shared canvas, which is
+ * what says the timeline is drawn on the canvas at all and where. And it carries the two things
+ * outside the pixi scene graph that blank the canvas on their own: what the Application clears to
+ * behind the columns, and the canvas ELEMENT's whole inline style.
  *
  * Deliberate omissions, each of them somewhere a defect can sit unseen. What a hidden object still
  * holds: a hidden sprite reads as absent, which is what lets a pooled view keep more note sprites
- * than its column needs. The TIMELINE canvas' clear colour: that Application is initialised with
- * backgroundAlpha 0 and the fakes model a colour but not an alpha, so there is nothing here to
- * state it against. Pixels: nothing rasterises, so two textures differ by the cache slot they came
+ * than its column needs. (The TIMELINE canvas' clear colour used to be one of these and is now
+ * COVERED rather than dropped: there is one canvas and one clear colour, stated above, and the
+ * strip's own background op states the rest.) Pixels: nothing rasterises, so two textures differ by the cache slot they came
  * from rather than by what they look like. And whatever the fakes below do not model at all - the
  * readers can only report what those objects hold, so a pixi property the fakes never gave them is
  * invisible here by construction.
@@ -94,21 +97,30 @@ import type {ComposerCache} from '$cmp/pages/Composer/ComposerCache'
  * Known unpinned areas, as of the close of phase 3 - written down because a list of what a guard
  * does NOT cover ages better than a claim that it covers everything, and each of these was found by
  * mutating the code and watching this file stay green:
- *  - computeCanvasSize() end to end. `canvasWidth` is what the renderer reports through
+ *  - computeCanvasSize()'s inPreview BRANCH. `canvasWidth` is what the renderer reports through
  *    onGeometryChange and the heights are what it passed to resize(); geometry() cross-checks the
  *    cache against them, so an INCONSISTENCY fails, but a size wrong the same way in all three is
- *    endorsed. Re-deriving it here would duplicate the row-height scale and the inPreview scaling.
- *  - the pixi interaction wiring (eventMode, interactiveChildren, hitArea) on the root containers.
- *    The pointer and wheel HANDLERS are driven - by the click-inverse test and by the manual-scroll
- *    part - but what routes an event to them is not: the hitareas decide whether a drag continues
- *    outside the canvas, and nothing here states that.
+ *    endorsed HERE. The non-preview formula is not unguarded any more: test/composerCanvasCss.test.ts
+ *    re-derives `85vw - 45px`, `45vh`, both row-height scales and both roundings against the CSS
+ *    placeholder, so mutating any of them fails there (and, through the canvas width, ~200 rows
+ *    here). What survives everything is the four PREVIEW factors - 0.8/0.55 on width, 0.8/0.6 on
+ *    height, and the 900px body-width they switch on: composerCanvasCssSize returns null in preview
+ *    on purpose, so that matrix never reaches the branch, and no harness here mounts with
+ *    `inPreview`. Each of the four can be changed with the whole suite green.
+ *  - the pixi interaction wiring on the root containers, EXCEPT the two hitareas, which 'what the
+ *    notes stage answers a pointer on' and 'which surface a pointer on the merged canvas reaches'
+ *    state between them - including both of the timeline's clauses, the one that keeps its own drag
+ *    alive outside the canvas and the one that defers to a press on the notes surface. `eventMode`
+ *    and `interactiveChildren` are still unread, so a container routing nothing at all reads here
+ *    the same as one routing everything. What ORDERS the two hitareas is pixi's own reverse walk,
+ *    which the fakes do not model: mount() states the child order that decides it instead.
  *  - the Application constructor options other than `autoStart`, which FakeApplication.init() reads
  *    because the ticker's behaviour hangs off it. resolution, autoDensity, antialias and the
  *    initial canvas size are still discarded and so invisible.
  *  - what a render group actually CHANGES. FakeContainer.enableRenderGroup records the call and the
  *    scene it produces is identical either way, which is the point of the real one - so what is
  *    pinned is that the renderer asks for it, not that pixi then moves the transform to the GPU.
- *  - teardown: nothing requires either Application to be destroyed, though destroy()'s own comment
+ *  - teardown: nothing requires the Application to be destroyed, though destroy()'s own comment
  *    calls that a hard requirement against a WebGL leak on remount.
  *  - the rules this file imports from production rather than restating - nearestEven,
  *    computeRowLayerStatuses, computeStrandedRows, displayButtonForId, isColumnVisible. A defect
@@ -120,6 +132,30 @@ import type {ComposerCache} from '$cmp/pages/Composer/ComposerCache'
  *    construction, since the scene is compared as values - and harmless for the same reason.
  *  - over-repainting BEYOND the marked set. Only the counts can see it, and only on the rows that
  *    state an exact painted set rather than 'window'.
+ *  - the SPLIT between the notes region and the timeline band is what the renderer REPORTS, and
+ *    geometry() cross-checks it against the one resize() and against the cache - so an
+ *    inconsistency fails, but a split wrong the same way in all three is endorsed. Before the two
+ *    canvases were merged the timeline's height was read off a SECOND resize() call, which was an
+ *    independent reading; the report replaces it.
+ *  - the strip's background before the FIRST cache exists. drawTimelineStage draws the bar
+ *    unconditionally and gates only the selection band and the markers on cacheData, but every
+ *    harness here waits the cache out at mount, so no scene is ever read in that window and moving
+ *    the bar back inside the gate is endorsed. What that costs in the app is the mini-timeline
+ *    showing the Application's clear colour for the ~50ms of the cache debounce.
+ *  - WHERE App.css ACTUALLY PUTS THE THREE TIMELINE BUTTONS. They are absolutely positioned HTML
+ *    floating over the composer canvas, and the renderer holds the drawn strip clear of them by
+ *    reproducing their footprint in px (composerCanvasGeometry's TIMELINE_INSET_LEFT/RIGHT) - so
+ *    'which surface a pointer on the merged canvas reaches' does now state that the strip declines
+ *    `0..80` and `W-41.6..W`, which is the renderer's half of the claim. What it cannot state is
+ *    that the stylesheet lays the buttons out in exactly those bands: jsdom performs no layout.
+ *    test/composerCanvasCss.test.ts covers as much of the other half as can be covered without a
+ *    browser - the declared `2.2rem`/`0.2rem`/`flex-shrink` against those constants, and the two
+ *    inline `margin-left` overrides in ComposerCanvas.svelte, read as text, that the 80px and the
+ *    41.6px each rest on.
+ *  - the render count was a PAIR (one per Application) and is now one number. Every row asserted
+ *    the same value twice, so no row's claim changed - but the equality of the two incidentally
+ *    proved the gated timeline render had fired on the rows where it was 1, and nothing states that
+ *    now. What replaces it is the gate test in PART SIX, which reads the outline's x per frame.
  *
  * HOW MUCH was repainted, AND WHICH COLUMNS, is observed indirectly, because everything the
  * renderer decides is private. Each counter of Repainted rides on something the class does in one
@@ -135,8 +171,9 @@ import type {ComposerCache} from '$cmp/pages/Composer/ComposerCache'
  *    container constructions and destructions read as "the pool grew" / "the pool was thrown away".
  *    A Sprite and a Graphics each un-count themselves in their own constructor.
  *  - Application.render() is the "did this update do anything at all" channel, and the rows where
- *    it is 0 are what make the rest mean something.
- *  - and, for the parts that drive a MOTION rather than an update, the notes Application's fake
+ *    it is 0 are what make the rest mean something. ONE number: the composer has one Application
+ *    since the mini-timeline moved onto the notes canvas.
+ *  - and, for the parts that drive a MOTION rather than an update, the Application's fake
  *    Ticker: `frames` counts the rAF callbacks it took, `emits` the ones its maxFPS gate let
  *    through, `starts`/`stops` the transitions. Those are what "the idle case does no per-frame
  *    work" is stated in, since a loop that runs and paints nothing moves no other counter here.
@@ -195,6 +232,12 @@ const pixi = vi.hoisted(() => {
         eventMode = 'none'
         interactiveChildren = true
         hitArea: unknown
+        /**
+         * Recorded rather than modelled, exactly like isRenderGroup: what a mask DOES is a stencil
+         * pass on the GPU and a prune in pixi's own hit testing, neither of which exists here. What
+         * this holds is which node the renderer pointed at, which is the half a defect can move.
+         */
+        mask: unknown = null
         visible = true
         destroyed = false
         /**
@@ -587,6 +630,13 @@ import {
     type ColumnWindowGeometry,
     type ComposerRendererState,
 } from '$cmp/pages/Composer/ComposerRenderer'
+//the two ends of the canvas the three DOM timeline buttons stand on, which the renderer holds the
+//drawn strip clear of. Imported rather than restated for the same reason nearestEven is: they are
+//the definition, and test/composerCanvasCss.test.ts is what pins them against App.css.
+import {
+    TIMELINE_INSET_LEFT,
+    TIMELINE_INSET_RIGHT,
+} from '$cmp/pages/Composer/composerCanvasGeometry'
 
 /**
  * 20, not the shipped default of 35, purely so the window (n/2 + 2 per side, strictly - so n + 3
@@ -597,12 +647,25 @@ const COLUMNS_PER_CANVAS = 20
 /** Far enough from both ends of a 100-column song that the window is never clipped. */
 const SELECTED = 40
 
+/**
+ * The pointerId every single-gesture row here presses with, and the one a SECOND concurrent pointer
+ * presses with.
+ *
+ * They exist because the two canvases became one: pixi dispatches per pointerId and per mouse button
+ * against a single EventBoundary now, so a second finger - or a right-button press during a
+ * left-button drag - is delivered to the same containers as the gesture already running. Two ids are
+ * the whole of what tells "this move continues my drag" from "this move belongs to somebody else".
+ */
+const PRIMARY_POINTER = 1
+const SECOND_POINTER = 2
+
 /** The body rect beforeEach mocks, jsdom measuring nothing on its own. */
 const BODY_WIDTH = 1920
 
 /**
- * The notes canvas' pixel geometry, by ComposerRenderer.computeCanvasSize's own rule over that
- * rect, and the playhead at its centre.
+ * The notes region's pixel geometry, by ComposerRenderer.computeCanvasSize's own rule over that
+ * rect, and the playhead at its centre. The canvas is exactly this wide and TALLER: it carries the
+ * mini-timeline band below the notes region, which Geometry states.
  *
  * It is stated here rather than read off a renderer because the window definition is a function of
  * PIXELS now (see ColumnWindowGeometry: a canvas does not hold exactly columnsPerCanvas columns),
@@ -775,8 +838,14 @@ function makeContext(): Context {
 
 /** What one update() repainted. See this file's header for what observes each of these. */
 interface Repainted {
-    /** both Applications, asserted together - a row where they differ is a bug in the renderer */
-    renders: {notes: number, timeline: number}
+    /**
+     * How many times the Application was asked to render, which is the did-this-update-do-anything-
+     * at-all channel. It was a PAIR while the timeline had a canvas of its own, and every row of
+     * every table asserted the same number twice - so nothing is lost by collapsing it, except the
+     * incidental proof that the gated timeline render had fired (recorded in the header's list of
+     * what is not pinned).
+     */
+    renders: number
     /** how many columns' content was repainted */
     columnPaints: number
     /**
@@ -809,6 +878,8 @@ interface SceneNode {
     clears: number
     ops?: unknown[]
     texture?: {textureId: number}
+    /** what pixi would stencil this node against, set by production code and never by the fakes */
+    mask?: unknown
     emit: (event: string, payload: {globalX: number}) => void
 }
 
@@ -830,15 +901,28 @@ interface SceneNode {
  * same way in the report, in the resize and in the cache is outside what these tests see. What is
  * inside is any DISAGREEMENT between those three, and anything derived from the reported width by a
  * rule stated here.
+ *
+ * `stripWidth` is the one field with no second reading at all: the renderer does NOT report the
+ * strip's insets through onGeometryChange - App.css positions the buttons and the renderer derives
+ * the strip's bounds from the same two constants - so this is derived from the reported canvas width
+ * and those constants, and nothing here can catch both sides moving together. What can is
+ * test/composerCanvasCss.test.ts, which checks those constants against the stylesheet's own
+ * `2.2rem`/`0.2rem`.
  */
 interface Geometry {
-    /** the width of both canvases, notes and timeline */
+    /** the canvas' width - the notes region spans all of it */
     canvasWidth: number
-    /** the height of the notes canvas */
+    /** the DRAWN STRIP's width: the canvas less the two ends the three DOM buttons stand on */
+    stripWidth: number
+    /** the canvas' whole height: `height + timelinePadding * 2 + timelineHeight` */
+    canvasHeight: number
+    /** the height of the NOTES REGION, which is the top part of the canvas */
     height: number
     columnWidth: number
     /** one display row, i.e. height / NOTES_PER_COLUMN */
     rowHeight: number
+    /** the band of app background above and below the strip - one row of it sits under the notes */
+    timelinePadding: number
     timelineHeight: number
 }
 
@@ -944,7 +1028,9 @@ interface PaintedScene {
         canvasStyle: string
         /**
          * Which element the canvas is actually a child of, or DETACHED. The scene graph says what
-         * would be drawn; this says whether it reaches the page at all.
+         * would be drawn; this says whether it reaches the page at all. There is ONE canvas since
+         * the timeline moved onto it, so this covers the timeline too - the strip's own place on
+         * that canvas is `timeline.strip` below.
          */
         canvasParent: string
         /** ascending column order; empty while the stage is hidden, which draws nothing */
@@ -958,10 +1044,15 @@ interface PaintedScene {
         playhead: PaintedTimelineChild
     }
     timeline: {
-        /** same rule as the notes canvas above */
-        canvasParent: string
-        /** the timeline Application's stage: the content container and the viewport hang off it */
+        /** the shared stage, the same object notes.stage describes - the strip hangs off it */
         stage: PaintedRoot
+        /**
+         * THE STRIP'S PLACE ON THE CANVAS: the root carrying the whole mini-timeline's offset, so
+         * everything below it stays in strip-local coordinates. It is what says the timeline is on
+         * the canvas at ALL, and where - the reading that replaced the timeline canvas' own
+         * `canvasParent` when the two canvases were merged.
+         */
+        strip: PaintedRoot
         /** the container the content below hangs off */
         container: PaintedRoot
         /** in draw order: the background, the tools-selection band if any, then the markers */
@@ -993,12 +1084,16 @@ interface Harness {
      * would be invisible to a reading that trusted it.
      */
     scrollPosition(): number
-    /** How many times the notes Application has been asked to render, ever. */
-    notesRenders(): number
-    /** How many times the timeline Application has been asked to render, ever. */
-    timelineRenders(): number
+    /** How many times the Application has been asked to render, ever. */
+    renders(): number
     /**
-     * The notes Application's frame loop, as counters - see the FakeTicker. This is the whole of
+     * The column container's x as each render saw it - see FakeApplication.renderedX. Read through
+     * the harness rather than by indexing pixi.applications, so a test cannot silently pick up a
+     * leaked Application instead of this one's.
+     */
+    renderedX(): number[]
+    /**
+     * The Application's frame loop, as counters - see the FakeTicker. This is the whole of
      * what "no per-frame work" is stated in.
      */
     frameLoop(): {started: boolean, maxFPS: number, frames: number, emits: number, stops: number}
@@ -1015,12 +1110,36 @@ interface Harness {
     geometry(): Geometry
     /** The ComposerCache the views currently hold textures from. */
     currentCache(): ComposerCache
-    /** Press a pointer onto the notes stage at a canvas x. */
-    pressPointerOverNotes(globalX: number): void
+    /**
+     * WHETHER A POINT ON THE NOTES CANVAS IS ROUTED to the stage's three handlers at all, by asking
+     * the hitarea the renderer installed. Everything else here reaches those handlers by emitting
+     * straight at the container, which is the shape of a pointer that has ALREADY been routed - so
+     * this is the only reading that can see the margins where the song has run out being dead.
+     *
+     * Canvas coordinates in, the same as every other pointer helper takes; the container's own
+     * offset is subtracted here because that is what pixi does to produce the local point it hands
+     * to `contains`.
+     */
+    pointerReachesNotesStage(canvasX: number, canvasY?: number): boolean
+    /**
+     * The twin of the above for the mini-timeline strip, which shares the canvas and is hit-tested
+     * FIRST. Canvas coordinates in; both the strip's own offset onto the canvas and the content
+     * container's are subtracted here, because that is what pixi's hitPruneFn does (it inverts the
+     * container's world transform before calling `contains`). Defaults to the middle of the strip.
+     */
+    pointerReachesTimelineStrip(canvasX: number, canvasY?: number): boolean
+    /**
+     * Press a pointer onto the notes stage at a canvas x.
+     *
+     * `pointerId` defaults to PRIMARY_POINTER, so every row that is about ONE gesture reads as it
+     * always did; passing SECOND_POINTER is how the concurrent-pointer rows put a second finger (or
+     * a second mouse button - pixi dispatches a pointerdown for each) on the canvas.
+     */
+    pressPointerOverNotes(globalX: number, pointerId?: number): void
     /** Move a pressed pointer across the notes stage to a canvas x. */
-    movePointerOverNotes(globalX: number): void
+    movePointerOverNotes(globalX: number, pointerId?: number): void
     /** Release a pointer over the notes stage at a canvas x, the way a click on a column arrives. */
-    releasePointerOverNotes(globalX: number): void
+    releasePointerOverNotes(globalX: number, pointerId?: number): void
     /** A wheel event on the notes canvas ELEMENT, which is where that listener is registered. */
     wheelOverNotes(deltaY: number): void
     /**
@@ -1028,11 +1147,17 @@ interface Harness {
      * and its own rule (absolute rather than anchored - see ComposerRenderer.handleTimelineSlide).
      * Everything else in this file reaches the timeline as scene description only.
      */
-    pressPointerOverTimeline(globalX: number): void
-    movePointerOverTimeline(globalX: number): void
-    releasePointerOverTimeline(globalX: number): void
-    /** A window-level pointerup, which is how a release outside the canvas reaches the renderer. */
-    releasePointerOutsideTheCanvas(): void
+    pressPointerOverTimeline(globalX: number, pointerId?: number): void
+    movePointerOverTimeline(globalX: number, pointerId?: number): void
+    releasePointerOverTimeline(globalX: number, pointerId?: number): void
+    /**
+     * A window-level pointerup, which is how a release outside the canvas reaches the renderer.
+     *
+     * With NO id it dispatches a plain Event, which names no pointer - the shape a `blur` has, and
+     * the one that must cancel whatever is running. With an id it names that pointer, which is how
+     * the concurrent rows state that a second finger's release does not end the first one's drag.
+     */
+    releasePointerOutsideTheCanvas(pointerId?: number): void
     /**
      * A native pointercancel: the OS taking the gesture away (an edge swipe, palm rejection). pixi
      * delivers no event of its own for it, so this is the window listener's alone to handle.
@@ -1040,7 +1165,18 @@ interface Harness {
     cancelPointer(): void
     /** Every selectColumn the renderer has asked for, in call order. */
     selectColumnCalls: {index: number, ignoreAudio?: boolean}[]
-    resize(): Promise<void>
+    resize(body?: {width: number, height: number}): Promise<void>
+    /**
+     * The geometry as it stood the instant init() resolved - BEFORE the 50ms cache debounce, which
+     * is the other thing that reports it. It is the only reading that can tell the two apart.
+     */
+    geometryAtInit(): {width: number, height: number, timelinePadding: number, timelineHeight: number}
+    /**
+     * Where the strip sat the instant init() resolved, for the same reason as the above: init()
+     * positions it, and recalculateCacheAndSizes positions it again 50ms later, so this is the only
+     * reading that can tell the two apart.
+     */
+    stripYAtInit(): number
     destroy(): void
 }
 
@@ -1143,9 +1279,8 @@ function describeColumn(
  * nothing with the first but the song and props objects it reads its state out of.
  */
 async function mount(context: Context = makeContext()): Promise<Harness> {
-    const notesEl = document.createElement('div')
-    const timelineEl = document.createElement('div')
-    document.body.append(notesEl, timelineEl)
+    const canvasEl = document.createElement('div')
+    document.body.append(canvasEl)
     const state = (): ComposerRendererState => ({
         columns: context.song.columns,
         structureVersion: context.song.structureVersion,
@@ -1163,39 +1298,84 @@ async function mount(context: Context = makeContext()): Promise<Harness> {
         lookaheadMs: context.props.lookaheadMs,
     })
     const appsBefore = pixi.applications.length
-    //the canvas width, taken from the callback the Svelte template takes it from - see Geometry
+    //the canvas geometry, taken from the callback the Svelte template takes it from - see Geometry.
+    //The template needs all four: the width sizes the wrapper, and the other three are where it
+    //absolutely positions the three timeline buttons over the strip the canvas draws.
     let reportedWidth = 0
+    let reportedHeight = 0
+    let reportedPadding = 0
+    let reportedTimelineHeight = 0
     const selectColumnCalls: {index: number, ignoreAudio?: boolean}[] = []
-    const renderer = new ComposerRenderer(notesEl, timelineEl, state(), {
+    const renderer = new ComposerRenderer(canvasEl, state(), {
         selectColumn: (index, ignoreAudio) => {
             selectColumnCalls.push({index, ignoreAudio})
         },
         toggleBreakpoint: () => {},
         onGeometryChange: reported => {
             reportedWidth = reported.width
+            reportedHeight = reported.height
+            reportedPadding = reported.timelinePadding
+            reportedTimelineHeight = reported.timelineHeight
         },
     })
     await renderer.init()
+    //TAKEN BEFORE THE DEBOUNCE BELOW, which is the whole point of it: recalculateCacheAndSizes
+    //reports the same four numbers 50ms later, so a reading taken after the wait cannot tell
+    //init()'s own notifyGeometry() from that one. The Svelte template renders the timeline controls
+    //only once this report has arrived, so what this pins is that they arrive with the canvas
+    //rather than 50ms after it.
+    const reportedAtInit = {
+        width: reportedWidth,
+        height: reportedHeight,
+        timelinePadding: reportedPadding,
+        timelineHeight: reportedTimelineHeight,
+    }
+    //...and WHAT THE CANVAS LOOKS LIKE at that same instant, for the same reason. Three separate
+    //things now decide this 50ms window and no reading taken after it can see any of them: init()
+    //reports the geometry the three DOM buttons are placed from, drawTimelineStage paints the
+    //strip's background bar whether or not a cache exists, and init() positions the strip. Drop the
+    //last of those and the bar and the viewport outline paint across the TOP of the canvas until
+    //the debounce fires - on every mount and every {#key columnsPerCanvas} remount - while the
+    //buttons sit correctly 489px lower. See 'the strip is under the notes region before the cache
+    //debounce'.
+    const [appAtInit] = pixi.applications.slice(appsBefore)
+    const stripYAtInit = appAtInit.stage.children[2].y
     //REQUIRED: init()'s theme callback schedules the ComposerCache behind a 50ms debounce. Without
     //waiting it out there is no cache, drawNotesStage early-returns, and every counter here reads
     //0 - which looks exactly like a perfectly optimised renderer.
     await vi.advanceTimersByTimeAsync(120)
 
-    //init() builds the notes Application first and the timeline one second; the shape assertions
-    //below are what makes that ordering assumption fail loudly if it is ever reversed
-    const [notesApp, timelineApp] = pixi.applications.slice(appsBefore)
-    expect(notesApp.stage.children).toHaveLength(2)
-    expect(timelineApp.stage.children).toHaveLength(2)
-    const notesColumns = notesApp.stage.children[0]
-    //the playhead is the notes stage's OTHER child, a persistent Graphics added AFTER the columns
-    //so it draws over them; that order is the claim, since a line under the columns is invisible
-    const playhead: SceneNode = notesApp.stage.children[1]
+    //ONE Application, whose stage carries the whole composer in THIS order, every index of which is
+    //load-bearing:
+    //  [0] the column container, because FakeApplication.render pushes children[0].x into renderedX
+    //      - the only channel for "the frame rendered the offset it computed" - and because it has
+    //      to be UNDER the playhead;
+    //  [1] the playhead, a persistent Graphics added AFTER the columns so it draws over them; a line
+    //      under the columns is invisible;
+    //  [2] the timeline strip, LAST, because pixi's EventBoundary walks children in REVERSE and
+    //      returns on the first hit - so being last is what makes the strip decide a pointer before
+    //      the notes container sees it. Draw order is free (the two regions never overlap in y), so
+    //      hit order is the whole of why it is here.
+    const [app] = pixi.applications.slice(appsBefore)
+    expect(app.stage.children).toHaveLength(3)
+    const notesColumns = app.stage.children[0]
+    const playhead: SceneNode = app.stage.children[1]
     expect(playhead.kind).toBe('graphics')
-    const timelineContent = timelineApp.stage.children[0]
-    //the viewport outline is the timeline stage's OTHER child, a persistent Graphics; it is the one
+    const strip = app.stage.children[2]
+    expect(strip.kind).toBe('containers')
+    expect(strip.children).toHaveLength(3)
+    const timelineContent = strip.children[0]
+    //the viewport outline is the strip's SECOND child, a persistent Graphics; it is the one
     //Graphics outside the pool that gets cleared, and columnPaints subtracts it by identity
-    const viewport: SceneNode = timelineApp.stage.children[1]
+    const viewport: SceneNode = strip.children[1]
     expect(viewport.kind).toBe('graphics')
+    //...and [2] is the outline's CLIP - a Graphics that never renders, because pixi takes a mask out
+    //of the build while it is one. A sibling and not a child of the outline, which is moved every
+    //frame; see initViewportClip. What this file can see of it is the shape it is cut to and that
+    //the outline points at it - not that pixi then stencils anything, which needs a GPU.
+    const viewportClip: SceneNode = strip.children[2]
+    expect(viewportClip.kind).toBe('graphics')
+    expect(viewport.mask).toBe(viewportClip)
     //jsdom measures nothing, so the canvas width comes from a mocked body rect through the
     //renderer's own computeCanvasSize. A zero here would make every timeline expectation below
     //compare zero against zero.
@@ -1203,7 +1383,7 @@ async function mount(context: Context = makeContext()): Promise<Harness> {
 
     const currentCache = (): ComposerCache => {
         for (let i = caches.length - 1; i >= 0; i--) {
-            if (caches[i].app === notesApp) return caches[i].cache
+            if (caches[i].app === app) return caches[i].cache
         }
         throw new Error('this renderer has built no ComposerCache')
     }
@@ -1216,12 +1396,19 @@ async function mount(context: Context = makeContext()): Promise<Harness> {
     }
 
     const geometry = (): Geometry => {
-        const [notesWidth, height] = lastResize(notesApp)
-        const [timelineWidth, timelineHeight] = lastResize(timelineApp)
-        //THE CANVASES THE RENDERER SIZED, against the width it REPORTED. Every timeline rule below
+        const [canvasWidth, canvasHeight] = lastResize(app)
+        //THE CANVAS THE RENDERER SIZED, against the width it REPORTED. Every timeline rule below
         //is stated in terms of the reported width; a scene drawn full-width onto a narrower canvas
         //is a disagreement here rather than a scene that happens to look right in the description.
-        expect([notesWidth, timelineWidth]).toEqual([reportedWidth, reportedWidth])
+        expect(canvasWidth).toBe(reportedWidth)
+        //THE SPLIT, reported rather than read back off the one resize. With two canvases the notes
+        //height and the timeline height were two independent readings and their disagreement was
+        //the check; with one canvas there is a single resize, so the renderer REPORTS where the
+        //split falls and this is what puts the reading back to three-numbers-must-agree - the
+        //report, the resize, and the cache below.
+        const height = reportedHeight
+        const timelineHeight = reportedTimelineHeight
+        expect(height + reportedPadding * 2 + timelineHeight).toBe(canvasHeight)
         //...and the column geometry, DERIVED from that width by the rule computeCanvasSize states,
         //rather than read back off the cache the renderer built - see Geometry
         const columnWidth = nearestEven(reportedWidth / COLUMNS_PER_CANVAS)
@@ -1239,12 +1426,22 @@ async function mount(context: Context = makeContext()): Promise<Harness> {
             noteHeight: cache.noteHeight,
             timelineHeight: cache.timelineHeight,
         }).toEqual({width: columnWidth, height, noteHeight: rowHeight, timelineHeight})
-        return {canvasWidth: reportedWidth, height, columnWidth, rowHeight, timelineHeight}
+        return {
+            canvasWidth: reportedWidth,
+            //DERIVED ONLY - see Geometry. The renderer reports no inset, so this is the reported
+            //canvas width less the two constants it draws the strip inside of.
+            stripWidth: reportedWidth - TIMELINE_INSET_LEFT - TIMELINE_INSET_RIGHT,
+            canvasHeight,
+            height,
+            columnWidth,
+            rowHeight,
+            timelinePadding: reportedPadding,
+            timelineHeight,
+        }
     }
 
     const measure = () => ({
-        notesRenders: notesApp.renders,
-        timelineRenders: timelineApp.renders,
+        renders: app.renders,
         graphicsClears: counters.graphicsClears,
         viewportClears: viewport.clears,
         //the third Graphics outside the pool, subtracted by identity for the same reason the
@@ -1320,10 +1517,7 @@ async function mount(context: Context = makeContext()): Promise<Harness> {
             //ordering is a claim in its own right).
             expect(paintedColumns).toHaveLength(columnPaints)
             return {
-                renders: {
-                    notes: after.notesRenders - before.notesRenders,
-                    timeline: after.timelineRenders - before.timelineRenders,
-                },
+                renders: after.renders - before.renders,
                 columnPaints,
                 paintedColumns,
                 timelineRebuilds: after.timelineClears - before.timelineClears,
@@ -1343,19 +1537,19 @@ async function mount(context: Context = makeContext()): Promise<Harness> {
             const columnWidth = geometry().columnWidth
             return {
                 notes: {
-                    stage: describeRoot(notesApp.stage),
+                    stage: describeRoot(app.stage),
                     x: notesColumns.x,
                     y: notesColumns.y,
                     alpha: notesColumns.alpha,
                     visible: notesColumns.visible,
-                    clearColor: notesApp.renderer.background.color,
-                    //READ OUT OF THE DOM, not off the Application. Taking it from notesApp.canvas
+                    clearColor: app.renderer.background.color,
+                    //READ OUT OF THE DOM, not off the Application. Taking it from app.canvas
                     //describes a canvas that may not be on the page at all: deleting the
                     //appendChild in init() renders the whole composer to a detached element - a
                     //blank screen - and every other assertion in this file still passes, because
                     //they all describe the scene graph rather than where it is mounted.
-                    canvasParent: notesApp.canvas.parentElement === notesEl ? 'notes' : 'DETACHED',
-                    canvasStyle: notesApp.canvas.style.cssText,
+                    canvasParent: app.canvas.parentElement === canvasEl ? 'canvas' : 'DETACHED',
+                    canvasStyle: app.canvas.style.cssText,
                     //a hidden stage draws nothing, so the views it still holds are not part of the
                     //scene. They are also what the pool deliberately keeps around while the audio
                     //recorder has the canvas hidden - see ComposerRenderer.drawNotesStage.
@@ -1369,9 +1563,8 @@ async function mount(context: Context = makeContext()): Promise<Harness> {
                     playhead: describeTimelineChild(playhead, slots),
                 },
                 timeline: {
-                    //same rule as the notes canvas above
-                    canvasParent: timelineApp.canvas.parentElement === timelineEl ? 'timeline' : 'DETACHED',
-                    stage: describeRoot(timelineApp.stage),
+                    stage: describeRoot(app.stage),
+                    strip: describeRoot(strip),
                     container: describeRoot(timelineContent),
                     content: timelineContent.children.map(child =>
                         describeTimelineChild(child, slots)
@@ -1380,6 +1573,15 @@ async function mount(context: Context = makeContext()): Promise<Harness> {
                 },
             }
         },
+        /**
+         * The outline's clip, DELIBERATELY OUTSIDE paintedScene: a mask draws nothing, so a scene
+         * description that carried it would be describing pixels that never exist. What it is worth
+         * asserting is the shape it cuts and that the outline is the node pointed at it.
+         */
+        viewportClip: () => ({
+            clipsTheOutline: viewport.mask === viewportClip,
+            ops: [...(viewportClip.ops ?? [])],
+        }),
         columnChildKinds() {
             return notesColumns.children.map(column => column.children.map(child => child.kind))
         },
@@ -1387,60 +1589,95 @@ async function mount(context: Context = makeContext()): Promise<Harness> {
             const {canvasWidth, columnWidth} = geometry()
             return (canvasWidth / 2 - notesColumns.x) / columnWidth
         },
-        notesRenders: () => notesApp.renders,
-        timelineRenders: () => timelineApp.renders,
+        renders: () => app.renders,
+        renderedX: () => app.renderedX,
         frameLoop: () => ({
-            started: notesApp.ticker.started,
-            maxFPS: notesApp.ticker.maxFPS,
-            frames: notesApp.ticker.frames,
-            emits: notesApp.ticker.emits,
-            stops: notesApp.ticker.stops,
+            started: app.ticker.started,
+            maxFPS: app.ticker.maxFPS,
+            frames: app.ticker.frames,
+            emits: app.ticker.emits,
+            stops: app.ticker.stops,
         }),
         msSinceLastFrame() {
-            const {lastEmitMs} = notesApp.ticker
+            const {lastEmitMs} = app.ticker
             if (Number.isNaN(lastEmitMs)) throw new Error('the frame loop has never emitted')
             return performance.now() - lastEmitMs
         },
         columnsAreARenderGroup: () => notesColumns.isRenderGroup,
         geometry,
         currentCache,
-        pressPointerOverNotes(globalX: number) {
-            notesColumns.emit('pointerdown', {globalX})
+        pointerReachesNotesStage(canvasX: number, canvasY = geometry().height / 2) {
+            const hitArea = notesColumns.hitArea as {contains(x: number, y: number): boolean}
+            return hitArea.contains(canvasX - notesColumns.x, canvasY - notesColumns.y)
         },
-        movePointerOverNotes(globalX: number) {
-            notesColumns.emit('pointermove', {globalX})
+        pointerReachesTimelineStrip(
+            canvasX: number,
+            canvasY = strip.y + geometry().timelineHeight / 2
+        ) {
+            const hitArea = timelineContent.hitArea as {contains(x: number, y: number): boolean}
+            return hitArea.contains(
+                canvasX - strip.x - timelineContent.x,
+                canvasY - strip.y - timelineContent.y
+            )
         },
-        releasePointerOverNotes(globalX: number) {
-            notesColumns.emit('pointerup', {globalX})
+        pressPointerOverNotes(globalX: number, pointerId = PRIMARY_POINTER) {
+            notesColumns.emit('pointerdown', {globalX, pointerId})
+        },
+        movePointerOverNotes(globalX: number, pointerId = PRIMARY_POINTER) {
+            notesColumns.emit('pointermove', {globalX, pointerId})
+        },
+        releasePointerOverNotes(globalX: number, pointerId = PRIMARY_POINTER) {
+            notesColumns.emit('pointerup', {globalX, pointerId})
         },
         wheelOverNotes(deltaY: number) {
-            notesApp.canvas.dispatchEvent(new WheelEvent('wheel', {deltaY}))
+            app.canvas.dispatchEvent(new WheelEvent('wheel', {deltaY}))
         },
-        pressPointerOverTimeline(globalX: number) {
-            timelineContent.emit('pointerdown', {globalX})
+        pressPointerOverTimeline(globalX: number, pointerId = PRIMARY_POINTER) {
+            timelineContent.emit('pointerdown', {globalX, pointerId})
         },
-        movePointerOverTimeline(globalX: number) {
-            timelineContent.emit('pointermove', {globalX})
+        movePointerOverTimeline(globalX: number, pointerId = PRIMARY_POINTER) {
+            timelineContent.emit('pointermove', {globalX, pointerId})
         },
-        releasePointerOverTimeline(globalX: number) {
-            timelineContent.emit('pointerup', {globalX})
+        releasePointerOverTimeline(globalX: number, pointerId = PRIMARY_POINTER) {
+            timelineContent.emit('pointerup', {globalX, pointerId})
         },
-        releasePointerOutsideTheCanvas() {
-            window.dispatchEvent(new Event('pointerup'))
+        releasePointerOutsideTheCanvas(pointerId?: number) {
+            //a plain Event where no id is asked for, which is what the renderer's own `blur` branch
+            //receives - an event that names NO pointer must cancel whatever is running
+            window.dispatchEvent(
+                pointerId === undefined
+                    ? new Event('pointerup')
+                    : new PointerEvent('pointerup', {pointerId})
+            )
         },
         cancelPointer() {
             window.dispatchEvent(new Event('pointercancel'))
         },
         selectColumnCalls,
-        async resize() {
+        geometryAtInit: () => reportedAtInit,
+        stripYAtInit: () => stripYAtInit,
+        /**
+         * A window resize, optionally MOVING THE BODY the renderer measures itself against.
+         *
+         * Without `body` this only re-runs the path: computeCanvasSize() reads document.body's rect,
+         * which beforeEach pins at 1920x1080, so every size it recomputes is the size already in
+         * hand and no geometry claim about the resize path means anything. Both of the obligations
+         * the merged canvas introduced - assigning width/height BEFORE renderer.resize(), which
+         * reads them through canvasHeight(), and repositioning the strip AFTER - survive deletion
+         * unless the size actually changes. See 'follows the body it is measured against'.
+         */
+        async resize(body?: {width: number, height: number}) {
+            if (body) {
+                vi.spyOn(document.body, 'getBoundingClientRect')
+                    .mockReturnValue(new DOMRect(0, 0, body.width, body.height))
+            }
             window.dispatchEvent(new Event('resize'))
             //the same 50ms debounce as init()'s, plus room for the draw it ends in
             await vi.advanceTimersByTimeAsync(120)
         },
         destroy() {
             renderer.destroy()
-            notesEl.remove()
-            timelineEl.remove()
+            canvasEl.remove()
         },
     }
 }
@@ -1681,10 +1918,20 @@ function expectedCanvasStyle(): string {
  * The rules:
  *  - its stage and its content container are roots, so both sit AT_ORIGIN and everything below is
  *    stated relative to them;
- *  - the whole song spans the canvas width, so one song column is `canvasWidth / columns.length`
- *    wide here (a different quantity from the notes stage's columnWidth, which is a fixed size per
- *    column and scrolls);
- *  - the background covers the strip, in the timeline layer colour;
+ *  - the STRIP between them is the one root that is deliberately not at the origin: it carries the
+ *    whole mini-timeline down to `height + timelinePadding`, i.e. the padding row below the notes
+ *    region, AND right to `TIMELINE_INSET_LEFT`, which is what keeps everything under it - the
+ *    content, the hitarea's bounds, the outline's 1.5px inset - written in strip-local coordinates;
+ *  - the whole song spans the STRIP, which is the canvas less the two ends the three DOM timeline
+ *    buttons stand on (App.css positions them; composerCanvasGeometry states their footprint). So
+ *    one song column is `stripWidth / columns.length` wide here - a different quantity from the
+ *    notes stage's columnWidth, which is a fixed size per column and scrolls;
+ *  - what deliberately stays CANVAS-based even on this stage is anything answering "how much of the
+ *    song is the canvas showing": `columnsOnScreen` below, and the `canvasWidth / 2 / columnWidth`
+ *    half of the outline's x. Those describe the notes region, and scaling them by the inset too
+ *    would make the outline claim a different set of columns than the canvas holds;
+ *  - the background covers the strip, in the timeline layer colour, with the 0.3rem corner radius
+ *    `.timeline-scroll` used to give the strip's own element;
  *  - a tools selection is a band from its first column to its last;
  *  - a breakpoint marker sits at its column's position, taking the SHORT breakpoint texture - slot
  *    0, where the notes stage's in-column marker is slot 1. (The renderer anchors it at 0.5 so it
@@ -1698,12 +1945,14 @@ function expectedCanvasStyle(): string {
  *    rectangle the user grabs is the rectangle they see.
  */
 function expectedTimeline(context: Context, geometry: Geometry): PaintedScene['timeline'] {
-    const {canvasWidth, columnWidth, timelineHeight} = geometry
+    const {canvasWidth, stripWidth, height, columnWidth, timelinePadding, timelineHeight} = geometry
     const {song, props} = context
-    const timelineColumnWidth = canvasWidth / song.columns.length
+    const timelineColumnWidth = stripWidth / song.columns.length
     const content: PaintedTimelineChild[] = [
         expectedGraphicsChild(0, 0, [
-            ['rect', 0, 0, canvasWidth, timelineHeight],
+            //4.8px is the 0.3rem `.timeline-scroll` gave the strip's element before the strip moved
+            //onto this canvas - with no element under it any more, the fill draws its own corners
+            ['roundRect', 0, 0, stripWidth, timelineHeight, 4.8],
             ['fill', {color: ThemeProvider.layer('primary', 0.1).rgb().rgbNumber()}],
         ]),
     ]
@@ -1722,18 +1971,20 @@ function expectedTimeline(context: Context, geometry: Geometry): PaintedScene['t
     }
     for (const breakpoint of song.breakpoints) {
         //QUIRK, preserved from before the pool and stated at ComposerRenderer.drawTimelineStage: the
-        //markers divide the canvas by `columns.length - 1` where every other value here divides by
+        //markers divide the strip by `columns.length - 1` where every other value here divides by
         //`columns.length`
-        const x = (canvasWidth / (song.columns.length - 1)) * breakpoint
+        const x = (stripWidth / (song.columns.length - 1)) * breakpoint
         content.push(expectedSpriteChild('breakpoints[0]', x, 0))
     }
     //not COLUMNS_PER_CANVAS: the renderer rounds a column to an even number of pixels, so the canvas
     //shows a fraction more or less than the setting asks for
     const columnsOnScreen = canvasWidth / columnWidth
     return {
-        //init() appends each Application's canvas to the element it was constructed with
-        canvasParent: 'timeline',
         stage: AT_ORIGIN,
+        //the one root that is NOT at the origin - see this function's rules. Its x is THE assertion
+        //that pins which container carries the inset: every coordinate below is strip-local because
+        //this one is not.
+        strip: {x: TIMELINE_INSET_LEFT, y: height + timelinePadding, alpha: 1, visible: true},
         container: AT_ORIGIN,
         content,
         viewport: expectedGraphicsChild(
@@ -1741,6 +1992,8 @@ function expectedTimeline(context: Context, geometry: Geometry): PaintedScene['t
             //multiplication of the difference, matching ComposerRenderer.timelineViewport: the
             //comparison against the renderer is exact and a timeline column is not a whole number
             //of pixels, so how the arithmetic associates moves the last bits of the result.
+            //THE TWO SPACES MIX HERE deliberately: the first factor is a STRIP column width, the
+            //subtrahend is how many CANVAS columns fit left of the playhead - see the rules above.
             timelineColumnWidth * (song.selected - canvasWidth / 2 / columnWidth),
             1.5,
             [
@@ -1775,8 +2028,9 @@ function expectedTimeline(context: Context, geometry: Geometry): PaintedScene['t
  * see the theme test at the bottom of this file.
  */
 /**
- * The playhead: a 2px red bar spanning the canvas' height, centred on the canvas' horizontal
- * middle, at the stage origin and never moved - and SHOWN ONLY WITH SMOOTH SCROLLING ON, which is
+ * The playhead: a 2px red bar spanning the NOTES REGION's height - which is where the canvas ended
+ * before the mini-timeline moved onto it, and running the bar any lower would put it through the
+ * strip - centred on the canvas' horizontal middle, at the stage origin and never moved - and SHOWN ONLY WITH SMOOTH SCROLLING ON, which is
  * the other half of the mutual exclusion expectedWindow's overlay rule states.
  *
  * The DRAWING is the same in both modes and this says so: the rectangle is drawn once at init and
@@ -1837,8 +2091,8 @@ function expectedScene(
             visible: true,
             clearColor: ThemeProvider.get('primary').rgb().rgbNumber(),
             canvasStyle: expectedCanvasStyle(),
-            //init() appends each Application's canvas to the element it was constructed with
-            canvasParent: 'notes',
+            //init() appends the one Application's canvas to the element it was constructed with
+            canvasParent: 'canvas',
             columns: expectedWindow(context, geometry, accent),
             playhead: expectedPlayhead(context, geometry, accent),
         },
@@ -2211,7 +2465,7 @@ describe('ComposerRenderer repaints from a diff of two moments, on one stable so
                 const repainted = harness.push()
                 const paintedColumns = expectedColumnPaints(testCase, harness)
                 expect(repainted).toEqual({
-                    renders: {notes: testCase.renders, timeline: testCase.renders},
+                    renders: testCase.renders,
                     columnPaints: paintedColumns.length,
                     paintedColumns,
                     timelineRebuilds: testCase.timelineRebuilds,
@@ -2683,7 +2937,7 @@ describe('the pooled column views', () => {
                 //of the song - is the one painted
                 const drawn = harness.drawnColumns()
                 expect(harness.push()).toEqual({
-                    renders: {notes: 1, timeline: 1},
+                    renders: 1,
                     columnPaints: 1,
                     paintedColumns: [drawn[drawn.length - 1]],
                     timelineRebuilds: 0,
@@ -2871,6 +3125,689 @@ describe('the notes scroll offset and the click handler are inverses', () => {
     })
 })
 
+/**
+ * THE MARGINS WHERE THE SONG HAS RUN OUT. The columns start AT the playhead rather than at the left
+ * edge, so the canvas is wider than the strip they occupy wherever the scroll cannot go any further:
+ * the left half at position 0, the right half at the last column, and both at once on any song
+ * shorter than the screen - which is every song that has just been created. Those margins used to
+ * answer no pointer at all, so a finger landing on them did nothing while the wheel over the very
+ * same pixels scrolled (that listener is on the canvas ELEMENT and never consulted a hitarea).
+ *
+ * Stated through the hitarea rather than by emitting at the container, because emitting IS the
+ * routed pointer - every other pointer test in this file starts after the decision this one is
+ * about. The last row closes the loop by doing both: routed first, then driven.
+ */
+describe('what the notes stage answers a pointer on', () => {
+    /** Advance far enough for at least one capped frame to have been emitted. */
+    const frame = () => vi.advanceTimersByTimeAsync(64)
+
+    async function mountStopped(prepare?: (song: ComposedSong) => void) {
+        const context = makeContext()
+        //stopped: a running transport is a second writer of the scroll position, and every row here
+        //needs the canvas to still be where `selected` put it when the hitarea is asked
+        context.props.isPlaying = false
+        prepare?.(context.song)
+        const harness = await mount(context)
+        harness.push()
+        return harness
+    }
+
+    /** Where the drawn columns begin and end ON THE CANVAS - the strip the hitarea used to be. */
+    function columnStrip(harness: Harness): {left: number, right: number} {
+        const {columnWidth} = harness.geometry()
+        const left = harness.paintedScene().notes.x
+        return {left, right: left + harness.context.song.columns.length * columnWidth}
+    }
+
+    it('the empty canvas before the first column, which is the left half of it at position 0', async () => {
+        const harness = await mountStopped(song => (song.selected = 0))
+        try {
+            const strip = columnStrip(harness)
+            //the margin exists at all - without this the row below would pass on a canvas that had
+            //no empty part to answer for
+            expect(strip.left).toBeGreaterThan(0)
+            expect(harness.scrollPosition()).toBe(0)
+            expect(harness.pointerReachesNotesStage(strip.left / 2)).toBe(true)
+            //and the very first pixel of the canvas, since the bound is the canvas and not a margin
+            expect(harness.pointerReachesNotesStage(0)).toBe(true)
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    it('the empty canvas after the last column, which is the right half of it at the end', async () => {
+        const harness = await mountStopped(song => (song.selected = song.columns.length - 1))
+        try {
+            const {canvasWidth} = harness.geometry()
+            const strip = columnStrip(harness)
+            expect(strip.right).toBeLessThan(canvasWidth)
+            expect(harness.pointerReachesNotesStage((strip.right + canvasWidth) / 2)).toBe(true)
+            expect(harness.pointerReachesNotesStage(canvasWidth)).toBe(true)
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    it('a song shorter than the screen, which is surrounded by margin at the only position it has', async () => {
+        //six columns of a twenty-column canvas: the motivating case, since a song is created long
+        //before it is long, and until it fills the screen most of the canvas is margin
+        const harness = await mountStopped(song => {
+            song.removeColumns(song.columns.length - 6, 6)
+            song.selected = 0
+        })
+        try {
+            const {canvasWidth} = harness.geometry()
+            const strip = columnStrip(harness)
+            expect(harness.context.song.columns).toHaveLength(6)
+            expect(strip.right).toBeLessThan(canvasWidth)
+            expect(harness.pointerReachesNotesStage(strip.left / 2)).toBe(true)
+            expect(harness.pointerReachesNotesStage((strip.right + canvasWidth) / 2)).toBe(true)
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    it('the columns themselves, and every height of the canvas', async () => {
+        const harness = await mountStopped()
+        try {
+            const {canvasWidth, height} = harness.geometry()
+            const strip = columnStrip(harness)
+            //the playhead: this song is far longer than the screen and scrolled to its middle, so
+            //the line has a column under it - asserted, since the strip runs off both edges here
+            const overAColumn = canvasWidth / 2
+            expect(overAColumn).toBeGreaterThan(strip.left)
+            expect(overAColumn).toBeLessThan(strip.right)
+            expect(harness.pointerReachesNotesStage(overAColumn, 0)).toBe(true)
+            expect(harness.pointerReachesNotesStage(overAColumn, height)).toBe(true)
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    it('NOT a point off the canvas, while no pointer is down', async () => {
+        //THE REASON THE BOUND SURVIVED. pixi registers its pointerup on globalThis rather than on
+        //the canvas element, so releasing a button anywhere else in the composer is hit-tested
+        //against this container too; answering it would reach handleStageUp as a click and both
+        //select and SOUND whichever end column the clamp landed on.
+        const harness = await mountStopped()
+        try {
+            const {canvasWidth, height} = harness.geometry()
+            expect(harness.pointerReachesNotesStage(-1)).toBe(false)
+            expect(harness.pointerReachesNotesStage(canvasWidth + 1)).toBe(false)
+            expect(harness.pointerReachesNotesStage(canvasWidth / 2, -1)).toBe(false)
+            expect(harness.pointerReachesNotesStage(canvasWidth / 2, height + 1)).toBe(false)
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    it('everything, once a pointer is down, so a drag that leaves the canvas still ends', async () => {
+        const harness = await mountStopped()
+        try {
+            const {canvasWidth, height} = harness.geometry()
+            harness.pressPointerOverNotes(canvasWidth / 2)
+            expect(harness.pointerReachesNotesStage(-1000)).toBe(true)
+            expect(harness.pointerReachesNotesStage(canvasWidth + 1000, height + 1000)).toBe(true)
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    it('and a drag begun in the margin scrolls, on the same three handlers a drag over a column uses', async () => {
+        const harness = await mountStopped(song => (song.selected = 0))
+        try {
+            const {columnWidth} = harness.geometry()
+            //the press lands where nothing is drawn, which is the whole point of the row
+            const start = columnStrip(harness).left / 2
+            expect(harness.pointerReachesNotesStage(start)).toBe(true)
+
+            harness.pressPointerOverNotes(start)
+            harness.movePointerOverNotes(start - columnWidth * 2)
+            await frame()
+            //dragging leftwards from a standstill at column 0 pulls the song forwards under the
+            //line, exactly as it would have from a press two columns to the right of here
+            expect(harness.scrollPosition()).toBe(2)
+            expect(harness.selectColumnCalls).toEqual([{index: 2, ignoreAudio: true}])
+        } finally {
+            harness.destroy()
+        }
+    })
+})
+
+/**
+ * WHICH SURFACE A POINTER ON THE MERGED CANVAS REACHES - the regression net for the timeline moving
+ * onto the notes canvas, and the thing none of the other pointer helpers in this file can see: they
+ * emit straight at a container, which is the shape of a pointer that has ALREADY been routed.
+ *
+ * There is one EventBoundary now. pixi's hitTestRecursive walks a container's children in REVERSE
+ * and returns on the first hit, and the strip is the stage's LAST child (mount() asserts that
+ * order), so the strip is asked first and the notes container is reached only when it declined.
+ * Every row below is an instance of that one sentence.
+ */
+describe('which surface a pointer on the merged canvas reaches', () => {
+    async function mountStoppedComposer() {
+        const context = makeContext()
+        //stopped, for the same reason the notes-stage rows above are: a running transport is a
+        //second writer of the scroll position
+        context.props.isPlaying = false
+        const harness = await mount(context)
+        harness.push()
+        return harness
+    }
+
+    it('a point in the notes region reaches the stage and not the strip', async () => {
+        const harness = await mountStoppedComposer()
+        try {
+            const {canvasWidth, height} = harness.geometry()
+            const x = canvasWidth / 2
+            expect(harness.pointerReachesNotesStage(x, height / 2)).toBe(true)
+            expect(harness.pointerReachesTimelineStrip(x, height / 2)).toBe(false)
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    it('a point on the strip reaches the strip and NOT the stage, which is what keeps a scrub silent', async () => {
+        const harness = await mountStoppedComposer()
+        try {
+            const {canvasWidth, height, timelinePadding, timelineHeight} = harness.geometry()
+            const x = canvasWidth / 2
+            const y = height + timelinePadding + timelineHeight / 2
+            expect(harness.pointerReachesTimelineStrip(x, y)).toBe(true)
+            //THE GUARD: handleStageUp calls selectColumn WITHOUT ignoreAudio, so a release that
+            //reached the notes stage as well as the strip would SOUND a column on every scrub
+            expect(harness.pointerReachesNotesStage(x, y)).toBe(false)
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    it("the notes stage's bound is the notes region, not the canvas", async () => {
+        const harness = await mountStoppedComposer()
+        try {
+            const {canvasWidth, height, canvasHeight} = harness.geometry()
+            const x = canvasWidth / 2
+            //the last row of the notes region is inside...
+            expect(harness.pointerReachesNotesStage(x, height)).toBe(true)
+            //...and the first row below it is not, though the CANVAS runs on for another
+            //`timelinePadding * 2 + timelineHeight` px
+            expect(harness.pointerReachesNotesStage(x, height + 1)).toBe(false)
+            expect(canvasHeight).toBeGreaterThan(height + 1)
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    it('the two padding rows reach nothing at all, as that div\'s padding did', async () => {
+        const harness = await mountStoppedComposer()
+        try {
+            const {canvasWidth, height, timelinePadding, timelineHeight} = harness.geometry()
+            const x = canvasWidth / 2
+            //TIMELINE_BAND_PADDING is `.timeline-wrapper-bg`'s `padding: 0.2rem 0` moved inside the
+            //canvas, and that div had no listener - so both rows are dead, deliberately
+            const above = height + timelinePadding / 2
+            const below = height + timelinePadding + timelineHeight + timelinePadding / 2
+            expect(harness.pointerReachesNotesStage(x, above)).toBe(false)
+            expect(harness.pointerReachesTimelineStrip(x, above)).toBe(false)
+            expect(harness.pointerReachesNotesStage(x, below)).toBe(false)
+            expect(harness.pointerReachesTimelineStrip(x, below)).toBe(false)
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    it('while a press owns the notes surface the strip answers nothing, anywhere', async () => {
+        const harness = await mountStoppedComposer()
+        try {
+            const {canvasWidth, height, timelinePadding, timelineHeight} = harness.geometry()
+            const stripY = height + timelinePadding + timelineHeight / 2
+            harness.pressPointerOverNotes(canvasWidth / 2)
+            //THE DEFERRAL. The strip is hit-tested BEFORE the notes container, so without it a stage
+            //drag whose pointer wanders down into the strip is claimed here and the drag freezes
+            //until the pointer comes back up.
+            expect(harness.pointerReachesTimelineStrip(canvasWidth / 2, stripY)).toBe(false)
+            //...including at the strip's own left edge, which without the deferral would answer.
+            //NOT x=0: that is inside the buttons' footprint now and would be declined for the inset
+            //reason, so this row would keep passing with the deferral deleted.
+            expect(harness.pointerReachesTimelineStrip(TIMELINE_INSET_LEFT + 10, stripY)).toBe(false)
+            //...while the stage answers everywhere, which is how a drag that leaves the canvas ends
+            expect(harness.pointerReachesNotesStage(canvasWidth / 2, stripY)).toBe(true)
+            expect(harness.pointerReachesNotesStage(-1000, -1000)).toBe(true)
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    it("the strip's hitarea stops where the buttons begin, at both ends", async () => {
+        const harness = await mountStoppedComposer()
+        try {
+            const {canvasWidth, height, timelinePadding, timelineHeight} = harness.geometry()
+            const y = height + timelinePadding + timelineHeight / 2
+            //THE CLAIM: a press where a DOM button stands must not ALSO scrub the song. The button
+            //itself swallows the press (pixi listens on the canvas element and the button is a DOM
+            //sibling over it), but the 3.2px seams between the three margin boxes fall through to
+            //the canvas - and these bounds are what decline them.
+            expect(harness.pointerReachesTimelineStrip(TIMELINE_INSET_LEFT - 1, y)).toBe(false)
+            expect(harness.pointerReachesTimelineStrip(TIMELINE_INSET_LEFT, y)).toBe(true)
+            expect(
+                harness.pointerReachesTimelineStrip(canvasWidth - TIMELINE_INSET_RIGHT, y)
+            ).toBe(true)
+            expect(
+                harness.pointerReachesTimelineStrip(canvasWidth - TIMELINE_INSET_RIGHT + 1, y)
+            ).toBe(false)
+            //...and the notes stage does not pick any of them up either, on its own `y` bound - so
+            //those pixels reach no handler at all, which is what pressing the inert
+            //`.timeline-wrapper` row did before the two canvases were merged
+            for (const x of [
+                TIMELINE_INSET_LEFT - 1,
+                TIMELINE_INSET_LEFT,
+                canvasWidth - TIMELINE_INSET_RIGHT,
+                canvasWidth - TIMELINE_INSET_RIGHT + 1,
+            ]) {
+                expect(harness.pointerReachesNotesStage(x, y)).toBe(false)
+            }
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    it('the strip is drawn at the inset the buttons occupy', async () => {
+        const harness = await mountStoppedComposer()
+        try {
+            const {canvasWidth} = harness.geometry()
+            const {strip, content} = harness.paintedScene().timeline
+            //the background roundRect is the strip's own extent - expectedTimeline compares it too,
+            //but only against a reference derived the same way, so this states it as a CLAIM
+            const background = content[0]
+            expect(background.kind).toBe('graphics')
+            const rect = background.ops.find(
+                (op): op is [string, number, number, number, number, number] =>
+                    Array.isArray(op) && op[0] === 'roundRect'
+            )
+            expect(strip.x).toBe(TIMELINE_INSET_LEFT)
+            expect(rect?.[3]).toBe(canvasWidth - TIMELINE_INSET_LEFT - TIMELINE_INSET_RIGHT)
+            //...AS A LITERAL, not only as the imported constants. Every other assertion in this file
+            //is written in terms of TIMELINE_INSET_LEFT/RIGHT, which makes them all invariant under
+            //the two being SWAPPED - a swap that would draw the strip from 41.6, underneath both
+            //left-hand buttons, and leave 80px of dead canvas at the right where one button stands.
+            //80 is the left band because two buttons stand there and one stands at the right.
+            expect(strip.x).toBe(80)
+            //toBeCloseTo and not toBe: 41.6 is not representable, so the subtraction lands a few
+            //ulps off it. 10 decimals is far tighter than any real drift and far looser than that.
+            expect(canvasWidth - rect![3] - strip.x).toBeCloseTo(41.6, 10)
+            //121.6px = 3 x 2.2rem of button + 5 x 0.2rem, at App.css's declared values. Four of
+            //those five are declared margins (two on the first button, one on the second, whose
+            //`margin-left` is zeroed inline, one trailing the third, whose `margin-left` is `auto`);
+            //the fifth is the clearance in front of the third button, which its auto margin creates
+            //rather than declares.
+            expect(TIMELINE_INSET_LEFT + TIMELINE_INSET_RIGHT).toBe(121.6)
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    it("the viewport outline is clipped to the strip, so it cannot reach into the buttons' bands", async () => {
+        const harness = await mountStoppedComposer()
+        try {
+            const {stripWidth, timelineHeight} = harness.geometry()
+            //THE CLAIM: timelineViewport()'s x is `stripColumnWidth * (scrollPosition -
+            //playheadX / columnWidth)`, which is NEGATIVE for the first half-canvas of columns of
+            //every song - the state a freshly created one opens in - and runs past stripWidth at the
+            //other end. Nothing else on the strip is masked, so before the strip was inset that
+            //overflow ran off the edge of the canvas; now it would run into the two bands the DOM
+            //buttons stand on and show through the 3.2px of bare canvas beside each button.
+            const clip = harness.viewportClip()
+            expect(clip.clipsTheOutline).toBe(true)
+            //the strip's own shape, corner radius included, so the outline is cut by the same arc
+            //the background bar is drawn with
+            expect(clip.ops[0]).toEqual(['roundRect', 0, 0, stripWidth, timelineHeight, 4.8])
+            //WHAT THIS CANNOT SEE: that pixi then stencils anything. jsdom has no GPU, and the fakes
+            //record the mask rather than applying it - so this pins the wiring and the shape, and
+            //the clipping itself rests on pixi's own StencilMask.
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    it('while a timeline drag runs the strip answers everything, anywhere', async () => {
+        const harness = await mountStoppedComposer()
+        try {
+            const {canvasWidth, height} = harness.geometry()
+            harness.pressPointerOverTimeline(canvasWidth / 2)
+            expect(harness.pointerReachesTimelineStrip(-1000, -1000)).toBe(true)
+            expect(harness.pointerReachesTimelineStrip(canvasWidth + 1000, height / 2)).toBe(true)
+            //...and the notes stage is kept out of it by the CHILD ORDER rather than by a clause of
+            //its own: pixi walks the stage's children in reverse and returns on the first hit, the
+            //strip is the last child (mount() states it), so this container is never asked while
+            //the line above answers. A mirror guard in testStageHitarea would be unreachable code.
+            harness.releasePointerOverTimeline(canvasWidth / 2)
+        } finally {
+            harness.destroy()
+        }
+    })
+})
+
+/**
+ * A SECOND CONCURRENT POINTER, which merging the two canvases made reachable for the first time.
+ *
+ * While the timeline had a canvas of its own the two surfaces had an EventBoundary each, and pixi
+ * registers pointerdown on the canvas ELEMENT (node_modules/pixi.js/lib/events/EventSystem.mjs -
+ * pointerdown/touchstart on domElement; only pointermove and pointerup are global), so a press on
+ * one canvas could not be delivered to the other's containers at all. One canvas is one boundary,
+ * and the two ownership guards the merge added are both stated over a hit-tested POINT - `contains`
+ * is handed no pointerId - so each of them routes a second press exactly as if it were the first
+ * one's continuation:
+ *
+ *  - a running scrub makes the strip answer the WHOLE canvas, so a press on the note grid was
+ *    routed to handleTimelineDown and teleported the scrub to it - measured at 93 columns;
+ *  - a held stage press makes the strip DECLINE everything, so a press meant for the strip was
+ *    routed to handleStageDown and overwrote the live drag's anchor - measured at 7 columns
+ *    backwards for a 10px forward nudge.
+ *
+ * The guards that reject it therefore live in the handlers, keyed on pointerId, and these rows are
+ * what pin them. A second pointer is ordinary on a phone (a second thumb) and ordinary on a desktop
+ * too: pixi dispatches a pointerdown per mouse BUTTON, so a right-click during a left-button drag
+ * is one.
+ */
+describe('a second concurrent pointer cannot corrupt the gesture already running', () => {
+    async function mountStoppedGliding() {
+        const context = makeContext()
+        //stopped, so the scroll position has exactly one writer - the gesture under test
+        context.props.isPlaying = false
+        //continuous rather than column-quantised, so a corrupted anchor shows as itself instead of
+        //being rounded back onto the column it should have stayed on
+        context.props.smoothScroll = true
+        const harness = await mount(context)
+        harness.push()
+        return harness
+    }
+
+    //a drag writes its position into the motion and the FRAME applies it, so nothing below can be
+    //read straight after the move that caused it - the same wait the manual-scrolling part uses
+    const aFrame = () => vi.advanceTimersByTimeAsync(64)
+
+    it('a press on the note grid does not teleport a running timeline scrub', async () => {
+        const harness = await mountStoppedGliding()
+        try {
+            const {stripWidth, height} = harness.geometry()
+            //A scrubs the far right of the STRIP - which stops TIMELINE_INSET_RIGHT short of the
+            //canvas' own edge, so `canvasWidth - 10` would be past the end and clamp to the last
+            //column for the wrong reason: the last column of the 100-column song
+            harness.pressPointerOverTimeline(TIMELINE_INSET_LEFT + stripWidth - 1, PRIMARY_POINTER)
+            await aFrame()
+            const afterA = harness.scrollPosition()
+            expect(harness.selectColumnCalls.at(-1)).toEqual({index: 99, ignoreAudio: true})
+
+            //B goes down in the MIDDLE OF THE NOTE GRID, hundreds of px above the strip. The strip
+            //is hit-tested first and answers it, because A's scrub makes it answer everything - so
+            //this really is dispatched to the timeline handlers rather than to the notes'.
+            expect(harness.pointerReachesTimelineStrip(100, height / 2)).toBe(true)
+            harness.pressPointerOverTimeline(100, SECOND_POINTER)
+            //...and is ignored: the canvas has not moved and no further column was asked for
+            expect(harness.scrollPosition()).toBe(afterA)
+            expect(harness.selectColumnCalls.at(-1)).toEqual({index: 99, ignoreAudio: true})
+
+            //B's moves are ignored too, so the scrub is not merely un-teleported but still A's.
+            //The frame wait is load-bearing: a move writes into the motion and the FRAME applies
+            //it, so a reading taken straight after the move sees the previous frame either way.
+            harness.movePointerOverTimeline(140, SECOND_POINTER)
+            await aFrame()
+            expect(harness.scrollPosition()).toBe(afterA)
+            //...and A still owns it: its own move moves the canvas, to the column the strip's
+            //midpoint stands for on a song that spans it
+            harness.movePointerOverTimeline(TIMELINE_INSET_LEFT + stripWidth / 2, PRIMARY_POINTER)
+            await aFrame()
+            expect(harness.scrollPosition()).toBeCloseTo(50, 5)
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    it("a second pointer's release does not settle the scrub the first is still holding", async () => {
+        const harness = await mountStoppedGliding()
+        try {
+            const {canvasWidth, stripWidth} = harness.geometry()
+            //the strip's own midpoint and quarter, in canvas coordinates - the fractions of the
+            //SONG they stand for are what the assertions below read
+            const stripHalf = TIMELINE_INSET_LEFT + stripWidth / 2
+            const stripQuarter = TIMELINE_INSET_LEFT + stripWidth / 4
+            harness.pressPointerOverTimeline(stripHalf, PRIMARY_POINTER)
+            harness.releasePointerOverTimeline(canvasWidth - 10, SECOND_POINTER)
+            //STILL DRAGGING: A's next move is still applied, which it would not be if B's release
+            //had taken the motion out of `dragging` - handleTimelineSlide returns when it has
+            harness.movePointerOverTimeline(stripQuarter, PRIMARY_POINTER)
+            await aFrame()
+            expect(harness.scrollPosition()).toBeCloseTo(25, 5)
+            //...and the same through the WINDOW listener, which hears every pointer on the page and
+            //would otherwise undo the guard the pixi handlers apply
+            harness.releasePointerOutsideTheCanvas(SECOND_POINTER)
+            harness.movePointerOverTimeline(stripHalf, PRIMARY_POINTER)
+            await aFrame()
+            expect(harness.scrollPosition()).toBeCloseTo(50, 5)
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    it('a press meant for the strip does not re-anchor a running stage drag', async () => {
+        const harness = await mountStoppedGliding()
+        try {
+            const {columnWidth, height, timelinePadding, timelineHeight} = harness.geometry()
+            //A drags the notes region 100px to the left: 100 / columnWidth columns forward
+            harness.pressPointerOverNotes(800, PRIMARY_POINTER)
+            harness.movePointerOverNotes(700, PRIMARY_POINTER)
+            await aFrame()
+            expect(harness.scrollPosition()).toBeCloseTo(SELECTED + 100 / columnWidth, 5)
+
+            //B taps the mini-timeline. A's press makes the strip decline everything, so this is
+            //dispatched to the NOTES container - the routing here is the harness's own hit test,
+            //not a reading of the source.
+            const stripY = height + timelinePadding + timelineHeight / 2
+            expect(harness.pointerReachesTimelineStrip(120, stripY)).toBe(false)
+            expect(harness.pointerReachesNotesStage(120, stripY)).toBe(true)
+            harness.pressPointerOverNotes(120, SECOND_POINTER)
+
+            //A nudges 10px further. Measured against B's x the canvas runs 7 columns BACKWARDS;
+            //measured against its own press it moves the 10px it was given.
+            harness.movePointerOverNotes(690, PRIMARY_POINTER)
+            await aFrame()
+            expect(harness.scrollPosition()).toBeCloseTo(SELECTED + 110 / columnWidth, 5)
+            //...and B's own moves move nothing at all
+            harness.movePointerOverNotes(400, SECOND_POINTER)
+            await aFrame()
+            expect(harness.scrollPosition()).toBeCloseTo(SELECTED + 110 / columnWidth, 5)
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    it("a second pointer's release does not end a stage drag, or sound a column", async () => {
+        const harness = await mountStoppedGliding()
+        try {
+            const {columnWidth} = harness.geometry()
+            harness.pressPointerOverNotes(800, PRIMARY_POINTER)
+            harness.movePointerOverNotes(700, PRIMARY_POINTER)
+            await aFrame()
+            const before = harness.selectColumnCalls.length
+            //B releases over the notes. handleStageUp's CLICK path calls selectColumn WITHOUT
+            //ignoreAudio - it SOUNDS the column - so a release that is not this gesture's reaching
+            //it is audible, not merely wrong.
+            harness.releasePointerOverNotes(120, SECOND_POINTER)
+            expect(harness.selectColumnCalls.slice(before)).toEqual([])
+            //...and A's drag survives it
+            harness.movePointerOverNotes(690, PRIMARY_POINTER)
+            await aFrame()
+            expect(harness.scrollPosition()).toBeCloseTo(SELECTED + 110 / columnWidth, 5)
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    it('a release naming NO pointer still cancels the gesture, which is what blur is', async () => {
+        const harness = await mountStoppedGliding()
+        try {
+            harness.pressPointerOverNotes(800, PRIMARY_POINTER)
+            harness.movePointerOverNotes(700, PRIMARY_POINTER)
+            await aFrame()
+            //THE SHAPE `blur` ARRIVES IN, and a pointercancel the browser gives no id for. Filtering
+            //it by owner the way the rows above filter a named release would strand the motion in
+            //`dragging` for good - which is the failure the window listener exists to prevent.
+            harness.releasePointerOutsideTheCanvas()
+            //long enough for the settle's own ease to arrive, so the reading below is a resting
+            //position rather than a moment of one
+            await vi.advanceTimersByTimeAsync(600)
+            const settled = harness.scrollPosition()
+            expect(settled).toBe(Math.round(settled))
+            //the drag is over, so a further move from the SAME pointer writes nothing
+            harness.movePointerOverNotes(600, PRIMARY_POINTER)
+            await aFrame()
+            expect(harness.scrollPosition()).toBe(settled)
+        } finally {
+            harness.destroy()
+        }
+    })
+})
+
+/**
+ * THE GATE THAT KEEPS THE VIEWPORT OUTLINE OFF THE PER-FRAME PATH, as the error it is allowed to
+ * hold.
+ *
+ * syncTimelineViewport skips the WRITE on any frame whose rounded x matches the last one written -
+ * assigning `viewportGraphics.x` dirties the stage batcher and makes pixi re-upload its whole
+ * attribute buffer, so a frame that would move the outline by a fraction of a pixel is worth
+ * skipping. The price is that the scene holds a stale x, and the size of that staleness is a
+ * property of the ROUNDING: two positions that round to the same integer can be almost 1.0 apart.
+ *
+ * Both bounds below are the claim. `< 1` is what the gate's rounding permits and is what a wider
+ * quantiser (a floor, a `Math.round(x / 2) * 2`) would break; `> 0.5` is what makes the row a
+ * measurement rather than a hope, and is what the docstring used to claim before it was measured.
+ */
+describe("the timeline outline's staleness is bounded by the gate's own rounding", () => {
+    it('trails the canvas by less than a pixel, and by more than half of one', async () => {
+        const context = makeContext()
+        context.props.isPlaying = false
+        context.props.smoothScroll = true
+        const harness = await mount(context)
+        try {
+            //A SONG WHOSE COLUMNS ARE FINER THAN THE STRIP'S PIXELS - 400 of them across ~1588px -
+            //which is the only shape the gate ever skips a frame on: on a short song the outline
+            //moves several whole pixels per frame and every frame writes.
+            harness.context.song.addColumns(300, harness.context.song.columns.length - 1)
+            harness.push()
+            const {canvasWidth, stripWidth, columnWidth} = harness.geometry()
+            const total = harness.context.song.columns.length
+            //the SONG spans the strip, which is the canvas less the DOM buttons' two footprints...
+            const relativeColumnWidth = stripWidth / total
+            //...while this one stays canvas-based: it is how many columns the notes region shows
+            const columnsOnScreen = canvasWidth / columnWidth
+
+            let worst = 0
+            const start = canvasWidth / 2
+            harness.pressPointerOverNotes(start)
+            for (let step = 1; step <= 600; step++) {
+                //3px a move: fine enough that consecutive frames land inside the same rounded
+                //pixel, which is what makes the gate skip at all
+                harness.movePointerOverNotes(start - step * 3)
+                await vi.advanceTimersByTimeAsync(21)
+                //THE TRUTH, recomputed from where the CANVAS actually is (read off the column
+                //container, not off the renderer) through timelineViewport's own rule
+                const truth =
+                    relativeColumnWidth * (harness.scrollPosition() - columnsOnScreen / 2)
+                worst = Math.max(worst, Math.abs(harness.paintedScene().timeline.viewport.x - truth))
+            }
+            harness.releasePointerOverNotes(start - 1800)
+            expect(worst).toBeLessThan(1)
+            expect(worst).toBeGreaterThan(0.5)
+        } finally {
+            harness.destroy()
+        }
+    })
+})
+
+/**
+ * THE GEOMETRY THE ONE CANVAS REPORTS, and the resize that moves it.
+ *
+ * The report is what the Svelte template builds the three timeline controls out of - it places them
+ * at `top: height + timelinePadding`, `height: timelineHeight`, over a strip `width` wide, and does
+ * not render them at all until it has one - so WHEN it arrives and whether it FOLLOWS the body are
+ * both visible to a user rather than internal bookkeeping.
+ */
+describe('the geometry the merged canvas reports', () => {
+    it('arrives with the canvas rather than 50ms after it', async () => {
+        const harness = await mount()
+        try {
+            //the other reporter is recalculateCacheAndSizes, behind a 50ms debounce. A renderer that
+            //left the report to that one renders the composer with no mini-timeline controls at all
+            //for those 50ms, on every mount and every {#key columnsPerCanvas} remount.
+            const atInit = harness.geometryAtInit()
+            expect(atInit.width).toBeGreaterThan(0)
+            expect(atInit.height).toBeGreaterThan(0)
+            expect(atInit.timelinePadding).toBeGreaterThan(0)
+            expect(atInit.timelineHeight).toBeGreaterThan(0)
+            //...and it is the geometry the settled renderer is actually showing, so it is a box the
+            //buttons can be placed in rather than a first guess that then moves under them
+            const settled = harness.geometry()
+            expect(atInit).toEqual({
+                width: settled.canvasWidth,
+                height: settled.height,
+                timelinePadding: settled.timelinePadding,
+                timelineHeight: settled.timelineHeight,
+            })
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    it('the strip is under the notes region before the cache debounce, not across the top', async () => {
+        const harness = await mount()
+        try {
+            //THE OTHER HALF OF THAT 50ms WINDOW. The report above is what puts the three DOM buttons
+            //on screen at once; this is where the canvas has drawn the bar they float over. Both
+            //have to be right together, and only one of them is a number the template can see - the
+            //strip's y is scene state, so nothing outside this file can notice it being wrong.
+            //
+            //The default (y = 0) is a whole notes region away from the truth, so a renderer that
+            //left this to recalculateCacheAndSizes paints the mini-timeline bar and the viewport
+            //outline ACROSS THE TOP of the canvas, over the first note rows, for those 50ms - on
+            //every mount and every {#key columnsPerCanvas} remount - while the buttons sit at the
+            //bottom. drawTimelineStage draws the bar with no cache in hand, so there is nothing else
+            //keeping the strip empty until the debounce catches up.
+            const {height, timelinePadding} = harness.geometryAtInit()
+            expect(harness.stripYAtInit()).toBe(height + timelinePadding)
+            //...and it is the same place the settled renderer keeps it, so this is the strip's one
+            //position rather than a first guess that then moves
+            expect(harness.paintedScene().timeline.strip.y).toBe(harness.stripYAtInit())
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    it('follows the body it is measured against, canvas and strip together', async () => {
+        const harness = await mount()
+        try {
+            const before = harness.geometry()
+            //ONLY THE HEIGHT MOVES. geometry() cross-checks the reported width against the
+            //module-level CANVAS_WIDTH/COLUMN_WIDTH the whole file's window definition is evaluated
+            //against, so a narrower body would fail there rather than say anything here. The height
+            //is where the merge's two new obligations live anyway: canvasHeight() is stated against
+            //`this.height`, and so are the strip's own y and the `top` the three DOM buttons get.
+            await harness.resize({width: 1920, height: 700})
+            const after = harness.geometry()
+            expect(after.height).toBeLessThan(before.height)
+            //HALF THE CLAIM IS INSIDE geometry(): it asserts that `height + timelinePadding * 2 +
+            //timelineHeight` is the size the canvas was actually RESIZED to. Putting
+            //renderer.resize() back above the width/height assignments - it reads them through
+            //canvasHeight() - sizes the canvas from the PREVIOUS notes region and fails there.
+            //The other half is the scene: dropping positionTimelineStrip() from the resize path
+            //leaves timelineStrip.y at the old notes height, drawn over the bottom note rows, and
+            //fails on `timeline.strip.y` here.
+            expect(harness.paintedScene()).toEqual(expectedScene(harness.context, after))
+        } finally {
+            harness.destroy()
+        }
+    })
+})
+
 describe('a theme edit reaches the pool as one repaint', () => {
     it('a column entering the window before that repaint takes the accent the window already has', async () => {
         const harness = await mount()
@@ -2960,7 +3897,7 @@ describe('the entry condition is the structure version, not the per-column count
             //bumping a counter by hand, which no mutator does without also bumping the structure
             for (const column of harness.context.song.columns) column.version++
             expect(harness.push()).toEqual({
-                renders: {notes: 0, timeline: 0},
+                renders: 0,
                 columnPaints: 0,
                 paintedColumns: [],
                 timelineRebuilds: 0,
@@ -3313,7 +4250,33 @@ describe('the smooth scroll', () => {
             harness.context.song.selected = parked
             const reference = await mount(harness.context)
             try {
-                expect(glided).toEqual(reference.paintedScene())
+                const drawn = reference.paintedScene()
+                // THE OUTLINE'S x ALONE is compared through the gate's own rule rather than
+                // exactly, and this is the only place in the file where the difference is visible.
+                // syncTimelineViewport skips the WRITE on a frame that would not move the outline
+                // by a whole pixel, so a position reached by GLIDING holds the last x whose
+                // rounding differed while the reference's was written exactly by draw(). Round-equal
+                // is the gate's statement of itself, and the strict inequality below is its
+                // consequence - two numbers with the same rounding are less than a pixel apart.
+                //
+                // Nothing about the PIXELS changed when the two canvases were merged: the gate used
+                // to skip the timeline Application's render instead, so the drawn outline lagged by
+                // the same fraction while the scene description held the exact value. This states
+                // what is on screen where it used to state what had been computed.
+                const withoutOutlineX = (scene: PaintedScene): PaintedScene => ({
+                    ...scene,
+                    timeline: {
+                        ...scene.timeline,
+                        viewport: {...scene.timeline.viewport, x: 0},
+                    },
+                })
+                expect(withoutOutlineX(glided)).toEqual(withoutOutlineX(drawn))
+                expect(Math.round(glided.timeline.viewport.x)).toBe(
+                    Math.round(drawn.timeline.viewport.x)
+                )
+                expect(
+                    Math.abs(glided.timeline.viewport.x - drawn.timeline.viewport.x)
+                ).toBeLessThan(1)
             } finally {
                 reference.destroy()
             }
@@ -3554,18 +4517,18 @@ describe('the smooth scroll', () => {
         const harness = await mountGliding()
         startPlaying(harness)
         await vi.advanceTimersByTimeAsync(LOOKAHEAD_MS + WHOLE / 2)
-        const rendersBefore = harness.notesRenders()
+        const rendersBefore = harness.renders()
         //the glide IS running at this point, so the count below is a stopped loop rather than one
         //that was never started
         await vi.advanceTimersByTimeAsync(WHOLE / 4)
-        expect(harness.notesRenders()).toBeGreaterThan(rendersBefore)
+        expect(harness.renders()).toBeGreaterThan(rendersBefore)
 
         harness.destroy()
-        const rendersAtDestroy = harness.notesRenders()
+        const rendersAtDestroy = harness.renders()
         //a loop that outlived destroy() would go on rendering into a destroyed Application, which
         //is the leak the {#key columnsPerCanvas} remount makes routine rather than exotic
         await vi.advanceTimersByTimeAsync(WHOLE * 4)
-        expect(harness.notesRenders()).toBe(rendersAtDestroy)
+        expect(harness.renders()).toBe(rendersAtDestroy)
     })
 })
 
@@ -3617,7 +4580,7 @@ describe('the frame loop', () => {
             harness.push()
             expect(harness.frameLoop().started).toBe(false)
 
-            const before = {loop: harness.frameLoop(), notes: harness.notesRenders()}
+            const before = {loop: harness.frameLoop(), notes: harness.renders()}
             //...and the TRANSPORT keeps running through a recording - it is playing the song into
             //the file - so the ticks have to stay silent too, not just the moment the flag is set
             for (let i = 0; i < 4; i++) {
@@ -3636,7 +4599,7 @@ describe('the frame loop', () => {
             harness.context.props.isRecordingAudio = false
             harness.push()
             expect(harness.scrollPosition()).toBe(harness.context.song.selected)
-            expect(harness.notesRenders()).toBeGreaterThan(before.notes)
+            expect(harness.renders()).toBeGreaterThan(before.notes)
         } finally {
             harness.destroy()
         }
@@ -3663,19 +4626,17 @@ describe('the frame loop', () => {
         try {
             harness.push()
             const before = {
-                renders: harness.notesRenders(),
-                timelineRenders: harness.timelineRenders(),
+                renders: harness.renders(),
                 clears: counters.graphicsClears,
             }
             await vi.advanceTimersByTimeAsync(1000)
-            //ALL FIVE, because each catches a different sloppy loop: `started` catches one armed at
-            //init, `frames` catches an rAF requested but gated to nothing, the two render counts
-            //catch a callback that renders unconditionally, and the clear count catches one that
-            //repaints columns. A loop that ran and did nothing moves only the middle two.
+            //ALL FOUR, because each catches a different sloppy loop: `started` catches one armed at
+            //init, `frames` catches an rAF requested but gated to nothing, the render count catches
+            //a callback that renders unconditionally, and the clear count catches one that repaints
+            //columns. A loop that ran and did nothing moves only the middle two.
             expect(harness.frameLoop().started).toBe(false)
             expect(harness.frameLoop().frames).toBe(0)
-            expect(harness.notesRenders()).toBe(before.renders)
-            expect(harness.timelineRenders()).toBe(before.timelineRenders)
+            expect(harness.renders()).toBe(before.renders)
             expect(counters.graphicsClears).toBe(before.clears)
         } finally {
             harness.destroy()
@@ -3687,8 +4648,8 @@ describe('the frame loop', () => {
         try {
             expect(harness.frameLoop().maxFPS).toBe(48)
             //...and the cap is on the ticker the renderer actually runs. The value alone cannot say
-            //that: setting it on the timeline's ticker, or running a private rAF beside this one,
-            //leaves it reading 48 while the frames arrive at the display's rate. Under the fake
+            //that: running a private rAF beside this one leaves it reading 48 while the frames
+            //arrive at the display's rate. Under the fake
             //clock a display frame is every 16ms, so 62 arrive in a second and the gate lets fewer
             //through - not 48 exactly, because it is a frame SKIP against that grid rather than a
             //clock (see expectPosition).
@@ -3717,9 +4678,9 @@ describe('the frame loop', () => {
             //THE GLIDE: every emitted frame moves the position, so every one renders exactly once.
             //Two renders per frame is what pixi's own registered render listener produces on top of
             //this class's; zero would mean the loop is not the thing painting.
-            const glideStart = {loop: harness.frameLoop(), renders: harness.notesRenders()}
+            const glideStart = {loop: harness.frameLoop(), renders: harness.renders()}
             await vi.advanceTimersByTimeAsync(LOOKAHEAD_MS + WHOLE)
-            const glideEnd = {loop: harness.frameLoop(), renders: harness.notesRenders()}
+            const glideEnd = {loop: harness.frameLoop(), renders: harness.renders()}
             const moved = glideEnd.renders - glideStart.renders
             const emitted = glideEnd.loop.emits - glideStart.loop.emits
             expect(moved).toBeGreaterThan(0)
@@ -3732,9 +4693,9 @@ describe('the frame loop', () => {
             //there is a frame that moved and renders for that reason.
             await vi.advanceTimersByTimeAsync(WHOLE / 2)
             expect(harness.scrollPosition()).toBe(SELECTED + 1)
-            const stallStart = {loop: harness.frameLoop(), renders: harness.notesRenders()}
+            const stallStart = {loop: harness.frameLoop(), renders: harness.renders()}
             await vi.advanceTimersByTimeAsync(WHOLE * 2)
-            const stallEnd = {loop: harness.frameLoop(), renders: harness.notesRenders()}
+            const stallEnd = {loop: harness.frameLoop(), renders: harness.renders()}
             expect(stallEnd.loop.emits).toBeGreaterThan(stallStart.loop.emits)
             expect(stallEnd.renders).toBe(stallStart.renders)
         } finally {
@@ -3747,10 +4708,9 @@ describe('the frame loop', () => {
         try {
             harness.context.props.isPlaying = true
             harness.push()
-            const notesApp = pixi.applications[pixi.applications.length - 2]
-            const before = notesApp.renderedX.length
+            const before = harness.renderedX().length
             await vi.advanceTimersByTimeAsync(LOOKAHEAD_MS + WHOLE)
-            const rendered = notesApp.renderedX.slice(before)
+            const rendered = harness.renderedX().slice(before)
             expect(rendered.length).toBeGreaterThan(0)
             //the offset each render SAW, against the offset the scene holds now. A frame that moved
             //the container after asking for the render - or a callback ordered after pixi's own
@@ -3785,59 +4745,68 @@ describe('the frame loop', () => {
             expect(harness.frameLoop().started).toBe(true)
             await vi.advanceTimersByTimeAsync(SCROLL_EASE_MS + 32)
             expect(harness.frameLoop().started).toBe(false)
-            const after = {loop: harness.frameLoop(), renders: harness.notesRenders()}
+            const after = {loop: harness.frameLoop(), renders: harness.renders()}
             await vi.advanceTimersByTimeAsync(1000)
             //a full second: no further rAF taken, no further emit, no further render
             expect(harness.frameLoop().frames).toBe(after.loop.frames)
             expect(harness.frameLoop().emits).toBe(after.loop.emits)
-            expect(harness.notesRenders()).toBe(after.renders)
+            expect(harness.renders()).toBe(after.renders)
         } finally {
             harness.destroy()
         }
     })
 
-    it('keeps the timeline off the per-frame path while still following the canvas', async () => {
+    it('keeps the timeline outline off the per-frame write path while still following the canvas', async () => {
         const harness = await mountGliding()
         try {
             //A LONG SONG, because the saving is a function of how slowly the outline moves and
             //makeSong's 100 columns are not slow: the whole song spans the timeline's width, so at
-            //100 columns the outline travels 16px per column, which a per-pixel gate has to render
+            //100 columns the outline travels 16px per column, which a per-pixel gate has to write
             //nearly every frame of. At 400 it travels 4px per column, which is where the gate
             //starts saving - and 400 is also the shipped default's neighbourhood.
             harness.context.song.addColumns(300, harness.context.song.columns.length - 1)
             harness.push()
             harness.context.props.isPlaying = true
             harness.push()
-            const before = {
-                loop: harness.frameLoop(),
-                notes: harness.notesRenders(),
-                timeline: harness.timelineRenders(),
-                viewportX: harness.paintedScene().timeline.viewport.x,
-            }
-            await vi.advanceTimersByTimeAsync(LOOKAHEAD_MS + WHOLE)
-            const after = {
-                notes: harness.notesRenders(),
-                timeline: harness.timelineRenders(),
-                viewportX: harness.paintedScene().timeline.viewport.x,
+            //SAMPLED PER FRAME, because the two canvases became one: the gate used to skip a second
+            //Application's render() and could be counted off that Application, and it now skips the
+            //WRITE of `viewportGraphics.x` - which is what puts the Graphics in the stage render
+            //group's update list and dirties the shared batcher. So what is counted here is how
+            //often the outline MOVED, against how often the canvas did.
+            let outlineWrites = 0
+            let scrollChanges = 0
+            let lastX = harness.paintedScene().timeline.viewport.x
+            let lastScroll = harness.scrollPosition()
+            const startX = lastX
+            const until = performance.now() + LOOKAHEAD_MS + WHOLE
+            while (performance.now() < until) {
+                await vi.advanceTimersByTimeAsync(16)
+                const x = harness.paintedScene().timeline.viewport.x
+                const scroll = harness.scrollPosition()
+                if (x !== lastX) outlineWrites++
+                if (scroll !== lastScroll) scrollChanges++
+                lastX = x
+                lastScroll = scroll
             }
             //THE WHOLE SONG spans the timeline's width, so its outline moves a fraction of a pixel
-            //per frame while the notes container moves several whole ones. Rendering it on every
-            //frame draws the same pixels again, and it is half of all the render() calls a glide
-            //makes.
-            expect(after.timeline - before.timeline).toBeLessThan(after.notes - before.notes)
+            //per frame while the notes container moves several whole ones. Writing it on every one
+            //of those frames re-uploads the stage batcher's whole attribute buffer to draw the same
+            //pixels again.
+            expect(outlineWrites).toBeLessThan(scrollChanges)
             //...and the RULE rather than the ratio, which is what keeps this from turning into a
-            //number tuned to this song's geometry: the gate renders when the outline's ROUNDED x
-            //moves, so over any interval it can render at most once per whole pixel the outline
-            //travelled, plus the one that starts it. On a longer song the same rule saves far more
-            //(the outline moves 4px per column on a 400-column one against 16px here); on this one
-            //it is still the difference between rendering per frame and rendering per pixel.
-            const travelled = after.viewportX - before.viewportX
-            expect(after.timeline - before.timeline).toBeLessThanOrEqual(Math.ceil(travelled) + 1)
+            //number tuned to this song's geometry: the gate writes when the outline's ROUNDED x
+            //moves, so over any interval it can write at most once per whole pixel the outline
+            //travelled, plus the one that starts it.
+            const travelled = lastX - startX
+            expect(outlineWrites).toBeLessThanOrEqual(Math.ceil(travelled) + 1)
             //...and the other direction, which is the one an over-eager gate breaks: a column of
-            //travel MUST move the outline and MUST reach the canvas. "Never render the timeline"
-            //satisfies the lines above and freezes the outline while the notes scroll.
+            //travel MUST move the outline. "Never move the outline" satisfies the lines above and
+            //freezes it while the notes scroll.
             expect(travelled).toBeGreaterThan(0)
-            expect(after.timeline).toBeGreaterThan(before.timeline)
+            expect(outlineWrites).toBeGreaterThan(0)
+            //...and the CONTENT container is not rebuilt per frame either - only draw() does that,
+            //and a glide never reaches draw()
+            expect(harness.push().timelineRebuilds).toBe(0)
         } finally {
             harness.destroy()
         }
@@ -4301,10 +5270,20 @@ describe('manual scrolling', () => {
             return {x: viewport.x, width: rect[3]}
         }
 
-        /** Where on the timeline strip a column sits, by the proportion the renderer maps with. */
+        /**
+         * Where on the CANVAS a column of the song sits, by the proportion the renderer maps with.
+         *
+         * The inset is the whole of the difference between the two spaces: the pointer helpers emit
+         * `globalX`, which is canvas space, while the scene the strip draws (and `drawnViewport`
+         * below reads) is strip-local. A press derived from strip geometry without this term lands
+         * 80px left of what it was aimed at.
+         */
         function timelineXOfColumn(harness: Harness, column: number): number {
-            const {canvasWidth} = harness.geometry()
-            return (canvasWidth / harness.context.song.columns.length) * column
+            const {stripWidth} = harness.geometry()
+            return (
+                TIMELINE_INSET_LEFT +
+                (stripWidth / harness.context.song.columns.length) * column
+            )
         }
 
         it(`${mode}, pressing the timeline navigates to the column under the pointer`, async () => {
@@ -4385,13 +5364,96 @@ describe('manual scrolling', () => {
                 //screen must not move the canvas: the grab records the offset to the rectangle's
                 //centre and holds it, where centring the rectangle on the pointer instead would
                 //jump the canvas by the distance from that centre - about 6 columns here.
-                harness.pressPointerOverTimeline(viewport.x + viewport.width * 0.25)
+                //`drawnViewport` reads the SCENE, which is strip-local, and the press emits a
+                //canvas-space `globalX` - so the inset has to be added back. Without it the press
+                //lands 80px left of the rectangle, `onSlider` is false and the canvas jumps, which
+                //the `selectColumnCalls` assertion below is what catches.
+                harness.pressPointerOverTimeline(
+                    TIMELINE_INSET_LEFT + viewport.x + viewport.width * 0.25
+                )
                 await frame()
                 //to within the half-pixel the rectangle's floored width costs at the grab point -
                 //which is exactly the slop rounding absorbs, so snapping can assert it exactly
                 if (smoothScroll) expect(harness.scrollPosition()).toBeCloseTo(SELECTED, 1)
                 else expect(harness.scrollPosition()).toBe(SELECTED)
                 expect(harness.selectColumnCalls).toEqual([])
+            } finally {
+                harness.destroy()
+            }
+        })
+
+        it(`${mode}, a drag past either end of the strip clamps onto the end column`, async () => {
+            const harness = await mountManual()
+            try {
+                //A DRAG THAT LEAVES THE STRIP ENTIRELY, which handleTimelineSlide clamps rather
+                //than letting the position run off the song. The drag keeps receiving moves out
+                //there because a running scrub makes the hitarea answer everywhere - that clause
+                //and this clamp are what make the gesture survive a finger that overshoots.
+                //Not the only way to reach the end columns: the strip is inset clear of the three
+                //DOM buttons now, so tapping them works too - the row after this states that.
+                const last = harness.context.song.columns.length - 1
+                harness.pressPointerOverTimeline(timelineXOfColumn(harness, 50))
+                await frame()
+                harness.movePointerOverTimeline(-500)
+                await frame()
+                expect(harness.scrollPosition()).toBe(0)
+                harness.movePointerOverTimeline(harness.geometry().canvasWidth + 500)
+                await frame()
+                expect(harness.scrollPosition()).toBe(last)
+                harness.releasePointerOverTimeline(harness.geometry().canvasWidth + 500)
+                await vi.advanceTimersByTimeAsync(400)
+                expect(harness.scrollPosition()).toBe(last)
+            } finally {
+                harness.destroy()
+            }
+        })
+
+        it(`${mode}, a press at a canvas x scrubs to the column DRAWN at that x`, async () => {
+            const harness = await mountManual()
+            try {
+                //THE INVERSE PROPERTY, which is what the inset has to preserve: the mapping the
+                //renderer draws a column with and the mapping it reads a press through are the same
+                //one. Converting one of them and not the other is an 80px error - about five
+                //columns here - that every other row in this part is blind to, because they all
+                //derive their press x from the same helper.
+                //
+                //COLUMNS 0 AND 99 are the new claim. The strip is drawn clear of the three DOM
+                //buttons now, so its ends are canvas nobody stands over and the song's first and
+                //last columns can be TAPPED rather than only dragged onto.
+                //
+                //THE ORDER IS CHOSEN so that every press lands OUTSIDE the viewport rectangle the
+                //previous one left drawn - the canvas shows ~19.9 columns, so consecutive targets
+                //are kept more than ten columns apart. A press inside that rectangle takes
+                //handleTimelineDown's `onSlider` path and deliberately moves nothing, which is the
+                //row above this one, not this one.
+                for (const column of [99, 0, 50, 25, 1]) {
+                    harness.pressPointerOverTimeline(timelineXOfColumn(harness, column))
+                    await frame()
+                    if (smoothScroll) expect(harness.scrollPosition()).toBeCloseTo(column, 6)
+                    else expect(harness.scrollPosition()).toBe(column)
+                    harness.releasePointerOverTimeline(timelineXOfColumn(harness, column))
+                    await vi.advanceTimersByTimeAsync(400)
+                }
+            } finally {
+                harness.destroy()
+            }
+        })
+
+        it(`${mode}, the viewport rectangle sits where the strip's own column width puts it`, async () => {
+            const harness = await mountManual()
+            try {
+                const {canvasWidth, stripWidth, columnWidth} = harness.geometry()
+                const {viewport, strip} = harness.paintedScene().timeline
+                //STRIP-LOCAL, and the strip is what carries the inset - so the outline is inside
+                //the inset bar rather than 80px left of it. The first factor is a strip column
+                //width and the second a count of CANVAS columns, which is the mix expectedTimeline
+                //documents and the one an over-eager conversion of `columnsOnScreen` would break.
+                const stripColumnWidth = stripWidth / harness.context.song.columns.length
+                expect(strip.x).toBe(TIMELINE_INSET_LEFT)
+                expect(viewport.x).toBeCloseTo(
+                    stripColumnWidth * (SELECTED - canvasWidth / 2 / columnWidth),
+                    6
+                )
             } finally {
                 harness.destroy()
             }
@@ -4566,7 +5628,7 @@ describe('manual scrolling', () => {
             const {columnWidth} = harness.geometry()
             const start = CANVAS_WIDTH / 2
             harness.pressPointerOverNotes(start)
-            const before = harness.notesRenders()
+            const before = harness.renders()
             //THREE COLUMNS over twelve moves and twelve frames. A quantiser applied only to the
             //value handed to selectColumn - leaving the canvas itself following the finger - passes
             //every position assertion sampled on a column boundary, and only a render count sees
@@ -4576,7 +5638,7 @@ describe('manual scrolling', () => {
                 await aFrame()
             }
             expect(harness.scrollPosition()).toBe(SELECTED + 3)
-            expect(harness.notesRenders() - before).toBeLessThanOrEqual(4)
+            expect(harness.renders() - before).toBeLessThanOrEqual(4)
         } finally {
             harness.destroy()
         }

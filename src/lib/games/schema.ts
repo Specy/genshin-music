@@ -83,8 +83,15 @@ export type SustainMetaJson = {
    * Per-note overrides live on NoteMetaJson.minLength.
    */
   minLength?: number;
-  /** Default loop region, used for every note without its own `loop`. */
-  loop: LoopRegion;
+  /**
+   * Default loop region, used for every note without its own `loop`. OMITTED
+   * (and no per-note loops either): the samples are loopless — a held note
+   * plays its file front to back once and note-off starts the `release` fade
+   * from wherever the playhead is. That is the authoring for sustained-but-not-
+   * looping instruments (long recorded holds with a natural decay, e.g.
+   * genshin's NightwindHorn); loopMode is irrelevant without a loop to leave.
+   */
+  loop?: LoopRegion;
 };
 
 /**

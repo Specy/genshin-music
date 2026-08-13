@@ -144,7 +144,7 @@
   },
   "player": {
     "other": {
-      "settingVersion": "Sky82"
+      "settingVersion": "Sky83"
     },
     "data": {
       "instrument": {
@@ -701,7 +701,7 @@
   },
   "zenKeyboard": {
     "other": {
-      "settingVersion": "Sky27"
+      "settingVersion": "Sky28"
     },
     "data": {
       "instrument": {

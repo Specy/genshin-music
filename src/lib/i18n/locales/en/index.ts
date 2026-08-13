@@ -202,8 +202,8 @@ export const i18n_en = {
     hint_no_songs_in_folder: 'No songs here, add one!',
     folder_empty: 'The folder is empty',
     midi_download_warning:
-      'If you use MIDI, the song will loose some accuracy, if you want to share the song with others, use the other format (button above). Do you still want to download?',
-    confirm_delete_folder: `Are you sure you want to delete the folder "{{folder_name}}"?  
+      'If you use MIDI, the song will lose some accuracy, if you want to share the song with others, use the other format (button above). Do you still want to download?',
+    confirm_delete_folder: `Are you sure you want to delete the folder "{{folder_name}}"?
             The songs won't be deleted`,
     filter_alphabetical: 'Alphabetical',
     'filter_date-created': 'Date created',
@@ -223,7 +223,7 @@ export const i18n_en = {
     memory_persisted_description: ` Your data is persisted in the browser, the browser should not automatically clear it.
                             Always make sure to download a backup sometimes, especially when you will not use the app
                             for a long time`,
-    memory_not_persisted_description: `The browser didn't allow to store data persistently, it might happen that you will loose
+    memory_not_persisted_description: `The browser didn't allow to store data persistently, it might happen that you will lose
                             data when cache is automatically cleared. To get persistent storage, add the app to the home
                             screen. If that still doesn't work, make sure you do a backup often`,
     props: {
@@ -562,7 +562,7 @@ export const i18n_en = {
             are also the costs of hosting. With a higher budget I can afford to not
             worry so much about how much I spend on the server, giving you the best
             possible experience.
-            
+
             I care about giving users all features without
             having to pay for it, neither having intrusive ads which can be annoying.
             For this same reason, there is no source of income except donations.
@@ -835,6 +835,7 @@ export const i18n_en = {
     'Old-Zither': 'Old Zither',
     DjemDjemDrum: 'DjemDjem Drum',
     DunDun: 'DunDun',
+    NightwindHorn: 'Nightwind Horn',
     Piano: 'Piano',
     Contrabass: 'Contrabass',
     Ukulele: 'Ukulele',

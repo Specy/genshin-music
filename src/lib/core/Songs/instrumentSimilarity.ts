@@ -26,6 +26,7 @@ export const SIMILAR_INSTRUMENTS = {
         'HarmonicKey': {Sky: 'Piano'},
         'DunDun': {Sky: 'DunDun'},
         'DjemDjemDrum': {Sky: 'Drum'},
+        'NightwindHorn': {Sky: 'Horn'},
     },
     Sky: {
         'Piano': {Genshin: 'LeapingSpiritPiano'},
@@ -44,9 +45,11 @@ export const SIMILAR_INSTRUMENTS = {
         'HandPan': {Genshin: 'DunDun'},
         'Drum': {Genshin: 'DjemDjemDrum'},
         'DunDun': {Genshin: 'DunDun'},
-        //winds/voice/SFX have no Genshin counterpart yet — omitted entries fall back
-        //to the target default (Flute, Panflute, Ocarina, MantaOcarina, Trumpet,
-        //Horn, Contrabass, SFX_*)
+        'Horn': {Genshin: 'NightwindHorn'},
+        'Trumpet': {Genshin: 'NightwindHorn'},
+        //other winds/voice/SFX have no Genshin counterpart yet — omitted entries fall
+        //back to the target default (Flute, Panflute, Ocarina, MantaOcarina,
+        //Contrabass, SFX_*)
     },
 } satisfies Record<ConversionGame, Record<string, SimilarByTarget>>
 

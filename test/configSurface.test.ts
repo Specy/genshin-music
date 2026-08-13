@@ -83,7 +83,7 @@ describe('game config surface', () => {
 
         // Instruments added AFTER the v1 freeze have no old surface to reproduce —
         // they exist only in the v2 fixture.
-        const POST_FREEZE_INSTRUMENTS = new Set(['sustained_recorder'])
+        const POST_FREEZE_INSTRUMENTS = new Set(['sustained_recorder', 'NightwindHorn'])
 
         const derivedInstrumentsData = Object.fromEntries(
             Object.entries(INSTRUMENTS_DATA)

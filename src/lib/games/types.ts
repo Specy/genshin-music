@@ -148,7 +148,8 @@ export type InstrumentSustain = {
    * taps). Absent = releases act immediately (sampler default).
    */
   minLength?: number;
-  loop: LoopRegion;
+  /** Absent (with no per-note loops) = loopless sustain: held notes play the file once, note-off fades (schema.ts). */
+  loop?: LoopRegion;
 };
 
 /**
