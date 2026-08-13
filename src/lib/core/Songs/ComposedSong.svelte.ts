@@ -5,6 +5,7 @@
 import type {Midi} from "@tonejs/midi"
 import {
     APP_NAME,
+    CANONICAL_NOTE_IDS,
     COMPOSER_NOTE_POSITIONS,
     INSTRUMENTS,
     INSTRUMENTS_DATA,
@@ -31,7 +32,7 @@ import {type SerializedSong, Song} from "./Song.svelte"
 import {clamp} from "../utils/Utilities"
 import {isLegacyAppName, LEGACY_NOTE_TABLES, legacyIndexToId} from "./legacyNoteTables"
 import {type ConversionGame, findSimilarInstrument} from "./instrumentSimilarity"
-import {buttonToNoteId, displayButtonForId, foldIdIntoRange, getNoteIdTable} from "./noteIds"
+import {songGridSlotForId, foldIdIntoRange, getNoteIdTable} from "./noteIds"
 
 interface OldFormatNoteType {
     key: string,
@@ -1018,25 +1019,31 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 4> 
     }
 
     /**
-     * Shift notes vertically on the shared button grid. Each note moves through the
-     * composer's visual row order from its DISPLAY button (own instrument's button,
-     * canonical fallback for stranded notes); the landing row's id comes from the
-     * note's own instrument, falling back to the canonical id (note strands but keeps
-     * its row) when the instrument has no button there.
+     * Shift notes vertically on the Song Grid, one grid row per unit of `amount`
+     * (positive = up). A note's row is the canonical row of its Note Id and the landing
+     * row's new id is that row's canonical id — the SAME id-only rule the canvas draws
+     * by (ADR-0004), so the tool moves notes exactly where the user sees them. The
+     * note's instrument is deliberately not consulted: before ADR-0004 this read the
+     * own-instrument `displayButtonForId`, which put the tool in each note's OWN track
+     * Button space (nobody's rows: not the canvas's, not the keyboard's) and made a
+     * sub-grid track's notes (NightwindHorn, the drums) jump bands or vanish off a row
+     * that visibly had space above it. A note landing on a row
+     * its own instrument cannot play simply becomes stranded there — canonical row,
+     * dimmed — which is how the canvas already renders stranded notes. Notes pushed off
+     * the top or bottom of the grid are dropped.
      */
     moveNotesBy(selectedColumns: number[], amount: number, layer: number | 'all') {
-        const fromNotePosition = new Map([...COMPOSER_NOTE_POSITIONS].reverse().map((n, i) => [n, i]))
-        const toNotePosition = new Map([...COMPOSER_NOTE_POSITIONS].reverse().map((n, i) => [i, n]))
+        //inverse of COMPOSER_NOTE_POSITIONS (slot -> row), built over GRID slots only:
+        //sky's positions array carries trailing rows past the last Song-Grid row (see the
+        //registry's canonicalNoteIds check), and a note must never land on one.
+        const slotAtRow = new Map(CANONICAL_NOTE_IDS.map((_, slot) => [COMPOSER_NOTE_POSITIONS[slot], slot]))
         const moveId = (note: ColumnNote): number | null => {
-            const instrumentName = this.instruments[note.trackIndex]?.name
-            const button = displayButtonForId(instrumentName, note.id)
-            if (button === -1) return null
-            const fromPosition = fromNotePosition.get(button)
-            if (fromPosition === undefined) return null
-            const toButton = toNotePosition.get(fromPosition + amount)
-            if (toButton === undefined) return null
-            return buttonToNoteId(instrumentName, toButton)
-                ?? buttonToNoteId(INSTRUMENTS[0], toButton)
+            const slot = songGridSlotForId(note.id)
+            if (slot === -1) return null
+            //rows count downward on the canvas, so moving UP is a smaller row
+            const toSlot = slotAtRow.get(COMPOSER_NOTE_POSITIONS[slot] - amount)
+            if (toSlot === undefined) return null
+            return CANONICAL_NOTE_IDS[toSlot]
         }
         if (layer === 'all') {
             selectedColumns.forEach(index => {

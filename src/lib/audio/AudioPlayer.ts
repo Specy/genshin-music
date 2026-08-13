@@ -67,26 +67,16 @@ export class AudioPlayer {
     return Promise.all(promises);
   }
 
-  /** Play a Note Id on one instrument — resolves the id to that instrument's button (stranded = silent). */
+  /** Play a Note Id on one instrument — the engine is id-keyed, so a stranded id is silent. */
   playNoteOfInstrument(instrumentIndex: number, id: number, pitch?: Pitch) {
     const instrumentData = this.instruments[instrumentIndex];
     const audioInstrument = this.audioInstruments[instrumentIndex];
     if (!audioInstrument || !instrumentData) return;
-    const button = audioInstrument.getButtonFromId(id);
-    if (button === -1) return;
-    audioInstrument.play(button, pitch ?? (instrumentData.pitch || this.basePitch));
+    audioInstrument.play(id, pitch ?? (instrumentData.pitch || this.basePitch));
   }
 
   playNotesOfInstrument(instrumentIndex: number, ids: number[], pitch?: Pitch) {
     ids.forEach((id) => this.playNoteOfInstrument(instrumentIndex, id, pitch));
-  }
-
-  /** Play a raw BUTTON position on one instrument (UI surfaces that are button-addressed, e.g. MIDI setup). */
-  playButtonOfInstrument(instrumentIndex: number, button: number, pitch?: Pitch) {
-    const instrumentData = this.instruments[instrumentIndex];
-    const audioInstrument = this.audioInstruments[instrumentIndex];
-    if (!audioInstrument || !instrumentData) return;
-    audioInstrument.play(button, pitch ?? (instrumentData.pitch || this.basePitch));
   }
 
   /** Like playNoteOfInstrument, but holds for `durationMs` when the instrument sustains (VSRG hold notes); one-shot otherwise. */
@@ -94,13 +84,11 @@ export class AudioPlayer {
     const instrumentData = this.instruments[instrumentIndex];
     const audioInstrument = this.audioInstruments[instrumentIndex];
     if (!audioInstrument || !instrumentData) return;
-    const button = audioInstrument.getButtonFromId(id);
-    if (button === -1) return;
     const resolvedPitch = pitch ?? (instrumentData.pitch || this.basePitch);
     if (durationMs !== undefined && durationMs > 0 && audioInstrument.supportsSustain) {
-      audioInstrument.pressNote(button, resolvedPitch, { durationMs });
+      audioInstrument.pressNote(id, resolvedPitch, { durationMs });
     } else {
-      audioInstrument.play(button, resolvedPitch);
+      audioInstrument.play(id, resolvedPitch);
     }
   }
 

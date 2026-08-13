@@ -7,7 +7,7 @@
   import type { KeyboardCode } from '$lib/providers/KeyboardProvider/KeyboardTypes';
   import type { VsrgSongKeys } from '$core/Songs/VsrgSong.svelte';
   import { keyBinds, type Shortcut } from '$stores/KeybindsStore.svelte';
-  import { Instrument } from '$lib/audio/Instrument.svelte';
+  import { Instrument, type ObservableNote } from '$lib/audio/Instrument.svelte';
   import { logger } from '$stores/LoggerStore.svelte';
   import ShapeKeyboard from '$lib/games/shapes/ShapeKeyboard.svelte';
   import ShortcutEditor from '$cmp/pages/keybinds/ShortcutEditor.svelte';
@@ -17,12 +17,23 @@
   import { setPageVisited } from '$stores/PageVisitStore.svelte';
   import { t } from '$i18n/binding.svelte';
 
-  // KeyboardProvider.listen() is registered once in onMount (not re-subscribed per `selected`
-  // change) - `selected` is $state, so the closure always reads its latest value regardless of
-  // when the listener was registered.
+  // KeyboardProvider.listen() is registered once in onMount (not re-subscribed per selection
+  // change) - both selections below are $state, so the closure always reads their latest value
+  // regardless of when the listener was registered.
   const baseInstrument = new Instrument();
 
-  let selected = $state<{ type: string; index: number }>({ type: '', index: -1 });
+  // Two selections, because they select two different KINDS of thing. The note grid selects a
+  // NOTE: per-note UI state is addressed through the note object (ADR-0005), and the rebind it
+  // arms attaches to that note's default label, so a screen position never enters the picture.
+  // The VSRG rows select a numbered LANE, which really is an index and stays one. They remain
+  // mutually exclusive - arming either clears the other - exactly like the single `selected`
+  // state they replace, which compared a bare index across both kinds (clicking note 3 while
+  // VSRG lane 3 was armed used to read as "deselect").
+  let selectedNote = $state<ObservableNote | null>(null);
+  let selectedVsrg = $state<{ type: '' | 'k4' | 'k6' | 'k8'; index: number }>({
+    type: '',
+    index: -1,
+  });
 
   // setShortcut returns the whole conflicting Shortcut object, not its name - interpolating it
   // directly rendered "[object Object]". `shortcuts:props.<name>` is the same key
@@ -43,22 +54,25 @@
     KeyboardProvider.listen(
       ({ letter, code }) => {
         if (letter === 'Escape') {
-          selected = { type: '', index: -1 };
+          selectedNote = null;
+          selectedVsrg = { type: '', index: -1 };
           return;
         }
-        const { type, index } = selected;
-        const note = baseInstrument.getNoteFromIndex(index);
-        if (type === 'keyboard' && index !== -1) {
-          // note is non-null whenever `index` came from a real note-grid click below.
-          const existing = keyBinds.setKeyboardKeybind(note!.noteNames.keyboard, code);
+        if (selectedNote) {
+          // A rebind attaches to the note's DEFAULT LABEL - the Shape's label for the position
+          // it drew that note at (ADR-0005 §2) - which is why the armed note itself, and not
+          // where it sits on screen, is all this needs.
+          const existing = keyBinds.setKeyboardKeybind(selectedNote.noteNames.keyboard, code);
           if (existing !== undefined)
             logger.warn(t('keybinds:already_used_keybind', { note_name: existing.name }));
-          selected = { type: '', index: -1 };
+          selectedNote = null;
+          return;
         }
+        const { type, index } = selectedVsrg;
         if (['k4', 'k6', 'k8'].includes(type) && index !== -1) {
           const kind = Number(type.replace('k', '')) as VsrgSongKeys;
           keyBinds.setVsrgKeybind(kind, index, letter);
-          selected = { type: '', index: -1 };
+          selectedVsrg = { type: '', index: -1 };
         }
       },
       { id: 'keybinds' }
@@ -84,21 +98,25 @@
       {t('keybinds:keyboard_keybinds_description')}
     </div>
     <div class="flex-centered">
+      <!-- The Shape places the instrument's notes and hands each one back (ADR-0005 §1/§3);
+           `note.noteNames.keyboard` is that note's default label, resolved by the engine
+           through the Shape's own assignment, so the key shown on a button is always the key
+           that button's rebind writes to. -->
       <ShapeKeyboard
         shape={baseInstrument.shape}
-        count={baseInstrument.notes.length}
+        notes={baseInstrument.notes}
         class="keyboard"
         style="margin:1rem 0"
       >
-        {#snippet button(i)}
-          {@const note = baseInstrument.notes[i]}
+        {#snippet button(note)}
           {@const key = keyBinds.getKeyOfShortcut('keyboard', note.noteNames.keyboard)}
           <BaseNote
-            data={{ status: selected.type === 'keyboard' && i === selected.index ? 'clicked' : '' }}
-            noteImage={baseInstrument.notes[i].noteImage}
+            data={{ status: selectedNote === note ? 'clicked' : '' }}
+            noteImage={note.icon}
             noteText={key ? (KeyboardProvider.getTextOfCode(key as KeyboardCode) ?? key) : '???'}
             handleClick={() => {
-              selected = { type: 'keyboard', index: selected.index === i ? -1 : i };
+              selectedNote = selectedNote === note ? null : note;
+              selectedVsrg = { type: '', index: -1 };
             }}
           />
         {/snippet}
@@ -184,9 +202,10 @@
     {#each keys as key, i (i)}
       <VsrgKey
         letter={key}
-        isActive={selected.type === type && selected.index === i}
+        isActive={selectedVsrg.type === type && selectedVsrg.index === i}
         handleClick={(willBeSelected) => {
-          selected = { type, index: willBeSelected ? i : -1 };
+          selectedVsrg = { type, index: willBeSelected ? i : -1 };
+          selectedNote = null;
         }}
       />
     {/each}

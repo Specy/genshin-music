@@ -10,7 +10,7 @@
   import { game } from '$game';
   import { SUSTAIN_VISUAL_THRESHOLD_MS } from '$core/legacyConfig';
   import type { Chunk } from '$core/Songs/VisualSong';
-  import { canonicalButtonForId } from '$core/Songs/noteIds';
+  import { songGridSlotForId } from '$core/Songs/noteIds';
   import type { Theme } from '$core/theme/ThemeProvider.svelte';
   import type { NoteNameType } from '$lib/games/types';
   import { cn, cs } from '$core/utils/Utilities';
@@ -40,8 +40,13 @@
     const result: (false | { held: boolean })[] = new Array(columnsPerRow * rows).fill(false);
     chunk.notes.forEach((note) => {
       //the player pipeline resolves displayButton at queue-build; anything unresolved
-      //falls back to the canonical (default-instrument) position of the note's id
-      const button = note.displayButton !== -1 ? note.displayButton : canonicalButtonForId(note.id);
+      //falls back to the id's canonical Song-Grid slot (ADR-0004: a game-authored grid
+      //position, not the default instrument's button — the two coincide for both shipped
+      //games). This frame still places by the note's OWN button, deliberately untouched
+      //by ADR-0004; only the fallback's definition moved. Deliberately NOT the note's
+      //`keyboardButton`: that is the key on the player's on-screen keyboard, a different
+      //coordinate space (see RecordedNote), and these frames are not that keyboard.
+      const button = note.displayButton !== -1 ? note.displayButton : songGridSlotForId(note.id);
       if (button >= 0 && button < result.length) {
         const existing = result[button];
         const held =

@@ -1,7 +1,15 @@
 import {describe, expect, it} from 'vitest'
-import {ComposedSong, INSTRUMENTS, RecordedSong} from './imports'
+import {
+    CANONICAL_NOTE_IDS,
+    COMPOSER_NOTE_POSITIONS,
+    ComposedSong,
+    INSTRUMENTS,
+    INSTRUMENTS_DATA,
+    RecordedSong,
+} from './imports'
 import {buildComposedSong} from './builders'
 import {expectGolden, readFixture} from './golden'
+import {noteIdToButton} from '$core/Songs/noteIds'
 
 // Format-v4 rewrite (2026-08-03): `composed-song.json` is the frozen pre-v4 fixture —
 // its `serialized` member is a real v3 file and now serves as the LEGACY INPUT; the
@@ -146,5 +154,92 @@ describe('breakpoints only ever address columns that exist', () => {
         payload.breakpoints = [0, 3, 500, -1, 2.5, Number.NaN]
         const parsed = ComposedSong.deserialize(payload)
         expect(parsed.breakpoints).toEqual([0, 3])
+    })
+})
+
+/**
+ * The Song Grid row a Note Id renders on, restated from game.json's positional pairing (ADR-0004)
+ * rather than read out of songGridSlotForId - the production mapping is half of what is under
+ * test here, so the oracle must not be the same function.
+ */
+function gridRow(id: number): number {
+    const slot = CANONICAL_NOTE_IDS.indexOf(id)
+    return slot === -1 ? -1 : COMPOSER_NOTE_POSITIONS[slot]
+}
+
+/** gridRow's inverse: the Note Id of a Song Grid row, or undefined past either end of the grid. */
+function idAtRow(row: number): number | undefined {
+    return CANONICAL_NOTE_IDS.find((_, slot) => COMPOSER_NOTE_POSITIONS[slot] === row)
+}
+
+/**
+ * The game's widest SUB-GRID instrument - one whose own table is narrower than the Song Grid, so
+ * its buttons pack against 0 instead of lining up with the grid's rows (genshin's 14-note
+ * NightwindHorn, sky's Bells). A SEARCH rather than a name because this file carries no per-game
+ * instrument list; widest so it lands on the melodic instrument ADR-0004 was written from rather
+ * than on the 8-note drums. Mirrors composerRenderer.test.ts's subGridPair - the two files pin the
+ * same defect from the two ends (what the canvas draws, and what this tool moves).
+ */
+function subGridInstrument(): (typeof INSTRUMENTS)[number] {
+    const best = INSTRUMENTS.map((instrument) => ({
+        instrument,
+        //an id it CAN play whose own button is NOT its canonical slot: the whole disagreement
+        misplaced: CANONICAL_NOTE_IDS.some(
+            (id, slot) => ![-1, slot].includes(noteIdToButton(instrument, id))
+        ),
+        width: INSTRUMENTS_DATA[instrument].notes.length,
+    }))
+        .filter((candidate) => candidate.misplaced)
+        //stable, so instruments of equal width keep INSTRUMENTS order and the pick is deterministic
+        .sort((a, b) => b.width - a.width)[0]
+    if (!best) throw new Error('no instrument in this game has a sub-grid table')
+    return best.instrument
+}
+
+/**
+ * ComposerTools' move-notes-up/down buttons (its `e` and `g` slots) call straight through to
+ * moveNotesBy, so the rows it steps through have to be the rows the CANVAS drew - which since
+ * ADR-0004 are Song Grid rows: a note's row is its Note Id's canonical slot, its instrument never
+ * consulted. While this resolved rows from the note's OWN instrument button instead, it agreed
+ * with the canvas only for full-size instruments; on a sub-grid track the packed button index is
+ * not the id's grid row, so a note the user could see sitting mid-canvas with empty rows above it
+ * either jumped a whole octave band or was deleted as though it were already at the top.
+ */
+describe('moveNotesBy steps through the Song Grid rows the canvas draws', () => {
+    it('moves every note exactly one grid row, identically on a sub-grid and a full-size track', () => {
+        const song = new ComposedSong('move all', [INSTRUMENTS[0], subGridInstrument()])
+        // one Note Id per grid row, in its own column, doubled onto both tracks - so every row of
+        // the grid is exercised and each column's two notes can only differ by their instrument
+        CANONICAL_NOTE_IDS.forEach((id, slot) => {
+            song.columns[slot].addNote(0, id)
+            song.columns[slot].addNote(1, id)
+        })
+
+        song.moveNotesBy(CANONICAL_NOTE_IDS.map((_, slot) => slot), 1, 'all')
+
+        CANONICAL_NOTE_IDS.forEach((id, slot) => {
+            const landed = idAtRow(gridRow(id) - 1)
+            const ids = song.columns[slot].notes.map((note) => note.id)
+            //only the top row has nowhere to go; every other note keeps its column, on both tracks
+            expect(ids).toEqual(landed === undefined ? [] : [landed, landed])
+        })
+    })
+
+    it('moves a single track without disturbing the others', () => {
+        const song = new ComposedSong('move layer', [INSTRUMENTS[0], subGridInstrument()])
+        //two notes one row apart, mid-grid: adjacent enough that the per-layer branch's collision
+        //merge would fire if they ever landed on the same row
+        const middleRow = Math.floor(CANONICAL_NOTE_IDS.length / 2)
+        const upper = idAtRow(middleRow - 1)!
+        const lower = idAtRow(middleRow)!
+        song.columns[0].addNote(1, upper)
+        song.columns[0].addNote(1, lower)
+        song.columns[0].addNote(0, lower)
+
+        song.moveNotesBy([0], 1, 1)
+
+        expect(song.columns[0].notesOfTrack(1).map((note) => note.id))
+            .toEqual([idAtRow(middleRow - 2)!, upper])
+        expect(song.columns[0].notesOfTrack(0).map((note) => note.id)).toEqual([lower])
     })
 })

@@ -150,6 +150,17 @@ export type GameJson = {
     perRow: number;
     cssClasses: NotesCssClasses;
     nameTypes: NoteNameType[];
+    /**
+     * The Song Grid's ordered Note Ids (ADR-0004): entry N is the id whose grid
+     * row is `composerPositions[N]`. A note's row therefore follows from its Note
+     * Id alone, never from the Button it happens to occupy on its track's
+     * instrument — that is what keeps one id on one row across every track.
+     * One entry per grid row (length === perColumn), ids unique.
+     * Written out here rather than referenced by preset name (or read off
+     * `instruments.list[0]`, the pre-ADR-0004 implicit source) so that reordering
+     * the menu roster or editing a preset can never silently redefine the grid.
+     */
+    canonicalNoteIds: number[];
     composerPositions: number[];
     importPositions: number[];
     animationDelayMs: number;

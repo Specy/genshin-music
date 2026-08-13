@@ -31,7 +31,7 @@
     keyPadding: number;
     onClick: (note: ObservableNote) => void;
     onRelease?: (note: ObservableNote) => void;
-    /** Button is currently physically held (pointer or bound key) — shown pressed-down. */
+    /** This note is currently physically held (pointer or bound key) — shown pressed-down. */
     held?: boolean;
   } = $props();
 

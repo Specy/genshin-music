@@ -15,7 +15,7 @@
   import Analytics from '$core/Analytics';
   import { ApproachingNote, type RecordedNote } from '$core/Songs/SongClasses';
   import type { NoteStatus } from '$core/types';
-  import { displayButtonForId } from '$core/Songs/noteIds';
+  import { resolvePlayerNoteButtons } from '$core/Songs/noteIds';
   import type { Instrument, ObservableNote } from '$lib/audio/Instrument.svelte';
   import { RecordedSong, type Chunk } from '$core/Songs/RecordedSong';
   import { MIDIProvider, type MIDIEvent } from '$lib/providers/MIDIProvider';
@@ -47,8 +47,9 @@
       hideNotesInPracticeMode: boolean;
     };
     functions: {
-      playSound: (index: number, songNote?: RecordedNote) => void;
-      releaseSound: (index: number) => void;
+      //id-keyed (ADR-0005 §4): what this surface hands the engine is the Note Id it pressed
+      playSound: (id: number, songNote?: RecordedNote) => void;
+      releaseSound: (id: number) => void;
       releaseAllSounds: () => void;
       setHasSong: (override: boolean) => void;
       onSongFinished: () => void;
@@ -65,7 +66,11 @@
   let mounted = true;
   let songTimestamp = 0;
   let cleanup: (() => void)[] = [];
-  let timeouts: Timer[] = [];
+  //pending status resets, keyed BY NOTE (ADR-0005 §3) rather than by its position: the note
+  //object outlives any republish of the keyboard, so a reset scheduled just before a layout
+  //change can only ever unlight the button it was scheduled for.
+  // eslint-disable-next-line svelte/prefer-svelte-reactivity -- bookkeeping only; nothing renders from it
+  const timeouts = new Map<ObservableNote, Timer>();
   let debouncedStateUpdate: Timer = 0;
   let mode: 'play' | 'practice' | 'approaching' | undefined = $state('play');
   let songToPractice: Chunk[] = [];
@@ -133,17 +138,17 @@
     const startOffset = song.notes[start] !== undefined ? song.notes[start].time : 0;
     for (let i = start; i < end && i < song.notes.length; i++) {
       const note = song.notes[i];
-      // Stranded/out-of-grid notes can't be practiced — skip (they were unplayable rows before
-      // too). Against the DISPLAY KEYBOARD's length and not game.notes.perColumn: the two were the
-      // same number back when this keyboard was always the game's full-size one, and stopped being
-      // once the grid started following the song's instrument. A note on a row this grid does not
-      // have is never rendered and can never be clicked, so admitting it here would only queue it
-      // up to expire and be scored as a MISS. practiceSong already filters on the same length.
-      if (note.displayButton < 0 || note.displayButton >= data.songDisplayInstrument.notes.length)
-        continue;
+      // Notes with no key on THIS keyboard can't be practiced — skip (they were unplayable rows
+      // before too). The test is `keyboardButton`, the display instrument's own Button space,
+      // which is also what the queue rows below are keyed by and what a click resolves to: a note
+      // this keyboard cannot play can never be clicked, so admitting it would only queue it up to
+      // expire and be scored as a MISS. The second bound is the queue's own row count (one row per
+      // Song Grid slot); a Button is always within its instrument's range, and every instrument's
+      // ids come from the grid's, so it only ever fires for a malformed config.
+      if (note.keyboardButton < 0 || note.keyboardButton >= game.notes.perColumn) continue;
       const obj = new ApproachingNote({
         time: Song.roundTime((note.time - startOffset) / speedChanger.value + startDelay),
-        index: note.displayButton,
+        index: note.keyboardButton,
         //durations scale with playback speed like the times do (matches applySpeedChange)
         duration: sustainingTracks[note.trackIndex] ? note.duration / speedChanger.value : 0,
       });
@@ -238,33 +243,51 @@
     });
   }
 
-  //live presses currently held down, with what to restore when they lift.
+  //live presses currently held down, with what to restore when they lift — note-keyed, same
+  //reason as `timeouts` above.
   // eslint-disable-next-line svelte/prefer-svelte-reactivity -- bookkeeping only; the visible status lives in playerStore
-  const heldVisualPresses = new Map<number, { prevStatus: NoteStatus; pressedAt: number }>();
+  const heldVisualPresses = new Map<
+    ObservableNote,
+    { prevStatus: NoteStatus; pressedAt: number }
+  >();
 
-  function scheduleStatusReset(noteIndex: number, prevStatus: NoteStatus, delayMs: number) {
-    const keyboard = playerStore.keyboard;
-    timeouts[noteIndex] = setTimeout(() => {
-      timeouts[noteIndex] = 0;
-      if (!['clicked', 'approach-wrong', 'approach-correct'].includes(keyboard[noteIndex].status))
-        return;
-      if (prevStatus === 'toClickNext')
-        return playerStore.setNoteState(noteIndex, { status: prevStatus });
-      playerStore.setNoteState(noteIndex, { status: '' });
-    }, delayMs);
+  /**
+   * The Button this note occupies on the keyboard AS PUBLISHED — the coordinate this
+   * surface's song-side tables speak (`RecordedNote.keyboardButton` and the approaching-note
+   * rows keyed by it, both resolved against this same instrument upstream). Never
+   * `displayButton`, which answers in the note's OWN TRACK's Buttons and is the sheet's
+   * coordinate. Asked of the published array instead of read off the note (`index` is the
+   * note's own private storage, ADR-0005): the two agree for every note actually on screen,
+   * and a note that is NOT on screen has no key here — -1, which leaves those tables untouched.
+   */
+  function buttonOf(note: ObservableNote) {
+    return playerStore.keyboard.indexOf(note);
+  }
+
+  function scheduleStatusReset(note: ObservableNote, prevStatus: NoteStatus, delayMs: number) {
+    timeouts.set(
+      note,
+      setTimeout(() => {
+        timeouts.delete(note);
+        if (!['clicked', 'approach-wrong', 'approach-correct'].includes(note.status)) return;
+        if (prevStatus === 'toClickNext')
+          return playerStore.setNoteState(note, { status: prevStatus });
+        playerStore.setNoteState(note, { status: '' });
+      }, delayMs)
+    );
   }
 
   function handleRelease(note: ObservableNote) {
     if (!note) return;
-    functions.releaseSound(note.index);
+    functions.releaseSound(note.id);
     //finger lifted: the ring has nothing left to count down, whether or not it ran out
-    if (note.data.holdTimerMs !== 0) playerStore.setNoteState(note.index, { holdTimerMs: 0 });
-    const held = heldVisualPresses.get(note.index);
+    if (note.data.holdTimerMs !== 0) playerStore.setNoteState(note, { holdTimerMs: 0 });
+    const held = heldVisualPresses.get(note);
     if (held) {
-      heldVisualPresses.delete(note.index);
+      heldVisualPresses.delete(note);
       //stay lit at least as long as a quick tap used to (the press animation length)
       const remaining = Math.max(0, game.notes.animationDelayMs - (Date.now() - held.pressedAt));
-      scheduleStatusReset(note.index, held.prevStatus, remaining);
+      scheduleStatusReset(note, held.prevStatus, remaining);
     }
   }
 
@@ -289,9 +312,12 @@
       previous = notes[i].time;
       if (delayTime > 16) await delay(delayTime + delayOffset);
       if (!mounted || songTimestamp !== song.timestamp) return;
-      const keyboardNote = keyboard[notes[i].displayButton];
+      //the note's key on this keyboard, or nothing on screen to press (keyboardButton -1, which
+      //indexes nothing) — either way the sound is the song note's own id, played on its own
+      //track's instrument
+      const keyboardNote = keyboard[notes[i].keyboardButton];
       if (keyboardNote) handleClick(keyboardNote, notes[i]);
-      else functions.playSound(-1, notes[i]);
+      else functions.playSound(notes[i].id, notes[i]);
       if (chunkPlayedNotes >= (playerControlsStore.currentChunk?.notes.length ?? 0)) {
         chunkPlayedNotes = 1;
         playerControlsStore.incrementChunkPositionAndSetCurrent(start + i + 1);
@@ -318,15 +344,23 @@
     end = end ?? song.notes.length;
     const keyboard = playerStore.keyboard;
     const { visualSheetSize } = data;
+    //only notes this keyboard has a key for can ever be clicked, so only those may enter the
+    //practice queue — a chunk holding an unclickable note would never complete. The pages built
+    //from these chunks follow, by necessity: they ARE the queue. Each surviving note still draws
+    //at its own `displayButton` inside its frame.
     const notes = applySpeedChange(song.notes)
       .slice(start, end)
-      .filter((note) => note.displayButton >= 0 && note.displayButton < keyboard.length);
+      .filter((note) => note.keyboardButton >= 0 && note.keyboardButton < keyboard.length);
     const chunks = RecordedSong.mergeNotesIntoChunks(notes.map((n) => n.clone()));
     if (chunks.length === 0) return;
     nextChunkDelay = 0;
     const firstChunk = chunks[0];
     firstChunk.notes.forEach((note) => {
-      playerStore.setNoteState(note.displayButton, {
+      //one lookup from the note's key on THIS keyboard to the note object, then everything is
+      //the object
+      const keyboardNote = keyboard[note.keyboardButton];
+      if (!keyboardNote) return;
+      playerStore.setNoteState(keyboardNote, {
         status: 'toClick',
         delay: game.notes.animationDelayMs,
         holdMs:
@@ -337,7 +371,7 @@
     });
     const secondChunk = chunks[1];
     secondChunk?.notes.forEach((note) => {
-      const keyboardNote = keyboard[note.displayButton];
+      const keyboardNote = keyboard[note.keyboardButton];
       if (keyboardNote.status === 'toClick') return keyboardNote.setStatus('toClickAndNext');
       keyboardNote.setStatus('toClickNext');
     });
@@ -357,8 +391,8 @@
 
   async function stopSong(): Promise<void> {
     songTimestamp = 0;
-    timeouts.forEach(clearTimeout);
-    timeouts = [];
+    timeouts.forEach((timeout) => clearTimeout(timeout));
+    timeouts.clear();
     heldVisualPresses.clear();
     playerStore.resetKeyboardLayout();
     approachingNotesList = [];
@@ -377,7 +411,9 @@
   }
 
   function handleApproachClick(note: ObservableNote) {
-    const approachingNote = approachingNotes[note.index][0];
+    //the queue's rows and this lookup are the same space now (both the displayed keyboard's
+    //Buttons); a note that is not on the keyboard resolves to -1 and hits no row
+    const approachingNote = approachingNotes[buttonOf(note)]?.[0];
     if (approachingNote) {
       approachingNote.clicked = true;
       if (approachingNote.time < approachRate / 3) return 'approach-correct';
@@ -388,8 +424,16 @@
   function handlePracticeClick(note: ObservableNote) {
     const keyboard = playerStore.keyboard;
     if (songToPractice.length > 0) {
+      //ONE coordinate space on both sides: the clicked note's position on the published
+      //keyboard, matched against the chunk note's key on that same keyboard. Comparing it with
+      //`displayButton` matched the note's OWN track's button instead, so on a multi-instrument
+      //song the right key failed to clear a note and a wrong one cleared it.
+      const button = buttonOf(note);
+      //a note that is not on the published keyboard has no key, and must not match the chunk
+      //notes practiceSong dropped for the same reason
+      if (button < 0) return;
       const clickedNoteIndex = songToPractice[0]?.notes.findIndex(
-        (e) => e.displayButton === note.index
+        (e) => e.keyboardButton === button
       );
       if (clickedNoteIndex !== -1) {
         songToPractice[0].notes.splice(clickedNoteIndex, 1);
@@ -404,7 +448,9 @@
           const nextChunk = songToPractice[0];
           const nextNextChunk = songToPractice[1];
           nextChunk.notes.forEach((note) => {
-            playerStore.setNoteState(note.displayButton, {
+            const keyboardNote = keyboard[note.keyboardButton];
+            if (!keyboardNote) return;
+            playerStore.setNoteState(keyboardNote, {
               status: 'toClick',
               delay: nextChunk.delay,
               holdMs:
@@ -415,7 +461,7 @@
           });
           if (nextNextChunk) {
             nextNextChunk?.notes.forEach((note) => {
-              const keyboardNote = keyboard[note.displayButton];
+              const keyboardNote = keyboard[note.keyboardButton];
               if (keyboardNote.status === 'toClick')
                 return keyboardNote.setStatus('toClickAndNext');
               keyboardNote.setStatus('toClickNext');
@@ -428,50 +474,48 @@
   }
 
   function handleClick(note: ObservableNote, songNote?: RecordedNote) {
-    const keyboard = playerStore.keyboard;
     const hasAnimation = data.hasAnimation;
     if (!note) return;
-    const prevStatus = keyboard[note.index].status;
+    const prevStatus = note.status;
     //the press below wipes the read-ahead hold hint, so carry its length into the release
     //ring first - that ring is what tells the player when to lift the finger back off
-    const holdTimerMs = mode === 'practice' ? keyboard[note.index].data.holdMs : 0;
-    playerStore.setNoteState(note.index, {
+    const holdTimerMs = mode === 'practice' ? note.data.holdMs : 0;
+    playerStore.setNoteState(note, {
       status: 'clicked',
       delay: playerStore.eventType !== 'play' ? game.notes.animationDelayMs : 0,
       holdMs: 0,
       holdTimerMs,
-      holdTimerId: keyboard[note.index].data.holdTimerId + 1,
+      holdTimerId: note.data.holdTimerId + 1,
       animationId:
         hasAnimation && playerStore.eventType !== 'approaching'
           ? Math.floor(Math.random() * 10000) + Date.now()
           : 0,
     });
     handlePracticeClick(note);
-    functions.playSound(note.index, songNote);
+    //the engine speaks Note Ids: play THIS note, not whatever the sounding instrument keeps
+    //at the same button
+    functions.playSound(note.id, songNote);
     const status = handleApproachClick(note);
     if (playerStore.eventType === 'approaching') {
-      playerStore.setNoteState(note.index, { status });
+      playerStore.setNoteState(note, { status });
       if (status === 'approach-wrong') playerControlsStore.increaseScore(false);
     }
     //TODO could add this to the player store
-    if (timeouts[note.index] && playerStore.eventType === 'play')
-      clearTimeout(timeouts[note.index]);
+    const pendingReset = timeouts.get(note);
+    if (pendingReset && playerStore.eventType === 'play') clearTimeout(pendingReset);
     if (songNote) {
       const holdDuration = sustainingTracks[songNote.trackIndex] ? songNote.duration : 0;
-      scheduleStatusReset(
-        note.index,
-        prevStatus,
-        Math.max(game.notes.animationDelayMs, holdDuration)
-      );
+      scheduleStatusReset(note, prevStatus, Math.max(game.notes.animationDelayMs, holdDuration));
     } else if (data.instrument.supportsSustain) {
       //live press on a sustaining instrument: the button stays visually pressed until
       //handleRelease lifts it — clear any pending reset from a previous tap so it
       //can't unlight the hold
-      if (timeouts[note.index]) clearTimeout(timeouts[note.index]);
-      heldVisualPresses.set(note.index, { prevStatus, pressedAt: Date.now() });
+      if (pendingReset) clearTimeout(pendingReset);
+      timeouts.delete(note);
+      heldVisualPresses.set(note, { prevStatus, pressedAt: Date.now() });
     } else {
       //non-sustaining instruments keep the plain tap animation
-      scheduleStatusReset(note.index, prevStatus, game.notes.animationDelayMs);
+      scheduleStatusReset(note, prevStatus, game.notes.animationDelayMs);
     }
   }
 
@@ -494,10 +538,9 @@
     //visual counterpart of Player's audio blur guard: lift held-pressed buttons whose
     //key-up will never arrive
     const releaseVisualsOnLeave = () => {
-      const keyboard = playerStore.keyboard;
-      [...heldVisualPresses.keys()].forEach((index) => {
-        if (keyboard[index]) handleRelease(keyboard[index]);
-      });
+      //the held notes ARE the map's keys — no keyboard lookup to go stale between the press
+      //and the blur
+      [...heldVisualPresses.keys()].forEach((note) => handleRelease(note));
     };
     window.addEventListener('blur', releaseVisualsOnLeave);
     document.addEventListener('visibilitychange', releaseVisualsOnLeave);
@@ -533,17 +576,21 @@
           // the `shape` derived below is the grid - so a song on a 2x4 drum kit gets 8 buttons in
           // 4 columns rather than 8 buttons in a piano's 5.
           playerStore.setKeyboardLayout(data.songDisplayInstrument.notes);
-          // Resolve each note's display button once, from its own track's instrument. The display
-          // keyboard follows track 0 (see displayInstrumentNameFor), so a note belonging to a
-          // WIDER track can land on a row this grid does not have; such notes remain in the timing
-          // stream and are skipped instead of changing the user's requested note range.
+          // Resolve each note's TWO display coordinates once (see RecordedNote): `displayButton`
+          // for the sheet frames, which stay on the note's own track instrument (ADR-0004), and
+          // `keyboardButton` for THIS keyboard, the only one everything below may index. The
+          // display keyboard follows track 0 (see displayInstrumentNameFor), so a note on another
+          // track - or one stranded on its own - simply has no key here; those notes remain in the
+          // timing stream and are skipped instead of changing the user's requested note range.
           const songInstruments = lostReference.instruments;
           sustainingTracks = songInstruments.map(
             (instrument) => game.instruments.data[instrument.name]?.sustain !== undefined
           );
-          lostReference.notes.forEach((n) => {
-            n.displayButton = displayButtonForId(songInstruments[n.trackIndex]?.name ?? '', n.id);
-          });
+          resolvePlayerNoteButtons(
+            lostReference.notes,
+            songInstruments,
+            data.songDisplayInstrument.name
+          );
 
           lostReference.timestamp = Date.now();
           const start = clamp(state.start, 0, lostReference.notes.length);
@@ -552,13 +599,11 @@
             start,
             lostReference.notes.length
           );
+          //"playable" = there is a key on THIS keyboard to press; a Button of the display
+          //instrument is by construction one of its keys, so >= 0 is the whole test
           const hasPlayableNotes = lostReference.notes
             .slice(start, end)
-            .some(
-              (note) =>
-                note.displayButton >= 0 &&
-                note.displayButton < data.songDisplayInstrument.notes.length
-            );
+            .some((note) => note.keyboardButton >= 0);
           if (end === start || !hasPlayableNotes) {
             playerControlsStore.setState({
               size: lostReference.notes.length,
@@ -615,13 +660,20 @@
    * The `min` makes the disagreement unrepresentable in the direction that renders wrongly:
    * capping at the Shape's own instrument keeps the count from exceeding the grid it is being
    * laid out on (15 piano buttons wrapped into a drum kit's 4 columns was the visible symptom),
-   * and capping at the published keyboard keeps `keyboard[index]` inside the array the button
-   * snippet indexes. Both are identities once the two clocks have met, which is every frame but
+   * and capping at the published keyboard keeps every note handed to the Shape one that is
+   * really there. Both are identities once the two clocks have met, which is every frame but
    * those few milliseconds.
    */
   const buttonCount = $derived(
     Math.min(displayInstrument.notes.length, playerStore.keyboard.length)
   );
+  /**
+   * What the Shape is handed (ADR-0005 §1): the displayed instrument's notes in authored
+   * Button order, capped by the guard above — so the Shape decides where each note goes and
+   * the snippet gets the note itself back, never an index into an array that may have been
+   * republished since. The slice is also what makes `note` in the snippet un-undefined.
+   */
+  const buttonNotes = $derived(playerStore.keyboard.slice(0, buttonCount));
   const keyboardClass = $derived(
     'keyboard' + (playerStore.eventType === 'play' ? ' keyboard-playback' : '')
   );
@@ -640,24 +692,23 @@
     <div class="loading" style="min-height: 20vh;">{t('common:loading')}...</div>
   </div>
 {:else}
-  <ShapeKeyboard {shape} count={buttonCount} class={keyboardClass} style={wrapperStyle}>
-    {#snippet button(index)}
-      {@const note = playerStore.keyboard[index]}
+  <ShapeKeyboard {shape} notes={buttonNotes} class={keyboardClass} style={wrapperStyle}>
+    <!-- payload: the note itself, and the BUTTON it is - the coordinate the per-button data
+         below is keyed by (approaching rows) and the one getNoteText labels, which resolves it
+         through the Shape's own assignment so the text can't disagree with what was drawn -->
+    {#snippet button(note, buttonIndex)}
       <PlayerNote
         {note}
+        {shape}
         data={{
           approachRate,
-          instrument: data.hasSong ? data.songDisplayInstrument.name : data.instrument.name,
+          instrument: displayInstrument.name,
         }}
         hideNote={hideNotes}
-        approachingNotes={approachingNotes[note.index]}
+        approachingNotes={approachingNotes[buttonIndex] ?? []}
         {handleClick}
         {handleRelease}
-        noteText={(data.hasSong ? data.songDisplayInstrument : data.instrument).getNoteText(
-          note.index,
-          data.noteNameType,
-          data.pitch
-        )}
+        noteText={displayInstrument.getNoteText(buttonIndex, data.noteNameType, data.pitch)}
       />
     {/snippet}
   </ShapeKeyboard>

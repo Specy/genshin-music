@@ -123,9 +123,11 @@ import type {ComposerCache} from '$cmp/pages/Composer/ComposerCache'
  *  - teardown: nothing requires the Application to be destroyed, though destroy()'s own comment
  *    calls that a hard requirement against a WebGL leak on remount.
  *  - the rules this file imports from production rather than restating - nearestEven,
- *    computeRowLayerStatuses, computeStrandedRows, displayButtonForId, isColumnVisible. A defect
- *    inside one of those is followed by the reference rather than caught, EXCEPT where a second,
- *    independent statement pins it (the closed-form window range does this for isColumnVisible).
+ *    computeGridRowLayerStatuses, computeGridStrandedRows, songGridSlotForId, isColumnVisible. A
+ *    defect inside one of those is followed by the reference rather than caught, EXCEPT where a
+ *    second, independent statement pins it (the closed-form window range does this for
+ *    isColumnVisible; 'one Note Id, one row, whatever the track's instrument' does it for the
+ *    canonical placement, stating the rows in game.json's own terms instead of the helper's).
  *  - an edit to a column entirely OUTSIDE the drawn window. It is correct because the column is
  *    painted on the way in, but nothing here drives that.
  *  - a wrong skip whose stale content happens to equal the correct content. Invisible by
@@ -605,6 +607,7 @@ vi.mock('$cmp/pages/Composer/ComposerCache', async importOriginal => {
 })
 
 import {
+    CANONICAL_NOTE_IDS,
     COMPOSER_NOTE_POSITIONS,
     ComposedSong,
     ComposerSettings,
@@ -617,11 +620,13 @@ import {
 //the renderer's own rounding helper, used here to DERIVE the column geometry rather than read it
 //back off the ComposerCache the renderer built - see Geometry
 import {nearestEven} from '$core/utils/Utilities'
+//the CANVAS placement rules (ADR-0004): a row is the Note Id's canonical Song Grid slot, so the
+//oracles below take the *Grid* helpers. computeButtonLayerStatuses, keyed by the Buttons of the
+//keyboard on screen, belongs to the composer KEYBOARD and deliberately does not appear in this file.
 import {
-    canonicalButtonForId,
-    computeRowLayerStatuses,
-    computeStrandedRows,
-    displayButtonForId,
+    songGridSlotForId,
+    computeGridRowLayerStatuses,
+    computeGridStrandedRows,
     noteIdToButton,
 } from '$core/Songs/noteIds'
 import {
@@ -756,7 +761,7 @@ function strandingPair(): {instrument: (typeof INSTRUMENTS)[number], id: number,
     for (const instrument of INSTRUMENTS) {
         for (let button = 0; button < buttons; button++) {
             const id = idOf(button)
-            const row = canonicalButtonForId(id)
+            const row = songGridSlotForId(id)
             if (row !== -1 && noteIdToButton(instrument, id) === -1) return {instrument, id, row}
         }
     }
@@ -767,12 +772,55 @@ function strandingPair(): {instrument: (typeof INSTRUMENTS)[number], id: number,
 function drawnColumnWithoutRow(song: ComposedSong, row: number): number {
     for (let index = 0; index < song.columns.length; index++) {
         if (!isColumnVisible(index, song.selected, WINDOW_GEOMETRY)) continue
-        const taken = song.columns[index].notes.some(
-            note => displayButtonForId(song.instruments[note.trackIndex]?.name ?? '', note.id) === row
-        )
+        //by the canvas' own placement rule: the id's canonical row, whatever track it is on
+        const taken = song.columns[index].notes.some(note => songGridSlotForId(note.id) === row)
         if (!taken) return index
     }
     throw new Error(`every drawn column already carries a note on row ${row}`)
+}
+
+/**
+ * THE PAIR OF NOTE IDS ADR-0004 IS ABOUT, on the game's widest SUB-GRID instrument - one whose own
+ * table is narrower than the Song Grid, so its buttons pack against 0 instead of lining up with the
+ * grid's rows:
+ *  - `playableId`, an id it CAN play whose own button index is NOT the id's canonical row. This one
+ *    value is the whole defect: placing by own button drew it at COMPOSER_NOTE_POSITIONS[ownButton],
+ *    a different row from the one the same id takes on a full-size track, and one that could collide
+ *    with - or silently un-dim - this same instrument's stranded ids;
+ *  - `strandedId`, an id it cannot play at all, which the canvas draws dimmed at the id's own row.
+ *
+ * WIDEST rather than first so this lands on the melodic sub-grid instrument the ADR was written
+ * from (genshin NightwindHorn, 14 notes: id 60 sits at its own button 0 rather than canonical row 7,
+ * and ids 72-83 strand) rather than on the 8-note drums, while still being a SEARCH - this file
+ * carries no per-game instrument list. Sky resolves it to Bells.
+ */
+function subGridPair(): {
+    instrument: (typeof INSTRUMENTS)[number]
+    playableId: number
+    ownButton: number
+    strandedId: number
+} {
+    const candidates = INSTRUMENTS.map(instrument => ({
+        instrument,
+        //index INTO CANONICAL_NOTE_IDS is the canonical row, by game.json's positional pairing -
+        //stated here rather than taken from songGridSlotForId, which is what production places by
+        playableId: CANONICAL_NOTE_IDS.find(
+            (id, row) => ![-1, row].includes(noteIdToButton(instrument, id))
+        ),
+        strandedId: CANONICAL_NOTE_IDS.find(id => noteIdToButton(instrument, id) === -1),
+        width: INSTRUMENTS_DATA[instrument].notes.length,
+    }))
+        .filter(candidate => candidate.playableId !== undefined && candidate.strandedId !== undefined)
+        //stable, so instruments of equal width keep INSTRUMENTS order and the pick is deterministic
+        .sort((a, b) => b.width - a.width)
+    const best = candidates[0]
+    if (!best) throw new Error('no instrument in this game has a sub-grid table')
+    return {
+        instrument: best.instrument,
+        playableId: best.playableId!,
+        ownButton: noteIdToButton(best.instrument, best.playableId!),
+        strandedId: best.strandedId!,
+    }
 }
 
 /** The canvas's own props - everything on the renderer state that is not read off the song. */
@@ -1738,11 +1786,13 @@ function expectedTails(context: Context, index: number, geometry: Geometry, acce
             //visible; the current layer's is not subject to that
             const isCurrentLayer = note.trackIndex === props.currentLayer
             if (!isCurrentLayer && !instrument?.visible) continue
-            const button = displayButtonForId(instrument?.name ?? '', note.id)
-            if (button === -1) continue
-            //centred in its display row, and a stub over the right 45% in the column the note
+            //a tail sits on the SAME canonical row as the note sprite it leaves - the instrument
+            //above decides only whether the tail is drawn at all, never where
+            const row = songGridSlotForId(note.id)
+            if (row === -1) continue
+            //centred in its Song Grid row, and a stub over the right 45% in the column the note
             //STARTS in so the bar reads as leaving the note icon
-            const y = COMPOSER_NOTE_POSITIONS[button] * rowHeight + (rowHeight - tailHeight) / 2
+            const y = COMPOSER_NOTE_POSITIONS[row] * rowHeight + (rowHeight - tailHeight) / 2
             const x = index === start ? columnWidth * 0.55 : 0
             ops.push(
                 ['rect', x, y, columnWidth - x, tailHeight],
@@ -1776,9 +1826,10 @@ function expectedTails(context: Context, index: number, geometry: Geometry, acce
  *    playhead's and tools-selected takes standard[3] at 0.4, which is this file's statement of that
  *    decision;
  *  - a breakpoint column shows the marker;
- *  - one note sprite per display row that computeRowLayerStatuses gives a non-zero status, at that
- *    row's y, dimmed to 0.45 when every note contributing to the row is stranded on its own
- *    instrument;
+ *  - one note sprite per Song Grid row that computeGridRowLayerStatuses gives a non-zero status, at
+ *    that row's y, dimmed to 0.45 when every note contributing to the row is stranded on its own
+ *    instrument. A row is the note ID's canonical slot on EVERY track (ADR-0004), so two tracks on
+ *    differently-sized instruments carrying one id contribute to one row rather than two;
  *  - and the tails above, in a Graphics that is itself shown and opaque - the per-bar alpha is in
  *    the fill ops, and a transparent Graphics would draw none of them.
  *
@@ -1806,9 +1857,9 @@ function expectedWindow(
         const isSelected = !props.smoothScroll && index === song.selected
         const isToolsSelected = props.selectedColumns.includes(index)
         const toolsOnly = isToolsSelected && !isSelected
-        const stranded = computeStrandedRows(column.notes, song.instruments)
+        const stranded = computeGridStrandedRows(column.notes, song.instruments)
         const notes: PaintedSpriteData[] = []
-        for (const [button, status] of computeRowLayerStatuses(
+        for (const [row, status] of computeGridRowLayerStatuses(
             column.notes,
             props.currentLayer,
             song.instruments
@@ -1817,8 +1868,8 @@ function expectedWindow(
             notes.push({
                 texture: `notes[${status}]`,
                 x: 0,
-                y: (COMPOSER_NOTE_POSITIONS[button] * height) / NOTES_PER_COLUMN,
-                alpha: stranded.has(button) ? 0.45 : 1,
+                y: (COMPOSER_NOTE_POSITIONS[row] * height) / NOTES_PER_COLUMN,
+                alpha: stranded.has(row) ? 0.45 : 1,
             })
         }
         drawn.push({
@@ -2684,7 +2735,7 @@ const WINDOWS: WindowCase[] = [
             harness.push()
             //the scenario is worth nothing if nothing ended up stranded, and two empty sets compare
             //equal - so the precondition is asserted rather than assumed
-            expect(computeStrandedRows(song.columns[column].notes, song.instruments)).toEqual(
+            expect(computeGridStrandedRows(song.columns[column].notes, song.instruments)).toEqual(
                 new Set([row])
             )
         },
@@ -2846,6 +2897,100 @@ describe('the painted scene is what the drawing rules say it is', () => {
             }
         })
     }
+})
+
+/**
+ * ADR-0004, stated INDEPENDENTLY of the helper the renderer places with.
+ *
+ * The table above compares the scene against computeGridRowLayerStatuses/computeGridStrandedRows, so
+ * a defect inside either is followed rather than caught - the header says so. This states the rows
+ * the other way round, from game.json's two positionally-paired lists: row N of the Song Grid holds
+ * Note Id CANONICAL_NOTE_IDS[N] and draws at COMPOSER_NOTE_POSITIONS[N]. A canvas that went back to
+ * placing by the track's own instrument button fails here even if both helpers agreed with it.
+ */
+describe('the canvas places every note at its Note Id row, on every track', () => {
+    /** Where a Note Id's sprite belongs, by game.json alone. */
+    function rowY(id: number, geometry: Geometry): number {
+        const row = CANONICAL_NOTE_IDS.indexOf(id)
+        expect(row).not.toBe(-1)
+        return (COMPOSER_NOTE_POSITIONS[row] * geometry.height) / NOTES_PER_COLUMN
+    }
+
+    it('a sub-grid track and a full-size track put one id on ONE row, and a stranded id dims on its own', async () => {
+        const {instrument, playableId, ownButton, strandedId} = subGridPair()
+        //NON-VACUOUS, and the reason this test exists: the two placement rules DISAGREE about this
+        //id. Before ADR-0004 the sub-grid track drew it at its own button's row, which is a
+        //different y - so every expectation below held only for the full-size track.
+        expect(COMPOSER_NOTE_POSITIONS[ownButton]).not.toBe(
+            COMPOSER_NOTE_POSITIONS[CANONICAL_NOTE_IDS.indexOf(playableId)]
+        )
+        const context = makeContext()
+        //track 0 full-size (and the current layer), track 1 the sub-grid instrument. A song of its
+        //own rather than makeSong's, so each column below carries only the notes under test.
+        const song = new ComposedSong('canonical placement', [INSTRUMENTS[0], instrument])
+        song.selected = SELECTED
+        song.addNoteAt(SELECTED - 2, 0, playableId)
+        song.addNoteAt(SELECTED - 1, 1, playableId)
+        song.addNoteAt(SELECTED, 0, playableId)
+        song.addNoteAt(SELECTED, 1, playableId)
+        song.addNoteAt(SELECTED + 1, 1, strandedId)
+        context.song = song
+        const harness = await mount(context)
+        try {
+            const geometry = harness.geometry()
+            const columns = harness.paintedScene().notes.columns
+            const notesAt = (index: number): PaintedSpriteData[] => {
+                const column = columns.find(painted => painted.index === index)
+                if (!column) throw new Error(`column ${index} is not drawn`)
+                return column.notes
+            }
+            const y = rowY(playableId, geometry)
+            //the full-size track, where own button and canonical row agree - the row both rules give
+            expect(notesAt(SELECTED - 2)).toEqual([{texture: 'notes[1]', x: 0, y, alpha: 1}])
+            //...and the SAME y from the sub-grid track, whose own button says otherwise. notes[4] is
+            //the circle icon of a visible track that is not the current layer
+            expect(notesAt(SELECTED - 1)).toEqual([{texture: 'notes[4]', x: 0, y, alpha: 1}])
+            //both tracks in one column: ONE sprite, carrying both layers' bits (1 | 1<<2). Two
+            //sprites here would be the two coordinate systems the ADR collapsed, still on screen
+            expect(notesAt(SELECTED)).toEqual([{texture: 'notes[5]', x: 0, y, alpha: 1}])
+            //an id the sub-grid instrument cannot play: drawn at the row the ID owns, dimmed
+            expect(notesAt(SELECTED + 1)).toEqual([
+                {texture: 'notes[4]', x: 0, y: rowY(strandedId, geometry), alpha: 0.45},
+            ])
+            //a stranded id no longer lands on a row a healthy note of the same track could take
+            expect(rowY(strandedId, geometry)).not.toBe(y)
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    it('a span tail starts on the same row its note sprite does', async () => {
+        const {instrument, playableId} = subGridPair()
+        const context = makeContext()
+        const song = new ComposedSong('canonical tails', [INSTRUMENTS[0], instrument])
+        song.selected = SELECTED
+        //on the sub-grid track, where a tail placed by own button would part company with its head
+        song.addNoteAt(SELECTED, 1, playableId, 3)
+        context.song = song
+        const harness = await mount(context)
+        try {
+            const geometry = harness.geometry()
+            const rowHeight = geometry.rowHeight
+            const tailHeight = Math.max(2, rowHeight * 0.22)
+            const columns = harness.paintedScene().notes.columns
+            const head = columns.find(painted => painted.index === SELECTED)!.notes[0]
+            //the tail is centred in the row its head sits at the top of
+            const tailY = head.y + (rowHeight - tailHeight) / 2
+            for (const index of [SELECTED, SELECTED + 1, SELECTED + 2]) {
+                const ops = columns.find(painted => painted.index === index)!.tails.ops
+                //a stub over the right 45% in the column the note starts in, full width after
+                const x = index === SELECTED ? geometry.columnWidth * 0.55 : 0
+                expect(ops[0]).toEqual(['rect', x, tailY, geometry.columnWidth - x, tailHeight])
+            }
+        } finally {
+            harness.destroy()
+        }
+    })
 })
 
 /**

@@ -36,6 +36,10 @@
     | { status: 'unsupported' }
     | { status: 'pending' };
 
+  // The DEFAULT instrument (INSTRUMENTS[0] = game.instruments.list[0], i.e. the one `init()`
+  // loads into `audioPlayer` below). It owns everything about the grid this page draws: the
+  // Shape, the notes the Shape places, their glyphs, and the Note Id each button plays -
+  // a MIDI preset maps hardware keys onto THOSE buttons.
   const baseInstrument = new Instrument();
   const audioPlayer = new AudioPlayer('C');
   let mounted = true;
@@ -146,12 +150,20 @@
       }
       const keyboardNotes = notes.filter((e) => e.midi === note);
       keyboardNotes.forEach((keyboardNote) => {
-        handleClick(keyboardNote, true);
+        // A preset slot is addressed by BUTTON (persisted MIDI settings stay button-keyed);
+        // the default instrument is what turns that Button into the Note Id the engine plays.
+        handleClick(keyboardNote, baseInstrument.getNoteFromIndex(keyboardNote.index)?.id, true);
       });
     }
   }
 
-  function handleClick(note: MIDINote, animate = false) {
+  /**
+   * Select (or animate) one preset slot and audition it. `id` is the Note Id the drawn button
+   * plays - the caller holds the note object the Shape gave it, so nothing here has to guess
+   * where the button lives; `undefined` when the slot maps to no note of the loaded
+   * instrument, in which case there is simply nothing to audition.
+   */
+  function handleClick(note: MIDINote, id: number | undefined, animate = false) {
     if (!animate) deselectNotes();
     note.status = 'clicked';
     if (animate) {
@@ -166,7 +178,7 @@
       selectedNote = note;
       selectedShortcut = null;
     }
-    playSound(note);
+    playSound(id);
   }
 
   function handleShortcutClick(shortcut: string) {
@@ -180,10 +192,10 @@
     selectedNote = null;
   }
 
-  function playSound(note: MIDINote) {
-    if (note === undefined) return;
-    //MIDINote.index is a BUTTON position (hardware presets are button-addressed)
-    audioPlayer.playButtonOfInstrument(0, note.index);
+  /** Audition one Note Id on the loaded instrument - the engine is id-keyed (ADR-0005 §4). */
+  function playSound(id: number | undefined) {
+    if (id === undefined) return;
+    audioPlayer.playNoteOfInstrument(0, id);
   }
 
   async function createPreset() {
@@ -194,7 +206,10 @@
         logger.warn(t('keybinds:already_existing_preset'));
         continue;
       }
-      MIDIProvider.createPreset({ name, notes: notes.map(() => -1) });
+      // One empty slot per BUTTON of the instrument the grid draws, so a fresh preset always
+      // covers exactly the buttons the user can see (the built-in presets already do; this
+      // just stops a new preset from inheriting a stale length instead of the real one).
+      MIDIProvider.createPreset({ name, notes: baseInstrument.notes.map(() => -1) });
       presets = MIDIProvider.getPresets();
       loadPreset(name);
       return;
@@ -316,20 +331,35 @@
 </Column>
 
 <div class="midi-setup-content">
+  <!-- Two arrays meet here (ADR-0005 §1/§3). The Shape places the DEFAULT INSTRUMENT's notes -
+       those are the buttons a MIDI preset maps - and hands each one back with its Button; the
+       row's editable data is the preset's own MIDINote for that Button, since a preset slot IS
+       a Button (MIDIProvider persists settings that way). Nothing here assumes the two arrays
+       line up positionally on screen: the Button comes from the Shape.
+       The `notes` read below happens INSIDE the snippet, in this component's scope, so the
+       `notes = [...notes]` republishing above still reaches every button even though the
+       instrument's note array handed to the Shape never changes identity. -->
   <ShapeKeyboard
     shape={baseInstrument.shape}
-    count={notes.length}
+    notes={baseInstrument.notes}
     class="keyboard"
     style="margin:1.5rem 0;width:fit-content"
   >
-    {#snippet button(i)}
-      {@const note = notes[i]}
-      <BaseNote
-        handleClick={() => handleClick(note)}
-        data={note}
-        noteImage={baseInstrument.notes[i]?.noteImage}
-        noteText={note.midi < 0 ? 'N/A' : String(note.midi)}
-      />
+    {#snippet button(instrumentNote, button)}
+      {@const note = notes[button]}
+      {#if note}
+        <BaseNote
+          handleClick={() => handleClick(note, instrumentNote.id)}
+          data={note}
+          noteImage={instrumentNote.icon}
+          noteText={note.midi < 0 ? 'N/A' : String(note.midi)}
+        />
+      {:else}
+        <!-- a button the loaded preset has no slot for: every shipped preset covers the whole
+             instrument, so this only shows up for a hand-edited/legacy short preset - the cell
+             stays empty rather than crashing or offering an unmappable button -->
+        <div></div>
+      {/if}
     {/snippet}
   </ShapeKeyboard>
   <div class="midi-shortcuts-wrapper">

@@ -34,7 +34,7 @@
     verticalOffset: number;
     onNoteClick: (note: ObservableNote) => void;
     onNoteRelease?: (note: ObservableNote) => void;
-    /** Button indexes currently physically held — rendered pressed-down. */
+    /** Note Ids currently physically held — rendered pressed-down. */
     heldNotes?: ReadonlySet<number>;
   } = $props();
 
@@ -58,23 +58,28 @@
   });
 </script>
 
+<!-- The Shape is handed the keyboard's notes and decides where each one goes (ADR-0005 §1);
+     the snippet gets the note back plus the Button it came from. The two still come from
+     different clocks - notes from the store, `shape` from the instrument - so during an
+     instrument swap the store can briefly hold the previous instrument's notes; that is
+     exactly what the old `count={...keyboard.length}` did, and the notes now travel with
+     the count instead of being looked up by an index that could outrun the array. -->
 <ShapeKeyboard
   shape={instrument.shape}
-  count={zenKeyboardStore.keyboard.length}
+  notes={zenKeyboardStore.keyboard}
   class={cssBase}
   style="transform:scale({scale / 100}) translateY({verticalOffset}px);margin-top:unset"
 >
-  {#snippet button(index)}
-    {@const note = zenKeyboardStore.keyboard[index]}
+  {#snippet button(note, button)}
     <ZenNote
       keyPadding={keySpacing}
       instrumentName={instrument.name}
-      noteText={instrument.getNoteText(index, noteNameType, pitch)}
+      noteText={instrument.getNoteText(button, noteNameType, pitch)}
       noteImage={note.noteImage}
       {note}
       onClick={onNoteClick}
       onRelease={onNoteRelease}
-      held={heldNotes?.has(index) ?? false}
+      held={heldNotes?.has(note.id) ?? false}
     />
   {/snippet}
 </ShapeKeyboard>

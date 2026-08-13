@@ -2,8 +2,12 @@
   "displayName": "Harmonic Key",
   "family": "piano",
   "midiName": "acoustic grand",
-  "fill": "#ddb055",
+  "fill": "#dcb154",
   "clickColor": "#e1cba3",
   "shape": "genshin-3x7",
+  "sustain": {
+    "release": 0.3,
+    "minLength": 0.1
+  },
   "notes": "standard-21"
 }

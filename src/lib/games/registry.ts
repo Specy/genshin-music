@@ -14,7 +14,8 @@
 // which evaluates this module). The raw JSON is CAST at the glob boundary, so what
 // TS can't promise is checked here (Codex review M3/M4): path/URL-safe names and
 // files, integer + per-instrument-unique Note Ids (the reverse button map is
-// first-occurrence-wins — duplicates would silently break song round-trips), legal
+// first-occurrence-wins — duplicates would silently break song round-trips), every
+// instrument note id being a member of the game's Song Grid (ADR-0004), legal
 // baseNote values, sane sustain/loop regions, required game.json sections, and a
 // duplicate-free roster. Filesystem-level checks (sample files exist on disk) live
 // in test/gameConfig.test.ts, where fs access exists; icon/shape/label checks need
@@ -153,6 +154,49 @@ function validateGameJson(id: string, gameJson: GameJson): void {
       fail(id, `notes.${field} must be a positive integer`);
     }
   }
+  // ADR-0004: the Song Grid places a note by its Note Id, so canonicalNoteIds[N] is
+  // the id whose row is composerPositions[N] — the pairing is positional and there is
+  // one entry per grid row. The row count is `perColumn`, NOT composerPositions.length:
+  // sky's composerPositions carries six trailing entries (rows 15-20 of a 15-row grid)
+  // left over from the legacy config that no instrument can index and that the frozen
+  // config-surface fixture pins, so only its first `perColumn` entries are ever read.
+  const canonicalNoteIds = gameJson.notes.canonicalNoteIds;
+  if (
+    !Array.isArray(canonicalNoteIds) ||
+    !canonicalNoteIds.every((noteId) => Number.isInteger(noteId))
+  ) {
+    fail(id, 'notes.canonicalNoteIds must be an array of integer Note Ids');
+  }
+  // A duplicate would give one id two rows and leave another row unreachable.
+  if (new Set(canonicalNoteIds).size !== canonicalNoteIds.length) {
+    fail(id, 'notes.canonicalNoteIds has duplicate Note Ids');
+  }
+  if (canonicalNoteIds.length !== gameJson.notes.perColumn) {
+    fail(
+      id,
+      `notes.canonicalNoteIds must list one Note Id per Song Grid row: got ${canonicalNoteIds.length}, notes.perColumn is ${gameJson.notes.perColumn}`
+    );
+  }
+  const composerPositions = gameJson.notes.composerPositions;
+  if (!Array.isArray(composerPositions) || composerPositions.length < canonicalNoteIds.length) {
+    fail(id, 'notes.composerPositions must have a row for every notes.canonicalNoteIds entry');
+  }
+  // Those first `perColumn` entries must be a PERMUTATION of the grid's rows. The canvas
+  // draws slot N at row composerPositions[N], and ComposedSong.moveNotesBy inverts that
+  // map (row -> slot) to shift a selection vertically; both rely on the pairing being a
+  // bijection. A duplicate would stack two slots invisibly on one row and hide one of
+  // them from the inverse, and an out-of-range row would put a slot off the grid — in
+  // either case the move tool silently DROPS notes on a row the user can see.
+  const gridPositions = composerPositions.slice(0, gameJson.notes.perColumn);
+  const rowsAreBijective =
+    gridPositions.every((row) => Number.isInteger(row) && row >= 0 && row < gridPositions.length) &&
+    new Set(gridPositions).size === gridPositions.length;
+  if (!rowsAreBijective) {
+    fail(
+      id,
+      `the first ${gridPositions.length} notes.composerPositions entries must be a permutation of rows 0..${gridPositions.length - 1} (one canvas row per Song Grid slot): got ${JSON.stringify(gridPositions)}`
+    );
+  }
   const list = gameJson.instruments.list;
   if (!Array.isArray(list) || list.length === 0) {
     fail(id, 'instruments.list must be a non-empty array');
@@ -165,6 +209,12 @@ function buildGameMeta(id: string): GameMeta {
   const presets = presetJsons[`./${id}/presets.json`] ?? {};
   validateGameJson(id, gameJson);
 
+  // ADR-0004: the Song Grid places every note by its Note Id alone, so an id no grid row
+  // owns is playable but UNDRAWABLE — songGridSlotForId returns -1 and the composer
+  // canvas silently skips the note on every track. Both shipped games satisfy this today
+  // (drum, horn and SFX id sets are all subsets of their game's grid); what this catches
+  // is a preset or an inline note list drifting out of the authored canonicalNoteIds.
+  const gridIds = new Set(gameJson.notes.canonicalNoteIds);
   const instruments: Record<string, InstrumentDefinition> = {};
   const prefix = `./${id}/instruments/`;
   for (const [path, meta] of Object.entries(instrumentMetas)) {
@@ -209,6 +259,15 @@ function buildGameMeta(id: string): GameMeta {
       // = held notes play their file once and note-off fades.
       if (meta.sustain.loop !== undefined) assertLoop(context, 'sustain.loop', meta.sustain.loop);
     }
+    const notes = normalizeNotes(context, meta, presets);
+    for (const note of notes) {
+      if (!gridIds.has(note.midi)) {
+        fail(
+          context,
+          `Note Id ${note.midi} is not in ${id}'s notes.canonicalNoteIds, so the Song Grid has no row to draw it on`
+        );
+      }
+    }
     instruments[name] = {
       name,
       displayName: meta.displayName,
@@ -220,7 +279,7 @@ function buildGameMeta(id: string): GameMeta {
       ...(meta.sustain !== undefined
         ? { sustain: { ...meta.sustain, loopMode: meta.sustain.loopMode ?? 'loop-continuous' } }
         : {}),
-      notes: normalizeNotes(context, meta, presets),
+      notes,
     };
   }
 

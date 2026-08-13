@@ -18,10 +18,24 @@ const UPDATE = process.env.UPDATE_FIXTURES === 'true'
  * ONLY for writing fixtures under brand-new fixture names that don't exist
  * yet — it is never a way to make a failing test pass. If `expectGolden`
  * reports a mismatch against an EXISTING fixture, the fixture is correct and
- * the code under test regressed; go fix the code. A legitimate
- * test:update-fixtures run should only ever ADD files under test/fixtures/ —
- * `git diff --stat` on that directory changing an existing file is a sign
- * something regenerated fixtures it shouldn't have.
+ * the code under test regressed; go fix the code.
+ *
+ * That last rule is about CODE, and the fixtures split in two on which side of
+ * it they sit:
+ *  - FROZEN fixtures capture a past state that no longer has a producer — the
+ *    v1/legacy wire captures fed through readFixture (config-surface.json,
+ *    recorded-song.json, composed-song.json, …). Nothing may ever regenerate
+ *    them; a diff there is always a bug or a hand-edit.
+ *  - LIVING fixtures pin what the CURRENT build produces — config-surface-v2.json
+ *    is the type case. Config is data now (ADR-0003), so a deliberate config
+ *    change legitimately moves it: the 2026-08-14 in-game re-capture of
+ *    HarmonicKey and LeapingSpiritPiano rewrote their fill/clickColor and gave
+ *    both a sustain block, and adding NightwindHorn added a whole instrument.
+ *    Regenerating one is a change to REVIEW, not a rule broken — read the diff
+ *    and confirm every moved value is one the config edit intended.
+ * So `git diff --stat test/fixtures/` changing an existing file is a question,
+ * not a verdict: on a frozen fixture something regenerated what it shouldn't
+ * have; on a living one, either the config change is real or the code regressed.
  */
 export function expectGolden(name: string, value: unknown): void {
     const file = path.join(FIXTURE_DIR, `${name}.json`)
