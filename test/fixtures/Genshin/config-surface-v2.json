@@ -11,6 +11,7 @@
     "HarmonicKey",
     "DunDun",
     "DjemDjemDrum",
+    "NightwindHorn",
     "sustained_recorder"
   ],
   "instrumentsData": {
@@ -670,6 +671,106 @@
         },
         {
           "file": "20.mp3",
+          "midi": 59,
+          "baseNote": "B",
+          "icon": "ti"
+        }
+      ]
+    },
+    "NightwindHorn": {
+      "name": "NightwindHorn",
+      "displayName": "Nightwind Horn",
+      "family": "brass",
+      "midiName": "french horn",
+      "fill": "#dbb361",
+      "clickColor": "#dbb361",
+      "shape": "genshin-2x7",
+      "sustain": {
+        "release": 0.3,
+        "minLength": 0.2,
+        "loopMode": "loop-continuous"
+      },
+      "notes": [
+        {
+          "file": "m60.mp3",
+          "midi": 60,
+          "baseNote": "C",
+          "icon": "do"
+        },
+        {
+          "file": "m62.mp3",
+          "midi": 62,
+          "baseNote": "D",
+          "icon": "re"
+        },
+        {
+          "file": "m64.mp3",
+          "midi": 64,
+          "baseNote": "E",
+          "icon": "mi"
+        },
+        {
+          "file": "m65.mp3",
+          "midi": 65,
+          "baseNote": "F",
+          "icon": "fa"
+        },
+        {
+          "file": "m67.mp3",
+          "midi": 67,
+          "baseNote": "G",
+          "icon": "so"
+        },
+        {
+          "file": "m69.mp3",
+          "midi": 69,
+          "baseNote": "A",
+          "icon": "la"
+        },
+        {
+          "file": "m71.mp3",
+          "midi": 71,
+          "baseNote": "B",
+          "icon": "ti"
+        },
+        {
+          "file": "m48.mp3",
+          "midi": 48,
+          "baseNote": "C",
+          "icon": "do"
+        },
+        {
+          "file": "m50.mp3",
+          "midi": 50,
+          "baseNote": "D",
+          "icon": "re"
+        },
+        {
+          "file": "m52.mp3",
+          "midi": 52,
+          "baseNote": "E",
+          "icon": "mi"
+        },
+        {
+          "file": "m53.mp3",
+          "midi": 53,
+          "baseNote": "F",
+          "icon": "fa"
+        },
+        {
+          "file": "m55.mp3",
+          "midi": 55,
+          "baseNote": "G",
+          "icon": "so"
+        },
+        {
+          "file": "m57.mp3",
+          "midi": 57,
+          "baseNote": "A",
+          "icon": "la"
+        },
+        {
+          "file": "m59.mp3",
           "midi": 59,
           "baseNote": "B",
           "icon": "ti"
@@ -1506,13 +1607,13 @@
           "C7"
         ],
         "number": [
-          "1\u0307",
-          "2\u0307",
-          "3\u0307",
-          "4\u0307",
-          "5\u0307",
-          "6\u0307",
-          "7\u0307",
+          "1̇",
+          "2̇",
+          "3̇",
+          "4̇",
+          "5̇",
+          "6̇",
+          "7̇",
           "1",
           "2",
           "3",
@@ -1520,13 +1621,13 @@
           "5",
           "6",
           "7",
-          "1\u0323",
-          "2\u0323",
-          "3\u0323",
-          "4\u0323",
-          "5\u0323",
-          "6\u0323",
-          "7\u0323"
+          "1̣",
+          "2̣",
+          "3̣",
+          "4̣",
+          "5̣",
+          "6̣",
+          "7̣"
         ],
         "playstation": [
           " ",
@@ -1579,6 +1680,96 @@
         "kind": "circle"
       }
     },
+    "genshin-2x7": {
+      "id": "genshin-2x7",
+      "capacity": 14,
+      "columns": 7,
+      "labels": {
+        "keyboard": [
+          "A",
+          "S",
+          "D",
+          "F",
+          "G",
+          "H",
+          "J",
+          "Z",
+          "X",
+          "C",
+          "V",
+          "B",
+          "N",
+          "M"
+        ],
+        "abc": [
+          "B1",
+          "B2",
+          "B3",
+          "B4",
+          "B5",
+          "B6",
+          "B7",
+          "C1",
+          "C2",
+          "C3",
+          "C4",
+          "C5",
+          "C6",
+          "C7"
+        ],
+        "number": [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5",
+          "6",
+          "7",
+          "1̣",
+          "2̣",
+          "3̣",
+          "4̣",
+          "5̣",
+          "6̣",
+          "7̣"
+        ],
+        "playstation": [
+          " ",
+          " ",
+          " ",
+          " ",
+          " ",
+          " ",
+          " ",
+          " ",
+          " ",
+          " ",
+          " ",
+          " ",
+          " ",
+          " "
+        ],
+        "switch": [
+          " ",
+          " ",
+          " ",
+          " ",
+          " ",
+          " ",
+          " ",
+          " ",
+          " ",
+          " ",
+          " ",
+          " ",
+          " ",
+          " "
+        ]
+      },
+      "noteShape": {
+        "kind": "circle"
+      }
+    },
     "genshin-2x4": {
       "id": "genshin-2x4",
       "capacity": 8,
@@ -1609,27 +1800,27 @@
           "2",
           "3",
           "4",
-          "1\u0323",
-          "2\u0323",
-          "3\u0323",
-          "4\u0323"
+          "1̣",
+          "2̣",
+          "3̣",
+          "4̣"
         ],
         "playstation": [
-          "\u27f0",
-          "\u25b2",
-          "\u2b45",
-          "\u25fc",
-          "\u27f1",
+          "⟰",
+          "▲",
+          "⭅",
+          "◼",
+          "⟱",
           "X",
           "L2",
           "R2"
         ],
         "switch": [
-          "\u27f0",
+          "⟰",
           "X",
-          "\u2b45",
+          "⭅",
           "Y",
-          "\u27f1",
+          "⟱",
           "B",
           "Zl",
           "Zr"

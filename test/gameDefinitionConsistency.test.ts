@@ -54,7 +54,7 @@ describe('frozen legacy note tables match the live instrument data (transcriptio
         //and every live instrument has a frozen table (new instruments added after the
         //freeze belong in the similarity map + live data only, never in the freeze —
         //when adding one, list it here rather than freezing it)
-        const POST_FREEZE_INSTRUMENTS = new Set(['sustained_recorder'])
+        const POST_FREEZE_INSTRUMENTS = new Set(['sustained_recorder', 'NightwindHorn'])
         for (const name of INSTRUMENTS) {
             if (POST_FREEZE_INSTRUMENTS.has(name)) continue
             expect(frozen.tables[name], `live instrument "${name}" missing from the freeze`).toBeTruthy()

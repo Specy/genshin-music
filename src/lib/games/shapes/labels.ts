@@ -124,6 +124,20 @@ export const STANDARD_21_LABELS: ShapeLabels = {
   ],
 };
 
+/**
+ * The 2×7 lower keyboard (14 buttons) — Genshin's two-octave instruments
+ * (NightwindHorn): the LOWER two rows of the 3×7, sliced from it so the
+ * A-row/Z-row keys and the plain/under-dot number octaves stay byte-identical
+ * with the buttons' canonical grid rows (middle + bottom octave).
+ */
+export const STANDARD_14_LOW_LABELS: ShapeLabels = {
+  keyboard: STANDARD_21_LABELS.keyboard.slice(7),
+  abc: STANDARD_21_LABELS.abc.slice(7),
+  number: STANDARD_21_LABELS.number.slice(7),
+  playstation: STANDARD_21_LABELS.playstation.slice(7),
+  switch: STANDARD_21_LABELS.switch.slice(7),
+};
+
 /** The 3×5 standard keyboard (15 buttons) — Sky main instruments. */
 export const STANDARD_15_LABELS: ShapeLabels = {
   keyboard: ['Q', 'W', 'E', 'R', 'T', 'A', 'S', 'D', 'F', 'G', 'Z', 'X', 'C', 'V', 'B'],

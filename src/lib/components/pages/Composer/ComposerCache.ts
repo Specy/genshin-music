@@ -15,7 +15,6 @@ interface ComposerCacheProps {
   margin: number;
   timelineHeight: number;
   app: Application;
-  breakpointsApp: Application;
   colors: {
     accent: ColorInstance;
     mainLayer: ColorInstance;
@@ -44,7 +43,6 @@ export class ComposerCache {
   noteWidth: number;
   noteHeight: number;
   app: Application | null;
-  breakpointsApp: Application | null;
   colors: {
     accent: ColorInstance;
     mainLayer: ColorInstance;
@@ -52,15 +50,7 @@ export class ComposerCache {
     bars: { color: number }[];
   };
 
-  constructor({
-    width,
-    height,
-    margin = 4,
-    timelineHeight = 30,
-    app,
-    breakpointsApp,
-    colors,
-  }: ComposerCacheProps) {
+  constructor({ width, height, margin = 4, timelineHeight = 30, app, colors }: ComposerCacheProps) {
     this.cache = {
       columns: [],
       notes: {},
@@ -77,7 +67,6 @@ export class ComposerCache {
     this.noteHeight = this.height / NOTES_PER_COLUMN;
     this.colors = colors;
     this.app = app;
-    this.breakpointsApp = breakpointsApp;
     this.generate();
   }
 
@@ -89,7 +78,6 @@ export class ComposerCache {
     this.cache.breakpoints.forEach((e) => e.destroy(true));
     Object.values(this.cache.notes).forEach((e) => e.destroy(true));
     this.app = null;
-    this.breakpointsApp = null;
   };
   generate = () => {
     TEMPO_CHANGERS.forEach((tempoChanger) => {
@@ -171,8 +159,13 @@ export class ComposerCache {
       const size = this.timelineHeight / 6;
       if (breakpoint.type === 'short') {
         g.circle(size, this.timelineHeight / 2, size).fill(this.colors.accent.rgb().rgbNumber());
-        if (!this.breakpointsApp) return;
-        const texture = this.breakpointsApp.renderer.generateTexture({
+        // THE SAME renderer as every other texture here, now that the mini-timeline shares the notes
+        // canvas. The split existed only because there were two: generateTexture returns a
+        // RenderTexture whose source has `uploadMethodId: 'unknown'`, so binding one in a DIFFERENT
+        // renderer falls through to _initEmptyTexture2D and draws blank - a marker rendered on the
+        // notes Application and drawn on the timeline one was invisible.
+        if (!this.app) return;
+        const texture = this.app.renderer.generateTexture({
           target: g,
           resolution: 2,
           frame: new Rectangle(0, 0, size * 2, this.timelineHeight),

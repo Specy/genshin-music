@@ -198,7 +198,7 @@
         "memory_persisted": "Данные в постоянном хранилище",
         "memory_not_persisted": "Данные не в постоянном хранилище",
         "memory_persisted_description": " Your data is persisted in the browser, the browser should not automatically clear it.\n                            Always make sure to download a backup sometimes, especially when you will not use the app\n                            for a long time",
-        "memory_not_persisted_description": "The browser didn't allow to store data persistently, it might happen that you will loose\n                            data\n                            when cache is automatically cleared. To get persistent storage, add the app to the home\n                            screen.\n                            If that still doesn't work, make sure you do a backup often",
+        "memory_not_persisted_description": "The browser didn't allow to store data persistently, it might happen that you will lose\n                            data\n                            when cache is automatically cleared. To get persistent storage, add the app to the home\n                            screen.\n                            If that still doesn't work, make sure you do a backup often",
         "props": {
             "composer_bpm": "Ударов в мин.",
             "composer_bpm_description": "Удары в минуту — это скорость песни. Обычно BPM в приложении должен быть в 4 раза больше BPM песни, которую вы пытаетесь создаете",
@@ -718,6 +718,7 @@
         "MantaOcarina": "Manta Ocarina",
         "Aurora": "Aurora",
         "sustained_recorder": "Sustained recorder",
+        "NightwindHorn": "Nightwind Horn",
         "Kalimba": "Kalimba",
         "ToyUkulele": "Toy Ukulele",
         "Drum": "Drum",

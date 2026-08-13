@@ -3,21 +3,23 @@
   import { t } from '$i18n/binding.svelte';
   import { ThemeProvider } from '$core/theme/ThemeProvider.svelte';
   import { colorToRGB } from '$core/utils/Utilities';
-  import { isMobile } from 'is-mobile';
   import { createShortcutListener } from '$stores/KeybindsStore.svelte';
   import type { InstrumentData, NoteColumn } from '$core/Songs/SongClasses';
   import type { ComposerSettingsDataType } from '$core/BaseSettings';
   import type { ComposerRenderer } from './ComposerRenderer';
+  import { composerCanvasCssSize } from './composerCanvasGeometry';
   import TimelineButton from './TimelineButton.svelte';
 
-  // The class names below (canvas-wrapper, canvas-relative, canvas-buttons,
-  // timeline-wrapper-bg, timeline-wrapper, timeline-scroll) are styled from App.css, not a local
-  // <style> block - renaming or restructuring these divs breaks that styling silently.
+  // The class names below (canvas-wrapper, canvas-relative, canvas-buttons, timeline-controls,
+  // timeline-button) are styled from App.css, not a local <style> block - renaming or restructuring
+  // these divs breaks that styling silently.
   //
   // ComposerRenderer (and therefore pixi.js) is never statically imported here - only `import
   // type` (erased at compile time) for typing `renderer`, plus the real
   // `await import('./ComposerRenderer')` inside onMount, which never runs during prerender.
   // Making this a static import would pull pixi.js into the prerendered/SSR build.
+  // composerCanvasGeometry, by contrast, IS a static import and must stay pixi-free for that reason:
+  // its whole job is to give this template the canvas' size before the renderer exists.
   interface ComposerCanvasProps {
     columns: NoteColumn[];
     // ComposedSong's graph version. Its own prop for the same reason `instruments` is: the renderer
@@ -57,34 +59,50 @@
     toggleBreakpoint,
   }: ComposerCanvasProps = $props();
 
-  let notesContainerEl: HTMLDivElement | undefined;
-  let timelineContainerEl: HTMLDivElement | undefined;
+  let canvasContainerEl: HTMLDivElement | undefined;
   let renderer: ComposerRenderer | null = $state(null);
 
-  // width/hasCache come from the renderer's onGeometryChange callback, not $derived: they're
-  // pixi/DOM-measurement values this template cannot compute on its own.
+  // Everything here comes from the renderer's onGeometryChange callback, not $derived: they're
+  // pixi/DOM-measurement values this template cannot compute on its own. The three timeline
+  // buttons are absolutely positioned over the mini-timeline the ONE canvas now draws at its
+  // bottom, so where that strip starts (height + timelinePadding) and how tall it is are part of
+  // the same report - previously `timelineHeight` was a second copy of the renderer's
+  // `isMobile() ? 25 : 30` here, which could disagree with it silently.
   let width = $state(0);
+  let height = $state(0);
+  let timelinePadding = $state(0);
+  let timelineHeight = $state(0);
   let hasCache = $state(false);
-  // isMobile() is a stable UA check that cannot change mid-session, so a plain const (not
-  // reactive) is safe here.
-  const timelineHeight = isMobile() ? 25 : 30;
 
   const isBreakpointSelected = $derived(breakpoints.includes(selected));
   // Mirrors ComposerRenderer's own theme formulas - see that file's header for why this is
   // duplicated rather than shared.
   const sideButtonsRgb = $derived(colorToRGB(ThemeProvider.get('primary').darken(0.08)).join(','));
-  const timelineHex = $derived(ThemeProvider.layer('primary', 0.1).hex());
   const backgroundHex = $derived(ThemeProvider.get('primary').hexa());
+  // THE THREE TIMELINE BUTTONS' BACKGROUND, and it is `.hex()` rather than App.css's
+  // `var(--primary-layer-10)` for one reason: `.hex()` DROPS the theme's alpha where ThemeVars
+  // emits that property through `.toString()`, which keeps it. The two shipped translucent themes
+  // ("Sky Music" rgba(23,23,23,0.72), "Eons of times" #453427d9) would otherwise give the buttons
+  // an alpha they never had - and unlike the canvas behind them, a DOM background composites
+  // straight onto the page, so a composer background image would show through the icons. This is
+  // verbatim what these buttons carried before the two canvases were merged, and it is the same
+  // alpha-stripped colour ComposerRenderer fills the strip with (`.rgb().rgbNumber()`).
+  // test/composerCanvasCss.test.ts reads this expression out of this file.
+  const timelineHex = $derived(ThemeProvider.layer('primary', 0.1).hex());
+  // THE CANVAS' SIZE AS CSS, so `.canvas-wrapper` is already the right size while the dynamic pixi
+  // import and Application.init() are still running - see composerCanvasCssSize for the whole
+  // rationale and for what it does and does not reproduce. Null in preview, and a null style
+  // directive REMOVES the property, so App.css's `var(..., 0px)` fallback takes over there.
+  const cssSize = $derived(composerCanvasCssSize({ inPreview: Boolean(inPreview) }));
 
   onMount(() => {
     let cancelled = false;
     let disposeShortcuts: (() => void) | null = null;
     void (async () => {
       const { ComposerRenderer: ComposerRendererClass } = await import('./ComposerRenderer');
-      if (cancelled || !notesContainerEl || !timelineContainerEl) return;
+      if (cancelled || !canvasContainerEl) return;
       const instance = new ComposerRendererClass(
-        notesContainerEl,
-        timelineContainerEl,
+        canvasContainerEl,
         {
           columns,
           structureVersion,
@@ -107,6 +125,9 @@
           toggleBreakpoint,
           onGeometryChange: (geometry) => {
             width = geometry.width;
+            height = geometry.height;
+            timelinePadding = geometry.timelinePadding;
+            timelineHeight = geometry.timelineHeight;
             hasCache = geometry.hasCache;
           },
         }
@@ -272,27 +293,79 @@
 <div
   class={['canvas-wrapper', inPreview && 'canvas-wrapper-in-preview']}
   style="width:{width}px;background-color:{hasCache ? 'unset' : backgroundHex}"
+  style:--composer-canvas-width={cssSize?.width}
+  style:--composer-canvas-height={cssSize?.height}
 >
-  <div class="canvas-relative" bind:this={notesContainerEl}>
-    {#if !settings.useKeyboardSideButtons.value}
+  <div class="canvas-relative" bind:this={canvasContainerEl}>
+    <!--
+      `height` is the NOTES region, and the inline height is what holds these chevrons to it:
+      `.canvas-buttons`' own `height: 100%` is 100% of `.canvas-relative`, which since the merge
+      holds the mini-timeline strip as well, so it would run them down over the strip.
+
+      Gated on the first geometry report for the same reason the timeline controls below are: that
+      report only exists once the dynamic pixi import and Application.init() have resolved, and a
+      0px-tall button leaves its 2rem chevron overflowing above the top of the canvas for the whole
+      of that window.
+    -->
+    {#if !settings.useKeyboardSideButtons.value && height > 0}
       <button
         onpointerdown={() => selectColumn(selected - 1)}
         class={['canvas-buttons', !isPlaying && 'canvas-buttons-visible']}
-        style="left:0;padding-right:0.5rem;justify-content:flex-start;background:linear-gradient(90deg, rgba({sideButtonsRgb},0.80) 30%, rgba({sideButtonsRgb},0.30) 80%, rgba({sideButtonsRgb},0) 100%)"
+        style="height:{height}px;left:0;padding-right:0.5rem;justify-content:flex-start;background:linear-gradient(90deg, rgba({sideButtonsRgb},0.80) 30%, rgba({sideButtonsRgb},0.30) 80%, rgba({sideButtonsRgb},0) 100%)"
       >
         {@render chevronLeftIcon()}
       </button>
       <button
         onpointerdown={() => selectColumn(selected + 1)}
         class={['canvas-buttons', !isPlaying && 'canvas-buttons-visible']}
-        style="right:0;padding-left:0.5rem;justify-content:flex-end;background:linear-gradient(270deg, rgba({sideButtonsRgb},0.80) 30%, rgba({sideButtonsRgb},0.30) 80%, rgba({sideButtonsRgb},0) 100%)"
+        style="height:{height}px;right:0;padding-left:0.5rem;justify-content:flex-end;background:linear-gradient(270deg, rgba({sideButtonsRgb},0.80) 30%, rgba({sideButtonsRgb},0.30) 80%, rgba({sideButtonsRgb},0) 100%)"
       >
         {@render chevronRightIcon()}
       </button>
     {/if}
   </div>
-  <div class="timeline-wrapper-bg row">
-    <div class="timeline-wrapper" style="height:{timelineHeight}px">
+  <!--
+    The three timeline controls, floated over the mini-timeline the canvas above now draws for
+    itself.
+
+    A FLEX ROW OF THREE, each 2.2rem wide with a 0.2rem margin and no shrink, the last pushed right
+    by an auto margin. That leaves them standing on [0, 80px] and [W-41.6px, W] at every viewport
+    width, and the canvas draws its strip between those two bounds rather than underneath them - see
+    composerCanvasGeometry's TIMELINE_INSET_LEFT/RIGHT, which is the same arithmetic on the pixi
+    side, and test/composerCanvasCss.test.ts, which is what keeps the two statements of it together.
+
+    THOSE ARE FOOTPRINTS AND NOT MARGIN BOXES, and the difference is only in how it is derived: an
+    auto margin absorbs the row's whole free space, so the third button's margin box is [80, W] and
+    its BORDER box is [W-38.4, W-3.2]. The 41.6px it is held clear by is 0.2rem of clearance before
+    it, the 2.2rem button, and its own trailing 0.2rem margin.
+
+    Pinned to the CANVAS box - `top` from the reported notes height plus the padding row, `width`
+    from the reported canvas width - and not to the wrapper. On a tall viewport `.canvas-wrapper`'s
+    min-height gives `.canvas-relative` a sliver of slack under the canvas, so anchoring vertically
+    to the wrapper would put the row below the strip. Horizontally it is a DELIBERATE divergence:
+    below a ~643px viewport `.canvas-wrapper`'s `min-width: 78vw` makes the wrapper wider than the
+    canvas - by 16px at a 400px viewport, more below that - and the old band ran the wrapper's full
+    width, so the add/remove-breakpoint button used to hang ~13px past the canvas' right edge over
+    band that no longer exists: only the canvas draws the strip now. Held to the canvas, that button
+    sits that same ~16px further left than it did at those widths. That same `78vw` floor is why
+    App.css maxes the placeholder against it rather than replacing it. From ~643px up, and in
+    preview at any width, the wrapper and the canvas are the same box.
+
+    OUTSIDE `.canvas-relative`, which is `overflow: hidden` and would clip the tooltips these
+    buttons render BELOW themselves.
+
+    Not rendered until that first geometry report exists: `top`, `width` and `height` come from a
+    measurement that only happens once `await import('./ComposerRenderer')` and `Application.init()`
+    have resolved, and a `top: 0; width: 0` row stacks three 16px icons over the TOP-LEFT CORNER of
+    the composer, over the first note rows, for the whole of that window. (They stay inside it: with
+    a zero width the free space is negative, so the third button's `margin-left: auto` resolves to 0
+    and the three pack from x=0 and overflow to the right.)
+  -->
+  {#if width > 0}
+    <div
+      class="timeline-controls"
+      style="top:{height + timelinePadding}px;width:{width}px;height:{timelineHeight}px"
+    >
       <TimelineButton
         onclick={() => renderer?.handleBreakpoints(-1)}
         tooltip={t('composer:previous_breakpoint')}
@@ -310,15 +383,11 @@
         {@render faStepForwardIcon()}
       </TimelineButton>
 
-      <div
-        class="timeline-scroll"
-        style="background-color:{timelineHex}"
-        bind:this={timelineContainerEl}
-      ></div>
-
+      <!-- the auto margin that puts this one against the row's right edge, which is what makes the
+           gap between it and the two above exactly the strip's span - see the comment above -->
       <TimelineButton
         onclick={toggleBreakpoint}
-        style="background-color:{timelineHex}"
+        style="margin-left:auto;background-color:{timelineHex}"
         tooltip={isBreakpointSelected
           ? t('composer:remove_breakpoint')
           : t('composer:add_breakpoint')}
@@ -329,5 +398,5 @@
         {@render (isBreakpointSelected ? faMinusCircleIcon : faPlusCircleIcon)()}
       </TimelineButton>
     </div>
-  </div>
+  {/if}
 </div>

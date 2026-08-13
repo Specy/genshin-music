@@ -8,7 +8,8 @@ describe('environment smoke test', () => {
         // Sky +1 on 2026-08-05: `sustained_recorder` (VCSL) — the `test_sustain` dummy
         // it replaced (added 2026-08-04) was deleted the same day it became redundant
         // Genshin +1: the same instrument, widened to its 21-note keyboard
-        expect(INSTRUMENTS.length).toBe(APP_NAME === 'Genshin' ? 11 : 35)
+        // Genshin +1 on 2026-08-13: `NightwindHorn` (in-game capture, loopless sustain)
+        expect(INSTRUMENTS.length).toBe(APP_NAME === 'Genshin' ? 12 : 35)
     })
 
     it('NoteLayer bit operations work', () => {

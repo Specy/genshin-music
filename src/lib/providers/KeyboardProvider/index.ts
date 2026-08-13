@@ -52,7 +52,8 @@ export class KeyboardProviderClass {
     window.addEventListener('keyup', this.handleEvent);
     window.addEventListener('keypress', this.handleEvent);
     try {
-      if ('keyboard' in navigator) {
+      // @ts-expect-error navigator.keyboard (Keyboard API) not in Navigator type definitions
+      if ('keyboard' in navigator && navigator.keyboard?.getLayoutMap) {
         // @ts-expect-error navigator.keyboard (Keyboard API) not in Navigator type definitions
         navigator.keyboard.getLayoutMap().then((layoutMap) => {
           const entries = [...layoutMap.entries()] as [string, string][];

@@ -1,17 +1,27 @@
-// This class owns all pixi state: both Applications (notes stage + timeline stage), the
-// ComposerCache, the scroll/drag state machine, and the update(state) entry point. It keeps a POOL
-// of per-column views (see ColumnView below) and diffs the state it last PAINTED against the one it
-// was handed now to decide how much of the scene to repaint - see update() and paintedState.
-// ComposerCanvas.svelte owns lifecycle only - it constructs this class in onMount, awaits init(),
-// feeds it state via update(), and renders the surrounding DOM.
+// This class owns all pixi state: ONE Application (the notes region and, below it, the
+// mini-timeline strip - see timelineStrip), the ComposerCache, the scroll/drag state machine, and
+// the update(state) entry point. It keeps a POOL of per-column views (see ColumnView below) and
+// diffs the state it last PAINTED against the one it was handed now to decide how much of the scene
+// to repaint - see update() and paintedState. ComposerCanvas.svelte owns lifecycle only - it
+// constructs this class in onMount, awaits init(), feeds it state via update(), and renders the
+// surrounding DOM.
+//
+// `notesApp`, `notesColumnsContainer`, `drawNotesStage` keep their names now that the timeline
+// shares the canvas: "notes" names the REGION the columns occupy, which is what every one of those
+// sites is about, and the strip is stated against it (its y is `height + TIMELINE_BAND_PADDING`;
+// its x and its width are the canvas' less the DOM buttons' footprint - see stripWidth()).
+// `this.height` is that region and not the canvas - see canvasHeight() for the only two places that
+// want the whole thing.
 //
 // Theme reaches this class via subscribeTheme(cb); ComposerCanvas.svelte separately derives the
 // handful of theme values its own DOM needs via $derived off the same ThemeProvider singleton.
 // This duplicates a few color formulas between the two files (numeric here for pixi draw calls,
 // CSS strings there) - deliberate, not an oversight. What this class hands back through
-// ComposerRendererCallbacks.onGeometryChange is width and hasCache: pixi/DOM-measurement-derived
-// values the template cannot re-derive on its own. The other callbacks carry user input the same
-// way round - a pointer on either canvas becomes a selectColumn or a toggleBreakpoint.
+// ComposerRendererCallbacks.onGeometryChange is the canvas' width, the split between its two
+// regions and hasCache: pixi/DOM-measurement-derived values the template cannot re-derive on its
+// own, and which the three absolutely-positioned timeline buttons are placed against. The other
+// callbacks carry user input the same way round - a pointer on either region becomes a selectColumn
+// or a toggleBreakpoint.
 import { game } from '$game';
 import { isMobile } from 'is-mobile';
 import {
@@ -33,6 +43,14 @@ import {
   displayButtonForId,
 } from '$core/Songs/noteIds';
 import { ComposerCache, type ComposerCacheData } from './ComposerCache';
+import {
+  TIMELINE_BAND_PADDING,
+  TIMELINE_INSET_LEFT,
+  TIMELINE_INSET_RIGHT,
+  composerCanvasElementHeight,
+  composerCanvasSize,
+  composerTimelineHeight,
+} from './composerCanvasGeometry';
 
 const NOTES_PER_COLUMN = game.notes.perColumn;
 const COMPOSER_NOTE_POSITIONS = game.notes.composerPositions;
@@ -54,9 +72,12 @@ const COMPOSER_NOTE_POSITIONS = game.notes.composerPositions;
  * WHETHER THE LINE IS ON SCREEN is playheadIsVisible, written onto playheadGraphics.visible by
  * init() and by update() - see overlayColumn for the overlay it is mutually exclusive with.
  *
- * WHAT IS DRAWN is a bar spanning the canvas' height plus a triangle at each end pointing INWARDS
- * along it - down from the top, up from the bottom. The bar alone is a thin line over a busy grid
- * of note icons and bar shading, and it is the only column marker in glide mode; the arrowheads are
+ * WHAT IS DRAWN is a bar spanning the NOTES REGION's height plus a triangle at each end pointing
+ * INWARDS along it - down from the top, up from the bottom. The notes region's bottom is where the
+ * canvas' own bottom edge was before the mini-timeline moved into this canvas; running the bar to
+ * the canvas height instead would put it and its arrowhead through the strip. The bar alone is a
+ * thin line over a busy grid of note icons and bar shading, and it is the only column marker in
+ * glide mode; the arrowheads are
  * what make it findable at a glance without widening the bar enough to hide the notes beside it.
  *
  * The colour is the theme's `accent` and comes through ComposerRendererTheme.playhead rather than
@@ -86,6 +107,35 @@ const PLAYHEAD_ARROW_LENGTH = 8;
  * Setting it ABOVE the display's refresh rate is a no-op, because the gate never fires.
  */
 const COMPOSER_MOTION_MAX_FPS = 48;
+
+/**
+ * `.timeline-scroll`'s `border-radius: 0.3rem`, which the strip has to draw for itself now that no
+ * DOM element sits under it.
+ *
+ * ONLY THE ROUNDING CAME ACROSS to the strip's CONTENT, not the `overflow: hidden` that element
+ * carried beside it. The strip's background is a roundRect; nothing clips the content container, so
+ * a tools selection anchored at column 0 fills the strip's two left corner wedges (~5px² each:
+ * r²(1 - π/4) at r=4.8) square where that element used to cut them, and a breakpoint marker at
+ * column 0 - anchored at 0.5, so half of it sits at negative strip x - is no longer cut by the arc
+ * either. Those two are left unclipped deliberately: the fix is a stencil mask, which is a
+ * batch-breaking push/pop on EVERY render, and the content container is the one that carries the
+ * strip's hitArea, so masking it would also PRUNE hit testing (EventBoundary.hitPruneFn consults a
+ * container's mask effect) and kill the clause that keeps a running scrub alive once the pointer
+ * wanders off the strip.
+ *
+ * THE VIEWPORT OUTLINE IS CLIPPED, and that one is not optional. Since the strip was inset clear of
+ * the three DOM buttons (TIMELINE_INSET_LEFT/RIGHT) its overflow no longer runs off the edge of the
+ * canvas - it runs into the two bands those buttons stand on, which are visible canvas. The outline
+ * overflows by design at both ends of every song (timelineViewport's x is negative for the first
+ * half-canvas of columns), so at a 1920px viewport on a 100-column song at scroll 0 it would paint
+ * its 3px strokes across the whole left band, showing through the 3.2px seams between the buttons.
+ * viewportGraphics is a leaf with no hitArea and lives under an `interactiveChildren = false`
+ * sibling, so masking IT prunes nothing - see initViewportClip.
+ *
+ * The residue, measured at that viewport: half of a 10px breakpoint marker at the song's first and
+ * last column, of which 3.2px falls in a seam and the rest behind a button.
+ */
+const TIMELINE_STRIP_RADIUS = 4.8;
 
 /**
  * How long the canvas takes to reach a column it was asked to ease to WHILE SMOOTH SCROLLING IS ON
@@ -325,11 +375,26 @@ export interface ComposerRendererState {
 }
 
 // onGeometryChange reports pixi/DOM-measurement-derived geometry back up to the Svelte template,
-// which cannot compute it independently.
+// which cannot compute it independently. Since the mini-timeline moved onto the notes canvas, the
+// SPLIT between the two regions is part of that: the three timeline buttons are absolutely
+// positioned over the strip the canvas draws, so the template needs the strip's own top and height
+// to put them there rather than a second copy of composerCanvasGeometry.composerTimelineHeight().
+// It reports no INSET: where the buttons sit horizontally is decided by App.css, and the renderer
+// derives the strip's own bounds from the same TIMELINE_INSET_* constants that stylesheet is
+// cross-checked against (test/composerCanvasCss.test.ts) - a reported inset would be a second
+// statement of a number the CSS already owns.
 export interface ComposerRendererCallbacks {
   selectColumn: (index: number, ignoreAudio?: boolean) => void;
   toggleBreakpoint: () => void;
-  onGeometryChange: (geometry: { width: number; hasCache: boolean }) => void;
+  onGeometryChange: (geometry: {
+    width: number;
+    /** the NOTES region's height - the canvas is this plus two padding rows plus timelineHeight */
+    height: number;
+    /** TIMELINE_BAND_PADDING: one row of it sits between the notes region and the strip */
+    timelinePadding: number;
+    timelineHeight: number;
+    hasCache: boolean;
+  }) => void;
 }
 
 /**
@@ -632,19 +697,59 @@ class ColumnView {
 
 export class ComposerRenderer {
   private notesApp: Application | null = null;
-  private timelineApp: Application | null = null;
   private wheelCanvas: HTMLCanvasElement | null = null;
   private cache: ComposerCache | null = null;
   private themeDispose: (() => void) | null = null;
 
-  // Persistent scene objects, created once per renderer instance. notesColumnsContainer's children
-  // are the pooled ColumnViews currently on screen (see the pool below); timelineContentContainer's
-  // are rebuilt by drawTimelineStage, which only runs from draw() - on the full repaint and on the
-  // narrowed one alike, which is why draw()'s own docstring lists the whole timeline rebuild among
-  // the things narrowing does not save.
+  // Persistent scene objects, created once per renderer instance - in FIELD INITIALISERS rather than
+  // in init(), which test/composerRenderer.test.ts relies on: it counts plain Container
+  // constructions after mounting to mean "the pool grew", so a container built inside init() would
+  // read as a pooled view against nothing. notesColumnsContainer's children are the pooled
+  // ColumnViews currently on screen (see the pool below); timelineContentContainer's are rebuilt by
+  // drawTimelineStage, which only runs from draw() - on the full repaint and on the narrowed one
+  // alike, which is why draw()'s own docstring lists the whole timeline rebuild among the things
+  // narrowing does not save.
   private readonly notesColumnsContainer = new Container();
+  /**
+   * THE MINI-TIMELINE'S PLACE ON THE ONE CANVAS: a plain container holding the timeline's content
+   * and its viewport outline, offset to `(TIMELINE_INSET_LEFT, height + TIMELINE_BAND_PADDING)` so
+   * everything below it stays written in strip-local coordinates - drawTimelineStage's whole
+   * geometry, viewportGraphics' 1.5px inset and testTimelineHitarea's `0..stripWidth()` by
+   * `0..timelineHeight` bounds alike (pixi inverts the container's world transform before calling
+   * `contains`, so the hitarea never sees either offset).
+   *
+   * THE POINTER HANDLERS ARE NOT COVERED BY THAT. `FederatedPointerEvent.globalX` is canvas space,
+   * so handleTimelineDown and handleTimelineSlide convert it with stripX() explicitly; assuming the
+   * container transform reaches them is what leaves handleTimelineDown's `sliderOffset` mixing two
+   * coordinate spaces.
+   *
+   * ADDED TO THE STAGE LAST, and that order is load-bearing rather than cosmetic: pixi's
+   * EventBoundary.hitTestRecursive walks a container's children in REVERSE and returns on the first
+   * hit, so the strip is asked about a pointer before the notes container is. See
+   * testTimelineHitarea for the deferral that makes the two agree, and test/composerRenderer.test.ts's
+   * mount(), which states the whole child order.
+   *
+   * NOT its own render group: RenderGroupPipe breaks the stage's batch around every group, so a
+   * second one buys an extra draw call and saves nothing - moving viewportGraphics queues only that
+   * child, never a walk of the strip's static children.
+   */
+  private readonly timelineStrip = new Container();
   private readonly timelineContentContainer = new Container();
   private readonly viewportGraphics = new Graphics();
+  /**
+   * THE STRIP'S `overflow: hidden`, for the one child that needs it - see TIMELINE_STRIP_RADIUS.
+   *
+   * A SIBLING of viewportGraphics and not a child of it: the outline is MOVED every frame
+   * (syncTimelineViewport writes its x and nothing else), and a mask parented to it would travel
+   * with it and clip nothing. As a child of timelineStrip it stands still in strip space while the
+   * outline slides under it.
+   *
+   * Redrawn only when the strip's size changes (syncViewportClip), which keeps it off both the
+   * per-frame path and the per-update one: a `clear()` here would otherwise land in
+   * test/composerRenderer.test.ts's global Graphics-clear count, which is how that file attributes
+   * a repaint to a column.
+   */
+  private readonly viewportClip = new Graphics();
   /**
    * The playhead line. A sibling of notesColumnsContainer on the notes stage, added AFTER it so it
    * renders on top, and never moved: it is the fixed thing in this coordinate system and the
@@ -780,11 +885,13 @@ export class ComposerRenderer {
   /** What is moving the scroll position, and with it whether the Ticker runs - see Motion. */
   private motion: Motion = { kind: 'resting' };
   /**
-   * The rounded viewport x the timeline Application was last RENDERED at, or NaN for "it has never
-   * been rendered". The gate that keeps the timeline off the per-frame path - see
-   * syncTimelineViewport.
+   * The rounded viewport x the outline was last MOVED to, or NaN for "it has never been moved". The
+   * gate that keeps the outline off the per-frame path - see syncTimelineViewport.
    */
-  private renderedViewportX = Number.NaN;
+  private writtenViewportX = Number.NaN;
+  /** The strip size viewportClip was last cut to, or NaN for "never" - see syncViewportClip. */
+  private clipWidth = Number.NaN;
+  private clipHeight = Number.NaN;
 
   private numberOfColumnsPerCanvas: number;
   private width: number;
@@ -807,8 +914,32 @@ export class ComposerRenderer {
    * matters: handleStageSlide replaces it with the live scroll position at the instant the drag
    * starts, which is what keeps a glide running under a hesitating finger from being given back.
    * The press's value is what the field is initialised to.
+   *
+   * `id` IS THE POINTER THAT OWNS THE GESTURE, and it is what makes this one field rather than a
+   * map: the composer has exactly one scroll position, so a second concurrent pointer cannot be a
+   * second drag - it can only corrupt this one. pixi dispatches per pointerId AND per mouse button
+   * (EventBoundary.mapPointerDown fires 'pointerdown' for every button, and EventSystem registers
+   * pointerdown on the canvas element), so "a second pointer" is a second finger on a touch screen
+   * OR a right-button press during a left-button drag. Without the id, that second press reached
+   * handleStageDown and overwrote (`x`, `anchorPosition`) with its own; the first pointer's next
+   * move was then measured against a position it had never been at, and a 10px nudge moved the
+   * canvas 7 columns. Every handler below compares before it acts, so the FIRST press owns the
+   * surface until it is released and the second is ignored outright.
+   *
+   * The merge is what made this reachable: before it, a press over the mini-timeline landed on a
+   * DIFFERENT canvas element with its own EventBoundary, so the two surfaces could not see each
+   * other's pointers.
    */
-  private stagePointer: { x: number; anchorPosition: number } | null = null;
+  private stagePointer: { id: number; x: number; anchorPosition: number } | null = null;
+  /**
+   * The pointerId scrubbing the mini-timeline, or null for "no pointer is down on the strip".
+   *
+   * THE STRIP'S HALF OF THE ONE-GESTURE-AT-A-TIME RULE - see stagePointer's `id` for the other half
+   * and for why an id rather than a boolean. The timeline needs a field of its own because its press
+   * IS its drag (handleTimelineDown enters the motion at once), so `motion` would answer "a timeline
+   * drag is running" for a gesture the window listener had already cancelled.
+   */
+  private timelinePointer: number | null = null;
   /**
    * The distance, in timeline px, from the position the viewport rectangle stands for to where the
    * pointer grabbed it - so the rectangle stays under the finger rather than jumping its centre
@@ -820,8 +951,7 @@ export class ComposerRenderer {
   private cacheRecalculateDebounce: Timer = 0;
 
   constructor(
-    private readonly notesContainer: HTMLElement,
-    private readonly timelineContainer: HTMLElement,
+    private readonly canvasContainer: HTMLElement,
     initialState: ComposerRendererState,
     private readonly callbacks: ComposerRendererCallbacks
   ) {
@@ -867,20 +997,25 @@ export class ComposerRenderer {
     this.width = width;
     this.height = height;
     this.columnSize = { width: columnWidth, height };
-    this.timelineHeight = isMobile() ? 25 : 30;
+    this.timelineHeight = composerTimelineHeight();
 
     this.notesApp = new Application();
     await this.notesApp.init({
       width: this.width,
-      height: this.height,
+      //the whole canvas: the notes region AND the band the mini-timeline sits in - see canvasHeight
+      height: this.canvasHeight(),
       background: this.stageBackgroundColor,
       autoDensity: true,
       autoStart: false,
       antialias: true,
       resolution: window.devicePixelRatio ?? 1.4,
     });
-    this.notesContainer.appendChild(this.notesApp.canvas);
+    this.canvasContainer.appendChild(this.notesApp.canvas);
     this.wheelCanvas = this.notesApp.canvas;
+    // ON THE CANVAS ELEMENT, which now covers the mini-timeline as well - so a wheel over the strip
+    // scrolls the composer where before the merge it reached no listener at all. Deliberate: the
+    // strip is part of the same surface now, and the alternative would be an element-space y test
+    // here purely to reproduce a dead zone nobody asked for.
     this.wheelCanvas.addEventListener('wheel', this.handleWheel);
     this.applyNotesCanvasOpacity();
     this.notesApp.renderer.background.color = this.theme.main.background;
@@ -905,10 +1040,11 @@ export class ComposerRenderer {
      * `if (!container.renderGroup)` guard), so moving this costs one matrix update whatever it
      * holds.
      *
-     * What it costs back: the group cannot merge into the stage's batch, so the playhead beside it
-     * is a second draw call. And a column entering or leaving the pool now sets structureDidChange
-     * on THIS group rather than on the stage's, so the instruction rebuild it forces no longer
-     * invalidates the playhead's - the pool churn is if anything cheaper than before.
+     * What it costs back: the group cannot merge into the stage's batch, so the playhead and the
+     * timeline strip beside it are a second draw call. And a column entering or leaving the pool
+     * now sets structureDidChange on THIS group rather than on the stage's, so the instruction
+     * rebuild it forces no longer invalidates the playhead's - the pool churn is if anything
+     * cheaper than before.
      *
      * Not cacheAsTexture: that also enables a render group, but its texture is only refreshed by an
      * explicit updateCacheTexture() call, so the pool adding and removing views would show stale
@@ -935,33 +1071,29 @@ export class ComposerRenderer {
      * renders at all, and it leaves update()-driven repaints rendering synchronously rather than
      * waiting up to a capped frame for the next tick.
      *
-     * The timeline Application's ticker is never started and keeps pixi's listener; the timeline is
-     * rendered explicitly by syncTimelineViewport and draw().
+     * ONE TICKER FOR THE WHOLE CANVAS: the mini-timeline is a container on this same stage, so it
+     * rides on the render a frame already makes and never asks for one of its own. What the merge
+     * did NOT remove is a second requestAnimationFrame - `Ticker.autoStart` is false and the
+     * timeline Application's ticker was never started, so it had asked for none.
      */
     this.notesApp.ticker.remove(this.notesApp.render, this.notesApp);
     this.notesApp.ticker.maxFPS = COMPOSER_MOTION_MAX_FPS;
     this.notesApp.ticker.add(this.onMotionFrame, this);
 
-    this.timelineApp = new Application();
-    await this.timelineApp.init({
-      width: this.width,
-      height: this.timelineHeight,
-      backgroundAlpha: 0,
-      autoDensity: true,
-      autoStart: false,
-      antialias: true,
-      resolution: window.devicePixelRatio ?? 1.4,
-    });
-    this.timelineContainer.appendChild(this.timelineApp.canvas);
     this.timelineContentContainer.eventMode = 'static';
     this.timelineContentContainer.interactiveChildren = false;
     this.timelineContentContainer.hitArea = this.testTimelineHitarea;
     this.timelineContentContainer.on('pointerdown', this.handleTimelineDown);
     this.timelineContentContainer.on('pointerup', this.handleTimelineUp);
     this.timelineContentContainer.on('pointermove', this.handleTimelineSlide);
-    this.timelineApp.stage.addChild(this.timelineContentContainer);
+    this.timelineStrip.addChild(this.timelineContentContainer);
     // viewportGraphics is a sibling added after the content container, so it renders on top.
-    this.timelineApp.stage.addChild(this.viewportGraphics);
+    this.timelineStrip.addChild(this.viewportGraphics);
+    this.initViewportClip();
+    this.positionTimelineStrip();
+    //THE LAST child of the stage, which is what makes pixi hit-test the strip before the columns -
+    //see the field. Draw order is free here, the two regions never overlapping in y.
+    this.notesApp.stage.addChild(this.timelineStrip);
 
     window.addEventListener('resize', this.recalculateCacheAndSizes);
     window.addEventListener('pointerup', this.resetPointerDown);
@@ -975,22 +1107,125 @@ export class ComposerRenderer {
     window.addEventListener('pointercancel', this.resetPointerDown);
     window.addEventListener('blur', this.resetPointerDown);
 
+    // REPORTED HERE AND NOT ONLY FROM recalculateCacheAndSizes, which is behind a 50ms debounce:
+    // the three timeline buttons are absolutely positioned from this report now, so waiting for the
+    // debounce would render them collapsed to nothing for those 50ms. `hasCache` is false here,
+    // which is the value the template already starts at, so the only thing this moves earlier is
+    // the geometry.
+    this.notifyGeometry();
     this.themeDispose = subscribeTheme(this.handleThemeChange);
     // subscribeTheme's callback fires synchronously once before returning, which already
     // calls recalculateCacheAndSizes via handleThemeChange - no separate call needed here.
   }
 
+  /**
+   * THE ONLY DOM MEASUREMENT this class makes. The arithmetic over it lives in
+   * composerCanvasGeometry.composerCanvasSize, which ComposerCanvas.svelte also renders as a CSS
+   * expression for the placeholder it shows before this renderer exists - see that function.
+   */
   private computeCanvasSize(): { width: number; height: number; columnWidth: number } {
     const sizes = document.body.getBoundingClientRect();
-    let width = nearestEven(sizes.width * 0.85 - 45);
-    let height = nearestEven(sizes.height * 0.45);
-    height = nearestEven(height * game.notes.composerRowHeightScale);
-    if (this.state.inPreview) {
-      width = nearestEven(width * (sizes.width < 900 ? 0.8 : 0.55));
-      height = nearestEven(height * (sizes.width < 900 ? 0.8 : 0.6));
-    }
+    const { width, height } = composerCanvasSize({
+      bodyWidth: sizes.width,
+      bodyHeight: sizes.height,
+      inPreview: Boolean(this.state.inPreview),
+    });
     const columnWidth = nearestEven(width / this.numberOfColumnsPerCanvas);
     return { width, height, columnWidth };
+  }
+
+  /**
+   * THE WHOLE CANVAS: the notes region, then the band the mini-timeline sits in. The only two things
+   * that want this number are the Application's initial size and the resize - everything else in
+   * this class wants `this.height`, which is the notes region and is what every note's y, every
+   * tail, the cache's texture height, the playhead and the stage hitarea are stated against.
+   *
+   * It comes to exactly the height the composer's canvas + timeline DIVs occupied before the merge
+   * (`.canvas-relative` + `.timeline-wrapper-bg`'s two 0.2rem padding rows + the strip), so the grid
+   * row around it does not reflow.
+   */
+  private canvasHeight(): number {
+    return composerCanvasElementHeight(this.height, this.timelineHeight);
+  }
+
+  /**
+   * The strip's place on the canvas: directly under the notes region, one padding row down, and
+   * inset from the left by the two breakpoint buttons that float over the canvas there.
+   *
+   * THE ONE WRITE THAT PUTS THE WHOLE SUBTREE IN STRIP-LOCAL COORDINATES. drawTimelineStage's
+   * geometry, viewportGraphics' position and testTimelineHitarea's bounds are all written as
+   * `0..stripWidth()` and never carry the inset themselves, because pixi inverts this container's
+   * world transform before calling `hitArea.contains` and applies it when rendering the children.
+   * The two POINTER HANDLERS are the exception and must convert explicitly - see stripX().
+   */
+  private positionTimelineStrip(): void {
+    this.timelineStrip.x = TIMELINE_INSET_LEFT;
+    this.timelineStrip.y = this.height + TIMELINE_BAND_PADDING;
+  }
+
+  /**
+   * Attaches the clip that keeps the viewport outline inside the strip - see TIMELINE_STRIP_RADIUS
+   * for why the outline needs one and the rest of the strip does not.
+   *
+   * ADDED TO THE STRIP AFTER the outline, so it neither renders (a mask is `includeInBuild = false`
+   * while it is one) nor changes what draws over what. What it DOES change is hit testing on
+   * viewportGraphics, which pixi prunes against a container's mask: that container has no hitArea
+   * and its only interactive sibling sets `interactiveChildren = false`, so it was never a pointer
+   * target to begin with.
+   */
+  private initViewportClip(): void {
+    this.timelineStrip.addChild(this.viewportClip);
+    this.viewportGraphics.mask = this.viewportClip;
+    this.syncViewportClip();
+  }
+
+  /**
+   * The clip's shape, which is the strip's own: exactly what drawTimelineStage gives the background,
+   * corner radius included, so the outline is cut by the same arc the bar is drawn with.
+   *
+   * GATED ON THE SIZE HAVING MOVED. Only a resize or a theme change can change it, and rebuilding a
+   * GraphicsContext per draw() would both dirty geometry no frame needs and put a `clear()` inside
+   * the window test/composerRenderer.test.ts counts Graphics clears in to decide which columns a
+   * repaint touched.
+   */
+  private syncViewportClip(): void {
+    const width = this.stripWidth();
+    if (width === this.clipWidth && this.timelineHeight === this.clipHeight) return;
+    this.clipWidth = width;
+    this.clipHeight = this.timelineHeight;
+    this.viewportClip.clear();
+    this.viewportClip.roundRect(0, 0, width, this.timelineHeight, TIMELINE_STRIP_RADIUS);
+    //a mask is read as coverage rather than as colour, so the fill's own colour never reaches a pixel
+    this.viewportClip.fill({ color: 0xffffff });
+  }
+
+  /**
+   * THE STRIP'S DRAWN WIDTH: the canvas less the two ends the DOM buttons stand on (see
+   * TIMELINE_INSET_LEFT). Every timeline value that means "across the whole song" divides by this;
+   * every value that means "what the canvas is showing" still divides by `this.width`.
+   *
+   * FLOORED AT 1 because it is a divisor. The insets come to a fixed 121.6px whatever the canvas is,
+   * and computeCanvasSize can in principle land below that in preview at an extreme viewport
+   * (`body * 0.85 - 45`, then times 0.8) - the floor turns a non-finite scroll position into a
+   * degenerate but finite one rather than propagating NaN into `selected`.
+   */
+  private stripWidth(): number {
+    return Math.max(1, this.width - TIMELINE_INSET_LEFT - TIMELINE_INSET_RIGHT);
+  }
+
+  /** One song column's width ON THE STRIP - the one statement timelineViewport() and draw() share. */
+  private timelineColumnWidth(): number {
+    return this.stripWidth() / this.state.columns.length;
+  }
+
+  /**
+   * A pointer's x in the STRIP'S own space. `FederatedPointerEvent.globalX` is CANVAS space
+   * (node_modules/pixi.js/lib/events/FederatedMouseEvent.mjs), and the container transform pixi
+   * inverts for `hitArea.contains` has no reach over it - so the two handlers that read `globalX`
+   * convert here rather than relying on positionTimelineStrip's offset.
+   */
+  private stripX(canvasX: number): number {
+    return canvasX - TIMELINE_INSET_LEFT;
   }
 
   /** The playhead's x, and with it the anchor of every column position - see PLAYHEAD_COLOR. */
@@ -1054,20 +1289,19 @@ export class ComposerRenderer {
   private recalculateCacheAndSizes = () => {
     if (this.cacheRecalculateDebounce) clearTimeout(this.cacheRecalculateDebounce);
     this.cacheRecalculateDebounce = setTimeout(() => {
-      if (!this.notesApp || !this.timelineApp) return;
+      if (!this.notesApp) return;
       const { width, height, columnWidth } = this.computeCanvasSize();
-      this.notesApp.renderer.resize(width, height);
-      this.timelineApp.renderer.resize(width, this.timelineHeight);
       const oldCache = this.cache;
+      // BEFORE the resize, which is what canvasHeight() reads: it is stated against `this.height`,
+      // so resizing first would size the canvas to the PREVIOUS frame's notes region and leave the
+      // strip drawn over the columns until the next resize caught up.
       this.width = width;
       this.height = height;
       this.columnSize = { width: columnWidth, height };
-      this.cache = this.generateCache(
-        columnWidth,
-        height,
-        isMobile() ? 2 : 4,
-        isMobile() ? 25 : 30
-      );
+      this.notesApp.renderer.resize(width, this.canvasHeight());
+      //...and the strip sits under the notes region, which has just moved
+      this.positionTimelineStrip();
+      this.cache = this.generateCache(columnWidth, height, isMobile() ? 2 : 4, this.timelineHeight);
       // EVERY input to a pooled view changed here: the column geometry AND every texture it holds
       // (the old cache's textures are destroyed 500ms below, so a surviving pool would end up
       // pointing at destroyed GPU resources). Nothing in the state diff can see any of this - theme
@@ -1077,7 +1311,8 @@ export class ComposerRenderer {
       // ...and the accent the pool paints tails in moves here, with the repaint below, rather than
       // when handleThemeChange replaced this.theme - see the field.
       this.paintTailAccent = this.theme.tailAccent;
-      //the line spans the canvas' height and sits at its centre, so both of its inputs just moved
+      //the line spans the notes region's height and sits at its horizontal centre, so both of its
+      //inputs just moved
       this.drawPlayhead();
       this.notifyGeometry();
       // draw() rebuilds and explicitly repaints the static scenes after cache regeneration.
@@ -1103,14 +1338,13 @@ export class ComposerRenderer {
     };
     colors.l = colors.l.luminosity() < 0.05 ? colors.l.lighten(0.4) : colors.l.lighten(0.1);
     colors.d = colors.d.luminosity() < 0.05 ? colors.d.lighten(0.15) : colors.d.darken(0.03);
-    if (!this.notesApp || !this.timelineApp) return null;
+    if (!this.notesApp) return null;
     return new ComposerCache({
       width: columnWidth,
       height,
       margin,
       timelineHeight,
       app: this.notesApp,
-      breakpointsApp: this.timelineApp,
       colors: {
         accent: ThemeProvider.get('composer_accent').rotate(20).darken(0.5),
         mainLayer: ThemeProvider.get('composer_main_layer'),
@@ -1269,8 +1503,9 @@ export class ComposerRenderer {
     //
     // What it does NOT stop is the once-per-tick repaint: `isRecordingAudio` is on
     // needsUnconditionalRepaint, so every transport tick still reaches draw(), which hides the
-    // columns, rebuilds the timeline content and renders both Applications once - measured at one
-    // render of each per tick. That is the rate the composer ran at before any of the smooth-scroll
+    // columns, rebuilds the timeline content and renders the canvas once - measured at one render
+    // per tick, back when that was one render of each of two Applications. That is the rate the
+    // composer ran at before any of the smooth-scroll
     // work existed, and the timeline strip stays visible during a recording, so it is also the only
     // sign the recording is progressing.
     if (state.isRecordingAudio) return this.rest();
@@ -1519,7 +1754,7 @@ export class ComposerRenderer {
    * offsets move.
    */
   private applyScrollPosition(position: number): void {
-    if (!this.notesApp || !this.timelineApp) return;
+    if (!this.notesApp) return;
     const cacheData = this.cache?.cache;
     this.scrollPosition = position;
     if (!cacheData || this.state.isRecordingAudio) return;
@@ -1561,21 +1796,42 @@ export class ComposerRenderer {
   }
 
   /**
-   * THE TIMELINE VIEWPORT, and the gate that keeps the timeline Application off the per-frame path.
+   * THE TIMELINE VIEWPORT, and the gate that keeps the outline off the per-frame path.
    *
-   * The rectangle's x is written every time, so the value the scene holds is always exact - what is
-   * gated is the RENDER. The whole song spans the canvas width here, so on a song of a few hundred
-   * columns the rectangle moves a fraction of a pixel per frame while the notes container moves
-   * several whole ones; rendering it on the frames where its rounded x did not move draws the same
-   * pixels again. At worst the outline trails the canvas by half a pixel.
+   * The whole song spans the canvas width here, so on a song of a few hundred columns the rectangle
+   * moves a fraction of a pixel per frame while the notes container moves several whole ones. What
+   * is gated is the WRITE: assigning `viewportGraphics.x` puts the Graphics into the stage render
+   * group's childrenToUpdate, and the next render hands it to GraphicsPipe.updateRenderable ->
+   * Batcher.updateElement, which sets the stage batcher dirty and makes BatcherPipe re-upload that
+   * batcher's whole attribute buffer - the playhead, the strip's background, its selection band, its
+   * breakpoint markers and this outline together. Skipping the write on a frame that would not have
+   * moved the outline by a whole pixel leaves the batcher clean and the buffer alone.
+   *
+   * Before the two canvases were merged this gated a second Application's render() instead. What it
+   * must NOT gate now is `notesApp.render()`, which is shared with the columns: those move several
+   * whole pixels on exactly the frames this skips.
+   *
+   * HOW FAR THE OUTLINE CAN TRAIL THE CANVAS: just under a whole pixel, not half of one. The gate
+   * compares ROUNDED positions, so two x values that round to the same integer are held to be the
+   * same - and those can be almost 1.0 apart (write at x = 10.4999, then skip every frame down to
+   * x = 9.5001). Measured over a 600-move drag on a 400-column song at the shipped defaults, the
+   * worst gap between the outline's x and the position the canvas was actually at came to 0.89px;
+   * test/composerRenderer.test.ts states the bound as < 1px and would fail if this became a floor or
+   * a wider quantiser. On the song this matters on - a few hundred columns across the strip - a
+   * pixel is a quarter of a column, which is finer than the outline's own edge.
+   *
+   * WHAT ALSO MOVED with the rewrite: the previous code wrote `viewportGraphics.x` unconditionally
+   * and gated the second Application's render(), so the SCENE always held the exact value and only
+   * the frame lagged. The error now lives in the scene graph. Nothing reads it - handleTimelineDown's
+   * grab test goes through timelineViewport() rather than through the Graphics - but a future reader
+   * that reached for `viewportGraphics.x` would be reading a position up to a pixel old.
    */
   private syncTimelineViewport(): void {
     const x = this.timelineViewport().x;
-    this.viewportGraphics.x = x;
     const rounded = Math.round(x);
-    if (rounded === this.renderedViewportX) return;
-    this.renderedViewportX = rounded;
-    this.timelineApp?.render();
+    if (rounded === this.writtenViewportX) return;
+    this.writtenViewportX = rounded;
+    this.viewportGraphics.x = x;
   }
 
   /**
@@ -1586,7 +1842,10 @@ export class ComposerRenderer {
    * grabs is the thing they see.
    */
   private timelineViewport(): { x: number; width: number } {
-    const relativeColumnWidth = this.width / this.state.columns.length;
+    const relativeColumnWidth = this.timelineColumnWidth();
+    //...while THESE two stay canvas quantities: they answer "which columns is the canvas showing",
+    //not "where on the strip", so scaling them by the inset as well would shrink the outline's span
+    //twice and make the rectangle report a different set of columns than the canvas holds
     const columnsOnScreen = this.width / this.columnSize.width;
     const firstVisible = this.scrollPosition - this.playheadX() / this.columnSize.width;
     return {
@@ -1665,9 +1924,14 @@ export class ComposerRenderer {
    * A pointer going down on the notes stage. It records the press and NOTHING else - the drag
    * motion is entered by the first move past DRAG_SLOP_PX (see handleStageSlide), so a click during
    * playback leaves the glide it landed on running.
+   *
+   * IGNORED OUTRIGHT WHILE ANOTHER POINTER ALREADY OWNS THE SURFACE - see stagePointer's `id`. The
+   * hitarea cannot make this decision: pixi hands `contains` a point and no pointerId, so the guard
+   * has to live where the event does.
    */
   private handleStageDown = (e: FederatedPointerEvent) => {
-    this.stagePointer = { x: e.globalX, anchorPosition: this.scrollPosition };
+    if (this.stagePointer) return;
+    this.stagePointer = { id: e.pointerId, x: e.globalX, anchorPosition: this.scrollPosition };
   };
 
   /**
@@ -1687,7 +1951,9 @@ export class ComposerRenderer {
    */
   private handleStageSlide = (e: FederatedPointerEvent) => {
     const pointer = this.stagePointer;
-    if (!pointer) return;
+    //a move from a pointer that is not the one holding the drag would be measured against an anchor
+    //it never pressed at - see stagePointer's `id`
+    if (!pointer || e.pointerId !== pointer.id) return;
     const motion = this.motion;
     const dragging = motion.kind === 'dragging' && motion.surface === 'stage';
     if (!dragging) {
@@ -1737,6 +2003,10 @@ export class ComposerRenderer {
    * already heard would put the picture behind the sound.
    */
   private handleStageUp = (e: FederatedPointerEvent) => {
+    //a release from a pointer that never owned the press is not this gesture ending - see
+    //stagePointer's `id`. It must not settle the drag under the finger still holding it, and it must
+    //not take the click path below, which SOUNDS the column it lands on.
+    if (this.stagePointer && e.pointerId !== this.stagePointer.id) return;
     this.stagePointer = null;
     const motion = this.motion;
     if (motion.kind === 'dragging' && motion.surface === 'stage') return this.settleStageDrag();
@@ -1771,11 +2041,22 @@ export class ComposerRenderer {
    * A pointer going down on the mini-timeline. Unlike the stage, this enters the drag AT ONCE and
    * jumps to the pointer, because that is what the affordance does: pressing anywhere on the
    * timeline navigates there.
+   *
+   * IGNORED OUTRIGHT WHILE ANOTHER POINTER IS ALREADY SCRUBBING - see timelinePointer. Because a
+   * running scrub makes testTimelineHitarea answer the WHOLE canvas (that is how a scrub keeps
+   * receiving moves once the pointer wanders off the strip), a second pointerdown anywhere on the
+   * canvas - the middle of the note grid included - was routed here and teleported the live scrub to
+   * it: measured at a 93-column jump on a 100-column song from a press on the notes.
    */
   private handleTimelineDown = (e: FederatedPointerEvent) => {
+    if (this.timelinePointer !== null) return;
+    this.timelinePointer = e.pointerId;
     //the rectangle drawn on the timeline, so grabbing it and grabbing what is drawn agree
     const viewport = this.timelineViewport();
-    this.onSlider = e.globalX > viewport.x && e.globalX < viewport.x + viewport.width;
+    //IN THE STRIP'S SPACE, which the rectangle's own x is stated in - `globalX` is canvas space and
+    //the strip's inset is not undone for it anywhere else (see stripX)
+    const pointerX = this.stripX(e.globalX);
+    this.onSlider = pointerX > viewport.x && pointerX < viewport.x + viewport.width;
     // WHERE ON THE RECTANGLE the pointer landed, as an offset from the position that rectangle
     // stands for. That position is `relativeColumnWidth * scrollPosition` - the playhead's own
     // column - because the line sits at the canvas' horizontal middle, so `firstVisible +
@@ -1783,12 +2064,27 @@ export class ComposerRenderer {
     // Taken from that identity rather than from the DRAWN centre, whose width is floored to whole
     // pixels: half a pixel of the strip is a sixteenth of a column on a 100-column song, which is
     // enough to make a grab that never moves ask for the column before the one it grabbed.
-    this.sliderOffset = (this.width / this.state.columns.length) * this.scrollPosition - e.globalX;
+    // BOTH TERMS IN STRIP SPACE. This is the one expression in the class that mixes a strip
+    // quantity with a pointer position, and they were the same space only while the strip ran the
+    // canvas' full width - converting one and not the other is an 80px error here, about five
+    // columns of a 100-column song, that no scene assertion can see.
+    this.sliderOffset = this.timelineColumnWidth() * this.scrollPosition - pointerX;
     this.enterMotion({ kind: 'dragging', surface: 'timeline', position: this.scrollPosition });
     this.handleTimelineSlide(e);
   };
 
-  private handleTimelineUp = () => {
+  /**
+   * The end of a scrub. Called both by pixi's own pointerup and by the window listener, which is why
+   * the event is optional - resetPointerDown has no pixi event to pass on for a pointercancel or a
+   * blur, and those must settle the scrub regardless of which pointer they name.
+   *
+   * A release from a pointer that is not the one scrubbing is NOT this gesture ending: a second
+   * finger going down and up over the canvas would otherwise settle the drag the first finger is
+   * still holding, leaving that finger's remaining moves writing into a motion nobody is in.
+   */
+  private handleTimelineUp = (e?: FederatedPointerEvent) => {
+    if (e && this.timelinePointer !== null && e.pointerId !== this.timelinePointer) return;
+    this.timelinePointer = null;
     const motion = this.motion;
     if (motion.kind !== 'dragging' || motion.surface !== 'timeline') return;
     const target = clamp(Math.round(motion.position), 0, this.state.columns.length - 1);
@@ -1798,7 +2094,7 @@ export class ComposerRenderer {
 
   /**
    * THE TIMELINE DRAG: absolute rather than an offset from an anchor, since the whole song spans
-   * the strip. The position is `(x / width) * columns.length`, which is the expression the throttled
+   * the strip. The position is `(x / stripWidth) * columns.length`, which is the expression the throttled
    * version already computed (`totalWidth / columnSize.width` cancels to `columns.length`) with its
    * floor replaced by snapManualPosition - so it is continuous while smooth scrolling is on and
    * quantised to whole columns while it is off. The timeline snaps with the notes stage rather than
@@ -1814,11 +2110,14 @@ export class ComposerRenderer {
    * and this adds it straight back. See handleTimelineDown for where the offset comes from.
    */
   private handleTimelineSlide = (e: FederatedPointerEvent) => {
+    //...and only from the pointer that started the scrub - see timelinePointer
+    if (this.timelinePointer !== null && e.pointerId !== this.timelinePointer) return;
     const motion = this.motion;
     if (motion.kind !== 'dragging' || motion.surface !== 'timeline') return;
     const lastColumn = this.state.columns.length - 1;
-    const x = this.onSlider ? e.globalX + this.sliderOffset : e.globalX;
-    const raw = clamp((x / this.width) * this.state.columns.length, 0, lastColumn);
+    const pointerX = this.stripX(e.globalX);
+    const x = this.onSlider ? pointerX + this.sliderOffset : pointerX;
+    const raw = clamp((x / this.stripWidth()) * this.state.columns.length, 0, lastColumn);
     const position = this.snapManualPosition(raw);
     motion.position = position;
     const column = Math.floor(position);
@@ -1839,23 +2138,88 @@ export class ComposerRenderer {
     }
   };
 
+  /**
+   * WHAT COUNTS AS A GRAB ON THE NOTES STAGE: the whole canvas, and not the strip the columns
+   * happen to occupy.
+   *
+   * The container is NARROWER than the canvas wherever the song runs out - the first column starts
+   * AT the playhead, so at scroll position 0 the left half of the canvas is empty; at the last
+   * column the right half is; and a song shorter than the screen, which is every song that has just
+   * been started, is surrounded by empty canvas at every scroll position it has. Those margins are
+   * part of the same surface as far as a finger is concerned, so they route to the same three
+   * handlers rather than to a gesture of their own. Nothing downstream needs to know: the drag is a
+   * DELTA from wherever the press landed (see handleStageSlide) and never reads the column under it,
+   * and the click path was already clamped, so a release out there picks the nearest end column.
+   *
+   * The CANVAS bound is still enforced, and is why this is not simply `true`. pixi registers its
+   * pointerup on globalThis rather than on the canvas element, so a release ANYWHERE on the page is
+   * hit-tested against this container; without the bound, letting go of a button elsewhere in the
+   * composer would reach handleStageUp as a click and both select and SOUND an end column.
+   *
+   * `x` and `y` arrive in the container's own space, so the canvas' left edge sits at `-container.x`.
+   * That offset is read back off the container rather than recomputed from `scrollPosition`: it is
+   * the exact value pixi inverted to produce `x`, and applyScrollPosition leaves the two disagreeing
+   * for as long as an audio recording is running.
+   *
+   * THE `y` BOUND IS THE NOTES REGION and not the canvas, which is load-bearing now that the
+   * mini-timeline shares the canvas: `this.height` stops at the padding row above the strip, so a
+   * timeline scrub's release does not also reach handleStageUp - which calls selectColumn WITHOUT
+   * `ignoreAudio` and would sound a column on every scrub.
+   *
+   * The reverse case needs nothing here. The timeline strip is a LATER child of the same stage, so
+   * pixi hit-tests it first (it walks children in reverse and returns on the first hit), and its own
+   * hitarea answers every point while its drag runs - so a timeline drag never reaches this
+   * container at all. That makes the stage child ORDER load-bearing rather than cosmetic;
+   * test/composerRenderer.test.ts's mount() states it.
+   */
   private testStageHitarea = {
     contains: (x: number, y: number) => {
       //while the stage is being dragged the pointer must keep reaching this container even outside
       //the canvas, which is what puts it on the composed path pixi dispatches pointerup along
       if (this.stagePointer) return true;
-      const width = this.columnSize.width * this.state.columns.length;
-      if (x < 0 || x > width || y < 0 || y > this.height) return false;
+      const canvasX = x + this.notesColumnsContainer.x;
+      if (canvasX < 0 || canvasX > this.width || y < 0 || y > this.height) return false;
       return true;
     },
   };
 
+  /**
+   * WHAT COUNTS AS A GRAB ON THE MINI-TIMELINE. `x` and `y` arrive in the content container's own
+   * space, which pixi produces by inverting the strip's world transform - so the strip's offset onto
+   * the canvas is already undone here, in x as well as in y, and the bounds are the strip's own
+   * `0..stripWidth()` by `0..timelineHeight`.
+   *
+   * THE x BOUND IS WHAT KEEPS THE BUTTONS FROM ALSO SCRUBBING. The three DOM buttons stand on
+   * exactly `[0, TIMELINE_INSET_LEFT]` and `[width - TIMELINE_INSET_RIGHT, width]` in canvas space,
+   * which is precisely what this rejects - so a press anywhere in those two bands reaches no handler
+   * at all, whether it lands on a button (which swallows it in the DOM) or on 3.2px of bare canvas
+   * beside one (which falls through and is declined here, and by the notes stage on `y >
+   * this.height`). Bands rather than margin boxes: the right-hand button's `margin-left: auto` makes
+   * its margin box the whole `[TIMELINE_INSET_LEFT, width]` remainder, and 3.2px of the band it
+   * stands on is the clearance in front of it rather than a margin of its own.
+   */
   private testTimelineHitarea = {
     contains: (x: number, y: number) => {
+      // DEFERRED WHILE A PRESS OWNS THE NOTES SURFACE, which is new with the merged canvas and is
+      // load-bearing rather than defensive. This container is a LATER child of the same stage, so
+      // pixi hit-tests it BEFORE the notes container and returns on the first hit; without this, a
+      // stage drag whose pointer wanders down into the strip is claimed here and the drag freezes
+      // until the pointer comes back up. `stagePointer` is the PRESS rather than the drag, so the
+      // deferral covers the whole gesture including the pre-slop part.
+      //
+      // The two ownership tests below and above cannot both hold: handleTimelineDown is reachable
+      // only if this hitarea answered, which needs `stagePointer === null`, and handleStageDown only
+      // if this one declined, which a running timeline drag never does.
+      //
+      // WHAT NEITHER OF THEM DECIDES is which POINTER is being asked about - `contains` is handed a
+      // point and nothing else. So both of these route a SECOND concurrent press exactly as if it
+      // were the first one's continuation, and the guards that reject it live in the handlers (see
+      // stagePointer's `id` and timelinePointer) rather than here.
+      if (this.stagePointer) return false;
       //same reason as the stage's, for the timeline's own drag
       const motion = this.motion;
       if (motion.kind === 'dragging' && motion.surface === 'timeline') return true;
-      if (x < 0 || x > this.width || y < 0 || y > this.timelineHeight) return false;
+      if (x < 0 || x > this.stripWidth() || y < 0 || y > this.timelineHeight) return false;
       return true;
     },
   };
@@ -1871,8 +2235,21 @@ export class ComposerRenderer {
    * the time this does anything; settleStageDrag and the timeline's own settle both return when the
    * motion is not theirs.
    */
-  private resetPointerDown = () => {
+  private resetPointerDown = (e: Event) => {
+    // A SECOND POINTER'S RELEASE IS NOT THIS GESTURE ENDING - the same rule the pixi handlers now
+    // apply, restated here because this listener is on `window` and therefore hears every pointer on
+    // the page. Without it the id guards above buy nothing: the second finger's pointerup reaches
+    // this instead and settles the drag the first finger is still holding.
+    //
+    // Only events that NAME a pointer are filtered. `blur` names none and must cancel whatever is
+    // running, and a `pointerup`/`pointercancel` naming a pointer this class never recorded (a press
+    // that started outside the canvas) is let through unchanged - there is nothing of ours for it to
+    // settle, and the branches below already return when the motion is not a drag.
+    const id = 'pointerId' in e ? (e as PointerEvent).pointerId : null;
+    const owner = this.stagePointer?.id ?? this.timelinePointer;
+    if (id !== null && owner !== null && id !== owner) return;
     this.stagePointer = null;
+    this.timelinePointer = null;
     const motion = this.motion;
     if (motion.kind !== 'dragging') return;
     if (motion.surface === 'stage') this.settleStageDrag();
@@ -1906,7 +2283,13 @@ export class ComposerRenderer {
   };
 
   private notifyGeometry() {
-    this.callbacks.onGeometryChange({ width: this.width, hasCache: this.cache !== null });
+    this.callbacks.onGeometryChange({
+      width: this.width,
+      height: this.height,
+      timelinePadding: TIMELINE_BAND_PADDING,
+      timelineHeight: this.timelineHeight,
+      hasCache: this.cache !== null,
+    });
   }
 
   // The entry point ComposerCanvas.svelte's $effect calls on every reactive-state change - the
@@ -2307,26 +2690,26 @@ export class ComposerRenderer {
    * call cannot enable it - that path has just dropped the pool, and every key with it, but the
    * default is what makes "only update() narrows" a property of the signature rather than of its
    * call sites. Everything else here runs identically either way: the container offset, the
-   * release/acquire pass, the whole timeline rebuild, both renders and the baseline record.
+   * release/acquire pass, the whole timeline rebuild, the render and the baseline record.
    *
-   * Both Applications render here unconditionally - the timeline's per-frame gate does not apply,
-   * because this rebuilt the timeline's whole content container.
+   * The render here is unconditional, and drawTimelineStage has just written the outline's EXACT x -
+   * syncTimelineViewport's per-frame gate does not apply, because this rebuilt the timeline's whole
+   * content container.
    */
   private draw(narrowed: boolean = false): void {
-    if (!this.notesApp || !this.timelineApp) return;
+    if (!this.notesApp) return;
     const cacheData = this.cache?.cache;
     const sizes = this.columnSize;
     const state = this.state;
-    const relativeColumnWidth = this.width / state.columns.length;
+    const relativeColumnWidth = this.timelineColumnWidth();
     const viewport = this.timelineViewport();
 
     const painted = this.drawNotesStage(cacheData, sizes, this.containerX(), narrowed);
     this.drawTimelineStage(cacheData, relativeColumnWidth, viewport.width, viewport.x);
     this.notesApp.render();
-    this.timelineApp.render();
-    //the gate's baseline moves with the render that just happened, or the next frame would compare
-    //against a position two repaints old and skip a render the outline needs
-    this.renderedViewportX = Math.round(viewport.x);
+    //the gate's baseline moves with the exact x drawTimelineStage just wrote, or the next frame
+    //would compare against a position two repaints old and skip a write the outline needs
+    this.writtenViewportX = Math.round(viewport.x);
     // The baseline is only the state of a run that ACTUALLY PAINTED the notes stage. Recording it
     // after a run that painted nothing (no cache yet, recording audio) would let the next update
     // diff against a moment that never reached the screen, and the pool would come back showing a
@@ -2383,6 +2766,37 @@ export class ComposerRenderer {
     );
   }
 
+  /**
+   * The mini-timeline's content, in the strip's own coordinates - `0..this.stripWidth()` by
+   * `0..this.timelineHeight`, with the strip's offset onto the canvas carried by timelineStrip in
+   * both axes (see positionTimelineStrip).
+   *
+   * INSET FROM BOTH ENDS OF THE CANVAS, by the footprint of the three DOM buttons that float over
+   * it: TIMELINE_INSET_LEFT (80px) for the two breakpoint-step buttons at the left,
+   * TIMELINE_INSET_RIGHT (41.6px) for the add/remove-breakpoint button at the right. The CANVAS
+   * still spans the whole card; only what is drawn on the strip is held clear of them. Those insets
+   * are fixed px whatever the viewport is, because the buttons are fixed rem - so the narrower the
+   * canvas the larger a fraction of it they take: 7.7% of a 1588px canvas at a 1920px viewport,
+   * 41% of a 296px one at 400px.
+   *
+   * AN OFFSET AND NOT A SCALE. Every "across the whole song" divisor below and in timelineViewport()
+   * is stripWidth(), so there is no canvas-space-to-strip-space factor anywhere and the pointer
+   * handlers invert the offset with a single subtraction (stripX). The pre-merge timeline canvas
+   * did scale - its element was inset by a flex shrink and the browser stretched a full-width bitmap
+   * into it - and reproducing that here would have meant reproducing a flex shrink in arithmetic.
+   *
+   * WHAT THE INSET BUYS: the buttons stand over dead canvas rather than over the strip, so the bar,
+   * the selection band and every breakpoint marker between the song's ends are drawn clear of them,
+   * and the strip's whole span is pressable, first and last column included (testTimelineHitarea
+   * rejects exactly the two inset bands, so a press on a button or on a seam between two of them
+   * reaches no handler). What it costs: the whole song is compressed into 121.6px less width.
+   *
+   * WHAT STILL REACHES INTO THOSE BANDS, because nothing masks this container: the FIRST and LAST
+   * breakpoint markers, which are anchored at 0.5 on strip x 0 and stripWidth, so half of a 10px
+   * sprite falls outside - about 3.2px of it in the seam between two buttons and the rest behind
+   * one. See TIMELINE_STRIP_RADIUS for why that is left and why the viewport outline, which
+   * overflows by up to a whole canvas width, is masked instead.
+   */
   private drawTimelineStage(
     cacheData: ComposerCacheData | undefined,
     relativeColumnWidth: number,
@@ -2391,14 +2805,25 @@ export class ComposerRenderer {
   ) {
     for (const child of this.timelineContentContainer.removeChildren())
       child.destroy({ children: true });
-    // viewportGraphics below is drawn regardless of cacheData - only the background/
-    // selection/breakpoints here are gated on it.
-    if (cacheData) {
-      const background = new Graphics();
-      background.rect(0, 0, this.width, this.timelineHeight);
-      background.fill({ color: this.theme.timeline.hexNumber });
-      this.timelineContentContainer.addChild(background);
+    //the outline's clip is the strip's own shape, so it is re-cut wherever that shape is re-drawn
+    this.syncViewportClip();
+    // THE BAR ITSELF, drawn whether or not a cache exists yet - unlike everything below it.
+    // `.timeline-scroll` carried `background-color` in the template, so the coloured bar was on
+    // screen from the component's first paint, independent of pixi; this is all that is left to
+    // paint it. Gated on cacheData the way the content is, it was missing for the whole of
+    // recalculateCacheAndSizes' 50ms debounce after every mount - draw() runs before then, from the
+    // first update() - and the band showed the Application's clear colour instead.
+    //ROUNDED, because `.timeline-scroll`'s `border-radius: 0.3rem` used to round the strip's own
+    //element and there is no element under it any more - see TIMELINE_STRIP_RADIUS
+    const background = new Graphics();
+    background.roundRect(0, 0, this.stripWidth(), this.timelineHeight, TIMELINE_STRIP_RADIUS);
+    background.fill({ color: this.theme.timeline.hexNumber });
+    this.timelineContentContainer.addChild(background);
 
+    // viewportGraphics below is drawn regardless of cacheData too - only the selection band and the
+    // breakpoint markers here are gated on it. The markers are cache TEXTURES; the band is gated
+    // beside them because the old timeline canvas drew neither before its first cache.
+    if (cacheData) {
       if (this.state.selectedColumns.length) {
         const first = this.state.selectedColumns[0] || 0;
         const last = this.state.selectedColumns[this.state.selectedColumns.length - 1];
@@ -2416,10 +2841,10 @@ export class ComposerRenderer {
         sprite.eventMode = 'passive';
         sprite.anchor.set(0.5, 0);
         // QUIRK: `columns.length - 1` here while every other timeline value divides by
-        // `columns.length` (see draw()'s relativeColumnWidth). Preserved verbatim - it is a
-        // pixel-level difference that predates the pool, and it is why a one-column song puts a
-        // breakpoint at NaN.
-        sprite.x = (this.width / (this.state.columns.length - 1)) * breakpoint;
+        // `columns.length` (see timelineColumnWidth()). Preserved verbatim - it is a pixel-level
+        // difference that predates the pool, and it is why a one-column song puts a breakpoint at
+        // NaN. Only the DIVIDEND moved to the strip's width with the inset.
+        sprite.x = (this.stripWidth() / (this.state.columns.length - 1)) * breakpoint;
         this.timelineContentContainer.addChild(sprite);
       });
     }
@@ -2431,7 +2856,7 @@ export class ComposerRenderer {
     this.viewportGraphics.y = 1.5;
   }
 
-  // Both Applications must be explicitly destroyed to avoid a WebGL/canvas leak on remount
+  // The Application must be explicitly destroyed to avoid a WebGL/canvas leak on remount
   // (this component remounts via {#key settings.columnsPerCanvas.value}).
   destroy(): void {
     // Before the Application goes: Application.destroy runs TickerPlugin.destroy, which destroys the
@@ -2450,14 +2875,12 @@ export class ComposerRenderer {
     if (this.cacheRecalculateDebounce) clearTimeout(this.cacheRecalculateDebounce);
     this.wheelCanvas?.removeEventListener('wheel', this.handleWheel);
     this.themeDispose?.();
-    // Before the Applications go: app.destroy({children: true}) only reaches what hangs off the
+    // Before the Application goes: app.destroy({children: true}) only reaches what hangs off the
     // STAGE, and a released view is parked outside the scene graph entirely.
     this.dropColumnPool();
     this.cache?.destroy();
     this.notesApp?.destroy(true, { children: true });
-    this.timelineApp?.destroy(true, { children: true });
     this.notesApp = null;
-    this.timelineApp = null;
     this.wheelCanvas = null;
   }
 }
