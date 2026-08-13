@@ -4,10 +4,11 @@ import {APP_NAME, INSTRUMENTS, NoteLayer} from './imports'
 describe('environment smoke test', () => {
     it('runs against a selected game', () => {
         expect(['Genshin', 'Sky']).toContain(APP_NAME)
-        // Genshin has 10 instruments; Sky had 34 (from Config.ts, counted directly)
-        // +1 on 2026-08-05: `sustained_recorder` (VCSL) — the `test_sustain` dummy
+        // Genshin had 10 instruments; Sky had 34 (from Config.ts, counted directly)
+        // Sky +1 on 2026-08-05: `sustained_recorder` (VCSL) — the `test_sustain` dummy
         // it replaced (added 2026-08-04) was deleted the same day it became redundant
-        expect(INSTRUMENTS.length).toBe(APP_NAME === 'Genshin' ? 10 : 35)
+        // Genshin +1: the same instrument, widened to its 21-note keyboard
+        expect(INSTRUMENTS.length).toBe(APP_NAME === 'Genshin' ? 11 : 35)
     })
 
     it('NoteLayer bit operations work', () => {

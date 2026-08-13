@@ -142,7 +142,7 @@
   },
   "player": {
     "other": {
-      "settingVersion": "Genshin81"
+      "settingVersion": "Genshin82"
     },
     "data": {
       "instrument": {
@@ -162,7 +162,8 @@
           "LeapingSpiritPiano",
           "HarmonicKey",
           "DunDun",
-          "DjemDjemDrum"
+          "DjemDjemDrum",
+          "sustained_recorder"
         ],
         "category": "song_settings"
       },
@@ -672,7 +673,7 @@
   },
   "zenKeyboard": {
     "other": {
-      "settingVersion": "Genshin26"
+      "settingVersion": "Genshin27"
     },
     "data": {
       "instrument": {
@@ -692,7 +693,8 @@
           "LeapingSpiritPiano",
           "HarmonicKey",
           "DunDun",
-          "DjemDjemDrum"
+          "DjemDjemDrum",
+          "sustained_recorder"
         ],
         "category": "keyboard"
       },

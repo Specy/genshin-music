@@ -851,7 +851,7 @@ export const i18n_en = {
     Ocarina: 'Ocarina',
     MantaOcarina: 'Manta Ocarina',
     Aurora: 'Aurora', //leave as is
-    sustained_recorder: 'Sustained recorder', //real sustained samples (VCSL alto+soprano recorders, CC0)
+    sustained_recorder: 'Sustained recorder', //real sustained samples (VCSL recorders, CC0): sky pairs alto+soprano, genshin adds tenor for its low octave
     Kalimba: 'Kalimba',
     ToyUkulele: 'Toy Ukulele',
     Drum: 'Drum',
