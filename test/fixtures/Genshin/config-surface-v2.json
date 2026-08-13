@@ -10,7 +10,8 @@
     "LeapingSpiritPiano",
     "HarmonicKey",
     "DunDun",
-    "DjemDjemDrum"
+    "DjemDjemDrum",
+    "sustained_recorder"
   ],
   "instrumentsData": {
     "DjemDjemDrum": {
@@ -1222,6 +1223,234 @@
           "icon": "ti"
         }
       ]
+    },
+    "sustained_recorder": {
+      "name": "sustained_recorder",
+      "displayName": "Sustained recorder",
+      "family": "pipe",
+      "midiName": "recorder",
+      "shape": "genshin-3x7",
+      "sustain": {
+        "release": 0.3,
+        "minLength": 0.1,
+        "loop": {
+          "start": 0.789396,
+          "end": 3.512646
+        },
+        "loopMode": "loop-continuous"
+      },
+      "notes": [
+        {
+          "file": "m72.mp3",
+          "midi": 72,
+          "baseNote": "C",
+          "icon": "do",
+          "loop": {
+            "start": 2.723813,
+            "end": 6.866021
+          }
+        },
+        {
+          "file": "m74.mp3",
+          "midi": 74,
+          "baseNote": "D",
+          "icon": "re",
+          "loop": {
+            "start": 2.450146,
+            "end": 9.962083
+          }
+        },
+        {
+          "file": "m76.mp3",
+          "midi": 76,
+          "baseNote": "E",
+          "icon": "mi",
+          "loop": {
+            "start": 2.814104,
+            "end": 10.40575
+          }
+        },
+        {
+          "file": "m77.mp3",
+          "midi": 77,
+          "baseNote": "F",
+          "icon": "fa",
+          "loop": {
+            "start": 2.871083,
+            "end": 13.466313
+          }
+        },
+        {
+          "file": "m79.mp3",
+          "midi": 79,
+          "baseNote": "G",
+          "icon": "so",
+          "loop": {
+            "start": 2.605438,
+            "end": 5.112542
+          }
+        },
+        {
+          "file": "m81.mp3",
+          "midi": 81,
+          "baseNote": "A",
+          "icon": "la",
+          "loop": {
+            "start": 2.706375,
+            "end": 4.784604
+          }
+        },
+        {
+          "file": "m83.mp3",
+          "midi": 83,
+          "baseNote": "B",
+          "icon": "ti",
+          "loop": {
+            "start": 2.997688,
+            "end": 5.208792
+          }
+        },
+        {
+          "file": "m60.mp3",
+          "midi": 60,
+          "baseNote": "C",
+          "icon": "do",
+          "loop": {
+            "start": 0.789396,
+            "end": 3.512646
+          }
+        },
+        {
+          "file": "m62.mp3",
+          "midi": 62,
+          "baseNote": "D",
+          "icon": "re",
+          "loop": {
+            "start": 2.667771,
+            "end": 5.923667
+          }
+        },
+        {
+          "file": "m64.mp3",
+          "midi": 64,
+          "baseNote": "E",
+          "icon": "mi",
+          "loop": {
+            "start": 2.885313,
+            "end": 6.604146
+          }
+        },
+        {
+          "file": "m65.mp3",
+          "midi": 65,
+          "baseNote": "F",
+          "icon": "fa",
+          "loop": {
+            "start": 1.629167,
+            "end": 4.566833
+          }
+        },
+        {
+          "file": "m67.mp3",
+          "midi": 67,
+          "baseNote": "G",
+          "icon": "so",
+          "loop": {
+            "start": 2.873125,
+            "end": 8.789208
+          }
+        },
+        {
+          "file": "m69.mp3",
+          "midi": 69,
+          "baseNote": "A",
+          "icon": "la",
+          "loop": {
+            "start": 2.258521,
+            "end": 9.591979
+          }
+        },
+        {
+          "file": "m71.mp3",
+          "midi": 71,
+          "baseNote": "B",
+          "icon": "ti",
+          "loop": {
+            "start": 2.856417,
+            "end": 9.169083
+          }
+        },
+        {
+          "file": "m48.mp3",
+          "midi": 48,
+          "baseNote": "C",
+          "icon": "do",
+          "loop": {
+            "start": 3.29525,
+            "end": 6.015917
+          }
+        },
+        {
+          "file": "m50.mp3",
+          "midi": 50,
+          "baseNote": "D",
+          "icon": "re",
+          "loop": {
+            "start": 2.923125,
+            "end": 6.652542
+          }
+        },
+        {
+          "file": "m52.mp3",
+          "midi": 52,
+          "baseNote": "E",
+          "icon": "mi",
+          "loop": {
+            "start": 2.335833,
+            "end": 7.843375
+          }
+        },
+        {
+          "file": "m53.mp3",
+          "midi": 53,
+          "baseNote": "F",
+          "icon": "fa",
+          "loop": {
+            "start": 1.545583,
+            "end": 6.908146
+          }
+        },
+        {
+          "file": "m55.mp3",
+          "midi": 55,
+          "baseNote": "G",
+          "icon": "so",
+          "loop": {
+            "start": 3.295833,
+            "end": 6.803917
+          }
+        },
+        {
+          "file": "m57.mp3",
+          "midi": 57,
+          "baseNote": "A",
+          "icon": "la",
+          "loop": {
+            "start": 1.523625,
+            "end": 6.465
+          }
+        },
+        {
+          "file": "m59.mp3",
+          "midi": 59,
+          "baseNote": "B",
+          "icon": "ti",
+          "loop": {
+            "start": 3.124521,
+            "end": 7.402042
+          }
+        }
+      ]
     }
   },
   "shapes": {
@@ -1277,13 +1506,13 @@
           "C7"
         ],
         "number": [
-          "1̇",
-          "2̇",
-          "3̇",
-          "4̇",
-          "5̇",
-          "6̇",
-          "7̇",
+          "1\u0307",
+          "2\u0307",
+          "3\u0307",
+          "4\u0307",
+          "5\u0307",
+          "6\u0307",
+          "7\u0307",
           "1",
           "2",
           "3",
@@ -1291,13 +1520,13 @@
           "5",
           "6",
           "7",
-          "1̣",
-          "2̣",
-          "3̣",
-          "4̣",
-          "5̣",
-          "6̣",
-          "7̣"
+          "1\u0323",
+          "2\u0323",
+          "3\u0323",
+          "4\u0323",
+          "5\u0323",
+          "6\u0323",
+          "7\u0323"
         ],
         "playstation": [
           " ",
@@ -1380,27 +1609,27 @@
           "2",
           "3",
           "4",
-          "1̣",
-          "2̣",
-          "3̣",
-          "4̣"
+          "1\u0323",
+          "2\u0323",
+          "3\u0323",
+          "4\u0323"
         ],
         "playstation": [
-          "⟰",
-          "▲",
-          "⭅",
-          "◼",
-          "⟱",
+          "\u27f0",
+          "\u25b2",
+          "\u2b45",
+          "\u25fc",
+          "\u27f1",
           "X",
           "L2",
           "R2"
         ],
         "switch": [
-          "⟰",
+          "\u27f0",
           "X",
-          "⭅",
+          "\u2b45",
           "Y",
-          "⟱",
+          "\u27f1",
           "B",
           "Zl",
           "Zr"
