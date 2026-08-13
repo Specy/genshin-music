@@ -166,13 +166,41 @@ export type InstrumentNote = {
   minLength?: number;
 };
 
-/** Props every Shape arrangement component receives (default impl: shapes/GridShape.svelte). */
-export type ShapeComponentProps = {
+/**
+ * What a Shape is told about ONE note (ADR-0005 §1) — the minimum any placement rule can
+ * need: the note's identity plus the two content facts an arrangement could sort or group
+ * by. Surfaces pass their own richer note objects (ObservableNote), which satisfy this
+ * structurally and come back out of the `button` snippet unchanged, so a surface keeps
+ * addressing per-note state through its own object instead of through a slot index.
+ */
+export type ShapeNote = {
+  /** Note Id (ADR-0001): the note's identity in songs and at the engine boundary. */
+  id: number;
+  baseNote: BaseNote;
+  icon: NoteImage;
+};
+
+/**
+ * Props every Shape arrangement component receives (default impl: shapes/GridShape.svelte).
+ *
+ * The Shape is handed the instrument's notes IN AUTHORED ORDER — meta.json's order is the
+ * single authored statement of in-game key placement — and is explicitly free to ignore it
+ * and place by note content instead (ADR-0005 §1). Generic in the note type so the surface's
+ * own note object survives the round trip into the snippet.
+ */
+export type ShapeComponentProps<N extends ShapeNote = ShapeNote> = {
   shape: ShapeDefinition;
-  /** Buttons actually rendered (≤ shape.capacity). */
-  count: number;
-  /** Renders the button at a Button index; the surface closes over its own data. */
-  button: import('svelte').Snippet<[number]>;
+  /** The instrument's notes in authored Button order (length ≤ shape.capacity). */
+  notes: readonly N[];
+  /**
+   * Renders one note; the surface closes over its own data. Payload: the note itself, and
+   * its BUTTON (its position in `notes`) — never the on-screen slot, which is the Shape's
+   * own business. Surfaces need the Button for per-button side data (MIDI preset slots,
+   * held/status tables) and never need the slot: Label Sets are read through
+   * `Instrument.getNoteText`, which applies the Shape's own assignment, so a surface cannot
+   * label a button differently from where the Shape drew it.
+   */
+  button: import('svelte').Snippet<[N, number]>;
   /** Extra classes/styles for the arrangement container (surfaces keep their page styling). */
   class?: string;
   style?: string;
@@ -195,7 +223,30 @@ export type ShapeDefinition = {
   labels: ShapeLabels;
   /** Button silhouette, echoed by overlays drawn around a button (the practice hold ring). */
   noteShape: NoteShape;
+  /**
+   * Declared at the base ShapeNote so one registry can hold every Shape; ShapeKeyboard
+   * re-instantiates it at the surface's own note type (one documented cast), which is sound
+   * because an arrangement reads only ShapeNote fields and hands the snippet back the very
+   * element it was given.
+   */
   component: import('svelte').Component<ShapeComponentProps>;
+  /**
+   * This Shape's note→position assignment, exposed as data (ADR-0005 §2): given the
+   * instrument's notes in authored order, returns the SLOT each one takes —
+   * `assign(notes)[button]` is where `notes[button]` is drawn AND which entry of this
+   * Shape's Label Sets is that button's label (`labels.keyboard[slot]`), so keybind
+   * resolution, highlighting and hints always agree with what was drawn.
+   *
+   * Omit for the identity assignment (slot k = note k), which every grid Shape uses:
+   * authored order IS on-screen order. Slots must be distinct integers in [0, capacity) —
+   * validated per instrument at defineGame time (shapes/assignment.ts).
+   *
+   * A content-driven Shape owns this as STABLE API: user keybinds are attached to label
+   * strings, so changing the rule moves users' keys. The ADR's example payoff is a
+   * content-aware grid that places a 14-note instrument on the standard 3×7's lower rows
+   * automatically, making a separate `*-2x7` Shape (with hand-sliced labels) unnecessary.
+   */
+  assign?: (notes: readonly ShapeNote[]) => readonly number[];
 };
 
 /** A fully-normalized instrument: what the app consumes at runtime. */
@@ -286,6 +337,10 @@ export interface GameDefinition {
     perRow: number; // Song Grid cols/row (7 | 5)
     cssClasses: NotesCssClasses; // NOTES_CSS_CLASSES
     nameTypes: NoteNameType[]; // NOTE_NAME_TYPES
+    // CANONICAL_NOTE_IDS — the Song Grid's ordered Note Ids (ADR-0004): entry N is
+    // the id whose row is composerPositions[N]. The canvas places every note by its
+    // id through this list, so no instrument's Button layout can move a row.
+    canonicalNoteIds: number[];
     composerPositions: number[]; // COMPOSER_NOTE_POSITIONS
     importPositions: number[]; // IMPORT_NOTE_POSITIONS
     animationDelayMs: number; // note press/animation delay (100 | 200)

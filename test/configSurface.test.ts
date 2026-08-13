@@ -81,6 +81,46 @@ describe('game config surface', () => {
         delete frozen.instrumentsData['test_sustain']
         frozen.instruments = frozen.instruments.filter((name: string) => name !== 'test_sustain')
 
+        // Deliberate VALUE divergence (2026-08-14, in-game RE-CAPTURE of HarmonicKey and
+        // LeapingSpiritPiano). Both are PRE-freeze instruments, so POST_FREEZE_INSTRUMENTS below is
+        // not available to them and must not be: their Note Ids, base notes, icons and layouts are
+        // untouched by the re-capture and still reproduce the frozen surface exactly. Only two facts
+        // per instrument legitimately moved, and only because the samples themselves were replaced:
+        //  - fill/clickColor: re-sampled off the new recordings' in-game button art. HarmonicKey's
+        //    clickColor is deliberately absent below — its lighter click tint (#e1cba3) survived.
+        //  - sustain: the new captures are real sustained holds, where the 2026-08-03 set was
+        //    tap-only, so both gained a LOOPLESS sustain block (release 0.3, minLength 0.1 — the
+        //    attacks are near-instant, unlike NightwindHorn's swells). The legacy v1 sustain shape
+        //    carried only {release, crossfade?, loop?, noteLoops?}, which is why the whole expected
+        //    value here is {release: 0.3}: no loop is authored, and minLength never existed in v1.
+        // Each edit names the frozen value it replaces and that value is ASSERTED before patching,
+        // so this exception can absorb exactly the changes enumerated here and nothing else — a
+        // further color tweak, a changed release, an added loop, or a hand-edit of the frozen file
+        // all still fail. No other field, and no other instrument, is touched.
+        const RECAPTURE_EDITS: Record<string, {field: string; from: unknown; to: unknown}[]> =
+            APP_NAME === 'Genshin'
+                ? {
+                    HarmonicKey: [
+                        {field: 'fill', from: '#ddb055', to: '#dcb154'},
+                        {field: 'sustain', from: undefined, to: {release: 0.3}},
+                    ],
+                    LeapingSpiritPiano: [
+                        {field: 'fill', from: '#5cadbd', to: '#58afb9'},
+                        {field: 'clickColor', from: '#5cadbd', to: '#58afb9'},
+                        {field: 'sustain', from: undefined, to: {release: 0.3}},
+                    ],
+                }
+                : {}
+        for (const [name, edits] of Object.entries(RECAPTURE_EDITS)) {
+            for (const {field, from, to} of edits) {
+                expect(
+                    frozen.instrumentsData[name][field],
+                    `${name}.${field} is not the frozen value this exception was written against`
+                ).toEqual(from)
+                frozen.instrumentsData[name][field] = to
+            }
+        }
+
         // Instruments added AFTER the v1 freeze have no old surface to reproduce —
         // they exist only in the v2 fixture.
         const POST_FREEZE_INSTRUMENTS = new Set(['sustained_recorder', 'NightwindHorn'])

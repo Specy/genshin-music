@@ -24,6 +24,7 @@ import type {
   ShapeDefinition,
   SustainLoopMode,
 } from '$lib/games/types';
+import { shapeSlots } from '$lib/games/shapes/assignment';
 import { Voice } from '$lib/audio/Voice';
 import { crossfadeLoopRegion, DEFAULT_LOOP_CROSSFADE_S } from '$lib/audio/loopCrossfade';
 import { KeyboardProvider } from '$lib/providers/KeyboardProvider';
@@ -45,10 +46,25 @@ const INSTRUMENT_BUFFER_POOL = new Map<InstrumentName, AudioBuffer[]>();
 
 //TODO refactor everything here
 
+/**
+ * The audio engine for one instrument.
+ *
+ * PUBLIC API IS KEYED BY NOTE ID (ADR-0005 §4): `play(id)`, `pressNote(id)`,
+ * `releaseNote(id)`, `getNoteById(id)`. A Note Id is what songs, MIDI and every surface
+ * already carry, so callers no longer round-trip id -> button -> id, and an id this
+ * instrument doesn't offer (a stranded note) is simply silent instead of needing a -1 guard
+ * at each call site.
+ *
+ * Buttons survive only as PRIVATE STORAGE: the position of a note in the authored note list
+ * indexes `notes`, `buffers` and `instrumentData.notes`. Where a button is drawn is neither
+ * of those — it is the Shape's slot, resolved through the Shape's assignment (`this.slots`),
+ * which is also where the Label Sets are read.
+ */
 export class Instrument {
   name: InstrumentName;
   volumeNode: GainNode | null = null;
   instrumentData: (typeof INSTRUMENTS_DATA)[InstrumentName];
+  /** This instrument's notes in authored Button order — array position IS the Button. */
   notes: ObservableNote[] = [];
   layouts: Layouts = {
     keyboard: [],
@@ -63,9 +79,20 @@ export class Instrument {
   audioContext: AudioContext | null = null;
   /** Sounding sustained voices (pruned opportunistically); engine state, never UI-observed. */
   private activeVoices: Voice[] = [];
-  /** Live (key-still-down) voice per button, for release-by-button. */
+  /** Live (key-still-down) voice per NOTE ID, for release-by-id. */
   // eslint-disable-next-line svelte/prefer-svelte-reactivity -- engine state, never UI-observed
   private heldVoices = new Map<number, Voice>();
+  /**
+   * Note Id -> Button (first occurrence, matching the old findIndex). The whole id-keyed
+   * public API resolves through this one map instead of scanning `notes` per call.
+   */
+  // eslint-disable-next-line svelte/prefer-svelte-reactivity -- engine lookup table, never UI-observed
+  private buttonsById = new Map<number, number>();
+  /**
+   * Button -> the slot the Shape draws it at (ADR-0005 §2), which is also the entry of the
+   * Shape's Label Sets that button wears. Identity for every shipped (grid) Shape.
+   */
+  private slots: readonly number[] = [];
   private static readonly MAX_VOICES = 32;
 
   get endNode() {
@@ -110,35 +137,66 @@ export class Instrument {
       switch: [...labels.switch],
     };
     for (const [i, configNote] of this.instrumentData.notes.entries()) {
-      const noteName = this.layouts.keyboard[i];
-      const noteNames = {
-        keyboard: noteName,
-      };
       // URL-locked path (§5.3 / ADR-0003): game id = the old APP_NAME.toLowerCase().
       const url = `${base}/assets/audio/${game.id}/${this.name}/${configNote.file}`;
-      const note = new ObservableNote(i, noteNames, url, configNote.baseNote, configNote.midi ?? 0);
+      const note = new ObservableNote(
+        i,
+        { keyboard: '' },
+        url,
+        configNote.baseNote,
+        configNote.midi ?? 0
+      );
       note.instrument = this.name;
       note.noteImage = configNote.icon;
       this.notes.push(note);
+      // first occurrence wins, exactly like the findIndex this replaces
+      if (!this.buttonsById.has(note.midiNote)) this.buttonsById.set(note.midiNote, i);
+    }
+    // The Shape says where each note sits; its Label Sets are indexed by that SLOT, not by
+    // authored order (ADR-0005 §2). Identity for every shipped Shape, so `noteNames.keyboard`
+    // is byte-identical to the old `layouts.keyboard[i]`.
+    this.slots = shapeSlots(this.shape, this.notes);
+    for (const [i, note] of this.notes.entries()) {
+      note.noteNames = { keyboard: this.layouts.keyboard[this.slotOf(i)] };
     }
   }
 
+  /** Where the Shape draws this Button — the index into every Label Set. */
+  private slotOf = (button: number) => this.slots[button] ?? -1;
+
+  /** The note bound to a keyboard label (a resolved keybind), null when this Shape has none. */
   getNoteFromCode = (code: string) => {
     const index = this.getNoteIndexFromCode(code);
     return index !== -1 ? this.notes[index] : null;
   };
+  /** The note playing a Note Id, null when the id is stranded on this instrument. */
+  getNoteById = (id: number): ObservableNote | null => {
+    const button = this.buttonsById.get(id);
+    return button === undefined ? null : (this.notes[button] ?? null);
+  };
   /** Button playing a Note Id on this instrument, -1 when the id is stranded on it. */
   getButtonFromId = (id: number) => {
-    return this.notes.findIndex((note) => note.midiNote === id);
+    return this.buttonsById.get(id) ?? -1;
   };
   getNoteFromIndex = (index: number) => {
     return this.notes[index] ?? null;
   };
+  /** Button bound to a keyboard label, -1 when unbound — prefer `getNoteFromCode`. */
   getNoteIndexFromCode = (code: string) => {
-    return this.layouts.keyboard.findIndex((e) => e === code);
+    const slot = this.layouts.keyboard.findIndex((e) => e === code);
+    if (slot === -1) return -1;
+    // the label lives at a SLOT; the button wearing it is the one the Shape put there
+    return this.slots.indexOf(slot);
   };
+  /**
+   * The display text of a BUTTON in one naming mode. Label Sets are read at the button's
+   * Shape slot, so the text always matches where the Shape drew it.
+   * (The sheet visualizer deliberately calls this with Song-Grid slots on the default
+   * instrument — identity there, unchanged by ADR-0005.)
+   */
   getNoteText = (index: number, type: NoteNameType, pitch: Pitch) => {
     const layout = this.layouts;
+    const slot = this.slotOf(index);
     try {
       if (type === 'Note name') {
         const baseNote = this.notes[index].baseNote;
@@ -146,13 +204,13 @@ export class Instrument {
       }
       if (type === 'Your Keyboard layout') {
         const key =
-          keyBinds.getKeyOfShortcut('keyboard', layout.keyboard[index]) ?? layout.keyboard[index];
+          keyBinds.getKeyOfShortcut('keyboard', layout.keyboard[slot]) ?? layout.keyboard[slot];
         const res = KeyboardProvider.getTextOfCode(key as KeyboardCode) ?? key.replace('Key', '');
         return capitalize(res);
       }
       if (type === 'Keyboard layout') {
         const key =
-          keyBinds.getKeyOfShortcut('keyboard', layout.keyboard[index]) ?? layout.keyboard[index];
+          keyBinds.getKeyOfShortcut('keyboard', layout.keyboard[slot]) ?? layout.keyboard[slot];
         const res = DEFAULT_ENG_KEYBOARD_MAP[key] ?? key.replace('Key', '');
         return capitalize(res);
       }
@@ -160,11 +218,11 @@ export class Instrument {
         const baseNote = this.notes[index].baseNote;
         return DO_RE_MI_NOTE_SCALE[baseNote][PITCH_TO_INDEX.get(pitch) ?? 0];
       }
-      if (type === 'ABC') return layout.abc[index];
-      if (type === '1 2 3') return layout.number[index];
+      if (type === 'ABC') return layout.abc[slot];
+      if (type === '1 2 3') return layout.number[slot];
       if (type === 'No Text') return '';
-      if (type === 'Playstation') return layout.playstation[index];
-      if (type === 'Switch') return layout.switch[index];
+      if (type === 'Playstation') return layout.playstation[slot];
+      if (type === 'Switch') return layout.switch[slot];
     } catch {
       // QUIRK: intentionally silent - swallows any index/lookup error without logging.
     }
@@ -176,19 +234,22 @@ export class Instrument {
     if (this.volumeNode) this.volumeNode.gain.value = newVolume;
   };
 
-  play = (note: number, pitch: Pitch, delay?: number) => {
+  /** Trigger a Note Id (ADR-0005 §4). An id this instrument doesn't offer is silent. */
+  play = (id: number, pitch: Pitch, delay?: number) => {
     // A sustaining instrument has no meaningful whole-file one-shot: plain triggers
     // (composer previews and span-1 columns, recorded taps, VSRG hits, MIDI-setup
     // auditions) become a tap — press + immediate release, so the authored
     // minLength/release define the sound instead of the raw multi-second sample.
     if (this.supportsSustain) {
-      this.pressNote(note, pitch, { delay, durationMs: 0 });
+      this.pressNote(id, pitch, { delay, durationMs: 0 });
       return;
     }
     if (this.isDeleted || !this.volumeNode || !this.audioContext) return;
+    const button = this.buttonsById.get(id);
+    if (button === undefined) return;
     const pitchChanger = getPitchChanger(pitch);
     const player = this.audioContext.createBufferSource();
-    player.buffer = this.buffers[note];
+    player.buffer = this.buffers[button];
     player.connect(this.volumeNode);
     //player.detune.value = pitch * 100, pitch should be 0 indexed from C
     player.playbackRate.value = pitchChanger;
@@ -207,32 +268,35 @@ export class Instrument {
   };
 
   /**
-   * Press a button. Non-sustaining instruments take the exact one-shot `play()` path
+   * Press a Note Id. Non-sustaining instruments take the exact one-shot `play()` path
    * (returns null). Sustaining instruments start a looped Voice that sounds until
-   * `releaseNote(button)` — or self-releases after `durationMs` (song playback,
+   * `releaseNote(id)` — or self-releases after `durationMs` (song playback,
    * scheduled sample-accurately on the audio timeline at start). `skipMs` resumes
    * mid-note (playback started inside a spanned note): audio picks up at the position
    * the playhead would have reached, and `durationMs` counts the REMAINING hold.
+   * An id this instrument doesn't offer is silent (returns null).
    */
   pressNote = (
-    button: number,
+    id: number,
     pitch: Pitch,
     options?: { delay?: number; durationMs?: number; skipMs?: number }
   ): Voice | null => {
     const sustain = this.sustainConfig;
     if (!sustain) {
-      this.play(button, pitch, options?.delay);
+      this.play(id, pitch, options?.delay);
       return null;
     }
     if (this.isDeleted || !this.volumeNode || !this.audioContext) return null;
+    const button = this.buttonsById.get(id);
+    if (button === undefined) return null;
     const buffer = this.buffers[button];
     if (!buffer) return null;
-    //same-button live retrigger: choke the previous sustain quickly instead of
+    //same-note live retrigger: choke the previous sustain quickly instead of
     //layering its full release tail under the new attack. Scheduled Composer voices
     //are not in heldVoices, so same-note polyphony across tracks remains independent.
-    const previous = this.heldVoices.get(button);
+    const previous = this.heldVoices.get(id);
     if (previous) {
-      this.heldVoices.delete(button);
+      this.heldVoices.delete(id);
       previous.choke();
     }
     this.pruneVoices();
@@ -260,7 +324,7 @@ export class Instrument {
       const minRemainingMs = Math.max(0, this.minNoteMs(button) - (options.skipMs ?? 0));
       voice.releaseAt(voice.startedAt + Math.max(options.durationMs, minRemainingMs) / 1000);
     } else {
-      this.heldVoices.set(button, voice);
+      this.heldVoices.set(id, voice);
     }
     return voice;
   };
@@ -269,6 +333,7 @@ export class Instrument {
    * Minimum milliseconds a triggered note must sound before its release begins
    * (sustain.minLength with per-note override; 0 when unset) — the Instrument-level
    * tap guarantee: a very fast tap still plays this much, then the normal release.
+   * Button-keyed: `instrumentData.notes` is private storage, indexed by authored position.
    */
   private minNoteMs = (button: number): number => {
     const sustain = this.sustainConfig;
@@ -277,14 +342,14 @@ export class Instrument {
     return typeof min === 'number' && Number.isFinite(min) && min > 0 ? min * 1000 : 0;
   };
 
-  /** Release the live voice held on a button (no-op for one-shot instruments and unheld buttons). */
-  releaseNote = (button: number) => {
-    const voice = this.heldVoices.get(button);
+  /** Release the live voice held on a Note Id (no-op for one-shot instruments and unheld ids). */
+  releaseNote = (id: number) => {
+    const voice = this.heldVoices.get(id);
     if (!voice) return;
-    this.heldVoices.delete(button);
+    this.heldVoices.delete(id);
     // releaseAt clamps to "now" once the minimum has already elapsed, so held
     // notes released late act exactly on the key-up
-    voice.releaseAt(voice.startedAt + this.minNoteMs(button) / 1000);
+    voice.releaseAt(voice.startedAt + this.minNoteMs(this.getButtonFromId(id)) / 1000);
   };
 
   /**
@@ -293,8 +358,8 @@ export class Instrument {
    * keeps playing in a background tab.
    */
   releaseHeldNotes = () => {
-    this.heldVoices.forEach((voice, button) =>
-      voice.releaseAt(voice.startedAt + this.minNoteMs(button) / 1000)
+    this.heldVoices.forEach((voice, id) =>
+      voice.releaseAt(voice.startedAt + this.minNoteMs(this.getButtonFromId(id)) / 1000)
     );
     this.heldVoices.clear();
   };
@@ -408,7 +473,21 @@ export type NoteDataState = {
   holdTimerId: number;
 };
 
+/**
+ * One note of a loaded instrument: its identity, its display data, and the reactive
+ * per-note UI state every keyboard surface mutates.
+ *
+ * It satisfies `ShapeNote` structurally (`id`, `baseNote`, `icon`), so a surface can hand
+ * its own notes straight to a Shape and get these very objects back out of the `button`
+ * snippet — per-note state is addressed through the object, never through a slot index.
+ */
 export class ObservableNote {
+  /**
+   * PRIVATE STORAGE (ADR-0005): this note's Button — its position in the instrument's
+   * authored note list, which indexes `Instrument.notes`/`buffers`/`instrumentData.notes`.
+   * It is NOT a screen position (that is the Shape's slot) and NOT a song identity (that is
+   * `id`). No new external consumer: address notes by `id`, or by the object itself.
+   */
   index: number;
   noteImage: NoteImage = DEFAULT_NOTE_ICON;
   midiNote: number;
@@ -440,6 +519,16 @@ export class ObservableNote {
     this.url = url;
     this.baseNote = baseNote;
     this.midiNote = midiNote;
+  }
+
+  /** Note Id (ADR-0001) — the ShapeNote/engine-facing name of `midiNote`. */
+  get id(): number {
+    return this.midiNote;
+  }
+
+  /** Glyph key — the ShapeNote-facing name of `noteImage`. */
+  get icon(): NoteImage {
+    return this.noteImage;
   }
 
   get status(): NoteStatus {

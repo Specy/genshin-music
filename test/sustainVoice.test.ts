@@ -398,11 +398,19 @@ const SUSTAIN = {
 }
 
 /**
+ * The Note Id of a button. The engine's public API is keyed by Note Id (ADR-0005 §4) while
+ * the per-note config overrides below are still authored per BUTTON (private storage), so
+ * the tests state the button they mean and translate here.
+ */
+const idAt = (instrument: Instrument, button: number) => instrument.notes[button].id
+
+/**
  * A real Instrument, force-fed a sustain config and fake audio plumbing (the default
  * instrument is one-shot by design). Post-ADR-0003 the per-note loop override lives on
  * the note struct itself (button 1 here), and instrumentData is a REFERENCE to the
  * shared config — so this builds a fresh copy instead of mutating it in place.
  * The registry normalizes loopMode to 'loop-continuous' when unauthored; mirrored here.
+ * `id(button)` is that button's Note Id, the engine's key.
  */
 function sustainingInstrument(loopMode: SustainLoopMode = 'loop-continuous') {
     const instrument = new Instrument(INSTRUMENTS[0])
@@ -417,12 +425,12 @@ function sustainingInstrument(loopMode: SustainLoopMode = 'loop-continuous') {
     instrument.audioContext = context as any
     instrument.volumeNode = (context as any).createGain()
     instrument.buffers = instrument.notes.map(() => FAKE_BUFFER)
-    return {instrument, created}
+    return {instrument, created, id: (button: number) => idAt(instrument, button)}
 }
 
 /** sustainingInstrument with sustain.minLength authored (and optionally a per-note override on button 1). */
 function minLengthInstrument(minLength: number, options: {noteOneMinLength?: number} = {}) {
-    const {instrument, created} = sustainingInstrument()
+    const {instrument, created, id} = sustainingInstrument()
     instrument.instrumentData = {
         ...instrument.instrumentData,
         sustain: {...SUSTAIN, loopMode: 'loop-continuous', minLength},
@@ -432,7 +440,7 @@ function minLengthInstrument(minLength: number, options: {noteOneMinLength?: num
                 : note
         ),
     }
-    return {instrument, created}
+    return {instrument, created, id}
 }
 
 describe('Instrument sustain', () => {
@@ -448,7 +456,7 @@ describe('Instrument sustain', () => {
         instrument.audioContext = context as any
         instrument.volumeNode = (context as any).createGain()
         instrument.buffers = instrument.notes.map(() => FAKE_BUFFER)
-        const voice = instrument.pressNote(0, 'C')
+        const voice = instrument.pressNote(idAt(instrument, 0), 'C')
         expect(voice).toBeNull()
         const source = created.sources[0]
         expect(source.loop).toBe(false)
@@ -456,42 +464,42 @@ describe('Instrument sustain', () => {
     })
 
     it('pressNote starts a held voice with the per-note loop override (default loop otherwise) and releaseNote releases it', () => {
-        const {instrument, created} = sustainingInstrument()
-        instrument.pressNote(0, 'C')
-        instrument.pressNote(1, 'C')
+        const {instrument, created, id} = sustainingInstrument()
+        instrument.pressNote(id(0), 'C')
+        instrument.pressNote(id(1), 'C')
         expect(created.sources[0].loopStart).toBe(0.1) // default region (note 0 has no loop override)
         expect(created.sources[1].loopStart).toBe(0.2) // per-note override
-        instrument.releaseNote(1)
+        instrument.releaseNote(id(1))
         // loop-continuous default: fades out over `release`, spawns no tail source
         expect(created.sources).toHaveLength(2)
         expect(created.sources[1].calls).toContainEqual({method: 'stop', args: [10.3]})
         expect(created.sources[0].calls.some((c: Call) => c.method === 'stop')).toBe(false)
         //releasing an unheld button is a no-op
-        instrument.releaseNote(5)
+        instrument.releaseNote(id(5))
     })
 
     it('a loop-sustain instrument plays out from the current phase on release', () => {
-        const {instrument, created} = sustainingInstrument('loop-sustain')
-        instrument.pressNote(1, 'C')
-        instrument.releaseNote(1) // released at start time — position 0, file front to back
+        const {instrument, created, id} = sustainingInstrument('loop-sustain')
+        instrument.pressNote(id(1), 'C')
+        instrument.releaseNote(id(1)) // released at start time — position 0, file front to back
         expect(created.sources[1].calls).toContainEqual({method: 'start', args: [10, 0]})
         expect(created.sources[0].calls).toContainEqual({method: 'stop', args: [10.02]})
     })
 
     it("loopMode 'one-shot' ignores note-off entirely — the explicit \"tap\" spelling", () => {
-        const {instrument, created} = sustainingInstrument('one-shot')
+        const {instrument, created, id} = sustainingInstrument('one-shot')
         expect(instrument.supportsSustain).toBe(false)
-        const voice = instrument.pressNote(0, 'C')
+        const voice = instrument.pressNote(id(0), 'C')
         expect(voice).toBeNull() // plain play() path, same as an instrument without sustain
         expect(created.sources[0].loop).toBe(false)
-        instrument.releaseNote(0) // nothing held — no-op, the sample rings out fully
+        instrument.releaseNote(id(0)) // nothing held — no-op, the sample rings out fully
         expect(created.sources[0].calls.some((c: Call) => c.method === 'stop')).toBe(false)
     })
 
     it('re-pressing a held button releases the previous voice (retrigger)', () => {
-        const {instrument, created} = sustainingInstrument()
-        instrument.pressNote(0, 'C')
-        instrument.pressNote(0, 'C')
+        const {instrument, created, id} = sustainingInstrument()
+        instrument.pressNote(id(0), 'C')
+        instrument.pressNote(id(0), 'C')
         expect(created.sources.length).toBe(2)
         expect(created.sources[0].calls).toContainEqual({method: 'stop', args: [10.02]})
         expect(created.sources[1].calls.some((c: Call) => c.method === 'stop')).toBe(false)
@@ -500,9 +508,9 @@ describe('Instrument sustain', () => {
     it('same note on separate instrument instances has independent voice and release state', () => {
         const first = sustainingInstrument()
         const second = sustainingInstrument()
-        first.instrument.pressNote(0, 'C')
-        second.instrument.pressNote(0, 'C')
-        first.instrument.releaseNote(0)
+        first.instrument.pressNote(first.id(0), 'C')
+        second.instrument.pressNote(second.id(0), 'C')
+        first.instrument.releaseNote(first.id(0))
         expect(first.created.sources).toHaveLength(1) // continuous: fade only, no tail source
         expect(first.created.sources[0].calls.some((c: Call) => c.method === 'stop')).toBe(true)
         expect(second.created.sources).toHaveLength(1)
@@ -510,18 +518,18 @@ describe('Instrument sustain', () => {
     })
 
     it('a durationMs press self-releases exactly at its musical end and is not registered as held', () => {
-        const {instrument, created} = sustainingInstrument()
-        const voice = instrument.pressNote(0, 'C', {durationMs: 500})
+        const {instrument, created, id} = sustainingInstrument()
+        const voice = instrument.pressNote(id(0), 'C', {durationMs: 500})
         expect(voice?.isReleased).toBe(true) // scheduled release counts as released
         // release acts at the requested time (10.5) — never deferred to a loop boundary
         expect(created.sources[0].calls).toContainEqual({method: 'stop', args: [10.5 + 0.3]})
-        instrument.releaseNote(0) // no live voice to release
+        instrument.releaseNote(id(0)) // no live voice to release
         expect(created.sources.length).toBe(1)
     })
 
     it('a scheduled durationMs press on a loop-sustain instrument plays out from the phase at its end', () => {
-        const {instrument, created} = sustainingInstrument('loop-sustain')
-        instrument.pressNote(0, 'C', {durationMs: 2500})
+        const {instrument, created, id} = sustainingInstrument('loop-sustain')
+        instrument.pressNote(id(0), 'C', {durationMs: 2500})
         // phase at 12.5: played 2.5 sample-seconds >= loop.end 1.9 -> 0.1 + (2.5 - 1.9) % 1.8
         expect(created.sources[1].calls).toContainEqual(
             {method: 'start', args: [12.5, 0.1 + (2.5 - 1.9) % (1.9 - 0.1)]})
@@ -529,84 +537,84 @@ describe('Instrument sustain', () => {
     })
 
     it('releaseAllNotes releases every sounding voice (ramped) or hard-stops on teardown', () => {
-        const {instrument, created} = sustainingInstrument()
-        instrument.pressNote(0, 'C')
-        instrument.pressNote(1, 'C')
+        const {instrument, created, id} = sustainingInstrument()
+        instrument.pressNote(id(0), 'C')
+        instrument.pressNote(id(1), 'C')
         instrument.releaseAllNotes()
         expect(created.sources).toHaveLength(2) // global stop fades; it does not spawn tails
         expect(created.sources[0].calls.some((c: Call) => c.method === 'stop')).toBe(true)
         expect(created.sources[1].calls.some((c: Call) => c.method === 'stop')).toBe(true)
 
         const second = sustainingInstrument()
-        second.instrument.pressNote(0, 'C')
+        second.instrument.pressNote(second.id(0), 'C')
         second.instrument.dispose()
         expect(second.created.sources[0].calls).toContainEqual({method: 'stop', args: [undefined]})
     })
 
     it('play() on a sustaining instrument is a tap (press + immediate release), never the raw whole file', () => {
-        const {instrument, created} = sustainingInstrument()
-        instrument.play(0, 'C')
+        const {instrument, created, id} = sustainingInstrument()
+        instrument.play(id(0), 'C')
         const source = created.sources[0]
         expect(source.loop).toBe(true) // a Voice with the loop region, not a bare one-shot source
         expect(source.loopStart).toBe(0.1)
         // no minLength authored: released at start, fades over `release` (0.3)
         expect(source.calls).toContainEqual({method: 'stop', args: [10.3]})
-        instrument.releaseNote(0) // taps are scheduled, not held
+        instrument.releaseNote(id(0)) // taps are scheduled, not held
         expect(created.sources).toHaveLength(1)
     })
 
     it('sustain.minLength shapes taps from play(): the note sounds minLength, then releases', () => {
-        const {instrument, created} = minLengthInstrument(0.5)
-        instrument.play(0, 'C')
+        const {instrument, created, id} = minLengthInstrument(0.5)
+        instrument.play(id(0), 'C')
         // released at 10.5 (the minimum, measured from the note start), faded by 10.8
         expect(created.sources[0].calls).toContainEqual({method: 'stop', args: [10.5 + 0.3]})
     })
 
     it('per-note minLength overrides the instrument default (0 = no minimum)', () => {
-        const {instrument, created} = minLengthInstrument(0.5, {noteOneMinLength: 0})
-        instrument.play(1, 'C')
+        const {instrument, created, id} = minLengthInstrument(0.5, {noteOneMinLength: 0})
+        instrument.play(id(1), 'C')
         expect(created.sources[0].calls).toContainEqual({method: 'stop', args: [10 + 0.3]})
     })
 
     it('a live release before minLength is deferred to it; a late release acts on the key-up', () => {
         const early = minLengthInstrument(0.5)
-        early.instrument.pressNote(0, 'C')
-        early.instrument.releaseNote(0) // key-up at 10 — the note still sounds until 10.5
+        early.instrument.pressNote(early.id(0), 'C')
+        early.instrument.releaseNote(early.id(0)) // key-up at 10 — the note still sounds until 10.5
         expect(early.created.sources[0].calls).toContainEqual({method: 'stop', args: [10.5 + 0.3]})
 
         const late = minLengthInstrument(0.5)
-        late.instrument.pressNote(0, 'C')
+        late.instrument.pressNote(late.id(0), 'C')
         ;(late.instrument.audioContext as any).currentTime = 11
-        late.instrument.releaseNote(0) // minimum long elapsed — releases now
+        late.instrument.releaseNote(late.id(0)) // minimum long elapsed — releases now
         expect(late.created.sources[0].calls).toContainEqual({method: 'stop', args: [11 + 0.3]})
     })
 
     it('scheduled durations shorter than minLength stretch to it; longer ones are untouched', () => {
         const short = minLengthInstrument(0.5)
-        short.instrument.pressNote(0, 'C', {durationMs: 125})
+        short.instrument.pressNote(short.id(0), 'C', {durationMs: 125})
         expect(short.created.sources[0].calls).toContainEqual({method: 'stop', args: [10.5 + 0.3]})
 
         const long = minLengthInstrument(0.5)
-        long.instrument.pressNote(0, 'C', {durationMs: 1000})
+        long.instrument.pressNote(long.id(0), 'C', {durationMs: 1000})
         expect(long.created.sources[0].calls).toContainEqual({method: 'stop', args: [11 + 0.3]})
     })
 
     it('skipMs counts toward minLength — a resumed mid-note press is not re-stretched', () => {
         // 125ms already served: 375ms of the minimum remain and win over the 125ms hold
         const partial = minLengthInstrument(0.5)
-        partial.instrument.pressNote(0, 'C', {durationMs: 125, skipMs: 125})
+        partial.instrument.pressNote(partial.id(0), 'C', {durationMs: 125, skipMs: 125})
         expect(partial.created.sources[0].calls).toContainEqual(
             {method: 'stop', args: [10.375 + 0.3]})
         // resumed past the whole minimum: the remaining hold applies as-is
         const served = minLengthInstrument(0.5)
-        served.instrument.pressNote(0, 'C', {durationMs: 125, skipMs: 750})
+        served.instrument.pressNote(served.id(0), 'C', {durationMs: 125, skipMs: 750})
         expect(served.created.sources[0].calls).toContainEqual(
             {method: 'stop', args: [10.125 + 0.3]})
     })
 
     it('releaseAllNotes ignores minLength — playback stop stays immediate', () => {
-        const {instrument, created} = minLengthInstrument(0.5)
-        instrument.pressNote(0, 'C')
+        const {instrument, created, id} = minLengthInstrument(0.5)
+        instrument.pressNote(id(0), 'C')
         instrument.releaseAllNotes()
         expect(created.sources[0].calls).toContainEqual({method: 'stop', args: [10.3]})
     })

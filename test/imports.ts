@@ -10,6 +10,10 @@ export {
     DO_RE_MI_NOTE_SCALE,
     TEMPO_CHANGERS,
     BASE_LAYER_LIMIT,
+    // pairs positionally with COMPOSER_NOTE_POSITIONS (ADR-0004): entry N is the Note Id of the
+    // Song Grid row COMPOSER_NOTE_POSITIONS[N] places. Deliberately NOT part of the
+    // configSurface golden objects - adding it there would force regenerating a frozen fixture.
+    CANONICAL_NOTE_IDS,
     COMPOSER_NOTE_POSITIONS,
     IMPORT_NOTE_POSITIONS,
     NOTES_CSS_CLASSES,

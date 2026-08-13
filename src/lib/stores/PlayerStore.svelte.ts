@@ -33,6 +33,14 @@ class PlayerStore {
     start: 0,
     end: 0,
   });
+  /**
+   * The notes currently on the player's keyboard, in the displayed instrument's authored
+   * Button order — the array handed straight to the Shape (ADR-0005 §1), which owns where
+   * each one is drawn. A position in it is a Button OF THE DISPLAYED INSTRUMENT, so the only
+   * song-side coordinate it pairs with is `RecordedNote.keyboardButton` (never
+   * `displayButton`, which speaks the note's own track's Buttons); per-note STATE is
+   * addressed by the note object (`setNoteState` below), never by that position.
+   */
   keyboard: ObservableNote[] = $state([]);
 
   get song(): RecordedSong | ComposedSong | null {
@@ -63,8 +71,15 @@ class PlayerStore {
   resetOutgoingAnimation = () => {
     this.keyboard.forEach((n) => n.setState({ animationId: 0 }));
   };
-  setNoteState = (index: number, state: Partial<NoteDataState>) => {
-    this.keyboard[index].setState(state);
+  /**
+   * Per-note UI state, addressed BY THE NOTE (ADR-0005 §3): the caller already holds the
+   * object — the snippet hands it out, key/MIDI resolution returns it, and song playback
+   * looks it up once through `keyboard[keyboardButton]` — so nothing has to re-derive a
+   * position, and a layout republished between the lookup and the write can no longer
+   * land the state on whatever note now sits at that index.
+   */
+  setNoteState = (note: ObservableNote, state: Partial<NoteDataState>) => {
+    note.setState(state);
   };
   setState = (state: Partial<PlayerStoreState>) => {
     Object.assign(this.state, state);

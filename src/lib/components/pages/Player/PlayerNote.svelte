@@ -5,6 +5,7 @@
   import { preventDefault } from '$core/utils/Utilities';
   import type { ObservableNote } from '$lib/audio/Instrument.svelte';
   import type { InstrumentName, NoteStatus } from '$core/types';
+  import type { ShapeDefinition } from '$lib/games/types';
   import type { ApproachingNote } from '$core/Songs/SongClasses';
   import GenshinNoteBorder from '$cmp/GenshinNoteBorder.svelte';
   import SvgNote from '$cmp/SvgNote.svelte';
@@ -13,6 +14,7 @@
 
   let {
     note,
+    shape,
     data,
     approachingNotes,
     noteText,
@@ -21,6 +23,12 @@
     handleRelease,
   }: {
     note: ObservableNote;
+    /**
+     * The Shape this button is drawn in (ADR-0005): the authority on the keyboard's geometry
+     * and silhouette, handed down as an object rather than re-derived from the instrument
+     * name — so the overlays below can't describe a different keyboard from the one on screen.
+     */
+    shape: ShapeDefinition;
     data: {
       approachRate: number;
       instrument: InstrumentName;
@@ -47,9 +55,12 @@
     }
   }
 
+  //banded by the row the button is DRAWN on, so the bands read across the keyboard on screen.
+  //Asked of the Shape rather than of game.notes.perRow (the Song Grid's width): identical on
+  //a full-size keyboard, where the two are the same number, and right on a narrower one -
+  //a 2x4 drum kit used to be banded in sevens while being laid out in fours.
   function getApproachCircleColor(index: number) {
-    const numOfNotes = game.notes.perRow;
-    const row = Math.floor(index / numOfNotes);
+    const row = Math.floor(index / shape.columns);
     if (row === 0) return 'var(--accent)';
     if (row === 1) return theme.get('accent').rotate(180).hex();
     if (row === 2) return 'var(--accent)';
@@ -116,14 +127,9 @@
     clickColor && theme.isDefault('accent') ? clickColor : undefined
   );
   //the hold ring traces the silhouette of the layout being played, so it never reads as a
-  //foreign shape laid over the keyboard. Falls back to a circle for an instrument whose
-  //Shape can't be resolved - a ring of the wrong outline still beats no ring at all.
-  const ring = $derived.by(() => {
-    const shapeId = game.instruments.data[data.instrument]?.shape;
-    return ringGeometry(
-      (shapeId ? game.shapes[shapeId]?.noteShape : undefined) ?? { kind: 'circle' }
-    );
-  });
+  //foreign shape laid over the keyboard - taken from the Shape this button is drawn in, the
+  //same object the arrangement itself used.
+  const ring = $derived(ringGeometry(shape.noteShape));
 </script>
 
 <button

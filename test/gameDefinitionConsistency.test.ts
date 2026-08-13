@@ -61,6 +61,20 @@ describe('frozen legacy note tables match the live instrument data (transcriptio
         }
     })
 
+    it('the Song Grid row order equals the frozen default-instrument table (ADR-0004 drift pin)', () => {
+        // canonicalNoteIds is authored INLINE in game.json now, so nothing in the app
+        // derives it from instruments.list[0] anymore — the whole point of ADR-0004. That
+        // also means nothing forces it to keep matching the layout every stored song, MIDI
+        // import table and canvas fixture was written against: the grid's row order IS the
+        // legacy default instrument's, and a reordering typo there would move notes on the
+        // canvas with every other test still green. Pin it against the FROZEN table (not
+        // the live instrument) so retuning an instrument can't quietly re-bless the grid.
+        // A deliberate grid change is possible but is a song-visual break: update this
+        // test consciously, never to make it pass.
+        const frozen = LEGACY_NOTE_TABLES[APP_NAME]
+        expect([...game.notes.canonicalNoteIds]).toEqual([...frozen.tables[frozen.defaultInstrument]])
+    })
+
     it('every similarity-map target for this game names a real instrument', () => {
         for (const [sourceGame, entries] of Object.entries(SIMILAR_INSTRUMENTS)) {
             if (sourceGame === APP_NAME) continue

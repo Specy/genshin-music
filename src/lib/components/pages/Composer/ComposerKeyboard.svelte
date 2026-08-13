@@ -2,7 +2,7 @@
   import { game } from '$game';
   import { ThemeProvider } from '$core/theme/ThemeProvider.svelte';
   import type { NoteNameType, Pitch } from '$lib/games/types';
-  import { computeRowLayerStatuses } from '$core/Songs/noteIds';
+  import { computeButtonLayerStatuses } from '$core/Songs/noteIds';
   import type { InstrumentData, NoteColumn } from '$core/Songs/SongClasses';
   import type { ComposerSettingsDataType } from '$core/BaseSettings';
   import type { Instrument, ObservableNote } from '$lib/audio/Instrument.svelte';
@@ -38,9 +38,17 @@
     };
   } = $props();
 
+  // Keyed by the Buttons of the keyboard actually on screen (`data.keyboard`), which is the
+  // number the `button` snippet below hands back — never the note's own track button, which
+  // for a sub-grid instrument is a different coordinate space and lit the wrong key.
   const layerStatuses = $derived.by(() => {
     try {
-      return computeRowLayerStatuses(data.currentColumn.notes, data.currentLayer, data.instruments);
+      return computeButtonLayerStatuses(
+        data.currentColumn.notes,
+        data.currentLayer,
+        data.instruments,
+        data.keyboard.name
+      );
     } catch {
       return null;
     }
@@ -112,13 +120,12 @@
         <div class="loading">Loading...</div>
       </div>
     {:else}
-      <ShapeKeyboard
-        shape={data.keyboard.shape}
-        count={data.keyboard.notes.length}
-        class="keyboard"
-      >
-        {#snippet button(i)}
-          {@const note = data.keyboard.notes[i]}
+      <ShapeKeyboard shape={data.keyboard.shape} notes={data.keyboard.notes} class="keyboard">
+        <!-- Payload (ADR-0005 §3): the note itself, plus its BUTTON — never a bare slot the
+             surface would have to resolve back into a note. The note goes straight to
+             ComposerNote and back out through the handlers; the Button only addresses this
+             surface's two per-button side tables (see Composer.svelte's `heldButtons`). -->
+        {#snippet button(note, i)}
           {#if layerStatuses === null}
             Err
           {:else}
@@ -127,7 +134,7 @@
               data={note}
               noteText={data.keyboard.getNoteText(i, data.noteNameType, data.pitch)}
               instrument={data.keyboard.name}
-              noteImage={note.noteImage}
+              noteImage={note.icon}
               clickAction={functions.handleClick}
               releaseAction={functions.handleNoteRelease}
               longPressAction={functions.handleNoteLongPress}

@@ -22,7 +22,9 @@
   let settings: ZenKeyboardSettingsDataType = $state(ZenKeyboardSettings.data);
   let instrument: Instrument = $state(new Instrument());
   let isMetronomePlaying = $state(false);
-  //buttons physically held right now (pointer or bound key) — rendered pressed-down
+  // Note Ids physically held right now (pointer or bound key) — rendered pressed-down.
+  // Keyed by Note Id, the same key the engine's own held-voice registry uses (ADR-0005 §4),
+  // so what looks held and what is still sounding can never disagree.
   const heldNotes = new SvelteSet<number>();
 
   onMount(() => {
@@ -131,18 +133,22 @@
     updateSettings(settings);
   }
 
+  // Both handlers receive the note itself — from ZenNote's pointer events or from the
+  // keybind listener's getNoteFromCode — and speak Note Ids to the engine and to the
+  // held-set (ADR-0005 §4). Nothing here derives a Button; where the note is drawn is the
+  // Shape's business, and the animation goes straight to the note object.
   function onNoteClick(note: ObservableNote) {
     //one-shot on non-sustaining instruments (exact old path), held Voice on sustaining ones
-    instrument.pressNote(note.index, settings.pitch.value);
+    instrument.pressNote(note.id, settings.pitch.value);
     //the pressed-down visual only applies where holding means something
-    if (instrument.supportsSustain) heldNotes.add(note.index);
-    zenKeyboardStore.animateNote(note.index);
-    MIDIProvider.broadcastNoteClick(note.midiNote);
+    if (instrument.supportsSustain) heldNotes.add(note.id);
+    zenKeyboardStore.animateNote(note);
+    MIDIProvider.broadcastNoteClick(note.id);
   }
 
   function onNoteRelease(note: ObservableNote) {
-    heldNotes.delete(note.index);
-    instrument.releaseNote(note.index);
+    heldNotes.delete(note.id);
+    instrument.releaseNote(note.id);
   }
 
   function onVolumeChange(data: SettingVolumeUpdate) {

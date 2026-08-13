@@ -339,37 +339,41 @@
     if (needsLoad) logger.hidePill();
   }
 
-  function playSound(index: number, songNote?: RecordedNote) {
+  /**
+   * The surface→engine entry point, keyed by NOTE ID (ADR-0005 §4): PlayerKeyboard hands
+   * over the id of the note the user pressed (or the song note's own id), never a button —
+   * so an instrument that doesn't offer that id is simply silent instead of sounding
+   * whatever its button of the same number happens to be.
+   */
+  function playSound(id: number, songNote?: RecordedNote) {
     if (!songNote) {
-      //live playing on the main instrument; the recording stores the button's Note Id.
-      //pressNote = one-shot on non-sustaining instruments, held Voice on sustaining ones
-      //(released by releaseSound on key/pointer up)
-      if (isRecording) handleRecording(instruments[0]?.getNoteFromIndex(index)?.midiNote ?? 0);
-      instruments[0].pressNote(index, settings.pitch.value);
+      //live playing on the main instrument; the recording stores the pressed Note Id, which
+      //is also what the saved song carries. pressNote = one-shot on non-sustaining
+      //instruments, held Voice on sustaining ones (released by releaseSound on key/pointer up)
+      if (isRecording) handleRecording(id);
+      instruments[0].pressNote(id, settings.pitch.value);
     } else {
       //song playback: the note belongs to exactly one track — play it on that track's
-      //instrument at ITS button for the id (stranded = silent). Notes with a duration
+      //instrument (an id that track lacks is stranded, and silent). Notes with a duration
       //self-release after it (speed-scaled upstream) when the instrument sustains.
       if (isRecording) handleRecording(songNote.id);
       const ins = instruments[songNote.trackIndex];
       const insData = instrumentsData[songNote.trackIndex];
       if (!ins || insData?.muted) return;
-      const button = ins.getButtonFromId(songNote.id);
-      if (button === -1) return;
       const pitch = insData?.pitch || settings.pitch.value;
       if (songNote.duration > 0 && ins.supportsSustain) {
-        ins.pressNote(button, pitch, { durationMs: songNote.duration });
+        ins.pressNote(songNote.id, pitch, { durationMs: songNote.duration });
       } else {
-        ins.play(button, pitch);
+        ins.play(songNote.id, pitch);
       }
     }
   }
 
-  function releaseSound(index: number) {
-    const note = instruments[0]?.getNoteFromIndex(index);
-    if (!note) return;
-    if (isRecording) recording.releaseNote(note.midiNote);
-    instruments[0].releaseNote(index);
+  function releaseSound(id: number) {
+    //both sides are id-keyed and ignore an id they are not holding: the recording closes the
+    //open note of that id, the engine releases the live voice held on it
+    if (isRecording) recording.releaseNote(id);
+    instruments[0]?.releaseNote(id);
   }
 
   function releaseAllSounds() {

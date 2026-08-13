@@ -4,7 +4,8 @@
 //
 // Throws on cross-domain invariants the registry can't check (they need the code
 // side): unknown Shape ids, notes exceeding a Shape's capacity, icons without a
-// glyph component. Module-eval throws fail dev instantly and prod at prerender.
+// glyph component, and a Shape whose note→position assignment isn't a real placement
+// for that instrument. Module-eval throws fail dev instantly and prod at prerender.
 import type {
   GameDefinition,
   GameIdentity,
@@ -13,6 +14,7 @@ import type {
   ShapeDefinition,
   ShapeId,
 } from './types';
+import { assertShapeAssignment, shapeNoteOf } from './shapes/assignment';
 import { gamesMeta } from './registry';
 
 export function defineGame(
@@ -63,6 +65,10 @@ export function defineGame(
         throw new Error(`${context}: note ${index} icon "${note.icon}" has no glyph component`);
       }
     }
+    // The Shape decides where these notes sit (ADR-0005 §2) and the engine reads Label Sets
+    // at those slots, so a broken assignment would silently mislabel or hide buttons at
+    // runtime. Checked with the same helper the engine and the arrangement use.
+    assertShapeAssignment(shape, instrument.notes.map(shapeNoteOf), context);
   }
   if (!code.svgGlyphs[gameJson.notes.defaultIcon]) {
     throw new Error(`[defineGame] ${id}: defaultIcon "${gameJson.notes.defaultIcon}" has no glyph`);

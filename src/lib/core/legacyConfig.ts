@@ -99,6 +99,9 @@ export const NOTES_PER_COLUMN = game.notes.perColumn
 export {NOTE_SCALE, DO_RE_MI_NOTE_SCALE}
 export const NOTES_CSS_CLASSES = game.notes.cssClasses
 export const NOTE_NAME_TYPES = game.notes.nameTypes
+// ADR-0004: the Song Grid's ordered Note Ids — index N pairs with
+// COMPOSER_NOTE_POSITIONS[N], so a note's canvas row follows from its id alone.
+export const CANONICAL_NOTE_IDS = game.notes.canonicalNoteIds
 export const COMPOSER_NOTE_POSITIONS = game.notes.composerPositions
 export const IMPORT_NOTE_POSITIONS = game.notes.importPositions
 

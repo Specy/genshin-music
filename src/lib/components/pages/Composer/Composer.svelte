@@ -228,7 +228,11 @@
     if (MIDIProvider.isDown(eventType) && velocity !== 0) {
       const keyboardNotes = MIDIProvider.getNotesOfMIDIevent(note);
       keyboardNotes.forEach((keyboardNote) => {
-        toggleNoteImmediate(currentInstrument.notes[keyboardNote.index]);
+        //a MIDI preset slot addresses a BUTTON of the current instrument (persisted settings,
+        //still Button-keyed by design); a preset can outlive a shorter instrument's note list,
+        //so resolve the note object here and hand THAT on - never the raw slot number
+        const pressed = currentInstrument.notes[keyboardNote.index];
+        if (pressed) toggleNoteImmediate(pressed);
       });
       const shortcut = MIDIProvider.settings.shortcuts.find((e) => e.midi === note);
       if (!shortcut) return;
@@ -398,25 +402,30 @@
     }
   }
 
+  /**
+   * Sound one NOTE ID on a track. Every caller already holds an id — song notes store ids,
+   * and the keyboard hands back the note object — so nothing here resolves a Button any more
+   * (ADR-0005 §4: the engine's public API is id-keyed). An id the track's instrument doesn't
+   * offer is STRANDED there and stays silent, which is why the lookup below is still a guard.
+   */
   function playSound(
     layer: number,
-    index: number,
+    id: number,
     delay?: number,
     durationMs?: number,
     skipMs?: number
   ) {
     const instrument = layers[layer];
-    const note = instrument?.notes[index];
-    if (note === undefined) return;
+    if (!instrument || instrument.getNoteById(id) === null) return;
     if (song.instruments[layer].muted) return;
     const pitch = song.instruments[layer].pitch || settings.pitch.value;
     if (durationMs !== undefined && instrument.supportsSustain) {
       //spanned note on a sustaining instrument: hold for its musical length, then release
-      instrument.pressNote(note.index, pitch, { delay, durationMs, skipMs });
+      instrument.pressNote(id, pitch, { delay, durationMs, skipMs });
     } else {
       //on sustaining instruments play() IS the tap (minLength + release inside the
       //Instrument) — previews, span-1 columns and non-sustaining one-shots all land here
-      instrument.play(note.index, pitch, delay);
+      instrument.play(id, pitch, delay);
     }
   }
 
@@ -455,9 +464,10 @@
   } | null = null;
 
   function handleClick(note: ObservableNote) {
-    //the clicked button's Note Id on the current layer's instrument
-    const id = note.midiNote;
-    playSound(layer, note.index);
+    //the clicked button's Note Id on the current layer's instrument - the one currency the
+    //song edits below and the audio engine both speak (ADR-0005)
+    const id = note.id;
+    playSound(layer, id);
     const covering = song.getSpanCovering(song.selected, layer, id);
     if (covering) {
       notePress = {
@@ -480,8 +490,8 @@
 
   /** Physical-keyboard / MIDI note entry: no pointer gesture exists there, so toggling stays immediate (the pre-popover behavior), occupancy rule included. */
   function toggleNoteImmediate(note: ObservableNote) {
-    const id = note.midiNote;
-    playSound(layer, note.index);
+    const id = note.id;
+    playSound(layer, id);
     if (song.getSpanCovering(song.selected, layer, id)) return;
     const existing = song.selectedColumn.findNote(layer, id);
     if (existing === null) {
@@ -495,7 +505,7 @@
   function handleNoteRelease(note: ObservableNote) {
     const press = notePress;
     notePress = null;
-    if (!press || press.longPressFired || press.id !== note.midiNote) return;
+    if (!press || press.longPressFired || press.id !== note.id) return;
     if (press.coveringStart !== null) return; //occupancy: covered buttons don't toggle
     if (press.existedAtPress) {
       song.removeNoteAt(song.selected, layer, press.id);
@@ -508,7 +518,7 @@
     //does nothing on the others (the press still completes as a normal tap)
     if (!layers[layer]?.supportsSustain) return;
     const press = notePress;
-    if (!press || press.id !== note.midiNote) return;
+    if (!press || press.id !== note.id) return;
     press.longPressFired = true;
     const startColumn = press.coveringStart ?? song.selected;
     if (!song.columns[startColumn]?.findNote(layer, press.id)) return;
@@ -554,7 +564,17 @@
     durationPopover = null;
   }
 
-  /** Buttons of the current layer's instrument occupied by a span in the selected column (tails, plus span starts so a long note reads as long). */
+  /**
+   * Buttons of the current layer's instrument occupied by a span in the selected column
+   * (tails, plus span starts so a long note reads as long).
+   *
+   * Deliberately BUTTONS, not Note Ids (ADR-0004/0005): the composer keyboard's rows really
+   * are the current instrument's Buttons, and its other per-button side table
+   * (`computeButtonLayerStatuses`) keys by the SAME instrument's Buttons — every track's notes
+   * resolved against the keyboard on screen, dropping the ids it cannot play. One coordinate
+   * space for both side tables, addressed through the Button the Shape hands the snippet; the
+   * -1 drop keeps ids this instrument lacks out of it, here and there alike.
+   */
   const heldButtons = $derived.by(() => {
     // eslint-disable-next-line svelte/prefer-svelte-reactivity -- rebuilt wholesale by this derived, never mutated after return
     const held = new Set<number>();
@@ -789,11 +809,11 @@
         seen.add(key);
         if (start + spanNote.span <= startColumn) continue;
         if (!layers[spanNote.trackIndex]?.supportsSustain) continue;
-        const button = layers[spanNote.trackIndex]?.getButtonFromId(spanNote.id) ?? -1;
-        if (button === -1) continue; //stranded on its instrument = silent
+        //no id -> button -> id round-trip: playSound takes the id and drops it if the
+        //track's instrument doesn't offer it (stranded = silent)
         playSound(
           spanNote.trackIndex,
-          button,
+          spanNote.id,
           delay,
           columnsDurationMs(startColumn, start + spanNote.span),
           columnsDurationMs(start, startColumn)
@@ -867,13 +887,12 @@
     delay = delay ? delay + (isRecordingAudio ? 0.5 : 0) : 0;
     if (ignoreAudio) return;
     song.selectedColumn.notes.forEach((note) => {
-      const button = layers[note.trackIndex]?.getButtonFromId(note.id) ?? -1;
-      if (button === -1) return; //stranded on its instrument = silent
       //held length only for spanned notes during playback — span 1 is the pre-sustain
-      //tap, and manually browsing columns always previews taps
+      //tap, and manually browsing columns always previews taps. Stranded ids stay silent
+      //inside playSound, so no -1 guard is needed here any more.
       playSound(
         note.trackIndex,
-        button,
+        note.id,
         delay,
         isPlaying && note.span > 1
           ? columnsDurationMs(song.selected, song.selected + note.span)

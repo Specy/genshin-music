@@ -37,10 +37,14 @@ import { clamp, colorToRGB, nearestEven } from '$core/utils/Utilities';
 import type { Timer } from '$core/utils/Utilities';
 import { TEMPO_CHANGERS } from '$core/legacyConfig';
 import type { NoteColumn, ColumnNote, InstrumentData } from '$core/Songs/SongClasses';
+// The canvas is the Song Grid, so it places by Note Id alone (ADR-0004): the *Grid* helpers and
+// songGridSlotForId, never computeButtonLayerStatuses, which the composer KEYBOARD uses - there a
+// row genuinely IS a Button of the selected instrument, and ids it cannot play are dropped rather
+// than drawn. This surface is where those notes stay visible.
 import {
-  computeRowLayerStatuses,
-  computeStrandedRows,
-  displayButtonForId,
+  songGridSlotForId,
+  computeGridRowLayerStatuses,
+  computeGridStrandedRows,
 } from '$core/Songs/noteIds';
 import { ComposerCache, type ComposerCacheData } from './ComposerCache';
 import {
@@ -640,16 +644,22 @@ class ColumnView {
     this.paintSelection(cache, params.isSelected, params.isToolsSelected);
     this.breakpointMarker.texture = cache.breakpoints[1];
     this.breakpointMarker.visible = params.isBreakpoint;
-    const strandedRows = computeStrandedRows(notes, instruments);
+    //`row` is the note's CANONICAL Song-Grid slot, not any instrument's button: one Note Id owns
+    //one row on every track (ADR-0004), so a 14-note horn's id 60 lands on the same row as a lyre's
+    const strandedRows = computeGridStrandedRows(notes, instruments);
     let painted = 0;
-    for (const [button, layerStatus] of computeRowLayerStatuses(notes, currentLayer, instruments)) {
+    for (const [row, layerStatus] of computeGridRowLayerStatuses(
+      notes,
+      currentLayer,
+      instruments
+    )) {
       if (layerStatus === 0) continue;
       const texture = cache.notes[layerStatus];
       const sprite = this.noteSpriteAt(painted, texture);
       sprite.texture = texture;
-      sprite.y = (COMPOSER_NOTE_POSITIONS[button] * sizes.height) / NOTES_PER_COLUMN;
+      sprite.y = (COMPOSER_NOTE_POSITIONS[row] * sizes.height) / NOTES_PER_COLUMN;
       //stranded notes (id has no button on its own instrument) are visibly dimmed
-      sprite.alpha = strandedRows.has(button) ? 0.45 : 1;
+      sprite.alpha = strandedRows.has(row) ? 0.45 : 1;
       sprite.visible = true;
       painted++;
     }
@@ -679,7 +689,7 @@ class ColumnView {
     const existing = this.noteSprites[index];
     if (existing) return existing;
     //grown on demand and never shrunk: the array ends up as deep as the densest column this view
-    //has ever held, bounded by the number of display rows (game.notes.composerPositions.length)
+    //has ever held, bounded by the number of Song Grid rows (game.notes.canonicalNoteIds.length)
     const sprite = new Sprite(texture);
     this.noteSprites.push(sprite);
     this.container.addChild(sprite);
@@ -2404,8 +2414,10 @@ export class ComposerRenderer {
    * different reasons, so the bullets say which applies. The first six change the pixels of a
    * column whose own `version` counter did not move, so the per-column skip cannot see them; the
    * last two are cheap gates that a narrowed path would reach a different way:
-   *  - `instruments` decides note textures (computeRowLayerStatuses), the dimming of stranded rows
-   *    (computeStrandedRows) and which tails draw at all, for every column;
+   *  - `instruments` decides note textures (computeGridRowLayerStatuses), the dimming of stranded
+   *    rows (computeGridStrandedRows) and which tails draw at all, for every column. It no longer
+   *    decides WHERE a note sits - placement is the Note Id's canonical row (ADR-0004) - but each
+   *    of those three still changes the pixels of a column whose `version` counter did not move;
    *  - `currentLayer` is bit 0 of every layer status plus the tail accent/dim, for every column;
    *  - `beatMarks` is the bar-group alternation, i.e. the background slot of every column;
    *  - `smoothScroll` decides whether the selected overlay exists at all and whether the playhead
@@ -2644,9 +2656,10 @@ export class ComposerRenderer {
         const instrument = instruments[note.trackIndex];
         const isCurrentLayer = note.trackIndex === currentLayer;
         if (!isCurrentLayer && !instrument?.visible) continue;
-        const button = displayButtonForId(instrument?.name ?? '', note.id);
-        if (button === -1) continue;
-        const y = COMPOSER_NOTE_POSITIONS[button] * rowHeight + (rowHeight - tailHeight) / 2;
+        //same canonical placement as the note sprite above - a tail must start under its own head
+        const row = songGridSlotForId(note.id);
+        if (row === -1) continue;
+        const y = COMPOSER_NOTE_POSITIONS[row] * rowHeight + (rowHeight - tailHeight) / 2;
         const x = index === start ? sizes.width * 0.55 : 0;
         graphics.rect(x, y, sizes.width - x, tailHeight).fill({
           color: isCurrentLayer ? accentColor : 0x888888,

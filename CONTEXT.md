@@ -11,7 +11,7 @@ The universal identity of a note in a song: the nominal MIDI number an instrumen
 _Avoid_: note index, note number, midi note (ambiguous with true pitch)
 
 **Button**:
-One physical position in an instrument's on-screen keyboard. Derived per instrument: the position of a Note Id in that instrument's ordered note list. Songs never store buttons.
+One key slot of an instrument: the position of a Note Id in the instrument's authored (ordered) note list. Keybinds and Label Sets attach to Buttons; where a Button appears on screen is its Shape's decision. Songs never store buttons.
 _Avoid_: note position, key (ambiguous with keybind and musical key), index
 
 **Sounding Pitch**:
@@ -25,7 +25,7 @@ _Avoid_: pitch (alone — overloaded with Sounding Pitch)
 ### Instruments
 
 **Shape**:
-The named on-screen arrangement of an instrument's buttons (`genshin-3x7`, `sky-2x4`, …). Every instrument declares exactly one, explicitly — never inferred from its note count. A Shape owns the button geometry, the interaction/rendering behavior, and the default Label Sets; a game can give the same geometry a different Shape when its behavior differs.
+The named on-screen arrangement of an instrument's buttons (`genshin-3x7`, `sky-2x4`, …). Every instrument declares exactly one, explicitly — never inferred from its note count. A Shape owns the button placement (free-form, not necessarily a grid — it receives the instrument's notes and may place them by note content rather than authored order), the interaction/rendering behavior, and the default Label Sets; a game can give the same geometry a different Shape when its behavior differs. What flows out of a keyboard is a note, never a Button.
 _Avoid_: layout (overloaded with Label Set), keyboard size
 
 **Label Set**:
@@ -37,7 +37,7 @@ A game-scoped, named note list (per button: Note Id, display note name, glyph) t
 _Avoid_: kind (the retired term)
 
 **Song Grid**:
-The game-canonical rows×columns note grid that song-wide surfaces (composer canvas, sheet visualizer) render, regardless of which instruments the song's tracks use. Distinct from any single instrument's Shape.
+The game-canonical rows×columns note grid that song-wide surfaces (composer canvas, sheet visualizer) render, regardless of which instruments the song's tracks use. Every Note Id has exactly one Song-Grid position, fixed by the game itself — never by any instrument. Distinct from any single instrument's Shape.
 
 **Unlisted Instrument**:
 An instrument a game ships (fully loadable by songs and the engine) but hides from its instrument menus.

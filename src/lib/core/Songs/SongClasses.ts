@@ -262,11 +262,30 @@ export class RecordedNote {
     duration: number
     trackIndex: number
     /**
-     * UI-resolved display button (the player/sheet pipelines fill it at queue-build via
-     * displayButtonForId with the note's own track instrument); -1 = stranded. Runtime
-     * only — never serialized.
+     * TWO DISPLAY COORDINATES, TWO DIFFERENT SPACES. Both are runtime only (never
+     * serialized) and both are filled in one pass at player queue-build by
+     * `resolvePlayerNoteButtons` (noteIds.ts); they agree ONLY when the note's own track
+     * instrument is also the one the on-screen keyboard is drawn from.
+     *
+     * `displayButton` — the note's row on a surface whose rows are its OWN TRACK
+     * instrument's Buttons (displayButtonForId: that instrument's button, else the id's
+     * canonical Song-Grid slot when it is stranded there, else -1). Its consumer is the
+     * player's sheet frames (PlayerPagesRenderer -> SheetFrame), which ADR-0004 leaves
+     * deliberately own-button. Nothing that indexes the keyboard may read it.
      */
     displayButton: number = -1
+    /**
+     * `keyboardButton` — the SAME note's key on the keyboard ACTUALLY ON SCREEN: its Button
+     * on the display instrument (noteIdToButton), -1 when that instrument has no key for the
+     * id. This is the only coordinate the keyboard/practice/approach paths may use, because
+     * `playerStore.keyboard` holds exactly that instrument's notes; a -1 note is skipped by
+     * all of them (it still sounds, and still draws in the sheet through the field above).
+     *
+     * Kept separate rather than re-pointing `displayButton`: the sheet needs the own-track
+     * answer, the keyboard needs this one, and collapsing them is what lit, queued and
+     * cleared keys that play unrelated notes on every multi-instrument song.
+     */
+    keyboardButton: number = -1
 
     constructor(id?: number, time?: number, duration?: number, trackIndex?: number) {
         this.id = id || 0
@@ -286,6 +305,10 @@ export class RecordedNote {
     clone() {
         const clone = new RecordedNote(this.id, this.time, this.duration, this.trackIndex)
         clone.displayButton = this.displayButton
+        //both resolved coordinates travel with the note: the player clones its notes AFTER
+        //resolving them (playSong's sheet pages, practiceSong's chunks), and a chunk note that
+        //lost its keyboardButton would stop matching the key that clears it
+        clone.keyboardButton = this.keyboardButton
         return clone
     }
 }

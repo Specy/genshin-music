@@ -12,7 +12,9 @@ function makeSine(seconds = 2, hz = 440.7) {
     return data
 }
 
-describe('crossfadeLoopRegion', () => {
+//raised timeout: these cases blend seconds of 48kHz audio for real (~3.4s of pure DSP), close
+//enough to vitest's 5s default that a loaded machine tripped the whole suite three times
+describe('crossfadeLoopRegion', {timeout: 30_000}, () => {
     const LOOP = {start: 0.5, end: 1.5}
 
     it('makes the wrap continuous: the last blended sample equals the sample before loop.start', () => {
