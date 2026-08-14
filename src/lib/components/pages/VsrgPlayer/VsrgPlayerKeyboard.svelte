@@ -52,7 +52,15 @@
       ({ letter, event }) => {
         if (event.repeat) return;
         const index = vsrgPlayerStore.keyboard.findIndex((l) => l.key === letter);
-        if (index >= 0) vsrgPlayerStore.releaseKey(index);
+        //EDGE-TRIGGERED: only a key this surface saw pressed may be released. The renderer's
+        //'up' branch scores a release against the earliest live hold object in that lane
+        //without checking whether a press ever happened, so an unmatched key-up marks an
+        //upcoming hold Missed. Reachable since KeyboardProvider started delivering key-up
+        //while a text field has focus (needed so held notes elsewhere can be released):
+        //typing in the song-rename box would otherwise score misses in the lane behind it.
+        if (index >= 0 && vsrgPlayerStore.keyboard[index].isPressed) {
+          vsrgPlayerStore.releaseKey(index);
+        }
       },
       { type: 'keyup', id: 'vsrg-player-keyboard' }
     );

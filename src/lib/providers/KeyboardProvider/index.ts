@@ -138,11 +138,24 @@ export class KeyboardProviderClass {
     this.register(`Digit${letter}` as KeyboardNumberCode, callback, options);
     return callback;
   };
+  /** Text entry that must swallow note keys: `<input>`, `<textarea>`, any contenteditable host. */
+  private static isTypingTarget = (element: Element | null) => {
+    if (!element) return false;
+    const tag = element.tagName;
+    return tag === 'INPUT' || tag === 'TEXTAREA' || (element as HTMLElement).isContentEditable;
+  };
   private handleEvent = (e: KeyboardEvent) => {
-    if (document.activeElement?.tagName === 'INPUT') return;
     const code = e.code as KeyboardCode;
     const isKeyUp = e.type === 'keyup';
     const isKeyDown = e.type === 'keydown';
+    //'keypress' is registered too but matches neither edge below — bail before the work.
+    if (!isKeyUp && !isKeyDown) return;
+    //Typing must not play notes, so a keyDOWN into a text field is swallowed. A keyUP never
+    //is: whoever is HOLDING that note needs its release, and clicking into a field mid-hold
+    //(the bpm box, the song name) is exactly when the release would otherwise be lost — on a
+    //looping sustaining instrument that means a tone that never stops. Releasing a note
+    //nobody holds is a no-op everywhere, so the asymmetry costs nothing.
+    if (isKeyDown && KeyboardProviderClass.isTypingTarget(document.activeElement)) return;
     const letter = code.replace('Key', '');
     const shiftPressed = e.shiftKey;
     const data = { letter, shift: shiftPressed, event: e, code };

@@ -640,6 +640,9 @@ import {
     type ColumnWindowGeometry,
     type ComposerRendererState,
 } from '$cmp/pages/Composer/ComposerRenderer'
+//the slicing thresholds themselves, so the timing rows below state the CONTRACT (work is yielded,
+//the sprite appears once the slices have run) instead of hard-coding whatever the knobs are today
+import {COMPOSER_TIMELINE_MINIMAP_CONFIG} from '$cmp/pages/Composer/composerTimelineMinimap'
 //the two ends of the canvas the three DOM timeline buttons stand on, which the renderer holds the
 //drawn strip clear of. Imported rather than restated for the same reason nearestEven is: they are
 //the definition, and test/composerCanvasCss.test.ts is what pins them against App.css.
@@ -4726,7 +4729,7 @@ describe('the smooth scroll', () => {
 // only the latest pending state with one atomic swap/render.
 // ---------------------------------------------------------------------------------------------
 describe('the static timeline minimap', () => {
-    it('needs multiple fallback idle slices before the first sprite can appear', async () => {
+    it('yields the first sprite to idle slices instead of painting it inline', async () => {
         const context = makeContext()
         //Mount while playing: no generation may start, so this begins with no previous sprite.
         const harness = await mount(context)
@@ -4735,11 +4738,20 @@ describe('the static timeline minimap', () => {
             context.props.isPlaying = false
             harness.push()
 
-            //100 columns across background, tail and head passes, against a hard 64-column slice
-            //cap: one callback cannot complete the 300-column job even if performance.now() is flat.
-            await vi.advanceTimersByTimeAsync(16)
+            //Nothing is painted inline: the job is handed to an idle callback, so no sprite can
+            //exist before one has run. (Not "several callbacks" any more — how many the job takes
+            //is maxColumnsPerIdleSlice against this song's columns × the background/tail/head
+            //passes, and that is a tuning knob. What must hold at every setting is that the work
+            //is YIELDED and the sprite appears only once the slices have run.)
+            await vi.advanceTimersByTimeAsync(COMPOSER_TIMELINE_MINIMAP_CONFIG.fallbackDelayMs - 1)
             expect(harness.timelineMinimapTexture()).toBeNull()
-            await vi.advanceTimersByTimeAsync(96)
+
+            const columnUnits = context.song.columns.length * 3
+            const slices =
+                Math.ceil(columnUnits / COMPOSER_TIMELINE_MINIMAP_CONFIG.maxColumnsPerIdleSlice) + 1
+            await vi.advanceTimersByTimeAsync(
+                COMPOSER_TIMELINE_MINIMAP_CONFIG.fallbackDelayMs * (slices + 1)
+            )
             expect(harness.timelineMinimapTexture()).not.toBeNull()
         } finally {
             harness.destroy()

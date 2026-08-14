@@ -294,7 +294,11 @@ export function createKeyboardListener(
       if (!options?.repeat && event.repeat) return;
       const shortcut = keyBinds.getShortcut('keyboard', code);
       if (shortcut !== undefined) {
-        if ((shortcut as Shortcut<string>).holdable && event.repeat) return;
+        //same rule as createShortcutListener: a NON-holdable shortcut ignores auto-repeat.
+        //Dead while nothing passes `repeat` (the guard above already returned), and it read
+        //inverted until hold-to-sustain made it matter: with repeats let through, the OS
+        //repeat stream would re-press a held note ~30x a second.
+        if (!(shortcut as Shortcut<string>).holdable && event.repeat) return;
         callback({ code, event, shortcut, isRepeat: event.repeat });
       }
     },
@@ -318,6 +322,30 @@ export function createKeyboardListener(
   };
 }
 
+/**
+ * Fires when the page can no longer be trusted to deliver the release half of a gesture:
+ * window blur (alt-tab), pagehide (iOS/bfcache, where blur is not reliable), and the tab
+ * going hidden. Any surface holding notes must release them here — a key-up that never
+ * arrives leaves a looping sustaining instrument sounding indefinitely.
+ *
+ * Deliberately NOT hooked to focus moving into a text field: KeyboardProvider now delivers
+ * key-up even while an input has focus, so the real release still arrives and the note keeps
+ * sounding until the user actually lifts the key.
+ */
+export function createReleaseGuard(onRelease: () => void): ShortcutDisposer {
+  const handleVisibilityChange = () => {
+    if (document.hidden) onRelease();
+  };
+  window.addEventListener('blur', onRelease);
+  window.addEventListener('pagehide', onRelease);
+  document.addEventListener('visibilitychange', handleVisibilityChange);
+  return () => {
+    window.removeEventListener('blur', onRelease);
+    window.removeEventListener('pagehide', onRelease);
+    document.removeEventListener('visibilitychange', handleVisibilityChange);
+  };
+}
+
 type KeyComboListener = (data: { keyCombo: string[]; event: KeyboardEvent; code: string }) => void;
 
 export function createKeyComboComposer(id: string, callback: KeyComboListener): ShortcutDisposer {
@@ -331,7 +359,11 @@ export function createKeyComboComposer(id: string, callback: KeyComboListener): 
   );
   KeyboardProvider.listen(
     ({ code }) => {
-      currentKeybinds.splice(currentKeybinds.indexOf(code), 1);
+      //guarded because indexOf can miss: a key-up now arrives even when its key-DOWN was
+      //swallowed (pressed while a text field had focus), and splice(-1, 1) would drop an
+      //unrelated key from the combo
+      const pressed = currentKeybinds.indexOf(code);
+      if (pressed >= 0) currentKeybinds.splice(pressed, 1);
     },
     { type: 'keyup', id: id + '_up' }
   );

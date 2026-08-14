@@ -19,6 +19,7 @@
   import type { Instrument, ObservableNote } from '$lib/audio/Instrument.svelte';
   import { RecordedSong, type Chunk } from '$core/Songs/RecordedSong';
   import { MIDIProvider, type MIDIEvent } from '$lib/providers/MIDIProvider';
+  import { HeldNoteRegistry, holderToken, midiHolderToken } from '$lib/audio/HeldNoteRegistry';
   import {
     createKeyboardListener,
     createShortcutListener,
@@ -89,42 +90,61 @@
     }
   }
 
+  /**
+   * What each physical key and MIDI slot is holding, resolved ONCE at press.
+   *
+   * Both edges used to resolve the note through `data.hasSong ? songDisplayInstrument :
+   * instrument`, and that ternary can flip while a key is down (a song starts or stops under
+   * a held finger). The release then looked up a DIFFERENT ObservableNote — missing the
+   * object-keyed visual hold and releasing the wrong id, which on a looping sustaining
+   * instrument leaves a tone sounding with no way to stop it. Holder -> note, resolved at
+   * press, never re-derived.
+   */
+  const heldInputNotes = new HeldNoteRegistry<ObservableNote>();
+
+  function pressHeldInput(holder: string, note: ObservableNote | undefined) {
+    if (!note) return;
+    //a duplicate note-on (or a repeat that slipped through) must not press twice
+    if (!heldInputNotes.press(holder, note.id, note)) return;
+    handleClick(note);
+  }
+
+  function releaseHeldInput(holder: string) {
+    const released = heldInputNotes.release(holder);
+    if (released) handleRelease(released.meta);
+  }
+
   function handleMidi([eventType, note, velocity]: MIDIEvent) {
     if (!mounted) return;
     const instrument = data.hasSong ? data.songDisplayInstrument : data.instrument;
-    //running-status zero-velocity note-on is the classic note-off alias
-    const isRelease =
-      MIDIProvider.isUp(eventType) || (MIDIProvider.isDown(eventType) && velocity === 0);
-    if (isRelease) {
-      const keyboardNotes = MIDIProvider.getNotesOfMIDIevent(note);
-      keyboardNotes.forEach((keyboardNote) => {
-        const observableNote = instrument.notes[keyboardNote.index];
-        if (observableNote) handleRelease(observableNote);
+    if (MIDIProvider.isNoteRelease(eventType, velocity)) {
+      MIDIProvider.getNotesOfMIDIevent(note).forEach((keyboardNote) => {
+        releaseHeldInput(midiHolderToken(note, keyboardNote.index));
       });
       return;
     }
     if (MIDIProvider.isDown(eventType)) {
-      const keyboardNotes = MIDIProvider.getNotesOfMIDIevent(note);
-      keyboardNotes.forEach((keyboardNote) => {
-        handleClick(instrument.notes[keyboardNote.index]);
+      MIDIProvider.getNotesOfMIDIevent(note).forEach((keyboardNote) => {
+        pressHeldInput(
+          midiHolderToken(note, keyboardNote.index),
+          instrument.notes[keyboardNote.index]
+        );
       });
     }
   }
 
-  const handleKeyboard: ShortcutListener<'keyboard'> = async ({ event, shortcut }) => {
+  const handleKeyboard: ShortcutListener<'keyboard'> = async ({ event, shortcut, code }) => {
     if (event.repeat) return;
     if (!event.shiftKey) {
       const instrument = data.hasSong ? data.songDisplayInstrument : data.instrument;
       const note = instrument.getNoteFromCode(shortcut.name);
-      if (note !== null) handleClick(note);
+      if (note !== null) pressHeldInput(holderToken('keyboard', code), note);
     }
   };
 
-  //release unconditionally (even if shift is down by now) — releasing an unheld button is a no-op
-  const handleKeyboardRelease: ShortcutListener<'keyboard'> = ({ shortcut }) => {
-    const instrument = data.hasSong ? data.songDisplayInstrument : data.instrument;
-    const note = instrument.getNoteFromCode(shortcut.name);
-    if (note !== null) handleRelease(note);
+  //release unconditionally (even if shift is down by now) — releasing an unheld key is a no-op
+  const handleKeyboardRelease: ShortcutListener<'keyboard'> = ({ code }) => {
+    releaseHeldInput(holderToken('keyboard', code));
   };
 
   async function approachingSong(song: RecordedSong, start = 0, end?: number) {
@@ -394,6 +414,9 @@
     timeouts.forEach((timeout) => clearTimeout(timeout));
     timeouts.clear();
     heldVisualPresses.clear();
+    //the keyboard layout is about to be replaced, so every note object a holder captured is
+    //stale; a holder left behind would also swallow the next press of that same key
+    heldInputNotes.releaseAll();
     playerStore.resetKeyboardLayout();
     approachingNotesList = [];
     songToPractice = [];
@@ -538,6 +561,9 @@
     //visual counterpart of Player's audio blur guard: lift held-pressed buttons whose
     //key-up will never arrive
     const releaseVisualsOnLeave = () => {
+      //physical holders first: their key-up will never arrive, and a holder left behind would
+      //swallow the next press of that key
+      heldInputNotes.releaseAll().forEach(({ meta }) => handleRelease(meta));
       //the held notes ARE the map's keys — no keyboard lookup to go stale between the press
       //and the blur
       [...heldVisualPresses.keys()].forEach((note) => handleRelease(note));
@@ -636,6 +662,14 @@
 
     MIDIProvider.addListener(handleMidi);
     cleanup.push(() => MIDIProvider.removeListener(handleMidi));
+    //A device unplugged mid-hold owes us no note-off, and a holder left in the registry makes
+    //that MIDI key silently DEAD (its next note-on is swallowed as a duplicate press). Only
+    //MIDI holds are dropped — a physically held PC key must survive someone unplugging a
+    //controller.
+    const handleMidiInputsChange = () =>
+      heldInputNotes.releaseSource('midi').forEach(({ meta }) => handleRelease(meta));
+    MIDIProvider.addInputsListener(handleMidiInputsChange);
+    cleanup.push(() => MIDIProvider.removeInputsListener(handleMidiInputsChange));
 
     return () => {
       cleanup.forEach((d) => d());

@@ -20,9 +20,9 @@ const TEMPO_CHANGERS = game.composer.tempoChangers;
  */
 export const COMPOSER_TIMELINE_MINIMAP_CONFIG = {
   showSustainTails: true,
-  maxColumnsPerIdleSlice: 64,
-  sliceBudgetMs: 4,
-  fallbackDelayMs: 16,
+  maxColumnsPerIdleSlice: 2048,
+  sliceBudgetMs: 12,
+  fallbackDelayMs: 8,
 } as const;
 
 const VERTICAL_PADDING = 2;

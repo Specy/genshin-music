@@ -232,6 +232,7 @@ vi.mock('pixi.js', () => pixi)
 import {ComposerSettings} from '$core/BaseSettings'
 import {ComposedSong} from '$core/Songs/ComposedSong.svelte'
 import {ComposerRenderer, type ComposerRendererState} from '$cmp/pages/Composer/ComposerRenderer'
+import {COMPOSER_TIMELINE_MINIMAP_CONFIG} from '$cmp/pages/Composer/composerTimelineMinimap'
 
 afterEach(() => {
     for (const application of pixi.applications) application.ticker.destroy()
@@ -285,23 +286,41 @@ describe('ComposerRenderer rendering', () => {
         //ONE Application: the notes region and the mini-timeline strip below it share a canvas, so
         //one render() rasterises both and there is no second one to count
         expect(pixi.applications).toHaveLength(1)
-        const initialRenderCounts = pixi.applications.map(
-            application => application.render.mock.calls.length
-        )
+        const renderCounts = () =>
+            pixi.applications.map(application => application.render.mock.calls.length)
 
-        vi.advanceTimersByTime(32)
-        expect(pixi.applications.map(application => application.render.mock.calls.length)).toEqual(
-            initialRenderCounts
-        )
-        expect(initialRenderCounts).toEqual([1])
+        //init + update paint the scene exactly once
+        expect(renderCounts()).toEqual([1])
+
+        //Time alone repaints nothing: no ticker, no self-driving loop. Measured strictly BEFORE
+        //the timeline minimap's first idle slice can run, so this stays a claim about the frame
+        //loop rather than about the minimap's scheduling thresholds.
+        await vi.advanceTimersByTimeAsync(COMPOSER_TIMELINE_MINIMAP_CONFIG.fallbackDelayMs - 1)
+        expect(renderCounts()).toEqual([1])
         expect(pixi.applications.map(application => application.initOptions?.autoStart)).toEqual([
             false,
         ])
 
+        //The minimap then finishes on its own idle slices and installs with ONE deliberate render
+        //— the atomic texture swap in installTimelineMinimap, the only repaint in this renderer
+        //that update() does not drive. How many slices that takes is a tuning knob
+        //(maxColumnsPerIdleSlice vs this song's columns × the background/tail/head passes); the
+        //ONE render at the end of them is the contract. Kept under recalculateCacheAndSizes' 50ms
+        //debounce, whose repaint belongs to a different claim and needs fakes this file
+        //deliberately does not carry.
+        const minimapSlices =
+            Math.ceil(
+                (song.columns.length * 3) /
+                    COMPOSER_TIMELINE_MINIMAP_CONFIG.maxColumnsPerIdleSlice
+            ) + 1
+        const settleMs = COMPOSER_TIMELINE_MINIMAP_CONFIG.fallbackDelayMs * (minimapSlices + 1)
+        expect(settleMs).toBeLessThan(50)
+        await vi.advanceTimersByTimeAsync(settleMs)
+        expect(renderCounts()).toEqual([2])
+
+        //...and an invalidating update repaints exactly once more
         renderer.update({...initialState, selected: 1})
-        expect(pixi.applications.map(application => application.render.mock.calls.length)).toEqual([
-            2,
-        ])
+        expect(renderCounts()).toEqual([3])
 
         renderer.destroy()
     })

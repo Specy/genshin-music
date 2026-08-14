@@ -29,8 +29,8 @@
       heldButtons: Set<number>;
     };
     functions: {
-      handleClick: (note: ObservableNote) => void;
-      handleNoteRelease: (note: ObservableNote) => void;
+      handleClick: (note: ObservableNote, pointerId: number) => void;
+      handleNoteRelease: (note: ObservableNote, pointerId: number) => void;
       handleNoteLongPress: (note: ObservableNote, anchor: HTMLElement) => void;
       handleNoteDrag: (note: ObservableNote, deltaX: number) => void;
       startRecordingAudio: (override?: boolean) => void;
