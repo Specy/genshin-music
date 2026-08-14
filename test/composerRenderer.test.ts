@@ -845,9 +845,8 @@ interface Props {
      *    changes. It is also the only mode where a selected overlay exists to be read.
      *  - ON for the glide part, where a tick only SCHEDULES and what reaches the screen does so on a
      *    frame; that part drives the clock itself.
-     *  - BOTH for the mutual-exclusion part and the manual-scroll part. It does NOT mean "nothing
-     *    animates": a drag and a wheel ease are continuous in either mode, which is what the second
-     *    of those is for.
+     *  - BOTH for the mutual-exclusion part and the manual-scroll part. Those rows state each mode's
+     *    own motion rules explicitly rather than assuming that manual input is always continuous.
      */
     smoothScroll: boolean
     bpm: number
@@ -867,6 +866,8 @@ const LOOKAHEAD_MS = 250
  * shared constant would move both sides of every expectation together.
  */
 const SCROLL_EASE_MS = 140
+/** ComposerRenderer's hardware-idle wheel settle timeout, independently restated like the ease. */
+const WHEEL_SETTLE_IDLE_MS = 100
 /**
  * ComposerRenderer's Flick/Coast constants, restated rather than imported for the same reason as
  * SCROLL_EASE_MS above. PART EIGHT also restates the two closed forms built from them - where a
@@ -1205,8 +1206,11 @@ interface Harness {
     movePointerOverNotes(globalX: number, pointerId?: number): void
     /** Release a pointer over the notes stage at a canvas x, the way a click on a column arrives. */
     releasePointerOverNotes(globalX: number, pointerId?: number): void
-    /** A wheel event on the notes canvas ELEMENT, which is where that listener is registered. */
-    wheelOverNotes(deltaY: number): void
+    /**
+     * A cancelable wheel event on the notes canvas ELEMENT, which is where that listener is
+     * registered. Returns whether the renderer prevented the browser's parallel page scroll.
+     */
+    wheelOverNotes(deltaY: number, deltaMode?: number): boolean
     /**
      * The mini-timeline's own drag, which is a SECOND pointer surface with its own three handlers
      * and its own rule (absolute rather than anchored - see ComposerRenderer.handleTimelineSlide).
@@ -1694,8 +1698,10 @@ async function mount(context: Context = makeContext()): Promise<Harness> {
         releasePointerOverNotes(globalX: number, pointerId = PRIMARY_POINTER) {
             notesColumns.emit('pointerup', {globalX, pointerId})
         },
-        wheelOverNotes(deltaY: number) {
-            app.canvas.dispatchEvent(new WheelEvent('wheel', {deltaY}))
+        wheelOverNotes(deltaY: number, deltaMode = WheelEvent.DOM_DELTA_PIXEL) {
+            const event = new WheelEvent('wheel', {deltaY, deltaMode, cancelable: true})
+            app.canvas.dispatchEvent(event)
+            return event.defaultPrevented
         },
         pressPointerOverTimeline(globalX: number, pointerId = PRIMARY_POINTER) {
             timelineContent.emit('pointerdown', {globalX, pointerId})
@@ -1933,7 +1939,7 @@ function expectedWindow(
  * REST, and at rest the two are equal: the renderer's position settles onto a whole column, and that
  * column is the index it hands `selectColumn` - see ComposerRenderer's Motion type for the
  * invariant. What breaks the equality is a motion in flight - a glide between two ticks, a pointer
- * mid-drag, a wheel ease still running - and every part that drives one reads the position off the
+ * mid-drag, a wheel gesture or its settle still running - and every part that drives one reads it off
  * scene (Harness.scrollPosition) and states it directly rather than through this.
  *
  * This is one of two statements the offset has to satisfy. The other is a CONSEQUENCE rather than a
@@ -4980,8 +4986,8 @@ describe('the frame loop', () => {
 //
 // A drag and a wheel, which are about INPUT and not about playback - and `smoothScroll` decides how
 // they move the canvas, so every row runs in BOTH modes and the two modes make DIFFERENT claims:
-//   ON  - the drag follows the pointer continuously, the wheel eases, the release settles with an
-//         ease, and the position spends most of a gesture strictly between two columns;
+//   ON  - the drag follows the pointer continuously, wheel deltas move directly, both settle with
+//         an ease when their input ends, and the position spends most of a gesture between columns;
 //   OFF - the drag steps a whole column at a time, the wheel and every settle arrive at once, and
 //         the position is a whole column at every instant.
 // This REVERSES an earlier round in which manual motion was continuous in both modes and only a
@@ -5343,33 +5349,33 @@ describe('manual scrolling', () => {
         })
 
         if (smoothScroll) {
-            it(`${mode}, the wheel eases to the next column rather than jumping to it`, async () => {
+            it(`${mode}, wheel deltas move directly until idle, then settle to the nearest column`, async () => {
                 const harness = await mountManual()
                 try {
-                    harness.wheelOverNotes(100)
+                    const {columnWidth} = harness.geometry()
+                    //Two sub-column hardware deltas separated by a frame. They add directly just
+                    //like pointer moves; there is no target and no easing curve.
+                    harness.wheelOverNotes(columnWidth * 0.3)
+                    expect(harness.selectColumnCalls).toEqual([])
+                    await frame()
+                    expect(harness.scrollPosition()).toBeCloseTo(SELECTED + 0.3, 6)
+                    harness.wheelOverNotes(columnWidth * 0.45)
+                    await frame()
+                    expect(harness.scrollPosition()).toBeCloseTo(SELECTED + 0.75, 6)
+                    expect(harness.frameLoop().started).toBe(true)
+
+                    //The second event RESET the timeout: 128ms have passed since the first but only
+                    //64 since the last, so a timer measured from gesture start would already settle.
+                    expect(harness.selectColumnCalls).toEqual([])
+                    //No physics is added. The only delayed action is the grid settle after the
+                    //hardware has emitted nothing for the whole idle window: round + ordinary ease.
+                    await vi.advanceTimersByTimeAsync(WHEEL_SETTLE_IDLE_MS - 65)
+                    expect(harness.selectColumnCalls).toEqual([])
+                    await vi.advanceTimersByTimeAsync(32)
                     expect(harness.selectColumnCalls).toEqual([
                         {index: SELECTED + 1, ignoreAudio: true},
                     ])
-                    //STRICTLY BETWEEN, on the very next frame: a "set the target and jump there"
-                    //implementation passes every endpoint assertion and fails this one
-                    await frame()
-                    const midway = harness.scrollPosition()
-                    expect(midway).toBeGreaterThan(SELECTED)
-                    expect(midway).toBeLessThan(SELECTED + 1)
-
-                    //AND NOW THE UPDATE THAT SELECTCOLUMN PRODUCES, the same round-trip the drag
-                    //row models: Svelte flushes it a microtask later, i.e. in the middle of the
-                    //140ms ease. syncScrollSchedule keeps a running ease alive only while
-                    //`selected` is still its own target; without that test it rests, which assigns
-                    //the position from `selected` and replaces the ease with the instant jump it
-                    //exists to avoid.
-                    harness.context.song.selected = SELECTED + 1
-                    harness.push()
-                    expect(harness.scrollPosition()).toBeGreaterThanOrEqual(midway)
-                    expect(harness.scrollPosition()).toBeLessThan(SELECTED + 1)
-                    expect(harness.frameLoop().started).toBe(true)
-
-                    await vi.advanceTimersByTimeAsync(400)
+                    await vi.advanceTimersByTimeAsync(SCROLL_EASE_MS + 64)
                     expect(harness.scrollPosition()).toBe(SELECTED + 1)
                     expect(harness.frameLoop().started).toBe(false)
                 } finally {
@@ -5650,52 +5656,94 @@ describe('manual scrolling', () => {
             }
         })
 
-        it(`${mode}, a burst of wheel events steps once per event rather than fighting`, async () => {
-            const harness = await mountManual()
-            try {
-                const framesBefore = harness.frameLoop().frames
-                //three events inside one frame, which is what a real wheel produces: they arrive at
-                //about 10ms intervals and the frame is 21ms at the cap
-                harness.wheelOverNotes(100)
-                harness.wheelOverNotes(100)
-                harness.wheelOverNotes(100)
-                //each step is measured from the running ease's own TARGET, or - with no ease to
-                //have one - from the position the previous event's settle already installed.
-                //Measured from a position that only moved on the next frame, all three would aim at
-                //the same column and the burst would move one column in total; read off
-                //`this.state.selected`, which Svelte refreshes a microtask later, it would move one
-                //as well. This is the row that says `settleAt` rather than "do nothing and let the
-                //round-trip move it" is the right primitive for the snapping half.
-                expect(harness.selectColumnCalls).toEqual([
-                    {index: SELECTED + 1, ignoreAudio: true},
-                    {index: SELECTED + 2, ignoreAudio: true},
-                    {index: SELECTED + 3, ignoreAudio: true},
-                ])
+        if (smoothScroll) {
+            it(`${mode}, a wheel burst follows its total hardware distance and coalesces to one frame`, async () => {
+                const harness = await mountManual()
+                try {
+                    const {columnWidth} = harness.geometry()
+                    const before = harness.renders()
+                    //Three raw events, 0.4 columns each. They are not three logical steps or three
+                    //new easing targets: they add to one 1.2-column hardware movement.
+                    expect(harness.wheelOverNotes(columnWidth * 0.4)).toBe(true)
+                    harness.wheelOverNotes(columnWidth * 0.4)
+                    harness.wheelOverNotes(columnWidth * 0.4)
+                    expect(harness.scrollPosition()).toBe(SELECTED) //the frame owns painting
+                    expect(harness.selectColumnCalls).toEqual([
+                        {index: SELECTED + 1, ignoreAudio: true},
+                    ])
+                    await frame()
+                    expect(harness.scrollPosition()).toBeCloseTo(SELECTED + 1.2, 6)
+                    expect(harness.renders() - before).toBe(1)
 
-                if (smoothScroll) {
-                    //MONOTONIC on the way there, which is the cheapest statement that catches an
-                    //ease restarted with a fresh one-column target from the current position: that
-                    //reverses direction, and both endpoints still agree
-                    let previous = harness.scrollPosition()
-                    for (let step = 0; step < 20; step++) {
-                        await frame()
-                        const position = harness.scrollPosition()
-                        expect(position).toBeGreaterThanOrEqual(previous)
-                        previous = position
-                    }
-                } else {
-                    //ARRIVED ALREADY, and no frames were taken getting there. There is no glide to
-                    //be monotonic through, so the frame count is what carries the claim.
+                    await vi.advanceTimersByTimeAsync(WHEEL_SETTLE_IDLE_MS + SCROLL_EASE_MS + 64)
+                    expect(harness.scrollPosition()).toBe(SELECTED + 1)
+                    expect(harness.frameLoop().started).toBe(false)
+                } finally {
+                    harness.destroy()
+                }
+            })
+
+            it(`${mode}, even the first tiny trackpad delta moves the canvas without a threshold`, async () => {
+                const harness = await mountManual()
+                try {
+                    const {columnWidth} = harness.geometry()
+                    harness.wheelOverNotes(10)
+                    await frame()
+                    expect(harness.scrollPosition()).toBeCloseTo(SELECTED + 10 / columnWidth, 6)
+                    expect(harness.selectColumnCalls).toEqual([])
+
+                    //A later delta continues from the undrawn motion position, not from selected or
+                    //the previous frame, and crossing the floor selects what is now underneath.
+                    harness.wheelOverNotes(columnWidth)
+                    await frame()
+                    expect(harness.scrollPosition()).toBeCloseTo(
+                        SELECTED + 1 + 10 / columnWidth,
+                        6
+                    )
+                    expect(harness.selectColumnCalls).toEqual([
+                        {index: SELECTED + 1, ignoreAudio: true},
+                    ])
+                } finally {
+                    harness.destroy()
+                }
+            })
+
+            it(`${mode}, line-mode deltas are normalised to pixels and remain fractional`, async () => {
+                const harness = await mountManual()
+                try {
+                    const {columnWidth} = harness.geometry()
+                    harness.wheelOverNotes(3, WheelEvent.DOM_DELTA_LINE)
+                    await frame()
+                    expect(harness.scrollPosition()).toBeCloseTo(
+                        SELECTED + (3 * 16) / columnWidth,
+                        6
+                    )
+                } finally {
+                    harness.destroy()
+                }
+            })
+        } else {
+            it(`${mode}, a wheel burst preserves the integral one-column-per-event rule`, async () => {
+                const harness = await mountManual()
+                try {
+                    const framesBefore = harness.frameLoop().frames
+                    harness.wheelOverNotes(100)
+                    harness.wheelOverNotes(100)
+                    harness.wheelOverNotes(100)
+                    expect(harness.selectColumnCalls).toEqual([
+                        {index: SELECTED + 1, ignoreAudio: true},
+                        {index: SELECTED + 2, ignoreAudio: true},
+                        {index: SELECTED + 3, ignoreAudio: true},
+                    ])
                     expect(harness.scrollPosition()).toBe(SELECTED + 3)
                     await vi.advanceTimersByTimeAsync(400)
                     expect(harness.frameLoop().frames).toBe(framesBefore)
                     expect(harness.frameLoop().started).toBe(false)
+                } finally {
+                    harness.destroy()
                 }
-                expect(harness.scrollPosition()).toBe(SELECTED + 3)
-            } finally {
-                harness.destroy()
-            }
-        })
+            })
+        }
     }
 
     /**
@@ -5806,12 +5854,13 @@ describe('manual scrolling', () => {
         }
     })
 
-    it('turning smooth scrolling off mid-ease finishes the ease at once', async () => {
+    it('turning smooth scrolling off mid-wheel settles on its last published column at once', async () => {
         const harness = await mountIn(true)
         try {
-            harness.wheelOverNotes(100)
+            const {columnWidth} = harness.geometry()
+            harness.wheelOverNotes(columnWidth * 0.6)
             await aFrame()
-            //STRICTLY BETWEEN two columns, with the ease still running
+            //STRICTLY BETWEEN two columns, with the hardware-driven wheel gesture still open.
             const midway = harness.scrollPosition()
             expect(midway).toBeGreaterThan(SELECTED)
             expect(midway).toBeLessThan(SELECTED + 1)
@@ -5819,13 +5868,12 @@ describe('manual scrolling', () => {
 
             harness.context.props.smoothScroll = false
             harness.push()
-            //NO TIMER ADVANCE. syncScrollSchedule's pre-existing `easing && selected === to` branch
-            //returns and leaves the ease RUNNING, which is 140ms of smooth motion in the mode whose
-            //whole point is that there is none; the mode-collapse statement is what settles it.
-            //Its own TARGET rather than `state.selected`, which is still a microtask behind - so
-            //resting here would yank the canvas back a column and push it forward again.
-            expect(harness.scrollPosition()).toBe(SELECTED + 1)
+            //NO TIMER ADVANCE: snap mode has no fractional wheel motion, and the pending idle
+            //callback is cancelled rather than waking the gesture later.
+            expect(harness.scrollPosition()).toBe(SELECTED)
             expect(harness.frameLoop().started).toBe(false)
+            await vi.advanceTimersByTimeAsync(WHEEL_SETTLE_IDLE_MS + SCROLL_EASE_MS + 64)
+            expect(harness.scrollPosition()).toBe(SELECTED)
         } finally {
             harness.destroy()
         }
@@ -6022,7 +6070,7 @@ describe('manual scrolling', () => {
 //    snap-mode integral-position invariant stays true against a genuinely fast release;
 //  - the SELECTION rule: Coasted columns are selected once each, with ignoreAudio, floor by
 //    floor as the line crosses them - the drag's own rule - and NOTHING is published at entry;
-//  - the COLLISIONS: the wheel takes over from the landing column, an external `selected` move
+//  - the COLLISIONS: the wheel takes over from the visible column, an external `selected` move
 //    abandons the Coast where its own round-trip does not, the mode's death settles on the last
 //    PUBLISHED column rather than teleporting to the landing, and a pointercancel never Flicks.
 describe('the momentum coast', () => {
@@ -6422,7 +6470,7 @@ describe('the momentum coast', () => {
         }
     })
 
-    it("the wheel takes a running Coast over: one SCROLL_EASE_MS step from the Coast's landing", async () => {
+    it('the wheel catches a running Coast and follows its hardware delta without added physics', async () => {
         const harness = await mountFlickable()
         try {
             await throwLeft(harness, 3, 40, 20)
@@ -6430,27 +6478,28 @@ describe('the momentum coast', () => {
             await vi.advanceTimersByTimeAsync(320)
             const atWheel = harness.scrollPosition()
             expect(atWheel).toBeLessThan(to - 1) //mid-flight, so the step below is a takeover
+            const directPosition = atWheel - 1
+            const crossed = Math.floor(directPosition)
+            const target = Math.round(directPosition)
             const before = harness.selectColumnCalls.length
-            harness.wheelOverNotes(100)
-            //±1 FROM THE LANDING, not from the canvas: the same composition rule a burst of
-            //wheel events uses against a running ease, extended to the Coast's own target
+            harness.wheelOverNotes(-COLUMN_WIDTH)
+            //The Coast is gone immediately, and the selected column is the floor the exact
+            //one-column hardware delta put under the line - no old landing participates.
             expect(harness.selectColumnCalls.slice(before)).toEqual([
-                {index: to + 1, ignoreAudio: true},
+                {index: crossed, ignoreAudio: true},
             ])
             flushPublished(harness)
-            //an EASE now, not the Coast: strictly between on the next frame, arrived at
-            //SCROLL_EASE_MS where the Coast had seconds left to run
+            //The next frame applies that exact delta rather than evaluating another motion curve.
             await aFrame()
-            const midway = harness.scrollPosition()
-            expect(midway).toBeGreaterThan(atWheel)
-            expect(midway).toBeLessThan(to + 1)
-            await vi.advanceTimersByTimeAsync(SCROLL_EASE_MS + 32)
-            expect(harness.scrollPosition()).toBe(to + 1)
+            expect(harness.scrollPosition()).toBeCloseTo(directPosition, 6)
+
+            //Only after the hardware goes quiet does the ordinary nearest-column ease begin.
+            await vi.advanceTimersByTimeAsync(
+                WHEEL_SETTLE_IDLE_MS + SCROLL_EASE_MS + 64
+            )
+            expect(harness.scrollPosition()).toBe(target)
             expect(harness.frameLoop().started).toBe(false)
-            //...and the Coast's floors stopped with it: the takeover published nothing further
-            expect(harness.selectColumnCalls.slice(before)).toEqual([
-                {index: to + 1, ignoreAudio: true},
-            ])
+            expect(harness.selectColumnCalls.at(-1)).toEqual({index: target, ignoreAudio: true})
         } finally {
             harness.destroy()
         }
