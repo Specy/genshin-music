@@ -41,7 +41,7 @@ import type {ComposerCache} from '$cmp/pages/Composer/ComposerCache'
  * and third parts below are aimed at it, and each compares against a reference the pooled path had
  * no hand in producing.
  *
- * Seven parts, because they fail on different mistakes:
+ * Eight parts, because they fail on different mistakes:
  *
  *  - the RECALCULATION TABLE drives the real renderer with ONE stable ComposedSong and asserts how
  *    much each kind of change repainted. It fails when a diffed field goes back to being read
@@ -73,6 +73,11 @@ import type {ComposerCache} from '$cmp/pages/Composer/ComposerCache'
  *  - PART SEVEN, MANUAL SCROLLING, drives a drag, a wheel and the mini-timeline in BOTH scroll
  *    modes. It fails on quantised motion, on a gesture fought by its own selectColumn round-trip,
  *    on one that never settles, and on a gesture nothing ends.
+ *  - PART EIGHT, THE MOMENTUM COAST, drives the Flick / Coast / Catch physics a stage-drag
+ *    release earns while smooth scrolling is on and the song is stopped. It fails on a landing
+ *    the closed form did not fix at release, on a Coast reachable in snap mode or during playback
+ *    or a recording, on a Catch whose release clicks, and on a publish stream that sounds a
+ *    column or repeats one.
  *
  * BOTH tables read the same description of the scene (Harness.paintedScene), so WHAT THAT
  * DESCRIPTION CARRIES is what either of them can see. It carries, for every child of a pooled
@@ -862,6 +867,18 @@ const LOOKAHEAD_MS = 250
  * shared constant would move both sides of every expectation together.
  */
 const SCROLL_EASE_MS = 140
+/**
+ * ComposerRenderer's Flick/Coast constants, restated rather than imported for the same reason as
+ * SCROLL_EASE_MS above. PART EIGHT also restates the two closed forms built from them - where a
+ * release LANDS and when the Coast ARRIVES - so a drift in any one of these fails there as a
+ * wrong destination or a wrong arrival instant rather than moving both sides of the expectation
+ * together.
+ */
+const FLICK_WINDOW_MS = 100
+const FLICK_MIN_SPEED_PX_PER_MS = 0.4
+const FLICK_MAX_SPEED_PX_PER_MS = 3
+const COAST_DECAY_PER_MS = 0.0035
+const COAST_ARRIVAL_PX = 0.5
 
 interface Context {
     song: ComposedSong
@@ -5984,6 +6001,682 @@ describe('manual scrolling', () => {
             harness.context.song.selected = SELECTED - 1
             harness.push()
             expect(harness.scrollPosition()).toBe(SELECTED - 1)
+        } finally {
+            harness.destroy()
+        }
+    })
+})
+
+// ---------------------------------------------------------------------------------------------
+// PART EIGHT: THE MOMENTUM COAST.
+//
+// A stage-drag release can now EARN a motion: released at speed (a FLICK), the canvas keeps
+// travelling on its own (a COAST) toward a landing column fixed at the instant of release, and a
+// press on the moving canvas (a CATCH) is the grab itself. Everything else in PART SEVEN keeps
+// holding word for word - which is most of what this part is for. The rows here state:
+//  - the PHYSICS as closed forms restated beside the gestures (see coastLanding and
+//    coastDurationMs): the trailing-window chord, the speed cap, travel = v/λ, round, clamp -
+//    so the landing is an EQUALITY, not a tendency;
+//  - the GATE: a Coast exists only with smooth scrolling on, the song stopped and no recording
+//    running. Playing, snapping and recording releases settle exactly as PART SEVEN says, and the
+//    snap-mode integral-position invariant stays true against a genuinely fast release;
+//  - the SELECTION rule: Coasted columns are selected once each, with ignoreAudio, floor by
+//    floor as the line crosses them - the drag's own rule - and NOTHING is published at entry;
+//  - the COLLISIONS: the wheel takes over from the landing column, an external `selected` move
+//    abandons the Coast where its own round-trip does not, the mode's death settles on the last
+//    PUBLISHED column rather than teleporting to the landing, and a pointercancel never Flicks.
+describe('the momentum coast', () => {
+    /**
+     * Smooth scrolling on, transport stopped, nothing recording - the ONLY state a release may
+     * Coast in, by settleStageDrag's gate. The rows that want the gate CLOSED flip exactly one of
+     * the three and keep the gesture identical, so what they pin is the gate and not a weaker
+     * throw.
+     */
+    async function mountFlickable() {
+        const context = makeContext()
+        context.props.smoothScroll = true
+        context.props.isPlaying = false
+        const harness = await mount(context)
+        harness.push()
+        return harness
+    }
+
+    /** Advance far enough for at least one capped frame to have been emitted. */
+    const aFrame = () => vi.advanceTimersByTimeAsync(64)
+
+    const WHOLE_COLUMN_MS = Math.round(60000 / BPM)
+
+    /** The last selectColumn the renderer asked for - the publish a flush hands back. */
+    function lastCall(harness: Harness): {index: number, ignoreAudio?: boolean} {
+        const call = harness.selectColumnCalls.at(-1)
+        if (!call) throw new Error('selectColumn was never called')
+        return call
+    }
+
+    /**
+     * The renderer's last publish, flushed back the way Svelte flushes it - a microtask later,
+     * i.e. mid-motion. The same house idiom as PART SEVEN's drag rows: without it `selected`
+     * goes stale and the survival tests below compare against the wrong side.
+     */
+    function flushPublished(harness: Harness) {
+        harness.context.song.selected = lastCall(harness).index
+        harness.push()
+    }
+
+    /**
+     * WHERE A RELEASE LANDS, by the renderer's closed form restated: cap the trailing-window
+     * speed, convert screen px to columns, take the whole v/λ of travel an exponential decay
+     * from speed v has in it, round to a whole column and clamp to the song. `forwardPxPerMs`
+     * is signed with the SONG's direction: positive is the pointer travelling LEFT, which
+     * scrolls the song forward.
+     */
+    function coastLanding(position: number, forwardPxPerMs: number, columns: number): number {
+        const capped = Math.min(Math.abs(forwardPxPerMs), FLICK_MAX_SPEED_PX_PER_MS)
+        const travel = (Math.sign(forwardPxPerMs) * capped) / COLUMN_WIDTH / COAST_DECAY_PER_MS
+        return Math.min(Math.max(Math.round(position + travel), 0), columns - 1)
+    }
+
+    /**
+     * WHEN A COAST ARRIVES, by the other closed form: the instant the remainder decays to
+     * COAST_ARRIVAL_PX, from which the position IS the landing exactly. Every "wait it out"
+     * below waits this plus frame slack, so a duration computed wrongly fails as a position
+     * that has not arrived rather than as a flaky margin.
+     */
+    function coastDurationMs(from: number, to: number): number {
+        return (
+            Math.log((Math.abs(to - from) * COLUMN_WIDTH) / COAST_ARRIVAL_PX) / COAST_DECAY_PER_MS
+        )
+    }
+
+    /**
+     * A THROW: press at the playhead, drag LEFT in `steps` sampled moves of `stepPx` every
+     * `stepMs`, release on the last move's own coordinate with no frame in between - so the
+     * trailing-window chord is exactly (steps·stepPx)/(steps·stepMs) px/ms and the release
+     * position is exactly the drag's last write. Callers keep steps·stepMs inside
+     * FLICK_WINDOW_MS, so the press seed anchors the chord and nothing ages out.
+     */
+    async function throwLeft(harness: Harness, steps: number, stepPx: number, stepMs: number) {
+        const start = CANVAS_WIDTH / 2
+        harness.pressPointerOverNotes(start)
+        for (let step = 1; step <= steps; step++) {
+            await vi.advanceTimersByTimeAsync(stepMs)
+            harness.movePointerOverNotes(start - stepPx * step)
+        }
+        harness.releasePointerOverNotes(start - stepPx * steps)
+    }
+
+    it('a fast release keeps travelling, publishes each column once, and lands where the formula says', async () => {
+        const harness = await mountFlickable()
+        try {
+            //40px every 20ms: a 2px/ms chord over a 60ms gesture, all of it inside the window.
+            //Release position 41.5, so round-settle would give 42 and the Coast is unmistakable.
+            await throwLeft(harness, 3, 40, 20)
+            const releasePosition = SELECTED + 1.5
+            const to = coastLanding(releasePosition, 2, harness.context.song.columns.length)
+            expect(to).toBe(SELECTED + 9)
+            //ENTRY PUBLISHES NOTHING: unlike the ease, whose callers select the target on the way
+            //in, the Coast's floors arrive one frame crossing at a time
+            const publishedAtRelease = harness.selectColumnCalls.length
+            await aFrame()
+            const first = harness.scrollPosition()
+            //...and the canvas is TRAVELLING with the pointer gone
+            expect(first).toBeGreaterThan(releasePosition)
+            expect(first).toBeLessThan(to)
+            //the publish's own round-trip, flushed where Svelte flushes it, does not yank the
+            //Coast back - the discriminator's surviving half, stated in full in its own row below
+            flushPublished(harness)
+            expect(harness.scrollPosition()).toBe(first)
+            expect(harness.frameLoop().started).toBe(true)
+            //monotonic on the way there, which is what catches a restarted or re-aimed curve
+            let previous = first
+            for (let step = 0; step < 5; step++) {
+                await aFrame()
+                const position = harness.scrollPosition()
+                expect(position).toBeGreaterThan(previous)
+                previous = position
+            }
+            //ARRIVAL: exactly the precomputed whole column, no correction hop, loop stopped
+            await vi.advanceTimersByTimeAsync(coastDurationMs(releasePosition, to) + 96)
+            expect(harness.scrollPosition()).toBe(to)
+            expect(harness.frameLoop().started).toBe(false)
+            //ONCE PER COLUMN CROSSED, ignoreAudio on every one, ending on the landing itself.
+            //The first crossing is 42: the drag already published floor(41.5) = 41 itself.
+            const published = harness.selectColumnCalls.slice(publishedAtRelease)
+            const crossings: {index: number, ignoreAudio?: boolean}[] = []
+            for (let index = SELECTED + 2; index <= to; index++) {
+                crossings.push({index, ignoreAudio: true})
+            }
+            expect(published).toEqual(crossings)
+            //...and the canvas follows the state again, which is the half of "at rest" a settle
+            //assertion on its own cannot see
+            harness.context.song.selected = to
+            harness.push()
+            harness.context.song.selected = 30
+            harness.push()
+            expect(harness.scrollPosition()).toBe(30)
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    it('a slow release settles exactly as it always did: round plus the SCROLL_EASE_MS ease', async () => {
+        const harness = await mountFlickable()
+        try {
+            const start = CANVAS_WIDTH / 2
+            harness.pressPointerOverNotes(start)
+            //fast INTO the gesture, so what decides below is the trailing window and not the
+            //gesture's history...
+            await vi.advanceTimersByTimeAsync(16)
+            harness.movePointerOverNotes(start - COLUMN_WIDTH * 1.6)
+            //...then a slow tail: 4px every 50ms is 0.08px/ms, five times under the threshold
+            await vi.advanceTimersByTimeAsync(50)
+            harness.movePointerOverNotes(start - COLUMN_WIDTH * 1.6 - 4)
+            await vi.advanceTimersByTimeAsync(50)
+            harness.movePointerOverNotes(start - COLUMN_WIDTH * 1.6 - 8)
+            const before = harness.selectColumnCalls.length
+            const positionAtRelease = harness.scrollPosition()
+            harness.releasePointerOverNotes(start - COLUMN_WIDTH * 1.6 - 8)
+            //ROUND, once, at the release - and no publish stream follows it
+            expect(harness.selectColumnCalls.slice(before)).toEqual([
+                {index: SELECTED + 2, ignoreAudio: true},
+            ])
+            flushPublished(harness)
+            //...and the 140ms ease carries it there: strictly between on the next frame, arrived
+            //when the ease is done - PART SEVEN's release, byte for byte
+            await aFrame()
+            const midway = harness.scrollPosition()
+            expect(midway).toBeGreaterThan(positionAtRelease)
+            expect(midway).toBeLessThan(SELECTED + 2)
+            await vi.advanceTimersByTimeAsync(SCROLL_EASE_MS + 32)
+            expect(harness.scrollPosition()).toBe(SELECTED + 2)
+            expect(harness.frameLoop().started).toBe(false)
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    it('a drag that pauses before releasing does not coast, however fast it once was', async () => {
+        const harness = await mountFlickable()
+        try {
+            const start = CANVAS_WIDTH / 2
+            harness.pressPointerOverNotes(start)
+            //5px/ms across two moves - the exact speed the pointercancel row proves would coast
+            //if released at once
+            await vi.advanceTimersByTimeAsync(16)
+            harness.movePointerOverNotes(start - COLUMN_WIDTH)
+            await vi.advanceTimersByTimeAsync(16)
+            harness.movePointerOverNotes(start - COLUMN_WIDTH * 2)
+            //...then the hand stills, long enough for every sample to age out of the window -
+            //drag-pause-release measures ~0, not the speed the gesture once had
+            await vi.advanceTimersByTimeAsync(FLICK_WINDOW_MS + 50)
+            const before = harness.selectColumnCalls.length
+            harness.releasePointerOverNotes(start - COLUMN_WIDTH * 2)
+            //the settle, AT ONCE: the position was already whole, so there is nothing to ease and
+            //the loop stops dead - no timer advance before these two
+            expect(harness.scrollPosition()).toBe(SELECTED + 2)
+            expect(harness.frameLoop().started).toBe(false)
+            expect(harness.selectColumnCalls.slice(before)).toEqual([
+                {index: SELECTED + 2, ignoreAudio: true},
+            ])
+            flushPublished(harness)
+            //...and nothing keeps travelling afterwards
+            await vi.advanceTimersByTimeAsync(2500)
+            expect(harness.scrollPosition()).toBe(SELECTED + 2)
+            expect(harness.selectColumnCalls.slice(before)).toHaveLength(1)
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    it('the threshold: a release just under 0.4px/ms settles, just over it coasts', async () => {
+        const harness = await mountFlickable()
+        try {
+            const start = CANVAS_WIDTH / 2
+            const columns = harness.context.song.columns.length
+            //JUST UNDER: 0.38px/ms over 50ms - 19px, well past DRAG_SLOP_PX, so this IS a drag
+            //and what rejects the Coast is the threshold and nothing earlier
+            const under = (FLICK_MIN_SPEED_PX_PER_MS - 0.02) * 50
+            harness.pressPointerOverNotes(start)
+            await vi.advanceTimersByTimeAsync(50)
+            harness.movePointerOverNotes(start - under)
+            const beforeUnder = harness.selectColumnCalls.length
+            harness.releasePointerOverNotes(start - under)
+            //today's settle: one rounded call, back onto the column the press was on
+            expect(harness.selectColumnCalls.slice(beforeUnder)).toEqual([
+                {index: SELECTED, ignoreAudio: true},
+            ])
+            await vi.advanceTimersByTimeAsync(SCROLL_EASE_MS + 64)
+            expect(harness.scrollPosition()).toBe(SELECTED)
+            expect(harness.frameLoop().started).toBe(false)
+
+            //JUST OVER: 0.42px/ms over the same 50ms, and the same shape of gesture coasts.
+            //0.42px/ms is 1.5 columns of travel, so the landing is two columns out where the
+            //settle above went back to zero.
+            const over = (FLICK_MIN_SPEED_PX_PER_MS + 0.02) * 50
+            const releasePosition = SELECTED + over / COLUMN_WIDTH
+            const to = coastLanding(releasePosition, FLICK_MIN_SPEED_PX_PER_MS + 0.02, columns)
+            expect(to).toBe(SELECTED + 2)
+            harness.pressPointerOverNotes(start)
+            await vi.advanceTimersByTimeAsync(50)
+            harness.movePointerOverNotes(start - over)
+            const beforeOver = harness.selectColumnCalls.length
+            harness.releasePointerOverNotes(start - over)
+            //no publish at entry - the floors arrive on frames
+            expect(harness.selectColumnCalls.slice(beforeOver)).toEqual([])
+            await vi.advanceTimersByTimeAsync(coastDurationMs(releasePosition, to) + 96)
+            expect(harness.scrollPosition()).toBe(to)
+            expect(harness.frameLoop().started).toBe(false)
+            //the two crossings, once each, silent
+            expect(harness.selectColumnCalls.slice(beforeOver)).toEqual([
+                {index: SELECTED + 1, ignoreAudio: true},
+                {index: SELECTED + 2, ignoreAudio: true},
+            ])
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    it('a ludicrous flick travels exactly what the 3px/ms cap travels, not further', async () => {
+        const harness = await mountFlickable()
+        try {
+            const start = CANVAS_WIDTH / 2
+            const columns = harness.context.song.columns.length
+            harness.pressPointerOverNotes(start)
+            //five columns in 10ms: a 40px/ms chord, thirteen times over the cap - the shape a
+            //touch driver's interpolated sample pair produces
+            await vi.advanceTimersByTimeAsync(10)
+            harness.movePointerOverNotes(start - COLUMN_WIDTH * 5)
+            harness.releasePointerOverNotes(start - COLUMN_WIDTH * 5)
+            const releasePosition = SELECTED + 5
+            const capped = coastLanding(releasePosition, 40, columns)
+            expect(capped).toBe(SELECTED + 16)
+            //...and the cap is what separates that from the end of the song: uncapped, v/λ is
+            //142 columns of travel and the landing clamps to the last column
+            const uncapped = Math.min(
+                Math.round(releasePosition + 40 / COLUMN_WIDTH / COAST_DECAY_PER_MS),
+                columns - 1
+            )
+            expect(uncapped).toBe(columns - 1)
+            await vi.advanceTimersByTimeAsync(coastDurationMs(releasePosition, capped) + 96)
+            expect(harness.scrollPosition()).toBe(capped)
+            expect(harness.frameLoop().started).toBe(false)
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    it('a flick against either end of the song lands ON the end column, never outside it', async () => {
+        const harness = await mountFlickable()
+        try {
+            const columns = harness.context.song.columns.length
+            const last = columns - 1
+            const start = CANVAS_WIDTH / 2
+            //NEAR THE END, THROWN FORWARD: the closed form says eight columns past the song and
+            //the clamp says the last column
+            harness.context.song.selected = last - 4
+            harness.push()
+            harness.pressPointerOverNotes(start)
+            await vi.advanceTimersByTimeAsync(20)
+            harness.movePointerOverNotes(start - COLUMN_WIDTH)
+            harness.releasePointerOverNotes(start - COLUMN_WIDTH)
+            expect(coastLanding(last - 3, 4, columns)).toBe(last)
+            //sampled the whole way in: never past the end, and parked exactly on it
+            const duration = coastDurationMs(last - 3, last)
+            const seen: number[] = []
+            for (let elapsed = 0; elapsed <= duration + 96; elapsed += 64) {
+                await aFrame()
+                seen.push(harness.scrollPosition())
+            }
+            expect(seen.every(position => position <= last)).toBe(true)
+            expect(harness.scrollPosition()).toBe(last)
+            expect(harness.frameLoop().started).toBe(false)
+
+            //COLUMN 0, THROWN BACKWARD - the mirror, and the sign convention with it: the
+            //pointer travelling RIGHT throws the song backward
+            harness.context.song.selected = 4
+            harness.push()
+            harness.pressPointerOverNotes(start)
+            await vi.advanceTimersByTimeAsync(20)
+            harness.movePointerOverNotes(start + COLUMN_WIDTH)
+            harness.releasePointerOverNotes(start + COLUMN_WIDTH)
+            expect(coastLanding(3, -4, columns)).toBe(0)
+            const seenBack: number[] = []
+            for (let elapsed = 0; elapsed <= duration + 96; elapsed += 64) {
+                await aFrame()
+                seenBack.push(harness.scrollPosition())
+            }
+            expect(seenBack.every(position => position >= 0)).toBe(true)
+            expect(harness.scrollPosition()).toBe(0)
+            expect(harness.frameLoop().started).toBe(false)
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    it('a press mid-Coast is the Catch: the canvas freezes at once, and a still release never clicks', async () => {
+        const harness = await mountFlickable()
+        try {
+            //the canonical 2px/ms throw: coasting toward SELECTED + 9
+            await throwLeft(harness, 3, 40, 20)
+            await vi.advanceTimersByTimeAsync(320)
+            const grabbed = harness.scrollPosition()
+            expect(grabbed).toBeGreaterThan(SELECTED + 1.5)
+            expect(grabbed).toBeLessThan(SELECTED + 9)
+            const callsAtPress = harness.selectColumnCalls.length
+            //THE GRAB: no slop wait - the fact of the press stops the canvas on the position the
+            //last frame painted, and 200ms of frames move it nowhere
+            harness.pressPointerOverNotes(CANVAS_WIDTH / 2)
+            await vi.advanceTimersByTimeAsync(200)
+            expect(harness.scrollPosition()).toBe(grabbed)
+            //...and the held canvas publishes nothing while it is held
+            expect(harness.selectColumnCalls).toHaveLength(callsAtPress)
+
+            //A RELEASE THAT NEVER MOVED. Everywhere else that is a click, which SOUNDS the
+            //column under it - selectColumn WITHOUT ignoreAudio. A Catch releases as the drag
+            //its press already entered: one silent rounded settle, the ratified exception.
+            harness.releasePointerOverNotes(CANVAS_WIDTH / 2)
+            const target = Math.round(grabbed)
+            expect(harness.selectColumnCalls.slice(callsAtPress)).toEqual([
+                {index: target, ignoreAudio: true},
+            ])
+            //the "sounds a note" observable, over the whole gesture: the click path never ran
+            expect(harness.selectColumnCalls.every(call => call.ignoreAudio === true)).toBe(true)
+            flushPublished(harness)
+            await vi.advanceTimersByTimeAsync(SCROLL_EASE_MS + 64)
+            expect(harness.scrollPosition()).toBe(target)
+            expect(harness.frameLoop().started).toBe(false)
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    it("a Catch thrown back the other way coasts with the new throw's speed alone", async () => {
+        const harness = await mountFlickable()
+        try {
+            //forward Coast under way...
+            await throwLeft(harness, 3, 40, 20)
+            await vi.advanceTimersByTimeAsync(320)
+            const grabbed = harness.scrollPosition()
+            const press = CANVAS_WIDTH / 2
+            harness.pressPointerOverNotes(press)
+            //...caught, then thrown BACK: 80px right every 20ms, a -4px/ms chord the cap trims
+            //to -3. The press reseeded the samples, so the forward throw's speed is gone.
+            await vi.advanceTimersByTimeAsync(20)
+            harness.movePointerOverNotes(press + COLUMN_WIDTH)
+            await vi.advanceTimersByTimeAsync(20)
+            harness.movePointerOverNotes(press + COLUMN_WIDTH * 2)
+            const releasePosition = grabbed - 2
+            const to = coastLanding(releasePosition, -4, harness.context.song.columns.length)
+            harness.releasePointerOverNotes(press + COLUMN_WIDTH * 2)
+            //REVERSED, and landing by the NEW chord alone: velocities REPLACE. Were the first
+            //throw's +2px/ms still in the sum the landing would sit columns away from this one,
+            //and the equality below is what would fail.
+            expect(to).toBeLessThan(releasePosition)
+            await aFrame()
+            expect(harness.scrollPosition()).toBeLessThan(releasePosition)
+            await vi.advanceTimersByTimeAsync(coastDurationMs(releasePosition, to) + 96)
+            expect(harness.scrollPosition()).toBe(to)
+            expect(harness.frameLoop().started).toBe(false)
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    it("the wheel takes a running Coast over: one SCROLL_EASE_MS step from the Coast's landing", async () => {
+        const harness = await mountFlickable()
+        try {
+            await throwLeft(harness, 3, 40, 20)
+            const to = SELECTED + 9 //where this throw's Coast is headed - pinned in the first row
+            await vi.advanceTimersByTimeAsync(320)
+            const atWheel = harness.scrollPosition()
+            expect(atWheel).toBeLessThan(to - 1) //mid-flight, so the step below is a takeover
+            const before = harness.selectColumnCalls.length
+            harness.wheelOverNotes(100)
+            //±1 FROM THE LANDING, not from the canvas: the same composition rule a burst of
+            //wheel events uses against a running ease, extended to the Coast's own target
+            expect(harness.selectColumnCalls.slice(before)).toEqual([
+                {index: to + 1, ignoreAudio: true},
+            ])
+            flushPublished(harness)
+            //an EASE now, not the Coast: strictly between on the next frame, arrived at
+            //SCROLL_EASE_MS where the Coast had seconds left to run
+            await aFrame()
+            const midway = harness.scrollPosition()
+            expect(midway).toBeGreaterThan(atWheel)
+            expect(midway).toBeLessThan(to + 1)
+            await vi.advanceTimersByTimeAsync(SCROLL_EASE_MS + 32)
+            expect(harness.scrollPosition()).toBe(to + 1)
+            expect(harness.frameLoop().started).toBe(false)
+            //...and the Coast's floors stopped with it: the takeover published nothing further
+            expect(harness.selectColumnCalls.slice(before)).toEqual([
+                {index: to + 1, ignoreAudio: true},
+            ])
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    it("an external `selected` move abandons the Coast; the Coast's own round-trip does not", async () => {
+        const harness = await mountFlickable()
+        try {
+            await throwLeft(harness, 3, 40, 20)
+            await vi.advanceTimersByTimeAsync(320)
+            //THE DISCRIMINATOR'S SURVIVING HALF: an update carrying exactly the column the Coast
+            //last published is its own selectColumn coming back through Svelte, and the Coast
+            //rides through it
+            flushPublished(harness)
+            const surviving = harness.scrollPosition()
+            expect(harness.frameLoop().started).toBe(true)
+            await aFrame()
+            expect(harness.scrollPosition()).toBeGreaterThan(surviving)
+
+            //ANY OTHER `selected` is an external jump - a breakpoint button, an undo, a shortcut
+            //- and the Coast is abandoned for the snap those paths expect: at once, silently
+            const before = harness.selectColumnCalls.length
+            harness.context.song.selected = 70
+            harness.push()
+            expect(harness.scrollPosition()).toBe(70)
+            expect(harness.frameLoop().started).toBe(false)
+            expect(harness.selectColumnCalls.slice(before)).toEqual([])
+            //...and stays abandoned: nothing coasts on toward the old landing afterwards
+            await vi.advanceTimersByTimeAsync(2500)
+            expect(harness.scrollPosition()).toBe(70)
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    it('turning smooth scrolling off mid-Coast settles on the last published column, not the landing', async () => {
+        const harness = await mountFlickable()
+        try {
+            await throwLeft(harness, 3, 40, 20)
+            const to = SELECTED + 9
+            await vi.advanceTimersByTimeAsync(320)
+            flushPublished(harness)
+            const published = harness.context.song.selected
+            //mid-flight, so the two candidate landings genuinely differ: settling on the TARGET
+            //here would teleport the canvas across every column in between
+            expect(published).toBeLessThan(to)
+            harness.context.props.smoothScroll = false
+            harness.push()
+            //NO TIMER ADVANCE: the mode has no eased motion, so the death is instantaneous - and
+            //it lands on the column the rest of the composer already agrees on
+            expect(harness.scrollPosition()).toBe(published)
+            expect(harness.frameLoop().started).toBe(false)
+            await vi.advanceTimersByTimeAsync(1000)
+            expect(harness.scrollPosition()).toBe(published)
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    it('a fast release while the song plays settles: the transport outranks momentum', async () => {
+        const context = makeContext()
+        context.props.smoothScroll = true
+        context.props.isPlaying = false
+        const harness = await mount(context)
+        try {
+            harness.push()
+            harness.context.props.isPlaying = true
+            harness.push()
+            //mid-glide, mid-column: the state a drag on a playing song actually starts from
+            await vi.advanceTimersByTimeAsync(LOOKAHEAD_MS + WHOLE_COLUMN_MS / 2)
+            const start = CANVAS_WIDTH / 2
+            harness.pressPointerOverNotes(start)
+            //a column every 16ms - a 5px/ms chord, fresh to the last sample
+            for (let step = 1; step <= 5; step++) {
+                await vi.advanceTimersByTimeAsync(16)
+                harness.movePointerOverNotes(start - COLUMN_WIDTH * step)
+            }
+            await aFrame()
+            const releasePosition = harness.scrollPosition()
+            const before = harness.selectColumnCalls.length
+            harness.releasePointerOverNotes(start - COLUMN_WIDTH * 5)
+            //NO Coast for it: one rounded settle, exactly the release every drag on a playing
+            //song has always had
+            const target = Math.round(releasePosition)
+            expect(harness.selectColumnCalls.slice(before)).toEqual([
+                {index: target, ignoreAudio: true},
+            ])
+            await vi.advanceTimersByTimeAsync(SCROLL_EASE_MS + 32)
+            expect(harness.scrollPosition()).toBe(target)
+            //no publish stream followed - the landing would be ten columns on had this coasted
+            expect(harness.selectColumnCalls.slice(before)).toEqual([
+                {index: target, ignoreAudio: true},
+            ])
+            //...and the transport takes the position back: the settle's flush is a discontinuity
+            //that re-anchors the glide, which resumes after its lookahead - rules untouched
+            harness.context.song.selected = target
+            harness.push()
+            expect(harness.scrollPosition()).toBe(target)
+            await vi.advanceTimersByTimeAsync(LOOKAHEAD_MS + WHOLE_COLUMN_MS / 2)
+            const resumed = harness.scrollPosition()
+            expect(resumed).toBeGreaterThan(target)
+            expect(resumed).toBeLessThan(target + 1)
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    it('a pointercancel with fresh fast samples never coasts; the same gesture pointerup-released does', async () => {
+        const harness = await mountFlickable()
+        try {
+            const start = CANVAS_WIDTH / 2
+            const columns = harness.context.song.columns.length
+            //FIRST, THE CONTROL: this exact gesture released properly coasts - so the settle
+            //below is the cancel's doing, not the samples falling short of the threshold
+            harness.pressPointerOverNotes(start)
+            await vi.advanceTimersByTimeAsync(16)
+            harness.movePointerOverNotes(start - COLUMN_WIDTH)
+            await vi.advanceTimersByTimeAsync(16)
+            harness.movePointerOverNotes(start - COLUMN_WIDTH * 2)
+            harness.releasePointerOverNotes(start - COLUMN_WIDTH * 2)
+            const controlTo = coastLanding(SELECTED + 2, 5, columns)
+            expect(controlTo).toBeGreaterThan(SELECTED + 2)
+            await vi.advanceTimersByTimeAsync(coastDurationMs(SELECTED + 2, controlTo) + 96)
+            expect(harness.scrollPosition()).toBe(controlTo)
+            harness.context.song.selected = controlTo
+            harness.push()
+
+            //NOW THE SAME THROW ENDED BY THE OS - an edge swipe, palm rejection. pixi hears no
+            //event for it at all, so this is the window listener's alone: the gesture was
+            //interrupted, its velocity is not a throw the user made, and it settles.
+            harness.pressPointerOverNotes(start)
+            await vi.advanceTimersByTimeAsync(16)
+            harness.movePointerOverNotes(start - COLUMN_WIDTH)
+            await vi.advanceTimersByTimeAsync(16)
+            harness.movePointerOverNotes(start - COLUMN_WIDTH * 2)
+            const before = harness.selectColumnCalls.length
+            harness.cancelPointer()
+            expect(harness.selectColumnCalls.slice(before)).toEqual([
+                {index: controlTo + 2, ignoreAudio: true},
+            ])
+            await vi.advanceTimersByTimeAsync(SCROLL_EASE_MS + 64)
+            expect(harness.scrollPosition()).toBe(controlTo + 2)
+            expect(harness.frameLoop().started).toBe(false)
+            //...and stays: no Coast wakes up later, nothing further is published
+            await vi.advanceTimersByTimeAsync(2500)
+            expect(harness.scrollPosition()).toBe(controlTo + 2)
+            expect(harness.selectColumnCalls.slice(before)).toHaveLength(1)
+            //and the canvas follows the state again - the OS taking the pointer froze nothing
+            harness.context.song.selected = controlTo + 5
+            harness.push()
+            expect(harness.scrollPosition()).toBe(controlTo + 5)
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    it('with smooth scrolling off a fast release never coasts, and every sample is a whole column', async () => {
+        const context = makeContext()
+        context.props.smoothScroll = false
+        context.props.isPlaying = false
+        const harness = await mount(context)
+        try {
+            harness.push()
+            const start = CANVAS_WIDTH / 2
+            const seen: number[] = []
+            const sample = () => seen.push(harness.scrollPosition())
+            harness.pressPointerOverNotes(start)
+            sample()
+            //a real throw's cadence - a column every 16ms is 5px/ms, fresh to the last sample -
+            //where the existing invariant row's mixed gesture is not reliably over the threshold
+            for (let step = 1; step <= 3; step++) {
+                await vi.advanceTimersByTimeAsync(16)
+                harness.movePointerOverNotes(start - COLUMN_WIDTH * step)
+                sample()
+            }
+            const before = harness.selectColumnCalls.length
+            harness.releasePointerOverNotes(start - COLUMN_WIDTH * 3)
+            sample()
+            //arrived AT ONCE, loop stopped, one restated settle - the shape every snap release
+            //has, asserted before any timer advance
+            expect(harness.scrollPosition()).toBe(SELECTED + 3)
+            expect(harness.frameLoop().started).toBe(false)
+            expect(harness.selectColumnCalls.slice(before)).toEqual([
+                {index: SELECTED + 3, ignoreAudio: true},
+            ])
+            //...and nothing smooth wakes up afterwards: sampled across the whole stretch the
+            //Coast would have run, the integral-position invariant holds against a genuine Flick
+            for (let step = 0; step < 20; step++) {
+                await aFrame()
+                sample()
+            }
+            expect(seen.every(Number.isInteger)).toBe(true)
+            expect(new Set(seen).size).toBeGreaterThan(1)
+            expect(harness.scrollPosition()).toBe(SELECTED + 3)
+            expect(harness.selectColumnCalls.slice(before)).toHaveLength(1)
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    it('a recording started mid-Coast rests the canvas, and nothing resumes when it ends', async () => {
+        const harness = await mountFlickable()
+        try {
+            await throwLeft(harness, 3, 40, 20)
+            await vi.advanceTimersByTimeAsync(320)
+            flushPublished(harness)
+            const published = harness.context.song.selected
+            const before = harness.selectColumnCalls.length
+            //RECORDING OUTRANKS EVERYTHING: the Coast is dropped and the loop stops dead - a
+            //frame taken here is a stall in the file the user is recording
+            harness.context.props.isRecordingAudio = true
+            harness.push()
+            expect(harness.frameLoop().started).toBe(false)
+            const idle = harness.frameLoop()
+            await vi.advanceTimersByTimeAsync(1000)
+            expect(harness.frameLoop().frames).toBe(idle.frames)
+            expect(harness.frameLoop().emits).toBe(idle.emits)
+            //...and coming out of it parks on `selected` - the column the Coast last published,
+            //the one the rest of the composer agrees on - with no Coast waking back up
+            harness.context.props.isRecordingAudio = false
+            harness.push()
+            expect(harness.scrollPosition()).toBe(published)
+            expect(harness.frameLoop().started).toBe(false)
+            await vi.advanceTimersByTimeAsync(2500)
+            expect(harness.scrollPosition()).toBe(published)
+            expect(harness.selectColumnCalls.slice(before)).toEqual([])
         } finally {
             harness.destroy()
         }

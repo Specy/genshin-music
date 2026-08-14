@@ -27,10 +27,12 @@
   let {
     data,
     folders,
+    currentSongId,
     functions,
   }: {
     data: SongStorable;
     folders: Folder[];
+    currentSongId: string | null;
     functions: {
       removeSong: (name: string, id: string) => void;
       renameSong: (newName: string, id: string) => void;
@@ -50,6 +52,8 @@
   // songName is a $derived directly overridden by the rename input below (Svelte 5.25+ allows
   // this) - it still resets to data.name whenever that upstream value changes.
   let songName = $derived(data.name);
+  //the null guard matters: an unsaved song's id is null, and so is a storable row's in theory
+  const isCurrent = $derived(currentSongId !== null && data.id === currentSongId);
 
   async function playSong() {
     if (isRenaming) return;
@@ -221,7 +225,7 @@
     {t('menu:invalid_song')}
   </div>
 {:else}
-  <div class="song-row">
+  <div class={['song-row', isCurrent && 'song-row-current']}>
     <div
       class={['song-name', hasTooltip(true)]}
       onclick={playSong}
@@ -236,6 +240,7 @@
           oninput={(e) => (songName = e.currentTarget.value)}
           style="width:100%;color:var(--primary-text)"
           value={songName}
+          {@attach (el) => el.focus()}
         />
       {:else}
         <div style="margin-left:0.3rem">

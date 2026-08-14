@@ -811,6 +811,7 @@
       hasChanges: changes > 0,
       audioSong,
       trackModifiers: vsrg.trackModifiers,
+      currentSongId: vsrg.id,
     }}
     functions={{
       setAudioSong,

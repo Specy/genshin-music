@@ -167,6 +167,52 @@ const SCROLL_EASE_MS = 140;
 const DRAG_SLOP_PX = 3;
 
 /**
+ * THE FLICK'S MEMORY, in ms: a release's velocity is read from the pointer samples in this
+ * trailing window and from nothing older (see stagePointer.samples and coastFromRelease). Reading
+ * the speed AT the release rather than over the gesture is what makes drag-pause-release measure
+ * ~0 - a stilled pointer's samples age out of the window, so the release finds no fresh pair to
+ * read a speed from and settles as an ordinary drag. The window also bounds the samples array:
+ * every push prunes to it, so a 1000Hz mouse holds ~100 entries and a long gesture buys no more.
+ */
+const FLICK_WINDOW_MS = 100;
+
+/**
+ * The speed at which a stage-drag release becomes a FLICK, in SCREEN px/ms - at or above this the
+ * release Coasts (see settleStageDrag), below it the drag settles exactly as it always did.
+ * Stated at the hand and not on the grid, for the reason DRAG_SLOP_PX is: what counts as a throw
+ * does not change when columnsPerCanvas rescales the columns under it. Velocity-only, with no
+ * distance requirement - the window above already guarantees the speed is CURRENT.
+ */
+const FLICK_MIN_SPEED_PX_PER_MS = 0.4;
+
+/**
+ * The cap on what a release can claim, in the same units. The Coast's travel is
+ * speed / COAST_DECAY_PER_MS, so without a cap one spuriously fast sample pair (touch drivers
+ * interpolate) buys an arbitrarily long throw; at the cap the travel is 3 / 0.0035 ≈ 857px worth
+ * of columns, about half a wide canvas, which is as far as a flick should ever carry.
+ */
+const FLICK_MAX_SPEED_PX_PER_MS = 3;
+
+/**
+ * λ of the Coast's exponential decay, per ms: position(t) = to − (to − from)·e^(−λ·elapsed),
+ * which departs at λ·(to − from) columns per ms - and `to` is CHOSEN as the release position plus
+ * v/λ (rounded, clamped), so the Coast leaves at the release's own speed and the handoff from the
+ * finger has no jerk in it. The same λ fixes the feel: ~63% of the remaining distance is gone
+ * every 1/λ ≈ 286ms.
+ */
+const COAST_DECAY_PER_MS = 0.0035;
+
+/**
+ * The remainder at which a Coast counts as ARRIVED, in px. An exponential never reaches its
+ * target, so the duration is fixed at birth as the time the remainder takes to decay to this -
+ * ln(distancePx / this) / λ - and motionPositionAt returns `to` exactly from then on, the same
+ * arrival pattern `easing` uses. Half a pixel is invisible at any zoom, and it doubles as the
+ * degenerate-Coast test in coastFromRelease: a landing this close to the release position is not
+ * a motion at all.
+ */
+const COAST_ARRIVAL_PX = 0.5;
+
+/**
  * What ComposerRenderer.overlayColumn holds when NO column carries the selected overlay, which is
  * the whole of R1's "the line and the highlight are mutually exclusive" in one value. A column index
  * is a non-negative array index, so `index === NO_OVERLAY_COLUMN` is false for every drawn column
@@ -471,7 +517,7 @@ interface ColumnPaintKey {
 }
 
 /**
- * WHAT IS MOVING THE SCROLL POSITION, as four mutually exclusive states. One field holds it (see
+ * WHAT IS MOVING THE SCROLL POSITION, as five mutually exclusive states. One field holds it (see
  * ComposerRenderer.motion), which is what makes "two sources wrote the position in the same frame"
  * unrepresentable rather than merely unlikely.
  *
@@ -490,11 +536,13 @@ interface ColumnPaintKey {
  *
  * ITS SCOPE IS WHAT `smoothScroll` DECIDES, and the invariant's content is the same either way:
  *  - GLIDING: "at rest" is a strictly smaller set of moments than "the position is an integer" - a
- *    playback glide, a drag or an ease splits them for the length of the gesture, and `resting` is
- *    the name for when they are back together.
+ *    playback glide, a drag, an ease or a Coast splits them for the length of the gesture, and
+ *    `resting` is the name for when they are back together.
  *  - SNAPPING: the two are the same set again. `playback` is unreachable (its only entry is inside
- *    `isPlaying && smoothScroll`) and so is `easing` (easeTo settles instead), which collapses this
- *    union to `resting | dragging`; and `dragging` holds only quantised values. So the position is
+ *    `isPlaying && smoothScroll`), so is `easing` (easeTo settles instead), and so is `coasting`
+ *    (its only entry, settleStageDrag's Flick test, is gated on
+ *    `smoothScroll && !isPlaying && !isRecordingAudio`), which collapses this union to
+ *    `resting | dragging`; and `dragging` holds only quantised values. So the position is
  *    a whole column at EVERY instant, not merely at rest - one assertion that catches any smooth
  *    motion in that mode from any source, including one added later.
  */
@@ -511,6 +559,27 @@ type Motion =
    * smooth scrolling is on - see the gate at the top of easeTo.
    */
   | { kind: 'easing'; from: number; to: number; startMs: number; durationMs: number }
+  /**
+   * A Flick's Coast: position(t) = to − (to − from)·e^(−COAST_DECAY_PER_MS·elapsed), leaving at
+   * the release's own speed and landing on the whole column `to` once `durationMs` is up - see
+   * motionPositionAt for the curve and coastFromRelease for how `to` and `durationMs` are fixed
+   * at birth. Entered only by settleStageDrag's Flick test, so only while smooth scrolling is on,
+   * the song is stopped and no recording runs.
+   *
+   * Unlike `easing`, entry pre-selects NOTHING: `publishedColumn` is the last column the frame
+   * handed selectColumn - floor crossings publish one at a time, exactly the drag's own rule, and
+   * arrival publishes `to` itself. It doubles as syncScrollSchedule's discriminator between the
+   * Coast's own selectColumn round-trip and an external jump, which is why it lives ON the motion
+   * rather than in a field beside it. A press during a Coast is the Catch - see handleStageDown.
+   */
+  | {
+      kind: 'coasting';
+      from: number;
+      to: number;
+      startMs: number;
+      durationMs: number;
+      publishedColumn: number;
+    }
   /**
    * A pointer is down and the canvas is following it. `position` is written by the pointermove
    * handler and read by the frame - the handler paints nothing itself, so a pointer stream faster
@@ -915,15 +984,28 @@ export class ComposerRenderer {
    * The press a stage drag may grow out of, or null for "no pointer is down on the notes stage".
    *
    * Separate from `motion` because a press is NOT yet a drag: the motion is entered only once the
-   * pointer has travelled DRAG_SLOP_PX (see handleStageSlide), so a click during playback leaves the
-   * glide it landed on completely alone. The drag is stated as an OFFSET from (`x`,
+   * pointer has travelled DRAG_SLOP_PX (see handleStageSlide), so a click during a playback glide
+   * or a wheel's ease leaves the motion it landed on completely alone. The one exception is the
+   * Catch: a press during a COAST is the grab itself, and handleStageDown enters the drag at the
+   * press. The drag is stated as an OFFSET from (`x`,
    * `anchorPosition`) rather than accumulated per move - an accumulator drifts, and a drift here is
    * a canvas that has slid out from under the finger.
    *
-   * `x` is the press. `anchorPosition` is written twice and only the second write is the one that
-   * matters: handleStageSlide replaces it with the live scroll position at the instant the drag
-   * starts, which is what keeps a glide running under a hesitating finger from being given back.
-   * The press's value is what the field is initialised to.
+   * `x` is the press. `anchorPosition` is written twice on the ordinary path and only the second
+   * write is the one that matters: handleStageSlide replaces it with the live scroll position at
+   * the instant the drag starts, which is what keeps a glide running under a hesitating finger
+   * from being given back. The press's value is what the field is initialised to - and under a
+   * Catch there IS no second write: the drag exists from the press, so handleStageSlide skips its
+   * anchor re-take, and the press's value is the anchor. Correct there rather than merely
+   * tolerated, because the Catch froze the canvas at exactly that position.
+   *
+   * `samples` is the pointer's recent x history on the shared now() timebase: seeded at the press
+   * and pushed on EVERY owning move, the pre-slop ones included - the first DRAG_SLOP_PX of a
+   * throw carries part of its speed, and a short sharp flick spends most of its samples there.
+   * Each push prunes to the trailing FLICK_WINDOW_MS, which bounds the array AND is the whole of
+   * the Flick's memory: a pointer held still drains it of anything a release could read a speed
+   * from. Read once, by settleStageDrag, via the release record that handleStageUp and
+   * resetPointerDown capture BEFORE nulling this field.
    *
    * `id` IS THE POINTER THAT OWNS THE GESTURE, and it is what makes this one field rather than a
    * map: the composer has exactly one scroll position, so a second concurrent pointer cannot be a
@@ -940,7 +1022,12 @@ export class ComposerRenderer {
    * DIFFERENT canvas element with its own EventBoundary, so the two surfaces could not see each
    * other's pointers.
    */
-  private stagePointer: { id: number; x: number; anchorPosition: number } | null = null;
+  private stagePointer: {
+    id: number;
+    x: number;
+    anchorPosition: number;
+    samples: Array<{ x: number; t: number }>;
+  } | null = null;
   /**
    * The pointerId scrubbing the mini-timeline, or null for "no pointer is down on the strip".
    *
@@ -1461,7 +1548,7 @@ export class ComposerRenderer {
    * alternative is leaving the playhead somewhere `selected` is not, and every click, edit and jump
    * downstream reasons in terms of `selected`.
    *
-   * THREE STATEMENTS ABOUT THE MANUAL MOTIONS OUTRANK PARTS OF THAT, all guarded near the top:
+   * FIVE STATEMENTS ABOUT THE MANUAL MOTIONS OUTRANK PARTS OF THAT, all guarded near the top:
    *  - a DRAG outranks everything for its duration. It is the user's hand on the canvas, so a tick
    *    arriving mid-drag is dropped rather than queued and the snap below cannot yank the canvas
    *    back to a column boundary the drag has just left - which would fire once per column crossed,
@@ -1471,10 +1558,19 @@ export class ComposerRenderer {
    *    off mid-gesture.
    *  - an EASE CANNOT OUTLIVE THE MODE it belongs to: with `smoothScroll` off there is no eased
    *    motion, so a running one finishes at its own target at once.
+   *  - a COAST dies with the mode too, but NOT at its own target: a Flick's landing can be twenty
+   *    columns out, and settling there would teleport the canvas across all of them. It settles at
+   *    `publishedColumn` - the column it last handed selectColumn, the one `selected` already
+   *    agrees with - so the flip moves the canvas by at most the fraction it was mid-crossing.
    *  - an EASE otherwise outranks the SNAP but not the transport. It is already heading for a column
    *    it asked for, so resting would just jump it to its own destination; but a playback tick, a
    *    breakpoint jump or an undo moving `selected` off that target abandons it, which is the snap
    *    those paths expect. `state.selected === motion.to` is what tells the two apart.
+   *  - a COAST outranks the snap the same way, on a different discriminator: its target is
+   *    deliberately never pre-selected, so `state.selected === motion.publishedColumn` is what
+   *    marks an update as its own round-trip. That update also re-aims the Coast when the song
+   *    shrank under it; anything else - an external jump - falls through and snaps, like an
+   *    abandoned ease.
    */
   private syncScrollSchedule(
     previous: ComposerRendererState | null,
@@ -1525,6 +1621,14 @@ export class ComposerRenderer {
     // column that was ASKED for, and `selected` may still be a microtask behind it, so resting
     // would yank the canvas back and the next update would push it forward again.
     if (!state.smoothScroll && this.motion.kind === 'easing') return this.settleAt(this.motion.to);
+    // NEITHER CAN A COAST, and its landing place differs: settleAt(publishedColumn) and NOT the
+    // target. The ease's target is at most a column away and already selected; a Flick's landing
+    // can be twenty columns out and was never pre-selected, so settling there would teleport the
+    // canvas across columns `selected` never visited. `publishedColumn` is the column the Coast
+    // last handed selectColumn - the one the rest of the composer already agrees on - so the flip
+    // costs at most the fraction of a column it was mid-crossing.
+    if (!state.smoothScroll && this.motion.kind === 'coasting')
+      return this.settleAt(this.motion.publishedColumn);
     if (state.isPlaying && state.smoothScroll && previous !== null) {
       const advancedOneColumn = previous.isPlaying && state.selected === previous.selected + 1;
       if (advancedOneColumn) {
@@ -1557,6 +1661,36 @@ export class ComposerRenderer {
     }
     if (this.motion.kind === 'easing' && state.selected === this.motion.to) {
       this.scrollSegments.length = 0;
+      return;
+    }
+    // THE COAST'S OWN ROUND-TRIP: its frames publish floor(position) as they cross it, and this is
+    // that call coming back through Svelte. `publishedColumn` and not the target, because the
+    // Coast never pre-selects where it is going - any update whose `selected` is somewhere else
+    // is an external jump and falls through to the snap below, exactly like an abandoned ease.
+    if (this.motion.kind === 'coasting' && state.selected === this.motion.publishedColumn) {
+      this.scrollSegments.length = 0;
+      const lastColumn = Math.max(0, state.columns.length - 1);
+      if (this.motion.to > lastColumn) {
+        // COLUMNS REMOVED MID-COAST (a shortcut or an undo can shrink the song without moving
+        // `selected`): the landing no longer exists, so re-aim at the clamped one - a fresh curve
+        // from wherever the canvas is now, same λ, duration recomputed by the same formula. When
+        // the clamped landing is where the canvas already stands there is nothing left to travel,
+        // and that is an arrival: publish it if the crossings have not, and settle.
+        const from = this.scrollPosition;
+        if (Math.abs(lastColumn - from) * this.columnSize.width <= COAST_ARRIVAL_PX) {
+          if (this.motion.publishedColumn !== lastColumn)
+            this.callbacks.selectColumn(lastColumn, true);
+          return this.settleAt(lastColumn);
+        }
+        this.enterMotion({
+          kind: 'coasting',
+          from,
+          to: lastColumn,
+          startMs: this.now(),
+          durationMs: this.coastDurationMs(from, lastColumn),
+          publishedColumn: this.motion.publishedColumn,
+        });
+      }
       return;
     }
     if (
@@ -1722,6 +1856,14 @@ export class ComposerRenderer {
         const eased = 1 - (1 - t) ** 3;
         return motion.from + (motion.to - motion.from) * eased;
       }
+      case 'coasting': {
+        const elapsed = nowMs - motion.startMs;
+        //durationMs was fixed at birth as the instant the remainder decays to COAST_ARRIVAL_PX,
+        //so returning `to` exactly from then on is the same arrival pattern easing uses
+        if (elapsed >= motion.durationMs) return motion.to;
+        //exponential decay: departs at the release's own speed and slows all the way in
+        return motion.to - (motion.to - motion.from) * Math.exp(-COAST_DECAY_PER_MS * elapsed);
+      }
       case 'dragging':
         //the pointer handler already wrote it; the frame only applies it
         return motion.position;
@@ -1732,9 +1874,17 @@ export class ComposerRenderer {
    * THE FRAME. Registered on the notes Application's Ticker at the default priority, and the only
    * per-frame work this class does - see init() for the loop's wiring and Motion for when it runs.
    *
-   * One applyScrollPosition per frame at most, for playback, drag and ease alike, and none at all
-   * on a frame where the position did not move: a pointer stream faster than the frame rate
+   * One applyScrollPosition per frame at most, for playback, drag, ease and Coast alike, and none
+   * at all on a frame where the position did not move: a pointer stream faster than the frame rate
    * coalesces here, and a schedule stalled on a late tick costs this call and nothing else.
+   *
+   * THE COAST IS THE ONE MOTION WHOSE FRAME ALSO PUBLISHES: each floor crossing hands selectColumn
+   * the column under the playhead - ignoreAudio, at most once per column, the drag's own rule, so
+   * Coasted columns are selected and never sounded. Its arrival settles the way the ease's does,
+   * and needs no publish of its own: `to` is a whole column, so the frame that reaches it has an
+   * integral floor and the crossing test above it has just published exactly that column. The ease
+   * never publishes here because easeTo's callers select the target on the way in; the Coast's
+   * entry deliberately does not - see settleStageDrag.
    *
    * A SNAP-MODE DRAG moves the position only once per column crossed, so most of its frames do
    * nothing here - and the overlay that mode draws can move while the position does not. That is
@@ -1748,6 +1898,15 @@ export class ComposerRenderer {
     if (position === null) return;
     if (this.motion.kind === 'easing' && position === this.motion.to)
       return this.settleAt(position);
+    if (this.motion.kind === 'coasting') {
+      const column = Math.floor(position);
+      if (column !== this.motion.publishedColumn) {
+        this.motion.publishedColumn = column;
+        this.callbacks.selectColumn(column, true);
+      }
+      //this doubles as the arrival's publish - see the doc block
+      if (position === this.motion.to) return this.settleAt(position);
+    }
     if (position !== this.scrollPosition) this.applyScrollPosition(position);
   };
 
@@ -1900,11 +2059,12 @@ export class ComposerRenderer {
    *    shipped defaults, that swallowed a forward wheel for the first 113 of every 273ms column
    *    while sending a backward one two columns back. `selected` is fresh here: the ticks that
    *    move it are a column apart, so the microtask-staleness a burst suffers cannot arise.
-   *  - OTHERWISE from the running ease's own TARGET, which is the whole of how a burst composes:
-   *    wheel events arrive several to a frame, and a step measured from the current position would
-   *    give every event in a burst the same destination. `this.state.selected` cannot serve there -
-   *    it is a snapshot Svelte refreshes a microtask later, so inside a burst it is the value from
-   *    before the previous event.
+   *  - OTHERWISE from the running ease's or Coast's own TARGET, which is the whole of how a burst
+   *    composes: wheel events arrive several to a frame, and a step measured from the current
+   *    position would give every event in a burst the same destination. `this.state.selected`
+   *    cannot serve there - it is a snapshot Svelte refreshes a microtask later, so inside a burst
+   *    it is the value from before the previous event. For a Coast this is also the takeover rule:
+   *    the wheel steps ±1 from the landing column, and the easeTo below replaces the motion.
    *
    * WHILE THE TRANSPORT OWNS THE POSITION it also does not ease: moving `selected` is enough,
    * because the update that produces takes syncScrollSchedule's discontinuity branch, which
@@ -1921,7 +2081,7 @@ export class ComposerRenderer {
     const transportOwned = this.state.isPlaying && this.state.smoothScroll;
     const from = transportOwned
       ? this.state.selected
-      : this.motion.kind === 'easing'
+      : this.motion.kind === 'easing' || this.motion.kind === 'coasting'
         ? this.motion.to
         : this.scrollPosition;
     const target = clamp(Math.round(from) + Math.sign(e.deltaY), 0, this.state.columns.length - 1);
@@ -1931,9 +2091,19 @@ export class ComposerRenderer {
   };
 
   /**
-   * A pointer going down on the notes stage. It records the press and NOTHING else - the drag
-   * motion is entered by the first move past DRAG_SLOP_PX (see handleStageSlide), so a click during
-   * playback leaves the glide it landed on running.
+   * A pointer going down on the notes stage. On the ordinary path it records the press and NOTHING
+   * else - the drag motion is entered by the first move past DRAG_SLOP_PX (see handleStageSlide),
+   * so a click during a playback glide or a wheel's ease leaves the motion it landed on running.
+   *
+   * THE CATCH is the one exception: a press during a Coast IS the grab. A Coast is the user's own
+   * throw still travelling, and the point of putting a finger on it is to stop it - so the drag is
+   * entered here, at the press, with no slop wait, and the canvas freezes on this very frame.
+   * snapManualPosition is the identity on this path (a Coast exists only while smooth scrolling is
+   * on) and is applied anyway, so every manual position keeps going through the one quantiser. The
+   * press's anchorPosition, written just above, is the anchor the whole gesture keeps -
+   * handleStageSlide's re-take is for presses that become drags later, and `dragging` being
+   * already true skips it. The release of a motionless Catch settles instead of clicking - see
+   * handleStageUp.
    *
    * IGNORED OUTRIGHT WHILE ANOTHER POINTER ALREADY OWNS THE SURFACE - see stagePointer's `id`. The
    * hitarea cannot make this decision: pixi hands `contains` a point and no pointerId, so the guard
@@ -1941,7 +2111,20 @@ export class ComposerRenderer {
    */
   private handleStageDown = (e: FederatedPointerEvent) => {
     if (this.stagePointer) return;
-    this.stagePointer = { id: e.pointerId, x: e.globalX, anchorPosition: this.scrollPosition };
+    this.stagePointer = {
+      id: e.pointerId,
+      x: e.globalX,
+      anchorPosition: this.scrollPosition,
+      samples: [{ x: e.globalX, t: this.now() }],
+    };
+    //the Catch - see the doc block
+    if (this.motion.kind === 'coasting') {
+      this.enterMotion({
+        kind: 'dragging',
+        surface: 'stage',
+        position: this.snapManualPosition(this.scrollPosition),
+      });
+    }
   };
 
   /**
@@ -1964,6 +2147,13 @@ export class ComposerRenderer {
     //a move from a pointer that is not the one holding the drag would be measured against an anchor
     //it never pressed at - see stagePointer's `id`
     if (!pointer || e.pointerId !== pointer.id) return;
+    // THE FLICK'S MEMORY, fed before anything can return: the pre-slop moves belong in it too -
+    // the first DRAG_SLOP_PX of a throw carries part of its speed, and a short sharp flick spends
+    // most of its samples there. Pruned at every push, so the array is bounded by the window
+    // rather than by the gesture's length - see FLICK_WINDOW_MS.
+    const sampleMs = this.now();
+    pointer.samples.push({ x: e.globalX, t: sampleMs });
+    while (pointer.samples[0].t < sampleMs - FLICK_WINDOW_MS) pointer.samples.shift();
     const motion = this.motion;
     const dragging = motion.kind === 'dragging' && motion.surface === 'stage';
     if (!dragging) {
@@ -1974,6 +2164,8 @@ export class ComposerRenderer {
       // press gives all of that back on the first drag frame, measured at 0.41 columns backward for
       // a 0.4-column hesitation on a playing song, which is the most ordinary way to use the
       // gesture. `this.scrollPosition` is what is on screen, which is the thing a finger grabs.
+      // (A Catch never gets here: its press already entered the drag, so `dragging` above is true
+      // and the press's anchor stands - which is right, the canvas froze at exactly that value.)
       pointer.anchorPosition = this.scrollPosition;
     }
     const lastColumn = this.state.columns.length - 1;
@@ -2011,15 +2203,31 @@ export class ComposerRenderer {
    * A click is a pick rather than a scroll, so it snaps - and `selectColumn` here is called WITHOUT
    * `ignoreAudio`, so the clicked column sounds at once; easing the canvas to a column the user has
    * already heard would put the picture behind the sound.
+   *
+   * A CATCH RELEASES AS A DRAG even when the pointer never moved: the press itself entered
+   * `dragging` (see handleStageDown), so the branch below routes it to settleStageDrag - round
+   * plus ease, nothing sounds. That is the one ratified exception to "a stationary press and
+   * release is a click", and it holds only during a Coast: the press was aimed at a canvas in
+   * motion, so the column under the release point is an accident of where the Coast was stopped.
+   *
+   * THE RELEASE RECORD IS CAPTURED BEFORE THE NULL, which is the only order that works: the Flick
+   * decision reads the press record's samples, and the field must be cleared before anything else
+   * runs (testStageHitarea answers the whole canvas while it is set). A pixi pointerup is a real
+   * release, so it passes `mayCoast: true` - the window backstop is the one that has to say no
+   * (see resetPointerDown).
    */
   private handleStageUp = (e: FederatedPointerEvent) => {
     //a release from a pointer that never owned the press is not this gesture ending - see
     //stagePointer's `id`. It must not settle the drag under the finger still holding it, and it must
     //not take the click path below, which SOUNDS the column it lands on.
     if (this.stagePointer && e.pointerId !== this.stagePointer.id) return;
+    const release = this.stagePointer
+      ? { samples: this.stagePointer.samples, atMs: this.now(), mayCoast: true }
+      : undefined;
     this.stagePointer = null;
     const motion = this.motion;
-    if (motion.kind === 'dragging' && motion.surface === 'stage') return this.settleStageDrag();
+    if (motion.kind === 'dragging' && motion.surface === 'stage')
+      return this.settleStageDrag(release);
     // The column the pointer is actually OVER, inverted through the live scroll position rather
     // than derived from `selected` and a fixed slot. The two agree whenever the scroll is at
     // rest; during a glide `selected` is a column ahead of what is on screen, and this is what
@@ -2030,8 +2238,20 @@ export class ComposerRenderer {
   };
 
   /**
-   * Where a stage drag comes to rest: the NEAREST column - eased to while smooth scrolling is on,
-   * arrived at instantly while it is off (the gate lives in easeTo).
+   * Where a stage drag comes to rest - and where a FLICK becomes a COAST.
+   *
+   * THE FLICK TEST runs first, and only when every gate holds: the release must be a real
+   * pointerup (`mayCoast` - a pointercancel or a blur interrupted the gesture, so its samples are
+   * not a throw), smooth scrolling must be on, and the song neither playing nor recording -
+   * transport and recording outrank momentum here for the same reason they outrank every manual
+   * motion in syncScrollSchedule. What is left is coastFromRelease's question: were the trailing
+   * samples fast enough, and is the landing anywhere other than where the settle below would go.
+   * A qualifying release enters `coasting` via enterMotion (which drops any stale schedule) and
+   * selects NOTHING here: the Coast publishes each floor as it crosses it and its arrival
+   * publishes the landing, so entry has nothing new to say.
+   *
+   * EVERY OTHER RELEASE is the settle as it always was: the NEAREST column - eased to while smooth
+   * scrolling is on, arrived at instantly while it is off (the gate lives in easeTo).
    *
    * Round rather than floor, unlike the `selectColumn` calls the drag itself makes. A floor-settle
    * always gives movement back, up to a full column on every single release, which reads as sticky;
@@ -2039,12 +2259,88 @@ export class ComposerRenderer {
    * everywhere else. While snapping, the drag has been writing that same rounded value all along,
    * so this release moves nothing at all.
    */
-  private settleStageDrag(): void {
+  private settleStageDrag(release?: {
+    samples: Array<{ x: number; t: number }>;
+    atMs: number;
+    mayCoast: boolean;
+  }): void {
     const motion = this.motion;
     if (motion.kind !== 'dragging' || motion.surface !== 'stage') return;
+    if (
+      release?.mayCoast &&
+      this.state.smoothScroll &&
+      !this.state.isPlaying &&
+      !this.state.isRecordingAudio
+    ) {
+      const coast = this.coastFromRelease(motion.position, release);
+      if (coast) return this.enterMotion(coast);
+    }
     const target = clamp(Math.round(motion.position), 0, this.state.columns.length - 1);
     this.callbacks.selectColumn(target, true);
     this.easeTo(target);
+  }
+
+  /**
+   * THE FLICK DECISION: the `coasting` motion a release earns, or null for "settle as always".
+   * Everything about the Coast is fixed here, at birth - where it lands, how long it takes - so
+   * the frames only evaluate a curve and the tests can state the destination as an equality.
+   *
+   * The SPEED is read from the samples still inside the trailing FLICK_WINDOW_MS at the release
+   * instant, as one straight line from the oldest to the newest - fewer than two of them, or zero
+   * time between them, is no measurable throw. It is measured in screen px/ms and capped at
+   * FLICK_MAX_SPEED_PX_PER_MS before the grid enters at all; only then does the column width
+   * convert it, with the drag's own sign: the position is anchor + (press.x − x) / width, so a
+   * pointer moving LEFT throws the song FORWARD.
+   *
+   * The LANDING is release position + v/λ - the whole travel an exponential decay from speed v
+   * has in it - rounded to a whole column and clamped to the song, so an edge flick lands ON the
+   * edge with no overscroll. Two degenerate cases settle instead of coasting: a landing equal to
+   * the round the settle would take anyway (the Coast would replace a 140ms ease with a slower
+   * ride to the same place), and a landing within COAST_ARRIVAL_PX of where the canvas already is.
+   *
+   * `publishedColumn` starts at floor(release position) because the drag has already published
+   * that floor - see handleStageSlide - so the Coast's first publish is its first real crossing.
+   */
+  private coastFromRelease(
+    releasePosition: number,
+    release: { samples: Array<{ x: number; t: number }>; atMs: number }
+  ): Extract<Motion, { kind: 'coasting' }> | null {
+    const windowStart = release.atMs - FLICK_WINDOW_MS;
+    const fresh = release.samples.filter((sample) => sample.t >= windowStart);
+    if (fresh.length < 2) return null;
+    const first = fresh[0];
+    const last = fresh[fresh.length - 1];
+    const dtMs = last.t - first.t;
+    if (dtMs <= 0) return null;
+    const speedPx = (last.x - first.x) / dtMs;
+    if (Math.abs(speedPx) < FLICK_MIN_SPEED_PX_PER_MS) return null;
+    const cappedPx = Math.min(Math.abs(speedPx), FLICK_MAX_SPEED_PX_PER_MS);
+    const speedColumns = (Math.sign(-speedPx) * cappedPx) / this.columnSize.width;
+    const travel = speedColumns / COAST_DECAY_PER_MS;
+    const lastColumn = this.state.columns.length - 1;
+    const to = clamp(Math.round(releasePosition + travel), 0, lastColumn);
+    if (to === clamp(Math.round(releasePosition), 0, lastColumn)) return null;
+    if (Math.abs(to - releasePosition) * this.columnSize.width <= COAST_ARRIVAL_PX) return null;
+    return {
+      kind: 'coasting',
+      from: releasePosition,
+      to,
+      startMs: release.atMs,
+      durationMs: this.coastDurationMs(releasePosition, to),
+      publishedColumn: Math.floor(releasePosition),
+    };
+  }
+
+  /**
+   * When a Coast from `from` to `to` counts as arrived: the instant its remainder decays to
+   * COAST_ARRIVAL_PX. Positive whenever the distance is above the epsilon, which both callers
+   * (coastFromRelease and the re-aim in syncScrollSchedule) have already tested.
+   */
+  private coastDurationMs(from: number, to: number): number {
+    return (
+      Math.log((Math.abs(to - from) * this.columnSize.width) / COAST_ARRIVAL_PX) /
+      COAST_DECAY_PER_MS
+    );
   }
 
   /**
@@ -2244,6 +2540,12 @@ export class ComposerRenderer {
    * bubble phase, so handleStageUp/handleTimelineUp run first and have already left `dragging` by
    * the time this does anything; settleStageDrag and the timeline's own settle both return when the
    * motion is not theirs.
+   *
+   * THE ONE DECISION THIS LISTENER ADDS is whether the release may FLICK. A window `pointerup` is
+   * a real release and passes `mayCoast: true`, the same as the pixi path; `pointercancel` and
+   * `blur` interrupted the gesture, so their velocity is not a throw and they settle as before -
+   * in practice the trailing-window rule would usually say no anyway, but the flag states it
+   * rather than leaning on timing.
    */
   private resetPointerDown = (e: Event) => {
     // A SECOND POINTER'S RELEASE IS NOT THIS GESTURE ENDING - the same rule the pixi handlers now
@@ -2258,11 +2560,20 @@ export class ComposerRenderer {
     const id = 'pointerId' in e ? (e as PointerEvent).pointerId : null;
     const owner = this.stagePointer?.id ?? this.timelinePointer;
     if (id !== null && owner !== null && id !== owner) return;
+    //captured before the nulls for the reason handleStageUp captures: the Flick decision reads
+    //the press record's samples
+    const stageRelease = this.stagePointer
+      ? {
+          samples: this.stagePointer.samples,
+          atMs: this.now(),
+          mayCoast: e.type === 'pointerup',
+        }
+      : undefined;
     this.stagePointer = null;
     this.timelinePointer = null;
     const motion = this.motion;
     if (motion.kind !== 'dragging') return;
-    if (motion.surface === 'stage') this.settleStageDrag();
+    if (motion.surface === 'stage') this.settleStageDrag(stageRelease);
     else this.handleTimelineUp();
   };
 

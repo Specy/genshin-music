@@ -2,6 +2,7 @@
   import { homeStore } from '$stores/HomeStore.svelte';
   import { folderStore } from '$stores/FoldersStore.svelte';
   import { songsStore } from '$stores/SongsStore.svelte';
+  import { vsrgPlayerStore } from '$stores/VsrgPlayerStore.svelte';
   import { globalConfigStore } from '$stores/GlobalConfigStore.svelte';
   import { clickOutside } from '$lib/utils/clickOutside';
   import type { VsrgSong } from '$core/Songs/VsrgSong.svelte';
@@ -219,6 +220,7 @@
           SongComponent={VsrgPlayerSongRow}
           componentProps={{
             folders: folderStore.folders,
+            currentSongId: vsrgPlayerStore.currentSong.song?.id ?? null,
             functions: {
               setMenuVisible: (v) => (isVisible = v),
               onSongSelect,

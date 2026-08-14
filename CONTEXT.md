@@ -60,3 +60,17 @@ A note whose Note Id the track's current instrument doesn't offer. Skipped at pl
 
 **Similar Instrument**:
 The target game's curated counterpart for a source game's instrument — the one a track swaps to during cross-game conversion so the song keeps a comparable timbre. Unmapped instruments fall back to the target's default.
+
+### Composer Canvas Gestures
+
+**Flick**:
+A notes-stage drag released while the hand is still moving fast: release velocity, measured over the gesture's trailing instant, at or above the flick threshold. Launches a Coast; a slower release settles on the nearest column as ever. Exists only while smooth scrolling is on and the song is stopped.
+_Avoid_: swipe (any drag), fast drag (the drag itself is not the Flick — the release is)
+
+**Coast**:
+The decaying glide a Flick launches. Its landing column is fixed at the moment of release — travel derived from release speed, rounded to a whole column, clamped to the song — and it selects columns as it passes them exactly as the drag it continues, never sounding them.
+_Avoid_: momentum/inertia scrolling (say Coast for the glide itself)
+
+**Catch**:
+A press on the notes stage while a Coast is running. The press itself is the grab: it halts the Coast where it is and owns the scroll from that instant. Released without movement it is a stop, never a click — it selects-and-sounds nothing.
+_Avoid_: tap-to-stop "click" (a Catch never takes the click path)
