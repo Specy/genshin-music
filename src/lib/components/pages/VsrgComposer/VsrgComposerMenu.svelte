@@ -41,6 +41,9 @@
       hasChanges: boolean;
       audioSong: RecordedSong | null;
       trackModifiers: VsrgTrackModifier[];
+      // the id of the song open in the vsrg composer (null while it is unsaved), so its row in
+      // the song list can show it is the one being edited
+      currentSongId: string | null;
     };
     functions: {
       setAudioSong: (song: SerializedSong | null) => void;
@@ -267,6 +270,7 @@
           SongComponent={VsrgComposerSongRow}
           componentProps={{
             folders: folderStore.folders,
+            currentSongId: data.currentSongId,
             functions: {
               onClick: functions.onSongOpen,
               toggleMenu: (v) => (isVisible = v),

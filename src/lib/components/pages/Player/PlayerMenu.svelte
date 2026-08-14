@@ -512,6 +512,7 @@
           SongComponent={PlayerSongRow}
           componentProps={{
             folders: folderStore.folders,
+            currentSongId: playerStore.song?.id ?? null,
             functions: {
               removeSong: functions.removeSong,
               toggleMenu,

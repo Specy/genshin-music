@@ -1667,6 +1667,11 @@ a {
   transition: all 0.2s;
 }
 
+.song-row-current {
+  background-color: var(--secondary);
+  color: var(--secondary-text);
+}
+
 .song-button {
   display: flex;
   justify-content: center;
@@ -1755,6 +1760,10 @@ a {
   outline: solid 2px var(--secondary);
   border-radius: 0.2rem;
   cursor: text;
+}
+
+.song-row-current .song-rename {
+  outline: solid 2px var(--primary);
 }
 
 .song-buttons-wrapper {

@@ -1284,6 +1284,7 @@
     isRecordingAudio,
     settings,
     hasChanges: changes > 0,
+    currentSongId: song.id,
   }}
   functions={{
     loadSong,

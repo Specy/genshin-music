@@ -41,6 +41,9 @@
       settings: ComposerSettingsDataType;
       hasChanges: boolean;
       isRecordingAudio: boolean;
+      // the id of the song open in the composer (null while it is unsaved), so its row in the
+      // song list can show it is the one being edited
+      currentSongId: string | null;
     };
     functions: {
       loadSong: (song: SerializedSong) => void;
@@ -318,6 +321,7 @@
           onCreateFolder={createFolder}
           componentProps={{
             folders: folderStore.folders,
+            currentSongId: data.currentSongId,
             functions: {
               loadSong: functions.loadSong,
               removeSong,
