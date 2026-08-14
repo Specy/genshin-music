@@ -145,11 +145,17 @@ const TIMELINE_STRIP_RADIUS = 4.8;
  * How long the canvas takes to reach a column it was asked to ease to WHILE SMOOTH SCROLLING IS ON
  * - see easeTo, whose gate makes every ease an instant settle while it is off.
  *
- * FIXED rather than proportional to the distance, which is what makes the wheel feel faster the
- * harder it is spun: a burst of events that moves the target eight columns takes the same wall time
- * as one event moving it one.
+ * Wheel input does not ease while events are arriving: the hardware's deltas move the canvas
+ * directly. This duration is used only after the wheel falls idle and settles to a whole column,
+ * the same as a drag release.
  */
 const SCROLL_EASE_MS = 140;
+
+/** How long after the hardware's last wheel delta the canvas waits before settling to its grid. */
+const WHEEL_SETTLE_IDLE_MS = 100;
+
+/** DOM_DELTA_LINE has no pixel definition; this is its conventional CSS-pixel approximation. */
+const WHEEL_LINE_PX = 16;
 
 /**
  * How far a pointer must travel across the notes stage before the press becomes a DRAG rather than
@@ -373,11 +379,11 @@ export interface ComposerRendererState {
    *    recording flag, written onto playheadGraphics.visible by init() and update());
    *  - whether the SELECTED-column overlay exists at all (overlayColumn, which is
    *    NO_OVERLAY_COLUMN while this is on);
-   *  - whether the WHEEL eases the canvas itself or only moves `selected` and lets the transport
-   *    re-anchor (handleWheel) - which is the one that is not about a mark on screen;
+   *  - whether the WHEEL follows hardware deltas and idle-settles the canvas, or only moves
+   *    `selected` and lets the transport re-anchor (handleWheel);
    *  - whether a manual DRAG follows the pointer continuously or moves a whole column at a time,
    *    on the notes stage and on the mini-timeline alike (snapManualPosition);
-   *  - whether the wheel and every settle EASE or arrive at once (the gate at the top of easeTo).
+   *  - whether wheel deltas move continuously before an idle EASE, or step whole columns at once.
    * The last two are a deliberate reversal: manual motion was continuous in both modes for one
    * round, and the setting now covers it. The tools-selection overlay is a different sprite state
    * and is unaffected by this in either direction - see ColumnView.paintSelection.
@@ -517,7 +523,7 @@ interface ColumnPaintKey {
 }
 
 /**
- * WHAT IS MOVING THE SCROLL POSITION, as five mutually exclusive states. One field holds it (see
+ * WHAT IS MOVING THE SCROLL POSITION, as six mutually exclusive states. One field holds it (see
  * ComposerRenderer.motion), which is what makes "two sources wrote the position in the same frame"
  * unrepresentable rather than merely unlikely.
  *
@@ -536,13 +542,14 @@ interface ColumnPaintKey {
  *
  * ITS SCOPE IS WHAT `smoothScroll` DECIDES, and the invariant's content is the same either way:
  *  - GLIDING: "at rest" is a strictly smaller set of moments than "the position is an integer" - a
- *    playback glide, a drag, an ease or a Coast splits them for the length of the gesture, and
- *    `resting` is the name for when they are back together.
+ *    playback glide, a drag, a wheel gesture, an ease or a Coast splits them for the length of the
+ *    gesture, and `resting` is the name for when they are back together.
  *  - SNAPPING: the two are the same set again. `playback` is unreachable (its only entry is inside
  *    `isPlaying && smoothScroll`), so is `easing` (easeTo settles instead), and so is `coasting`
  *    (its only entry, settleStageDrag's Flick test, is gated on
  *    `smoothScroll && !isPlaying && !isRecordingAudio`), which collapses this union to
- *    `resting | dragging`; and `dragging` holds only quantised values. So the position is
+ *    `resting | dragging`; `wheeling` is also unreachable because handleWheel takes its quantised
+ *    branch in that mode, and `dragging` holds only quantised values. So the position is
  *    a whole column at EVERY instant, not merely at rest - one assertion that catches any smooth
  *    motion in that mode from any source, including one added later.
  */
@@ -555,8 +562,8 @@ type Motion =
    */
   | { kind: 'playback' }
   /**
-   * A wheel or a drag release, running to a whole column over SCROLL_EASE_MS. Entered only while
-   * smooth scrolling is on - see the gate at the top of easeTo.
+   * A drag release or an idle wheel settling to a whole column over SCROLL_EASE_MS. Entered only
+   * while smooth scrolling is on - see the gate at the top of easeTo.
    */
   | { kind: 'easing'; from: number; to: number; startMs: number; durationMs: number }
   /**
@@ -580,6 +587,14 @@ type Motion =
       durationMs: number;
       publishedColumn: number;
     }
+  /**
+   * Hardware-driven wheel motion. Every event adds its normalised pixel delta to `position`; the
+   * frame applies the latest value without interpolation, so OS/trackpad acceleration is preserved
+   * and a faster event stream merely coalesces. `publishedColumn` is the floor last handed to
+   * selectColumn and is also the discriminator for its reactive round-trip in syncScrollSchedule.
+   * The idle timer replaces this with an ordinary `easing` settle.
+   */
+  | { kind: 'wheeling'; position: number; publishedColumn: number }
   /**
    * A pointer is down and the canvas is following it. `position` is written by the pointermove
    * handler and read by the frame - the handler paints nothing itself, so a pointer stream faster
@@ -777,6 +792,8 @@ class ColumnView {
 export class ComposerRenderer {
   private notesApp: Application | null = null;
   private wheelCanvas: HTMLCanvasElement | null = null;
+  /** The one-shot idle settle reset by every direct wheel delta. */
+  private wheelSettleTimeout: Timer = 0;
   private cache: ComposerCache | null = null;
   private themeDispose: (() => void) | null = null;
 
@@ -985,7 +1002,7 @@ export class ComposerRenderer {
    *
    * Separate from `motion` because a press is NOT yet a drag: the motion is entered only once the
    * pointer has travelled DRAG_SLOP_PX (see handleStageSlide), so a click during a playback glide
-   * or a wheel's ease leaves the motion it landed on completely alone. The one exception is the
+   * or a wheel's settle ease leaves the motion it landed on completely alone. The one exception is
    * Catch: a press during a COAST is the grab itself, and handleStageDown enters the drag at the
    * press. The drag is stated as an OFFSET from (`x`,
    * `anchorPosition`) rather than accumulated per move - an accumulator drifts, and a drift here is
@@ -1113,7 +1130,7 @@ export class ComposerRenderer {
     // scrolls the composer where before the merge it reached no listener at all. Deliberate: the
     // strip is part of the same surface now, and the alternative would be an element-space y test
     // here purely to reproduce a dead zone nobody asked for.
-    this.wheelCanvas.addEventListener('wheel', this.handleWheel);
+    this.wheelCanvas.addEventListener('wheel', this.handleWheel, { passive: false });
     this.applyNotesCanvasOpacity();
     this.notesApp.renderer.background.color = this.theme.main.background;
     this.notesColumnsContainer.eventMode = 'static';
@@ -1548,7 +1565,7 @@ export class ComposerRenderer {
    * alternative is leaving the playhead somewhere `selected` is not, and every click, edit and jump
    * downstream reasons in terms of `selected`.
    *
-   * FIVE STATEMENTS ABOUT THE MANUAL MOTIONS OUTRANK PARTS OF THAT, all guarded near the top:
+   * SIX STATEMENTS ABOUT THE MANUAL MOTIONS OUTRANK PARTS OF THAT, all guarded near the top:
    *  - a DRAG outranks everything for its duration. It is the user's hand on the canvas, so a tick
    *    arriving mid-drag is dropped rather than queued and the snap below cannot yank the canvas
    *    back to a column boundary the drag has just left - which would fire once per column crossed,
@@ -1556,6 +1573,9 @@ export class ComposerRenderer {
    *    The release settles, and the next tick after it takes the discontinuity branch and resumes.
    *    The one thing that branch DOES do is re-quantise the live position when `smoothScroll` went
    *    off mid-gesture.
+   *  - a WHEEL gesture has the same authority between its first hardware delta and its idle settle:
+   *    its own floor-selection round-trips leave it alone, while play, recording, a mode flip or an
+   *    external selected move cancels its timer and lets the corresponding branch take over.
    *  - an EASE CANNOT OUTLIVE THE MODE it belongs to: with `smoothScroll` off there is no eased
    *    motion, so a running one finishes at its own target at once.
    *  - a COAST dies with the mode too, but NOT at its own target: a Flick's landing can be twenty
@@ -1595,6 +1615,22 @@ export class ComposerRenderer {
       // quantised - see snapManualPosition.)
       if (!state.smoothScroll) this.motion.position = Math.floor(this.motion.position);
       return;
+    }
+    if (this.motion.kind === 'wheeling') {
+      if (!state.smoothScroll) {
+        this.cancelWheelSettle();
+        return this.settleAt(this.motion.publishedColumn);
+      }
+      if (
+        !state.isPlaying &&
+        !state.isRecordingAudio &&
+        state.selected === this.motion.publishedColumn
+      ) {
+        this.scrollSegments.length = 0;
+        return;
+      }
+      //Something with higher authority is taking over below, or selected moved externally.
+      this.cancelWheelSettle();
     }
     // RECORDING OUTRANKS EVERYTHING, including a drag - the guard above it is the one exception
     // this branch is deliberately placed after, since a pointer cannot be down during a recording
@@ -1802,9 +1838,9 @@ export class ComposerRenderer {
   /**
    * Ease to a whole column over SCROLL_EASE_MS, starting from wherever the canvas is now.
    *
-   * Restarting from the CURRENT position on every call is what makes a burst of wheel events one
-   * continuously accelerating glide rather than N eases fighting each other; the caller measures the
-   * next target from the ease's own `to` (see handleWheel) so the burst composes rather than stalls.
+   * Wheel events themselves do not call this. They move directly for as long as the hardware emits
+   * deltas, then the idle timeout calls this once to settle the fractional position exactly like a
+   * drag release.
    */
   private easeTo(target: number): void {
     // SNAP MODE HAS NO EASED MOTION AT ALL. Every caller here is a manual settle or a pause, and
@@ -1864,6 +1900,9 @@ export class ComposerRenderer {
         //exponential decay: departs at the release's own speed and slows all the way in
         return motion.to - (motion.to - motion.from) * Math.exp(-COAST_DECAY_PER_MS * elapsed);
       }
+      case 'wheeling':
+        //the wheel handler already wrote it; the frame only applies the latest hardware delta
+        return motion.position;
       case 'dragging':
         //the pointer handler already wrote it; the frame only applies it
         return motion.position;
@@ -1874,9 +1913,10 @@ export class ComposerRenderer {
    * THE FRAME. Registered on the notes Application's Ticker at the default priority, and the only
    * per-frame work this class does - see init() for the loop's wiring and Motion for when it runs.
    *
-   * One applyScrollPosition per frame at most, for playback, drag, ease and Coast alike, and none
-   * at all on a frame where the position did not move: a pointer stream faster than the frame rate
-   * coalesces here, and a schedule stalled on a late tick costs this call and nothing else.
+   * One applyScrollPosition per frame at most, for playback, drag, wheel, ease and Coast alike, and
+   * none at all on a frame where the position did not move: a pointer or wheel stream faster than
+   * the frame rate coalesces here, and a schedule stalled on a late tick costs this call and nothing
+   * else.
    *
    * THE COAST IS THE ONE MOTION WHOSE FRAME ALSO PUBLISHES: each floor crossing hands selectColumn
    * the column under the playhead - ignoreAudio, at most once per column, the drag's own rule, so
@@ -2045,55 +2085,95 @@ export class ComposerRenderer {
     return this.scrollPosition + (x - this.playheadX()) / this.columnSize.width;
   }
 
+  /** Convert the WheelEvent's declared unit to the screen pixels the stage drag is stated in. */
+  private wheelDeltaPx(e: WheelEvent): number {
+    if (e.deltaMode === WheelEvent.DOM_DELTA_LINE) return e.deltaY * WHEEL_LINE_PX;
+    if (e.deltaMode === WheelEvent.DOM_DELTA_PAGE) return e.deltaY * this.width;
+    return e.deltaY;
+  }
+
+  private cancelWheelSettle(): void {
+    if (!this.wheelSettleTimeout) return;
+    clearTimeout(this.wheelSettleTimeout);
+    this.wheelSettleTimeout = 0;
+  }
+
+  /** The hardware has gone quiet: round the direct wheel position and use the normal settle ease. */
+  private settleWheel = (): void => {
+    this.wheelSettleTimeout = 0;
+    const motion = this.motion;
+    if (motion.kind !== 'wheeling') return;
+    const target = clamp(Math.round(motion.position), 0, this.state.columns.length - 1);
+    this.callbacks.selectColumn(target, true);
+    this.easeTo(target);
+  };
+
   /**
-   * THE WHEEL: one column per event - EASED while smooth scrolling is on, arriving at once while it
-   * is off. Nothing here tests the setting; the gate is inside easeTo, which every non-transport
-   * path below ends in.
+   * THE WHEEL, in two modes:
+   *  - With smooth scrolling ON and the transport stopped, the event's pixel delta is applied
+   *    DIRECTLY to a fractional column position. There is no interpolation and no added momentum:
+   *    the OS/trackpad supplies both cadence and acceleration. Events faster than the renderer's
+   *    frame cap coalesce in `wheeling`, exactly like pointer moves coalesce in `dragging`. Each new
+   *    floor under the playhead is selected silently, while a 100ms gap ends the gesture and eases
+   *    once to the nearest whole column.
+   *  - While snapping, or while playback owns the smooth position, the historical one logical
+   *    column per event remains. Snap mode arrives immediately; playback changes `selected` and lets
+   *    syncScrollSchedule re-anchor the transport rather than fighting it with a manual position.
    *
-   * WHAT THE STEP IS MEASURED FROM depends on who owns the position, and it has to, because the
-   * value this produces is compared by Svelte against `selected`:
-   *  - WHILE THE TRANSPORT OWNS IT (playing with smooth scrolling on) the step is measured from
-   *    `selected` itself. The playhead is a LOOKAHEAD BEHIND `selected` by construction, so a step
-   *    measured from the playhead asks for a column the transport is already on - an unchanged
-   *    write, which notifies nothing and moves neither the canvas nor the music. Measured at the
-   *    shipped defaults, that swallowed a forward wheel for the first 113 of every 273ms column
-   *    while sending a backward one two columns back. `selected` is fresh here: the ticks that
-   *    move it are a column apart, so the microtask-staleness a burst suffers cannot arise.
-   *  - OTHERWISE from the running ease's or Coast's own TARGET, which is the whole of how a burst
-   *    composes: wheel events arrive several to a frame, and a step measured from the current
-   *    position would give every event in a burst the same destination. `this.state.selected`
-   *    cannot serve there - it is a snapshot Svelte refreshes a microtask later, so inside a burst
-   *    it is the value from before the previous event. For a Coast this is also the takeover rule:
-   *    the wheel steps ±1 from the landing column, and the easeTo below replaces the motion.
-   *
-   * WHILE THE TRANSPORT OWNS THE POSITION it also does not ease: moving `selected` is enough,
-   * because the update that produces takes syncScrollSchedule's discontinuity branch, which
-   * re-anchors the playhead there and re-schedules. Easing as well would put the canvas behind
-   * music that has already jumped.
-   *
-   * A DRAG OUTRANKS IT, which is syncScrollSchedule's rule applied to the one input that can arrive
-   * mid-gesture: a mouse with a wheel can be scrolled with its button held, and easing from under a
-   * held pointer replaces the `dragging` motion, so the release would run handleStageUp's CLICK
-   * path and sound a note from a gesture the user performed as a drag.
+   * A DRAG OUTRANKS IT: a mouse wheel used with the button held must not replace the pointer's
+   * motion and make its eventual release fall through to the sounding click path.
    */
   private handleWheel = (e: WheelEvent) => {
-    if (this.motion.kind === 'dragging') return;
+    e.preventDefault();
+    if (this.motion.kind === 'dragging' || e.deltaY === 0) return;
+
+    this.cancelWheelSettle();
+    //The notes stage is hidden during capture and recording deliberately owns an idle ticker.
+    if (this.state.isRecordingAudio) return;
     const transportOwned = this.state.isPlaying && this.state.smoothScroll;
-    const from = transportOwned
-      ? this.state.selected
-      : this.motion.kind === 'easing' || this.motion.kind === 'coasting'
-        ? this.motion.to
-        : this.scrollPosition;
-    const target = clamp(Math.round(from) + Math.sign(e.deltaY), 0, this.state.columns.length - 1);
-    this.callbacks.selectColumn(target, true);
-    if (transportOwned) return;
-    this.easeTo(target);
+    if (!this.state.smoothScroll || transportOwned) {
+      const from = transportOwned ? this.state.selected : this.scrollPosition;
+      const target = clamp(
+        Math.round(from) + Math.sign(e.deltaY),
+        0,
+        this.state.columns.length - 1
+      );
+      this.callbacks.selectColumn(target, true);
+      if (transportOwned) return;
+      this.easeTo(target);
+      return;
+    }
+
+    const previousMotion = this.motion;
+    const from = previousMotion.kind === 'wheeling' ? previousMotion.position : this.scrollPosition;
+    const position = clamp(
+      from + this.wheelDeltaPx(e) / this.columnSize.width,
+      0,
+      this.state.columns.length - 1
+    );
+    const publishedColumn =
+      previousMotion.kind === 'wheeling' || previousMotion.kind === 'coasting'
+        ? previousMotion.publishedColumn
+        : this.state.selected;
+    const wheelMotion: Extract<Motion, { kind: 'wheeling' }> = {
+      kind: 'wheeling',
+      position,
+      publishedColumn,
+    };
+    this.enterMotion(wheelMotion);
+
+    const column = Math.floor(position);
+    if (column !== wheelMotion.publishedColumn) {
+      wheelMotion.publishedColumn = column;
+      this.callbacks.selectColumn(column, true);
+    }
+    this.wheelSettleTimeout = setTimeout(this.settleWheel, WHEEL_SETTLE_IDLE_MS);
   };
 
   /**
    * A pointer going down on the notes stage. On the ordinary path it records the press and NOTHING
    * else - the drag motion is entered by the first move past DRAG_SLOP_PX (see handleStageSlide),
-   * so a click during a playback glide or a wheel's ease leaves the motion it landed on running.
+   * so a click during a playback glide or a wheel's settle ease leaves that motion running.
    *
    * THE CATCH is the one exception: a press during a Coast IS the grab. A Coast is the user's own
    * throw still travelling, and the point of putting a finger on it is to stop it - so the drag is
@@ -2111,6 +2191,12 @@ export class ComposerRenderer {
    */
   private handleStageDown = (e: FederatedPointerEvent) => {
     if (this.stagePointer) return;
+    //A press keeps ordinary click semantics, but the wheel's idle timer must not move the canvas
+    //under it later. Begin the same settle now; a move past slop will replace that ease with a drag.
+    if (this.motion.kind === 'wheeling') {
+      this.cancelWheelSettle();
+      this.settleWheel();
+    }
     this.stagePointer = {
       id: e.pointerId,
       x: e.globalX,
@@ -2160,7 +2246,7 @@ export class ComposerRenderer {
       if (Math.abs(e.globalX - pointer.x) <= DRAG_SLOP_PX) return;
       // THE ANCHOR IS TAKEN HERE, at the instant the drag actually starts, and not at the press.
       // The press is not the grab - the slop test above is - and whatever was already moving the
-      // canvas keeps writing the position in between: a glide, or a wheel's ease. Anchoring on the
+      // canvas keeps writing the position in between: a glide, or a wheel settle. Anchoring on the
       // press gives all of that back on the first drag frame, measured at 0.41 columns backward for
       // a 0.4-column hesitation on a playing song, which is the most ordinary way to use the
       // gesture. `this.scrollPosition` is what is on screen, which is the thing a finger grabs.
@@ -2356,6 +2442,7 @@ export class ComposerRenderer {
    */
   private handleTimelineDown = (e: FederatedPointerEvent) => {
     if (this.timelinePointer !== null) return;
+    this.cancelWheelSettle();
     this.timelinePointer = e.pointerId;
     //the rectangle drawn on the timeline, so grabbing it and grabbing what is drawn agree
     const viewport = this.timelineViewport();
@@ -3197,6 +3284,7 @@ export class ComposerRenderer {
     window.removeEventListener('pointercancel', this.resetPointerDown);
     window.removeEventListener('blur', this.resetPointerDown);
     if (this.cacheRecalculateDebounce) clearTimeout(this.cacheRecalculateDebounce);
+    this.cancelWheelSettle();
     this.wheelCanvas?.removeEventListener('wheel', this.handleWheel);
     this.themeDispose?.();
     // Before the Application goes: app.destroy({children: true}) only reaches what hangs off the
