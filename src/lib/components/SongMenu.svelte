@@ -22,7 +22,7 @@
 </script>
 
 <script lang="ts" generics="T extends SongMenuRowProps">
-  import type { Component } from 'svelte';
+  import type { Component, Snippet } from 'svelte';
   import type { ClassValue } from 'svelte/elements';
   import FuzzySearch from 'fuzzy-search';
   import { Folder } from '$core/Folder';
@@ -31,7 +31,6 @@
   import { ThemeProvider } from '$core/theme/ThemeProvider.svelte';
   import { t } from '$i18n/binding.svelte';
   import Row from './layout/Row.svelte';
-  import AppButton from './inputs/AppButton.svelte';
   import SongFolder from './SongFolder.svelte';
   import SongFolderContent from './SongFolderContent.svelte';
   import SongMenuSearch from './SongMenuSearch.svelte';
@@ -45,6 +44,7 @@
     baseType,
     exclude,
     onCreateFolder,
+    importButton,
   }: {
     songs: SongStorable[];
     SongComponent: Component<T>;
@@ -54,6 +54,9 @@
     baseType?: SongType;
     exclude?: SongType[];
     onCreateFolder?: () => void;
+    //the page's own import control (each page imports a different song kind),
+    //rendered in the search row where the create-folder button used to sit
+    importButton?: Snippet;
   } = $props();
 
   let searchValue = $state('');
@@ -132,9 +135,7 @@
       backgroundColor={unselectedColor.toString()}
       textColor={unselectedColorText}
     />
-    {#if onCreateFolder}
-      <AppButton onclick={onCreateFolder}>{t('menu:create_folder')}</AppButton>
-    {/if}
+    {@render importButton?.()}
   </Row>
 
   {#if !exclude?.includes('composed')}
@@ -242,4 +243,29 @@
       {/if}
     </SongFolder>
   {/each}
+
+  <!-- Outlined in the folders' own background color and left transparent, so
+       it reads as the empty slot at the end of the folder list rather than as
+       another control in the search row. -->
+  {#if onCreateFolder}
+    <button
+      class="create-folder"
+      onclick={onCreateFolder}
+      style="--create-folder-color:{unselectedColor.toString()};color:{folderColor}"
+    >
+      <svg
+        stroke="currentColor"
+        fill="currentColor"
+        stroke-width="0"
+        viewBox="0 0 448 512"
+        height="1em"
+        width="1em"
+        xmlns="http://www.w3.org/2000/svg"
+        ><path
+          d="M416 208H272V64c0-17.67-14.33-32-32-32h-32c-17.67 0-32 14.33-32 32v144H32c-17.67 0-32 14.33-32 32v32c0 17.67 14.33 32 32 32h144v144c0 17.67 14.33 32 32 32h32c17.67 0 32-14.33 32-32V304h144c17.67 0 32-14.33 32-32v-32c0-17.67-14.33-32-32-32z"
+        /></svg
+      >
+      {t('menu:create_folder')}
+    </button>
+  {/if}
 </div>

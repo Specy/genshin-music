@@ -29,6 +29,7 @@
   import AppLink from '$cmp/AppLink.svelte';
   import AppButton from '$cmp/inputs/AppButton.svelte';
   import FilePicker, { type FileElement } from '$cmp/inputs/FilePicker.svelte';
+  import IconUpload from '~icons/fa6-solid/upload';
   import HelpTooltip from '$cmp/utility/HelpTooltip.svelte';
   import DonateButton from '$cmp/DonateButton.svelte';
 
@@ -330,14 +331,18 @@
               renameSong: functions.renameSong,
             },
           }}
-        />
-        <div class="row" style="justify-content:flex-end;gap:0.2rem">
-          <FilePicker onPick={importFile} onError={jsonImportError} as="json" multiple={true}>
-            <AppButton>
-              {t('menu:import_song_sheet')}
-            </AppButton>
-          </FilePicker>
-        </div>
+        >
+          {#snippet importButton()}
+            <FilePicker onPick={importFile} onError={jsonImportError} as="json" multiple={true}>
+              <AppButton>
+                {#snippet icon()}
+                  <IconUpload />
+                {/snippet}
+                {t('menu:import_song_sheet')}
+              </AppButton>
+            </FilePicker>
+          {/snippet}
+        </SongMenu>
         <div class="songs-buttons-wrapper" style="margin-top:auto">
           <AppButton
             style="margin-top:0.5rem"
