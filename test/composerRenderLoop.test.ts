@@ -18,6 +18,7 @@ import {afterEach, describe, expect, it, vi} from 'vitest'
 const pixi = vi.hoisted(() => {
     interface FakeApplicationOptions {
         autoStart?: boolean
+        preference?: string[]
     }
 
     class FakeTexture {
@@ -296,6 +297,7 @@ describe('ComposerRenderer rendering', () => {
         expect(pixi.applications.map(application => application.initOptions?.autoStart)).toEqual([
             false,
         ])
+        expect(pixi.applications[0].initOptions?.preference).toEqual(['webgpu', 'webgl'])
 
         renderer.update({...initialState, selected: 1})
         expect(pixi.applications.map(application => application.render.mock.calls.length)).toEqual([

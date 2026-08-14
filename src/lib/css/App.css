@@ -2364,22 +2364,6 @@ select {
   color: var(--accent-text) !important;
 }
 
-/* The overlay the three timeline controls sit in. ComposerCanvas.svelte gives it its top, width and
-   height from the geometry the renderer reports, so it lines up with the band the composer canvas
-   draws its mini-timeline in. Transparent to the pointer, so the canvas keeps taking presses
-   everywhere the buttons themselves are not; positioned by `.canvas-wrapper` rather than by
-   `.canvas-relative`, which is overflow:hidden and would clip the buttons' tooltips - those render
-   BELOW them.
-
-   THE ITEMS SIT AT THEIR NATURAL WIDTH and the last carries `margin-left: auto` (inline, in
-   ComposerCanvas.svelte), so the three stand on [0, 80px] and [W-41.6px, W] at EVERY viewport width
-   - which is exactly what composerCanvasGeometry's TIMELINE_INSET_LEFT/RIGHT assume when they hold
-   the drawn strip clear of them. Those are the bands the buttons OCCUPY and not their margin boxes:
-   an auto margin absorbs the row's whole free space, so the third button's margin box runs [80, W]
-   and its border box is [W-38.4, W-3.2] - the 41.6px is 0.2rem of clearance, the 2.2rem button and
-   its own trailing 0.2rem. `flex-start` and not `space-between`: an auto margin consumes the free
-   space before `justify-content` is consulted, so `space-between` would be a declaration with no
-   effect describing a layout this row no longer has. */
 .timeline-controls {
   display: flex;
   flex-direction: row;
@@ -2388,34 +2372,29 @@ select {
   position: absolute;
   left: 0;
   pointer-events: none;
+  padding: 0.2rem;
+  gap: 0.2rem;
+}
+
+/* One continuous boundary between the scrolling note grid and the denser minimap panel. This DOM
+   overlay spans the full canvas, including the opaque timeline buttons that would cover a line
+   drawn only by pixi underneath them. */
+.timeline-controls::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto;
+  height: 1px;
+  z-index: 1;
+  pointer-events: none;
+  background-color: var(--primary-darken-10);
 }
 
 .timeline-button {
-  /* verbatim what these carried as flex siblings of the timeline canvas, plus the `pointer-events`
-     that puts them back in front of a `.timeline-controls` the pointer passes through */
   height: 100%;
   padding: 0;
   width: 2.2rem;
-  margin: 0.2rem;
-  /* NEVER SHRUNK. This row's width is the canvas', which is `body * 0.85 - 45` and can in principle
-     come out under the three buttons' 121.6px in the theme preview at an extreme viewport; without
-     this the browser would take the overflow back out of all three and the strip - inset by a fixed
-     121.6px on the pixi side - would no longer line up with them. `2.2rem` and `0.2rem` are read by
-     composerCanvasGeometry.ts as px (TIMELINE_BUTTON_SIZE/MARGIN, at the 16px root font size stated
-     there); test/composerCanvasCss.test.ts asserts these two declarations still say what that file
-     assumes they say. */
   flex-shrink: 0;
   pointer-events: auto;
-  /* NO `background-color` HERE, deliberately: ComposerCanvas.svelte sets it inline, per button, to
-     `ThemeProvider.layer('primary', 0.1).hex()`. The CSS route would be `var(--primary-layer-10)`,
-     which is the SAME colour with the theme's alpha still on it - ThemeVars.svelte emits that
-     property through `.toString()` - and these buttons must be opaque: the strip they used to sit
-     on was inset out from under them, so what is now behind them is the canvas element (itself
-     composited at `max(primary.alpha, 0.8)`) and, through it, whatever the user set as a composer
-     background. On "Sky Music" (rgba(23,23,23,0.72)) the alpha-preserving form would leak 5.6% of
-     that backdrop through each icon and on "Eons of times" (#453427d9) 2.2%. `.hex()` drops the
-     alpha, which is both the pre-merge inline value and the alpha-stripped colour ComposerRenderer
-     fills the strip with. */
   border: none;
   color: var(--icon-color);
   display: flex;

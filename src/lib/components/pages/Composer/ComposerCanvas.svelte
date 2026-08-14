@@ -328,19 +328,19 @@
     The three timeline controls, floated over the mini-timeline the canvas above now draws for
     itself.
 
-    A FLEX ROW OF THREE, each 2.2rem wide with a 0.2rem margin and no shrink, the last pushed right
-    by an auto margin. That leaves them standing on [0, 80px] and [W-41.6px, W] at every viewport
-    width, and the canvas draws its strip between those two bounds rather than underneath them - see
-    composerCanvasGeometry's TIMELINE_INSET_LEFT/RIGHT, which is the same arithmetic on the pixi
-    side, and test/composerCanvasCss.test.ts, which is what keeps the two statements of it together.
+    A FLEX ROW OF THREE, each 2.2rem wide with 0.2rem HORIZONTAL margins and no shrink, the last
+    pushed right by an auto margin. That leaves them standing on [0, 80px] and [W-41.6px, W] at every
+    viewport width, and the canvas draws its strip between those two bounds rather than underneath
+    them - see composerCanvasGeometry's TIMELINE_INSET_LEFT/RIGHT, which is the same arithmetic on
+    the pixi side, and test/composerCanvasCss.test.ts, which keeps the two statements together.
 
     THOSE ARE FOOTPRINTS AND NOT MARGIN BOXES, and the difference is only in how it is derived: an
     auto margin absorbs the row's whole free space, so the third button's margin box is [80, W] and
     its BORDER box is [W-38.4, W-3.2]. The 41.6px it is held clear by is 0.2rem of clearance before
     it, the 2.2rem button, and its own trailing 0.2rem margin.
 
-    Pinned to the CANVAS box - `top` from the reported notes height plus the padding row, `width`
-    from the reported canvas width - and not to the wrapper. On a tall viewport `.canvas-wrapper`'s
+    Pinned to the CANVAS box - `top` at the reported notes height (timelinePadding is now zero),
+    `width` from the reported canvas width - and not to the wrapper. On a tall viewport `.canvas-wrapper`'s
     min-height gives `.canvas-relative` a sliver of slack under the canvas, so anchoring vertically
     to the wrapper would put the row below the strip. Horizontally it is a DELIBERATE divergence:
     below a ~643px viewport `.canvas-wrapper`'s `min-width: 78vw` makes the wrapper wider than the
