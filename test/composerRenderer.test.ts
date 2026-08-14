@@ -1152,6 +1152,8 @@ interface Harness {
     scrollPosition(): number
     /** How many times the Application has been asked to render, ever. */
     renders(): number
+    /** Texture of the completed static sprite nested under the timeline background. */
+    timelineMinimapTexture(): object | null
     /**
      * The column container's x as each render saw it - see FakeApplication.renderedX. Read through
      * the harness rather than by indexing pixi.applications, so a test cannot silently pick up a
@@ -1412,7 +1414,9 @@ async function mount(context: Context = makeContext()): Promise<Harness> {
     //REQUIRED: init()'s theme callback schedules the ComposerCache behind a 50ms debounce. Without
     //waiting it out there is no cache, drawNotesStage early-returns, and every counter here reads
     //0 - which looks exactly like a perfectly optimised renderer.
-    await vi.advanceTimersByTimeAsync(120)
+    //50ms cache debounce plus six 16ms minimap callbacks: five bounded 64-column slices for the
+    //three 100-column passes, then one separate texture-install callback.
+    await vi.advanceTimersByTimeAsync(180)
 
     //ONE Application, whose stage carries the whole composer in THIS order, every index of which is
     //load-bearing:
@@ -1659,6 +1663,11 @@ async function mount(context: Context = makeContext()): Promise<Harness> {
             return (canvasWidth / 2 - notesColumns.x) / columnWidth
         },
         renders: () => app.renders,
+        timelineMinimapTexture() {
+            const background = timelineContent.children[0]
+            const sprite = background?.children.find(child => child.kind === 'sprites')
+            return sprite?.texture ?? null
+        },
         renderedX: () => app.renderedX,
         frameLoop: () => ({
             started: app.ticker.started,
@@ -1744,7 +1753,7 @@ async function mount(context: Context = makeContext()): Promise<Harness> {
             }
             window.dispatchEvent(new Event('resize'))
             //the same 50ms debounce as init()'s, plus room for the draw it ends in
-            await vi.advanceTimersByTimeAsync(120)
+            await vi.advanceTimersByTimeAsync(180)
         },
         destroy() {
             renderer.destroy()
@@ -2004,13 +2013,11 @@ function expectedCanvasStyle(): string {
  *    song is the canvas showing": `columnsOnScreen` below, and the `canvasWidth / 2 / columnWidth`
  *    half of the outline's x. Those describe the notes region, and scaling them by the inset too
  *    would make the outline claim a different set of columns than the canvas holds;
- *  - the background covers the strip, in the timeline layer colour, with the 0.3rem corner radius
- *    `.timeline-scroll` used to give the strip's own element;
- *  - a tools selection is a band from its first column to its last;
- *  - a breakpoint marker sits at its column's position, taking the SHORT breakpoint texture - slot
- *    0, where the notes stage's in-column marker is slot 1. (The renderer anchors it at 0.5 so it
- *    reads as centred on the column; the fakes below do not model anchors, so what is compared is
- *    the position the sprite is anchored AT.)
+ *  - the background covers the rectangular strip in the timeline layer colour;
+ *  - a tools selection covers every selected cell, including the final one;
+ *  - breakpoints are one timeline column wide with a three-pixel floor, at their columns' leading
+ *    edges and clamped at the strip's right edge. Their opaque colour is the exact transformed
+ *    composer accent used by the notes canvas' cached breakpoint sprites;
  *  - the viewport outline is as wide as the number of columns the canvas shows, with its left edge
  *    at the FIRST column the canvas shows - the scrolled-to column less the columns that fit
  *    between the canvas' left edge and the playhead - drawn 1.5px down so its 3px stroke sits
@@ -2024,15 +2031,13 @@ function expectedTimeline(context: Context, geometry: Geometry): PaintedScene['t
     const timelineColumnWidth = stripWidth / song.columns.length
     const content: PaintedTimelineChild[] = [
         expectedGraphicsChild(0, 0, [
-            //4.8px is the 0.3rem `.timeline-scroll` gave the strip's element before the strip moved
-            //onto this canvas - with no element under it any more, the fill draws its own corners
-            ['roundRect', 0, 0, stripWidth, timelineHeight, 4.8],
+            ['rect', 0, 0, stripWidth, timelineHeight],
             ['fill', {color: ThemeProvider.layer('primary', 0.1).rgb().rgbNumber()}],
         ]),
     ]
     if (props.selectedColumns.length) {
         const from = props.selectedColumns[0] * timelineColumnWidth
-        const to = props.selectedColumns[props.selectedColumns.length - 1] * timelineColumnWidth
+        const to = (props.selectedColumns[props.selectedColumns.length - 1] + 1) * timelineColumnWidth
         content.push(
             expectedGraphicsChild(0, 0, [
                 ['rect', from, 0, to - from, timelineHeight],
@@ -2043,12 +2048,23 @@ function expectedTimeline(context: Context, geometry: Geometry): PaintedScene['t
             ])
         )
     }
-    for (const breakpoint of song.breakpoints) {
-        //QUIRK, preserved from before the pool and stated at ComposerRenderer.drawTimelineStage: the
-        //markers divide the strip by `columns.length - 1` where every other value here divides by
-        //`columns.length`
-        const x = (stripWidth / (song.columns.length - 1)) * breakpoint
-        content.push(expectedSpriteChild('breakpoints[0]', x, 0))
+    if (song.breakpoints.length) {
+        const ops: unknown[] = []
+        const breakpointWidth = Math.min(Math.max(3, timelineColumnWidth), stripWidth)
+        for (const breakpoint of song.breakpoints) {
+            ops.push([
+                'rect',
+                Math.min(timelineColumnWidth * breakpoint, stripWidth - breakpointWidth),
+                0,
+                breakpointWidth,
+                timelineHeight,
+            ])
+        }
+        ops.push(['fill', {
+            color: ThemeProvider.get('composer_accent').rotate(20).darken(0.5).rgb().rgbNumber(),
+            alpha: 1,
+        }])
+        content.push(expectedGraphicsChild(0, 0, ops))
     }
     //not COLUMNS_PER_CANVAS: the renderer rounds a column to an even number of pixels, so the canvas
     //shows a fraction more or less than the setting asks for
@@ -2071,7 +2087,14 @@ function expectedTimeline(context: Context, geometry: Geometry): PaintedScene['t
             timelineColumnWidth * (song.selected - canvasWidth / 2 / columnWidth),
             1.5,
             [
-                ['roundRect', 0, 0, Math.floor(timelineColumnWidth * columnsOnScreen), timelineHeight - 3, 6],
+                [
+                    'roundRect',
+                    0,
+                    0,
+                    Math.floor(timelineColumnWidth * columnsOnScreen),
+                    timelineHeight - 3,
+                    6,
+                ],
                 ['stroke', {
                     width: 3,
                     color: ThemeProvider.get('composer_accent').rgb().rgbNumber(),
@@ -3506,19 +3529,17 @@ describe('which surface a pointer on the merged canvas reaches', () => {
         }
     })
 
-    it('the two padding rows reach nothing at all, as that div\'s padding did', async () => {
+    it('the reclaimed padding is part of the timeline hit area, with no dead row below it', async () => {
         const harness = await mountStoppedComposer()
         try {
-            const {canvasWidth, height, timelinePadding, timelineHeight} = harness.geometry()
+            const {canvasWidth, height, canvasHeight, timelinePadding, timelineHeight} = harness.geometry()
             const x = canvasWidth / 2
-            //TIMELINE_BAND_PADDING is `.timeline-wrapper-bg`'s `padding: 0.2rem 0` moved inside the
-            //canvas, and that div had no listener - so both rows are dead, deliberately
-            const above = height + timelinePadding / 2
-            const below = height + timelinePadding + timelineHeight + timelinePadding / 2
-            expect(harness.pointerReachesNotesStage(x, above)).toBe(false)
-            expect(harness.pointerReachesTimelineStrip(x, above)).toBe(false)
-            expect(harness.pointerReachesNotesStage(x, below)).toBe(false)
-            expect(harness.pointerReachesTimelineStrip(x, below)).toBe(false)
+            expect(timelinePadding).toBe(0)
+            const firstTimelinePixel = height + 0.5
+            expect(harness.pointerReachesNotesStage(x, firstTimelinePixel)).toBe(false)
+            expect(harness.pointerReachesTimelineStrip(x, firstTimelinePixel)).toBe(true)
+            expect(canvasHeight).toBe(height + timelineHeight)
+            expect(harness.pointerReachesTimelineStrip(x, canvasHeight - 0.5)).toBe(true)
         } finally {
             harness.destroy()
         }
@@ -3553,7 +3574,7 @@ describe('which surface a pointer on the merged canvas reaches', () => {
             const y = height + timelinePadding + timelineHeight / 2
             //THE CLAIM: a press where a DOM button stands must not ALSO scrub the song. The button
             //itself swallows the press (pixi listens on the canvas element and the button is a DOM
-            //sibling over it), but the 3.2px seams between the three margin boxes fall through to
+            //sibling over it), but the 3.2px padding/gaps around the buttons fall through to
             //the canvas - and these bounds are what decline them.
             expect(harness.pointerReachesTimelineStrip(TIMELINE_INSET_LEFT - 1, y)).toBe(false)
             expect(harness.pointerReachesTimelineStrip(TIMELINE_INSET_LEFT, y)).toBe(true)
@@ -3584,13 +3605,13 @@ describe('which surface a pointer on the merged canvas reaches', () => {
         try {
             const {canvasWidth} = harness.geometry()
             const {strip, content} = harness.paintedScene().timeline
-            //the background roundRect is the strip's own extent - expectedTimeline compares it too,
+            //the background rect is the strip's own extent - expectedTimeline compares it too,
             //but only against a reference derived the same way, so this states it as a CLAIM
             const background = content[0]
             expect(background.kind).toBe('graphics')
             const rect = background.ops.find(
-                (op): op is [string, number, number, number, number, number] =>
-                    Array.isArray(op) && op[0] === 'roundRect'
+                (op): op is [string, number, number, number, number] =>
+                    Array.isArray(op) && op[0] === 'rect'
             )
             expect(strip.x).toBe(TIMELINE_INSET_LEFT)
             expect(rect?.[3]).toBe(canvasWidth - TIMELINE_INSET_LEFT - TIMELINE_INSET_RIGHT)
@@ -3603,11 +3624,8 @@ describe('which surface a pointer on the merged canvas reaches', () => {
             //toBeCloseTo and not toBe: 41.6 is not representable, so the subtraction lands a few
             //ulps off it. 10 decimals is far tighter than any real drift and far looser than that.
             expect(canvasWidth - rect![3] - strip.x).toBeCloseTo(41.6, 10)
-            //121.6px = 3 x 2.2rem of button + 5 x 0.2rem, at App.css's declared values. Four of
-            //those five are declared margins (two on the first button, one on the second, whose
-            //`margin-left` is zeroed inline, one trailing the third, whose `margin-left` is `auto`);
-            //the fifth is the clearance in front of the third button, which its auto margin creates
-            //rather than declares.
+            //121.6px = 3 x 2.2rem of button + 5 x 0.2rem, from the controls' two horizontal padding
+            //edges and its gaps: three spacers around the left pair, two around the right button.
             expect(TIMELINE_INSET_LEFT + TIMELINE_INSET_RIGHT).toBe(121.6)
         } finally {
             harness.destroy()
@@ -3626,9 +3644,8 @@ describe('which surface a pointer on the merged canvas reaches', () => {
             //buttons stand on and show through the 3.2px of bare canvas beside each button.
             const clip = harness.viewportClip()
             expect(clip.clipsTheOutline).toBe(true)
-            //the strip's own shape, corner radius included, so the outline is cut by the same arc
-            //the background bar is drawn with
-            expect(clip.ops[0]).toEqual(['roundRect', 0, 0, stripWidth, timelineHeight, 4.8])
+            //the strip's own rectangular shape, matching the background bar
+            expect(clip.ops[0]).toEqual(['rect', 0, 0, stripWidth, timelineHeight])
             //WHAT THIS CANNOT SEE: that pixi then stencils anything. jsdom has no GPU, and the fakes
             //record the mask rather than applying it - so this pins the wiring and the shape, and
             //the clipping itself rests on pixi's own StencilMask.
@@ -3910,7 +3927,7 @@ describe('the geometry the merged canvas reports', () => {
             const atInit = harness.geometryAtInit()
             expect(atInit.width).toBeGreaterThan(0)
             expect(atInit.height).toBeGreaterThan(0)
-            expect(atInit.timelinePadding).toBeGreaterThan(0)
+            expect(atInit.timelinePadding).toBe(0)
             expect(atInit.timelineHeight).toBeGreaterThan(0)
             //...and it is the geometry the settled renderer is actually showing, so it is a box the
             //buttons can be placed in rather than a first guess that then moves under them
@@ -4701,6 +4718,65 @@ describe('the smooth scroll', () => {
 })
 
 // ---------------------------------------------------------------------------------------------
+// THE STATIC TIMELINE MINIMAP.
+//
+// paintedScene intentionally describes the timeline overlays but not the raster contents of a
+// generated texture. These identity/timing rows cover the renderer half of that omitted surface:
+// generation yields across callbacks, playback freezes the installed sprite, and stopping resumes
+// only the latest pending state with one atomic swap/render.
+// ---------------------------------------------------------------------------------------------
+describe('the static timeline minimap', () => {
+    it('needs multiple fallback idle slices before the first sprite can appear', async () => {
+        const context = makeContext()
+        //Mount while playing: no generation may start, so this begins with no previous sprite.
+        const harness = await mount(context)
+        try {
+            expect(harness.timelineMinimapTexture()).toBeNull()
+            context.props.isPlaying = false
+            harness.push()
+
+            //100 columns across background, tail and head passes, against a hard 64-column slice
+            //cap: one callback cannot complete the 300-column job even if performance.now() is flat.
+            await vi.advanceTimersByTimeAsync(16)
+            expect(harness.timelineMinimapTexture()).toBeNull()
+            await vi.advanceTimersByTimeAsync(96)
+            expect(harness.timelineMinimapTexture()).not.toBeNull()
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    it('keeps the completed sprite frozen through playback and swaps once after stopping', async () => {
+        const context = makeContext()
+        context.props.isPlaying = false
+        const harness = await mount(context)
+        try {
+            const before = harness.timelineMinimapTexture()
+            expect(before).not.toBeNull()
+
+            context.props.isPlaying = true
+            harness.push()
+            context.song.addNoteAt(10, 0, idOf(14), 2)
+            harness.push()
+            const rendersAfterEdit = harness.renders()
+
+            await vi.advanceTimersByTimeAsync(1000)
+            expect(harness.timelineMinimapTexture()).toBe(before)
+            expect(harness.renders()).toBe(rendersAfterEdit)
+
+            context.props.isPlaying = false
+            harness.push()
+            const rendersBeforeIdleSwap = harness.renders()
+            await vi.advanceTimersByTimeAsync(112)
+            expect(harness.timelineMinimapTexture()).not.toBe(before)
+            expect(harness.renders() - rendersBeforeIdleSwap).toBe(1)
+        } finally {
+            harness.destroy()
+        }
+    })
+})
+
+// ---------------------------------------------------------------------------------------------
 // PART SIX: THE FRAME LOOP.
 //
 // Everything above reads what the renderer PAINTED. This reads how often it was asked to, which is
@@ -4913,6 +4989,10 @@ describe('the frame loop', () => {
             expect(harness.frameLoop().started).toBe(true)
             await vi.advanceTimersByTimeAsync(SCROLL_EASE_MS + 32)
             expect(harness.frameLoop().started).toBe(false)
+            //Stopping also releases the pending static minimap build. Let its bounded idle slices
+            //finish before taking the long-idle baseline; its one atomic swap/render is legitimate
+            //stopped work, not a frame loop left behind.
+            await vi.advanceTimersByTimeAsync(200)
             const after = {loop: harness.frameLoop(), renders: harness.renders()}
             await vi.advanceTimersByTimeAsync(1000)
             //a full second: no further rAF taken, no further emit, no further render

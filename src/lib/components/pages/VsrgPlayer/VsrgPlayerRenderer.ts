@@ -9,6 +9,7 @@
 // VsrgPlayerRendererState below); the callbacks are wired once at construction instead and never
 // change identity afterward.
 import { Application, Container, Sprite } from 'pixi.js';
+import { PIXI_RENDERER_PREFERENCE } from '$cmp/pixiRendererPreference';
 import { subscribeTheme } from '$core/theme/ThemeProvider.svelte';
 import type { Theme } from '$core/theme/ThemeProvider.svelte';
 import { keyBinds } from '$stores/KeybindsStore.svelte';
@@ -173,6 +174,7 @@ export class VsrgPlayerRenderer {
     const devicePixelRatio = window.devicePixelRatio ?? 1.4;
     this.app = new Application();
     await this.app.init({
+      preference: PIXI_RENDERER_PREFERENCE,
       width: this.sizes.rawWidth,
       height: this.sizes.rawHeight,
       backgroundAlpha: 0,

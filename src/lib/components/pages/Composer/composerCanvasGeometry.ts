@@ -30,53 +30,36 @@ const ROOT_FONT_SIZE = 16;
 
 /** `.timeline-button`'s `width: 2.2rem` in src/lib/css/App.css. */
 export const TIMELINE_BUTTON_SIZE = 2.2 * ROOT_FONT_SIZE;
-/** `.timeline-button`'s `margin: 0.2rem` in src/lib/css/App.css. */
+/** `.timeline-controls`'s `padding` and `gap`, both `0.2rem` in src/lib/css/App.css. */
 export const TIMELINE_BUTTON_MARGIN = 0.2 * ROOT_FONT_SIZE;
 
 /**
  * WHERE THE MINI-TIMELINE STRIP STARTS on the canvas, in px.
  *
  * The canvas spans the whole card, but the two previous/next-breakpoint buttons float over its left
- * end, so the strip is drawn clear of them instead of underneath them. This is their two margin
- * boxes end to end: margin + button + margin + button + margin. There is ONE 0.2rem between the two
- * buttons and not two because the second carries `margin-left: 0` inline (ComposerCanvas.svelte).
+ * end, so the strip is drawn clear of them instead of underneath them. This is the controls'
+ * leading padding + button + gap + button + trailing padding.
  */
 export const TIMELINE_INSET_LEFT = TIMELINE_BUTTON_MARGIN * 3 + TIMELINE_BUTTON_SIZE * 2;
 /**
- * WHERE THE STRIP ENDS: the band the add/remove-breakpoint button stands on, which is 0.2rem of
- * clearance before it, the 2.2rem button, and its own trailing 0.2rem margin.
+ * WHERE THE STRIP ENDS: the band the add/remove-breakpoint button stands on, which is the controls'
+ * 0.2rem gap before it, the 2.2rem button, and 0.2rem trailing padding.
  *
- * NOT that button's margin box, though it is the same width. It carries `margin-left: auto` inline
- * (ComposerCanvas.svelte), and an auto margin absorbs the flex row's whole free space - so its
- * margin box actually runs from TIMELINE_INSET_LEFT to the row's right edge and its BORDER box is
- * `[W - 38.4, W - 3.2]`. The leading 0.2rem here is the gap that leaves between the strip's right
- * end and the button, which is the same clearance the two left buttons get from their own margins.
+ * The button carries `margin-left: auto` inline (ComposerCanvas.svelte), which consumes the free
+ * space and leaves this fixed-size trailing band.
  */
 export const TIMELINE_INSET_RIGHT = TIMELINE_BUTTON_MARGIN * 2 + TIMELINE_BUTTON_SIZE;
 
 /**
- * The band of the app's own background colour above and below the mini-timeline strip, in px.
- *
- * It is `.timeline-wrapper-bg`'s `padding: 0.2rem 0` (src/lib/css/App.css before the timeline moved
- * into the notes canvas), which is why it is the same 0.2rem TIMELINE_BUTTON_MARGIN is: the buttons
- * are `height: 100%` of a row as tall as the strip with a 0.2rem margin, so their margin boxes
- * exactly fill this band top and bottom. NOTHING DRAWS IT: the Application clears to ThemeProvider's
- * `primary`, so the two rows come free from the clear. That is the same COLOUR `var(--primary)` gave
- * that div and not the same PIXELS - ThemeVars.svelte emits `--primary` with its alpha, while the
- * clear colour is `.rgb().rgbNumber()` with the alpha stripped and the whole canvas is then
- * composited at `max(primary.alpha, 0.8)` (ComposerRenderer.applyNotesCanvasOpacity). On the shipped
- * opaque themes the two are identical; on a translucent one - "Sky Music" at rgba(23,23,23,0.72) -
- * these rows come out at the canvas' 0.8 rather than at the theme's 0.72. ComposerCanvas.svelte puts
- * the `.timeline-controls` overlay at `top: height + timelinePadding` from the value this is
- * REPORTED as through onGeometryChange - an inline style on that div, not a declaration in App.css,
- * which carries only the overlay's flex layout - so the buttons and this constant cannot drift
- * apart.
- *
- * A pointer landing in either row reaches nothing: the strip's hitarea rejects it (local y outside
- * 0..timelineHeight) and the notes stage's rejects it (y > this.height). That is what pressing that
- * div's padding did before, and test/composerRenderer.test.ts has a row for it.
+ * There is no dead band around the mini-timeline any more. The former two 0.2rem padding rows are
+ * folded into composerTimelineHeight instead, so the minimap gains useful pitch resolution without
+ * making the composer taller. Kept as an exported geometry value because ComposerRenderer reports
+ * the split to ComposerCanvas.svelte and both sides must continue to use one formula.
  */
-export const TIMELINE_BAND_PADDING = 0.2 * ROOT_FONT_SIZE;
+export const TIMELINE_BAND_PADDING = 0;
+
+/** The two former 0.2rem padding rows, now part of the timeline's drawable height. */
+const RECLAIMED_TIMELINE_PADDING = TIMELINE_BUTTON_MARGIN * 2;
 
 /**
  * The canvas' size as a fraction of the body's, stated in the CSS units the placeholder is written
@@ -106,10 +89,10 @@ const PREVIEW_HEIGHT_FACTOR_WIDE = 0.6;
  * A UA check rather than a media query, and that is not reproducible in CSS: `is-mobile` matches a
  * user-agent regex, so a 1200px-wide Android tablet reports mobile and an iPad reports desktop. With
  * no `navigator` at all - which is the state a prerender runs in - it returns false, so the served
- * HTML carries the 30 and the first hydrated render carries the real value.
+ * HTML carries the 36.4px desktop value and hydration may replace it with 31.4px on mobile.
  */
 export function composerTimelineHeight(): number {
-  return isMobile() ? 25 : 30;
+  return (isMobile() ? 25 : 30) + RECLAIMED_TIMELINE_PADDING;
 }
 
 /**

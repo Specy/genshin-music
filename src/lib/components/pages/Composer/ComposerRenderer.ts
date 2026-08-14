@@ -24,10 +24,12 @@
 // or a toggleBreakpoint.
 import { game } from '$game';
 import { isMobile } from 'is-mobile';
+import type { ColorInstance } from 'color';
 import {
   Application,
   Container,
   Graphics,
+  Rectangle,
   Sprite,
   type FederatedPointerEvent,
   type Texture,
@@ -55,6 +57,11 @@ import {
   composerCanvasSize,
   composerTimelineHeight,
 } from './composerCanvasGeometry';
+import {
+  COMPOSER_TIMELINE_MINIMAP_CONFIG,
+  ComposerTimelineMinimapBuilder,
+} from './composerTimelineMinimap';
+import { PIXI_RENDERER_PREFERENCE } from '$cmp/pixiRendererPreference';
 
 const NOTES_PER_COLUMN = game.notes.perColumn;
 const COMPOSER_NOTE_POSITIONS = game.notes.composerPositions;
@@ -112,34 +119,13 @@ const PLAYHEAD_ARROW_LENGTH = 8;
  */
 const COMPOSER_MOTION_MAX_FPS = 48;
 
-/**
- * `.timeline-scroll`'s `border-radius: 0.3rem`, which the strip has to draw for itself now that no
- * DOM element sits under it.
- *
- * ONLY THE ROUNDING CAME ACROSS to the strip's CONTENT, not the `overflow: hidden` that element
- * carried beside it. The strip's background is a roundRect; nothing clips the content container, so
- * a tools selection anchored at column 0 fills the strip's two left corner wedges (~5px² each:
- * r²(1 - π/4) at r=4.8) square where that element used to cut them, and a breakpoint marker at
- * column 0 - anchored at 0.5, so half of it sits at negative strip x - is no longer cut by the arc
- * either. Those two are left unclipped deliberately: the fix is a stencil mask, which is a
- * batch-breaking push/pop on EVERY render, and the content container is the one that carries the
- * strip's hitArea, so masking it would also PRUNE hit testing (EventBoundary.hitPruneFn consults a
- * container's mask effect) and kill the clause that keeps a running scrub alive once the pointer
- * wanders off the strip.
- *
- * THE VIEWPORT OUTLINE IS CLIPPED, and that one is not optional. Since the strip was inset clear of
- * the three DOM buttons (TIMELINE_INSET_LEFT/RIGHT) its overflow no longer runs off the edge of the
- * canvas - it runs into the two bands those buttons stand on, which are visible canvas. The outline
- * overflows by design at both ends of every song (timelineViewport's x is negative for the first
- * half-canvas of columns), so at a 1920px viewport on a 100-column song at scroll 0 it would paint
- * its 3px strokes across the whole left band, showing through the 3.2px seams between the buttons.
- * viewportGraphics is a leaf with no hitArea and lives under an `interactiveChildren = false`
- * sibling, so masking IT prunes nothing - see initViewportClip.
- *
- * The residue, measured at that viewport: half of a 10px breakpoint marker at the song's first and
- * last column, of which 3.2px falls in a seam and the rest behind a button.
- */
-const TIMELINE_STRIP_RADIUS = 4.8;
+/** A breakpoint remains legible even when a long song makes one timeline column sub-pixel wide. */
+const TIMELINE_BREAKPOINT_MIN_WIDTH = 3;
+
+/** The exact colour source ComposerCache uses for breakpoint markers on the notes canvas. */
+function composerBreakpointMarkerColor(): ColorInstance {
+  return ThemeProvider.get('composer_accent').rotate(20).darken(0.5);
+}
 
 /**
  * How long the canvas takes to reach a column it was asked to ease to WHILE SMOOTH SCROLLING IS ON
@@ -295,6 +281,24 @@ interface ComposerRendererTheme {
    * are recoloured by the same call.
    */
   playhead: number;
+  /** Flat colours used by the tiny raster marks; alpha is applied per head/tail by the builder. */
+  minimap: {
+    current: number;
+    visible: number;
+  };
+}
+
+interface MinimapIdleDeadline {
+  timeRemaining(): number;
+}
+
+type MinimapIdleSchedule = { kind: 'idle'; id: number } | { kind: 'timeout'; id: number };
+
+interface TimelineMinimapBuild {
+  generation: number;
+  graphics: Graphics;
+  builder: ComposerTimelineMinimapBuilder;
+  readyToInstall: boolean;
 }
 
 // The reactive input ComposerCanvas.svelte pushes into update() on every relevant change via its
@@ -444,9 +448,9 @@ export interface ComposerRendererCallbacks {
   toggleBreakpoint: () => void;
   onGeometryChange: (geometry: {
     width: number;
-    /** the NOTES region's height - the canvas is this plus two padding rows plus timelineHeight */
+    /** the NOTES region's height - the canvas is this plus timelineHeight */
     height: number;
-    /** TIMELINE_BAND_PADDING: one row of it sits between the notes region and the strip */
+    /** Legacy split field, now zero because the former padding is part of timelineHeight. */
     timelinePadding: number;
     timelineHeight: number;
     hasCache: boolean;
@@ -832,8 +836,31 @@ export class ComposerRenderer {
   private readonly timelineStrip = new Container();
   private readonly timelineContentContainer = new Container();
   private readonly viewportGraphics = new Graphics();
+  /** The current background Graphics; the completed minimap sprite is nested under it. */
+  private timelineBackground: Graphics | null = null;
+  /** One static quad during ordinary rendering; replaced only after an idle build completes. */
+  private timelineMinimapSprite: Sprite | null = null;
+  private timelineMinimapTexture: Texture | null = null;
+  private timelineMinimapBuild: TimelineMinimapBuild | null = null;
+  private timelineMinimapSchedule: MinimapIdleSchedule | null = null;
+  private timelineMinimapGeneration = 0;
+  /** True when the latest visible-note state has not reached a completed sprite yet. */
+  private timelineMinimapPending = true;
+  /** Transport state seen by the minimap channel (its first update may have no previousState). */
+  private timelineMinimapWasPlaying: boolean;
+  /** Inputs of the latest requested build, including direct theme/resize invalidations. */
+  private timelineMinimapInputKey: {
+    columns: NoteColumn[];
+    structureVersion: number;
+    instruments: InstrumentData[];
+    currentLayer: number;
+    width: number;
+    height: number;
+    currentColor: number;
+    visibleColor: number;
+  } | null = null;
   /**
-   * THE STRIP'S `overflow: hidden`, for the one child that needs it - see TIMELINE_STRIP_RADIUS.
+   * THE STRIP'S `overflow: hidden`, for the one child that needs it.
    *
    * A SIBLING of viewportGraphics and not a child of it: the outline is MOVED every frame
    * (syncTimelineViewport writes its x and nothing else), and a mask parented to it would travel
@@ -937,6 +964,8 @@ export class ComposerRenderer {
    * too, and both catch up in the same repaint.)
    */
   private paintTailAccent: number;
+  /** Moves with the cache repaint so both canvas and timeline breakpoint markers always match. */
+  private paintBreakpointColor: number;
 
   /**
    * WHERE THE CANVAS IS SCROLLED TO, as a fractional column index: the column-space coordinate
@@ -1070,6 +1099,7 @@ export class ComposerRenderer {
     private readonly callbacks: ComposerRendererCallbacks
   ) {
     this.state = initialState;
+    this.timelineMinimapWasPlaying = initialState.isPlaying;
     this.scrollPosition = initialState.selected;
     // Seeded here as well as in update() because a renderer can paint a whole scene without ever
     // being handed a state: init() -> subscribeTheme -> recalculateCacheAndSizes -> draw().
@@ -1101,8 +1131,13 @@ export class ComposerRenderer {
       },
       tailAccent: ThemeProvider.get('accent').rgbNumber(),
       playhead: ThemeProvider.get('accent').rgbNumber(),
+      minimap: {
+        current: ThemeProvider.get('composer_main_layer').rgbNumber(),
+        visible: ThemeProvider.get('composer_secondary_layer').rgbNumber(),
+      },
     };
     this.paintTailAccent = this.theme.tailAccent;
+    this.paintBreakpointColor = composerBreakpointMarkerColor().rgb().rgbNumber();
   }
 
   // ComposerCanvas.svelte's onMount must await this before ever calling update().
@@ -1115,6 +1150,7 @@ export class ComposerRenderer {
 
     this.notesApp = new Application();
     await this.notesApp.init({
+      preference: PIXI_RENDERER_PREFERENCE,
       width: this.width,
       //the whole canvas: the notes region AND the band the mini-timeline sits in - see canvasHeight
       height: this.canvasHeight(),
@@ -1254,17 +1290,16 @@ export class ComposerRenderer {
    * this class wants `this.height`, which is the notes region and is what every note's y, every
    * tail, the cache's texture height, the playhead and the stage hitarea are stated against.
    *
-   * It comes to exactly the height the composer's canvas + timeline DIVs occupied before the merge
-   * (`.canvas-relative` + `.timeline-wrapper-bg`'s two 0.2rem padding rows + the strip), so the grid
-   * row around it does not reflow.
+   * It remains exactly the height the composer's canvas + timeline DIVs occupied before the merge:
+   * the former two 0.2rem padding rows have moved inside timelineHeight, so the grid does not reflow.
    */
   private canvasHeight(): number {
     return composerCanvasElementHeight(this.height, this.timelineHeight);
   }
 
   /**
-   * The strip's place on the canvas: directly under the notes region, one padding row down, and
-   * inset from the left by the two breakpoint buttons that float over the canvas there.
+   * The strip's place on the canvas: directly against the notes region, and inset from the left by
+   * the two breakpoint buttons that float over the canvas there.
    *
    * THE ONE WRITE THAT PUTS THE WHOLE SUBTREE IN STRIP-LOCAL COORDINATES. drawTimelineStage's
    * geometry, viewportGraphics' position and testTimelineHitarea's bounds are all written as
@@ -1275,11 +1310,13 @@ export class ComposerRenderer {
   private positionTimelineStrip(): void {
     this.timelineStrip.x = TIMELINE_INSET_LEFT;
     this.timelineStrip.y = this.height + TIMELINE_BAND_PADDING;
+    this.syncTimelineMinimapSpriteSize();
   }
 
   /**
-   * Attaches the clip that keeps the viewport outline inside the strip - see TIMELINE_STRIP_RADIUS
-   * for why the outline needs one and the rest of the strip does not.
+   * Attaches the clip that keeps the viewport outline inside the strip. The outline intentionally
+   * overflows at the first and last half-canvas of a song; without this clip it would draw through
+   * the gaps around the timeline buttons.
    *
    * ADDED TO THE STRIP AFTER the outline, so it neither renders (a mask is `includeInBuild = false`
    * while it is one) nor changes what draws over what. What it DOES change is hit testing on
@@ -1294,8 +1331,7 @@ export class ComposerRenderer {
   }
 
   /**
-   * The clip's shape, which is the strip's own: exactly what drawTimelineStage gives the background,
-   * corner radius included, so the outline is cut by the same arc the bar is drawn with.
+   * The clip's shape, which is the strip's own: exactly what drawTimelineStage gives the background.
    *
    * GATED ON THE SIZE HAVING MOVED. Only a resize or a theme change can change it, and rebuilding a
    * GraphicsContext per draw() would both dirty geometry no frame needs and put a `clear()` inside
@@ -1308,7 +1344,7 @@ export class ComposerRenderer {
     this.clipWidth = width;
     this.clipHeight = this.timelineHeight;
     this.viewportClip.clear();
-    this.viewportClip.roundRect(0, 0, width, this.timelineHeight, TIMELINE_STRIP_RADIUS);
+    this.viewportClip.rect(0, 0, width, this.timelineHeight);
     //a mask is read as coverage rather than as colour, so the fill's own colour never reaches a pixel
     this.viewportClip.fill({ color: 0xffffff });
   }
@@ -1327,9 +1363,15 @@ export class ComposerRenderer {
     return Math.max(1, this.width - TIMELINE_INSET_LEFT - TIMELINE_INSET_RIGHT);
   }
 
+  private syncTimelineMinimapSpriteSize(): void {
+    if (!this.timelineMinimapSprite) return;
+    this.timelineMinimapSprite.width = this.stripWidth();
+    this.timelineMinimapSprite.height = this.timelineHeight;
+  }
+
   /** One song column's width ON THE STRIP - the one statement timelineViewport() and draw() share. */
   private timelineColumnWidth(): number {
-    return this.stripWidth() / this.state.columns.length;
+    return this.stripWidth() / Math.max(1, this.state.columns.length);
   }
 
   /**
@@ -1415,7 +1457,14 @@ export class ComposerRenderer {
       this.notesApp.renderer.resize(width, this.canvasHeight());
       //...and the strip sits under the notes region, which has just moved
       this.positionTimelineStrip();
-      this.cache = this.generateCache(columnWidth, height, isMobile() ? 2 : 4, this.timelineHeight);
+      const breakpointColor = composerBreakpointMarkerColor();
+      this.cache = this.generateCache(
+        columnWidth,
+        height,
+        isMobile() ? 2 : 4,
+        this.timelineHeight,
+        breakpointColor
+      );
       // EVERY input to a pooled view changed here: the column geometry AND every texture it holds
       // (the old cache's textures are destroyed 500ms below, so a surviving pool would end up
       // pointing at destroyed GPU resources). Nothing in the state diff can see any of this - theme
@@ -1425,12 +1474,18 @@ export class ComposerRenderer {
       // ...and the accent the pool paints tails in moves here, with the repaint below, rather than
       // when handleThemeChange replaced this.theme - see the field.
       this.paintTailAccent = this.theme.tailAccent;
+      //The cache received this exact Color instance above; its notes-canvas marker and the timeline
+      //line therefore change to the same colour in the same repaint.
+      this.paintBreakpointColor = breakpointColor.rgb().rgbNumber();
       //the line spans the notes region's height and sits at its horizontal centre, so both of its
       //inputs just moved
       this.drawPlayhead();
       this.notifyGeometry();
       // draw() rebuilds and explicitly repaints the static scenes after cache regeneration.
       this.draw();
+      // Theme and dimensions both affect the raster. Keep the old sprite through the repaint and
+      // replace it later from idle time (or defer the job outright while playback is active).
+      this.invalidateTimelineMinimap();
       // QUIRK: destroying the previous cache is delayed 500ms after the new one is created -
       // destroying it immediately causes visible texture glitches (found empirically; root
       // cause not identified).
@@ -1444,7 +1499,8 @@ export class ComposerRenderer {
     columnWidth: number,
     height: number,
     margin: number,
-    timelineHeight: number
+    timelineHeight: number,
+    breakpointColor: ColorInstance
   ): ComposerCache | null {
     const colors = {
       l: ThemeProvider.get('primary'), //light
@@ -1460,7 +1516,7 @@ export class ComposerRenderer {
       timelineHeight,
       app: this.notesApp,
       colors: {
-        accent: ThemeProvider.get('composer_accent').rotate(20).darken(0.5),
+        accent: breakpointColor,
         mainLayer: ThemeProvider.get('composer_main_layer'),
         secondLayer: ThemeProvider.get('composer_secondary_layer'),
         bars: [
@@ -1471,6 +1527,205 @@ export class ComposerRenderer {
         ],
       },
     });
+  }
+
+  /**
+   * Mark the static note bitmap stale and start a latest-state build when transport is stopped.
+   * The old sprite is deliberately left attached until installTimelineMinimap swaps it atomically.
+   */
+  private invalidateTimelineMinimap(): void {
+    this.timelineMinimapPending = true;
+    this.cancelTimelineMinimapBuild();
+    this.timelineMinimapInputKey = {
+      columns: this.state.columns,
+      structureVersion: this.state.structureVersion,
+      instruments: this.state.instruments,
+      currentLayer: this.state.currentLayer,
+      width: this.stripWidth(),
+      height: this.timelineHeight,
+      currentColor: this.theme.minimap.current,
+      visibleColor: this.theme.minimap.visible,
+    };
+    const app = this.notesApp;
+    if (!app || this.state.isPlaying) return;
+
+    const graphics = new Graphics();
+    const builder = new ComposerTimelineMinimapBuilder(
+      {
+        columns: this.state.columns,
+        instruments: this.state.instruments,
+        currentLayer: this.state.currentLayer,
+        width: this.stripWidth(),
+        height: this.timelineHeight,
+        palette: this.theme.minimap,
+        showSustainTails: COMPOSER_TIMELINE_MINIMAP_CONFIG.showSustainTails,
+      },
+      {
+        rect: (x, y, width, height, style) => {
+          graphics.rect(x, y, width, height).fill(style);
+        },
+      }
+    );
+    const generation = this.timelineMinimapGeneration;
+    this.timelineMinimapBuild = { generation, graphics, builder, readyToInstall: false };
+    this.scheduleTimelineMinimapSlice(generation);
+  }
+
+  /** Pause/cancel obsolete work. A future job always receives a different generation token. */
+  private cancelTimelineMinimapBuild(): void {
+    this.timelineMinimapGeneration++;
+    const scheduled = this.timelineMinimapSchedule;
+    if (scheduled?.kind === 'idle' && typeof window.cancelIdleCallback === 'function') {
+      window.cancelIdleCallback(scheduled.id);
+    } else if (scheduled?.kind === 'timeout') {
+      window.clearTimeout(scheduled.id);
+    }
+    this.timelineMinimapSchedule = null;
+    this.timelineMinimapBuild?.graphics.destroy(true);
+    this.timelineMinimapBuild = null;
+  }
+
+  private scheduleTimelineMinimapSlice(generation: number): void {
+    if (typeof window.requestIdleCallback === 'function') {
+      const id = window.requestIdleCallback(
+        (deadline) => this.runTimelineMinimapSlice(generation, deadline),
+        { timeout: 250 }
+      );
+      this.timelineMinimapSchedule = { kind: 'idle', id };
+      return;
+    }
+    const id = window.setTimeout(() => {
+      const started = performance.now();
+      this.runTimelineMinimapSlice(generation, {
+        timeRemaining: () =>
+          Math.max(
+            0,
+            COMPOSER_TIMELINE_MINIMAP_CONFIG.sliceBudgetMs - (performance.now() - started)
+          ),
+      });
+    }, COMPOSER_TIMELINE_MINIMAP_CONFIG.fallbackDelayMs);
+    this.timelineMinimapSchedule = { kind: 'timeout', id };
+  }
+
+  private runTimelineMinimapSlice(generation: number, deadline: MinimapIdleDeadline): void {
+    this.timelineMinimapSchedule = null;
+    const build = this.timelineMinimapBuild;
+    if (!build || build.generation !== generation || generation !== this.timelineMinimapGeneration)
+      return;
+    if (this.state.isPlaying) {
+      this.timelineMinimapPending = true;
+      this.cancelTimelineMinimapBuild();
+      return;
+    }
+    // A drag, wheel settle or Coast owns responsiveness just as strongly as playback. Idle work is
+    // simply re-queued; no progress is lost and the old completed sprite remains visible.
+    if (this.motion.kind !== 'resting') {
+      this.scheduleTimelineMinimapSlice(generation);
+      return;
+    }
+
+    // Texture generation gets an idle callback of its own instead of sharing the last geometry
+    // slice. The upload is tiny (the strip is only ~32-36px tall), but yielding here keeps the two
+    // kinds of work from combining into one avoidable long task.
+    if (build.readyToInstall) {
+      this.installTimelineMinimap(build);
+      return;
+    }
+
+    const started = performance.now();
+    let columnsDrawn = 0;
+    let complete: boolean;
+    do {
+      complete = build.builder.drawNextColumn();
+      columnsDrawn++;
+      if (complete) break;
+    } while (
+      columnsDrawn < COMPOSER_TIMELINE_MINIMAP_CONFIG.maxColumnsPerIdleSlice &&
+      performance.now() - started < COMPOSER_TIMELINE_MINIMAP_CONFIG.sliceBudgetMs &&
+      deadline.timeRemaining() > 1
+    );
+
+    if (!complete) {
+      this.scheduleTimelineMinimapSlice(generation);
+      return;
+    }
+    build.readyToInstall = true;
+    this.scheduleTimelineMinimapSlice(generation);
+  }
+
+  private installTimelineMinimap(build: TimelineMinimapBuild) {
+    const app = this.notesApp;
+    if (
+      !app ||
+      this.state.isPlaying ||
+      this.timelineMinimapBuild !== build ||
+      build.generation !== this.timelineMinimapGeneration
+    ) {
+      this.timelineMinimapPending = true;
+      this.cancelTimelineMinimapBuild();
+      return;
+    }
+
+    const texture = app.renderer.generateTexture({
+      target: build.graphics,
+      resolution: Math.min(window.devicePixelRatio || 1, 2),
+      frame: new Rectangle(0, 0, this.stripWidth(), this.timelineHeight),
+      textureSourceOptions: { scaleMode: 'linear' },
+    });
+    build.graphics.destroy(true);
+    this.timelineMinimapBuild = null;
+
+    const sprite = new Sprite(texture);
+    sprite.eventMode = 'none';
+    const previousSprite = this.timelineMinimapSprite;
+    previousSprite?.parent?.removeChild(previousSprite);
+    previousSprite?.destroy();
+    this.timelineMinimapTexture?.destroy(true);
+    this.timelineMinimapSprite = sprite;
+    this.timelineMinimapTexture = texture;
+    this.syncTimelineMinimapSpriteSize();
+    this.timelineBackground?.addChild(sprite);
+    this.timelineMinimapPending = false;
+    // Completion happens while stopped/resting, outside the normal update path. One explicit render
+    // makes the atomic texture swap visible; playback never pays this render or its generation.
+    app.render();
+  }
+
+  private syncTimelineMinimapState(next: ComposerRendererState): void {
+    const wasPlaying = this.timelineMinimapWasPlaying;
+    this.timelineMinimapWasPlaying = next.isPlaying;
+    const key = this.timelineMinimapInputKey;
+    const invalidated =
+      key === null ||
+      key.columns !== next.columns ||
+      key.structureVersion !== next.structureVersion ||
+      key.instruments !== next.instruments ||
+      key.currentLayer !== next.currentLayer ||
+      key.width !== this.stripWidth() ||
+      key.height !== this.timelineHeight ||
+      key.currentColor !== this.theme.minimap.current ||
+      key.visibleColor !== this.theme.minimap.visible;
+
+    if (next.isPlaying) {
+      if (invalidated || this.timelineMinimapBuild) this.timelineMinimapPending = true;
+      if (this.timelineMinimapBuild || this.timelineMinimapSchedule)
+        this.cancelTimelineMinimapBuild();
+      return;
+    }
+    if (invalidated || (wasPlaying && this.timelineMinimapPending)) {
+      this.invalidateTimelineMinimap();
+    }
+  }
+
+  private destroyTimelineMinimap(): void {
+    this.cancelTimelineMinimapBuild();
+    this.timelineMinimapSprite?.parent?.removeChild(this.timelineMinimapSprite);
+    this.timelineMinimapSprite?.destroy();
+    this.timelineMinimapTexture?.destroy(true);
+    this.timelineMinimapSprite = null;
+    this.timelineMinimapTexture = null;
+    this.timelineMinimapPending = false;
+    this.timelineMinimapInputKey = null;
   }
 
   // The notes canvas' own CSS opacity, taken from the theme's background alpha. It is a DOM style
@@ -2012,9 +2267,9 @@ export class ComposerRenderer {
    * is gated is the WRITE: assigning `viewportGraphics.x` puts the Graphics into the stage render
    * group's childrenToUpdate, and the next render hands it to GraphicsPipe.updateRenderable ->
    * Batcher.updateElement, which sets the stage batcher dirty and makes BatcherPipe re-upload that
-   * batcher's whole attribute buffer - the playhead, the strip's background, its selection band, its
-   * breakpoint markers and this outline together. Skipping the write on a frame that would not have
-   * moved the outline by a whole pixel leaves the batcher clean and the buffer alone.
+   * batcher's whole attribute buffer - the playhead, the strip's background/minimap quad, its
+   * selection band, breakpoint lines and this outline together. Skipping a write until the outline
+   * has moved by a whole pixel leaves the batcher clean and the buffer alone.
    *
    * Before the two canvases were merged this gated a second Application's render() instead. What it
    * must NOT gate now is `notesApp.render()`, which is shared with the columns: those move several
@@ -2555,7 +2810,7 @@ export class ComposerRenderer {
    * for as long as an audio recording is running.
    *
    * THE `y` BOUND IS THE NOTES REGION and not the canvas, which is load-bearing now that the
-   * mini-timeline shares the canvas: `this.height` stops at the padding row above the strip, so a
+   * mini-timeline shares the canvas: `this.height` stops exactly where the strip starts, so a
    * timeline scrub's release does not also reach handleStageUp - which calls selectColumn WITHOUT
    * `ignoreAudio` and would sound a column on every scrub.
    *
@@ -2587,9 +2842,8 @@ export class ComposerRenderer {
    * which is precisely what this rejects - so a press anywhere in those two bands reaches no handler
    * at all, whether it lands on a button (which swallows it in the DOM) or on 3.2px of bare canvas
    * beside one (which falls through and is declined here, and by the notes stage on `y >
-   * this.height`). Bands rather than margin boxes: the right-hand button's `margin-left: auto` makes
-   * its margin box the whole `[TIMELINE_INSET_LEFT, width]` remainder, and 3.2px of the band it
-   * stands on is the clearance in front of it rather than a margin of its own.
+   * this.height`). The right-hand button's `margin-left: auto` consumes the row's free space, while
+   * the parent control row's gap and padding supply its fixed 3.2px clearances.
    */
   private testTimelineHitarea = {
     contains: (x: number, y: number) => {
@@ -2684,6 +2938,10 @@ export class ComposerRenderer {
       },
       tailAccent: ThemeProvider.get('accent').rgbNumber(),
       playhead: ThemeProvider.get('accent').rgbNumber(),
+      minimap: {
+        current: ThemeProvider.get('composer_main_layer').rgbNumber(),
+        visible: ThemeProvider.get('composer_secondary_layer').rgbNumber(),
+      },
     };
     this.recalculateCacheAndSizes();
     if (this.notesApp) this.notesApp.renderer.background.color = this.theme.main.background;
@@ -2744,6 +3002,9 @@ export class ComposerRenderer {
     //the LAST UPDATE, not the last paint - see the field for why the schedule needs the other one
     const previousUpdate = this.previousState;
     this.previousState = state;
+    // Content invalidation is independent from the immediate Pixi repaint diff. This schedules a
+    // latest-state static bitmap while stopped, or records that work as pending while playing.
+    this.syncTimelineMinimapState(state);
     this.syncScrollSchedule(previousUpdate, state);
     if (previous === null) return this.draw();
     const cacheData = this.cache?.cache;
@@ -3116,7 +3377,7 @@ export class ComposerRenderer {
     const viewport = this.timelineViewport();
 
     const painted = this.drawNotesStage(cacheData, sizes, this.containerX(), narrowed);
-    this.drawTimelineStage(cacheData, relativeColumnWidth, viewport.width, viewport.x);
+    this.drawTimelineStage(relativeColumnWidth, viewport.width, viewport.x);
     this.notesApp.render();
     //the gate's baseline moves with the exact x drawTimelineStage just wrote, or the next frame
     //would compare against a position two repaints old and skip a write the outline needs
@@ -3197,23 +3458,21 @@ export class ComposerRenderer {
    * into it - and reproducing that here would have meant reproducing a flex shrink in arithmetic.
    *
    * WHAT THE INSET BUYS: the buttons stand over dead canvas rather than over the strip, so the bar,
-   * the selection band and every breakpoint marker between the song's ends are drawn clear of them,
+   * the selection band and every breakpoint line are drawn clear of them,
    * and the strip's whole span is pressable, first and last column included (testTimelineHitarea
    * rejects exactly the two inset bands, so a press on a button or on a seam between two of them
-   * reaches no handler). What it costs: the whole song is compressed into 121.6px less width.
-   *
-   * WHAT STILL REACHES INTO THOSE BANDS, because nothing masks this container: the FIRST and LAST
-   * breakpoint markers, which are anchored at 0.5 on strip x 0 and stripWidth, so half of a 10px
-   * sprite falls outside - about 3.2px of it in the seam between two buttons and the rest behind
-   * one. See TIMELINE_STRIP_RADIUS for why that is left and why the viewport outline, which
-   * overflows by up to a whole canvas width, is masked instead.
+   * reaches no handler). What it costs: the whole song is compressed into 121.6px less width. The
+   * viewport outline alone can overflow that strip and is masked; see initViewportClip.
    */
   private drawTimelineStage(
-    cacheData: ComposerCacheData | undefined,
     relativeColumnWidth: number,
     timelineWidth: number,
     timelinePosition: number
   ) {
+    // The static bitmap belongs to the renderer rather than to this rebuilt container. Detach it
+    // before destroying the old background, then nest it under the new one in the same draw order.
+    this.timelineMinimapSprite?.parent?.removeChild(this.timelineMinimapSprite);
+    this.timelineBackground = null;
     for (const child of this.timelineContentContainer.removeChildren())
       child.destroy({ children: true });
     //the outline's clip is the strip's own shape, so it is re-cut wherever that shape is re-drawn
@@ -3224,40 +3483,45 @@ export class ComposerRenderer {
     // paint it. Gated on cacheData the way the content is, it was missing for the whole of
     // recalculateCacheAndSizes' 50ms debounce after every mount - draw() runs before then, from the
     // first update() - and the band showed the Application's clear colour instead.
-    //ROUNDED, because `.timeline-scroll`'s `border-radius: 0.3rem` used to round the strip's own
-    //element and there is no element under it any more - see TIMELINE_STRIP_RADIUS
     const background = new Graphics();
-    background.roundRect(0, 0, this.stripWidth(), this.timelineHeight, TIMELINE_STRIP_RADIUS);
+    background.rect(0, 0, this.stripWidth(), this.timelineHeight);
     background.fill({ color: this.theme.timeline.hexNumber });
+    this.timelineBackground = background;
+    if (this.timelineMinimapSprite) background.addChild(this.timelineMinimapSprite);
     this.timelineContentContainer.addChild(background);
 
-    // viewportGraphics below is drawn regardless of cacheData too - only the selection band and the
-    // breakpoint markers here are gated on it. The markers are cache TEXTURES; the band is gated
-    // beside them because the old timeline canvas drew neither before its first cache.
-    if (cacheData) {
-      if (this.state.selectedColumns.length) {
-        const first = this.state.selectedColumns[0] || 0;
-        const last = this.state.selectedColumns[this.state.selectedColumns.length - 1];
-        const x = first * relativeColumnWidth;
-        const xEnd = last * relativeColumnWidth;
-        const selectedRange = new Graphics();
-        selectedRange.rect(x, 0, xEnd - x, this.timelineHeight);
-        selectedRange.fill({ color: this.theme.timeline.selected, alpha: 0.6 });
-        this.timelineContentContainer.addChild(selectedRange);
-      }
+    if (this.state.selectedColumns.length) {
+      const first = this.state.selectedColumns[0] || 0;
+      const last = this.state.selectedColumns[this.state.selectedColumns.length - 1];
+      const x = first * relativeColumnWidth;
+      const xEnd = (last + 1) * relativeColumnWidth;
+      const selectedRange = new Graphics();
+      selectedRange.rect(x, 0, xEnd - x, this.timelineHeight);
+      selectedRange.fill({ color: this.theme.timeline.selected, alpha: 0.6 });
+      this.timelineContentContainer.addChild(selectedRange);
+    }
 
-      const breakpointsTexture = cacheData.breakpoints[0];
-      this.state.breakpoints.forEach((breakpoint) => {
-        const sprite = new Sprite(breakpointsTexture);
-        sprite.eventMode = 'passive';
-        sprite.anchor.set(0.5, 0);
-        // QUIRK: `columns.length - 1` here while every other timeline value divides by
-        // `columns.length` (see timelineColumnWidth()). Preserved verbatim - it is a pixel-level
-        // difference that predates the pool, and it is why a one-column song puts a breakpoint at
-        // NaN. Only the DIVIDEND moved to the strip's width with the inset.
-        sprite.x = (this.stripWidth() / (this.state.columns.length - 1)) * breakpoint;
-        this.timelineContentContainer.addChild(sprite);
-      });
+    if (this.state.breakpoints.length) {
+      const breakpointLines = new Graphics();
+      const breakpointWidth = Math.min(
+        Math.max(TIMELINE_BREAKPOINT_MIN_WIDTH, relativeColumnWidth),
+        this.stripWidth()
+      );
+      for (const breakpoint of this.state.breakpoints) {
+        // One coordinate system for every timeline element: a breakpoint marks the leading edge of
+        // its column, on the same width/columns scale the bitmap and viewport use. Its visual line
+        // is one timeline column wide with a three-pixel floor, so it does not disappear when a long
+        // song compresses columns below one pixel. The final few pixels are shifted left only when
+        // needed to stay inside the strip instead of drawing through the right-hand button band.
+        breakpointLines.rect(
+          Math.min(breakpoint * relativeColumnWidth, this.stripWidth() - breakpointWidth),
+          0,
+          breakpointWidth,
+          this.timelineHeight
+        );
+      }
+      breakpointLines.fill({ color: this.paintBreakpointColor, alpha: 1 });
+      this.timelineContentContainer.addChild(breakpointLines);
     }
 
     this.viewportGraphics.clear();
@@ -3290,6 +3554,7 @@ export class ComposerRenderer {
     // Before the Application goes: app.destroy({children: true}) only reaches what hangs off the
     // STAGE, and a released view is parked outside the scene graph entirely.
     this.dropColumnPool();
+    this.destroyTimelineMinimap();
     this.cache?.destroy();
     this.notesApp?.destroy(true, { children: true });
     this.notesApp = null;

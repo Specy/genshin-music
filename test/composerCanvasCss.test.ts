@@ -7,13 +7,13 @@
  *     it loads. composerCanvasGeometry emits that size as two custom properties and App.css maxes
  *     them against its original floors; this file evaluates THOSE DECLARATIONS, with those
  *     properties, and checks the result against the JS the renderer actually sizes itself with.
- *  2. `.timeline-button`'s `width: 2.2rem` / `margin: 0.2rem` vs TIMELINE_BUTTON_SIZE/MARGIN, which
- *     is what ComposerRenderer derives TIMELINE_INSET_LEFT/RIGHT from - the two ends of the canvas
- *     it holds the mini-timeline strip clear of, so that the buttons and the strip do not overlap.
+ *  2. `.timeline-button`'s `width: 2.2rem` and `.timeline-controls`'s `padding` / `gap: 0.2rem` vs
+ *     TIMELINE_BUTTON_SIZE/MARGIN, which is what ComposerRenderer derives TIMELINE_INSET_LEFT/RIGHT
+ *     from - the two ends of the canvas it holds the mini-timeline strip clear of.
  *  3. ComposerCanvas.svelte's own INLINE STYLES, which are the third link of both chains and were
  *     the one link nothing read. The stylesheet and the geometry module agreeing buys nothing if the
- *     component never puts the custom properties on the element, or if the two `margin-left`
- *     overrides that make the buttons' footprint 80px/41.6px are dropped in a refactor - both of
+ *     component never puts the custom properties on the element, or if the `margin-left: auto`
+ *     that makes the right button's footprint 41.6px is dropped in a refactor - both of
  *     which passed the entire suite before the reader below existed. Read as TEXT, because no test
  *     in this repo mounts a Svelte component.
  *
@@ -270,7 +270,7 @@ describe('the composer canvas placeholder and the size the renderer computes', (
     //genshin and sky's game.json `composerRowHeightScale`, and the desktop/mobile timeline heights.
     //Both are build- or UA-time values one run cannot vary on its own, so they are passed in.
     const ROW_HEIGHT_SCALES = [1, 0.95]
-    const TIMELINE_HEIGHTS = [30, 25]
+    const TIMELINE_HEIGHTS = [36.4, 31.4]
 
     for (const viewport of VIEWPORTS) {
         for (const rowHeightScale of ROW_HEIGHT_SCALES) {
@@ -358,7 +358,7 @@ describe('the composer canvas placeholder and the size the renderer computes', (
         //canvas element for good - a transparent strip under the mini-timeline inside the card - and
         //because the same value holds before AND after the canvas lands, the layout shift is 0.
         const context: CssContext = {viewportWidth: 2560, viewportHeight: 1440, vars: {}}
-        const css = composerCanvasCssSize({inPreview: false, rowHeightScale: 0.95, timelineHeight: 30})
+        const css = composerCanvasCssSize({inPreview: false, rowHeightScale: 0.95, timelineHeight: 36.4})
         if (!css) throw new Error('composerCanvasCssSize returned null outside preview')
         context.vars['--composer-canvas-height'] = css.height
         const js = composerCanvasSize({
@@ -367,7 +367,7 @@ describe('the composer canvas placeholder and the size the renderer computes', (
             inPreview: false,
             rowHeightScale: 0.95,
         })
-        const canvasHeight = composerCanvasElementHeight(js.height, 30)
+        const canvasHeight = composerCanvasElementHeight(js.height, 36.4)
         const placeholder = evaluateCss(wrapper.get('min-height')!, context)
         expect(placeholder).toBeCloseTo(0.45 * 1440 + 14, 6)
         expect(canvasHeight).toBeCloseTo(652.4, 6)
@@ -388,13 +388,16 @@ describe('the composer canvas placeholder and the size the renderer computes', (
 
 describe("the timeline buttons' declared size and the inset the strip is drawn at", () => {
     const button = declarationsOf('.timeline-button')
+    const controls = declarationsOf('.timeline-controls')
+    const separator = declarationsOf('.timeline-controls::before')
 
     it('App.css still declares the rem values composerCanvasGeometry converts', () => {
         //THE ONLY BRIDGE between the stylesheet and the pixi side. The renderer draws its strip
-        //inside `TIMELINE_INSET_LEFT..width - TIMELINE_INSET_RIGHT`, which is where these two
-        //declarations put the three buttons' margin boxes; edit either alone and they overlap.
+        //inside `TIMELINE_INSET_LEFT..width - TIMELINE_INSET_RIGHT`, which is where these
+        //declarations put the three buttons; edit either side alone and they overlap.
         expect(button.get('width')).toBe('2.2rem')
-        expect(button.get('margin')).toBe('0.2rem')
+        expect(controls.get('padding')).toBe('0.2rem')
+        expect(controls.get('gap')).toBe('0.2rem')
         //...at the 16px root font size composerCanvasGeometry assumes and states
         expect(TIMELINE_BUTTON_SIZE).toBe(2.2 * 16)
         expect(TIMELINE_BUTTON_MARGIN).toBe(0.2 * 16)
@@ -404,18 +407,22 @@ describe("the timeline buttons' declared size and the inset the strip is drawn a
     })
 
     it('the two insets are the two bands the three buttons stand on', () => {
-        //left: margin + button + margin + button + margin (the middle button carries
-        //`margin-left: 0` inline, so there is ONE margin between the two and not two)
+        //left: leading padding + button + gap + button + trailing padding
         expect(TIMELINE_INSET_LEFT).toBe(80)
-        //right: clearance + button + margin. Not that button's margin box, though it is the same
-        //width: `margin-left: auto` absorbs the row's whole free space, so its margin box runs from
-        //TIMELINE_INSET_LEFT to the right edge and the leading 0.2rem here is the gap the auto
-        //margin leaves in front of it rather than a declared margin.
+        //right: gap + button + trailing padding; `margin-left: auto` absorbs the free space before it
         expect(TIMELINE_INSET_RIGHT).toBe(41.6)
         expect(TIMELINE_INSET_LEFT + TIMELINE_INSET_RIGHT).toBe(121.6)
-        //the band above and below the strip is the same 0.2rem, which is why the buttons'
-        //`height: 100%` plus their vertical margins exactly fills it
-        expect(TIMELINE_BAND_PADDING).toBe(TIMELINE_BUTTON_MARGIN)
+        //No vertical dead band remains; its former 6.4px total is included in the timeline heights.
+        expect(TIMELINE_BAND_PADDING).toBe(0)
+        expect(36.4 - 30).toBeCloseTo(TIMELINE_BUTTON_MARGIN * 2, 6)
+    })
+
+    it('draws a dark full-width separator above the canvas and its opaque buttons', () => {
+        expect(separator.get('inset')).toBe('0 0 auto')
+        expect(separator.get('height')).toBe('1px')
+        expect(separator.get('z-index')).toBe('1')
+        expect(separator.get('background-color')).toBe('var(--primary-darken-10)')
+        expect(separator.get('pointer-events')).toBe('none')
     })
 })
 
@@ -443,13 +450,11 @@ describe('the inline styles in ComposerCanvas.svelte that both couplings actuall
         )
     })
 
-    it('gives the three timeline buttons exactly the margins the insets are derived from', () => {
-        //TIMELINE_INSET_LEFT is `MARGIN * 3 + SIZE * 2` and not `MARGIN * 4 + SIZE * 2` only because
-        //the middle button zeroes its left margin here, and TIMELINE_INSET_RIGHT is a band at the
-        //ROW'S RIGHT EDGE only because the third button's left margin is `auto`. Neither is declared
-        //in App.css, and dropping either passed the entire suite before this test: the first makes
-        //the left band 83.2px while the renderer still draws and hit-tests from 80, the second packs
-        //all three buttons at the left, over the strip's first 35.2px.
+    it('places the three timeline buttons in the bands the insets reserve', () => {
+        //Padding and gap establish the left band's fixed footprint. The third button's `auto`
+        //margin is the one inline position that matters: dropping it packs all three buttons at the
+        //left, over the strip's first 35.2px. The middle button's zero is retained but neutral now
+        //that spacing belongs to the parent rather than per-button margins.
         const controls = COMPOSER_CANVAS.slice(
             COMPOSER_CANVAS.indexOf('class="timeline-controls"')
         )

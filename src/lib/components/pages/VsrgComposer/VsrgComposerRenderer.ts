@@ -12,6 +12,7 @@ import {
   Rectangle,
   type FederatedPointerEvent,
 } from 'pixi.js';
+import { PIXI_RENDERER_PREFERENCE } from '$cmp/pixiRendererPreference';
 import { subscribeTheme } from '$core/theme/ThemeProvider.svelte';
 import type { Theme } from '$core/theme/ThemeProvider.svelte';
 import { t } from '$i18n/binding.svelte';
@@ -174,6 +175,7 @@ export class VsrgComposerRenderer {
 
     this.app = new Application();
     await this.app.init({
+      preference: PIXI_RENDERER_PREFERENCE,
       width: this.sizes.rawWidth,
       height: this.sizes.rawHeight,
       background: this.canvasColors.background_plain[1],
