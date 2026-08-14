@@ -562,7 +562,7 @@
             "insert_in_layer_n": "插入層 {{layer_number}}",
             "paste_all_layers": "貼上全部",
             "insert_all_layers": "插入全部",
-            "select_layer_description": "選擇突顯列中的所有音符或僅選擇當前層的音符",
+            "select_layer_description": "僅選擇當前層的音符",
             "delete_selected_columns": "刪除選定的列",
             "erase_all_selected_notes": "刪除所有選定的音符",
             "insert_copied_notes": "插入複製的音符",

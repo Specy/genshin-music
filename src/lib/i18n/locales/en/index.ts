@@ -681,8 +681,7 @@ export const i18n_en = {
       insert_in_layer_n: 'Insert in layer {{layer_number}}',
       paste_all_layers: 'Paste all',
       insert_all_layers: 'Insert all',
-      select_layer_description:
-        'Select all the notes in the highlighted columns or only the ones of the current layer',
+      select_layer_description: 'Select only the notes of the current layer',
       delete_selected_columns: 'Delete selected columns',
       erase_all_selected_notes: 'Erase all selected notes',
       insert_copied_notes: 'Insert copied notes',

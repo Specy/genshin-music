@@ -562,7 +562,7 @@
             "insert_in_layer_n": "レイヤー {{layer_number}} に挿入",
             "paste_all_layers": "すべてに貼り付け",
             "insert_all_layers": "すべてに挿入",
-            "select_layer_description": "ハイライト列内のすべてのノート、または現在のレイヤーのノートのみを選択",
+            "select_layer_description": "現在のレイヤーのノートのみを選択",
             "delete_selected_columns": "選択した列を削除",
             "erase_all_selected_notes": "すべての選択済みノートを削除",
             "insert_copied_notes": "コピーしたノートを挿入",

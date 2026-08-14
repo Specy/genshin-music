@@ -562,7 +562,7 @@
       "insert_in_layer_n": "Inserir na camada {{layer_number}}",
       "paste_all_layers": "Colar tudo",
       "insert_all_layers": "Inserir tudo",
-      "select_layer_description": "Seleciona todas as notas nas colunas destacadas ou apenas as da camada atual",
+      "select_layer_description": "Seleciona apenas as notas da camada atual",
       "delete_selected_columns": "Excluir colunas selecionadas",
       "erase_all_selected_notes": "Apagar todas as notas selecionadas",
       "insert_copied_notes": "Inserir notas copiadas",

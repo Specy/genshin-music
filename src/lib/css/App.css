@@ -2509,6 +2509,7 @@ select {
   bottom: -50vh;
   max-height: 45vh;
   min-width: 36vw;
+  min-height: 46vh;
   display: flex;
   margin-right: auto;
   margin-left: auto;
@@ -2533,9 +2534,10 @@ select {
 }
 
 .tools-right {
-  margin-left: 1rem;
-  padding-left: 1rem;
-  border-left: solid 2px var(--secondary);
+    margin-left: 0.6rem;
+    padding-left: 0.6rem;
+    border-left: solid 2px var(--secondary);
+    min-width: 10rem;
 }
 
 .tools-right .app-button {
@@ -2998,11 +3000,6 @@ select {
   .buttons-composer-wrapper,
   .buttons-composer-wrapper-right {
     flex: 1;
-  }
-
-  .tools-right {
-    padding-left: 0.6rem;
-    margin-left: 0.6rem;
   }
 
   .tools-visible {
