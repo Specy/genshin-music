@@ -8,6 +8,9 @@
     class?: ClassValue;
     onclick?: (e: MouseEvent) => void;
     children?: Snippet;
+    //rendered before the label; its presence is what tightens the left padding
+    //and adds the gap between the two (.app-button-with-icon in App.css)
+    icon?: Snippet;
     toggled?: boolean;
     disabled?: boolean;
     visible?: boolean;
@@ -29,6 +32,7 @@
     class: cls = '',
     cssVar,
     children,
+    icon,
     toggled = false,
     onclick,
     disabled = false,
@@ -50,12 +54,19 @@
 </script>
 
 <button
-  class={['app-button', cls, toggled && 'active', hasTooltip(tooltip)]}
+  class={[
+    'app-button',
+    icon && 'app-button-with-icon',
+    cls,
+    toggled && 'active',
+    hasTooltip(tooltip),
+  ]}
   style={computedStyle}
   aria-label={ariaLabel}
   {onclick}
   {disabled}
 >
+  {@render icon?.()}
   {@render children?.()}
   {#if tooltip}
     <Tooltip position={tooltipPosition}>

@@ -23,6 +23,7 @@
   import AppButton from '$cmp/inputs/AppButton.svelte';
   import Header from '$cmp/header/Header.svelte';
   import FilePicker, { type FileElement } from '$cmp/inputs/FilePicker.svelte';
+  import IconUpload from '~icons/fa6-solid/upload';
   import { fileService } from '$core/Services/FileService';
   import { logger } from '$stores/LoggerStore.svelte';
   import type { SerializedSong } from '$core/Songs/Song.svelte';
@@ -207,11 +208,6 @@
               {t('common:create_song')}
             </AppButton>
           </AppLink>
-          <FilePicker onPick={importSong} onError={importError} as="json" multiple={true}>
-            <AppButton>
-              {t('menu:import_song_sheet')}
-            </AppButton>
-          </FilePicker>
         </div>
         <SongMenu
           songs={songsStore.songs}
@@ -226,7 +222,18 @@
               onSongSelect,
             },
           }}
-        />
+        >
+          {#snippet importButton()}
+            <FilePicker onPick={importSong} onError={importError} as="json" multiple={true}>
+              <AppButton>
+                {#snippet icon()}
+                  <IconUpload />
+                {/snippet}
+                {t('menu:import_song_sheet')}
+              </AppButton>
+            </FilePicker>
+          {/snippet}
+        </SongMenu>
       </MenuPanel>
       <MenuPanel id="Settings">
         <SettingsPane {settings} onUpdate={onSettingsUpdate} />

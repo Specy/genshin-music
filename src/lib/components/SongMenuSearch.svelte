@@ -95,7 +95,7 @@
     padding: 0.5rem 1rem;
     border: none;
     background-color: transparent;
-    max-width: 8rem;
+    max-width: 6rem;
     outline: none;
   }
 </style>

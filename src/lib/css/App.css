@@ -146,6 +146,15 @@ input[type='number'] {
     filter 0.2s;
 }
 
+/* Only applied when AppButton is given an `icon` snippet: the icon sits closer
+   to the button's left edge than the label would, and the two need a gap. */
+.app-button-with-icon {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding-left: 0.5rem;
+}
+
 .icon-app-button {
   width: unset;
   min-width: unset;
@@ -855,6 +864,34 @@ a {
   padding: 0;
   max-width: 20rem;
   padding-left: 0.3rem;
+}
+
+/* Lives here rather than in SongMenu.svelte: that component is
+   generics-attributed and can't carry its own styles - see its top comment.
+   --create-folder-color is set inline to the same color the folders are
+   filled with, so the outline matches them under any theme. */
+.create-folder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  width: 100%;
+  margin: 0.4rem 0;
+  padding: 0.5rem;
+  border: solid 0.15rem var(--create-folder-color);
+  border-radius: 0.4rem;
+  background-color: transparent;
+  color: inherit;
+  font-family: inherit;
+  font-size: 1rem;
+  cursor: pointer;
+  transition:
+    background-color 0.2s,
+    filter 0.2s;
+}
+
+.create-folder:hover {
+  background-color: var(--create-folder-color);
 }
 
 @media only screen and (max-width: 920px) {

@@ -40,6 +40,7 @@
   import AppLink from '$cmp/AppLink.svelte';
   import AppButton from '$cmp/inputs/AppButton.svelte';
   import FilePicker, { type FileElement } from '$cmp/inputs/FilePicker.svelte';
+  import IconUpload from '~icons/fa6-solid/upload';
   import HelpTooltip from '$cmp/utility/HelpTooltip.svelte';
   import Tooltip from '$cmp/utility/Tooltip.svelte';
   import { hasTooltip } from '$cmp/utility/tooltip';
@@ -498,11 +499,6 @@
               {t('menu:compose_song')}
             </AppButton>
           </AppLink>
-          <FilePicker onPick={importSong} onError={jsonImportError} as="json" multiple={true}>
-            <AppButton>
-              {t('menu:import_song_sheet')}
-            </AppButton>
-          </FilePicker>
         </div>
         <SongMenu
           songs={songsStore.songs}
@@ -520,7 +516,18 @@
               renameSong: functions.renameSong,
             },
           }}
-        />
+        >
+          {#snippet importButton()}
+            <FilePicker onPick={importSong} onError={jsonImportError} as="json" multiple={true}>
+              <AppButton>
+                {#snippet icon()}
+                  <IconUpload />
+                {/snippet}
+                {t('menu:import_song_sheet')}
+              </AppButton>
+            </FilePicker>
+          {/snippet}
+        </SongMenu>
         <div
           style="margin-top:auto;padding-top:0.5rem;width:100%;display:flex;justify-content:flex-end"
         >
