@@ -562,7 +562,7 @@
       "insert_in_layer_n": "레이어{{layer_number}}번에 삽입하기",
       "paste_all_layers": "모든 레이어 붙여넣기",
       "insert_all_layers": "모든 레이어 삽입하기",
-      "select_layer_description": "선택된 열이나 현재 레이어의 모든 노트를 선택합니다",
+      "select_layer_description": "현재 레이어의 노트만 선택합니다",
       "delete_selected_columns": "선택된 열을 삭제하기",
       "erase_all_selected_notes": "선택된 열을 모두 삭제하기",
       "insert_copied_notes": "노트 삽입하기",

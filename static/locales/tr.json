@@ -562,7 +562,7 @@
             "insert_in_layer_n": "{{layer_number}}. katmana ekle",
             "paste_all_layers": "Tümünü yapıştır",
             "insert_all_layers": "Tümünü ekle",
-            "select_layer_description": "Vurgulanmış sütunlardaki tüm notaları seç veya geçerli katmandakileri seç",
+            "select_layer_description": "Yalnızca geçerli katmandaki notaları seç",
             "delete_selected_columns": "Seçili sütunu sil",
             "erase_all_selected_notes": "Tüm seçili notaları sil",
             "insert_copied_notes": "Kopyalanan notaları ekle",

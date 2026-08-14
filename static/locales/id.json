@@ -562,7 +562,7 @@
             "insert_in_layer_n": "Sisipkan di lapisan {{layer_number}}",
             "paste_all_layers": "Tempel semua",
             "insert_all_layers": "Sisipkan semua",
-            "select_layer_description": "Pilih semua note di kolom yang disorot atau hanya yang ada di lapisan saat ini",
+            "select_layer_description": "Pilih hanya note di lapisan saat ini",
             "delete_selected_columns": "Hapus kolom yang dipilih",
             "erase_all_selected_notes": "Hapus semua nada yang dipilih",
             "insert_copied_notes": "Sisipkan note yang disalin",
