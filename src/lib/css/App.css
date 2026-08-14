@@ -2942,7 +2942,7 @@ select {
   }
 }
 
-@media only screen and (max-width: 920px) {
+@media only screen and (max-width: 1000px) {
   .canvas-buttons {
     display: flex;
   }

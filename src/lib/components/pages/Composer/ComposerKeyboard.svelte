@@ -32,6 +32,7 @@
       handleClick: (note: ObservableNote) => void;
       handleNoteRelease: (note: ObservableNote) => void;
       handleNoteLongPress: (note: ObservableNote, anchor: HTMLElement) => void;
+      handleNoteDrag: (note: ObservableNote, deltaX: number) => void;
       startRecordingAudio: (override?: boolean) => void;
       selectColumnFromDirection: (direction: number) => void;
       handleTempoChanger: (tempoChanger: (typeof game.composer.tempoChangers)[number]) => void;
@@ -138,6 +139,7 @@
               clickAction={functions.handleClick}
               releaseAction={functions.handleNoteRelease}
               longPressAction={functions.handleNoteLongPress}
+              dragAction={functions.handleNoteDrag}
               held={data.heldButtons.has(i)}
             />
           {/if}
