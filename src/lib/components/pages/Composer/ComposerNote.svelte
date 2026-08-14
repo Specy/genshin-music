@@ -139,7 +139,7 @@
     <div class="layer-4-line"></div>
     {#if held}
       <div
-        style="position:absolute;bottom:6%;left:20%;right:20%;height:0.25rem;border-radius:0.2rem;background-color:var(--accent);pointer-events:none"
+        style="z-index:2;position:absolute;bottom:6%;left:20%;right:20%;height:0.25rem;border-radius:0.2rem;background-color:var(--accent);pointer-events:none"
       ></div>
     {/if}
     <div class={game.features.hasNoteFrame ? 'note-name' : 'note-name-sky'}>
