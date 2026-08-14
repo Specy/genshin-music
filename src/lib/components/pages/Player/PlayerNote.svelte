@@ -212,7 +212,7 @@
     {#if note.data.holdMs > 0 && !hideNote}
       <!-- practice hold hint: this note should be kept pressed -->
       <div
-        style="position:absolute;bottom:6%;left:20%;right:20%;height:0.25rem;border-radius:0.2rem;background-color:var(--accent);pointer-events:none"
+        style="z-index:2;position:absolute;bottom:6%;left:20%;right:20%;height:0.25rem;border-radius:0.2rem;background-color:var(--accent);pointer-events:none"
       ></div>
     {/if}
     <div class={game.notes.cssClasses.noteName} style="color:{textColor}">
