@@ -45,7 +45,7 @@
     type ShortcutListener,
   } from '$stores/KeybindsStore.svelte';
   import { registerLeaveHandler } from '$stores/navigationGuard.svelte';
-  import { calculateSongLength, delay, formatMs } from '$core/utils/Utilities';
+  import { calculateSongLength, clamp, delay, formatMs } from '$core/utils/Utilities';
 
   let {
     songId = null,
@@ -455,13 +455,36 @@
     trackIndex: number;
     id: number;
     anchor: HTMLElement;
+    /** Span when the popover opened — the origin the still-held finger's drag is measured from. */
+    spanAtOpen: number;
+    /** Horizontal travel worth one column, frozen at open time (see handleNoteDrag). */
+    dragStepPx: number;
   } | null = $state(null);
-  let notePress: {
-    id: number;
-    existedAtPress: boolean;
-    coveringStart: number | null;
-    longPressFired: boolean;
-  } | null = null;
+  // One press record PER BUTTON, not one for the whole keyboard: on touch two notes can be
+  // held at once, and only the ADD half of the gesture runs at pointerdown - removal and
+  // long-press are deferred to the release. A single slot let the second pointerdown
+  // overwrite the first finger's record, so neither release recognised its own press and
+  // tapping two selected notes together deselected NEITHER (one at a time worked, because
+  // each down/up pair completed before the next down).
+  // Keyed by Note Id, the same currency the three handlers already speak, so the id equality
+  // the release used to test by hand is now the map lookup itself. Two fingers on the SAME
+  // button still collapse to one record, which is the same single toggle they produced before.
+  // eslint-disable-next-line svelte/prefer-svelte-reactivity -- pointer-gesture bookkeeping, never read from the template
+  const notePresses = new Map<
+    number,
+    { existedAtPress: boolean; coveringStart: number | null; longPressFired: boolean }
+  >();
+
+  /**
+   * Drop every in-flight press. A record is only meaningful against the column and layer it
+   * was taken in - its deferred removal targets `song.selected` and `layer` as they are at
+   * RELEASE - so when either moves under a held finger the press is abandoned rather than
+   * applied to whatever is now selected. Same dismissal points as durationPopover, and the
+   * reason a stale record can never be consumed in a context it was not taken in.
+   */
+  function abandonNotePresses() {
+    notePresses.clear();
+  }
 
   function handleClick(note: ObservableNote) {
     //the clicked button's Note Id on the current layer's instrument - the one currency the
@@ -470,22 +493,23 @@
     playSound(layer, id);
     const covering = song.getSpanCovering(song.selected, layer, id);
     if (covering) {
-      notePress = {
-        id,
+      notePresses.set(id, {
         existedAtPress: false,
         coveringStart: covering.startColumn,
         longPressFired: false,
-      };
+      });
       return;
     }
     const existing = song.selectedColumn.findNote(layer, id);
     if (existing === null) {
       song.addNoteAt(song.selected, layer, id);
       handleAutoSave();
-      notePress = { id, existedAtPress: false, coveringStart: null, longPressFired: false };
-    } else {
-      notePress = { id, existedAtPress: true, coveringStart: null, longPressFired: false };
     }
+    notePresses.set(id, {
+      existedAtPress: existing !== null,
+      coveringStart: null,
+      longPressFired: false,
+    });
   }
 
   /** Physical-keyboard / MIDI note entry: no pointer gesture exists there, so toggling stays immediate (the pre-popover behavior), occupancy rule included. */
@@ -503,12 +527,15 @@
   }
 
   function handleNoteRelease(note: ObservableNote) {
-    const press = notePress;
-    notePress = null;
-    if (!press || press.longPressFired || press.id !== note.id) return;
+    const press = notePresses.get(note.id);
+    //fires twice per pointer (pointerup then pointerleave): the delete below consumes the
+    //record, so the second call misses and does nothing
+    if (!press) return;
+    notePresses.delete(note.id);
+    if (press.longPressFired) return;
     if (press.coveringStart !== null) return; //occupancy: covered buttons don't toggle
     if (press.existedAtPress) {
-      song.removeNoteAt(song.selected, layer, press.id);
+      song.removeNoteAt(song.selected, layer, note.id);
       handleAutoSave();
     }
   }
@@ -517,18 +544,50 @@
     //durations are only authorable on instruments that can actually sustain — long-press
     //does nothing on the others (the press still completes as a normal tap)
     if (!layers[layer]?.supportsSustain) return;
-    const press = notePress;
-    if (!press || press.id !== note.id) return;
+    const press = notePresses.get(note.id);
+    if (!press) return;
     press.longPressFired = true;
     const startColumn = press.coveringStart ?? song.selected;
-    if (!song.columns[startColumn]?.findNote(layer, press.id)) return;
+    const existing = song.columns[startColumn]?.findNote(layer, note.id);
+    if (!existing) return;
     addToHistory();
     durationPopover = {
       startColumn,
       trackIndex: layer,
-      id: press.id,
+      id: note.id,
       anchor,
+      spanAtOpen: existing.span,
+      //one column per HALF A KEY of travel: derived from the button that was pressed, so the
+      //gesture scales with the keyboard (whose size is viewport-relative) instead of carrying a
+      //device-specific pixel constant. Measured once — the anchor cannot resize mid-gesture, and
+      //this would otherwise be a layout read on every pointermove. The floor keeps the step
+      //usable if the rect comes back degenerate (0 on a hidden/unlaid-out button).
+      dragStepPx: Math.max(20, anchor.getBoundingClientRect().width / 2),
     };
+  }
+
+  /**
+   * Duration drag: the long press opens the popover, and the finger that opened it keeps
+   * editing — horizontal travel from the press origin sets the span, right to lengthen, left
+   * to shorten. ABSOLUTE (origin + delta), never accumulated, so a wander back to where it
+   * started restores the span it started at, and the clamps are the slider's own.
+   *
+   * The drag ends with the pointer, but the popover outlives it (spec §2 dismissal rules), so
+   * the slider is still there for what the finger could not reach.
+   */
+  function handleNoteDrag(note: ObservableNote, deltaX: number) {
+    const popover = durationPopover;
+    if (!popover || popover.id !== note.id) return;
+    const span = clamp(
+      popover.spanAtOpen + Math.round(deltaX / popover.dragStepPx),
+      1,
+      popoverMaxSpan
+    );
+    //setNoteSpan publishes unconditionally, and a drag is a stream of pointermoves that mostly
+    //land on the span already applied - without this every one of them would repaint the canvas
+    //and re-arm the autosave
+    if (span === popoverSpan) return;
+    setPopoverSpan(span);
   }
 
   // The SPAN NUMBER, never the note object. Identity trap: with cloning gone the ColumnNote is a
@@ -862,8 +921,13 @@
 
   function selectColumn(index: number, ignoreAudio?: boolean, delay?: number) {
     if (index < 0 || index > song.columns.length - 1) return;
-    //moving to another column dismisses the duration popover (spec §2 dismissal rules)
-    if (durationPopover !== null && index !== song.selected) durationPopover = null;
+    //moving to another column dismisses the duration popover (spec §2 dismissal rules) and
+    //abandons any held press, whose deferred edit was aimed at the column being left - this
+    //is also every playback tick, so a note held while the song plays stays as pressed
+    if (index !== song.selected) {
+      if (durationPopover !== null) durationPopover = null;
+      abandonNotePresses();
+    }
     song.selected = index;
     if (isToolsVisible && copiedColumns.length === 0) {
       // the clicked column only ever feeds the min/max below, which then replace the array
@@ -908,6 +972,7 @@
   function changeLayer(newLayer: number) {
     layer = newLayer;
     durationPopover = null;
+    abandonNotePresses();
   }
 
   function toggleTools() {
@@ -1251,6 +1316,7 @@
     functions={{
       handleClick,
       handleNoteRelease,
+      handleNoteDrag,
       handleNoteLongPress,
       startRecordingAudio,
       selectColumnFromDirection,

@@ -35,6 +35,7 @@
     clickAction,
     releaseAction,
     longPressAction,
+    dragAction,
     held = false,
     noteText,
     noteImage,
@@ -47,6 +48,8 @@
     releaseAction?: (data: ObservableNote) => void;
     /** Held ~450ms without release — opens the duration popover for this note, anchored to the button element (live element so the popover can follow resizes). */
     longPressAction?: (data: ObservableNote, anchor: HTMLElement) => void;
+    /** Pointer moved while the long press is still held — signed horizontal travel in px from where the press began. */
+    dragAction?: (data: ObservableNote, deltaX: number) => void;
     /** The current column is covered by this button's note span on the current layer. */
     held?: boolean;
     noteText: string;
@@ -56,19 +59,26 @@
   const LONG_PRESS_MS = 450;
   let longPressTimeout: ReturnType<typeof setTimeout> | 0 = 0;
   let buttonElement: HTMLButtonElement | undefined = $state();
+  //where the still-unreleased press began, and whether it has already turned into a long
+  //press — together they are what makes the moves below a duration drag rather than drift
+  let pressOriginX = 0;
+  let longPressFired = false;
 
   function startLongPress() {
     if (!longPressAction) return;
     clearTimeout(longPressTimeout);
     longPressTimeout = setTimeout(() => {
       longPressTimeout = 0;
-      if (buttonElement) longPressAction(data, buttonElement);
+      if (!buttonElement) return;
+      longPressFired = true;
+      longPressAction(data, buttonElement);
     }, LONG_PRESS_MS);
   }
 
   function endPress() {
     clearTimeout(longPressTimeout);
     longPressTimeout = 0;
+    longPressFired = false;
     releaseAction?.(data);
   }
 
@@ -95,8 +105,20 @@
   {@attach suppressNativeTouch}
   onpointerdown={(e) => {
     preventDefault(e);
+    //keep this pointer's moves and its release on THIS button once the finger/cursor wanders
+    //off it, which a duration drag immediately does: touch captures implicitly, mouse does not.
+    //Boundary events are held back until the capture is released, so `onpointerleave` below
+    //still ends the press — after the pointerup that already did, and it no-ops there.
+    buttonElement?.setPointerCapture(e.pointerId);
+    pressOriginX = e.clientX;
+    longPressFired = false;
     clickAction(data);
     startLongPress();
+  }}
+  onpointermove={(e) => {
+    //only once the long press has fired: before that the press is still a tap, and the
+    //keyboard is a surface fingers legitimately rest on
+    if (longPressFired) dragAction?.(data, e.clientX - pressOriginX);
   }}
   onpointerup={endPress}
   onpointerleave={endPress}
