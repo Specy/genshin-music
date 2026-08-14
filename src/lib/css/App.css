@@ -2534,10 +2534,10 @@ select {
 }
 
 .tools-right {
-    margin-left: 0.6rem;
-    padding-left: 0.6rem;
-    border-left: solid 2px var(--secondary);
-    min-width: 10rem;
+  margin-left: 0.6rem;
+  padding-left: 0.6rem;
+  border-left: solid 2px var(--secondary);
+  min-width: 10rem;
 }
 
 .tools-right .app-button {
