@@ -43,9 +43,10 @@
     data: ObservableNote;
     layer: LayerStatus;
     instrument: InstrumentName;
-    clickAction: (data: ObservableNote) => void;
+    /** Pointer pressed the button. The pointerId identifies the FINGER, which is what a held note is owned by. */
+    clickAction: (data: ObservableNote, pointerId: number) => void;
     /** Pointer released/left the button — completes the press gesture (short press). */
-    releaseAction?: (data: ObservableNote) => void;
+    releaseAction?: (data: ObservableNote, pointerId: number) => void;
     /** Held ~450ms without release — opens the duration popover for this note, anchored to the button element (live element so the popover can follow resizes). */
     longPressAction?: (data: ObservableNote, anchor: HTMLElement) => void;
     /** Pointer moved while the long press is still held — signed horizontal travel in px from where the press began. */
@@ -63,6 +64,8 @@
   //press — together they are what makes the moves below a duration drag rather than drift
   let pressOriginX = 0;
   let longPressFired = false;
+  /** The pointer currently pressing this button, if any — the gesture's owner (see endPress). */
+  let activePointerId: number | null = null;
 
   function startLongPress() {
     if (!longPressAction) return;
@@ -75,12 +78,26 @@
     }, LONG_PRESS_MS);
   }
 
-  function endPress() {
+  function endPress(pointerId: number) {
+    //Only the pointer that pressed may end the press. pointerleave fires for pointers that
+    //never pressed at all (a mouse merely crossing the button while a finger or a key holds
+    //this note), and that stray release used to cut the real holder's sound.
+    if (activePointerId !== pointerId) return;
+    activePointerId = null;
     clearTimeout(longPressTimeout);
     longPressTimeout = 0;
     longPressFired = false;
-    releaseAction?.(data);
+    releaseAction?.(data, pointerId);
   }
+
+  //A held note outlives the pointer events of a button that can be destroyed under it: the
+  //keyboard is swapped out wholesale while audio-recording, and re-created when the layer's
+  //instrument changes. No pointer event is delivered then, so the release has to come from here.
+  $effect(() => {
+    return () => {
+      if (activePointerId !== null) endPress(activePointerId);
+    };
+  });
 
   let colors = $state({
     note_background: ThemeProvider.get('note_background').desaturate(0.6).toString(),
@@ -109,20 +126,28 @@
     //off it, which a duration drag immediately does: touch captures implicitly, mouse does not.
     //Boundary events are held back until the capture is released, so `onpointerleave` below
     //still ends the press — after the pointerup that already did, and it no-ops there.
+    //A second pointer landing on a button someone is already holding takes it over — but the
+    //displaced one must be RELEASED first. Its own pointerup is about to be swallowed by the
+    //ownership guard in endPress, and with held notes refcounted per id (HeldNoteRegistry) a
+    //swallowed release is a voice that never stops and a span that keeps growing.
+    if (activePointerId !== null && activePointerId !== e.pointerId) endPress(activePointerId);
     buttonElement?.setPointerCapture(e.pointerId);
     pressOriginX = e.clientX;
     longPressFired = false;
-    clickAction(data);
+    activePointerId = e.pointerId;
+    clickAction(data, e.pointerId);
     startLongPress();
   }}
   onpointermove={(e) => {
     //only once the long press has fired: before that the press is still a tap, and the
     //keyboard is a surface fingers legitimately rest on
-    if (longPressFired) dragAction?.(data, e.clientX - pressOriginX);
+    if (longPressFired && activePointerId === e.pointerId) {
+      dragAction?.(data, e.clientX - pressOriginX);
+    }
   }}
-  onpointerup={endPress}
-  onpointerleave={endPress}
-  onpointercancel={endPress}
+  onpointerup={(e) => endPress(e.pointerId)}
+  onpointerleave={(e) => endPress(e.pointerId)}
+  onpointercancel={(e) => endPress(e.pointerId)}
   class="button-hitbox"
   oncontextmenu={preventDefault}
 >

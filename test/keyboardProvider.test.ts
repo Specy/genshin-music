@@ -72,7 +72,7 @@ describe('KeyboardProvider', () => {
         expect(listenerCb).not.toHaveBeenCalled()
     })
 
-    it('suppresses every handler and listener while a focused element is an <input>', () => {
+    it('suppresses every keyDOWN handler and listener while a focused element is a text field', () => {
         const input = document.createElement('input')
         document.body.appendChild(input)
         input.focus()
@@ -87,6 +87,46 @@ describe('KeyboardProvider', () => {
 
         expect(handlerCb).not.toHaveBeenCalled()
         expect(listenerCb).not.toHaveBeenCalled()
+    })
+
+    it('suppresses keydown in a <textarea> and a contenteditable too, not just <input>', () => {
+        const textarea = document.createElement('textarea')
+        const editable = document.createElement('div')
+        editable.setAttribute('contenteditable', 'true')
+        // jsdom derives isContentEditable from nothing, so state it outright
+        Object.defineProperty(editable, 'isContentEditable', {value: true})
+        document.body.append(textarea, editable)
+
+        const cb = vi.fn()
+        KeyboardProvider.listen(cb, {type: 'keydown'})
+
+        textarea.focus()
+        dispatchKey('KeyE')
+        editable.focus()
+        dispatchKey('KeyE')
+
+        expect(cb).not.toHaveBeenCalled()
+    })
+
+    /**
+     * The asymmetry hold-to-sustain depends on: typing must not PLAY notes, but a key released
+     * after focus moved into a text field still has to reach whoever is holding that note.
+     * Swallowing it leaves a looping sustaining instrument sounding with no way to stop it.
+     */
+    it('still delivers keyUP while a text field has focus, so a held note can be released', () => {
+        const input = document.createElement('input')
+        document.body.appendChild(input)
+        input.focus()
+
+        const handlerCb = vi.fn()
+        const listenerCb = vi.fn()
+        KeyboardProvider.register('KeyE', handlerCb, {type: 'keyup'})
+        KeyboardProvider.listen(listenerCb, {type: 'keyup'})
+
+        dispatchKey('KeyE', 'keyup')
+
+        expect(handlerCb).toHaveBeenCalledTimes(1)
+        expect(listenerCb).toHaveBeenCalledTimes(1)
     })
 
     it('listen() fans out to every keydown of the right type, regardless of code', () => {

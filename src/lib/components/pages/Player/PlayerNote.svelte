@@ -130,17 +130,32 @@
   //foreign shape laid over the keyboard - taken from the Shape this button is drawn in, the
   //same object the arrangement itself used.
   const ring = $derived(ringGeometry(shape.noteShape));
+
+  /** The pointer pressing this button, if any. */
+  let activePointerId: number | null = null;
+
+  /**
+   * Only the pointer that pressed may release. `pointerleave` fires for pointers that never
+   * pressed — a mouse merely crossing the keyboard — and that stray release used to close the
+   * recorded note and cut the sustain of a note being held by the PC keyboard or MIDI.
+   */
+  function endPointerPress(pointerId: number) {
+    if (activePointerId !== pointerId) return;
+    activePointerId = null;
+    handleRelease?.(note);
+  }
 </script>
 
 <button
   {@attach suppressNativeTouch}
   onpointerdown={(e) => {
     e.preventDefault();
+    activePointerId = e.pointerId;
     handleClick(note);
   }}
-  onpointerup={() => handleRelease?.(note)}
-  onpointerleave={() => handleRelease?.(note)}
-  onpointercancel={() => handleRelease?.(note)}
+  onpointerup={(e) => endPointerPress(e.pointerId)}
+  onpointerleave={(e) => endPointerPress(e.pointerId)}
+  onpointercancel={(e) => endPointerPress(e.pointerId)}
   oncontextmenu={preventDefault}
   class="button-hitbox-bigger"
 >

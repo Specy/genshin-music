@@ -26,7 +26,7 @@
   import { VsrgSong } from '$core/Songs/VsrgSong.svelte';
   import { Song, type SerializedSong } from '$core/Songs/Song.svelte';
   import { NoteLayer } from '$core/Songs/Layer';
-  import type { InstrumentData, NoteColumn } from '$core/Songs/SongClasses';
+  import type { ColumnNote, InstrumentData, NoteColumn } from '$core/Songs/SongClasses';
   import type { SettingUpdate, SettingVolumeUpdate } from '$core/types/SettingsPropriety';
   import type { ComposerSettingsDataType } from '$core/BaseSettings';
   import { MIDIProvider, type MIDIEvent } from '$lib/providers/MIDIProvider';
@@ -41,9 +41,12 @@
   import { asyncConfirm, asyncPrompt } from '$stores/AsyncPromptStore.svelte';
   import {
     createKeyboardListener,
+    createReleaseGuard,
     createShortcutListener,
     type ShortcutListener,
   } from '$stores/KeybindsStore.svelte';
+  import { HeldNoteRegistry, holderToken, midiHolderToken } from '$lib/audio/HeldNoteRegistry';
+  import { spanForHeldMs } from '$core/Songs/sustainQuantize';
   import { registerLeaveHandler } from '$stores/navigationGuard.svelte';
   import { calculateSongLength, clamp, delay, formatMs } from '$core/utils/Utilities';
 
@@ -111,9 +114,16 @@
     );
     const shortcutKeyboardListener = createKeyboardListener(
       'composer_shortcuts_keyboard',
-      handleKeyboardShortcut
+      handleKeyboardShortcut,
+      { onRelease: handleKeyboardRelease }
     );
-    cleanup.push(shortcutKeyboardListener, shortcutListener);
+    //a key-up that never arrives (alt-tab, tab hidden, iOS bfcache) would leave a looping
+    //sustaining voice sounding and its span growing for a key nobody is holding
+    cleanup.push(
+      shortcutKeyboardListener,
+      shortcutListener,
+      createReleaseGuard(endAllSustainRecordings)
+    );
     settings = loadedSettings;
     init(loadedSettings);
     broadcastChannel = window.BroadcastChannel
@@ -132,13 +142,18 @@
     }
     return () => {
       mounted = false;
+      endAllSustainRecordings();
       AudioProvider.clear();
       layers.forEach((instrument) => instrument.dispose());
       broadcastChannel?.close?.();
       isPlaying = false;
       cleanup.forEach((dispose) => dispose());
       KeyboardProvider.unregisterById('composer');
+      //the tempo-changer digits register under their own id — unregistering only 'composer'
+      //left one live handler set per mount, and they now share the page with held notes
+      KeyboardProvider.unregisterById('composer_keyboard');
       MIDIProvider.removeListener(handleMidi);
+      MIDIProvider.removeInputsListener(handleMidiInputsChange);
       if (AudioProvider.isRecording) AudioProvider.stopRecording();
       if (window.location.hostname !== 'localhost') {
         window.removeEventListener('beforeunload', handleUnload);
@@ -148,8 +163,12 @@
 
   async function init(loadedSettings: ComposerSettingsDataType) {
     await syncInstruments();
+    //the teardown above is synchronous, so an unmount during that await would run BEFORE these
+    //registrations and leave both listeners behind — one live set per fast mount/unmount
+    if (!mounted) return;
     AudioProvider.setReverb(loadedSettings.reverb.value);
     MIDIProvider.addListener(handleMidi);
+    MIDIProvider.addInputsListener(handleMidiInputsChange);
     game.composer.tempoChangers.forEach((tempoChanger, i) => {
       KeyboardProvider.registerNumber(
         (i + 1) as KeyboardNumber,
@@ -168,14 +187,33 @@
     }
   }
 
-  const handleKeyboardShortcut: ShortcutListener<'keyboard'> = ({ shortcut, event }) => {
+  const handleKeyboardShortcut: ShortcutListener<'keyboard'> = ({ shortcut, code, event }) => {
     if (event.repeat) return;
     const shouldEditKeyboard = isPlaying || event.shiftKey;
     if (shouldEditKeyboard) {
       const note = currentInstrument.getNoteFromCode(shortcut.name);
-      if (note !== null) toggleNoteImmediate(note);
+      if (note === null) return;
+      //the PHYSICAL key holds the note, not the shortcut name, so a keyboard LAYOUT change
+      //mid-hold cannot orphan the release (KeyboardEvent.code is layout-independent). Rebinding
+      //the key itself mid-hold still can: the key-up half only fires for keys that are bound.
+      if (startSustainRecording(holderToken('keyboard', code), note.id)) return;
+      toggleNoteImmediate(note);
     }
   };
+
+  /**
+   * Key-up half of hold-to-sustain. Deliberately NOT gated on `isPlaying || shiftKey` the way
+   * the down half is: that gate can flip while a key is down (playback ends under a held key),
+   * and releasing a holder that holds nothing is a no-op anyway.
+   */
+  const handleKeyboardRelease: ShortcutListener<'keyboard'> = ({ code }) => {
+    endSustainRecording(holderToken('keyboard', code));
+  };
+
+  /** A MIDI device appearing or vanishing mid-hold owes us no note-off — release only ITS notes. */
+  function handleMidiInputsChange() {
+    for (const { holder } of sustainRecordings.entriesOfSource('midi')) endSustainRecording(holder);
+  }
 
   const handleShortcut: ShortcutListener<'composer'> = ({ shortcut, event }) => {
     const wasPlaying = isPlaying;
@@ -225,6 +263,17 @@
 
   function handleMidi([eventType, note, velocity]: MIDIEvent) {
     if (!mounted) return;
+    //note-off, or the running-status alias for it (note-on at velocity 0). The note itself is
+    //not re-resolved: the holder token carries which press this ends, so an instrument swapped
+    //mid-hold still releases the note that was actually pressed. (The SLOT still comes from the
+    //live preset, so a preset edited mid-hold could still orphan a hold — only reachable from
+    //the keybinds page, which unmounts this surface.)
+    if (MIDIProvider.isNoteRelease(eventType, velocity)) {
+      MIDIProvider.getNotesOfMIDIevent(note).forEach((keyboardNote) => {
+        endSustainRecording(midiHolderToken(note, keyboardNote.index));
+      });
+      return;
+    }
     if (MIDIProvider.isDown(eventType) && velocity !== 0) {
       const keyboardNotes = MIDIProvider.getNotesOfMIDIevent(note);
       keyboardNotes.forEach((keyboardNote) => {
@@ -232,7 +281,9 @@
         //still Button-keyed by design); a preset can outlive a shorter instrument's note list,
         //so resolve the note object here and hand THAT on - never the raw slot number
         const pressed = currentInstrument.notes[keyboardNote.index];
-        if (pressed) toggleNoteImmediate(pressed);
+        if (!pressed) return;
+        if (startSustainRecording(midiHolderToken(note, keyboardNote.index), pressed.id)) return;
+        toggleNoteImmediate(pressed);
       });
       const shortcut = MIDIProvider.settings.shortcuts.find((e) => e.midi === note);
       if (!shortcut) return;
@@ -429,6 +480,20 @@
     }
   }
 
+  /**
+   * Attack a note and LEAVE IT SOUNDING until releaseNote — the live half of sustain recording.
+   * Same guards as playSound, but no durationMs and no delay: only the no-durationMs press is
+   * registered in the instrument's heldVoices, so it is the only one a release can ever reach,
+   * and a live press has no lookahead to honor (a voice scheduled into the future cannot be
+   * cancelled by a release, only faded out).
+   */
+  function playHeldSound(layer: number, id: number) {
+    const instrument = layers[layer];
+    if (!instrument || instrument.getNoteById(id) === null) return;
+    if (song.instruments[layer].muted) return;
+    instrument.pressNote(id, song.instruments[layer].pitch || settings.pitch.value);
+  }
+
   /** Real length in ms of columns [from, to) at the current bpm, honoring each column's tempo changer (same math and rounding as the playback tick). */
   function columnsDurationMs(from: number, to: number): number {
     const msPerBeat = 60000 / settings.bpm.value;
@@ -486,10 +551,142 @@
     notePresses.clear();
   }
 
-  function handleClick(note: ObservableNote) {
+  // ── live sustain recording (playing + a sustaining track = the keyboard is an instrument) ──
+  // Holding a key while the playhead walks records a DURATION: the note keeps sounding and its
+  // span is re-quantized from how long the key has actually been down. Every input feeds the
+  // same registry - pointer, PC keyboard, MIDI - because the note being held has nothing to do
+  // with which device is holding it, and a release must find its note however it was started.
+  type SustainRecording = {
+    /** Track the key was pressed on: the selected layer can move under a held key. */
+    trackIndex: number;
+    startColumn: number;
+    /**
+     * The note object this hold owns. IDENTITY, not coordinates: undo, paste, a column
+     * insert/remove or a song load can leave a DIFFERENT note answering the same
+     * (column, track, id) address, and setNoteSpan would lengthen that one just as happily.
+     */
+    note: ColumnNote;
+    /** Attack time - the hold clock the span is quantized against (see spanForHeldMs). */
+    pressedAt: number;
+    /** Whether this hold ever recorded more than its start column (drives autosave + the release). */
+    grew: boolean;
+  };
+  const sustainRecordings = new HeldNoteRegistry<SustainRecording>();
+
+  /**
+   * Start recording a held note, or report that this press is an ordinary tap.
+   *
+   * Capability comes from the instrument config (`supportsSustain`), never from which game is
+   * loaded. A button already covered by an earlier span obeys the occupancy rule, and a note
+   * that already carries a duration is left alone - re-quantizing it from this press would
+   * SHRINK an authored span back to what the finger has held so far.
+   */
+  function startSustainRecording(holder: string, id: number): boolean {
+    if (!isPlaying) return false;
+    if (!layers[layer]?.supportsSustain) return false;
+    if (sustainRecordings.isHolding(holder)) return true; //auto-repeat / duplicate note-on
+    if (song.getSpanCovering(song.selected, layer, id)) return false;
+    const startColumn = song.selected;
+    let note = song.selectedColumn.findNote(layer, id);
+    if (note === null) {
+      song.addNoteAt(startColumn, layer, id);
+      handleAutoSave();
+      note = song.columns[startColumn]?.findNote(layer, id) ?? null;
+    }
+    if (note === null) return false;
+    //A note that already carries a duration records too: the hold can only ever LENGTHEN it
+    //(see applySustainSpan), so re-playing an authored note over its own column is harmless,
+    //while refusing here would drop the press back onto the editing path - which deletes the
+    //note on release. Performing over your own long note must never erase it.
+    const pressed = sustainRecordings.press(holder, id, {
+      trackIndex: layer,
+      startColumn,
+      note,
+      pressedAt: Date.now(),
+      grew: false,
+    });
+    //null means this holder is already holding, which the guard above already returned for
+    if (!pressed) return true;
+    //only the first holder attacks: a second key on the same note joins the sounding voice
+    if (pressed.isFirstHolderOfId) playHeldSound(layer, id);
+    return true;
+  }
+
+  /**
+   * Re-quantize one recording against the clock. Returns 'stale' when the note it owns is no
+   * longer the note at its address, which is the signal to end the recording rather than write.
+   */
+  function applySustainSpan(
+    id: number,
+    recording: SustainRecording
+  ): 'stale' | 'unchanged' | 'grown' {
+    const current = song.columns[recording.startColumn]?.findNote(recording.trackIndex, id);
+    if (current !== recording.note) return 'stale';
+    //never past the playhead: a sustain cannot be recorded into the future
+    const held = spanForHeldMs(
+      Date.now() - recording.pressedAt,
+      song.selected - recording.startColumn + 1,
+      (offset) =>
+        columnsDurationMs(recording.startColumn + offset, recording.startColumn + offset + 1)
+    );
+    //A hold only ever LENGTHENS. The quantized value is re-derived from scratch on every tick,
+    //so without this floor anything that moves the playhead BACKWARDS under a held key -
+    //a wheel-up, a timeline click, a canvas drag, a MIDI previous_column - would shrink the
+    //playhead cap and rewrite the note shorter than what was already performed. It is also what
+    //makes re-playing an already-spanned note safe.
+    //...and never ask for more than the model would grant: setNoteSpan clamps to maxSpanAt but
+    //publishes either way, so an unclamped request past a later same-id note would repaint the
+    //canvas and invalidate the renderer's caches on every tick of the hold while changing nothing
+    const applied = Math.min(
+      Math.max(held, current.span),
+      song.maxSpanAt(recording.startColumn, recording.trackIndex, id)
+    );
+    if (applied === current.span) return 'unchanged';
+    song.setNoteSpan(recording.startColumn, recording.trackIndex, id, applied);
+    if (current.span > 1) recording.grew = true;
+    return 'grown';
+  }
+
+  /** The playhead moved: every still-held note re-quantizes against how long it has been down. */
+  function advanceSustainRecordings() {
+    for (const { holder, id, meta } of sustainRecordings.entries()) {
+      if (applySustainSpan(id, meta) === 'stale') endSustainRecording(holder);
+    }
+  }
+
+  /** End one hold: final quantization, then the voice stops if this was its last holder. */
+  function endSustainRecording(holder: string) {
+    const released = sustainRecordings.release(holder);
+    if (!released) return;
+    const { id, meta, isLastHolderOfId } = released;
+    applySustainSpan(id, meta);
+    if (isLastHolderOfId) layers[meta.trackIndex]?.releaseNote(id);
+    //one save per recorded sustain - the per-tick growth deliberately does not count changes
+    if (meta.grew) handleAutoSave();
+  }
+
+  function endAllSustainRecordings() {
+    for (const { holder } of sustainRecordings.entries()) endSustainRecording(holder);
+  }
+
+  // Ends every hold when the ground under it moves. Loading or creating a song replaces `song`,
+  // and an instrument edit, swap or removal replaces the Instrument a held voice belongs to —
+  // all of those write `song`/`layer`/`layers` directly instead of going through changeLayer,
+  // so hooking those call sites one by one would keep missing new ones. The note-identity check
+  // in applySustainSpan already refuses the WRITE; this is what releases the voice.
+  $effect(() => {
+    void song;
+    void layers[layer];
+    return endAllSustainRecordings;
+  });
+
+  function handleClick(note: ObservableNote, pointerId: number) {
     //the clicked button's Note Id on the current layer's instrument - the one currency the
     //song edits below and the audio engine both speak (ADR-0005)
     const id = note.id;
+    //while playing on a sustaining track the press is a PERFORMANCE, not an edit: it sounds
+    //its own held attack, records its duration, and never deletes on release
+    if (startSustainRecording(holderToken('pointer', pointerId), id)) return;
     playSound(layer, id);
     const covering = song.getSpanCovering(song.selected, layer, id);
     if (covering) {
@@ -526,7 +723,9 @@
     handleAutoSave();
   }
 
-  function handleNoteRelease(note: ObservableNote) {
+  function handleNoteRelease(note: ObservableNote, pointerId: number) {
+    //a recording press left no press record behind, so this is its only release path
+    endSustainRecording(holderToken('pointer', pointerId));
     const press = notePresses.get(note.id);
     //fires twice per pointer (pointerup then pointerleave): the delete below consumes the
     //record, so the second call misses and does nothing
@@ -541,6 +740,11 @@
   }
 
   function handleNoteLongPress(note: ObservableNote, anchor: HTMLElement) {
+    //while the song plays, holding a key MEANS recording a sustain - never "hand-edit this
+    //note's duration". Gated on isPlaying rather than on "is this note recording" so it holds
+    //at every tempo and for the holds that record nothing (covered buttons, already-spanned
+    //notes); a popover opened mid-playback was useless anyway, since the next tick dismisses it.
+    if (isPlaying) return;
     //durations are only authorable on instruments that can actually sustain — long-press
     //does nothing on the others (the press still completes as a normal tap)
     if (!layers[layer]?.supportsSustain) return;
@@ -816,8 +1020,14 @@
   async function togglePlay(override?: boolean): Promise<void> {
     const newState = typeof override === 'boolean' ? override : !isPlaying;
     isPlaying = newState;
-    //stopping playback releases voices still held from spanned notes
-    if (!isPlaying) layers.forEach((layer) => layer?.releaseAllNotes());
+    //stopping playback releases voices still held from spanned notes. Live recordings end
+    //FIRST, while their voices are still in heldVoices: each gets its normal release tail and
+    //its final quantization, instead of the blanket fade below silencing a note whose span
+    //would then keep growing for a key nobody can hear.
+    if (!isPlaying) {
+      endAllSustainRecordings();
+      layers.forEach((layer) => layer?.releaseAllNotes());
+    }
     if (isPlaying) {
       const lookahead = settings.lookaheadTime.value / 1000;
       selectColumn(song.selected, false, lookahead);
@@ -844,6 +1054,8 @@
       return togglePlay(false);
     }
     selectColumn(newIndex, false, errorDelay);
+    //after the playhead moved: a hold can only be worth columns the playhead has reached
+    advanceSustainRecordings();
   }
 
   /**
@@ -972,6 +1184,9 @@
   function changeLayer(newLayer: number) {
     layer = newLayer;
     durationPopover = null;
+    //the keys now belong to another instrument: each held note keeps the span it recorded and
+    //releases on the track that actually sounded it
+    endAllSustainRecordings();
     abandonNotePresses();
   }
 

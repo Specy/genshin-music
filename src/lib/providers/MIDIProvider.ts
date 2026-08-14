@@ -194,6 +194,14 @@ export class MIDIListener {
   isDown = (code: number) => {
     return code > 143 && code < 160;
   };
+  /**
+   * The two ways a keyboard says "note off": a real note-off, or the running-status alias every
+   * controller is allowed to send instead — a note-ON carrying velocity 0. A surface that only
+   * tests `isUp` misses the second and leaves the note held forever on those devices.
+   */
+  isNoteRelease = (code: number, velocity: number) => {
+    return this.isUp(code) || (this.isDown(code) && velocity === 0);
+  };
 
   addListener = (listener: MIDICallback) => {
     this.listeners.push(listener);
