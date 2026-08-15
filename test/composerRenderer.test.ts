@@ -835,6 +835,10 @@ function subGridPair(): {
 /** The canvas's own props - everything on the renderer state that is not read off the song. */
 interface Props {
     isPlaying: boolean
+    /** performance.now()-domain start of the selected playback column */
+    playbackColumnStartMs: number
+    /** unchanged for transport ticks; incremented for play/manual re-anchors */
+    playbackAnchorGeneration: number
     isRecordingAudio: boolean
     currentLayer: number
     beatMarks: number
@@ -892,6 +896,8 @@ function makeContext(): Context {
         song: makeSong(),
         props: {
             isPlaying: true,
+            playbackColumnStartMs: performance.now(),
+            playbackAnchorGeneration: 0,
             isRecordingAudio: false,
             currentLayer: 0,
             beatMarks: 3,
@@ -1236,6 +1242,8 @@ interface Harness {
     cancelPointer(): void
     /** Every selectColumn the renderer has asked for, in call order. */
     selectColumnCalls: {index: number, ignoreAudio?: boolean}[]
+    /** Gesture releases which must re-anchor playback even when they restate the same floor. */
+    forceAnchorCalls: number[]
     resize(body?: {width: number, height: number}): Promise<void>
     /**
      * The geometry as it stood the instant init() resolved - BEFORE the 50ms cache debounce, which
@@ -1356,6 +1364,8 @@ async function mount(context: Context = makeContext()): Promise<Harness> {
         columns: context.song.columns,
         structureVersion: context.song.structureVersion,
         isPlaying: context.props.isPlaying,
+        playbackColumnStartMs: context.props.playbackColumnStartMs,
+        playbackAnchorGeneration: context.props.playbackAnchorGeneration,
         isRecordingAudio: context.props.isRecordingAudio,
         instruments: context.song.instruments,
         selected: context.song.selected,
@@ -1376,9 +1386,11 @@ async function mount(context: Context = makeContext()): Promise<Harness> {
     let reportedPadding = 0
     let reportedTimelineHeight = 0
     const selectColumnCalls: {index: number, ignoreAudio?: boolean}[] = []
+    const forceAnchorCalls: number[] = []
     const renderer = new ComposerRenderer(canvasEl, state(), {
-        selectColumn: (index, ignoreAudio) => {
+        selectColumn: (index, ignoreAudio, forceAnchor) => {
             selectColumnCalls.push({index, ignoreAudio})
+            if (forceAnchor) forceAnchorCalls.push(index)
         },
         toggleBreakpoint: () => {},
         onGeometryChange: reported => {
@@ -1733,6 +1745,7 @@ async function mount(context: Context = makeContext()): Promise<Harness> {
             window.dispatchEvent(new Event('pointercancel'))
         },
         selectColumnCalls,
+        forceAnchorCalls,
         geometryAtInit: () => reportedAtInit,
         stripYAtInit: () => stripYAtInit,
         /**
@@ -4136,8 +4149,8 @@ function selectedColumnOf(harness: Harness): number {
 //  - the SCHEDULE being an absolute timeline rather than a chase. A glide that eased toward a
 //    target would pass a test that only checked the endpoints and be wrong in between, so the rows
 //    below read the position at fractions of a column and state where it belongs;
-//  - AUDIO-TRUTH: an update carrying `selected = i` means column i is SOUNDING - the transport
-//    starts its audio as the update lands - so the travel must start at the tick's own instant.
+//  - AUDIO-TRUTH: an update carrying `selected = i` carries the performance-clock instant at which
+//    its audio starts, so travel waits for a future anchor and catches up from a late callback.
 //    A hold or an offset at the start is invisible at the endpoints (the column is right either
 //    way) and puts the line out of time with the music for the whole song;
 //  - tempo changers, whose whole point here is that the speed changes with them;
@@ -4187,36 +4200,48 @@ describe('the smooth scroll', () => {
         return harness
     }
 
-    /** Press play: the update where isPlaying flips with `selected` where it already was. */
-    function startPlaying(harness: Harness) {
+    /** Press play: a fresh anchor whose selected column starts at the supplied performance time. */
+    function startPlaying(harness: Harness, startMs = performance.now()) {
+        harness.context.props.playbackAnchorGeneration += 1
+        harness.context.props.playbackColumnStartMs = startMs
         harness.context.props.isPlaying = true
         return harness.push()
     }
 
-    /** One playback tick: the transport's onSounding advancing `selected` by one, nothing else. */
-    function tick(harness: Harness) {
+    /** One transport advance: generation unchanged, with its audio-true boundary supplied. */
+    function tick(harness: Harness, startMs = performance.now()) {
+        harness.context.props.playbackColumnStartMs = startMs
         harness.context.song.selected += 1
         return harness.push()
     }
 
-    it("starts travelling the moment play lands, one column over that column's length", async () => {
+    /** A manual re-anchor: generation changes even when the numeric move is exactly +1. */
+    function jump(harness: Harness, selected: number, startMs = performance.now()) {
+        harness.context.props.playbackAnchorGeneration += 1
+        harness.context.props.playbackColumnStartMs = startMs
+        harness.context.song.selected = selected
+        return harness.push()
+    }
+
+    it("waits for a 50ms play anchor, then travels one column over that column's length", async () => {
         const harness = await mountGliding()
         try {
             expect(harness.scrollPosition()).toBe(SELECTED)
+            const startsAt = performance.now() + 50
             //pressing play schedules; it paints nothing, because nothing has moved yet
-            expect(startPlaying(harness).columnPaints).toBe(0)
+            expect(startPlaying(harness, startsAt).columnPaints).toBe(0)
             expect(harness.scrollPosition()).toBe(SELECTED)
 
-            //AUDIO-TRUTH. The update that flips isPlaying means column SELECTED is sounding NOW,
-            //so the very next frames find the line already under way - a playhead that held still
-            //after the press would spend that hold behind the music for the whole song.
-            await vi.advanceTimersByTimeAsync(32)
-            expect(harness.scrollPosition()).toBeGreaterThan(SELECTED)
+            //The UI state lands before the scheduled audio anchor. Frames taken inside that margin
+            //must leave the line at the column start rather than leading what the listener hears.
+            await vi.advanceTimersByTimeAsync(48)
+            expect(harness.scrollPosition()).toBe(SELECTED)
 
-            //...and it travels one whole column over one whole column's worth of time. Read at the
+            //Once the explicit boundary passes it travels one whole column over one whole column's
+            //worth of time. Read at the
             //halfway point rather than only at the ends: an ease, or a chase toward a target,
             //agrees at both ends and disagrees here.
-            await vi.advanceTimersByTimeAsync(WHOLE / 2 - 32)
+            await vi.advanceTimersByTimeAsync(WHOLE / 2 + 2)
             expectPosition(harness, SELECTED + 0.5, WHOLE)
 
             await vi.advanceTimersByTimeAsync(WHOLE / 2)
@@ -4322,26 +4347,20 @@ describe('the smooth scroll', () => {
         }
     })
 
-    it('truncates the segment a tick arrives EARLY inside, so the line does not lag the music', async () => {
+    it('catches up fractionally when a boundary callback reaches the renderer late', async () => {
         const harness = await mountGliding()
         try {
             startPlaying(harness)
-            //100ms EARLY relative to the previous segment's PREDICTED end. Segments are anchored
-            //on the instant their update LANDS while the boundaries ticks announce are
-            //audio-clock-exact, so a segment anchored late (a slow flush, a busy main thread)
-            //predicts an end past the true boundary and the next tick - on time - lands inside
-            //it. The real skew is flush-delay-sized; 100ms magnifies it to where a frame can
-            //read the difference.
-            await vi.advanceTimersByTimeAsync(WHOLE - 100)
-            tick(harness)
+            const boundary = performance.now() + WHOLE
+            //The audio boundary passes, but worker wake + Svelte delivery arrive 100ms later.
+            await vi.advanceTimersByTimeAsync(WHOLE + 100)
+            tick(harness, boundary)
 
-            //The new segment starts AT the tick, and the old one is cut back to end there.
-            //Without the cut the playhead would keep travelling through the previous column's
-            //remainder while the queue holds the new column's travel behind it, arriving at every
-            //boundary 100ms late for the rest of the song. Read one emitted frame after the tick:
-            //with the cut the line is already at or past the boundary the tick announced.
+            //On the next emitted frame the segment is already callback-lateness + frame-time into
+            //the selected column. Anchoring at callback arrival would be only one frame into it.
             await vi.advanceTimersByTimeAsync(32)
-            expect(harness.scrollPosition()).toBeGreaterThanOrEqual(SELECTED + 1)
+            const elapsed = performance.now() - boundary
+            expectPosition(harness, SELECTED + 1 + elapsed / WHOLE, WHOLE)
         } finally {
             harness.destroy()
         }
@@ -4593,8 +4612,7 @@ describe('the smooth scroll', () => {
             const EIGHTH = columnMs(0.125)
             for (let i = 0; i < 8; i++) {
                 await vi.advanceTimersByTimeAsync(EIGHTH)
-                harness.context.song.selected += 1
-                harness.push()
+                tick(harness)
             }
             expect(harness.context.song.selected).toBe(last)
             //let the last column's own travel finish: the playhead reaches the far boundary of
@@ -4618,22 +4636,21 @@ describe('the smooth scroll', () => {
         }
     })
 
-    it('snaps for a jump, and resumes gliding on the next tick', async () => {
+    it('snaps for a jump but waits for its exact future boundary before gliding', async () => {
         const harness = await mountGliding()
         try {
             startPlaying(harness)
             await vi.advanceTimersByTimeAsync(WHOLE / 2)
 
             //a breakpoint jump, a click, the wheel: `selected` moving by anything but one column
-            harness.context.song.selected = 60
-            harness.push()
+            const startsAt = performance.now() + 50
+            jump(harness, 60, startsAt)
             expect(harness.scrollPosition()).toBe(60)
 
-            //...and the jump re-anchors the SCHEDULE and not only the position: the playhead
-            //travels on through column 60 - the column now sounding - which it would stand still
-            //on for a whole column and then leap over if the next tick's segment were the only
-            //thing in the queue
-            await vi.advanceTimersByTimeAsync(WHOLE / 2)
+            //The target is immediate user feedback; movement through it starts with its audio.
+            await vi.advanceTimersByTimeAsync(48)
+            expect(harness.scrollPosition()).toBe(60)
+            await vi.advanceTimersByTimeAsync(WHOLE / 2 + 2)
             expectPosition(harness, 60.5, WHOLE)
             await vi.advanceTimersByTimeAsync(WHOLE / 2)
             expectPosition(harness, 61, WHOLE)
@@ -4648,6 +4665,27 @@ describe('the smooth scroll', () => {
             tick(harness)
             await vi.advanceTimersByTimeAsync(WHOLE / 2)
             expectPosition(harness, 61.5, WHOLE)
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    it('treats a generation-bumped manual +1 as a discontinuity, not a transport tick', async () => {
+        const harness = await mountGliding()
+        try {
+            startPlaying(harness)
+            await vi.advanceTimersByTimeAsync(WHOLE / 2)
+            expectPosition(harness, SELECTED + 0.5, WHOLE)
+
+            const startsAt = performance.now() + 50
+            jump(harness, SELECTED + 1, startsAt)
+            //Numeric delta alone would append to the old half-finished segment and leave the line
+            //there. The generation says this is an anchor, so it snaps to the requested column.
+            expect(harness.scrollPosition()).toBe(SELECTED + 1)
+            await vi.advanceTimersByTimeAsync(48)
+            expect(harness.scrollPosition()).toBe(SELECTED + 1)
+            await vi.advanceTimersByTimeAsync(WHOLE / 2 + 2)
+            expectPosition(harness, SELECTED + 1.5, WHOLE)
         } finally {
             harness.destroy()
         }
@@ -6020,6 +6058,8 @@ describe('manual scrolling', () => {
         context.props.isPlaying = false
         const harness = await mount(context)
         harness.push()
+        harness.context.props.playbackAnchorGeneration += 1
+        harness.context.props.playbackColumnStartMs = performance.now()
         harness.context.props.isPlaying = true
         harness.push()
         return harness
@@ -6095,6 +6135,7 @@ describe('manual scrolling', () => {
             //of a column the line ROUNDS to the next one - that rounding gap is the whole of
             //this row.
             await vi.advanceTimersByTimeAsync(WHOLE_COLUMN_MS)
+            harness.context.props.playbackColumnStartMs = performance.now()
             harness.context.song.selected = SELECTED + 1
             harness.push()
             await vi.advanceTimersByTimeAsync(WHOLE_COLUMN_MS * 0.7)
@@ -6127,18 +6168,20 @@ describe('manual scrolling', () => {
         const harness = await mount(context)
         try {
             harness.push()
+            harness.context.props.playbackAnchorGeneration += 1
+            harness.context.props.playbackColumnStartMs = performance.now()
             harness.context.props.isPlaying = true
             harness.push()
             await vi.advanceTimersByTimeAsync(60)
 
-            //BACKWARDS, so the move is unambiguously a jump: `selected` advancing by exactly one
-            //while playing is a playback TICK by definition, and the renderer cannot tell a wheel
-            //that produced one from the transport that would have
+            //BACKWARDS, so this row's move is visibly a jump even without the generation field.
             harness.wheelOverNotes(-100)
             expect(harness.selectColumnCalls).toEqual([{index: SELECTED - 1, ignoreAudio: true}])
             //the transport owns the position here, so the wheel moves `selected` and stops. The
             //update that produces is a discontinuity, which re-anchors the playhead on the new
             //column AT ONCE rather than easing the canvas toward music that has already jumped.
+            harness.context.props.playbackAnchorGeneration += 1
+            harness.context.props.playbackColumnStartMs = performance.now()
             harness.context.song.selected = SELECTED - 1
             harness.push()
             expect(harness.scrollPosition()).toBe(SELECTED - 1)
@@ -6659,6 +6702,8 @@ describe('the momentum coast', () => {
         const harness = await mount(context)
         try {
             harness.push()
+            harness.context.props.playbackAnchorGeneration += 1
+            harness.context.props.playbackColumnStartMs = performance.now()
             harness.context.props.isPlaying = true
             harness.push()
             //mid-glide, mid-column: the state a drag on a playing song actually starts from
@@ -6680,6 +6725,7 @@ describe('the momentum coast', () => {
             expect(harness.selectColumnCalls.slice(before)).toEqual([
                 {index: target, ignoreAudio: true},
             ])
+            expect(harness.forceAnchorCalls).toContain(target)
             await vi.advanceTimersByTimeAsync(SCROLL_EASE_MS + 32)
             expect(harness.scrollPosition()).toBe(target)
             //no publish stream followed - the landing would be ten columns on had this coasted
@@ -6687,7 +6733,9 @@ describe('the momentum coast', () => {
                 {index: target, ignoreAudio: true},
             ])
             //...and the transport takes the position back: the settle's flush is a discontinuity
-            //that re-anchors the glide, which departs at once - rules untouched
+            //that re-anchors the glide at its supplied boundary
+            harness.context.props.playbackAnchorGeneration += 1
+            harness.context.props.playbackColumnStartMs = performance.now()
             harness.context.song.selected = target
             harness.push()
             expect(harness.scrollPosition()).toBe(target)

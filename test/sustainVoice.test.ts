@@ -523,6 +523,29 @@ describe('Instrument sustain', () => {
         expect(created.sources[1].calls.some((c: Call) => c.method === 'stop')).toBe(false)
     })
 
+    it('caps already-sounding voices at 64 and steals the oldest for the 65th immediate voice', () => {
+        const {instrument, created, id} = sustainingInstrument()
+        for (let i = 0; i < 65; i++) {
+            // A duration makes these independent playback voices rather than same-key retriggers.
+            instrument.pressNote(id(0), 'C', {durationMs: 5000})
+        }
+
+        expect((instrument as any).activeVoices).toHaveLength(64)
+        expect(created.sources[0].calls).toContainEqual({method: 'stop', args: [undefined]})
+        expect(created.sources[1].calls).not.toContainEqual({method: 'stop', args: [undefined]})
+    })
+
+    it('drops disposed voices from both the active and held registries immediately', () => {
+        const {instrument, created, id} = sustainingInstrument()
+        instrument.pressNote(id(0), 'C')
+        expect((instrument as any).heldVoices.size).toBe(1)
+
+        created.sources[0].emitEnded()
+
+        expect((instrument as any).activeVoices).toHaveLength(0)
+        expect((instrument as any).heldVoices.size).toBe(0)
+    })
+
     it('same note on separate instrument instances has independent voice and release state', () => {
         const first = sustainingInstrument()
         const second = sustainingInstrument()
@@ -712,6 +735,48 @@ describe('Instrument committed scheduling', () => {
         expect(created.sources[0].calls).toContainEqual({method: 'start', args: [12]})
         // released at startedAt + durationMs, faded over `release` (0.3)
         expect(created.sources[0].calls).toContainEqual({method: 'stop', args: [12.5 + 0.3]})
+    })
+
+    it('does not spend the sounding-voice cap or steal audio while committing more than 64 future voices', () => {
+        const {instrument, created, id} = sustainingInstrument()
+        for (let i = 0; i < 65; i++) {
+            instrument.pressNote(id(0), 'C', {at: 11, durationMs: 500})
+        }
+
+        expect((instrument as any).activeVoices).toHaveLength(65)
+        expect(created.sources).toHaveLength(65)
+        expect(created.sources.every((source) =>
+            !source.calls.some((call: Call) => call.method === 'stop' && call.args[0] === undefined)
+        )).toBe(true)
+    })
+
+    it('a future same-id playback voice does not choke or replace the live held voice', () => {
+        const {instrument, created, id} = sustainingInstrument()
+        instrument.pressNote(id(0), 'C')
+        instrument.pressNote(id(0), 'C', {at: 11, durationMs: 500})
+
+        expect(created.sources[0].calls).not.toContainEqual({method: 'stop', args: [10.02]})
+        expect((instrument as any).heldVoices.get(id(0))).toBe((instrument as any).activeVoices[0])
+
+        instrument.releaseNote(id(0))
+        expect(created.sources[0].calls).toContainEqual({method: 'stop', args: [10.3]})
+        expect(created.sources[1].calls).not.toContainEqual({method: 'stop', args: [undefined]})
+    })
+
+    it('the audio-clock start boundary is already sounding and cannot be retracted', () => {
+        const sustain = sustainingInstrument()
+        sustain.instrument.pressNote(sustain.id(0), 'C', {at: 11, durationMs: 500})
+        ;(sustain.instrument.audioContext as any).currentTime = 11
+        sustain.instrument.cancelScheduledAfter(11)
+        expect(sustain.created.sources[0].calls)
+            .not.toContainEqual({method: 'stop', args: [undefined]})
+
+        const oneShot = oneShotInstrument()
+        oneShot.instrument.play(oneShot.id(0), 'C', 11)
+        ;(oneShot.context as any).currentTime = 11
+        oneShot.instrument.cancelScheduledAfter(11)
+        expect(oneShot.created.sources[0].calls)
+            .not.toContainEqual({method: 'stop', args: [undefined]})
     })
 
     it('cancelScheduledAfter retracts a committed-but-unstarted Voice and leaves a sounding one ringing', () => {

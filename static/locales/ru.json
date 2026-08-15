@@ -220,8 +220,6 @@
             "composer_smooth_scroll_description": "Во время воспроизведения холст плавно движется по колонкам, а не перескакивает к следующей, учитывая изменения темпа",
             "composer_sync_tabs": "Autoplay in all tabs (pc only)",
             "composer_sync_tabs_description": "Advanced feature, it syncs other browser tabs to all play at the same time",
-            "composer_lookahead_time": "Lookahead time",
-            "composer_lookahead_time_description": "How many milliseconds ahead the composer will look for notes to play, a higher value improves playback accuracy by reducing stutters, but feels less responsive",
             "player_instrument": "Инструмент",
             "player_instrument_description": "Основной музыкальный инструмент, который так же будет использован при записи мелодии",
             "player_pitch": "Высота",

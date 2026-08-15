@@ -105,7 +105,8 @@ export class Instrument {
    * Shape's Label Sets that button wears. Identity for every shipped (grid) Shape.
    */
   private slots: readonly number[] = [];
-  private static readonly MAX_VOICES = 32;
+  /** Maximum voices that are already sounding; future transport commits do not spend it early. */
+  private static readonly MAX_VOICES = 64;
   /**
    * How long after its start time a committed one-shot is kept registered, in seconds.
    * Mirrors Metronome's BEAT_RETENTION_S: only a one-shot that has not started yet can
@@ -331,18 +332,35 @@ export class Instrument {
     if (button === undefined) return null;
     const buffer = this.buffers[button];
     if (!buffer) return null;
+    const now = this.audioContext.currentTime;
+    const requestedAt = options?.at;
+    const scheduledAhead =
+      typeof requestedAt === 'number' && Number.isFinite(requestedAt) && requestedAt > now;
     //same-note live retrigger: choke the previous sustain quickly instead of
-    //layering its full release tail under the new attack. Scheduled Composer voices
-    //are not in heldVoices, so same-note polyphony across tracks remains independent.
-    const previous = this.heldVoices.get(id);
-    if (previous) {
-      this.heldVoices.delete(id);
-      previous.choke();
+    //layering its full release tail under the new attack. A future Composer commit
+    //must not choke what the player is hearing NOW merely because it was scheduled
+    //early; scheduled song voices also stay out of heldVoices below.
+    if (!scheduledAhead) {
+      const previous = this.heldVoices.get(id);
+      if (previous) {
+        this.heldVoices.delete(id);
+        if (!previous.isDisposed) previous.choke();
+      }
     }
     this.pruneVoices();
-    if (this.activeVoices.length >= Instrument.MAX_VOICES) {
-      //oldest-first stealing keeps the newest notes audible on constrained devices
-      this.activeVoices.shift()?.stop();
+    if (!scheduledAhead) {
+      let soundingCount = this.activeVoices.reduce(
+        (count, voice) => count + (voice.startedAt <= now ? 1 : 0),
+        0
+      );
+      while (soundingCount >= Instrument.MAX_VOICES) {
+        const oldestSounding = this.activeVoices.findIndex((voice) => voice.startedAt <= now);
+        if (oldestSounding === -1) break;
+        // Oldest-first stealing keeps the newest notes audible. Committed future
+        // voices neither trigger a present-time cut nor consume the sounding cap.
+        this.activeVoices[oldestSounding].stop();
+        soundingCount--;
+      }
     }
     const voice = new Voice({
       context: this.audioContext,
@@ -356,6 +374,7 @@ export class Instrument {
       crossfade: sustain.crossfade,
       at: options?.at,
       skip: options?.skipMs !== undefined ? options.skipMs / 1000 : undefined,
+      onDispose: this.forgetVoice,
     });
     this.activeVoices.push(voice);
     if (options?.durationMs !== undefined) {
@@ -407,8 +426,11 @@ export class Instrument {
   /** Release everything sounding, live and scheduled — ramped (playback stop) or hard (teardown). */
   releaseAllNotes = (hard = false) => {
     this.heldVoices.clear();
-    this.activeVoices.forEach((voice) => (hard ? voice.stop() : voice.fadeOut()));
+    // Clear ownership before stopping: hard stop invokes the per-voice dispose callback,
+    // which must not splice the array while this traversal is in progress.
+    const voices = this.activeVoices;
     this.activeVoices = [];
+    voices.forEach((voice) => (hard ? voice.stop() : voice.fadeOut()));
   };
 
   /**
@@ -421,11 +443,12 @@ export class Instrument {
    */
   cancelScheduledAfter = (at: number) => {
     if (!this.audioContext) return;
-    // Clamped so a cutoff already in the past can never cut audio that is sounding.
-    const cutoff = Math.max(at, this.audioContext.currentTime);
+    const now = this.audioContext.currentTime;
     const keptOneShots: ScheduledOneShot[] = [];
     for (const entry of this.scheduledOneShots) {
-      if (entry.at >= cutoff) {
+      // Equality with `now` is already sounding: currentTime is the audio renderer's
+      // authoritative boundary, so only a strictly-future event remains retractable.
+      if (entry.at > now && entry.at >= at) {
         // Safe: entries are pushed only after start() was called on them — stop() on a
         // never-started source throws InvalidStateError.
         entry.source.stop();
@@ -436,10 +459,12 @@ export class Instrument {
     }
     this.scheduledOneShots = keptOneShots;
     const keptVoices: Voice[] = [];
-    for (const voice of this.activeVoices) {
+    // stop() synchronously invokes forgetVoice; iterate a snapshot so adjacent future
+    // voices cannot be skipped as that callback removes them from the live registry.
+    for (const voice of [...this.activeVoices]) {
       // Pre-start Voice.stop() is silent teardown, never a mid-waveform cut — the
       // source has not produced a sample yet (see Voice's fadeOut/stopSource).
-      if (voice.startedAt >= cutoff) voice.stop();
+      if (voice.startedAt > now && voice.startedAt >= at) voice.stop();
       else keptVoices.push(voice);
     }
     this.activeVoices = keptVoices;
@@ -449,6 +474,18 @@ export class Instrument {
     // A voice with a future release scheduled is still sounding and must continue to
     // count toward the cap (and remain available to releaseAllNotes on stop/blur).
     this.activeVoices = this.activeVoices.filter((voice) => !voice.isDisposed);
+    for (const [id, voice] of this.heldVoices) {
+      if (voice.isDisposed) this.heldVoices.delete(id);
+    }
+  };
+
+  /** Remove every registry reference as soon as a Voice reaches terminal teardown. */
+  private forgetVoice = (voice: Voice) => {
+    const index = this.activeVoices.indexOf(voice);
+    if (index !== -1) this.activeVoices.splice(index, 1);
+    for (const [id, held] of this.heldVoices) {
+      if (held === voice) this.heldVoices.delete(id);
+    }
   };
 
   /** Bake each sustained note's loop-boundary crossfade into its decoded buffer (see loopCrossfade.ts). */

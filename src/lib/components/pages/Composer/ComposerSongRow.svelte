@@ -44,8 +44,13 @@
   //the null guard matters: an unsaved song's id is null, and so is a storable row's in theory
   const isCurrent = $derived(currentSongId !== null && data.id === currentSongId);
 
-  async function openInComposer() {
+  async function openInComposer(event: MouseEvent | KeyboardEvent) {
     if (isRenaming) return;
+    //The menu is hidden after a successful selection, but its DOM stays mounted. Release the row's
+    //role-button focus synchronously, before the song lookup's await, so keyboard focus cannot remain
+    //parked on an invisible menu item. currentTarget is the role-button for both its click and the
+    //explicit Enter/Space keyboard activation below.
+    if (event.currentTarget instanceof HTMLElement) event.currentTarget.blur();
     logger.showPill(t('logs:loading_song'));
     const song = await songService.getOneSerializedFromStorable(data);
     logger.hidePill();
@@ -57,7 +62,7 @@
   function handleNameKeydown(e: KeyboardEvent) {
     if (e.key !== 'Enter' && e.key !== ' ') return;
     e.preventDefault();
-    openInComposer();
+    void openInComposer(e);
   }
 
   function toggleRename() {

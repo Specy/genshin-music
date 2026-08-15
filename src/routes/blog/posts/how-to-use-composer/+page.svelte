@@ -175,6 +175,10 @@
         href="/blog/connect-midi-device">connect MIDI device</AppLink
       > guide.
     </li>
+    <li>
+      <b class="blog-b">Change app theme</b>: Opens the theme picker so you can change the colors
+      and background used by the composer and the rest of the app.
+    </li>
   </ol>
   <BlogImage src="{base}/assets/blog/help-composer-5.webp" alt="Instrument settings" />
   <p class="blog-p">

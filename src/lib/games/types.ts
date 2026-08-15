@@ -398,9 +398,6 @@ export interface GameDefinition {
     // animation. When false (Sky), notes have no frame and Zen uses a flip
     // animation. Refs: PlayerNote, BaseNote, ComposerNote, ZenNote.
     hasNoteFrame: boolean;
-    // Exports/backs-up songs via `toOldFormat()` (pre-versioned Sky format) on
-    // download instead of `serialize()`. Refs: PlayerMenu, composer, error page.
-    downloadsSongsInOldFormat: boolean;
   };
 
   // ── i18n ──────────────────────────────────────────────────────────────────

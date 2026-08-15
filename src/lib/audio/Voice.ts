@@ -51,6 +51,8 @@ export type VoiceOptions = {
    * mid-waveform amplitude would click.
    */
   skip?: number;
+  /** Notify the owning Instrument when this voice has fully torn down. */
+  onDispose?: (voice: Voice) => void;
 };
 
 export class Voice {
@@ -66,6 +68,7 @@ export class Voice {
   private readonly crossfadeS: number;
   private releaseSource: AudioBufferSourceNode | null = null;
   private releaseGain: GainNode | null = null;
+  private readonly onDispose: ((voice: Voice) => void) | undefined;
   /** Buffer position (seconds) the source starts at — 0 unless `skip` resumed mid-note. */
   private readonly initialPosition: number;
   /** End time of the skipped-start ramp-in, or null when no ramp was scheduled. */
@@ -79,6 +82,7 @@ export class Voice {
     this.context = options.context;
     this.buffer = options.buffer;
     this.destination = options.destination;
+    this.onDispose = options.onDispose;
     //instrument metadata is authored data — sanitize before it reaches Web Audio, where
     //negative/NaN values throw or produce browser-dependent behavior
     this.releaseS = Number.isFinite(options.release)
@@ -382,5 +386,6 @@ export class Voice {
     this.releaseGain?.disconnect();
     this.releaseSource = null;
     this.releaseGain = null;
+    this.onDispose?.(this);
   };
 }

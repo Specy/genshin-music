@@ -221,8 +221,6 @@
             "composer_smooth_scroll_description": "播放时，画布会跟随节奏变换器连续平滑地划过每一列，而不是直接跳到下一列。",
             "composer_sync_tabs": "在所有选项卡中自动播放（仅限电脑）",
             "composer_sync_tabs_description": "高级功能，它同步其他浏览器选项卡以同时播放。",
-            "composer_lookahead_time": "前窥时长",
-            "composer_lookahead_time_description": "编曲器将提前多少毫秒寻找要播放的音符，较高的值可以提高播放准确性，但感觉响应速度较差。",
             "player_instrument": "乐器",
             "player_instrument_description": "播放器的主要（第一个）乐器，也将保存在您录制的歌曲中。",
             "player_pitch": "曲调",
