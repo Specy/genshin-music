@@ -262,7 +262,6 @@ describe('ComposerRenderer rendering', () => {
             selectedColumns: [],
             smoothScroll: false,
             bpm: Number(ComposerSettings.data.bpm.value),
-            lookaheadMs: Number(ComposerSettings.data.lookaheadTime.value),
         }
     }
 

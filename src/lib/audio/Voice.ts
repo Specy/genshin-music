@@ -34,8 +34,14 @@ export type VoiceOptions = {
   release: number;
   /** Sustain-to-release crossfade length in seconds (default 20 ms). */
   crossfade?: number;
-  /** Start delay in seconds from now. */
-  delay?: number;
+  /**
+   * Absolute AudioContext time to start sounding at; undefined or already past starts
+   * now. Absolute rather than a relative delay because committed playback must land
+   * exactly on the transport's audio-clock grid — a delay measured from "now" re-reads
+   * currentTime at call time, which jitters the seams between scheduler top-ups
+   * (ADR-0006).
+   */
+  at?: number;
   /**
    * Seconds of the NOTE already elapsed when this voice starts (resuming playback
    * mid-note): audio begins at the buffer position the playhead would have reached
@@ -111,12 +117,17 @@ export class Voice {
       this.positionAfter(skip * this.playbackRate),
       this.buffer.duration
     );
-    const requestedDelay = options.delay;
-    const delay =
-      typeof requestedDelay === 'number' && Number.isFinite(requestedDelay) && requestedDelay > 0
-        ? requestedDelay
-        : 0;
-    this.startedAt = options.context.currentTime + delay;
+    const requestedAt = options.at;
+    // A past (or absent/non-finite) `at` clamps to now: source.start() would play it
+    // immediately anyway, and a startedAt before the true start would misplace the
+    // phase math in sourcePositionAt and the pre-start checks in releaseAt/fadeOut.
+    this.startedAt =
+      typeof requestedAt === 'number' &&
+      Number.isFinite(requestedAt) &&
+      requestedAt > options.context.currentTime
+        ? requestedAt
+        : options.context.currentTime;
+    const scheduledAhead = this.startedAt > options.context.currentTime;
     if (this.initialPosition > 0 && this.crossfadeS > 0) {
       // A resumed start lands on an arbitrary waveform amplitude; stepping there
       // from silence clicks. Ramp in over the same short crossfade the release tail
@@ -132,7 +143,7 @@ export class Voice {
     if (this.initialPosition > 0) {
       this.source.start(this.startedAt, this.initialPosition);
     } else {
-      this.source.start(delay ? this.startedAt : undefined);
+      this.source.start(scheduledAhead ? this.startedAt : undefined);
     }
     this.source.addEventListener('ended', this.handleSustainEnded, { once: true });
   }
@@ -189,7 +200,7 @@ export class Voice {
   /** Fade the entire logical voice without spawning a release tail (playback stop). */
   fadeOut = (duration = this.releaseS) => {
     if (this.disposed) return;
-    // A delayed source must be cancelled, not faded from its future start time;
+    // A source committed to a future start must be cancelled, not faded from that time;
     // otherwise pressing Stop before it starts would still produce a late attack.
     if (this.startedAt > this.context.currentTime) {
       this.stop();

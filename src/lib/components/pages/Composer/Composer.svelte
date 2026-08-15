@@ -17,6 +17,7 @@
   import CanvasTool from './CanvasTool.svelte';
   import InstrumentControls from './InstrumentControls.svelte';
   import { Instrument, type ObservableNote } from '$lib/audio/Instrument.svelte';
+  import { ComposerTransport, TRANSPORT_START_MARGIN_S } from '$lib/audio/ComposerTransport';
   import AudioRecorder from '$lib/audio/AudioRecorder';
   import Analytics from '$core/Analytics';
   import { homeStore } from '$stores/HomeStore.svelte';
@@ -147,6 +148,13 @@
       layers.forEach((instrument) => instrument.dispose());
       broadcastChannel?.close?.();
       isPlaying = false;
+      //not the full stop path (the instruments were just disposed — there is nothing left to
+      //cancel or release), but the transport's pending worker-timer wake survives unmount on
+      //its own, and an awaiting startRecordingAudio needs the play-run promise settled so its
+      //!mounted bail can run
+      transport.stop();
+      playbackEnded?.resolve();
+      playbackEnded = null;
       cleanup.forEach((dispose) => dispose());
       KeyboardProvider.unregisterById('composer');
       //the tempo-changer digits register under their own id — unregistering only 'composer'
@@ -252,6 +260,12 @@
   }
 
   function handleAutoSave() {
+    //ADR-0006 resync-on-mutation, at the note-edit funnel: every editing path that changes what
+    //playback would sound lands here right after its mutation — click add/remove, popover span
+    //edits, column add/remove, tempo changers, sustain-recording note-add and release. For the
+    //two sustain-recording paths the future columns are unchanged, so the resync is a harmless
+    //no-op recommit — cheap, and simpler than exempting them.
+    resyncPlayback();
     changes++;
     if (changes > 5 && settings.autosave.value) {
       //TODO maybe add here that songs which arent saved dont get autosaved
@@ -335,6 +349,11 @@
     if (key === 'reverb') {
       AudioProvider.setReverb(data.value as boolean);
     }
+    //ADR-0006 resync-on-mutation: bpm re-times every uncommitted boundary and pitch re-voices
+    //every uncommitted note, so both retract and recommit the window. Reverb is a live node the
+    //committed audio already flows through, and per-layer volume (see changeVolume) is a live
+    //gain for the same reason — neither changes what should be committed, so neither resyncs.
+    if (key === 'bpm' || key === 'pitch') resyncPlayback();
     updateSettings();
   }
 
@@ -372,6 +391,11 @@
     // InstrumentControls renders a keyed {#each} over the roster, so an in-place field edit would
     // leave the layer panel showing the old name/colour/visibility. Do not "optimise" it away.
     song.setInstrument(index, instrument);
+    //ADR-0006 resync-on-mutation: this is where mute and the per-layer pitch override land (the
+    //instrument popup's onChange funnels here), and both change what committed audio should
+    //contain, synchronously — playSound reads the roster entry just written. A NAME change
+    //resyncs a second time from syncInstruments, once the replacement instrument exists.
+    resyncPlayback();
     syncInstruments(song);
   }
 
@@ -418,6 +442,10 @@
     if (!mounted) return;
     const newInstruments = (await Promise.all(promises)) as Instrument[];
     layers = newInstruments;
+    //ADR-0006 resync-on-mutation: an instrument swap replaces the layer that would sound the
+    //committed window, and only NOW does the loaded replacement exist to recommit through —
+    //resyncing at the call sites instead would recommit into the just-disposed instrument.
+    resyncPlayback();
   }
 
   function changeVolume(obj: SettingVolumeUpdate) {
@@ -438,8 +466,9 @@
     isRecordingAudio = true;
     await delay(300);
     await togglePlay(true); //wait till song finishes
-    //wait untill audio has finished playing
-    await delay(settings.lookaheadTime.value + 1000);
+    //committed audio ENDS at the song's audio-true end (onFinished fires only once the last
+    //column has fully elapsed), so all that is left to drain is the reverb/release tail
+    await delay(1000);
     if (!mounted) return;
     isRecordingAudio = false;
     const recording = await AudioProvider.stopRecording();
@@ -454,38 +483,35 @@
   }
 
   /**
-   * Sound one NOTE ID on a track. Every caller already holds an id — song notes store ids,
-   * and the keyboard hands back the note object — so nothing here resolves a Button any more
-   * (ADR-0005 §4: the engine's public API is id-keyed). An id the track's instrument doesn't
-   * offer is STRANDED there and stays silent, which is why the lookup below is still a guard.
+   * Sound one NOTE ID on a track: immediately when `at` is omitted (previews, live entry), or
+   * committed at the ABSOLUTE AudioContext time `at` — the engine speaks audio-clock time end
+   * to end, never relative delays (ADR-0006). Every caller already holds an id — song
+   * notes store ids, and the keyboard hands back the note object — so nothing here resolves a
+   * Button any more (ADR-0005 §4: the engine's public API is id-keyed). An id the track's
+   * instrument doesn't offer is STRANDED there and stays silent, which is why the lookup below
+   * is still a guard.
    */
-  function playSound(
-    layer: number,
-    id: number,
-    delay?: number,
-    durationMs?: number,
-    skipMs?: number
-  ) {
+  function playSound(layer: number, id: number, at?: number, durationMs?: number, skipMs?: number) {
     const instrument = layers[layer];
     if (!instrument || instrument.getNoteById(id) === null) return;
     if (song.instruments[layer].muted) return;
     const pitch = song.instruments[layer].pitch || settings.pitch.value;
     if (durationMs !== undefined && instrument.supportsSustain) {
       //spanned note on a sustaining instrument: hold for its musical length, then release
-      instrument.pressNote(id, pitch, { delay, durationMs, skipMs });
+      instrument.pressNote(id, pitch, { at, durationMs, skipMs });
     } else {
       //on sustaining instruments play() IS the tap (minLength + release inside the
       //Instrument) — previews, span-1 columns and non-sustaining one-shots all land here
-      instrument.play(id, pitch, delay);
+      instrument.play(id, pitch, at);
     }
   }
 
   /**
    * Attack a note and LEAVE IT SOUNDING until releaseNote — the live half of sustain recording.
-   * Same guards as playSound, but no durationMs and no delay: only the no-durationMs press is
-   * registered in the instrument's heldVoices, so it is the only one a release can ever reach,
-   * and a live press has no lookahead to honor (a voice scheduled into the future cannot be
-   * cancelled by a release, only faded out).
+   * Same guards as playSound, but no durationMs and no `at`: only the no-durationMs press is
+   * registered in the instrument's heldVoices, so it is the only one a release can ever reach —
+   * and a live press is a held voice sounding NOW, never committed into the future, so there is
+   * no scheduled start for its release to race.
    */
   function playHeldSound(layer: number, id: number) {
     const instrument = layers[layer];
@@ -494,7 +520,7 @@
     instrument.pressNote(id, song.instruments[layer].pitch || settings.pitch.value);
   }
 
-  /** Real length in ms of columns [from, to) at the current bpm, honoring each column's tempo changer (same math and rounding as the playback tick). */
+  /** Real length in ms of columns [from, to) at the current bpm, honoring each column's tempo changer (same math and rounding as the transport's grid — it sums exactly what this returns). */
   function columnsDurationMs(from: number, to: number): number {
     const msPerBeat = 60000 / settings.bpm.value;
     let ms = 0;
@@ -503,6 +529,67 @@
       ms += Song.roundTime(msPerBeat * changer);
     }
     return ms;
+  }
+
+  // ── playback transport (ADR-0006: one clock, two meanings of "ahead") ──────────────────────
+  // All playback timing lives on the AudioContext clock. The transport advances the sounding
+  // cursor on it and commits column audio ahead on it, and every cancel sweep below reads the
+  // SAME clock, so "what is committed" and "what is retractable" can never disagree about now.
+  const clock = { now: () => AudioProvider.getAudioContext().currentTime };
+  const transport = new ComposerTransport(clock, {
+    columnDurationMs: (i) => columnsDurationMs(i, i + 1),
+    columnCount: () => song.columns.length,
+    // Sound column `index`'s notes, committed at the absolute audio time the transport's grid
+    // assigned it. Commits only happen while the transport runs, so "am I playing" is implicit
+    // here; a commit is the SONG sounding, never a browse's preview, so spanned notes always
+    // carry their real length.
+    commitColumn: (index, atAudioTime) => {
+      song.columns[index]?.notes.forEach((note) => {
+        playSound(
+          note.trackIndex,
+          note.id,
+          atAudioTime,
+          note.span > 1 ? columnsDurationMs(index, index + note.span) : undefined
+        );
+      });
+    },
+    // The sounding cursor entered `index`: move the selection with it (ignoreAudio — this
+    // column's audio was committed up to a horizon ago), then let held sustains re-quantize
+    // against the column the playhead has now actually reached.
+    onSounding: (index) => {
+      selectColumn(index, true);
+      advanceSustainRecordings();
+    },
+    // The audio-true end of the song: the last column has fully elapsed at the ear. The stop
+    // path runs with an empty committed window left to cancel, and resolves the play-run
+    // promise togglePlay handed out.
+    onFinished: () => {
+      togglePlay(false);
+    },
+  });
+
+  /**
+   * Retract every committed-but-unstarted event, on every layer, from this instant on. The
+   * transport never touches audio (its contract), so each path that abandons the committed
+   * window — stop, a jump's re-anchor, resyncPlayback — must run this sweep itself, and FIRST:
+   * resync()/anchor() rebuild the window immediately, and anything not cancelled before that
+   * would sound twice.
+   */
+  function resyncAudioCancel() {
+    const now = clock.now();
+    layers.forEach((instrument) => instrument?.cancelScheduledAfter(now));
+  }
+
+  /**
+   * ADR-0006 "resync on mutation": any change to what-should-sound cancels the committed
+   * window and recommits it from the sounding column with fresh durations. This is what makes
+   * the ~1 s horizon free — in-window audio is never stale, so the window is indistinguishable
+   * from a 0 ms one at the ear. No-op while stopped: there is no committed window to rebuild.
+   */
+  function resyncPlayback() {
+    if (!transport.isRunning) return;
+    resyncAudioCancel();
+    transport.resync();
   }
 
   function changePitch(value: Pitch) {
@@ -937,6 +1024,8 @@
     if (!mounted) return;
     const added = (await addSong(newSong)) as ComposedSong;
     if (!mounted) return;
+    //same reason as loadSong's guard: creating replaces the song under a running transport
+    if (transport.isRunning) togglePlay(false);
     song = added;
     layer = 0;
     // same reason as loadSong: the history belongs to the song that was just replaced
@@ -946,6 +1035,10 @@
   }
 
   async function loadSong(songToLoad: SerializedSong | ComposedSong) {
+    //loading replaces the song under a running transport, and the committed window, the
+    //sounding position and the play-run promise all belong to the song being replaced — playing
+    //the incoming song from a stale index would be an accident, not a behavior. Stop first.
+    if (transport.isRunning) togglePlay(false);
     try {
       let parsed: ComposedSong | null = null;
       if (songToLoad instanceof ComposedSong) {
@@ -1004,73 +1097,95 @@
     }
   }
 
+  // In both functions the funnel (and its resync) runs BEFORE the selection move, not after.
+  // While playing (reachable via the MIDI shortcuts) the move is a jump, and a jump's re-anchor
+  // commits the target column's audio a start-margin into the future — still retractable, so a
+  // resync arriving AFTER it would cancel that commit and, by resync's own contract, never
+  // recommit the sounding column: the jumped-to column would land silent. Resync the mutation
+  // first, then jump; the anchor is the last word on the committed window.
   function addColumns(amount = 1, position: number | 'end' = 'end') {
     song.addColumns(amount, position);
-    if (amount === 1) selectColumn(song.selected + 1);
     handleAutoSave();
+    if (amount === 1) selectColumn(song.selected + 1);
   }
 
   function removeColumns(amount: number, position: number) {
     if (song.columns.length < settings.beatMarks.value * 4) return;
     song.removeColumns(amount, position);
-    if (song.columns.length <= song.selected) selectColumn(song.selected - 1);
     handleAutoSave();
+    if (song.columns.length <= song.selected) selectColumn(song.selected - 1);
   }
 
-  async function togglePlay(override?: boolean): Promise<void> {
+  /**
+   * The promise the play-run in progress returned, with its resolver. CONTRACT: `await
+   * togglePlay(true)` resolves when playback ENDS — startRecordingAudio depends on that ("wait
+   * till song finishes"). Playback itself lives in the transport's worker-timer wakes, so
+   * nothing here can await it; the contract is kept explicitly: PLAY creates the deferred, and
+   * the stop path — reached by manual stop and by the transport's onFinished alike — resolves
+   * it. Every other caller ignores the promise.
+   */
+  let playbackEnded: { promise: Promise<void>; resolve: () => void } | null = null;
+
+  function togglePlay(override?: boolean): Promise<void> {
     const newState = typeof override === 'boolean' ? override : !isPlaying;
-    isPlaying = newState;
-    //stopping playback releases voices still held from spanned notes. Live recordings end
-    //FIRST, while their voices are still in heldVoices: each gets its normal release tail and
-    //its final quantization, instead of the blanket fade below silencing a note whose span
-    //would then keep growing for a key nobody can hear.
-    if (!isPlaying) {
+    if (!newState) {
+      isPlaying = false;
+      //stopping playback releases voices still held from spanned notes. Live recordings end
+      //FIRST, while their voices are still in heldVoices: each gets its normal release tail and
+      //its final quantization, instead of the blanket fade below silencing a note whose span
+      //would then keep growing for a key nobody can hear.
       endAllSustainRecordings();
+      //then retract the committed window BEFORE fading what already sounds: with a ~1 s
+      //horizon an uncancelled pause would leak a full second of runaway notes (ADR-0006 —
+      //stop needed the cancellation registry anyway, which is why it exists).
+      resyncAudioCancel();
+      transport.stop();
+      //finally fade what is already sounding — a release, not a cancellation: started audio
+      //always rings out.
       layers.forEach((layer) => layer?.releaseAllNotes());
+      playbackEnded?.resolve();
+      playbackEnded = null;
+      return Promise.resolve();
     }
-    if (isPlaying) {
-      const lookahead = settings.lookaheadTime.value / 1000;
-      selectColumn(song.selected, false, lookahead);
-      pressSpansCoveringStart(lookahead);
-    }
-    let delayOffset = 0;
-    let previousTime: number;
-    while (isPlaying) {
-      const tempoChanger = song.selectedColumn.getTempoChanger().changer;
-      const msPerBeat = (60000 / settings.bpm.value) * tempoChanger + delayOffset;
-      previousTime = Date.now();
-      await delay(Song.roundTime(msPerBeat));
-      if (!isPlaying || !mounted) break;
-      delayOffset = previousTime + msPerBeat - Date.now();
-      const lookaheadTime = settings.lookaheadTime.value / 1000;
-      //this schedules the next column counting for the error delay so that timing is more accurate
-      handlePlaybackTick(Math.max(0, lookaheadTime + delayOffset / 1000));
-    }
-  }
-
-  function handlePlaybackTick(errorDelay: number) {
-    const newIndex = song.selected + 1;
-    if (isPlaying && newIndex > song.columns.length - 1) {
+    //play while already playing (a duplicate 'play' broadcast from a synced tab): one
+    //transport, one run — hand back the run in progress instead of committing its audio twice.
+    if (isPlaying) return playbackEnded?.promise ?? Promise.resolve();
+    isPlaying = true;
+    //the audio-export offset lives in the anchor margin: the whole run — the resumed spans
+    //below and every committed column — starts that much later, decided in exactly one place.
+    const margin = TRANSPORT_START_MARGIN_S + (isRecordingAudio ? 0.5 : 0);
+    const startAt = clock.now() + margin;
+    //spans covering the start column resume at the same absolute time the anchor column is
+    //committed for, so they stay aligned with its notes by construction
+    pressSpansCoveringStart(startAt);
+    //no selectColumn here: the anchor column is already selected, and its notes sound through
+    //commitColumn like every other column's — the transport commits it at the anchor time.
+    transport.anchor(song.selected, margin);
+    if (!transport.isRunning) {
+      //anchor refused (empty song / selection out of range — the transport's contract is to
+      //stay STOPPED and fire nothing): nothing sounded and nothing will, so fall straight
+      //through to the stop path, which also releases the spans pressed above.
       return togglePlay(false);
     }
-    selectColumn(newIndex, false, errorDelay);
-    //after the playhead moved: a hold can only be worth columns the playhead has reached
-    advanceSustainRecordings();
+    let resolve!: () => void;
+    const promise = new Promise<void>((r) => (resolve = r));
+    playbackEnded = { promise, resolve };
+    return promise;
   }
 
   /**
    * Notes whose span begins BEFORE the playback start column but still covers it
-   * (play pressed mid-note): press each at the audio position it would have reached
-   * by now, releasing where its span really ends. Under the no-overlap invariant the
-   * nearest earlier same-(track, id) note is the only possible coverer, so a backward
-   * scan marking seen pairs decides every candidate at its first sighting. Only
-   * sustaining tracks resume — a one-shot sample's attack happened in the past and
-   * cannot be meaningfully re-entered.
+   * (play pressed mid-note): press each at `resumeAt` — the ABSOLUTE audio time the anchor
+   * column is committed for, so resumed spans align with its notes by construction (the audio-
+   * export offset rides in togglePlay's margin and needs no mirroring here). Each enters its
+   * sample at the position the playhead would have reached, releasing where its span really
+   * ends. Under the no-overlap invariant the nearest earlier same-(track, id) note is the only
+   * possible coverer, so a backward scan marking seen pairs decides every candidate at its
+   * first sighting. Only sustaining tracks resume — a one-shot sample's attack happened in the
+   * past and cannot be meaningfully re-entered.
    */
-  function pressSpansCoveringStart(delaySeconds: number) {
+  function pressSpansCoveringStart(resumeAt: number) {
     const startColumn = song.selected;
-    //mirrors selectColumn's recording offset so resumed spans stay aligned with the column notes
-    const delay = delaySeconds ? delaySeconds + (isRecordingAudio ? 0.5 : 0) : 0;
     // eslint-disable-next-line svelte/prefer-svelte-reactivity -- transient local dedupe set
     const seen = new Set<string>();
     for (let start = startColumn - 1; start >= 0; start--) {
@@ -1085,7 +1200,7 @@
         playSound(
           spanNote.trackIndex,
           spanNote.id,
-          delay,
+          resumeAt,
           columnsDurationMs(startColumn, start + spanNote.span),
           columnsDurationMs(start, startColumn)
         );
@@ -1131,12 +1246,13 @@
     await goto(resolve(`/${pageName}` as any));
   }
 
-  function selectColumn(index: number, ignoreAudio?: boolean, delay?: number) {
+  function selectColumn(index: number, ignoreAudio?: boolean) {
     if (index < 0 || index > song.columns.length - 1) return;
+    const jumped = index !== song.selected;
     //moving to another column dismisses the duration popover (spec §2 dismissal rules) and
     //abandons any held press, whose deferred edit was aimed at the column being left - this
     //is also every playback tick, so a note held while the song plays stays as pressed
-    if (index !== song.selected) {
+    if (jumped) {
       if (durationPopover !== null) durationPopover = null;
       abandonNotePresses();
     }
@@ -1148,32 +1264,36 @@
       const max = Math.max(index, ...selectedColumns);
       selectedColumns = new Array(max - min + 1).fill(0).map((_, i) => min + i);
     }
-    // BEHAVIOR NOTE: refreshSong() used to clone unconditionally, so re-selecting the SAME index
-    // still forced a repaint. Writing an unchanged value to the `selected` signal notifies
-    // nothing. The case that used to depend on that is togglePlay's selectColumn(song.selected, ...)
-    // on play-start: the canvas effect does re-run, because it reads `isPlaying` - but the renderer
-    // excludes `isPlaying` from its repaint diff (it changes no pixel there), so update() returns
-    // without rendering and the canvas keeps what it had. Nothing about a column's APPEARANCE
-    // depends on whether the song is playing, so there is nothing to repaint.
-    // What that same update DOES do, with smooth scrolling on, is start the glide: the renderer
-    // reads `isPlaying` in its syncScrollSchedule, and this is the transition that schedules the
-    // first column's travel and starts the ticker that animates it. A no-op for pixels, and not a
-    // no-op for the renderer.
-    //add a bit of delay if recording audio to imrove the recording quality
-    delay = delay ? delay + (isRecordingAudio ? 0.5 : 0) : 0;
+    // BEHAVIOR NOTE (what the renderer sees): playback never routes a selection through here at
+    // play-start — togglePlay anchors the transport on the column that is ALREADY selected, and
+    // anchor() deliberately fires no onSounding for it. The canvas still notices the start: its
+    // props effect reads `isPlaying`, and that flip is the transition where the renderer's
+    // syncScrollSchedule schedules the first glide segment and starts the ticker that animates
+    // it (a no-op for pixels — the repaint diff excludes `isPlaying` — but not for the
+    // renderer). From then on every cursor move lands here as the transport's onSounding ->
+    // selectColumn(index, true): an ignoreAudio write at the moment the column's committed
+    // audio starts sounding, so `selected` IS the sounding column and the renderer follows the
+    // ear with nothing to compensate for (ADR-0006).
     if (ignoreAudio) return;
+    //ignoreAudio is how the transport's own onSounding round-trip, and the renderer's
+    //coast/drag publishes, stay side-effect-free; a bare call is a USER movement:
+    if (transport.isRunning) {
+      //manual JUMP while playing. Selection is already written above — the transport echoes no
+      //onSounding for its anchor column, so it must find the selection already in place. Cancel
+      //the committed window (it belongs to the abandoned position) and re-anchor; the anchor
+      //column then sounds through commitColumn like every other column, which is why there is
+      //no preview call on this path.
+      if (jumped) {
+        resyncAudioCancel();
+        transport.anchor(index);
+      }
+      return;
+    }
+    //stopped: manual browsing previews the column as immediate taps — no committed time and no
+    //durations (sounding spans at length is playback's business, the transport's). Stranded ids
+    //stay silent inside playSound, so no -1 guard is needed here any more.
     song.selectedColumn.notes.forEach((note) => {
-      //held length only for spanned notes during playback — span 1 is the pre-sustain
-      //tap, and manually browsing columns always previews taps. Stranded ids stay silent
-      //inside playSound, so no -1 guard is needed here any more.
-      playSound(
-        note.trackIndex,
-        note.id,
-        delay,
-        isPlaying && note.span > 1
-          ? columnsDurationMs(song.selected, song.selected + note.span)
-          : undefined
-      );
+      playSound(note.trackIndex, note.id);
     });
   }
 
@@ -1212,11 +1332,19 @@
     const history = undoHistory.pop();
     if (!history) return;
     song.restoreColumns(history);
+    //undo is the one mutation path with NO changes++ (it restores toward the saved state), so
+    //it cannot ride the funnel's resync in handleAutoSave — resync explicitly (ADR-0006)
+    resyncPlayback();
   }
 
+  // The bulk tools below count changes bare rather than through handleAutoSave, so each carries
+  // its own resync — the ADR-0006 rule is the same either way: the resync runs right after the
+  // mutation. (copyColumns mutates nothing that sounds; its resync is the uniform rule
+  // recommitting an unchanged window, and keeping the sites identical beats special-casing one.)
   function copyColumns(targetLayer: number | 'all') {
     copiedColumns = song.copyColumns(selectedColumns, targetLayer);
     changes++;
+    resyncPlayback();
     selectedColumns = [];
   }
 
@@ -1226,12 +1354,14 @@
     else if (Number.isFinite(targetLayer)) song.pasteLayer(copiedColumns, insert, targetLayer);
     syncInstruments();
     changes++;
+    resyncPlayback();
   }
 
   function eraseColumns(targetLayer: number | 'all') {
     addToHistory();
     song.eraseColumns(selectedColumns, targetLayer);
     changes++;
+    resyncPlayback();
     selectedColumns = [song.selected];
   }
 
@@ -1239,6 +1369,7 @@
     addToHistory();
     song.moveNotesBy(selectedColumns, amount, position);
     changes++;
+    resyncPlayback();
   }
 
   function switchLayerPosition(direction: 1 | -1) {
@@ -1249,6 +1380,7 @@
     song.swapLayer(song.columns.length, 0, layer, toSwap);
     song.swapInstruments(layer, toSwap);
     changes++;
+    resyncPlayback();
     syncInstruments();
     layer = toSwap;
   }
@@ -1260,6 +1392,7 @@
     // what kept a deleted column's breakpoint out of the saved song
     song.deleteColumns(selectedColumns);
     changes++;
+    resyncPlayback();
     selectedColumns = [song.selected];
   }
 

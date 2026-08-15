@@ -5,10 +5,11 @@
  * last): the note is worth N+1 columns only once the hold passes the MIDPOINT of the (N+1)th.
  *
  * Counting tick CROSSINGS instead — the obvious reading of "still held when the next column is
- * selected" — records ordinary taps as sustains, because the composer's model runs
- * `lookaheadTime` ahead of the audio: a note played in time with what the user HEARS lands
- * near the END of the model's current column, so even a short tap crosses the next tick. This
- * measures the gesture instead of the phase it happened to land on.
+ * selected" — would make the span depend on the PHASE the press happened to land on. Selection
+ * is audio-true (ADR-0006), so a press in time with what the user hears lands near the START
+ * of the sounding column — but input latency, and where within the column the gesture really
+ * falls, still shift it. Measuring the gesture keeps a short tap worth one column wherever it
+ * lands, and still charges held time to the columns the hold actually covered.
  *
  * @param heldMs      how long the key has been down
  * @param maxSpan     columns the playhead has actually reached (a sustain is never recorded

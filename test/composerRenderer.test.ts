@@ -64,8 +64,9 @@ import type {ComposerCache} from '$cmp/pages/Composer/ComposerCache'
  *  - the tests between the tables and PART FIVE are single claims neither table makes on its own,
  *    each stating at its own site what it is there for.
  *  - PART FIVE, THE GLIDE, turns smooth scrolling on and states where the playhead is at fractions
- *    of a column over a driven clock. It fails on a chase-toward-a-target implementation, on a
- *    lookahead not honoured, and on a queue that drops segments.
+ *    of a column over a driven clock. It fails on a chase-toward-a-target implementation, on
+ *    travel that does not start at the tick that announced its column, and on a queue that drops
+ *    segments.
  *  - PART SIX, THE FRAME LOOP, reads how often the renderer ASKED to render rather than what it
  *    painted - the half a scene description cannot see. It fails on a loop that runs while idle, on
  *    a private rAF beside the capped ticker, and on a render per tick rather than per frame that
@@ -853,17 +854,14 @@ interface Props {
      */
     smoothScroll: boolean
     bpm: number
-    lookaheadMs: number
 }
 
 /**
- * The composer's own defaults for the two numbers the glide is a function of, so the section that
- * exercises it is exercising the shipped arrangement rather than a convenient one. At these values
- * one column at tempo 1 lasts 273ms against a 250ms lookahead - the case where a single "current
- * glide" slot would very nearly hold, and a 1/4 column is where it stops holding.
+ * The composer's shipped default bpm, so the glide section exercises the shipped arrangement
+ * rather than a convenient one: one column at tempo 1 lasts 273ms, a 1/4 column 68ms, a 1/8
+ * column 34ms - the last being where ticks outpace the emitted frames consuming them.
  */
 const BPM = 220
-const LOOKAHEAD_MS = 250
 /**
  * ComposerRenderer's SCROLL_EASE_MS, restated rather than imported - it is not exported, and a
  * shared constant would move both sides of every expectation together.
@@ -900,7 +898,6 @@ function makeContext(): Context {
             selectedColumns: [],
             smoothScroll: false,
             bpm: BPM,
-            lookaheadMs: LOOKAHEAD_MS,
         },
     }
 }
@@ -1369,7 +1366,6 @@ async function mount(context: Context = makeContext()): Promise<Harness> {
         selectedColumns: context.props.selectedColumns,
         smoothScroll: context.props.smoothScroll,
         bpm: context.props.bpm,
-        lookaheadMs: context.props.lookaheadMs,
     })
     const appsBefore = pixi.applications.length
     //the canvas geometry, taken from the callback the Svelte template takes it from - see Geometry.
@@ -4140,12 +4136,14 @@ function selectedColumnOf(harness: Harness): number {
 //  - the SCHEDULE being an absolute timeline rather than a chase. A glide that eased toward a
 //    target would pass a test that only checked the endpoints and be wrong in between, so the rows
 //    below read the position at fractions of a column and state where it belongs;
-//  - the LOOKAHEAD, which is the difference between the playhead marking what is being heard and
-//    the playhead running a quarter second ahead of it. It is invisible at the endpoints too - the
-//    column is right either way - and shows up only as WHEN the travel starts;
+//  - AUDIO-TRUTH: an update carrying `selected = i` means column i is SOUNDING - the transport
+//    starts its audio as the update lands - so the travel must start at the tick's own instant.
+//    A hold or an offset at the start is invisible at the endpoints (the column is right either
+//    way) and puts the line out of time with the music for the whole song;
 //  - tempo changers, whose whole point here is that the speed changes with them;
-//  - the queue, which only does anything when more segments are in flight than one, i.e. when
-//    columns are shorter than the lookahead. A two-slot implementation passes every tempo-1 row;
+//  - the queue, whose CHAIN is what keeps the timeline contiguous when ticks jitter against the
+//    frames consuming it - a single "current glide" slot jumps the line when a tick lands inside
+//    the previous segment's prediction;
 //  - the line and the overlay being MUTUALLY EXCLUSIVE, which is what keeps one mark on the canvas
 //    rather than two disagreeing ones.
 //
@@ -4154,7 +4152,7 @@ function selectedColumnOf(harness: Harness): number {
 // happened and moves the clock those frames read. The frames themselves come off the notes
 // Application's Ticker (see the FakeTicker), whose maxFPS gate lets through only some of them.
 describe('the smooth scroll', () => {
-    /** msPerBeat at BPM, by the arithmetic Composer.svelte's playback loop and the renderer share. */
+    /** A column's length at BPM, by the arithmetic the transport and the renderer share. */
     const columnMs = (changer: number) => Math.round((60000 / BPM) * changer)
     const WHOLE = columnMs(1)
     const QUARTER = columnMs(0.25)
@@ -4195,13 +4193,13 @@ describe('the smooth scroll', () => {
         return harness.push()
     }
 
-    /** One playback tick: what handlePlaybackTick does to the state, and nothing else. */
+    /** One playback tick: the transport's onSounding advancing `selected` by one, nothing else. */
     function tick(harness: Harness) {
         harness.context.song.selected += 1
         return harness.push()
     }
 
-    it("holds still for the lookahead, then travels one column over that column's length", async () => {
+    it("starts travelling the moment play lands, one column over that column's length", async () => {
         const harness = await mountGliding()
         try {
             expect(harness.scrollPosition()).toBe(SELECTED)
@@ -4209,16 +4207,16 @@ describe('the smooth scroll', () => {
             expect(startPlaying(harness).columnPaints).toBe(0)
             expect(harness.scrollPosition()).toBe(SELECTED)
 
-            //THE LOOKAHEAD. Column SELECTED's notes were scheduled to sound LOOKAHEAD_MS from now,
-            //so until then the playhead belongs where it is - a canvas that started moving at once
-            //would be a quarter second ahead of the music for the whole song.
-            await vi.advanceTimersByTimeAsync(LOOKAHEAD_MS - 32)
-            expect(harness.scrollPosition()).toBe(SELECTED)
+            //AUDIO-TRUTH. The update that flips isPlaying means column SELECTED is sounding NOW,
+            //so the very next frames find the line already under way - a playhead that held still
+            //after the press would spend that hold behind the music for the whole song.
+            await vi.advanceTimersByTimeAsync(32)
+            expect(harness.scrollPosition()).toBeGreaterThan(SELECTED)
 
-            //...and from there it travels one whole column over one whole column's worth of time.
-            //Read at the halfway point rather than only at the ends: an ease, or a chase toward a
-            //target, agrees at both ends and disagrees here.
-            await vi.advanceTimersByTimeAsync(32 + WHOLE / 2)
+            //...and it travels one whole column over one whole column's worth of time. Read at the
+            //halfway point rather than only at the ends: an ease, or a chase toward a target,
+            //agrees at both ends and disagrees here.
+            await vi.advanceTimersByTimeAsync(WHOLE / 2 - 32)
             expectPosition(harness, SELECTED + 0.5, WHOLE)
 
             await vi.advanceTimersByTimeAsync(WHOLE / 2)
@@ -4235,7 +4233,7 @@ describe('the smooth scroll', () => {
             //at two tempos rather than two different journeys
             harness.context.song.setTempoChangerAt(SELECTED, TEMPO_CHANGERS[2])
             startPlaying(harness)
-            await vi.advanceTimersByTimeAsync(LOOKAHEAD_MS + QUARTER / 2)
+            await vi.advanceTimersByTimeAsync(QUARTER / 2)
             //half a 1/4 column takes an eighth of a whole one, and the playhead is half way
             expectPosition(harness, SELECTED + 0.5, QUARTER)
             await vi.advanceTimersByTimeAsync(QUARTER / 2)
@@ -4252,29 +4250,29 @@ describe('the smooth scroll', () => {
     /**
      * REPLACES 'keeps the overlay on the column the playhead is inside, not on the one selected'.
      *
-     * That test's premise was that the overlay lags `selected` by the lookahead during a glide, so
-     * that the highlight and the line agree. There is no overlay to lag any more: with smooth
-     * scrolling on the line is the only mark, and the two are mutually exclusive. What the deleted
-     * test was really protecting - the mark not running a lookahead ahead of the music - is carried
-     * by the position assertions in the rows above, which state where the LINE is at fractions of a
-     * column.
+     * That test's premise was a second mark that had to be held in agreement with the line. There
+     * is no second mark: with smooth scrolling on the line is the only one, and the two are
+     * mutually exclusive. What the deleted test was really protecting - the mark staying with the
+     * music - is carried by the position assertions in the rows above, which state where the LINE
+     * is at fractions of a column.
      */
     it('draws no selection overlay at all, before, during and after a tick', async () => {
         const harness = await mountGliding()
         try {
             expect(selectedColumnsOf(harness)).toEqual([])
             startPlaying(harness)
-            await vi.advanceTimersByTimeAsync(LOOKAHEAD_MS + WHOLE / 2)
+            await vi.advanceTimersByTimeAsync(WHOLE / 2)
             expect(selectedColumnsOf(harness)).toEqual([])
 
-            //THE TICK, which moves `selected` to the next column while the playhead is still inside
-            //this one - it is a lookahead short of the boundary. Neither column may acquire it.
+            //THE TICK, driven here while the line is still mid-column (jitter magnified): it moves
+            //`selected` on while the playhead has the previous column's travel to give up. Neither
+            //column may acquire an overlay at that instant.
             tick(harness)
             expect(harness.context.song.selected).toBe(SELECTED + 1)
             expect(selectedColumnsOf(harness)).toEqual([])
 
-            //...and the playhead crossing the boundary does not produce one either
-            await vi.advanceTimersByTimeAsync(WHOLE / 2 + LOOKAHEAD_MS)
+            //...and the playhead travelling on through the next column does not produce one either
+            await vi.advanceTimersByTimeAsync(WHOLE / 2)
             expect(harness.scrollPosition()).toBeGreaterThan(SELECTED + 1)
             expect(selectedColumnsOf(harness)).toEqual([])
         } finally {
@@ -4328,68 +4326,69 @@ describe('the smooth scroll', () => {
         const harness = await mountGliding()
         try {
             startPlaying(harness)
-            //100ms EARLY, which is what Composer.svelte's `delayOffset` drift term produces in the
-            //real app - every tick there is scheduled against the measured error of the last one,
-            //so a tick landing exactly on the nominal cadence is the exception rather than the
-            //rule. Every other row in this part ticks on the nominal cadence, which is the one
-            //case the truncation branch cannot fire in.
+            //100ms EARLY relative to the previous segment's PREDICTED end. Segments are anchored
+            //on the instant their update LANDS while the boundaries ticks announce are
+            //audio-clock-exact, so a segment anchored late (a slow flush, a busy main thread)
+            //predicts an end past the true boundary and the next tick - on time - lands inside
+            //it. The real skew is flush-delay-sized; 100ms magnifies it to where a frame can
+            //read the difference.
             await vi.advanceTimersByTimeAsync(WHOLE - 100)
             tick(harness)
 
-            //The new segment starts one lookahead from the tick, and the old one is cut back to end
-            //there. Without the cut the playhead is still travelling through the previous column
-            //when the next one's travel begins, so it arrives at the boundary late and stays late -
-            //measured at a third of a column behind the music, for the rest of the song.
-            //past the truncated segment's end by more than one emitted frame, so the reading cannot
-            //be a stale frame rather than a lagging playhead - an emitted frame is at most two
-            //display frames, which on a 273ms column is a small fraction of one, against the third
-            //of a column an untruncated segment leaves behind
-            await vi.advanceTimersByTimeAsync(LOOKAHEAD_MS + 100)
+            //The new segment starts AT the tick, and the old one is cut back to end there.
+            //Without the cut the playhead would keep travelling through the previous column's
+            //remainder while the queue holds the new column's travel behind it, arriving at every
+            //boundary 100ms late for the rest of the song. Read one emitted frame after the tick:
+            //with the cut the line is already at or past the boundary the tick announced.
+            await vi.advanceTimersByTimeAsync(32)
             expect(harness.scrollPosition()).toBeGreaterThanOrEqual(SELECTED + 1)
         } finally {
             harness.destroy()
         }
     })
 
-    it('runs a continuous timeline when columns are shorter than the lookahead', async () => {
+    it('walks short columns one at a time, in order, when ticks arrive with jitter', async () => {
         const harness = await mountGliding()
         try {
-            //1/4 columns at 220bpm last 68ms against a 250ms lookahead, so by the time the first
-            //one is heard the loop has already ticked past three more. THIS is what a single
-            //"current glide" slot cannot hold: each tick would overwrite the pending one and the
-            //playhead would skip the columns in between.
+            //1/8 columns at 220bpm last 34ms - one to two emitted frames each - and the ticks
+            //below land ±12ms off their boundaries, the way timer wakes and Svelte flushes skew
+            //them in the real app. Alternating the jitter makes every other tick land INSIDE the
+            //previous segment's prediction (the truncation seam) and every other one land past it
+            //(the clamp-and-wait seam), so both seams are crossed repeatedly at speed.
             for (let index = SELECTED; index < SELECTED + 8; index++) {
-                harness.context.song.setTempoChangerAt(index, TEMPO_CHANGERS[2])
+                harness.context.song.setTempoChangerAt(index, TEMPO_CHANGERS[3])
             }
             startPlaying(harness)
-            //four ticks arrive inside the lookahead window, before the playhead has moved at all
-            for (let i = 0; i < 4; i++) {
-                await vi.advanceTimersByTimeAsync(QUARTER)
+            const EIGHTH = columnMs(0.125)
+
+            //Sampled finely and reduced to the sequence of columns the line passed THROUGH rather
+            //than to readings at the boundaries: a reading taken at a boundary is a coin flip on
+            //how stale the last frame is (the cap emits unevenly - see expectPosition), while a
+            //skipped or revisited column is exactly what a dropped or replaced segment produces
+            //and shows up here directly.
+            const seen: number[] = [Math.floor(harness.scrollPosition())]
+            const sampleFor = async (ms: number) => {
+                for (let elapsed = 0; elapsed < ms; elapsed += 4) {
+                    await vi.advanceTimersByTimeAsync(4)
+                    const at = Math.floor(harness.scrollPosition())
+                    if (seen[seen.length - 1] !== at) seen.push(at)
+                }
+            }
+            for (let i = 0; i < 6; i++) {
+                await sampleFor(i % 2 === 0 ? EIGHTH + 12 : EIGHTH - 12)
                 tick(harness)
             }
-            expect(harness.context.song.selected).toBe(SELECTED + 4)
-            //four ticks have been taken and the playhead has not finished the FIRST column: the
-            //queue is holding the other three rather than the last one having overwritten them
-            expect(harness.scrollPosition()).toBeLessThan(SELECTED + 1)
-
-            //...and then the playhead WALKS the columns it was given, one at a time and in order.
-            //Sampled finely and reduced to the sequence of columns the line passed THROUGH rather
-            //than to four readings at column boundaries: a reading taken at a boundary is a coin
-            //flip on how stale the last frame is (the cap emits unevenly - see expectPosition),
-            //while a skipped column is what the queue exists to rule out and shows up here
-            //directly.
-            const seen: number[] = [Math.floor(harness.scrollPosition())]
-            for (let step = 0; step < 4 * 8; step++) {
-                await vi.advanceTimersByTimeAsync(QUARTER / 8)
-                const at = Math.floor(harness.scrollPosition())
-                if (seen[seen.length - 1] !== at) seen.push(at)
-            }
+            //stop sampling INSIDE the last ticked column, so the trailing clamp at its far
+            //boundary does not append the never-reached next column's floor
+            await sampleFor(EIGHTH - 8)
             expect(seen).toEqual([
                 SELECTED,
                 SELECTED + 1,
                 SELECTED + 2,
                 SELECTED + 3,
                 SELECTED + 4,
+                SELECTED + 5,
+                SELECTED + 6,
             ])
         } finally {
             harness.destroy()
@@ -4410,9 +4409,10 @@ describe('the smooth scroll', () => {
             await vi.advanceTimersByTimeAsync(WHOLE)
 
             //THE WINDOW IS A FUNCTION OF THE GLIDE, stated through the exported definition at the
-            //fractional position the canvas is actually at - not at `selected`, which by now is a
-            //lookahead ahead of it. A pool advanced from the state instead would hold a window
-            //shifted by that much and every column in it would still be painted correctly.
+            //fractional position the canvas is actually at - not at `selected`, which is a whole
+            //column while the line is partway through it. A pool advanced from the state instead
+            //would hold a window shifted by that fraction and every column in it would still be
+            //painted correctly.
             const position = harness.scrollPosition()
             expect(position).toBeGreaterThan(before[0])
             const visible: number[] = []
@@ -4473,11 +4473,11 @@ describe('the smooth scroll', () => {
         }
     })
 
-    it('snaps to the selected column when playback stops mid-column', async () => {
+    it('settles on the selected column when playback stops mid-column', async () => {
         const harness = await mountGliding()
         try {
             startPlaying(harness)
-            await vi.advanceTimersByTimeAsync(LOOKAHEAD_MS + WHOLE / 2)
+            await vi.advanceTimersByTimeAsync(WHOLE / 2)
             expectPosition(harness, SELECTED + 0.5, WHOLE)
 
             harness.context.props.isPlaying = false
@@ -4486,9 +4486,9 @@ describe('the smooth scroll', () => {
             //reached at the moment of the pause, and the 140ms ease is what carries it to a column.
             expect(harness.scrollPosition()).toBeGreaterThan(SELECTED)
             await vi.advanceTimersByTimeAsync(SCROLL_EASE_MS + 32)
-            //...and it lands BACKWARD, on the column the line was inside - the last one whose notes
-            //were played - rather than forward on `selected`, which the transport had advanced to a
-            //lookahead before its notes would have been heard.
+            //...and it lands on `selected` - which during audio-true playback is the very column
+            //the line was inside, the one being heard when the pause landed - giving back only the
+            //fraction of it already travelled.
             expect(harness.scrollPosition()).toBe(SELECTED)
             //...and STILL no overlay, because the mode is keyed on the SETTING and not on whether
             //the song is playing. A stopped composer with smooth scrolling on shows the line on the
@@ -4505,37 +4505,34 @@ describe('the smooth scroll', () => {
         }
     })
 
-    it('pauses onto the last column that was PLAYED, not the one the transport had reached', async () => {
+    it('pauses without publishing: the settle target is the column already selected', async () => {
         const harness = await mountGliding()
         try {
             startPlaying(harness)
-            //one tick, so `selected` is a column ahead of the line - which is the ordinary state
-            //during playback, not an edge case: the transport advances a lookahead before the
-            //notes it announces are heard. Pausing here is where snapping to `selected` would jump
-            //the canvas FORWARD onto a column nothing has played yet.
+            //one tick, then partway into its column - the ordinary state a pause lands in: the
+            //line is a fraction inside the very column `selected` names, because `selected` is
+            //audio-true.
             await vi.advanceTimersByTimeAsync(WHOLE)
             tick(harness)
             await vi.advanceTimersByTimeAsync(WHOLE / 2)
             expect(harness.context.song.selected).toBe(SELECTED + 1)
             const midColumn = harness.scrollPosition()
-            expect(midColumn).toBeGreaterThan(SELECTED)
-            expect(midColumn).toBeLessThan(SELECTED + 1)
+            expect(midColumn).toBeGreaterThan(SELECTED + 1)
+            expect(midColumn).toBeLessThan(SELECTED + 2)
 
             harness.selectColumnCalls.length = 0
             harness.context.props.isPlaying = false
             harness.push()
-            //the composer is told to go back to the column the line is inside, with ignoreAudio -
-            //a pause that sounded a note would be its own bug - and the app state follows the
-            //canvas rather than the canvas being dragged to the state
-            expect(harness.selectColumnCalls).toEqual([{index: SELECTED, ignoreAudio: true}])
-            //...and it EASES there rather than arriving, which is the whole point of the branch
+            //NO selectColumn round-trip: the column the line is inside IS the selected one, so
+            //the pause has nothing to tell the composer that its state does not already hold -
+            //the settle target never differs from `selected`, which is why the branch publishes
+            //nothing at all.
+            expect(harness.selectColumnCalls).toEqual([])
+            //...and it EASES there rather than arriving, which is the whole point of the branch:
+            //halting a mid-column glide dead is still a jump
             expect(harness.scrollPosition()).toBe(midColumn)
-
-            harness.context.song.selected = SELECTED
-            harness.push()
             await vi.advanceTimersByTimeAsync(SCROLL_EASE_MS + 32)
-            expect(harness.scrollPosition()).toBe(SELECTED)
-            //and the selectColumn round-trip it made itself did not undo the ease on the way past
+            expect(harness.scrollPosition()).toBe(SELECTED + 1)
             expect(harness.frameLoop().started).toBe(false)
         } finally {
             harness.destroy()
@@ -4578,13 +4575,13 @@ describe('the smooth scroll', () => {
         }
     })
 
-    it('parks on the LAST column when the song runs out, not a lookahead short of it', async () => {
+    it('settles on the last column when the song runs out - the end is the ordinary pause', async () => {
         const harness = await mountGliding()
         try {
             const last = harness.context.song.columns.length - 1
-            //1/8 columns at the end, which is the reported reproduction: they last 34ms against a
-            //250ms lookahead, so the transport runs out of song while the playhead is still eight
-            //columns back, and every one of those columns is in the queue rather than on screen.
+            //1/8 columns at the end - the fastest cadence the settings admit, where an
+            //end-of-song case computed from anything but `selected` would be magnified across
+            //eight 34ms columns
             for (let index = last - 8; index <= last; index++) {
                 harness.context.song.setTempoChangerAt(index, TEMPO_CHANGERS[3])
             }
@@ -4592,7 +4589,7 @@ describe('the smooth scroll', () => {
             harness.push()
             startPlaying(harness)
 
-            //run the transport to the end on the eighth-note cadence
+            //run to the end on the audio-true cadence: each tick lands at its column's boundary
             const EIGHTH = columnMs(0.125)
             for (let i = 0; i < 8; i++) {
                 await vi.advanceTimersByTimeAsync(EIGHTH)
@@ -4600,19 +4597,21 @@ describe('the smooth scroll', () => {
                 harness.push()
             }
             expect(harness.context.song.selected).toBe(last)
-            //the playhead is still well short of the end here - that part is correct, the audio for
-            //those columns has not sounded yet
-            expect(harness.scrollPosition()).toBeLessThan(last)
+            //let the last column's own travel finish: the playhead reaches the far boundary of
+            //the song and holds there, which is where the music is while its final column sounds
+            await vi.advanceTimersByTimeAsync(EIGHTH * 2)
+            expect(harness.scrollPosition()).toBe(last + 1)
 
-            //THE SONG ENDS. Composer.svelte's tick calls togglePlay(false) without advancing
-            //`selected`, so this is the same isPlaying transition a manual pause makes - but the
-            //answer is not the same. A pause parks on the last column that was HEARD so play can
-            //resume there; running out of song has no resume, and the notes still scheduled will
-            //sound, so the playhead belongs at the end of the song rather than a lookahead short.
+            //THE SONG ENDS. The transport's onFinished stops playback with `selected` still on
+            //the last column - the last column the song reached IS the selected one, so the end
+            //needs no case of its own: the ordinary pause settle eases back onto it, publishing
+            //nothing.
+            harness.selectColumnCalls.length = 0
             harness.context.props.isPlaying = false
             harness.push()
             await vi.advanceTimersByTimeAsync(SCROLL_EASE_MS + 32)
             expect(harness.scrollPosition()).toBe(last)
+            expect(harness.selectColumnCalls).toEqual([])
             expect(harness.frameLoop().started).toBe(false)
         } finally {
             harness.destroy()
@@ -4623,7 +4622,7 @@ describe('the smooth scroll', () => {
         const harness = await mountGliding()
         try {
             startPlaying(harness)
-            await vi.advanceTimersByTimeAsync(LOOKAHEAD_MS + WHOLE / 2)
+            await vi.advanceTimersByTimeAsync(WHOLE / 2)
 
             //a breakpoint jump, a click, the wheel: `selected` moving by anything but one column
             harness.context.song.selected = 60
@@ -4631,23 +4630,23 @@ describe('the smooth scroll', () => {
             expect(harness.scrollPosition()).toBe(60)
 
             //...and the jump re-anchors the SCHEDULE and not only the position: the playhead
-            //travels on through column 60, which is the column it would skip outright if the next
-            //tick's segment were the only thing in the queue
-            await vi.advanceTimersByTimeAsync(LOOKAHEAD_MS + WHOLE / 2)
+            //travels on through column 60 - the column now sounding - which it would stand still
+            //on for a whole column and then leap over if the next tick's segment were the only
+            //thing in the queue
+            await vi.advanceTimersByTimeAsync(WHOLE / 2)
             expectPosition(harness, 60.5, WHOLE)
             await vi.advanceTimersByTimeAsync(WHOLE / 2)
             expectPosition(harness, 61, WHOLE)
 
-            //THE STALL A JUMP COSTS, stated rather than smoothed over. A click does not reset the
-            //playback loop's own timer, so the next tick arrives at a moment unrelated to the
-            //anchor this jump created - here a full column later, while the column it announces is
-            //only heard a lookahead after that. The playhead waits at the line for the difference
-            //instead of running ahead of the music or stepping back to meet it.
-            tick(harness)
+            //A LATE TICK, stated rather than smoothed over. Ticks normally land at their column's
+            //boundary; this one is held back half a column - a stalled flush, a busy main thread.
+            //The playhead waits AT the boundary for it instead of extrapolating past the schedule
+            //it was given or stepping back to meet the delay.
             await vi.advanceTimersByTimeAsync(WHOLE / 2)
             expect(harness.scrollPosition()).toBe(61)
 
-            await vi.advanceTimersByTimeAsync(LOOKAHEAD_MS - WHOLE / 2 + WHOLE / 2)
+            tick(harness)
+            await vi.advanceTimersByTimeAsync(WHOLE / 2)
             expectPosition(harness, 61.5, WHOLE)
         } finally {
             harness.destroy()
@@ -4658,7 +4657,7 @@ describe('the smooth scroll', () => {
         const harness = await mountGliding()
         try {
             startPlaying(harness)
-            await vi.advanceTimersByTimeAsync(LOOKAHEAD_MS + WHOLE / 2)
+            await vi.advanceTimersByTimeAsync(WHOLE / 2)
             const midColumn = harness.scrollPosition()
             expectPosition(harness, SELECTED + 0.5, WHOLE)
 
@@ -4681,7 +4680,7 @@ describe('the smooth scroll', () => {
         const harness = await mountGliding()
         try {
             startPlaying(harness)
-            await vi.advanceTimersByTimeAsync(LOOKAHEAD_MS + WHOLE / 2)
+            await vi.advanceTimersByTimeAsync(WHOLE / 2)
             expectPosition(harness, SELECTED + 0.5, WHOLE)
 
             //the toggle is the whole point of the setting existing - it has to be comparable
@@ -4704,7 +4703,7 @@ describe('the smooth scroll', () => {
     it('stops requesting frames once the renderer is destroyed', async () => {
         const harness = await mountGliding()
         startPlaying(harness)
-        await vi.advanceTimersByTimeAsync(LOOKAHEAD_MS + WHOLE / 2)
+        await vi.advanceTimersByTimeAsync(WHOLE / 2)
         const rendersBefore = harness.renders()
         //the glide IS running at this point, so the count below is a stopped loop rather than one
         //that was never started
@@ -4823,7 +4822,7 @@ describe('the frame loop', () => {
         try {
             harness.context.props.isPlaying = true
             harness.push()
-            await vi.advanceTimersByTimeAsync(LOOKAHEAD_MS)
+            await vi.advanceTimersByTimeAsync(32)
             expect(harness.frameLoop().started).toBe(true)
 
             //AudioRecorder captures in real time, so a main-thread stall is a dropout in the file
@@ -4935,7 +4934,7 @@ describe('the frame loop', () => {
             //Two renders per frame is what pixi's own registered render listener produces on top of
             //this class's; zero would mean the loop is not the thing painting.
             const glideStart = {loop: harness.frameLoop(), renders: harness.renders()}
-            await vi.advanceTimersByTimeAsync(LOOKAHEAD_MS + WHOLE)
+            await vi.advanceTimersByTimeAsync(WHOLE)
             const glideEnd = {loop: harness.frameLoop(), renders: harness.renders()}
             const moved = glideEnd.renders - glideStart.renders
             const emitted = glideEnd.loop.emits - glideStart.loop.emits
@@ -4943,8 +4942,8 @@ describe('the frame loop', () => {
             expect(moved).toBeLessThanOrEqual(emitted)
 
             //THE STALL: the schedule has run out and is waiting for a late tick, so the loop keeps
-            //asking for frames (the tick's segment starts a lookahead in the future and has to be
-            //picked up by something) - and the position is clamped, so none of them may render.
+            //asking for frames (the tick's segment has to be picked up by one the moment it
+            //lands) - and the position is clamped, so none of them may render.
             //Measured from AFTER the playhead has reached that clamp, since the frame that puts it
             //there is a frame that moved and renders for that reason.
             await vi.advanceTimersByTimeAsync(WHOLE / 2)
@@ -4965,7 +4964,7 @@ describe('the frame loop', () => {
             harness.context.props.isPlaying = true
             harness.push()
             const before = harness.renderedX().length
-            await vi.advanceTimersByTimeAsync(LOOKAHEAD_MS + WHOLE)
+            await vi.advanceTimersByTimeAsync(WHOLE)
             const rendered = harness.renderedX().slice(before)
             expect(rendered.length).toBeGreaterThan(0)
             //the offset each render SAW, against the offset the scene holds now. A frame that moved
@@ -4990,7 +4989,7 @@ describe('the frame loop', () => {
         try {
             harness.context.props.isPlaying = true
             harness.push()
-            await vi.advanceTimersByTimeAsync(LOOKAHEAD_MS + WHOLE / 2)
+            await vi.advanceTimersByTimeAsync(WHOLE / 2)
             expect(harness.frameLoop().started).toBe(true)
 
             harness.context.props.isPlaying = false
@@ -5038,7 +5037,7 @@ describe('the frame loop', () => {
             let lastX = harness.paintedScene().timeline.viewport.x
             let lastScroll = harness.scrollPosition()
             const startX = lastX
-            const until = performance.now() + LOOKAHEAD_MS + WHOLE
+            const until = performance.now() + WHOLE
             while (performance.now() < until) {
                 await vi.advanceTimersByTimeAsync(16)
                 const x = harness.paintedScene().timeline.viewport.x
@@ -6010,9 +6009,10 @@ describe('manual scrolling', () => {
      * is a second writer of the position. These are the ones where that second writer is the point.
      *
      * What they cover that nothing above can: the transport moves the position between a press and
-     * the drag it becomes, it owns a queue a gesture has to take away from it, and it runs a
-     * LOOKAHEAD ahead of the playhead - so `selected` and the line are about a column apart, and
-     * every input measured against the wrong one of the two is wrong by a column.
+     * the drag it becomes, it owns a queue a gesture has to take away from it, and during a glide
+     * the line is a FRACTION into `selected`'s column - so the line ROUNDS to the wrong column for
+     * the whole second half of every column, and an input measured off it instead of off
+     * `selected` is wrong by one exactly then.
      */
     async function mountPlaying() {
         const context = makeContext()
@@ -6033,7 +6033,7 @@ describe('manual scrolling', () => {
         try {
             const {columnWidth} = harness.geometry()
             //into the column's travel, so the playhead is on a fraction rather than a boundary
-            await vi.advanceTimersByTimeAsync(LOOKAHEAD_MS + WHOLE_COLUMN_MS / 2)
+            await vi.advanceTimersByTimeAsync(WHOLE_COLUMN_MS / 2)
             harness.pressPointerOverNotes(CANVAS_WIDTH / 2)
             //A HESITATION between the press and the first real move, which is what an ordinary grab
             //looks like. The glide keeps writing the position through all of it, so the position
@@ -6055,7 +6055,7 @@ describe('manual scrolling', () => {
         const harness = await mountPlaying()
         try {
             const {columnWidth} = harness.geometry()
-            await vi.advanceTimersByTimeAsync(LOOKAHEAD_MS + WHOLE_COLUMN_MS / 2)
+            await vi.advanceTimersByTimeAsync(WHOLE_COLUMN_MS / 2)
             harness.pressPointerOverNotes(CANVAS_WIDTH / 2)
             harness.movePointerOverNotes(CANVAS_WIDTH / 2 - columnWidth * 20.6)
             await vi.advanceTimersByTimeAsync(64)
@@ -6090,29 +6090,30 @@ describe('manual scrolling', () => {
     it('while playing with smooth scrolling on, the wheel steps from the transport, not the playhead', async () => {
         const harness = await mountPlaying()
         try {
-            //ONE TICK, then a moment into the next column: `selected` is 41 and the playhead is
-            //still inside 40, because the schedule runs a lookahead behind the state by
-            //construction. That gap is the whole of this row.
+            //ONE TICK, then deep into its column: `selected` is 41 and the line is a fraction
+            //past 41.5, because the line travels THROUGH the sounding column. In the second half
+            //of a column the line ROUNDS to the next one - that rounding gap is the whole of
+            //this row.
             await vi.advanceTimersByTimeAsync(WHOLE_COLUMN_MS)
             harness.context.song.selected = SELECTED + 1
             harness.push()
-            await vi.advanceTimersByTimeAsync(32)
-            expect(harness.scrollPosition()).toBeLessThan(SELECTED + 1)
+            await vi.advanceTimersByTimeAsync(WHOLE_COLUMN_MS * 0.7)
+            expect(harness.scrollPosition()).toBeGreaterThan(SELECTED + 1.5)
+            expect(harness.scrollPosition()).toBeLessThan(SELECTED + 2)
 
             harness.selectColumnCalls.length = 0
             harness.wheelOverNotes(100)
-            //MEASURED FROM `selected`, not from the line. Rounding the playhead gives 40, so a
-            //forward step from there asks for 41 - the column the transport is ALREADY on, an
-            //unchanged write that notifies nothing: the user scrolls forward during playback and
-            //nothing happens at all, for as long as the playhead is in the first half of the
-            //column.
+            //MEASURED FROM `selected`, not from the line. Rounding the playhead gives 42, so a
+            //forward step from there would ask for 43 - skipping the column between - while a
+            //step from `selected` asks for 42, the column after the one sounding.
             expect(harness.selectColumnCalls).toEqual([{index: SELECTED + 2, ignoreAudio: true}])
 
             harness.selectColumnCalls.length = 0
             harness.wheelOverNotes(-100)
-            //...and backward is the same error in the other direction, which is why both are here:
-            //from the line it would ask for 39, jumping the transport TWO columns back for one
-            //wheel notch.
+            //...and backward is the same error in the other direction, which is why both are
+            //here: from the line it would ask for 41, the column the transport is ALREADY on -
+            //an unchanged write that notifies nothing, a backward notch that does nothing at all
+            //for the whole second half of every column.
             expect(harness.selectColumnCalls).toEqual([{index: SELECTED, ignoreAudio: true}])
         } finally {
             harness.destroy()
@@ -6128,7 +6129,7 @@ describe('manual scrolling', () => {
             harness.push()
             harness.context.props.isPlaying = true
             harness.push()
-            await vi.advanceTimersByTimeAsync(250 + 60)
+            await vi.advanceTimersByTimeAsync(60)
 
             //BACKWARDS, so the move is unambiguously a jump: `selected` advancing by exactly one
             //while playing is a playback TICK by definition, and the renderer cannot tell a wheel
@@ -6661,7 +6662,7 @@ describe('the momentum coast', () => {
             harness.context.props.isPlaying = true
             harness.push()
             //mid-glide, mid-column: the state a drag on a playing song actually starts from
-            await vi.advanceTimersByTimeAsync(LOOKAHEAD_MS + WHOLE_COLUMN_MS / 2)
+            await vi.advanceTimersByTimeAsync(WHOLE_COLUMN_MS / 2)
             const start = CANVAS_WIDTH / 2
             harness.pressPointerOverNotes(start)
             //a column every 16ms - a 5px/ms chord, fresh to the last sample
@@ -6686,11 +6687,11 @@ describe('the momentum coast', () => {
                 {index: target, ignoreAudio: true},
             ])
             //...and the transport takes the position back: the settle's flush is a discontinuity
-            //that re-anchors the glide, which resumes after its lookahead - rules untouched
+            //that re-anchors the glide, which departs at once - rules untouched
             harness.context.song.selected = target
             harness.push()
             expect(harness.scrollPosition()).toBe(target)
-            await vi.advanceTimersByTimeAsync(LOOKAHEAD_MS + WHOLE_COLUMN_MS / 2)
+            await vi.advanceTimersByTimeAsync(WHOLE_COLUMN_MS / 2)
             const resumed = harness.scrollPosition()
             expect(resumed).toBeGreaterThan(target)
             expect(resumed).toBeLessThan(target + 1)

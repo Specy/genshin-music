@@ -46,14 +46,13 @@ export type ComposerSettingsDataType = {
     syncTabs: SettingsCheckbox
     useKeyboardSideButtons: SettingsCheckbox
     smoothScroll: SettingsCheckbox
-    lookaheadTime: SettingsNumber
 }
 export type ComposerSettingsType = BaseSettings<ComposerSettingsDataType>
 
 
 export const ComposerSettings = {
     other: {
-        settingVersion: APP_NAME + 72,
+        settingVersion: APP_NAME + 73,
     },
     data: {
         bpm: {
@@ -156,16 +155,6 @@ export const ComposerSettings = {
             category: "composer_settings",
             songSetting: false,
             value: false
-        },
-        lookaheadTime: {
-            name: "composer_lookahead_time",
-            tooltip: "composer_lookahead_time_description",
-            type: "number",
-            category: "composer_settings",
-            songSetting: false,
-            value: 200,
-            increment: 50,
-            threshold: [0, 500]
         }
     }
 

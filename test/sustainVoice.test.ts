@@ -130,12 +130,20 @@ describe('Voice', () => {
         expect(source.calls).toContainEqual({method: 'start', args: [undefined]})
     })
 
-    it('without a loop region the source plays one-shot; with delay it starts at now+delay', () => {
-        const {created, voice} = makeVoice({loop: null, delay: 0.5})
+    it('without a loop region the source plays one-shot; with a future `at` it starts at that absolute time', () => {
+        const {created, voice} = makeVoice({loop: null, at: 10.5})
         const source = created.sources[0]
         expect(source.loop).toBe(false)
         expect(voice.startedAt).toBe(10.5)
         expect(source.calls).toContainEqual({method: 'start', args: [10.5]})
+    })
+
+    it('an `at` at or before the audio clock (or non-finite) starts immediately — startedAt clamps to now', () => {
+        for (const at of [10, 9, NaN, Infinity]) {
+            const {created, voice} = makeVoice({loop: null, at})
+            expect(voice.startedAt).toBe(10)
+            expect(created.sources[0].calls).toContainEqual({method: 'start', args: [undefined]})
+        }
     })
 
     it('loop-continuous (default): release keeps the loop wrapping and fades it out over `release` — no tail source', () => {
@@ -231,7 +239,7 @@ describe('Voice', () => {
     })
 
     it('releaseAt clamps to the voice start time (never releases before it starts)', () => {
-        const {voice, created} = makeVoice({delay: 1, loopMode: 'loop-sustain'}) // startedAt = 11
+        const {voice, created} = makeVoice({at: 11, loopMode: 'loop-sustain'}) // startedAt = 11
         voice.releaseAt(10.2)
         // clamped to the start: position 0, tail plays the file front to back
         expect(created.sources[0].calls).toContainEqual({method: 'stop', args: [11.02]})
@@ -254,8 +262,8 @@ describe('Voice', () => {
         expect(atEnd.created.sources[0].calls).toContainEqual({method: 'start', args: [10, 0.5]})
     })
 
-    it('skip composes with delay: source starts at now+delay from the skipped position', () => {
-        const {created, voice} = makeVoice({delay: 0.5, skip: 1})
+    it('skip composes with a scheduled start: source starts at `at` from the skipped position', () => {
+        const {created, voice} = makeVoice({at: 10.5, skip: 1})
         expect(voice.startedAt).toBe(10.5)
         expect(created.sources[0].calls).toContainEqual({method: 'start', args: [10.5, 1.5]})
     })
@@ -340,8 +348,8 @@ describe('Voice', () => {
         expect(choked.created.sources[0].calls).toContainEqual({method: 'stop', args: [10.02]})
     })
 
-    it('fadeOut cancels a delayed voice before it can make a late sound', () => {
-        const {voice, created} = makeVoice({delay: 0.5})
+    it('fadeOut cancels a scheduled voice before it can make a late sound', () => {
+        const {voice, created} = makeVoice({at: 10.5})
         voice.fadeOut()
         expect(voice.isDisposed).toBe(true)
         expect(created.sources).toHaveLength(1)
@@ -426,6 +434,16 @@ function sustainingInstrument(loopMode: SustainLoopMode = 'loop-continuous') {
     instrument.volumeNode = (context as any).createGain()
     instrument.buffers = instrument.notes.map(() => FAKE_BUFFER)
     return {instrument, created, id: (button: number) => idAt(instrument, button)}
+}
+
+/** A real one-shot Instrument (the default is one) with fake audio plumbing, for the scheduled-one-shot registry tests. */
+function oneShotInstrument() {
+    const instrument = new Instrument(INSTRUMENTS[0])
+    const {context, created} = fakeContext()
+    instrument.audioContext = context as any
+    instrument.volumeNode = (context as any).createGain()
+    instrument.buffers = instrument.notes.map(() => FAKE_BUFFER)
+    return {instrument, created, context, id: (button: number) => idAt(instrument, button)}
 }
 
 /** sustainingInstrument with sustain.minLength authored (and optionally a per-note override on button 1). */
@@ -617,6 +635,101 @@ describe('Instrument sustain', () => {
         instrument.pressNote(id(0), 'C')
         instrument.releaseAllNotes()
         expect(created.sources[0].calls).toContainEqual({method: 'stop', args: [10.3]})
+    })
+})
+
+// ADR-0006: play/pressNote take an ABSOLUTE AudioContext time, and everything committed to a
+// future start is retractable through cancelScheduledAfter until the moment it starts.
+describe('Instrument committed scheduling', () => {
+    it('play with a future `at` commits the one-shot at that absolute time', () => {
+        const {instrument, created, id} = oneShotInstrument()
+        instrument.play(id(0), 'C', 10.4)
+        expect(created.sources[0].calls).toContainEqual({method: 'start', args: [10.4]})
+    })
+
+    it('play with no `at` (or one already past) starts now and is fire-and-forget — sounding audio always rings out', () => {
+        const {instrument, created, id} = oneShotInstrument()
+        instrument.play(id(0), 'C')
+        instrument.play(id(1), 'C', 9.5)
+        expect(created.sources[0].calls).toContainEqual({method: 'start', args: [undefined]})
+        expect(created.sources[1].calls).toContainEqual({method: 'start', args: [undefined]})
+        instrument.cancelScheduledAfter(0) // nothing registered — nothing to retract
+        expect(created.sources[0].calls.some((c: Call) => c.method === 'stop')).toBe(false)
+        expect(created.sources[1].calls.some((c: Call) => c.method === 'stop')).toBe(false)
+    })
+
+    it('cancelScheduledAfter retracts committed one-shots from `at` on, leaving earlier ones committed', () => {
+        const {instrument, created, id} = oneShotInstrument()
+        instrument.play(id(0), 'C', 10.3)
+        instrument.play(id(1), 'C', 10.6)
+        instrument.cancelScheduledAfter(10.5)
+        const [first, second] = created.sources
+        expect(first.calls.some((c: Call) => c.method === 'stop')).toBe(false)
+        expect(second.calls).toContainEqual({method: 'stop', args: [undefined]})
+        expect(second.calls).toContainEqual({method: 'disconnect', args: []})
+        // retraction deregisters: a wider second sweep cannot double-stop it
+        instrument.cancelScheduledAfter(10.2)
+        expect(second.calls.filter((c: Call) => c.method === 'stop')).toHaveLength(1)
+        // and that sweep retracts the earlier one-shot, still unstarted
+        expect(first.calls).toContainEqual({method: 'stop', args: [undefined]})
+    })
+
+    it('a cutoff already in the past clamps to now — a one-shot that began sounding is never cut', () => {
+        const {instrument, created, id, context} = oneShotInstrument()
+        instrument.play(id(0), 'C', 10.4)
+        ;(context as any).currentTime = 10.5 // started sounding at 10.4
+        instrument.cancelScheduledAfter(10)
+        expect(created.sources[0].calls.some((c: Call) => c.method === 'stop')).toBe(false)
+    })
+
+    it("the 'ended' handler deregisters a committed one-shot", () => {
+        const {instrument, created, id} = oneShotInstrument()
+        instrument.play(id(0), 'C', 10.4)
+        const source = created.sources[0]
+        source.emitEnded()
+        const stops = source.calls.filter((c: Call) => c.method === 'stop').length
+        instrument.cancelScheduledAfter(10.2) // would re-stop 10.4 if it were still registered
+        expect(source.calls.filter((c: Call) => c.method === 'stop')).toHaveLength(stops)
+    })
+
+    it("play() prunes entries long past their start — a lost 'ended' must not grow the registry over a session", () => {
+        const {instrument, id, context} = oneShotInstrument()
+        instrument.play(id(0), 'C', 10.4)
+        instrument.play(id(1), 'C', 10.6)
+        expect((instrument as any).scheduledOneShots).toHaveLength(2)
+        ;(context as any).currentTime = 11.2 // both within the 1s retention bound — kept
+        instrument.play(id(0), 'C')
+        expect((instrument as any).scheduledOneShots).toHaveLength(2)
+        ;(context as any).currentTime = 20 // both long past it — dropped
+        instrument.play(id(0), 'C')
+        expect((instrument as any).scheduledOneShots).toHaveLength(0)
+    })
+
+    it('pressNote with `at` starts the voice at that absolute time and durationMs counts from it', () => {
+        const {instrument, created, id} = sustainingInstrument()
+        const voice = instrument.pressNote(id(0), 'C', {at: 12, durationMs: 500})
+        expect(voice?.startedAt).toBe(12)
+        expect(created.sources[0].calls).toContainEqual({method: 'start', args: [12]})
+        // released at startedAt + durationMs, faded over `release` (0.3)
+        expect(created.sources[0].calls).toContainEqual({method: 'stop', args: [12.5 + 0.3]})
+    })
+
+    it('cancelScheduledAfter retracts a committed-but-unstarted Voice and leaves a sounding one ringing', () => {
+        const {instrument, created, id} = sustainingInstrument()
+        instrument.pressNote(id(0), 'C', {durationMs: 5000}) // sounding since 10
+        instrument.pressNote(id(1), 'C', {at: 11, durationMs: 500}) // committed, starts at 11
+        instrument.cancelScheduledAfter(10.5)
+        expect(created.sources[1].calls).toContainEqual({method: 'stop', args: [undefined]})
+        expect(created.sources[1].calls).toContainEqual({method: 'disconnect', args: []})
+        // the sounding voice keeps only its own musical release (at 15, faded by 15.3)
+        expect(created.sources[0].calls.filter((c: Call) => c.method === 'stop'))
+            .toEqual([{method: 'stop', args: [15 + 0.3]}])
+        // the retracted voice left activeVoices: a later stop touches only the sounding one
+        const stopsAfterRetraction =
+            created.sources[1].calls.filter((c: Call) => c.method === 'stop').length
+        instrument.releaseAllNotes(true)
+        expect(created.sources[1].calls.filter((c: Call) => c.method === 'stop'))
+            .toHaveLength(stopsAfterRetraction)
     })
 })
 

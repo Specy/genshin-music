@@ -255,10 +255,6 @@ export const i18n_en = {
       composer_sync_tabs: 'Autoplay in all tabs (pc only)',
       composer_sync_tabs_description:
         'Advanced feature, it syncs other browser tabs to all play at the same time',
-      composer_lookahead_time: 'Lookahead time',
-      composer_lookahead_time_description:
-        'How many milliseconds ahead the composer will look for notes to play, a higher value improves playback accuracy by reducing stutters, but feels less responsive',
-
       sheet_visualizer_note_names: 'Show note names',
       sheet_visualizer_note_names_description:
         'Writes the name of each note inside it, using the layout selected below',
