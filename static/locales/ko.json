@@ -220,8 +220,6 @@
       "composer_smooth_scroll_description": "재생하는 동안 화면이 다음 열로 바로 건너뛰지 않고, 템포 조절기를 따라 각 열을 부드럽게 지나갑니다",
       "composer_sync_tabs": "모든 탭에서 자동 재생 (컴퓨터 전용)",
       "composer_sync_tabs_description": "고급 기능으로, 다른 탭이 동시에 연주하도록 합니다",
-      "composer_lookahead_time": "미리보기 시간",
-      "composer_lookahead_time_description": "연주할 노트를 얼마나 일찍 보여줄 지 설정합니다. 더 높은 값은 끊김을 줄여 연주의 정확도가 높아지지만, 반응속도가 느려졌다고 느낄 수 있습니다",
       "player_instrument": "악기",
       "player_instrument_description": "플레이어의 기본(처음) 악기. 곡을 녹음할 때도 저장이 됩니다",
       "player_pitch": "음높이",

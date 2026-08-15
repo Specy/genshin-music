@@ -344,6 +344,21 @@ export interface ComposerRendererState {
    * column's appearance.
    */
   isPlaying: boolean;
+  /**
+   * Absolute `performance.now()`-domain time at which `selected` begins sounding during playback.
+   * Composer maps the transport's AudioContext boundary into this clock before publishing the
+   * state. Keeping the boundary explicit lets the renderer wait for a future anchor margin, or
+   * catch up fractionally when a transport callback reaches the main thread late, instead of
+   * pretending callback arrival is the audio boundary.
+   */
+  playbackColumnStartMs: number;
+  /**
+   * Monotonic identity of the current playback anchor. It stays unchanged for ordinary transport
+   * advances and increments whenever Composer anchors/re-anchors (play start or a manual seek).
+   * `selected + 1` is therefore a continuous transport tick only when this value is unchanged; a
+   * manual one-column seek is a discontinuity despite having the same numeric delta.
+   */
+  playbackAnchorGeneration: number;
   isRecordingAudio: boolean;
   // The instrument roster, passed as its OWN field rather than reached through the song. It used
   // to be `song: ComposedSong` and the draw path read `state.song.instruments` - which meant the
@@ -428,7 +443,8 @@ export interface ComposerRendererState {
 // cross-checked against (test/composerCanvasCss.test.ts) - a reported inset would be a second
 // statement of a number the CSS already owns.
 export interface ComposerRendererCallbacks {
-  selectColumn: (index: number, ignoreAudio?: boolean) => void;
+  /** `forceAnchor` marks a gesture's release, even when it lands on its last published floor. */
+  selectColumn: (index: number, ignoreAudio?: boolean, forceAnchor?: boolean) => void;
   toggleBreakpoint: () => void;
   onGeometryChange: (geometry: {
     width: number;
@@ -600,7 +616,8 @@ type Motion =
  * segment a quarter as long over the same distance, so the scroll speeds up through it.
  *
  * WHY A QUEUE OF THESE rather than a single "current glide". A tick anchors its column's segment
- * at its own arrival instant, so after a tick the queue holds the just-started segment - but the
+ * at the performance-clock time Composer mapped from the audio boundary, so after a tick the queue
+ * holds the just-started segment - but the
  * previous one is consumed only as frames read past its end (scrollPositionAt drops expired
  * entries lazily), so around every boundary two segments are live at once, and the frames and the
  * ticks run on different cadences: a 1/8 column at 220bpm lasts 34ms against emitted frames up to
@@ -611,11 +628,9 @@ type Motion =
  * single segment survived.
  *
  * `endMs` starts as a PREDICTION from the bpm and the column's tempo changer, because the segment
- * has to be drawable before the tick that ends it arrives. The boundaries ticks announce are
- * audio-clock-exact, but a tick reaches this class through a timer wake and a Svelte flush, so its
- * arrival instant jitters around its boundary - scheduleScrollSegment replaces the previous
- * segment's prediction with the next tick's measured start, so the chain stays contiguous in time
- * as well as in position.
+ * has to be drawable before the tick that ends it arrives. The next state's explicit start time is
+ * the authoritative boundary: scheduleScrollSegment shortens an overlong prediction to it, while
+ * never stretching a segment backwards under a playhead already drawn past that point.
  */
 interface ScrollSegment {
   /** The column whose START the playhead is at when this segment begins. */
@@ -1737,10 +1752,9 @@ export class ComposerRenderer {
    * Matching the rounding is what keeps a glide the same length as the column it travels through,
    * so the two do not drift apart within a column.
    *
-   * The number is exact but the INSTANT a tick lands is not - a boundary reaches this class
-   * through a timer wake and a Svelte flush. That jitter is absorbed not here but through the
-   * MEASURED instant scheduleScrollSegment writes as each segment's start (see ScrollSegment),
-   * which is why this arithmetic does not have to know about it.
+   * The number is exact and the segment's start comes from the explicit performance-clock boundary
+   * on ComposerRendererState. That timestamp, rather than callback arrival, absorbs worker-timer and
+   * Svelte-flush latency without asking this arithmetic to know about either.
    */
   private columnDurationMs(index: number): number {
     const column = this.state.columns[index];
@@ -1752,15 +1766,12 @@ export class ComposerRenderer {
 
   private scheduleScrollSegment(column: number, startMs: number, durationMs: number): void {
     const last = this.scrollSegments[this.scrollSegments.length - 1];
-    // The measurement replacing the prediction - see ScrollSegment - but ONLY WHERE IT SHORTENS
-    // the previous segment, which is the case where the tick came in early. Stretching it instead
-    // would move the playhead BACKWARDS: the position inside a segment is a fraction of its length,
-    // so lengthening one at a fixed instant puts the playhead behind where the frame before it
-    // already drew. A tick arriving LATE therefore leaves the prediction alone and the playhead
-    // clamps at the column boundary until the new segment's turn - a brief stall at the line, which
-    // reads as the music being late rather than as the canvas stepping back. Nothing accumulates
-    // either way, because every segment is anchored on the tick that scheduled it rather than on
-    // the one before.
+    // The explicit next boundary replaces the prediction - see ScrollSegment - but ONLY WHERE IT
+    // SHORTENS the previous segment. Stretching it instead would move the playhead BACKWARDS: the
+    // position inside a segment is a fraction of its length, so lengthening one at a fixed instant
+    // puts the playhead behind where the frame before it already drew. Nothing accumulates either
+    // way, because every segment is anchored on its audio-derived performance time rather than on
+    // callback arrival or on the segment before it.
     if (last && startMs > last.startMs && startMs < last.endMs) last.endMs = startMs;
     this.scrollSegments.push({ from: column, startMs, endMs: startMs + durationMs });
   }
@@ -1789,15 +1800,17 @@ export class ComposerRenderer {
    * reads `scrollPosition` for the container offset.
    *
    * WHILE THE SONG PLAYS WITH SMOOTH SCROLLING ON, three cases, and the schedule is the same
-   * statement in all of them: an update carrying `selected = i` means the playhead is at the START
-   * of column i NOW - its audio is starting as the update lands - and travels through it over that
-   * column's length.
+   * statement in all of them: an update carrying `selected = i` also carries the performance-clock
+   * instant at which column i starts. The playhead remains at i before it, catches up when the update
+   * arrives after it, and travels through the column over that column's length.
    *  - A PLAYBACK TICK - `selected` advancing by exactly one from a state that was ALSO playing -
-   *    appends that segment to the queue. The one before it ends where this one begins, which is
-   *    what makes the timeline contiguous.
+   *    with the SAME playbackAnchorGeneration appends that segment to the queue. The one before it
+   *    ends where this one begins, which is what makes the timeline contiguous. A manual +1 seek
+   *    bumps the generation and is therefore a discontinuity, not a transport tick by coincidence.
    *  - ANY OTHER MOVE - play being pressed, a click, the wheel, a drag, a breakpoint jump - is a
    *    discontinuity, so the queue is dropped and the playhead re-anchored on the new column
-   *    before the same segment is scheduled from there. WITHOUT THAT SCHEDULE the new column's own
+   *    before the same segment is scheduled from its supplied audio boundary. WITHOUT THAT
+   *    SCHEDULE the new column's own
    *    travel would never exist: the queue stays empty until the NEXT boundary's tick, so the
    *    playhead would stand at the anchor for that column's whole length and then leap over it to
    *    the following column's start. It is the same missing first segment at play time and after a
@@ -1911,17 +1924,20 @@ export class ComposerRenderer {
     if (!state.smoothScroll && this.motion.kind === 'coasting')
       return this.settleAt(this.motion.publishedColumn);
     if (state.isPlaying && state.smoothScroll && previous !== null) {
-      const advancedOneColumn = previous.isPlaying && state.selected === previous.selected + 1;
+      const samePlaybackAnchor =
+        state.playbackAnchorGeneration === previous.playbackAnchorGeneration;
+      const advancedOneColumn =
+        previous.isPlaying && samePlaybackAnchor && state.selected === previous.selected + 1;
       if (advancedOneColumn) {
         this.scheduleScrollSegment(
           state.selected,
-          this.now(),
+          state.playbackColumnStartMs,
           this.columnDurationMs(state.selected)
         );
         this.enterMotion({ kind: 'playback' });
         return;
       }
-      if (previous.isPlaying && state.selected === previous.selected) {
+      if (previous.isPlaying && samePlaybackAnchor && state.selected === previous.selected) {
         // The glide carries on untouched - an edit during playback is not a discontinuity. The
         // QUEUE is what decides whether that is a motion at all: with nothing scheduled there is
         // nothing to travel through, and entering `playback` anyway would leave the frames running
@@ -1934,7 +1950,7 @@ export class ComposerRenderer {
       this.scrollPosition = state.selected;
       this.scheduleScrollSegment(
         state.selected,
-        this.now(),
+        state.playbackColumnStartMs,
         this.columnDurationMs(state.selected)
       );
       this.enterMotion({ kind: 'playback' });
@@ -2335,7 +2351,7 @@ export class ComposerRenderer {
     const motion = this.motion;
     if (motion.kind !== 'wheeling') return;
     const target = clamp(Math.round(motion.position), 0, this.state.columns.length - 1);
-    this.callbacks.selectColumn(target, true);
+    this.callbacks.selectColumn(target, true, true);
     this.easeTo(target);
   };
 
@@ -2593,7 +2609,7 @@ export class ComposerRenderer {
       if (coast) return this.enterMotion(coast);
     }
     const target = clamp(Math.round(motion.position), 0, this.state.columns.length - 1);
-    this.callbacks.selectColumn(target, true);
+    this.callbacks.selectColumn(target, true, true);
     this.easeTo(target);
   }
 
@@ -2712,7 +2728,7 @@ export class ComposerRenderer {
     const motion = this.motion;
     if (motion.kind !== 'dragging' || motion.surface !== 'timeline') return;
     const target = clamp(Math.round(motion.position), 0, this.state.columns.length - 1);
-    this.callbacks.selectColumn(target, true);
+    this.callbacks.selectColumn(target, true, true);
     this.easeTo(target);
   };
 

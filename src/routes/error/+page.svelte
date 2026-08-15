@@ -12,11 +12,8 @@
   import { setPageVisited } from '$stores/PageVisitStore.svelte';
   import { fileService } from '$core/Services/FileService';
   import { songService } from '$core/Services/SongService';
-  import { ComposedSong } from '$core/Songs/ComposedSong.svelte';
-  import { RecordedSong } from '$core/Songs/RecordedSong';
   import type { SerializedSong } from '$core/Songs/Song.svelte';
   import { APP_NAME } from '$core/legacyConfig';
-  import { game } from '$game';
   import { t } from '$i18n/binding.svelte';
 
   onMount(() => {
@@ -48,15 +45,9 @@
     try {
       const songName = song.name;
       const parsed = songService.parseSong(song);
-      const usesOldFormat =
-        game.features.downloadsSongsInOldFormat &&
-        (parsed instanceof ComposedSong || parsed instanceof RecordedSong);
-      if (usesOldFormat) {
-        const dropped = parsed.countOldFormatDroppedNotes();
-        if (dropped > 0)
-          logger.warn(t('logs:old_format_export_dropped_notes', { count: dropped }), 8000);
-      }
-      const converted = [usesOldFormat ? parsed.toOldFormat() : parsed.serialize()];
+      // Legacy Sky recovery export is intentionally disabled. To restore it:
+      // const converted = [parsed.toOldFormat()];
+      const converted = [parsed.serialize()];
       fileService.downloadSong(converted, `${songName}.${APP_NAME.toLowerCase()}sheet`);
       logger.success(t('logs:song_downloaded'));
     } catch (e) {

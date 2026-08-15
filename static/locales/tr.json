@@ -220,8 +220,6 @@
             "composer_smooth_scroll_description": "Çalma sırasında besteleyici, bir sonraki sütuna atlamak yerine tempo değiştiricileri takip ederek her sütunun içinden sürekli olarak kayar",
             "composer_sync_tabs": "Tüm sekmelerde otomatik oynatma (yalnızca bilgisayar)",
             "composer_sync_tabs_description": "Gelişmiş özellik: diğer tarayıcı sekmelerini aynı anda çalacak şekilde senkronize eder.",
-            "composer_lookahead_time": "Ön görülen zaman",
-            "composer_lookahead_time_description": "Besteleyicinin çalınacak notaları aramak için kaç milisaniye önde bakacağı; daha yüksek bir değer, takılmaları azaltarak çalma doğruluğunu artırır, ancak daha az duyarlı hissettirir.",
             "player_instrument": "Enstrüman",
             "player_instrument_description": "Oynatıcının ana (ilk) enstrümanı, kaydettiğiniz şarkıya da kaydedilecektir",
             "player_pitch": "Akort",

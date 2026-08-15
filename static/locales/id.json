@@ -221,8 +221,6 @@
             "composer_smooth_scroll_description": "Selama pemutaran, kanvas bergerak mulus melewati setiap kolom alih-alih melompat ke kolom berikutnya, mengikuti pengubah tempo",
             "composer_sync_tabs": "Putar otomatis di semua tab (hanya untuk komputer)",
             "composer_sync_tabs_description": "Fitur lanjutan, fitur ini menyinkronkan tab browser lain untuk bermain secara bersamaan",
-            "composer_lookahead_time": "Waktu lookahead",
-            "composer_lookahead_time_description": "Berapa milidetik ke depan komposer akan mencari nada untuk dimainkan, nilai yang lebih tinggi akan meningkatkan akurasi pemutaran dengan mengurangi gagap, tetapi terasa kurang responsif",
             "player_instrument": "Instrumen",
             "player_instrument_description": "Instrumen utama (pertama) pemain, juga akan disimpan dalam lagu yang Anda rekam",
             "player_pitch": "Pitch",

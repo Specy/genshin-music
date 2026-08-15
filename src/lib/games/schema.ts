@@ -206,7 +206,6 @@ export type GameJson = {
 
   features: {
     hasNoteFrame: boolean;
-    downloadsSongsInOldFormat: boolean;
   };
 
   i18n: {

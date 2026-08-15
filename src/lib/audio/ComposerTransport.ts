@@ -67,6 +67,8 @@ export const TRANSPORT_MIN_COMMIT_AHEAD = 2;
  */
 const DURATION_FLOOR_S = 0.001;
 
+type SoundingEvent = { index: number; atAudioTime: number };
+
 /**
  * Everything the transport knows about the outside. It owns TIME only: what a column contains,
  * which instruments sound it, and cancelling committed-but-unstarted audio on stop/resync all
@@ -90,8 +92,10 @@ export interface TransportCallbacks {
    * The sounding cursor ENTERED column `index` - its audio is starting now. Fired for every
    * column the cursor passes, including every column a stall skipped over, in order; NOT fired
    * for the anchor column, which the caller selected itself before asking to play from it.
+   * `atAudioTime` is the exact absolute boundary from the transport grid, not the later clock
+   * time at which a delayed worker callback happened to report it.
    */
-  onSounding(index: number): void;
+  onSounding(index: number, atAudioTime: number): void;
   /**
    * The LAST column finished sounding - the audio-true end of the song, about a horizon after
    * the final commitColumn went out. The transport is stopped by the time this fires.
@@ -150,6 +154,15 @@ export class ComposerTransport {
   private committedThrough = -1;
   /** Absolute audio time column committedThrough + 1 starts - the running sum's growing edge. */
   private commitTime = 0;
+  /**
+   * Start/end times actually handed to commitColumn in the current window build. Keeping this
+   * small piece of the old grid is important across a resync: by the time resync() is called,
+   * columnDurationMs already describes the NEW song. A late worker wake may nevertheless have
+   * left the cursor behind audio which started on the OLD grid, and those absolute committed
+   * times are the only truthful way to catch it up without duplicating a started column.
+   */
+  private readonly committedStarts = new Map<number, number>();
+  private readonly committedEnds = new Map<number, number>();
   private pendingWake: number | null = null;
 
   constructor(
@@ -170,6 +183,16 @@ export class ComposerTransport {
   /** The column the listener is hearing right now (the Sounding Column of CONTEXT.md). */
   get soundingColumn(): number {
     return this.cursor;
+  }
+
+  /** Absolute audio-clock time at which the current cursor column starts (seconds). */
+  get currentColumnStartTime(): number | null {
+    return this.running ? this.columnStartTime : null;
+  }
+
+  /** True only during anchor()'s start margin, before the anchor has begun sounding. */
+  get isCurrentColumnPending(): boolean {
+    return this.running && this.columnStartTime > this.clock.now();
   }
 
   /**
@@ -197,6 +220,8 @@ export class ComposerTransport {
     this.cursor = column;
     this.columnStartTime = this.clock.now() + marginS;
     this.nextBoundaryTime = this.columnStartTime + this.durS(column);
+    this.committedStarts.clear();
+    this.committedEnds.clear();
     // The watermark sits one BEFORE the anchor, so the first topUp() commits the anchor column
     // at columnStartTime through the same path as every other column - no special first-commit
     // seam whose times could disagree with the grid.
@@ -216,8 +241,9 @@ export class ComposerTransport {
    * mutation is what makes the horizon free - in-window audio is never stale, so a 1 s window
    * is indistinguishable from a 0 ms one from the user's point of view.
    *
-   * The sounding column itself is NOT recommitted: its audio already started, and started audio
-   * always rings out.
+   * A sounding column itself is NOT recommitted: its audio already started, and started audio
+   * always rings out. During anchor()'s future start margin it is not sounding yet, however, so
+   * cancellation removed it too and resync recommits it at its unchanged absolute anchor time.
    *
    * A recomputed boundary already in the past (the column shrank under the cursor) is fine: the
    * re-armed sleep clamps to 0 and that wake's catch-up loop advances through whatever is now
@@ -225,9 +251,48 @@ export class ComposerTransport {
    */
   resync(): void {
     if (!this.running) return;
+
+    // A worker wake can be late while already-committed audio continues perfectly on time. By
+    // the time the composer's mutation reaches us, columnDurationMs describes the NEW grid, so
+    // first consume only starts which were actually committed on the OLD one. This is the
+    // crucial ordering: rebuilding first would either leave the cursor stale or recommit the
+    // already-started next column.
+    const caughtOnOldGrid = this.collectDue(this.clock.now(), true);
+    if (!this.emitSounding(caughtOnOldGrid.sounding)) return;
+    if (caughtOnOldGrid.finished) {
+      this.finish();
+      return;
+    }
+
+    const now = this.clock.now();
+    const pendingAnchor = this.columnStartTime > now;
+    this.committedStarts.clear();
+    this.committedEnds.clear();
     this.nextBoundaryTime = this.columnStartTime + this.durS(this.cursor);
-    this.committedThrough = this.cursor;
-    this.commitTime = this.nextBoundaryTime;
+
+    if (pendingAnchor) {
+      // The composer just cancelled this not-yet-started anchor along with the rest of the old
+      // window. Rewind one column further than an ordinary resync so it is recreated at the
+      // SAME absolute start, keeping the start margin (and renderer/audio alignment) intact.
+      this.committedThrough = this.cursor - 1;
+      this.commitTime = this.columnStartTime;
+    } else {
+      // Started audio rings out. Rebuild strictly after it, even if a changed duration makes
+      // one or more fresh-grid boundaries already due.
+      this.committedThrough = this.cursor;
+      this.commitTime = this.nextBoundaryTime;
+    }
+
+    const caughtOnFreshGrid = pendingAnchor
+      ? { sounding: [] as SoundingEvent[], finished: false }
+      : this.collectDue(now, false);
+    if (!pendingAnchor) this.alignCommitEdgeWithCursor();
+    if (!caughtOnFreshGrid.finished) this.topUp();
+    if (!this.emitSounding(caughtOnFreshGrid.sounding)) return;
+    if (caughtOnFreshGrid.finished) {
+      this.finish();
+      return;
+    }
     this.topUp();
     this.armSleep();
   }
@@ -261,28 +326,84 @@ export class ComposerTransport {
    */
   private onWake(): void {
     if (!this.running) return;
-    while (this.running && this.clock.now() >= this.nextBoundaryTime) {
-      this.cursor += 1;
-      if (this.cursor > this.callbacks.columnCount() - 1) {
-        // The last column's audio has fully elapsed - the audio-true end of the song, about a
-        // horizon AFTER the final commit went out. Ending when commits run out would announce
-        // the end a second before the listener hears it.
-        this.running = false;
-        this.callbacks.onFinished();
-        return;
-      }
-      this.columnStartTime = this.nextBoundaryTime;
-      this.nextBoundaryTime += this.durS(this.cursor);
-      // Audio before UI: after a stall's catch-up the near-future commits are urgent - the
-      // window may have drained to nothing - and onSounding runs arbitrary consumer work.
-      this.topUp();
-      this.callbacks.onSounding(this.cursor);
+    const caught = this.collectDue(this.clock.now(), false);
+    this.alignCommitEdgeWithCursor();
+    // Audio before UI: after a stall the old horizon may be completely drained. Skip every
+    // uncommitted start which is now in the past, then restore the FUTURE window before handing
+    // arbitrary work to onSounding consumers.
+    if (!caught.finished) this.topUp();
+    if (!this.emitSounding(caught.sounding)) return;
+    if (caught.finished) {
+      this.finish();
+      return;
     }
-    // Re-checked because onSounding may have called stop(): committing or re-arming after the
-    // caller said stop would hand out audio the composer has no reason to expect.
-    if (!this.running) return;
-    this.topUp();
     this.armSleep();
+  }
+
+  /**
+   * Move the cursor across every boundary due at `now`, returning callbacks for the caller to
+   * emit only after the future audio window is safe again. With `committedOnly`, used at the
+   * start of resync(), movement stops at the edge of audio actually handed to commitColumn;
+   * durations may already have mutated, so inventing old-grid starts beyond that edge would be
+   * both untruthful and liable to duplicate a column.
+   */
+  private collectDue(
+    now: number,
+    committedOnly: boolean
+  ): { sounding: SoundingEvent[]; finished: boolean } {
+    const sounding: SoundingEvent[] = [];
+
+    while (this.running) {
+      const last = this.callbacks.columnCount() - 1;
+      if (this.cursor >= last) {
+        const committedEnd = this.committedEnds.get(this.cursor);
+        const boundary = committedOnly ? committedEnd : this.nextBoundaryTime;
+        if (boundary === undefined || now < boundary) break;
+        return { sounding, finished: true };
+      }
+
+      const next = this.cursor + 1;
+      const committedStart = this.committedStarts.get(next);
+      if (committedOnly && committedStart === undefined) break;
+      const atAudioTime = committedStart ?? this.nextBoundaryTime;
+      if (now < atAudioTime) break;
+
+      this.cursor = next;
+      this.columnStartTime = atAudioTime;
+      this.nextBoundaryTime =
+        this.committedEnds.get(next) ??
+        this.committedStarts.get(next + 1) ??
+        atAudioTime + this.durS(next);
+      sounding.push({ index: next, atAudioTime });
+    }
+
+    return { sounding, finished: false };
+  }
+
+  /**
+   * A stall can carry the cursor beyond the commit watermark. Those columns never had audio
+   * scheduled and cannot be repaired retroactively; move the growing edge to the first future
+   * boundary so topUp() skips them instead of releasing a burst of past-due notes.
+   */
+  private alignCommitEdgeWithCursor(): void {
+    if (this.committedThrough >= this.cursor) return;
+    this.committedThrough = this.cursor;
+    this.commitTime = this.nextBoundaryTime;
+  }
+
+  private emitSounding(sounding: SoundingEvent[]): boolean {
+    for (const event of sounding) {
+      if (!this.running) return false;
+      this.callbacks.onSounding(event.index, event.atAudioTime);
+    }
+    return this.running;
+  }
+
+  private finish(): void {
+    if (!this.running) return;
+    this.running = false;
+    this.clearPendingWake();
+    this.callbacks.onFinished();
   }
 
   /**
@@ -302,8 +423,22 @@ export class ComposerTransport {
         this.committedThrough < this.cursor + TRANSPORT_MIN_COMMIT_AHEAD)
     ) {
       const next = this.committedThrough + 1;
-      this.callbacks.commitColumn(next, this.commitTime);
-      this.commitTime += this.durS(next);
+      const start = this.commitTime;
+      const end = start + this.durS(next);
+      // A commit at currentTime is already too late for reliable Web Audio scheduling. This
+      // is normally prevented by collectDue()+alignCommitEdgeWithCursor(); the remaining case
+      // is the audio clock crossing a boundary while synchronous consumer work is in progress.
+      // Advance only the watermark in that race: the next wake still reports cursor continuity,
+      // while later columns can be committed safely instead of the whole window remaining dry.
+      if (start <= this.clock.now()) {
+        this.commitTime = end;
+        this.committedThrough = next;
+        continue;
+      }
+      this.callbacks.commitColumn(next, start);
+      this.committedStarts.set(next, start);
+      this.committedEnds.set(next, end);
+      this.commitTime = end;
       this.committedThrough = next;
     }
   }

@@ -4,7 +4,6 @@
   import { resolve } from '$app/paths';
   import type { Midi } from '@tonejs/midi';
   import { APP_NAME } from '$core/legacyConfig';
-  import { game } from '$game';
   import Analytics from '$core/Analytics';
   import { playerStore } from '$stores/PlayerStore.svelte';
   import { homeStore } from '$stores/HomeStore.svelte';
@@ -162,14 +161,9 @@
       return;
     }
     const songName = song.name;
-    if (game.features.downloadsSongsInOldFormat) {
-      const dropped = song.countOldFormatDroppedNotes();
-      if (dropped > 0)
-        logger.warn(t('logs:old_format_export_dropped_notes', { count: dropped }), 8000);
-    }
-    const converted = [
-      game.features.downloadsSongsInOldFormat ? song.toOldFormat() : song.serialize(),
-    ];
+    // Legacy Sky export is intentionally disabled. To restore it:
+    // const converted = [song.toOldFormat()];
+    const converted = [song.serialize()];
     fileService.downloadSong(converted, `${songName}.${APP_NAME.toLowerCase()}sheet`);
     logger.success(t('logs:song_downloaded'));
     Analytics.userSongs('download', { page: 'player' });
@@ -207,24 +201,10 @@
   async function downloadAllSongs() {
     try {
       const songs = await songService.getSongs();
-      let droppedNotes = 0;
-      const toDownload = songs.map((song) => {
-        if (game.features.downloadsSongsInOldFormat) {
-          if (ComposedSong.isSerializedType(song)) {
-            const parsed = ComposedSong.deserialize(song);
-            droppedNotes += parsed.countOldFormatDroppedNotes();
-            return parsed.toOldFormat();
-          }
-          if (RecordedSong.isSerializedType(song)) {
-            const parsed = RecordedSong.deserialize(song);
-            droppedNotes += parsed.countOldFormatDroppedNotes();
-            return parsed.toOldFormat();
-          }
-        }
-        return song;
-      });
-      if (droppedNotes > 0)
-        logger.warn(t('logs:old_format_export_dropped_notes', { count: droppedNotes }), 8000);
+      // Legacy Sky backup conversion is intentionally disabled. To restore it, map composed and
+      // recorded songs through `toOldFormat()` here before downloading them.
+      // const toDownload = songs.map((song) => songService.parseSong(song).toOldFormat());
+      const toDownload = songs.map((song) => songService.parseSong(song).serialize());
       const date = new Date().toISOString().split('T')[0];
       const folders = await _folderService.getFolders();
       const files = [...folders, ...toDownload];

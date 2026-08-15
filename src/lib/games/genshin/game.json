@@ -177,8 +177,7 @@
     }
   },
   "features": {
-    "hasNoteFrame": true,
-    "downloadsSongsInOldFormat": false
+    "hasNoteFrame": true
   },
   "i18n": {
     "updateMessage": "Added new instruments: Harmonic Key (genshin)\nAdded new Layout: number layout"

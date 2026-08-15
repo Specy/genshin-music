@@ -19,6 +19,7 @@ import {
 } from '../src/lib/audio/ComposerTransport'
 
 type Commit = { index: number, at: number, clockAtCommit: number }
+type Sounding = { index: number, at: number }
 type Sleep = { handler: () => void, ms: number, target: number }
 
 function harness(durationsMs: number[]) {
@@ -37,6 +38,7 @@ function harness(durationsMs: number[]) {
     }
     const commits: Commit[] = []
     const sounded: number[] = []
+    const soundingEvents: Sounding[] = []
     let finishedCount = 0
     const transport = new ComposerTransport(
         clock,
@@ -46,7 +48,10 @@ function harness(durationsMs: number[]) {
             // clockAtCommit captures the commit's MARGIN - the whole point of the horizon is
             // how far ahead of the audio clock each column goes out.
             commitColumn: (i, at) => commits.push({index: i, at, clockAtCommit: clock.t}),
-            onSounding: (i) => sounded.push(i),
+            onSounding: (i, at) => {
+                sounded.push(i)
+                soundingEvents.push({index: i, at})
+            },
             onFinished: () => {
                 finishedCount++
             },
@@ -59,6 +64,7 @@ function harness(durationsMs: number[]) {
         pending,
         commits,
         sounded,
+        soundingEvents,
         durationsMs,
         finished: () => finishedCount,
         /** The single armed sleep - the transport never has more than one, so assert it. */
@@ -108,6 +114,8 @@ describe('anchoring the transport', () => {
         expect(h.sleep().ms).toBeCloseTo((MARGIN + 0.1) * 1000, 6)
         expect(h.transport.isRunning).toBe(true)
         expect(h.transport.soundingColumn).toBe(0)
+        expect(h.transport.currentColumnStartTime).toBeCloseTo(10 + MARGIN, 9)
+        expect(h.transport.isCurrentColumnPending).toBe(true)
     })
 
     it('anchored on the last column, plays it and finishes at its end', () => {
@@ -121,6 +129,8 @@ describe('anchoring the transport', () => {
         expect(h.finished()).toBe(1)
         expect(h.sounded).toEqual([])
         expect(h.transport.isRunning).toBe(false)
+        expect(h.transport.currentColumnStartTime).toBeNull()
+        expect(h.transport.isCurrentColumnPending).toBe(false)
     })
 
     it('refuses an empty song or an out-of-range column without declaring the song finished', () => {
@@ -209,7 +219,9 @@ describe('the committed window', () => {
         h.transport.anchor(0)
         expect(h.commits.map((c) => c.index)).toEqual([0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
         // The bpm halves under a running transport; the composer has cancelled the instruments'
-        // committed-but-unstarted events and calls resync().
+        // committed-but-unstarted events and calls resync(). The anchor has reached its exact
+        // start first, so it is sounding rather than part of the cancelled future window.
+        h.clock.t = MARGIN
         for (let i = 0; i < h.durationsMs.length; i++) h.durationsMs[i] = 200
         const before = h.commits.length
         h.transport.resync()
@@ -219,7 +231,53 @@ describe('the committed window', () => {
         expect(recommitted.map((c) => c.index)).toEqual([1, 2, 3, 4])
         recommitted.forEach((c, k) => expect(c.at).toBeCloseTo(MARGIN + 0.2 * (k + 1), 9))
         // The sounding column's own boundary was recomputed with its fresh duration too.
-        expect(h.sleep().ms).toBeCloseTo((MARGIN + 0.2) * 1000, 6)
+        expect(h.sleep().ms).toBeCloseTo(0.2 * 1000, 6)
+    })
+
+    it('resync before the anchor starts recommits it at the unchanged absolute time', () => {
+        const h = harness(new Array(10).fill(100))
+        h.clock.t = 10
+        h.transport.anchor(0)
+        const anchorStart = 10 + MARGIN
+        const before = h.commits.length
+
+        // The composer cancels the whole not-yet-started window at 10.02, then changes tempo.
+        h.clock.t = 10.02
+        h.durationsMs.fill(200)
+        h.transport.resync()
+
+        const recommitted = h.commits.slice(before)
+        expect(recommitted[0]).toMatchObject({index: 0})
+        expect(recommitted[0].at).toBeCloseTo(anchorStart, 9)
+        expect(recommitted.every((commit) => commit.at > h.clock.t)).toBe(true)
+        expect(h.transport.currentColumnStartTime).toBeCloseTo(anchorStart, 9)
+        expect(h.transport.isCurrentColumnPending).toBe(true)
+        expect(h.sounded).toEqual([])
+        expect(h.sleep().ms).toBeCloseTo((anchorStart + 0.2 - h.clock.t) * 1000, 6)
+    })
+
+    it('resync just after an unheard worker wake catches the old committed boundary first', () => {
+        const h = harness(new Array(12).fill(100))
+        h.transport.anchor(0) // column 1 was committed to start at 0.15
+        const before = h.commits.length
+
+        // Audio has started column 1 but the worker callback has not run yet. The durations are
+        // already the NEW values when resync is called; catch-up must still use the OLD .15 grid.
+        h.clock.t = MARGIN + 0.101
+        h.durationsMs.fill(200)
+        h.transport.resync()
+
+        expect(h.transport.soundingColumn).toBe(1)
+        expect(h.transport.currentColumnStartTime).toBeCloseTo(MARGIN + 0.1, 9)
+        expect(h.transport.isCurrentColumnPending).toBe(false)
+        expect(h.soundingEvents).toEqual([{index: 1, at: MARGIN + 0.1}])
+
+        const recommitted = h.commits.slice(before)
+        // Column 1 is already sounding and must not be duplicated. The new grid begins after it.
+        expect(recommitted.some((commit) => commit.index === 1)).toBe(false)
+        expect(recommitted[0].index).toBe(2)
+        expect(recommitted[0].at).toBeCloseTo(MARGIN + 0.3, 9)
+        expect(recommitted.every((commit) => commit.at > h.clock.t)).toBe(true)
     })
 
     it('floors a degenerate column duration instead of wedging the grid', () => {
@@ -265,6 +323,53 @@ describe('the wake loop', () => {
         h.commits.forEach((c) => expect(c.at).toBeCloseTo(MARGIN + 0.034 * c.index, 9))
         // And the next sleep is aimed at column 14's boundary on that same grid.
         expect(h.sleep().ms).toBeCloseTo((MARGIN + 0.034 * 15 - 0.55) * 1000, 6)
+    })
+
+    it('skips uncommitted columns after a stall longer than the horizon instead of bursting them', () => {
+        const h = harness(new Array(100).fill(34))
+        h.transport.anchor(0)
+        const initiallyCommitted = h.commits.length
+        expect(h.commits.at(-1)?.index).toBe(27)
+
+        // The committed horizon ends around 1.002 s. Audio time jumps well beyond it, so
+        // columns 28..44 were never scheduled and are now irrecoverably in the past.
+        h.clock.t = 1.55
+        h.fireArmed()
+
+        expect(h.transport.soundingColumn).toBe(44)
+        expect(h.sounded).toEqual(Array.from({length: 44}, (_, i) => i + 1))
+        h.soundingEvents.forEach((event) => {
+            expect(event.at).toBeCloseTo(MARGIN + 0.034 * event.index, 9)
+        })
+
+        const afterStall = h.commits.slice(initiallyCommitted)
+        expect(afterStall[0].index).toBe(45)
+        expect(afterStall[0].at).toBeCloseTo(MARGIN + 0.034 * 45, 9)
+        expect(afterStall.every((commit) => commit.at > commit.clockAtCommit)).toBe(true)
+        expect(h.commits.some((commit) => commit.index >= 28 && commit.index <= 44)).toBe(false)
+        expect(new Set(h.commits.map((commit) => commit.index)).size).toBe(h.commits.length)
+        expect(h.sleep().ms).toBeCloseTo((MARGIN + 0.034 * 45 - h.clock.t) * 1000, 6)
+    })
+
+    it('does not advance or recommit while the audio clock is frozen', () => {
+        const h = harness(new Array(10).fill(200))
+        h.transport.anchor(0)
+        const committed = [...h.commits]
+
+        // A suspended AudioContext freezes currentTime even though worker timers keep waking.
+        // Each wake must merely re-arm against the same audio boundary.
+        for (let i = 0; i < 3; i++) {
+            h.fireArmed()
+            expect(h.clock.t).toBe(0)
+            expect(h.transport.soundingColumn).toBe(0)
+            expect(h.sounded).toEqual([])
+            expect(h.commits).toEqual(committed)
+            expect(h.sleep().ms).toBeCloseTo((MARGIN + 0.2) * 1000, 6)
+        }
+
+        h.clock.t = MARGIN + 0.2
+        h.fireArmed()
+        expect(h.soundingEvents).toEqual([{index: 1, at: MARGIN + 0.2}])
     })
 
     it('a stale wake from before a resync advances nothing and re-arms onto the new grid', () => {

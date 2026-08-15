@@ -29,6 +29,10 @@
     // subscribes this component to the graph.
     structureVersion: number;
     isPlaying: boolean;
+    /** performance.now()-domain start of the selected sounding playback column. */
+    playbackColumnStartMs: number;
+    /** Bumped for play/manual re-anchors; stable across ordinary transport advances. */
+    playbackAnchorGeneration: number;
     isRecordingAudio: boolean;
     // The roster is its own prop, not reached through a `song` prop - see ComposerRendererState's
     // note. The $effect below has to READ it for an instrument edit to repaint the canvas.
@@ -39,7 +43,7 @@
     settings: ComposerSettingsDataType;
     breakpoints: number[];
     selectedColumns: number[];
-    selectColumn: (index: number, ignoreAudio?: boolean) => void;
+    selectColumn: (index: number, ignoreAudio?: boolean, forceAnchor?: boolean) => void;
     toggleBreakpoint: () => void;
   }
 
@@ -47,6 +51,8 @@
     columns,
     structureVersion,
     isPlaying,
+    playbackColumnStartMs,
+    playbackAnchorGeneration,
     isRecordingAudio,
     instruments,
     selected,
@@ -107,6 +113,8 @@
           columns,
           structureVersion,
           isPlaying,
+          playbackColumnStartMs,
+          playbackAnchorGeneration,
           isRecordingAudio,
           instruments,
           selected,
@@ -183,6 +191,8 @@
       columns,
       structureVersion,
       isPlaying,
+      playbackColumnStartMs,
+      playbackAnchorGeneration,
       isRecordingAudio,
       instruments,
       selected,

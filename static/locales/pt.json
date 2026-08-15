@@ -220,8 +220,6 @@
       "composer_smooth_scroll_description": "Durante a reprodução, a área do compositor desliza continuamente por cada coluna em vez de pular para a próxima, seguindo as mudanças de tempo",
       "composer_sync_tabs": "Reproduzir automaticamente em todas as abas (apenas PC)",
       "composer_sync_tabs_description": "Recurso avançado, sincroniza outras abas do navegador para todas tocarem ao mesmo tempo",
-      "composer_lookahead_time": "Tempo de antecipação",
-      "composer_lookahead_time_description": "Quantos milissegundos à frente o compositor procurará notas para tocar, um valor mais alto melhora a precisão da reprodução e reduz travamentos, mas parece menos responsivo",
       "player_instrument": "Instrumento",
       "player_instrument_description": "O principal (primeiro) instrumento do reprodutor, também será salvo na música que você gravar",
       "player_pitch": "Tonalidade",

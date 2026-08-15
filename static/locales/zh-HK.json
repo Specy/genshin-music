@@ -221,8 +221,6 @@
             "composer_smooth_scroll_description": "播放時，畫布會跟隨節奏變換器連續滑過每一列，而不是直接跳到下一列。",
             "composer_sync_tabs": "在所有分頁中自動播放（僅限電腦）",
             "composer_sync_tabs_description": "進階功能，它同步其他瀏覽器分頁以同時播放。",
-            "composer_lookahead_time": "前窺時長",
-            "composer_lookahead_time_description": "編曲器將提前多少毫秒尋找要播放的音符，較高的值可以提高播放準確性，但感覺回應速度較差。",
             "player_instrument": "樂器",
             "player_instrument_description": "演奏器的主要（第一個）樂器，也將儲存在您錄製的歌曲中。",
             "player_pitch": "音調",

@@ -51,6 +51,20 @@ export class AudioProviderClass {
       this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
     return this.audioContext;
   };
+  /**
+   * Make the shared audio clock advance before a transport is anchored to it.
+   *
+   * Browsers are allowed to create an AudioContext in the suspended state when construction
+   * happens outside a user activation. Composer playback uses currentTime as its only clock, so
+   * anchoring before resume would leave both playback and audio export waiting forever on a
+   * timestamp the context can never reach. Keep the resume promise visible to callers so they can
+   * guard play/stop races while it is pending.
+   */
+  ensureRunning = async (): Promise<AudioContext> => {
+    const context = this.getAudioContext();
+    if (context.state !== 'running') await context.resume();
+    return context;
+  };
   waitReverb = async (): Promise<void> => {
     if (this.reverbLoading) {
       await this.reverbLoading;

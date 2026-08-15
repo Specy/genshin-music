@@ -221,8 +221,6 @@
             "composer_smooth_scroll_description": "再生中、キャンバスが次の列へジャンプするのではなく、テンポ変換ツールに合わせて各列を滑らかに移動していきます",
             "composer_sync_tabs": "すべてのタブで自動再生（PCのみ）",
             "composer_sync_tabs_description": "他のブラウザタブを同期して同時に再生する高度な機能です。",
-            "composer_lookahead_time": "先読み時間",
-            "composer_lookahead_time_description": "コンポーザーが再生するノートを何ミリ秒先まで探すか。値を高くすると再生精度が向上しますが、反応性が低下したように感じる場合があります。",
             "player_instrument": "楽器",
             "player_instrument_description": "プレイヤーの主要（最初の）楽器。録音した曲にも保存されます。",
             "player_pitch": "ピッチ",
