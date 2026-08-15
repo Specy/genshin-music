@@ -746,8 +746,11 @@
             "change-1": "Uygulamanın tamamı sıfırdan yeniden yazıldı. Performans her yerde iyileşmiş olmalı.",
             "change-2": "Uzatılan notalar eklendi. Besteleyicide, süre penceresini açmak için klavyedeki bir notaya uzun basın ve notanın kaç sütun boyunca süreceğini seçin. Oynatıcıda ve zen klavyede ise notayı uzatmak için nota butonunu basılı tutmanız yeterli.",
             "change-3": "Çalma sırasında besteleyici artık, şarkının neresinde olduğunuzu gösteren bir çizgiyle birlikte yumuşak bir şekilde kayıyor. Sürükleme ve kaydırma da yumuşak hale geldi. Bunu besteleyici ayarlarından kapatabilirsiniz.",
-            "change-4": "Kullanıcı deneyimini iyileştirmek için uygulama genelinde küçük tasarım değişiklikleri yapıldı",
-            "change-5": "Diğer birçok hata düzeltmesi ve iyileştirme"
+            "change-4": "Besteleyici zaman çizelgesine nota sayfası mini haritası eklendi",
+            "change-5": "Besteleyicide, bir sütunda kullanılan katmanlar vurgulanır",
+            "change-6": "Kullanıcı deneyimini iyileştirmek için uygulama genelinde küçük tasarım değişiklikleri yapıldı",
+            "change-7": "Besteleyici oynatması artık tek bir saat üzerinden çalışıyor; ses, görseller ve kayıt tamamen senkron kalıyor (lookahead ayarı kaldırıldı)",
+            "change-8": "Diğer birçok hata düzeltmesi ve iyileştirme"
         },
         "3-7-0": {
             "title": "Yeni enstrümanlar (Genshin)",

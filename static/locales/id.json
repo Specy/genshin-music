@@ -745,8 +745,11 @@
             "change-1": "Seluruh aplikasi telah ditulis ulang dari awal. Kinerja seharusnya meningkat di semua bagian.",
             "change-2": "Note tertahan telah ditambahkan. Di komposer, tekan lama sebuah note pada keyboard untuk membuka popover durasi dan pilih berapa kolom note tersebut akan bertahan. Di pemain dan keyboard Zen, cukup tahan tombol note untuk menahan note tersebut.",
             "change-3": "Saat memutar lagu, komposer kini melakukan scroll dengan mulus, disertai garis yang menandai posisi Anda di dalam lagu. Menyeret dan menggeser kanvas juga terasa mulus. Anda dapat mematikannya di pengaturan komposer.",
-            "change-4": "Sedikit perubahan desain di seluruh aplikasi untuk meningkatkan Pengalaman Pengguna",
-            "change-5": "Banyak perbaikan bug dan peningkatan lainnya"
+            "change-4": "Menambahkan minimap lembar lagu pada timeline komposer",
+            "change-5": "Layer yang digunakan dalam sebuah kolom disorot di komposer",
+            "change-6": "Sedikit perubahan desain di seluruh aplikasi untuk meningkatkan pengalaman pengguna",
+            "change-7": "Pemutaran komposer kini berjalan pada satu jam — suara, visual, dan rekaman tetap sepenuhnya sinkron (pengaturan lookahead telah dihapus)",
+            "change-8": "Banyak perbaikan bug dan peningkatan lainnya"
         },
         "3-7-0": {
             "title": "Instrumen baru (Genshin)",
