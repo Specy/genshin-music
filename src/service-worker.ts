@@ -30,6 +30,7 @@
 import { GAME_IDENTITY } from '$game/identity';
 import { PUBLIC_SW_VERSION } from '$env/static/public';
 import { CacheFirst, NetworkFirst, Serwist } from 'serwist';
+import type { ServiceWorkerUpdateStatus } from '$lib/serviceWorkerUpdate';
 
 declare const self: ServiceWorkerGlobalScope;
 
@@ -86,14 +87,37 @@ const serwist = new Serwist({
 
 serwist.addEventListeners();
 
-// Manual update prompt: the app posts { type: 'SKIP_WAITING' } when the user
-// accepts an update (see $lib/serviceWorkerRegistration.ts).
+// Manual update prompt: registration first asks this worker whether the requesting client is
+// stale and whether another tab is open. It posts SKIP_WAITING immediately for a fresh sole tab,
+// or after the user accepts the prompt in every other case (see $lib/serviceWorkerRegistration.ts).
 self.addEventListener('message', (event) => {
   if (event.data && event.data.type === 'SKIP_WAITING') {
     console.log('[ServiceWorker] skip waiting');
     self.skipWaiting();
   }
+  if (event.data && event.data.type === 'GET_UPDATE_STATUS') {
+    event.waitUntil(reportUpdateStatus(event));
+  }
 });
+
+async function reportUpdateStatus(event: ExtendableMessageEvent): Promise<void> {
+  const responsePort = event.ports[0];
+  if (!responsePort) return;
+
+  const sourceClientId =
+    event.source && 'id' in event.source && typeof event.source.id === 'string'
+      ? event.source.id
+      : null;
+  const clients = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+  const hasOtherClients = clients.some(
+    (client) => client.url.startsWith(self.registration.scope) && client.id !== sourceClientId
+  );
+  const status: ServiceWorkerUpdateStatus = {
+    currentClientIsStale: event.data.clientVersion !== PUBLIC_SW_VERSION,
+    hasOtherClients,
+  };
+  responsePort.postMessage(status);
+}
 
 // On a MAJOR_VERSION cache-key change, skip waiting and refresh all open tabs.
 self.addEventListener('install', (event) => {

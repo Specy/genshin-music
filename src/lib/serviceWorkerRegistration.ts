@@ -1,9 +1,14 @@
-// Port of old src/serviceWorkerRegistration.ts (~160 lines, verbatim below except two
-// substitutions and one type-level tightening, all disclosed in this header) - the manual
-// registration half of Phase 5 Task 2 (see src/service-worker.ts for the worker itself,
-// AppInit.svelte for the caller + update-prompt flow that finally wires the two halves
-// together - AppInit's own pre-existing update check already reads the
-// `${APP_NAME}_repeat_update_notice` key this flow writes).
+// Port of old src/serviceWorkerRegistration.ts (~160 lines) - the manual registration half of
+// Phase 5 Task 2 (see src/service-worker.ts for the worker itself, AppInit.svelte for the caller +
+// update-prompt flow that wires the two halves together - AppInit's own update check already reads
+// the `${APP_NAME}_repeat_update_notice` key this flow writes).
+//
+// UPDATE ELIGIBILITY: `navigator.serviceWorker.controller` alone cannot tell whether this page is
+// stale. A navigation can be controlled by the previous worker while its network-first response
+// has already loaded the newly deployed client. Before invoking `onUpdate`, this file now asks the
+// waiting worker whether the client's build version differs and whether another in-scope tab is
+// open. A fresh sole tab activates the worker without the pointless reload prompt; stale clients
+// and multi-tab sessions preserve the manual prompt.
 //
 // -- old file's own top comment, unchanged --
 // This optional code is used to register a service worker.
@@ -50,6 +55,17 @@
 //     it, console.log and all, so it stays.
 import { base } from '$app/paths';
 import { dev } from '$app/environment';
+import {
+  isServiceWorkerUpdateStatus,
+  shouldPromptForServiceWorkerUpdate,
+  type ServiceWorkerUpdateStatus,
+} from '$lib/serviceWorkerUpdate';
+
+const UPDATE_STATUS_TIMEOUT_MS = 1000;
+const UNKNOWN_UPDATE_STATUS: ServiceWorkerUpdateStatus = {
+  currentClientIsStale: true,
+  hasOtherClients: false,
+};
 
 function isLocalhost() {
   return Boolean(
@@ -114,7 +130,7 @@ async function registerValidSW(swUrl: string, config?: Config) {
         if (installingWorker == null) {
           return;
         }
-        installingWorker.onstatechange = () => {
+        installingWorker.onstatechange = async () => {
           if (installingWorker.state === 'installed') {
             if (navigator.serviceWorker.controller) {
               // At this point, the updated precached content has been fetched,
@@ -125,7 +141,17 @@ async function registerValidSW(swUrl: string, config?: Config) {
                   'tabs for this page are closed. See https://cra.link/PWA.'
               );
 
-              // Execute callback
+              const status = await requestUpdateStatus(installingWorker);
+              if (!shouldPromptForServiceWorkerUpdate(status)) {
+                console.log(
+                  'The current tab already has the new content; activating the service worker ' +
+                    'without a reload prompt.'
+                );
+                installingWorker.postMessage({ type: 'SKIP_WAITING' });
+                return;
+              }
+
+              // Execute callback only when this client is stale or another tab is open.
               if (config && config.onUpdate) {
                 config.onUpdate(registration);
               }
@@ -147,6 +173,38 @@ async function registerValidSW(swUrl: string, config?: Config) {
     .catch((error) => {
       console.error('Error during service worker registration:', error);
     });
+}
+
+function requestUpdateStatus(worker: ServiceWorker): Promise<ServiceWorkerUpdateStatus> {
+  return new Promise((resolve) => {
+    const channel = new MessageChannel();
+    let settled = false;
+    const finish = (status: ServiceWorkerUpdateStatus) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timeout);
+      channel.port1.onmessage = null;
+      channel.port1.close();
+      resolve(status);
+    };
+    const timeout = setTimeout(() => finish(UNKNOWN_UPDATE_STATUS), UPDATE_STATUS_TIMEOUT_MS);
+
+    channel.port1.onmessage = (event: MessageEvent<unknown>) => {
+      finish(isServiceWorkerUpdateStatus(event.data) ? event.data : UNKNOWN_UPDATE_STATUS);
+    };
+
+    try {
+      worker.postMessage(
+        {
+          type: 'GET_UPDATE_STATUS',
+          clientVersion: import.meta.env.PUBLIC_SW_VERSION,
+        },
+        [channel.port2]
+      );
+    } catch {
+      finish(UNKNOWN_UPDATE_STATUS);
+    }
+  });
 }
 
 function checkValidServiceWorker(swUrl: string, config?: Config) {
