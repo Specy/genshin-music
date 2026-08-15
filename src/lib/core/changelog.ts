@@ -14,6 +14,8 @@ export const CHANGELOG: Update[] = [
             'Rewritten from scratch',
             'Sustained notes',
             'Smooth scrolling composer',
+            'Sheet minimap in the composer timeline',
+            'Used layers in a column are highlighted in the composer',
             'Slight redesigns throughout the app',
             'Composer playback now runs on a single clock — sound, visuals and recording stay exactly in sync (the lookahead setting is gone)',
             'Other bug fixes and improvements',

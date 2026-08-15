@@ -745,8 +745,11 @@
       "change-1": "Todo o aplicativo foi reescrito do zero. O desempenho deve estar melhor em toda parte.",
       "change-2": "Foram adicionadas as notas sustentadas. No compositor, pressione e segure uma nota no teclado para abrir o menu de duração e escolher por quantas colunas ela deve durar. No reprodutor e no teclado Zen, basta manter o botão da nota pressionado para sustentar a nota.",
       "change-3": "Durante a reprodução, o compositor agora rola suavemente, com uma linha marcando onde você está na música. Arrastar e rolar a área de edição também ficou suave. Você pode desativar isso nas configurações do compositor.",
-      "change-4": "Pequenas mudanças de design em todo o aplicativo para melhorar a experiência do usuário",
-      "change-5": "Muitas outras correções de bugs e melhorias"
+      "change-4": "Adicionado um minimapa da partitura à linha do tempo do compositor",
+      "change-5": "As camadas usadas em uma coluna são destacadas no compositor",
+      "change-6": "Pequenas mudanças de design em todo o aplicativo para melhorar a experiência do usuário",
+      "change-7": "A reprodução do compositor agora funciona com um único relógio — som, elementos visuais e gravação permanecem perfeitamente sincronizados (a configuração de antecipação foi removida)",
+      "change-8": "Muitas outras correções de bugs e melhorias"
     },
     "3-7-0": {
       "title": "Novos instrumentos (Genshin)",
