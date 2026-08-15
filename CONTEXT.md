@@ -74,3 +74,16 @@ _Avoid_: momentum/inertia scrolling (say Coast for the glide itself)
 **Catch**:
 A press on the notes stage while a Coast is running. The press itself is the grab: it halts the Coast where it is and owns the scroll from that instant. Released without movement it is a stop, never a click — it selects-and-sounds nothing.
 _Avoid_: tap-to-stop "click" (a Catch never takes the click path)
+
+### Composer Playback
+
+**Transport**:
+The engine that turns a song's columns into committed audio and advances the Sounding Column. Owns playback time; knows nothing about which notes sound — that stays with the composer.
+
+**Sounding Column**:
+The column whose notes the listener is hearing right now — what the selected column _means_ while the song plays. Every playback surface (keyboard flash, playhead, sustain recording, end-of-song) agrees on it by definition.
+_Avoid_: current column (ambiguous with edit-time selection), playhead column
+
+**Committed**:
+Audio already handed to the audio clock ahead of being heard. Committed audio is retractable until the moment it starts sounding; once started it always rings out — deleting a note never silences its in-flight sound.
+_Avoid_: scheduled (says when it was decided, not whether it can still be taken back)

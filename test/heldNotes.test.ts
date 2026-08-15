@@ -72,16 +72,18 @@ describe('HeldNoteRegistry', () => {
 });
 
 /**
- * The rule the composer writes a live-played sustain down with. The lookahead skew is the whole
- * reason this measures the GESTURE instead of counting tick crossings: at the shipped defaults
- * (220bpm, 200ms lookahead) a note played in time with what the user hears lands ~72ms before
- * the next tick, so tick-counting would record every ordinary tap as a two-column sustain.
+ * The rule the composer writes a live-played sustain down with. It measures the GESTURE instead
+ * of counting tick crossings because a tick count would depend on the PHASE the press landed on:
+ * selection is audio-true (ADR-0006), so a press in time with what the user hears lands near the
+ * START of the sounding column, but input latency and where within the column the gesture really
+ * falls still shift it - a tap landing late in a column would cross the next tick and be
+ * recorded as a two-column sustain.
  */
 describe('spanForHeldMs', () => {
   const uniform = (ms: number) => () => ms;
 
   it('keeps a tap at one column even when it crosses a tick', () => {
-    //150ms of a 272ms column: crosses the next tick when played in time, still one column
+    //150ms of a 272ms column: crosses the next tick when pressed late in the column, still one column
     expect(spanForHeldMs(150, 8, uniform(272))).toBe(1);
   });
 

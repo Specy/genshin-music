@@ -167,13 +167,6 @@
       your browser tabs that have the composer open.
     </li>
     <li>
-      <b class="blog-b">Lookahead time</b>: To prevent lags from the app affecting audio, notes are
-      "scheduled" to be played a few milliseconds before than they are actually played, this value
-      will give the app a certain amount of time where lags in the app won't affect the audio timing
-      accuracy. This will cause the audio to "lag behind" the canvas, you can reduce or disable this
-      lookahead. If your audio stutters, try to increase this value.
-    </li>
-    <li>
       <b class="blog-b">Connect MIDI keyboard</b>: You can use a MIDI keyboard to make it easier to
       compose a song, by using the keyboard to select/deselect notes.
       <!-- QUIRK: /blog/connect-midi-device is a broken link (missing /posts/) - same

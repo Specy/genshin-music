@@ -15,6 +15,7 @@ export const CHANGELOG: Update[] = [
             'Sustained notes',
             'Smooth scrolling composer',
             'Slight redesigns throughout the app',
+            'Composer playback now runs on a single clock — sound, visuals and recording stay exactly in sync (the lookahead setting is gone)',
             'Other bug fixes and improvements',
         ]
     },

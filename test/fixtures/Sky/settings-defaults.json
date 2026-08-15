@@ -1,7 +1,7 @@
 {
   "composer": {
     "other": {
-      "settingVersion": "Sky72"
+      "settingVersion": "Sky73"
     },
     "data": {
       "bpm": {
@@ -126,19 +126,6 @@
         "category": "composer_settings",
         "songSetting": false,
         "value": false
-      },
-      "lookaheadTime": {
-        "name": "composer_lookahead_time",
-        "tooltip": "composer_lookahead_time_description",
-        "type": "number",
-        "category": "composer_settings",
-        "songSetting": false,
-        "value": 200,
-        "increment": 50,
-        "threshold": [
-          0,
-          500
-        ]
       }
     }
   },

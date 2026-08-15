@@ -44,6 +44,12 @@ type Layouts = {
 // eslint-disable-next-line svelte/prefer-svelte-reactivity
 const INSTRUMENT_BUFFER_POOL = new Map<InstrumentName, AudioBuffer[]>();
 
+type ScheduledOneShot = {
+  source: AudioBufferSourceNode;
+  /** The absolute AudioContext time this one-shot was committed to sound at. */
+  at: number;
+};
+
 //TODO refactor everything here
 
 /**
@@ -83,6 +89,12 @@ export class Instrument {
   // eslint-disable-next-line svelte/prefer-svelte-reactivity -- engine state, never UI-observed
   private heldVoices = new Map<number, Voice>();
   /**
+   * One-shots committed to a future audio-clock start (ADR-0006) — the retractable set
+   * cancelScheduledAfter operates on. An immediately-started one-shot never enters: it
+   * is already sounding, so there is nothing left to retract.
+   */
+  private scheduledOneShots: ScheduledOneShot[] = [];
+  /**
    * Note Id -> Button (first occurrence, matching the old findIndex). The whole id-keyed
    * public API resolves through this one map instead of scanning `notes` per call.
    */
@@ -94,6 +106,14 @@ export class Instrument {
    */
   private slots: readonly number[] = [];
   private static readonly MAX_VOICES = 32;
+  /**
+   * How long after its start time a committed one-shot is kept registered, in seconds.
+   * Mirrors Metronome's BEAT_RETENTION_S: only a one-shot that has not started yet can
+   * be cancelled, so dropping an older entry costs nothing; the 'ended' listener
+   * normally removes an entry, and this bound keeps the registry finite over a long
+   * session even if an 'ended' event never arrives.
+   */
+  private static readonly ONE_SHOT_RETENTION_S = 1;
 
   get endNode() {
     return this.volumeNode;
@@ -234,35 +254,54 @@ export class Instrument {
     if (this.volumeNode) this.volumeNode.gain.value = newVolume;
   };
 
-  /** Trigger a Note Id (ADR-0005 §4). An id this instrument doesn't offer is silent. */
-  play = (id: number, pitch: Pitch, delay?: number) => {
+  /**
+   * Trigger a Note Id (ADR-0005 §4), immediately or committed at the absolute
+   * AudioContext time `at`. An id this instrument doesn't offer is silent.
+   */
+  play = (id: number, pitch: Pitch, at?: number) => {
     // A sustaining instrument has no meaningful whole-file one-shot: plain triggers
     // (composer previews and span-1 columns, recorded taps, VSRG hits, MIDI-setup
     // auditions) become a tap — press + immediate release, so the authored
     // minLength/release define the sound instead of the raw multi-second sample.
     if (this.supportsSustain) {
-      this.pressNote(id, pitch, { delay, durationMs: 0 });
+      this.pressNote(id, pitch, { at, durationMs: 0 });
       return;
     }
     if (this.isDeleted || !this.volumeNode || !this.audioContext) return;
     const button = this.buttonsById.get(id);
     if (button === undefined) return;
+    const now = this.audioContext.currentTime;
+    // Lazy retention prune (Metronome's BEAT_RETENTION_S rationale): an entry this far
+    // past its start time can no longer be cancelled, so dropping it costs nothing —
+    // and an 'ended' that never arrives must not grow the registry over a long session.
+    this.scheduledOneShots = this.scheduledOneShots.filter(
+      (entry) => entry.at >= now - Instrument.ONE_SHOT_RETENTION_S
+    );
     const pitchChanger = getPitchChanger(pitch);
     const player = this.audioContext.createBufferSource();
     player.buffer = this.buffers[button];
     player.connect(this.volumeNode);
     //player.detune.value = pitch * 100, pitch should be 0 indexed from C
     player.playbackRate.value = pitchChanger;
-    if (delay) {
-      player.start(this.audioContext.currentTime + delay);
+    // Only a FUTURE start is committed on the absolute audio clock and registered as
+    // retractable (ADR-0006); anything else starts now and is fire-and-forget — it is
+    // already sounding, and sounding audio always rings out.
+    const entry = at !== undefined && at > now ? { source: player, at } : null;
+    if (entry) {
+      player.start(entry.at);
+      this.scheduledOneShots.push(entry);
     } else {
       player.start();
     }
 
-    function handleEnd() {
+    const handleEnd = () => {
       player.stop();
       player.disconnect();
-    }
+      if (entry) {
+        const index = this.scheduledOneShots.indexOf(entry);
+        if (index !== -1) this.scheduledOneShots.splice(index, 1);
+      }
+    };
 
     player.addEventListener('ended', handleEnd, { once: true });
   };
@@ -270,20 +309,21 @@ export class Instrument {
   /**
    * Press a Note Id. Non-sustaining instruments take the exact one-shot `play()` path
    * (returns null). Sustaining instruments start a looped Voice that sounds until
-   * `releaseNote(id)` — or self-releases after `durationMs` (song playback,
-   * scheduled sample-accurately on the audio timeline at start). `skipMs` resumes
-   * mid-note (playback started inside a spanned note): audio picks up at the position
-   * the playhead would have reached, and `durationMs` counts the REMAINING hold.
+   * `releaseNote(id)` — or self-releases after `durationMs` (song playback, committed
+   * sample-accurately on the audio timeline: `at` is the absolute AudioContext start
+   * time, and `durationMs` counts from it). `skipMs` resumes mid-note (playback started
+   * inside a spanned note): audio picks up at the position the playhead would have
+   * reached, and `durationMs` counts the REMAINING hold.
    * An id this instrument doesn't offer is silent (returns null).
    */
   pressNote = (
     id: number,
     pitch: Pitch,
-    options?: { delay?: number; durationMs?: number; skipMs?: number }
+    options?: { at?: number; durationMs?: number; skipMs?: number }
   ): Voice | null => {
     const sustain = this.sustainConfig;
     if (!sustain) {
-      this.play(id, pitch, options?.delay);
+      this.play(id, pitch, options?.at);
       return null;
     }
     if (this.isDeleted || !this.volumeNode || !this.audioContext) return null;
@@ -314,7 +354,7 @@ export class Instrument {
       loopMode: sustain.loopMode,
       release: sustain.release,
       crossfade: sustain.crossfade,
-      delay: options?.delay,
+      at: options?.at,
       skip: options?.skipMs !== undefined ? options.skipMs / 1000 : undefined,
     });
     this.activeVoices.push(voice);
@@ -369,6 +409,40 @@ export class Instrument {
     this.heldVoices.clear();
     this.activeVoices.forEach((voice) => (hard ? voice.stop() : voice.fadeOut()));
     this.activeVoices = [];
+  };
+
+  /**
+   * Retract every committed-but-unstarted event whose start time is at or after `at`
+   * (transport stop/resync, ADR-0006). Committed audio is retractable until it starts;
+   * once sounding it always rings out — deleting a note never silences its in-flight
+   * sound. heldVoices needs no handling: a scheduled voice is never held (only a live
+   * no-durationMs press registers there — see the retrigger comment in pressNote), so
+   * activeVoices covers every cancellable Voice.
+   */
+  cancelScheduledAfter = (at: number) => {
+    if (!this.audioContext) return;
+    // Clamped so a cutoff already in the past can never cut audio that is sounding.
+    const cutoff = Math.max(at, this.audioContext.currentTime);
+    const keptOneShots: ScheduledOneShot[] = [];
+    for (const entry of this.scheduledOneShots) {
+      if (entry.at >= cutoff) {
+        // Safe: entries are pushed only after start() was called on them — stop() on a
+        // never-started source throws InvalidStateError.
+        entry.source.stop();
+        entry.source.disconnect();
+      } else {
+        keptOneShots.push(entry);
+      }
+    }
+    this.scheduledOneShots = keptOneShots;
+    const keptVoices: Voice[] = [];
+    for (const voice of this.activeVoices) {
+      // Pre-start Voice.stop() is silent teardown, never a mid-waveform cut — the
+      // source has not produced a sample yet (see Voice's fadeOut/stopSource).
+      if (voice.startedAt >= cutoff) voice.stop();
+      else keptVoices.push(voice);
+    }
+    this.activeVoices = keptVoices;
   };
 
   private pruneVoices = () => {

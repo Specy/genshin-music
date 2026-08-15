@@ -320,13 +320,13 @@ interface TimelineMinimapBuild {
 //    `$state.raw` at their declarations. A future field backed by a deep `$state` array must be
 //    hoisted into a plain copy in the canvas's $effect rather than indexed in the loops.
 //
-// `beatMarks`, `columnsPerCanvas`, `bpm`, `smoothScroll` and `lookaheadMs` are the settings values
-// this class needs, taken as scalars rather than as the `ComposerSettings.data` object they come
+// `beatMarks`, `columnsPerCanvas`, `bpm` and `smoothScroll` are the settings values this class
+// needs, taken as scalars rather than as the `ComposerSettings.data` object they come
 // from. That object's identity never changes when a setting is edited, so a diff could not see one;
 // and reading them in the canvas's $effect - rather than deep inside a draw that may or may not run
 // - is what subscribes that effect to them at all. ComposerCanvas.svelte's $effect is the one place
-// all five are read off `settings`, which is also what keeps `bpm` the same number the playback
-// loop waits by - see that field.
+// all four are read off `settings`, which is also what keeps `bpm` the same number the transport
+// spaces columns by - see that field.
 export interface ComposerRendererState {
   columns: NoteColumn[];
   /**
@@ -404,10 +404,11 @@ export interface ComposerRendererState {
    * ComposerSettings' `bpm`, as a number: what lets this class work out how long a column lasts and
    * therefore how fast to travel through it - see columnDurationMs.
    *
-   * THE SETTING AND NOT `song.bpm`, which is the one thing here that has to be right: the playback
-   * loop this glide has to keep time with waits `(60000 / settings.bpm.value) * changer` ms per
-   * column (Composer.svelte's togglePlay), so reading the same value is what makes them the same
-   * number by construction rather than by an argument that has to hold. It used to take the song's,
+   * THE SETTING AND NOT `song.bpm`, which is the one thing here that has to be right: the transport
+   * this glide has to keep time with commits columns `(60000 / settings.bpm.value) * changer` ms
+   * apart (the columnDurationMs callback Composer.svelte hands ComposerTransport), so reading the
+   * same value is what makes them the same number by construction rather than by an argument that
+   * has to hold. It used to take the song's,
    * on the argument that Composer.svelte keeps the two equal - it does not on two ordinary paths.
    * `song.bpm` is seeded from the DEFAULT settings at declaration and re-seeded nowhere when the
    * stored settings land in onMount, and createNewSong builds a ComposedSong at its own default; so
@@ -415,23 +416,6 @@ export interface ComposerRendererState {
    * song, had the glide running at one tempo and the transport at another.
    */
   bpm: number;
-  /**
-   * ComposerSettings' `lookaheadTime`, in ms - how far AHEAD of being heard a column's notes are
-   * scheduled with the audio clock.
-   *
-   * The composer selects column i and schedules its notes to sound `lookaheadMs` later, so the
-   * state has always run ahead of the audio by that much. While the scroll snapped this was
-   * invisible - a highlight appearing a quarter second early reads as a highlight - but a
-   * continuously moving playhead running a quarter second ahead of the music reads as being out of
-   * time, and at the shipped defaults (220bpm, 250ms) that is very nearly a whole column. So the
-   * glide for a column is scheduled to START `lookaheadMs` in the future, which is when that column
-   * is actually heard.
-   *
-   * Nothing else has to be held back to match: while smooth scrolling is on there is no selection
-   * overlay for the line to disagree with (see overlayColumn), so the line alone says where the
-   * music is.
-   */
-  lookaheadMs: number;
 }
 
 // onGeometryChange reports pixi/DOM-measurement-derived geometry back up to the Svelte template,
@@ -615,18 +599,23 @@ type Motion =
  * linearly. Tempo changers need no special handling anywhere - a 1/4 column simply schedules a
  * segment a quarter as long over the same distance, so the scroll speeds up through it.
  *
- * WHY A QUEUE OF THESE rather than a single "current glide". A segment is scheduled to start
- * `lookaheadMs` in the FUTURE (see ComposerRendererState.lookaheadMs), so between scheduling it and
- * it beginning, the previous segment must keep running. At the shipped defaults one column at
- * tempo 1 lasts about as long as the lookahead, so that is one segment in flight - but a 1/8 column
- * at 220bpm lasts 34ms against a 250ms lookahead, and then seven of them are pending at once. A
- * two-slot "current + next" holds for tempo 1 and silently drops segments on a fast run.
+ * WHY A QUEUE OF THESE rather than a single "current glide". A tick anchors its column's segment
+ * at its own arrival instant, so after a tick the queue holds the just-started segment - but the
+ * previous one is consumed only as frames read past its end (scrollPositionAt drops expired
+ * entries lazily), so around every boundary two segments are live at once, and the frames and the
+ * ticks run on different cadences: a 1/8 column at 220bpm lasts 34ms against emitted frames up to
+ * 32ms apart, and a backgrounded tab stops emitting frames entirely while the transport's
+ * worker-timer ticks keep appending. What the queue guarantees is the CHAIN: each appended segment
+ * begins, in position, exactly where the previous one's travel ends (`from` advances by one), so
+ * however the two cadences interleave a frame reads one contiguous timeline rather than whatever
+ * single segment survived.
  *
  * `endMs` starts as a PREDICTION from the bpm and the column's tempo changer, because the segment
- * has to be drawable before the tick that ends it arrives. scheduleScrollSegment replaces the
- * previous segment's prediction with the measurement when the next one is scheduled, so the
- * timeline stays contiguous and the playback loop's own drift correction is inherited rather than
- * fought.
+ * has to be drawable before the tick that ends it arrives. The boundaries ticks announce are
+ * audio-clock-exact, but a tick reaches this class through a timer wake and a Svelte flush, so its
+ * arrival instant jitters around its boundary - scheduleScrollSegment replaces the previous
+ * segment's prediction with the next tick's measured start, so the chain stays contiguous in time
+ * as well as in position.
  */
 interface ScrollSegment {
   /** The column whose START the playhead is at when this segment begins. */
@@ -973,10 +962,11 @@ export class ComposerRenderer {
    * `motion` is `resting`, fractional for the length of any other motion.
    *
    * It is this class's own value and NOT a mirror of `state.selected`, which is the whole point:
-   * `selected` moves in whole columns at tick boundaries and runs ahead of the audio by the
-   * lookahead, while this moves continuously and in time with what is heard - and during a drag or
-   * an ease it moves with the user's hand while `selected` steps a column at a time behind it. See
-   * the Motion type for the invariant that says when the two are back together.
+   * `selected` moves in whole columns at column boundaries, while this travels continuously
+   * THROUGH the column being heard - a fraction past `selected`'s start for most of every column -
+   * and during a drag or an ease it moves with the user's hand while `selected` steps a column at
+   * a time behind it. See the Motion type for the invariant that says when the two are back
+   * together.
    */
   private scrollPosition = 0;
   /**
@@ -1741,15 +1731,16 @@ export class ComposerRenderer {
   // ── the scroll schedule ────────────────────────────────────────────────────────────────────────
 
   /**
-   * How long column `index` lasts, by the arithmetic Composer.svelte's playback loop waits by: it
-   * rounds `(60000 / bpm) * changer` to whole ms, which is the same rounding Song.roundTime does.
+   * How long column `index` lasts, by the arithmetic the transport commits columns with: the
+   * columnDurationMs callback Composer.svelte hands ComposerTransport rounds
+   * `(60000 / bpm) * changer` to whole ms, which is the same rounding Song.roundTime does.
    * Matching the rounding is what keeps a glide the same length as the column it travels through,
    * so the two do not drift apart within a column.
    *
-   * What this deliberately leaves out is that loop's `delayOffset` drift term - the correction it
-   * carries from tick to tick for how late the last one was. A segment inherits that a different
-   * way, through the MEASURED instant scheduleScrollSegment writes as its start (see ScrollSegment),
-   * which is why the same arithmetic here does not have to know about it.
+   * The number is exact but the INSTANT a tick lands is not - a boundary reaches this class
+   * through a timer wake and a Svelte flush. That jitter is absorbed not here but through the
+   * MEASURED instant scheduleScrollSegment writes as each segment's start (see ScrollSegment),
+   * which is why this arithmetic does not have to know about it.
    */
   private columnDurationMs(index: number): number {
     const column = this.state.columns[index];
@@ -1799,26 +1790,25 @@ export class ComposerRenderer {
    *
    * WHILE THE SONG PLAYS WITH SMOOTH SCROLLING ON, three cases, and the schedule is the same
    * statement in all of them: an update carrying `selected = i` means the playhead is at the START
-   * of column i one lookahead from now, and travels through it over that column's length.
+   * of column i NOW - its audio is starting as the update lands - and travels through it over that
+   * column's length.
    *  - A PLAYBACK TICK - `selected` advancing by exactly one from a state that was ALSO playing -
    *    appends that segment to the queue. The one before it ends where this one begins, which is
    *    what makes the timeline contiguous.
    *  - ANY OTHER MOVE - play being pressed, a click, the wheel, a drag, a breakpoint jump - is a
    *    discontinuity, so the queue is dropped and the playhead re-anchored on the new column
-   *    before the same segment is scheduled from there. WITHOUT THAT SCHEDULE the next tick's
-   *    segment would be the only one in the queue, and since it starts a lookahead in the future,
-   *    the first frame would find nothing covering the present and jump the playhead to that
-   *    segment's start column. It is the same gap at play time and after a jump; both are here.
+   *    before the same segment is scheduled from there. WITHOUT THAT SCHEDULE the new column's own
+   *    travel would never exist: the queue stays empty until the NEXT boundary's tick, so the
+   *    playhead would stand at the anchor for that column's whole length and then leap over it to
+   *    the following column's start. It is the same missing first segment at play time and after a
+   *    jump; both are here.
    *  - `selected` NOT MOVING leaves the schedule alone, so an edit made during playback - note
    *    entry is not gated on isPlaying - does not interrupt the glide.
    *
    * Everything else snaps: any move while smooth scrolling is off or the song is stopped. Stopping
-   * snaps to `selected` too, and the direction depends on where the playhead had got to: pausing
-   * mid-column pulls it FORWARD by up to a lookahead's worth of travel, while a song running off
-   * its own end pushes it BACK by the part of the last column it had already entered (the tick that
-   * ends playback comes a whole column after the one that selected that column). Either way the
-   * alternative is leaving the playhead somewhere `selected` is not, and every click, edit and jump
-   * downstream reasons in terms of `selected`.
+   * lands on `selected` too - by a 140ms ease rather than a jump when it halts a mid-column glide
+   * (the pause branch below) - because a playhead left anywhere `selected` is not would disagree
+   * with every click, edit and jump downstream, all of which reason in terms of `selected`.
    *
    * SIX STATEMENTS ABOUT THE MANUAL MOTIONS OUTRANK PARTS OF THAT, all guarded near the top:
    *  - a DRAG outranks everything for its duration. It is the user's hand on the canvas, so a tick
@@ -1925,7 +1915,7 @@ export class ComposerRenderer {
       if (advancedOneColumn) {
         this.scheduleScrollSegment(
           state.selected,
-          this.now() + state.lookaheadMs,
+          this.now(),
           this.columnDurationMs(state.selected)
         );
         this.enterMotion({ kind: 'playback' });
@@ -1944,7 +1934,7 @@ export class ComposerRenderer {
       this.scrollPosition = state.selected;
       this.scheduleScrollSegment(
         state.selected,
-        this.now() + state.lookaheadMs,
+        this.now(),
         this.columnDurationMs(state.selected)
       );
       this.enterMotion({ kind: 'playback' });
@@ -1990,22 +1980,24 @@ export class ComposerRenderer {
       previous.isPlaying &&
       !state.isPlaying
     ) {
-      // PAUSING, which is the one stop that is not a discontinuity: the playhead is mid-column and
-      // halting it dead is the jump this eases away. It settles BACKWARD onto the column it is
-      // inside - the last one whose notes were played - and not onto `selected`, which the
-      // transport had already advanced to but whose notes are still a lookahead from being heard.
-      // So pressing play again resumes on the column the line is parked at, rather than skipping
-      // the one that was only half heard.
+      // PAUSING, which is the one stop that is not a discontinuity: the playhead is mid-glide and
+      // halting it dead is the jump this eases away. It settles on `state.selected` - the column
+      // that was SOUNDING when the stop landed, the very one the playhead is inside - so the 140ms
+      // ease gives back only the fraction of that column already travelled, and pressing play
+      // again resumes on the column the pause interrupted. The stop retracted that column's
+      // successors from the audio clock, so easing back to its start parks the line on the last
+      // column that actually sounded.
       //
-      // REACHING THE END OF THE SONG arrives as the same isPlaying transition - Composer.svelte's
-      // playback tick calls togglePlay(false) when it runs out of columns, WITHOUT advancing
-      // `selected` past the last one - but it is the one stop that must not settle backward. There
-      // is no resume to park for, and the notes the transport already scheduled are on the audio
-      // clock and will sound; the playhead belongs where the song ends. Settling backward left it a
-      // lookahead short, which is invisible at tempo 1 (a lookahead is about one column) and gross
-      // where the song ends in fast tempo changers: eight 1/8 columns last 34ms each against a
-      // 250ms lookahead, so the line parked eight columns from the end. At lookahead 0 the playhead
-      // and `selected` never diverge, which is why that case never showed it.
+      // THE END OF THE SONG arrives as the same transition and needs no case of its own:
+      // onFinished stops playback with `selected` still on the last column, which by then IS the
+      // column the playhead just finished travelling - the same settle, from the far end of the
+      // column instead of partway in.
+      //
+      // NO selectColumn CALL on the way in, unlike every manual settle: the target IS
+      // `state.selected`, so the composer already stands exactly where the playhead is easing to,
+      // and a publish would only round-trip a value the state holds. The ease still survives any
+      // further update landing mid-slide through the `easing && selected === to` branch above -
+      // `selected` equals the target without a publish having had to make it so.
       //
       // SWITCHING SMOOTH SCROLLING OFF mid-glide also leaves the playhead mid-column, and does NOT
       // ease. That is a mode change rather than a transport one: the line disappears and the
@@ -2014,23 +2006,7 @@ export class ComposerRenderer {
       // 'playback'`, which the mode change does not produce on its own); when the setting goes off
       // and the song pauses in the SAME update it reaches here instead, and easeTo's own gate
       // settles it. Either way it does not ease.
-      const lastColumn = Math.max(0, state.columns.length - 1);
-      // `selected` sitting on the last column is what "ran out of song" looks like from here. A
-      // manual pause ON that column reads the same and is treated the same, deliberately: the
-      // difference between the two answers is at most the lookahead, and at the end of a song
-      // parking on the end is the better of them either way.
-      const ranToTheEnd = state.selected >= lastColumn;
-      const target = ranToTheEnd
-        ? lastColumn
-        : clamp(Math.floor(this.scrollPosition), 0, lastColumn);
-      // Ordered as handleWheel and settleStageDrag order it, and for the same reason: this write
-      // reaches Svelte, and the update it schedules arrives after this call has installed the
-      // motion - where the `easing && selected === to` branch above is what keeps it from being
-      // undone. Skipped when the column is already selected, which is the common case (the
-      // transport advances `selected` a lookahead early, so a pause in the first part of a column
-      // finds them already equal).
-      if (target !== state.selected) this.callbacks.selectColumn(target, true);
-      this.easeTo(target);
+      this.easeTo(clamp(state.selected, 0, Math.max(0, state.columns.length - 1)));
       return;
     }
     this.rest();
@@ -2571,8 +2547,8 @@ export class ComposerRenderer {
       return this.settleStageDrag(release);
     // The column the pointer is actually OVER, inverted through the live scroll position rather
     // than derived from `selected` and a fixed slot. The two agree whenever the scroll is at
-    // rest; during a glide `selected` is a column ahead of what is on screen, and this is what
-    // makes a click land where it was aimed.
+    // rest; during a glide the canvas sits a fraction of a column past `selected`'s start, and
+    // this is what makes a click land where it was aimed.
     const clicked = Math.floor(this.columnAtCanvasX(e.globalX));
     if (clicked === this.state.selected) return;
     this.callbacks.selectColumn(clamp(clicked, 0, this.state.columns.length - 1));
@@ -3113,7 +3089,7 @@ export class ComposerRenderer {
    *
    * Not compared, and why. `isPlaying` IS read now - syncScrollSchedule and handleWheel both take
    * it - but what it changes is the SCHEDULE rather than any column's appearance, so it stays out
-   * of here; see its field. `bpm` and `lookaheadMs` are the same shape of thing. `inPreview`
+   * of here; see its field. `bpm` is the same shape of thing. `inPreview`
    * and `columnsPerCanvas` both decide geometry, and `inPreview` decides a great deal of it (it
    * scales both canvas dimensions in computeCanvasSize, so it moves every column's x, every note's
    * y and the size of both canvases) - but neither reaches update() as a CHANGE: Composer.svelte
