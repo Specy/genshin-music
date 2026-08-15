@@ -4936,9 +4936,15 @@ describe('the frame loop', () => {
         }
     })
 
-    it('caps the loop, and a second of gliding emits fewer frames than the display offers', async () => {
+    it('caps only playback, and a second of gliding emits fewer frames than the display offers', async () => {
         const harness = await mountGliding()
         try {
+            //The stopped composer is uncapped so manual dragging, wheeling, easing and coasting can
+            //follow every display frame. Starting playback installs the cap before starting its
+            //glide; stopping playback removes it again.
+            expect(harness.frameLoop().maxFPS).toBe(0)
+            harness.context.props.isPlaying = true
+            harness.push()
             expect(harness.frameLoop().maxFPS).toBe(48)
             //...and the cap is on the ticker the renderer actually runs. The value alone cannot say
             //that: running a private rAF beside this one leaves it reading 48 while the frames
@@ -4946,8 +4952,6 @@ describe('the frame loop', () => {
             //clock a display frame is every 16ms, so 62 arrive in a second and the gate lets fewer
             //through - not 48 exactly, because it is a frame SKIP against that grid rather than a
             //clock (see expectPosition).
-            harness.context.props.isPlaying = true
-            harness.push()
             const before = harness.frameLoop()
             await vi.advanceTimersByTimeAsync(1000)
             const after = harness.frameLoop()
@@ -4958,6 +4962,10 @@ describe('the frame loop', () => {
             //had stopped emitting would read 0. Neither bound is the cap restated - they bracket it.
             expect(emits).toBeGreaterThan(40)
             expect(emits).toBeLessThan(52)
+
+            harness.context.props.isPlaying = false
+            harness.push()
+            expect(harness.frameLoop().maxFPS).toBe(0)
         } finally {
             harness.destroy()
         }

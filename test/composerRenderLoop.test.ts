@@ -344,8 +344,14 @@ describe('ComposerRenderer rendering', () => {
         expect(app.ticker.started).toBe(false)
         expect(app.ticker.framesRequested).toBe(0)
 
-        //THE CAP lives on it, since it is the one the renderer runs
+        //STOPPED interaction is uncapped. The same ticker switches to the playback cap and back as
+        //isPlaying changes; this is done in update(), before that update can start a glide.
+        expect(app.ticker.maxFPS).toBe(0)
+        const playing = {...makeInitialState(song), isPlaying: true}
+        renderer.update(playing)
         expect(app.ticker.maxFPS).toBe(48)
+        renderer.update({...playing, isPlaying: false})
+        expect(app.ticker.maxFPS).toBe(0)
 
         //PIXI'S OWN RENDER LISTENER IS GONE, and the renderer's own callback is the only thing on
         //the ticker. That is what makes "one render per frame that MOVED" possible: pixi's listener
