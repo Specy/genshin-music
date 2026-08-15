@@ -11,8 +11,10 @@ import {
   TextStyle,
   Rectangle,
   type FederatedPointerEvent,
+  type RendererPreference,
 } from 'pixi.js';
 import { PIXI_RENDERER_PREFERENCE } from '$cmp/pixiRendererPreference';
+import { observeWebGLContext, pixiResolution } from '$cmp/pixiContextRecovery';
 import { subscribeTheme } from '$core/theme/ThemeProvider.svelte';
 import type { Theme } from '$core/theme/ThemeProvider.svelte';
 import { t } from '$i18n/binding.svelte';
@@ -108,6 +110,12 @@ export class VsrgComposerRenderer {
   private app: Application | null = null;
   private cache: VsrgCanvasCache | null = null;
   private themeDispose: (() => void) | null = null;
+  private contextLost = false;
+  private contextRecoveryDispose: (() => void) | null = null;
+  private replacingLostRenderer = false;
+  /** A renderer instance gets one fresh WebGL context before its terminal Canvas fallback. */
+  private hasRestartedWebGL = false;
+  private destroyed = false;
   private throttledEventLoop = new ThrottledEventLoop(() => {}, 48);
   private cumulativeScroll = 0;
 
@@ -173,17 +181,9 @@ export class VsrgComposerRenderer {
     this.themeDispose = subscribeTheme(this.handleThemeChange);
     this.calculateSizes();
 
-    this.app = new Application();
-    await this.app.init({
-      preference: PIXI_RENDERER_PREFERENCE,
-      width: this.sizes.rawWidth,
-      height: this.sizes.rawHeight,
-      background: this.canvasColors.background_plain[1],
-      autoDensity: false,
-      antialias: true,
-      resolution: window?.devicePixelRatio || 1,
-    });
+    this.app = await this.createApplication(PIXI_RENDERER_PREFERENCE);
     this.container.appendChild(this.app.canvas);
+    this.observeContext(this.app.canvas);
 
     this.app.stage.addChild(
       this.scrollableTrackContainer,
@@ -223,6 +223,89 @@ export class VsrgComposerRenderer {
     this.draw();
   }
 
+  private async createApplication(
+    preference: RendererPreference | RendererPreference[]
+  ): Promise<Application> {
+    const app = new Application();
+    await app.init({
+      preference,
+      width: this.sizes.rawWidth,
+      height: this.sizes.rawHeight,
+      background: this.canvasColors.background_plain[1],
+      autoDensity: false,
+      antialias: true,
+      resolution: pixiResolution(),
+    });
+    return app;
+  }
+
+  private observeContext(canvas: HTMLCanvasElement): void {
+    this.contextRecoveryDispose?.();
+    this.contextRecoveryDispose = observeWebGLContext(canvas, {
+      onLost: () => {
+        this.contextLost = true;
+      },
+      onRestored: () => {
+        if (this.destroyed || this.replacingLostRenderer) return;
+        this.contextLost = false;
+        this.calculateSizes();
+      },
+      onRecoveryTimeout: () => {
+        void this.replaceUnrestoredRenderer();
+      },
+    });
+  }
+
+  /** Preserve live editor state, try one fresh WebGL context, then use Canvas if that also fails. */
+  private async replaceUnrestoredRenderer(): Promise<void> {
+    const oldApp = this.app;
+    if (this.destroyed || this.replacingLostRenderer || !this.contextLost || !oldApp) return;
+
+    this.replacingLostRenderer = true;
+    const preference: RendererPreference = this.hasRestartedWebGL ? 'canvas' : 'webgl';
+    if (preference === 'webgl') this.hasRestartedWebGL = true;
+    let replacement: Application;
+    try {
+      replacement = await this.createApplication(preference);
+    } catch (error) {
+      this.replacingLostRenderer = false;
+      if (preference === 'webgl') {
+        console.warn('Could not restart a lost Pixi WebGL renderer; using Canvas.', error);
+        await this.replaceUnrestoredRenderer();
+      } else {
+        console.error('Could not replace a lost Pixi renderer with Canvas.', error);
+      }
+      return;
+    }
+    if (this.destroyed) {
+      replacement.destroy(true, { children: true });
+      return;
+    }
+
+    this.contextRecoveryDispose?.();
+    this.contextRecoveryDispose = null;
+    oldApp.stage.removeChild(this.scrollableTrackContainer);
+    oldApp.stage.removeChild(this.keysContainer);
+    oldApp.stage.removeChild(this.timelineContainer);
+    this.cache?.destroy();
+    this.cache = null;
+
+    this.app = replacement;
+    replacement.stage.addChild(
+      this.scrollableTrackContainer,
+      this.keysContainer,
+      this.timelineContainer
+    );
+    if (oldApp.canvas.parentNode) oldApp.canvas.replaceWith(replacement.canvas);
+    else this.container.appendChild(replacement.canvas);
+    if (preference === 'webgl') this.observeContext(replacement.canvas);
+    oldApp.destroy(true, false);
+
+    this.contextLost = false;
+    this.replacingLostRenderer = false;
+    this.calculateSizes();
+  }
+
   // Bound to the resize listener and called directly here and from VsrgComposerStore events.
   private calculateSizes = () => {
     const wrapperSizes = this.container.getBoundingClientRect();
@@ -245,8 +328,8 @@ export class VsrgComposerRenderer {
     // pixi's renderer only applies width/height at Application init; this explicit resize on
     // every recalculation is what keeps the drawing buffer tracking the container (e.g. on
     // window resize).
-    this.app?.renderer.resize(this.sizes.rawWidth, this.sizes.rawHeight);
-    if (this.app) {
+    if (this.app && !this.contextLost && !this.replacingLostRenderer) {
+      this.app.renderer.resize(this.sizes.rawWidth, this.sizes.rawHeight);
       this.app.canvas.style.width = `${this.sizes.width}px`;
       this.app.canvas.style.height = `${this.sizes.height + timelineSize}px`;
     }
@@ -276,7 +359,7 @@ export class VsrgComposerRenderer {
   };
 
   private generateCache = () => {
-    if (!this.app) return;
+    if (!this.app || this.contextLost || this.replacingLostRenderer) return;
     const trackColors = this.state.trackColors;
     // QUIRK: sets the background from the DARKENED color's hex string, not the un-darkened
     // numeric the Application was created with in init() - an apparent old mismatch, not a
@@ -523,7 +606,7 @@ export class VsrgComposerRenderer {
   // Rebuilds every container's children fully on every call (see the scrollableTrackContainer/
   // keysContainer/timelineContainer declarations above for why).
   private draw(): void {
-    if (!this.app) return;
+    if (!this.app || this.contextLost || this.replacingLostRenderer) return;
     this.drawKeys();
     const hasCache = this.cache !== null;
     this.scrollableTrackContainer.visible = hasCache;
@@ -895,6 +978,9 @@ export class VsrgComposerRenderer {
   // this.app?.destroy() below is REQUIRED: nothing else owns the pixi Application's lifecycle in
   // this synchronous class. Skipping it would leak a WebGL context/canvas on every unmount.
   destroy(): void {
+    this.destroyed = true;
+    this.contextRecoveryDispose?.();
+    this.contextRecoveryDispose = null;
     window.removeEventListener('resize', this.calculateSizes);
     window.removeEventListener('blur', this.handleBlur);
     vsrgComposerStore.removeEventListener('timestampChange', { id: 'vsrg-canvas' });
