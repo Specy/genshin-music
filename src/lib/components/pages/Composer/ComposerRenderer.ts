@@ -102,7 +102,9 @@ const PLAYHEAD_ARROW_HALF_WIDTH = 6;
 const PLAYHEAD_ARROW_LENGTH = 8;
 
 /**
- * The cap put on the notes Application's Ticker while a motion is running - see startMotionFrames.
+ * The cap put on the notes Application's Ticker while the song is playing. Stopped-song motion
+ * (dragging, wheeling, easing and coasting) leaves pixi's maxFPS at 0, meaning uncapped, so direct
+ * canvas interaction can follow the display's refresh rate.
  *
  * pixi's cap is a frame-SKIP gate rather than a clock of its own: `Ticker.update` computes
  * `delta = (now - lastFrame) | 0` and returns without emitting when that is below `1000 / maxFPS`
@@ -1232,7 +1234,7 @@ export class ComposerRenderer {
      * timeline Application's ticker was never started, so it had asked for none.
      */
     this.notesApp.ticker.remove(this.notesApp.render, this.notesApp);
-    this.notesApp.ticker.maxFPS = COMPOSER_MOTION_MAX_FPS;
+    this.syncMotionMaxFps(this.state.isPlaying);
     this.notesApp.ticker.add(this.onMotionFrame, this);
 
     this.timelineContentContainer.eventMode = 'static';
@@ -2113,6 +2115,14 @@ export class ComposerRenderer {
     this.notesApp?.ticker.stop();
   }
 
+  /** Pixi uses 0 for an uncapped ticker; only transport playback gets the 48 FPS ceiling. */
+  private syncMotionMaxFps(isPlaying: boolean): void {
+    const maxFps = isPlaying ? COMPOSER_MOTION_MAX_FPS : 0;
+    if (this.notesApp && this.notesApp.ticker.maxFPS !== maxFps) {
+      this.notesApp.ticker.maxFPS = maxFps;
+    }
+  }
+
   /**
    * WHERE THE CURRENT MOTION PUTS THE PLAYHEAD at a wall-clock instant, or null for "nowhere new".
    *
@@ -2984,6 +2994,9 @@ export class ComposerRenderer {
     // FIRST, unconditionally, and before any early return: the pointer/wheel/hitarea handlers all
     // read this.state, and they must never see the state of a previous update.
     this.state = state;
+    // Also before syncScrollSchedule: a play transition can start the ticker there, so its first
+    // requested frame must already carry the playback cap. Stopping restores uncapped interaction.
+    this.syncMotionMaxFps(state.isPlaying);
     // BEFORE any repaint decision: every path below reads `scrollPosition` for the container offset
     // and `overlayColumn` for the overlay, and these are what move them. R1's two mode-gated values
     // are written unconditionally rather than behind a change test, for the reason ColumnView.paint
