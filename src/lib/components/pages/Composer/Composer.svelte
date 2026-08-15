@@ -105,6 +105,11 @@
 
   const currentInstrument = $derived(layers[layer]);
   const songLength = $derived(calculateSongLength(song.columns, settings.bpm.value, song.selected));
+  const usedLayersInSelectedColumn = $derived.by(() => {
+    // Rebuilt as one immutable value whenever the song graph or selected column changes; the
+    // instrument panel only needs membership checks, not a reactive collection of its own.
+    return new Set(song.selectedColumn?.notes.map((note) => note.trackIndex) ?? []);
+  });
 
   // No refreshSong() any more (2026-08-06 reactive-model plan, phase 1). ComposedSong publishes
   // its own changes now: `selected`, `breakpoints`, `instruments`, `name`/`bpm`/`pitch` are
@@ -1691,6 +1696,7 @@
     <InstrumentControls
       instruments={song.instruments}
       selected={layer}
+      usedLayers={usedLayersInSelectedColumn}
       onLayerSelect={changeLayer}
       onInstrumentAdd={addInstrument}
       onInstrumentChange={editInstrument}

@@ -8,6 +8,7 @@
   let {
     instruments,
     selected,
+    usedLayers,
     onLayerSelect,
     onInstrumentChange,
     onInstrumentDelete,
@@ -16,6 +17,7 @@
   }: {
     instruments: InstrumentData[];
     selected: number;
+    usedLayers: ReadonlySet<number>;
     onLayerSelect: (index: number) => void;
     onInstrumentChange: (instrument: InstrumentData, index: number) => void;
     onInstrumentDelete: (index: number) => void;
@@ -59,15 +61,18 @@
 <div class="column instruments-button-wrapper">
   {#each instruments as ins, i (ins.name + i)}
     {@const isSelected = i === selected}
+    {@const isUsedBySelectedColumn = !isSelected && usedLayers.has(i)}
     {@const passiveIconBase = ThemeProvider.getText('primary')}
     {@const passiveIcon = passiveIconBase.isDark()
       ? passiveIconBase.lighten(0.2)
       : passiveIconBase.darken(0.15)}
     <div
-      class={['instrument-button', 'flex-centered', isSelected && 'instrument-button-selected']}
-      style={isSelected
-        ? `background-color:${ThemeProvider.get('primary').mix(ThemeProvider.get('accent')).toString()}`
-        : ''}
+      class={[
+        'instrument-button',
+        'flex-centered',
+        isUsedBySelectedColumn && 'instrument-button-used',
+        isSelected && 'instrument-button-selected',
+      ]}
       use:scrollIntoViewOnSelect={isSelected}
     >
       {#if !isSelected}

@@ -2743,9 +2743,19 @@ select {
   border-radius: 0;
 }
 
+.instrument-button-used {
+  background-color: rgba(var(--composer-secondary-layer-rgb), 0.2);
+}
+
 .instrument-button-selected {
   height: 4.2rem;
   min-height: 4.2rem;
+  background-color: var(--composer-main-layer);
+  color: var(--composer-main-layer-text);
+}
+
+.instrument-button-selected .app-button {
+  color: var(--composer-main-layer-text);
 }
 
 .instrument-settings {
