@@ -8,8 +8,9 @@
 // itself. Only isPlaying/scrollSpeed/keyboardLayout/maxFps are pushed reactively via update() (see
 // VsrgPlayerRendererState below); the callbacks are wired once at construction instead and never
 // change identity afterward.
-import { Application, Container, Sprite } from 'pixi.js';
+import { Application, Container, Sprite, type RendererPreference } from 'pixi.js';
 import { PIXI_RENDERER_PREFERENCE } from '$cmp/pixiRendererPreference';
+import { observeWebGLContext, pixiResolution } from '$cmp/pixiContextRecovery';
 import { subscribeTheme } from '$core/theme/ThemeProvider.svelte';
 import type { Theme } from '$core/theme/ThemeProvider.svelte';
 import { keyBinds } from '$stores/KeybindsStore.svelte';
@@ -109,6 +110,12 @@ export class VsrgPlayerRenderer {
   private cache: VsrgPlayerCache | null = null;
   private themeDispose: (() => void) | null = null;
   private currentSongDispose: (() => void) | null = null;
+  private contextLost = false;
+  private contextRecoveryDispose: (() => void) | null = null;
+  private replacingLostRenderer = false;
+  /** A renderer instance gets one fresh WebGL context before its terminal Canvas fallback. */
+  private hasRestartedWebGL = false;
+  private destroyed = false;
   private throttledEventLoop: ThrottledEventLoop;
 
   // Persistent scene container, created once per renderer instance; draw() clears and rebuilds
@@ -171,18 +178,9 @@ export class VsrgPlayerRenderer {
     window.addEventListener('resize', this.calculateSizes);
     this.calculateSizes();
 
-    const devicePixelRatio = window.devicePixelRatio ?? 1.4;
-    this.app = new Application();
-    await this.app.init({
-      preference: PIXI_RENDERER_PREFERENCE,
-      width: this.sizes.rawWidth,
-      height: this.sizes.rawHeight,
-      backgroundAlpha: 0,
-      autoDensity: false,
-      antialias: true,
-      resolution: devicePixelRatio,
-    });
+    this.app = await this.createApplication(PIXI_RENDERER_PREFERENCE);
     this.container.appendChild(this.app.canvas);
+    this.observeContext(this.app.canvas);
     this.app.stage.addChild(this.hitObjectsContainer);
     this.hitObjectsContainer.sortableChildren = true;
 
@@ -194,6 +192,83 @@ export class VsrgPlayerRenderer {
     // did) - this is the real calculateSizes()/generateCache() pass; it also paints the first frame.
     this.calculateSizes();
     this.draw();
+  }
+
+  private async createApplication(
+    preference: RendererPreference | RendererPreference[]
+  ): Promise<Application> {
+    const app = new Application();
+    await app.init({
+      preference,
+      width: this.sizes.rawWidth,
+      height: this.sizes.rawHeight,
+      backgroundAlpha: 0,
+      autoDensity: false,
+      antialias: true,
+      resolution: pixiResolution(),
+    });
+    return app;
+  }
+
+  private observeContext(canvas: HTMLCanvasElement): void {
+    this.contextRecoveryDispose?.();
+    this.contextRecoveryDispose = observeWebGLContext(canvas, {
+      onLost: () => {
+        this.contextLost = true;
+      },
+      onRestored: () => {
+        if (this.destroyed || this.replacingLostRenderer) return;
+        this.contextLost = false;
+        this.calculateSizes();
+      },
+      onRecoveryTimeout: () => {
+        void this.replaceUnrestoredRenderer();
+      },
+    });
+  }
+
+  /** Preserve playback state, try one fresh WebGL context, then use Canvas if that also fails. */
+  private async replaceUnrestoredRenderer(): Promise<void> {
+    const oldApp = this.app;
+    if (this.destroyed || this.replacingLostRenderer || !this.contextLost || !oldApp) return;
+
+    this.replacingLostRenderer = true;
+    const preference: RendererPreference = this.hasRestartedWebGL ? 'canvas' : 'webgl';
+    if (preference === 'webgl') this.hasRestartedWebGL = true;
+    let replacement: Application;
+    try {
+      replacement = await this.createApplication(preference);
+    } catch (error) {
+      this.replacingLostRenderer = false;
+      if (preference === 'webgl') {
+        console.warn('Could not restart a lost Pixi WebGL renderer; using Canvas.', error);
+        await this.replaceUnrestoredRenderer();
+      } else {
+        console.error('Could not replace a lost Pixi renderer with Canvas.', error);
+      }
+      return;
+    }
+    if (this.destroyed) {
+      replacement.destroy(true, { children: true });
+      return;
+    }
+
+    this.contextRecoveryDispose?.();
+    this.contextRecoveryDispose = null;
+    oldApp.stage.removeChild(this.hitObjectsContainer);
+    this.cache?.destroy();
+    this.cache = null;
+
+    this.app = replacement;
+    replacement.stage.addChild(this.hitObjectsContainer);
+    if (oldApp.canvas.parentNode) oldApp.canvas.replaceWith(replacement.canvas);
+    else this.container.appendChild(replacement.canvas);
+    if (preference === 'webgl') this.observeContext(replacement.canvas);
+    oldApp.destroy(true, false);
+
+    this.contextLost = false;
+    this.replacingLostRenderer = false;
+    this.calculateSizes();
   }
 
   private onSongPick = ({ type, song }: VsrgPlayerSong) => {
@@ -221,6 +296,9 @@ export class VsrgPlayerRenderer {
   // this.app?.destroy() below is REQUIRED: nothing else owns the pixi Application's lifecycle in
   // this synchronous class. Skipping it would leak a WebGL context/canvas on every unmount.
   destroy(): void {
+    this.destroyed = true;
+    this.contextRecoveryDispose?.();
+    this.contextRecoveryDispose = null;
     this.throttledEventLoop.stop();
     // QUIRK: resets the shared vsrgPlayerStore's keyboard layout to the 4-key mapping
     // UNCONDITIONALLY, regardless of whether a 4-key or 6-key layout was active. Flagged, not fixed.
@@ -287,8 +365,8 @@ export class VsrgPlayerRenderer {
       scaling: el.clientHeight / this.state.scrollSpeed,
       verticalOffset: 15,
     };
-    this.app?.renderer.resize(sizes.width, sizes.height);
-    if (this.app) {
+    if (this.app && !this.contextLost && !this.replacingLostRenderer) {
+      this.app.renderer.resize(sizes.width, sizes.height);
       this.app.canvas.style.width = `${sizes.width}px`;
       this.app.canvas.style.height = `${sizes.height}px`;
     }
@@ -302,7 +380,7 @@ export class VsrgPlayerRenderer {
 
   private generateCache = () => {
     const app = this.app;
-    if (!app) return;
+    if (!app || this.contextLost || this.replacingLostRenderer) return;
     const newCache = new VsrgPlayerCache({
       app,
       colors: this.colors,
@@ -439,7 +517,7 @@ export class VsrgPlayerRenderer {
   }
 
   private draw(): void {
-    if (!this.app) return;
+    if (!this.app || this.contextLost || this.replacingLostRenderer) return;
     const hasCache = this.cache !== null;
     this.hitObjectsContainer.visible = hasCache;
     if (hasCache) {

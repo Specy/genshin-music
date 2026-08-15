@@ -106,6 +106,17 @@ const pixi = vi.hoisted(() => {
             return child
         }
 
+        addChildAt<T extends FakeContainer>(child: T, index: number): T {
+            this.children.splice(index, 0, child)
+            return child
+        }
+
+        removeChild<T extends FakeContainer>(child: T): T {
+            const index = this.children.indexOf(child)
+            if (index !== -1) this.children.splice(index, 1)
+            return child
+        }
+
         removeChildren(): FakeContainer[] {
             const children = this.children
             this.children = []
@@ -320,6 +331,34 @@ describe('ComposerRenderer rendering', () => {
         //...and an invalidating update repaints exactly once more
         renderer.update({...initialState, selected: 1})
         expect(renderCounts()).toEqual([3])
+
+        renderer.destroy()
+    })
+
+    it('stops GPU work while WebGL is lost and rebuilds generated textures after restoration', async () => {
+        vi.useFakeTimers()
+        const song = new ComposedSong('Composer context recovery')
+        const initialState = makeInitialState(song)
+        const renderer = mount(initialState)
+        await renderer.init()
+        await vi.advanceTimersByTimeAsync(50)
+
+        const [app] = pixi.applications
+        const rendersBeforeLoss = app.render.mock.calls.length
+        const texturesBeforeLoss = app.renderer.generateTexture.mock.calls.length
+        const lost = new Event('webglcontextlost', {cancelable: true})
+        app.canvas.dispatchEvent(lost)
+
+        expect(lost.defaultPrevented).toBe(true)
+        renderer.update({...initialState, selected: 1})
+        expect(app.render).toHaveBeenCalledTimes(rendersBeforeLoss)
+        expect(app.renderer.generateTexture).toHaveBeenCalledTimes(texturesBeforeLoss)
+
+        app.canvas.dispatchEvent(new Event('webglcontextrestored'))
+        await vi.advanceTimersByTimeAsync(50)
+        expect(app.renderer.resize).toHaveBeenCalled()
+        expect(app.renderer.generateTexture.mock.calls.length).toBeGreaterThan(texturesBeforeLoss)
+        expect(app.render.mock.calls.length).toBeGreaterThan(rendersBeforeLoss)
 
         renderer.destroy()
     })

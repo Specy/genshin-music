@@ -83,6 +83,12 @@ const pixi = vi.hoisted(() => {
             return children[0]
         }
 
+        removeChild<T extends FakeContainer>(child: T): T {
+            const index = this.children.indexOf(child)
+            if (index !== -1) this.children.splice(index, 1)
+            return child
+        }
+
         removeChildren(): FakeContainer[] {
             this.clears++
             const children = this.children
@@ -139,13 +145,16 @@ const pixi = vi.hoisted(() => {
             resize: vi.fn(),
             generateTexture: vi.fn(() => new FakeTexture()),
         }
+        initOptions: {preference?: string | string[]} | undefined
 
         constructor() {
             applications.push(this)
         }
 
         //no ticker: this fake renders nothing, and the counters below are the only observation
-        async init() {}
+        async init(options?: {preference?: string | string[]}) {
+            this.initOptions = options
+        }
 
         destroy() {}
     }
@@ -201,6 +210,7 @@ vi.mock('fontfaceobserver', () => ({
 import {INSTRUMENTS, VsrgSong} from './imports'
 import {assertNoLiveAliasing} from './noAliasing'
 import {captureVsrgSongState} from '$cmp/pages/VsrgComposer/vsrgSongRenderState'
+import {WEBGL_CONTEXT_RECOVERY_TIMEOUT_MS} from '$cmp/pixiContextRecovery'
 import {ThrottledEventLoop} from '$core/ThrottledEventLoop'
 import {
     VsrgComposerRenderer,
@@ -315,6 +325,7 @@ async function mount(): Promise<Harness> {
 }
 
 afterEach(() => {
+    vi.useRealTimers()
     pixi.applications.length = 0
     document.body.replaceChildren()
 })
@@ -483,6 +494,56 @@ describe('VsrgComposerRenderer recalculates from a diff of two moments, on one s
             }
         })
     }
+})
+
+describe('VsrgComposerRenderer context recovery', () => {
+    it('suppresses GPU work while lost and rebuilds every generated texture after restoration', async () => {
+        const harness = await mount()
+        try {
+            const app = pixi.applications[pixi.applications.length - 1]
+            const texturesBeforeLoss = app.renderer.generateTexture.mock.calls.length
+            const resizesBeforeLoss = app.renderer.resize.mock.calls.length
+            const lost = new Event('webglcontextlost', {cancelable: true})
+            app.canvas.dispatchEvent(lost)
+
+            expect(lost.defaultPrevented).toBe(true)
+            expect(harness.push()).toEqual({
+                sizes: 0,
+                cache: 0,
+                fps: 0,
+                draws: {keys: 0, tracks: 0, timeline: 0},
+            })
+
+            app.canvas.dispatchEvent(new Event('webglcontextrestored'))
+            expect(app.renderer.resize.mock.calls.length).toBeGreaterThan(resizesBeforeLoss)
+            expect(app.renderer.generateTexture.mock.calls.length).toBeGreaterThan(texturesBeforeLoss)
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    it('restarts WebGL once before making Canvas the terminal fallback', async () => {
+        vi.useFakeTimers()
+        const harness = await mount()
+        try {
+            const original = pixi.applications[pixi.applications.length - 1]
+            original.canvas.dispatchEvent(new Event('webglcontextlost', {cancelable: true}))
+            await vi.advanceTimersByTimeAsync(WEBGL_CONTEXT_RECOVERY_TIMEOUT_MS)
+
+            const restarted = pixi.applications[pixi.applications.length - 1]
+            expect(restarted).not.toBe(original)
+            expect(restarted.initOptions?.preference).toBe('webgl')
+
+            restarted.canvas.dispatchEvent(new Event('webglcontextlost', {cancelable: true}))
+            await vi.advanceTimersByTimeAsync(WEBGL_CONTEXT_RECOVERY_TIMEOUT_MS)
+
+            const fallback = pixi.applications[pixi.applications.length - 1]
+            expect(fallback).not.toBe(restarted)
+            expect(fallback.initOptions?.preference).toBe('canvas')
+        } finally {
+            harness.destroy()
+        }
+    })
 })
 
 /**
