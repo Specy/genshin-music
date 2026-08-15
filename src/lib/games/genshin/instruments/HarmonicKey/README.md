@@ -20,9 +20,10 @@ Captured in-game as one 48 kHz stereo recording, all 21 notes in button order
 - segmented at silence, then trimmed: onset walked back to the noise floor with
   a short pre-roll and fade-in, tail kept down to the floor with a pad and
   fade-out
+- removed the first 30 ms from every finished sample to eliminate capture noise
 - stereo downmixed to mono (the capture's L−R decorrelation is room/reverb, not
   content), DC removed
-- encoded to 128 kbps CBR mono MP3 at the source rate (lamejs), named
+- encoded to 128 kbps CBR mono MP3 at the source rate, named
   `<button>.mp3` — the historical default naming the `standard-21` preset uses
 
 ### Loudness: matched to the OLD set, not to the house target
