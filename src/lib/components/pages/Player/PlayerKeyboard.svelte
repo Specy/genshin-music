@@ -52,6 +52,7 @@
       playSound: (id: number, songNote?: RecordedNote) => void;
       releaseSound: (id: number) => void;
       releaseAllSounds: () => void;
+      restartMetronome: (bpm: number, firstBeatDelayMs?: number) => void;
       setHasSong: (override: boolean) => void;
       onSongFinished: () => void;
     };
@@ -63,6 +64,7 @@
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   let nextChunkDelay = 0;
   const tickTime = 50;
+  const playbackLeadInMs = 200;
   let tickInterval: Timer = 0;
   let mounted = true;
   let songTimestamp = 0;
@@ -74,6 +76,7 @@
   const timeouts = new Map<ObservableNote, Timer>();
   let debouncedStateUpdate: Timer = 0;
   let mode: 'play' | 'practice' | 'approaching' | undefined = $state('play');
+  let activeRunKey: number | undefined;
   let songToPractice: Chunk[] = [];
   let sustainingTracks: boolean[] = [];
   let approachingNotes: ApproachingNote[][] = $state(Array2d.from(game.notes.perColumn));
@@ -81,10 +84,14 @@
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   let playTimestamp = Date.now();
 
-  function setTicker(enabled: boolean) {
+  function setTicker(enabled: boolean, runKey: number = playerStore.state.key) {
     if (enabled) {
       clearInterval(tickInterval);
-      tickInterval = setInterval(tick, tickTime);
+      // Bind the interval to the run which created its approach queue. Store transitions are
+      // intentionally torn down on a 4ms debounce; without carrying this key, an old tick which
+      // becomes due inside that window can score/finish the old queue while eventType already
+      // names the destination run.
+      tickInterval = setInterval(() => tick(runKey), tickTime);
     } else {
       clearInterval(tickInterval);
     }
@@ -147,9 +154,24 @@
     releaseHeldInput(holderToken('keyboard', code));
   };
 
-  async function approachingSong(song: RecordedSong, start = 0, end?: number) {
+  function isCurrentRun(runKey: number, expectedMode: 'play' | 'practice' | 'approaching') {
+    return (
+      mounted &&
+      activeRunKey === runKey &&
+      playerStore.state.key === runKey &&
+      playerStore.eventType === expectedMode &&
+      mode === expectedMode
+    );
+  }
+
+  async function approachingSong(
+    song: RecordedSong,
+    start = 0,
+    end?: number,
+    runKey: number = playerStore.state.key
+  ) {
     mode = 'approaching';
-    setTicker(true);
+    activeRunKey = runKey;
     end = end ?? song.notes.length;
     const { speedChanger } = data;
     const notes: ApproachingNote[] = [];
@@ -175,17 +197,21 @@
       notes.push(obj);
     }
     await delay(2000); //add an initial delay to let the user prepare
+    // A mode change during the preparation delay owns the surface now. Without this guard, the
+    // old approach run wakes up two seconds later and clears/replaces the newer mode's pages,
+    // score and queues. `key` is monotonic across every transition (including stop), unlike
+    // playId, which resetSong() sets back to zero.
+    if (!isCurrentRun(runKey, 'approaching')) return;
     // QUIRK: playerControlsStore.setSong(song) is intentionally left commented out - nothing
     // reads the stored song, kept as-is rather than deleted or reinstated.
     //playerControlsStore.setSong(song)
-    playerControlsStore.clearPages();
-    playerControlsStore.resetScore();
     approachingNotes = Array2d.from(game.notes.perColumn);
     approachingNotesList = notes;
+    setTicker(true, runKey);
   }
 
-  function tick() {
-    if (!data.hasSong || mode !== 'approaching') return;
+  function tick(runKey: number) {
+    if (!data.hasSong || !isCurrentRun(runKey, 'approaching')) return;
     const stateNotes = approachingNotes;
     const notes = approachingNotesList;
     const { speedChanger } = data;
@@ -311,8 +337,14 @@
     }
   }
 
-  async function playSong(song: RecordedSong, start = 0, end?: number) {
+  async function playSong(
+    song: RecordedSong,
+    start = 0,
+    end?: number,
+    runKey: number = playerStore.state.key
+  ) {
     mode = 'play';
+    activeRunKey = runKey;
     end = end ?? song.notes.length;
     songTimestamp = song.timestamp;
     const keyboard = playerStore.keyboard;
@@ -321,7 +353,13 @@
     if (notes.length === 0) return;
     const mergedNotes = RecordedSong.mergeNotesIntoChunks(notes.map((n) => n.clone()));
     playerControlsStore.setPages(groupArrayEvery(mergedNotes, visualSheetSize));
-    await delay(200); //add small start offset
+    // Cancel the old click grid now and schedule beat zero at the end of the same preparation
+    // window as the song. A delayed audio-clock anchor avoids both a stray old click during the
+    // lead-in and the phase error that results from starting the metronome's default 50ms margin
+    // alongside this transport's 200ms margin.
+    functions.restartMetronome(song.bpm * data.speedChanger.value, playbackLeadInMs);
+    await delay(playbackLeadInMs);
+    if (!isCurrentRun(runKey, 'play')) return;
     const startOffset = notes[0].time;
     let previous = startOffset;
     let delayOffset = 0;
@@ -331,7 +369,7 @@
       const delayTime = notes[i].time - previous;
       previous = notes[i].time;
       if (delayTime > 16) await delay(delayTime + delayOffset);
-      if (!mounted || songTimestamp !== song.timestamp) return;
+      if (!isCurrentRun(runKey, 'play') || songTimestamp !== song.timestamp) return;
       //the note's key on this keyboard, or nothing on screen to press (keyboardButton -1, which
       //indexes nothing) — either way the sound is the song note's own id, played on its own
       //track's instrument
@@ -354,12 +392,18 @@
       lastNoteTime
     );
     if (finalReleaseTime > lastNoteTime) await delay(finalReleaseTime - lastNoteTime);
-    if (!mounted || songTimestamp !== song.timestamp) return;
+    if (!isCurrentRun(runKey, 'play') || songTimestamp !== song.timestamp) return;
     functions.onSongFinished();
   }
 
-  function practiceSong(song: RecordedSong, start = 0, end?: number) {
+  function practiceSong(
+    song: RecordedSong,
+    start = 0,
+    end?: number,
+    runKey: number = playerStore.state.key
+  ) {
     mode = 'practice';
+    activeRunKey = runKey;
     //TODO move this to the song class
     end = end ?? song.notes.length;
     const keyboard = playerStore.keyboard;
@@ -410,6 +454,13 @@
   }
 
   async function stopSong(): Promise<void> {
+    // This is the one teardown path for every play/practice/approach/restart/stop transition.
+    // Shared player state must be cleared here rather than by whichever destination happens to
+    // overwrite it later: approach has a two-second preparation window, empty songs return early,
+    // and the keyboard shortcut does not pass through PlayerSongControls' stop button.
+    setTicker(false);
+    mode = undefined;
+    activeRunKey = undefined;
     songTimestamp = 0;
     timeouts.forEach((timeout) => clearTimeout(timeout));
     timeouts.clear();
@@ -422,6 +473,8 @@
     songToPractice = [];
     sustainingTracks = [];
     approachingNotes = Array2d.from(game.notes.perColumn);
+    playerControlsStore.clearPages();
+    playerControlsStore.resetScore();
     //stopping playback releases every still-held voice (live and scheduled)
     functions.releaseAllSounds();
     playerStore.setKeyboardLayout(data.instrument.notes);
@@ -514,12 +567,14 @@
           ? Math.floor(Math.random() * 10000) + Date.now()
           : 0,
     });
-    handlePracticeClick(note);
+    const ownsCurrentRun = activeRunKey === playerStore.state.key;
+    if (ownsCurrentRun && mode === 'practice' && playerStore.eventType === 'practice')
+      handlePracticeClick(note);
     //the engine speaks Note Ids: play THIS note, not whatever the sounding instrument keeps
     //at the same button
     functions.playSound(note.id, songNote);
-    const status = handleApproachClick(note);
-    if (playerStore.eventType === 'approaching') {
+    if (ownsCurrentRun && mode === 'approaching' && playerStore.eventType === 'approaching') {
+      const status = handleApproachClick(note);
       playerStore.setNoteState(note, { status });
       if (status === 'approach-wrong') playerControlsStore.increaseScore(false);
     }
@@ -589,10 +644,13 @@
       if (debouncedStateUpdate) clearTimeout(debouncedStateUpdate);
       debouncedStateUpdate = setTimeout(async () => {
         const state = playerStore.state;
+        const runKey = state.key;
         const song = playerStore.song;
         const type = playerStore.eventType;
         await stopSong();
-        if (!mounted) return;
+        // A second transition can arrive while the await yields. Its own debounced callback will
+        // perform the setup; this stale one must not install the song/mode it captured beforehand.
+        if (!mounted || playerStore.state.key !== runKey) return;
         if (type === 'stop') {
           functions.setHasSong(false);
         } else {
@@ -640,13 +698,13 @@
             return;
           }
           if (type === 'play') {
-            playSong(lostReference, start, end);
+            playSong(lostReference, start, end, runKey);
           }
           if (type === 'practice') {
-            practiceSong(lostReference, start, end);
+            practiceSong(lostReference, start, end, runKey);
           }
           if (type === 'approaching') {
-            approachingSong(lostReference, start, end);
+            approachingSong(lostReference, start, end, runKey);
           }
           functions.setHasSong(true);
           Analytics.songEvent({ type });

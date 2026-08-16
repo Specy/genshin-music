@@ -14,6 +14,7 @@
   import ComposerDurationPopover from './ComposerDurationPopover.svelte';
   import ComposerCanvas from './ComposerCanvas.svelte';
   import ComposerMenu from './ComposerMenu.svelte';
+  import { ComposerInstrumentSynchronizer } from './ComposerInstrumentSynchronizer';
   import CanvasTool from './CanvasTool.svelte';
   import InstrumentControls from './InstrumentControls.svelte';
   import { Instrument, type ObservableNote } from '$lib/audio/Instrument.svelte';
@@ -102,6 +103,15 @@
   let broadcastChannel: BroadcastChannel | null = null;
   let mounted = false;
   let cleanup: (() => void)[] = [];
+  const instrumentSynchronizer = new ComposerInstrumentSynchronizer({
+    getLayers: () => layers,
+    setLayers: (nextLayers) => (layers = nextLayers),
+    isMounted: () => mounted,
+    onLoadError: () => logger.error(t('logs:error_loading_instrument')),
+    //ADR-0006 resync-on-mutation: an instrument swap replaces the layer that would sound the
+    //committed window, and only NOW does the loaded replacement exist to recommit through.
+    onSynced: () => resyncPlayback(),
+  });
 
   const currentInstrument = $derived(layers[layer]);
   const songLength = $derived(calculateSongLength(song.columns, settings.bpm.value, song.selected));
@@ -413,53 +423,8 @@
     syncInstruments(song);
   }
 
-  async function syncInstruments(songToSync?: ComposedSong) {
-    if (!songToSync) songToSync = song;
-    //remove excess instruments
-    const extraInstruments = layers.splice(songToSync.instruments.length);
-    extraInstruments.forEach((ins) => {
-      AudioProvider.disconnect(ins.endNode);
-      ins.dispose();
-    });
-    const promises = songToSync.instruments.map(async (ins, i) => {
-      if (layers[i] === undefined) {
-        //If it doesn't have a layer, create one
-        const instrument = new Instrument(ins.name);
-        layers[i] = instrument;
-        const loaded = await instrument.load(AudioProvider.getAudioContext());
-        if (!loaded) logger.error(t('logs:error_loading_instrument'));
-        if (!mounted) return instrument.dispose();
-        AudioProvider.connect(instrument.endNode, ins.reverbOverride);
-        instrument.changeVolume(ins.volume);
-        return instrument;
-      }
-      if (layers[i].name === ins.name) {
-        //if it has a layer and it's the same, just set the volume and reverb
-        layers[i].changeVolume(ins.volume);
-        AudioProvider.setReverbOfNode(layers[i].endNode, ins.reverbOverride);
-        return layers[i];
-      } else {
-        //if it has a layer and it's different, delete the layer and create a new one
-        const old = layers[i];
-        AudioProvider.disconnect(old.endNode);
-        old.dispose();
-        const instrument = new Instrument(ins.name);
-        layers[i] = instrument;
-        const loaded = await instrument.load(AudioProvider.getAudioContext());
-        if (!loaded) logger.error(t('logs:error_loading_instrument'));
-        if (!mounted) return instrument.dispose();
-        AudioProvider.connect(instrument.endNode, ins.reverbOverride);
-        instrument.changeVolume(ins.volume);
-        return instrument;
-      }
-    });
-    if (!mounted) return;
-    const newInstruments = (await Promise.all(promises)) as Instrument[];
-    layers = newInstruments;
-    //ADR-0006 resync-on-mutation: an instrument swap replaces the layer that would sound the
-    //committed window, and only NOW does the loaded replacement exist to recommit through —
-    //resyncing at the call sites instead would recommit into the just-disposed instrument.
-    resyncPlayback();
+  function syncInstruments(songToSync: ComposedSong = song) {
+    return instrumentSynchronizer.sync(songToSync.instruments);
   }
 
   function changeVolume(obj: SettingVolumeUpdate) {
@@ -1098,6 +1063,11 @@
     if (playbackActive || transport.isRunning) void togglePlay(false);
     song = added;
     layer = 0;
+    // The roster above drives the controls, but notes sound through the separate loaded
+    // Instrument array. Rebuild it when the song is replaced just as loadSong does; otherwise a
+    // newly-created song displays its three default instruments while still playing the previous
+    // song's layer instruments until another roster action happens to synchronize them.
+    syncInstruments(added);
     // Selection and undo entries address the replaced song, while copiedColumns is an
     // editor-level clipboard: preserving it is what allows copy -> new song -> paste.
     selectedColumns = [];

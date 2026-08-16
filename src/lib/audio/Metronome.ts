@@ -60,7 +60,8 @@ const WAKE_MAX_MS = 100;
  * the FUTURE rather than at "now" - a beat placed at exactly currentTime is at the mercy of
  * whatever the main thread does next, which is the whole defect this scheduler removes.
  */
-const START_MARGIN_S = 0.05;
+export const METRONOME_START_MARGIN_MS = 50;
+const START_MARGIN_S = METRONOME_START_MARGIN_MS / 1000;
 
 /**
  * How long after its start time a beat is kept in the cancellation queue, in seconds. Only a
@@ -198,7 +199,7 @@ export class Metronome {
     this.crochetBuffer = result[1];
   }
 
-  start() {
+  start(firstBeatDelayMs = METRONOME_START_MARGIN_MS) {
     // Idempotent on the TIMER HANDLE, not on a boolean. The previous implementation guarded a
     // `while (running)` loop on a flag that stop() cleared while an awaited delay was still
     // pending: a stop() immediately followed by a start() left the parked loop to resume beside
@@ -212,7 +213,13 @@ export class Metronome {
     this.period = this.beatPeriod();
     this.beatIndex = 0;
     this.anchorBeat = 0;
-    this.anchorTime = ctx.currentTime + START_MARGIN_S;
+    // Beat zero must remain in the future: scheduleDueBeats deliberately drops times at/before
+    // `now` as missed beats. Non-finite input would poison the anchor and silence the run, so the
+    // optional transport lead-in may only extend (never erase) the scheduler's safe margin.
+    const safeFirstBeatDelayMs = Number.isFinite(firstBeatDelayMs)
+      ? Math.max(METRONOME_START_MARGIN_MS, firstBeatDelayMs)
+      : METRONOME_START_MARGIN_MS;
+    this.anchorTime = ctx.currentTime + safeFirstBeatDelayMs / 1000;
     this.accentAnchorBeat = 0;
     this.accentBeats = this.beats;
     this.lastMargin = 0;
@@ -231,6 +238,19 @@ export class Metronome {
     // Without this the metronome would keep clicking for a whole lookahead after the user turned
     // it off, because those beats are already committed to the audio clock.
     this.cancelPendingBeats();
+  }
+
+  /**
+   * Start a fresh beat grid even when the metronome is already running.
+   *
+   * `start()` is deliberately idempotent, while changing bpm preserves the next committed beat
+   * and the current bar phase. Transport boundaries (record/play/restart) need the opposite: cancel
+   * the old lookahead queue and make the next click beat zero of a newly anchored run. A caller may
+   * provide a longer first-beat delay when another transport has a known preparation window.
+   */
+  restart(firstBeatDelayMs = METRONOME_START_MARGIN_MS) {
+    this.stop();
+    this.start(firstBeatDelayMs);
   }
 
   toggle() {

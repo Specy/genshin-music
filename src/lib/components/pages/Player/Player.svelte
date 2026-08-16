@@ -133,6 +133,11 @@
         } else if (eventType === 'stop') {
           syncDisplayInstrument([]);
         }
+        if (eventType === 'stop' && isMetronomePlaying) {
+          // Free play/recording uses the user's own tempo after a song is dismissed. The scheduler
+          // adopts this on its next wake without resetting the still-running free-play phase.
+          metronome.bpm = settings.bpm.value;
+        }
         if (!settings.syncSongData.value) return;
         if (isSongEvent) {
           //remember the user's own values before the first song overrides them (a second song
@@ -273,10 +278,21 @@
   }
 
   async function onSongFinished() {
-    if (settings.loopPractice.value) {
-      await delay(1000);
-      restartSong();
-    }
+    if (!settings.loopPractice.value) return;
+    const finishedKey = playerStore.state.key;
+    const finishedType = playerStore.eventType;
+    if (!['play', 'practice', 'approaching'].includes(finishedType)) return;
+    await delay(1000);
+    // Selecting/stopping/restarting during the pause transfers ownership to another run. The old
+    // completion must not wake up and restart that newer run from its current slider position.
+    if (
+      !mounted ||
+      !settings.loopPractice.value ||
+      playerStore.state.key !== finishedKey ||
+      playerStore.eventType !== finishedType
+    )
+      return;
+    restartSong();
   }
 
   function loadInstruments(toLoad: InstrumentData[]) {
@@ -459,21 +475,29 @@
     }
   }
 
+  /** Re-anchor the click grid on a transport boundary, leaving the toggle state unchanged. */
+  function restartMetronome(bpm: number, firstBeatDelayMs?: number) {
+    if (!isMetronomePlaying) return;
+    metronome.bpm = bpm;
+    metronome.beats = settings.metronomeBeats.value;
+    metronome.changeVolume(settings.metronomeVolume.value);
+    metronome.restart(firstBeatDelayMs);
+  }
+
   function toggleMetronome() {
     const wasPlaying = isMetronomePlaying;
     isMetronomePlaying = !wasPlaying;
     if (wasPlaying) {
       metronome.stop();
     } else {
-      metronome.bpm = settings.bpm.value;
-      metronome.beats = settings.metronomeBeats.value;
-      metronome.changeVolume(settings.metronomeVolume.value);
-      metronome.start();
+      const playingSong = playerStore.eventType === 'play' ? playerStore.song : null;
+      restartMetronome(playingSong ? playingSong.bpm * speedChanger.value : settings.bpm.value);
     }
   }
 
   async function toggleRecord(override?: boolean | null) {
     if (typeof override !== 'boolean') override = null;
+    const wasRecording = isRecording;
     const newState = override !== null ? override : !isRecording;
     if (!newState && recording.notes.length > 0) {
       //if there was a song recording — keys still held at stop count as released now
@@ -494,6 +518,9 @@
       recording.captureDurations = instruments[0]?.supportsSustain ?? false;
     }
     isRecording = newState;
+    // Only the actual off -> on edge is a new recording origin. In particular, stopping an empty
+    // recording also takes the branch which replaces `recording` above and must not reset the beat.
+    if (newState && !wasRecording) restartMetronome(settings.bpm.value);
   }
 
   function enableLoop(enabled: boolean) {
@@ -565,6 +592,7 @@
         playSound,
         releaseSound,
         releaseAllSounds,
+        restartMetronome,
         setHasSong,
         onSongFinished,
       }}

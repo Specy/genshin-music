@@ -306,6 +306,64 @@ describe('stopping the metronome', () => {
         }
     })
 
+    it('restart cancels the old lookahead and anchors a new downbeat at the new tempo', () => {
+        const h = harness()
+        h.metronome.start()
+        h.advance(0.1)
+        const oldBeats = h.beats()
+        const restartedAt = h.now()
+
+        h.metronome.bpm = 120
+        h.metronome.restart()
+
+        expect(h.intervals.size).toBe(1)
+        const allBeats = h.beats()
+        oldBeats.forEach((beat, index) => {
+            // A click which has started is allowed to finish; every old future click is retracted.
+            expect(allBeats[index].cancelled).toBe(beat.at > restartedAt)
+        })
+        const replacement = allBeats.slice(oldBeats.length)
+        expect(replacement.length).toBeGreaterThanOrEqual(2)
+        expect(replacement[0]).toMatchObject({
+            at: restartedAt + FIRST,
+            accent: true,
+            cancelled: false,
+        })
+        expect(replacement[1].at - replacement[0].at).toBeCloseTo(0.5, 9)
+    })
+
+    it('can anchor beat zero at a transport lead-in while cancelling the old grid immediately', () => {
+        const h = harness()
+        h.metronome.start()
+        h.advance(0.1)
+        const oldBeats = h.beats()
+        const restartedAt = h.now()
+
+        h.metronome.restart(200)
+
+        const allBeats = h.beats()
+        oldBeats.forEach((beat, index) => {
+            expect(allBeats[index].cancelled).toBe(beat.at > restartedAt)
+        })
+        const replacement = allBeats.slice(oldBeats.length)
+        expect(replacement[0]).toMatchObject({
+            at: restartedAt + 0.2,
+            accent: true,
+            cancelled: false,
+        })
+    })
+
+    it.each([0, -20, Number.NaN, Number.POSITIVE_INFINITY])(
+        'keeps beat zero on the safe scheduler margin for an invalid %s ms lead-in',
+        firstBeatDelayMs => {
+            const h = harness()
+
+            h.metronome.start(firstBeatDelayMs)
+
+            expect(h.beats()[0]).toMatchObject({at: FIRST, accent: true, cancelled: false})
+        },
+    )
+
     it('ignores a second start while it is already running', () => {
         const h = harness()
         h.metronome.start()
