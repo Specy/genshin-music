@@ -101,10 +101,10 @@ export class ComposerCache {
       if (layer.test(0)) {
         //layer 1
         g.roundRect(
-          this.margin / 2 - 0.25,
           this.margin / 2,
-          Math.ceil(noteWidth - this.margin),
-          Math.ceil(noteHeight - this.margin),
+          this.margin / 2,
+          noteWidth - this.margin,
+          noteHeight - this.margin,
           radius
         )
           .fill(new Color(this.colors.mainLayer).rgb().rgbNumber())
@@ -112,20 +112,21 @@ export class ComposerCache {
       }
       if (layer.test(1)) {
         //layer 2
+        const strokeWidth = this.margin === 4 ? 3 : 2;
         g.roundRect(
-          this.margin / 2 - 0.25,
           this.margin / 2,
-          Math.ceil(noteWidth - this.margin),
-          Math.ceil(noteHeight - this.margin),
+          this.margin / 2,
+          noteWidth - this.margin,
+          noteHeight - this.margin,
           radius
         ).stroke({
-          width: this.margin === 4 ? 3 : 2,
+          width: strokeWidth,
           color: new Color(this.colors.secondLayer).rgb().rgbNumber(),
         });
       }
       if (layer.test(2)) {
         //layer 3
-        g.circle(noteWidth / 2 - 0.25, noteHeight / 2, noteHeight / 3 - 0.5)
+        g.circle(noteWidth / 2, noteHeight / 2, noteHeight / 3 - 0.5)
           .fill(new Color(this.colors.secondLayer).rgb().rgbNumber())
           .stroke({ width: 1, color: new Color(this.colors.secondLayer).rgb().rgbNumber() });
       }
@@ -133,8 +134,8 @@ export class ComposerCache {
       if (layer.test(3)) {
         //layer 4
         const lineWidth = this.margin === 4 ? 3 : 2;
-        g.moveTo(this.margin / 2 + 0.5, noteHeight / 2)
-          .lineTo(noteWidth - this.margin + 0.5, noteHeight / 2)
+        g.moveTo(this.margin / 2, noteHeight / 2)
+          .lineTo(noteWidth - this.margin / 2, noteHeight / 2)
           .stroke({
             width: lineWidth,
             color: new Color(this.colors.secondLayer).darken(0.15).rgb().rgbNumber(),
