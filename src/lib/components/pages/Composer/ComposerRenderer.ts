@@ -65,6 +65,23 @@ import {
 import { PIXI_RENDERER_PREFERENCE } from '$cmp/pixiRendererPreference';
 import { observeWebGLContext, pixiResolution } from '$cmp/pixiContextRecovery';
 
+export type ComposerPlayheadVariant = 'line' | 'rectangle';
+
+export interface ComposerPlayheadConfig {
+  variant: ComposerPlayheadVariant;
+  borderRadius?: number;
+}
+
+/**
+ * Source-level configuration for the composer playhead variant.
+ * 'line' (default) draws a vertical bar with arrowheads at the centre.
+ * 'rectangle' wraps the currently playing column from the centre to the column's right edge.
+ */
+export const COMPOSER_PLAYHEAD_CONFIG: ComposerPlayheadConfig = {
+  variant: 'rectangle',
+  borderRadius: 4,
+};
+
 const NOTES_PER_COLUMN = game.notes.perColumn;
 const COMPOSER_NOTE_POSITIONS = game.notes.composerPositions;
 
@@ -1543,24 +1560,42 @@ export class ComposerRenderer {
     const centre = this.playheadX();
     const bottom = this.height;
     this.playheadGraphics.clear();
-    this.playheadGraphics.rect(centre - PLAYHEAD_WIDTH / 2, 0, PLAYHEAD_WIDTH, bottom);
-    this.playheadGraphics.poly([
-      centre - PLAYHEAD_ARROW_HALF_WIDTH,
-      0,
-      centre + PLAYHEAD_ARROW_HALF_WIDTH,
-      0,
-      centre,
-      PLAYHEAD_ARROW_LENGTH,
-    ]);
-    this.playheadGraphics.poly([
-      centre - PLAYHEAD_ARROW_HALF_WIDTH,
-      bottom,
-      centre + PLAYHEAD_ARROW_HALF_WIDTH,
-      bottom,
-      centre,
-      bottom - PLAYHEAD_ARROW_LENGTH,
-    ]);
-    this.playheadGraphics.fill({ color: this.theme.playhead, alpha: PLAYHEAD_ALPHA });
+    if (COMPOSER_PLAYHEAD_CONFIG.variant === 'rectangle') {
+      const strokeWidth = PLAYHEAD_WIDTH;
+      const halfStroke = strokeWidth / 2;
+      const radius = COMPOSER_PLAYHEAD_CONFIG.borderRadius ?? 4;
+      this.playheadGraphics.roundRect(
+        centre,
+        halfStroke,
+        this.columnSize.width,
+        bottom - strokeWidth,
+        radius
+      );
+      this.playheadGraphics.stroke({
+        width: strokeWidth,
+        color: this.theme.playhead,
+        alpha: PLAYHEAD_ALPHA,
+      });
+    } else {
+      this.playheadGraphics.rect(centre - PLAYHEAD_WIDTH / 2, 0, PLAYHEAD_WIDTH, bottom);
+      this.playheadGraphics.poly([
+        centre - PLAYHEAD_ARROW_HALF_WIDTH,
+        0,
+        centre + PLAYHEAD_ARROW_HALF_WIDTH,
+        0,
+        centre,
+        PLAYHEAD_ARROW_LENGTH,
+      ]);
+      this.playheadGraphics.poly([
+        centre - PLAYHEAD_ARROW_HALF_WIDTH,
+        bottom,
+        centre + PLAYHEAD_ARROW_HALF_WIDTH,
+        bottom,
+        centre,
+        bottom - PLAYHEAD_ARROW_LENGTH,
+      ]);
+      this.playheadGraphics.fill({ color: this.theme.playhead, alpha: PLAYHEAD_ALPHA });
+    }
   }
 
   private recalculateCacheAndSizes = () => {
@@ -1830,7 +1865,7 @@ export class ComposerRenderer {
       key.currentColor !== this.theme.minimap.current ||
       key.visibleColor !== this.theme.minimap.visible;
 
-    if (next.isPlaying) {
+    if (next.isPlaying || next.isRecordingAudio) {
       if (invalidated || this.timelineMinimapBuild) this.timelineMinimapPending = true;
       if (this.timelineMinimapBuild || this.timelineMinimapSchedule)
         this.cancelTimelineMinimapBuild();
@@ -2565,7 +2600,7 @@ export class ComposerRenderer {
    * has to live where the event does.
    */
   private handleStageDown = (e: FederatedPointerEvent) => {
-    if (this.stagePointer) return;
+    if (this.stagePointer || this.state.isRecordingAudio) return;
     //A press keeps ordinary click semantics, but the wheel's idle timer must not move the canvas
     //under it later. Begin the same settle now; a move past slop will replace that ease with a drag.
     if (this.motion.kind === 'wheeling') {
@@ -2816,7 +2851,7 @@ export class ComposerRenderer {
    * it: measured at a 93-column jump on a 100-column song from a press on the notes.
    */
   private handleTimelineDown = (e: FederatedPointerEvent) => {
-    if (this.timelinePointer !== null) return;
+    if (this.timelinePointer !== null || this.state.isRecordingAudio) return;
     this.cancelWheelSettle();
     this.timelinePointer = e.pointerId;
     //the rectangle drawn on the timeline, so grabbing it and grabbing what is drawn agree
@@ -3125,6 +3160,20 @@ export class ComposerRenderer {
     //the LAST UPDATE, not the last paint - see the field for why the schedule needs the other one
     const previousUpdate = this.previousState;
     this.previousState = state;
+    if (state.isRecordingAudio) {
+      this.timelineMinimapWasPlaying = state.isPlaying;
+      this.timelineMinimapPending = true;
+      this.cancelTimelineMinimapBuild();
+      this.syncScrollSchedule(previousUpdate, state);
+      if (!previousUpdate?.isRecordingAudio) {
+        this.notesColumnsContainer.visible = false;
+        this.timelineStrip.visible = false;
+        this.playheadGraphics.visible = false;
+        this.notesApp?.render();
+        this.paintedState = null;
+      }
+      return;
+    }
     // Content invalidation is independent from the immediate Pixi repaint diff. This schedules a
     // latest-state static bitmap while stopped, or records that work as pending while playing.
     if (this.contextLost || this.replacingLostRenderer) {
@@ -3261,11 +3310,7 @@ export class ComposerRenderer {
     next: ComposerRendererState
   ): boolean {
     return (
-      // not `previous.isRecordingAudio !== next.isRecordingAudio`: a baseline is only recorded by a
-      // run that painted, which cannot be one where this was true. Written as an absolute so that
-      // stays true even if the baseline rule is ever loosened - the pool must never be advanced
-      // incrementally while the container it lives in is hidden.
-      next.isRecordingAudio ||
+      previous.isRecordingAudio !== next.isRecordingAudio ||
       previous.columns !== next.columns ||
       previous.instruments !== next.instruments ||
       previous.breakpoints !== next.breakpoints ||
@@ -3510,7 +3555,11 @@ export class ComposerRenderer {
     const viewport = this.timelineViewport();
 
     const painted = this.drawNotesStage(cacheData, sizes, this.containerX(), narrowed);
-    this.drawTimelineStage(relativeColumnWidth, viewport.width, viewport.x);
+    const visibleTimeline = Boolean(cacheData) && !this.state.isRecordingAudio;
+    this.timelineStrip.visible = visibleTimeline;
+    if (visibleTimeline) {
+      this.drawTimelineStage(relativeColumnWidth, viewport.width, viewport.x);
+    }
     this.notesApp.render();
     //the gate's baseline moves with the exact x drawTimelineStage just wrote, or the next frame
     //would compare against a position two repaints old and skip a write the outline needs
@@ -3659,6 +3708,9 @@ export class ComposerRenderer {
 
     this.viewportGraphics.clear();
     this.viewportGraphics.roundRect(0, 0, timelineWidth, this.timelineHeight - 3, 6);
+    const midX = timelineWidth / 2;
+    this.viewportGraphics.moveTo(midX, 0);
+    this.viewportGraphics.lineTo(midX, this.timelineHeight - 3);
     this.viewportGraphics.stroke({ width: 3, color: this.theme.timeline.border, alpha: 0.8 });
     this.viewportGraphics.x = timelinePosition;
     this.viewportGraphics.y = 1.5;

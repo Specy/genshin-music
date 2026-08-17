@@ -361,11 +361,13 @@ const pixi = vi.hoisted(() => {
             return this
         }
 
-        moveTo() {
+        moveTo(x: number, y: number) {
+            this.ops.push(['moveTo', x, y])
             return this
         }
 
-        lineTo() {
+        lineTo(x: number, y: number) {
+            this.ops.push(['lineTo', x, y])
             return this
         }
 
@@ -637,6 +639,7 @@ import {
 } from '$core/Songs/noteIds'
 import {
     ComposerRenderer,
+    COMPOSER_PLAYHEAD_CONFIG,
     isColumnVisible,
     type ColumnWindowGeometry,
     type ComposerRendererState,
@@ -1650,10 +1653,14 @@ async function mount(context: Context = makeContext()): Promise<Harness> {
                     stage: describeRoot(app.stage),
                     strip: describeRoot(strip),
                     container: describeRoot(timelineContent),
-                    content: timelineContent.children.map(child =>
-                        describeTimelineChild(child, slots)
-                    ),
-                    viewport: describeTimelineChild(viewport, slots),
+                    content: !strip.visible
+                        ? []
+                        : timelineContent.children.map(child =>
+                            describeTimelineChild(child, slots)
+                        ),
+                    viewport: !strip.visible
+                        ? expectedGraphicsChild(0, 0, [])
+                        : describeTimelineChild(viewport, slots),
                 },
             }
         },
@@ -2041,6 +2048,20 @@ function expectedTimeline(context: Context, geometry: Geometry): PaintedScene['t
     const {canvasWidth, stripWidth, height, columnWidth, timelinePadding, timelineHeight} = geometry
     const {song, props} = context
     const timelineColumnWidth = stripWidth / song.columns.length
+    if (context.props.isRecordingAudio) {
+        return {
+            stage: AT_ORIGIN,
+            strip: {
+                x: TIMELINE_INSET_LEFT,
+                y: height + timelinePadding,
+                alpha: 1,
+                visible: false,
+            },
+            container: AT_ORIGIN,
+            content: [],
+            viewport: expectedGraphicsChild(0, 0, []),
+        }
+    }
     const content: PaintedTimelineChild[] = [
         expectedGraphicsChild(0, 0, [
             ['rect', 0, 0, stripWidth, timelineHeight],
@@ -2086,7 +2107,12 @@ function expectedTimeline(context: Context, geometry: Geometry): PaintedScene['t
         //the one root that is NOT at the origin - see this function's rules. Its x is THE assertion
         //that pins which container carries the inset: every coordinate below is strip-local because
         //this one is not.
-        strip: {x: TIMELINE_INSET_LEFT, y: height + timelinePadding, alpha: 1, visible: true},
+        strip: {
+            x: TIMELINE_INSET_LEFT,
+            y: height + timelinePadding,
+            alpha: 1,
+            visible: !context.props.isRecordingAudio,
+        },
         container: AT_ORIGIN,
         content,
         viewport: expectedGraphicsChild(
@@ -2106,6 +2132,16 @@ function expectedTimeline(context: Context, geometry: Geometry): PaintedScene['t
                     Math.floor(timelineColumnWidth * columnsOnScreen),
                     timelineHeight - 3,
                     6,
+                ],
+                [
+                    'moveTo',
+                    Math.floor(timelineColumnWidth * columnsOnScreen) / 2,
+                    0,
+                ],
+                [
+                    'lineTo',
+                    Math.floor(timelineColumnWidth * columnsOnScreen) / 2,
+                    timelineHeight - 3,
                 ],
                 ['stroke', {
                     width: 3,
@@ -2173,15 +2209,28 @@ function expectedPlayhead(
     geometry: Geometry,
     accent: number
 ): PaintedTimelineChild {
-    const {canvasWidth, height} = geometry
+    const {canvasWidth, columnWidth, height} = geometry
     const centre = canvasWidth / 2
-    return {
-        ...expectedGraphicsChild(0, 0, [
+    const ops = COMPOSER_PLAYHEAD_CONFIG.variant === 'rectangle'
+        ? [
+            [
+                'roundRect',
+                centre,
+                1.5,
+                columnWidth,
+                height - 3,
+                COMPOSER_PLAYHEAD_CONFIG.borderRadius ?? 4,
+            ],
+            ['stroke', {width: 3, color: accent, alpha: 0.9}],
+        ]
+        : [
             ['rect', centre - 1.5, 0, 3, height],
             ['poly', [centre - 6, 0, centre + 6, 0, centre, 8]],
             ['poly', [centre - 6, height, centre + 6, height, centre, height - 8]],
             ['fill', {color: accent, alpha: 0.9}],
-        ]),
+        ]
+    return {
+        ...expectedGraphicsChild(0, 0, ops),
         visible: context.props.smoothScroll && !context.props.isRecordingAudio,
     }
 }
@@ -2535,7 +2584,7 @@ const REPAINTS: RepaintCase[] = [
         },
         renders: 1,
         columnPaints: [],
-        timelineRebuilds: 1,
+        timelineRebuilds: 0,
     },
     {
         //the first paintable update after a non-painting one must be a FULL repaint: there is no
@@ -4317,20 +4366,32 @@ describe('the smooth scroll', () => {
     it('draws the line at the canvas centre, and hides it with the stage while audio records', async () => {
         const harness = await mountGliding()
         try {
-            const {canvasWidth, height} = harness.geometry()
+            const {canvasWidth, columnWidth, height} = harness.geometry()
+            const centre = canvasWidth / 2
             const drawn = () => harness.paintedScene().notes.playhead
             expect(drawn().visible).toBe(true)
             //AT THE CENTRE, which is what makes it agree with the container offset: the offset puts
             //the start of the scrolled-to column here, so a line drawn anywhere else marks a column
             //the composer is not on while every other value in the scene stays right.
-            expect(drawn().ops).toEqual([
-                ['rect', canvasWidth / 2 - 1.5, 0, 3, height],
-                //the arrowheads, each based on a canvas edge and pointing inwards along the bar
-                ['poly', [canvasWidth / 2 - 6, 0, canvasWidth / 2 + 6, 0, canvasWidth / 2, 8]],
-                ['poly', [canvasWidth / 2 - 6, height, canvasWidth / 2 + 6, height, canvasWidth / 2, height - 8]],
-                //ONE fill for all three, so the bar and its arrows cannot drift apart in colour
-                ['fill', {color: ThemeProvider.get('accent').rgbNumber(), alpha: 0.9}],
-            ])
+            const expectedOps = COMPOSER_PLAYHEAD_CONFIG.variant === 'rectangle'
+                ? [
+                    [
+                        'roundRect',
+                        centre,
+                        1.5,
+                        columnWidth,
+                        height - 3,
+                        COMPOSER_PLAYHEAD_CONFIG.borderRadius ?? 4,
+                    ],
+                    ['stroke', {width: 3, color: ThemeProvider.get('accent').rgbNumber(), alpha: 0.9}],
+                ]
+                : [
+                    ['rect', centre - 1.5, 0, 3, height],
+                    ['poly', [centre - 6, 0, centre + 6, 0, centre, 8]],
+                    ['poly', [centre - 6, height, centre + 6, height, centre, height - 8]],
+                    ['fill', {color: ThemeProvider.get('accent').rgbNumber(), alpha: 0.9}],
+                ]
+            expect(drawn().ops).toEqual(expectedOps)
 
             harness.context.props.isRecordingAudio = true
             harness.push()
@@ -4341,7 +4402,7 @@ describe('the smooth scroll', () => {
             expect(drawn().visible).toBe(false)
             //hidden, not cleared: the drawing survives, so bringing the stage back costs no
             //GraphicsContext rebuild
-            expect(drawn().ops).toHaveLength(4)
+            expect(drawn().ops).toEqual(expectedOps)
         } finally {
             harness.destroy()
         }
@@ -6875,6 +6936,107 @@ describe('the momentum coast', () => {
             await vi.advanceTimersByTimeAsync(2500)
             expect(harness.scrollPosition()).toBe(published)
             expect(harness.selectColumnCalls.slice(before)).toEqual([])
+        } finally {
+            harness.destroy()
+        }
+    })
+})
+
+describe('Playhead variant config', () => {
+    const originalVariant = COMPOSER_PLAYHEAD_CONFIG.variant
+
+    afterEach(() => {
+        COMPOSER_PLAYHEAD_CONFIG.variant = originalVariant
+    })
+
+    it('draws a rectangle wrapping the whole column when variant is rectangle', async () => {
+        COMPOSER_PLAYHEAD_CONFIG.variant = 'rectangle'
+        const harness = await mount()
+        try {
+            const {canvasWidth, columnWidth, height} = harness.geometry()
+            const centre = canvasWidth / 2
+            const playhead = harness.paintedScene().notes.playhead
+            expect(playhead.ops).toEqual([
+                ['roundRect', centre, 1.5, columnWidth, height - 3, 4],
+                ['stroke', {width: 3, color: ThemeProvider.get('accent').rgbNumber(), alpha: 0.9}],
+            ])
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    it('draws a line with arrows when variant is line', async () => {
+        COMPOSER_PLAYHEAD_CONFIG.variant = 'line'
+        const harness = await mount()
+        try {
+            const {canvasWidth, height} = harness.geometry()
+            const centre = canvasWidth / 2
+            const playhead = harness.paintedScene().notes.playhead
+            expect(playhead.ops).toEqual([
+                ['rect', centre - 1.5, 0, 3, height],
+                ['poly', [centre - 6, 0, centre + 6, 0, centre, 8]],
+                ['poly', [centre - 6, height, centre + 6, height, centre, height - 8]],
+                ['fill', {color: ThemeProvider.get('accent').rgbNumber(), alpha: 0.9}],
+            ])
+        } finally {
+            harness.destroy()
+        }
+    })
+})
+
+describe('Timeline viewport middle indicator line', () => {
+    it('draws a vertical line in the middle of the viewport', async () => {
+        const harness = await mount()
+        try {
+            const scene = harness.paintedScene()
+            const viewport = scene.timeline.viewport
+            const {stripWidth, timelineHeight, columnWidth, canvasWidth} = harness.geometry()
+            const timelineColumnWidth = stripWidth / harness.context.song.columns.length
+            const columnsOnScreen = canvasWidth / columnWidth
+            const viewportWidth = Math.floor(timelineColumnWidth * columnsOnScreen)
+            expect(viewport.ops).toEqual([
+                ['roundRect', 0, 0, viewportWidth, timelineHeight - 3, 6],
+                ['moveTo', viewportWidth / 2, 0],
+                ['lineTo', viewportWidth / 2, timelineHeight - 3],
+                ['stroke', {
+                    width: 3,
+                    color: ThemeProvider.get('composer_accent').rgb().rgbNumber(),
+                    alpha: 0.8,
+                }],
+            ])
+        } finally {
+            harness.destroy()
+        }
+    })
+})
+
+describe('Audio recording does not render notes or timeline and avoids rendering updates', () => {
+    it('hides timeline strip and performs no rendering updates during recording ticks', async () => {
+        const harness = await mount()
+        try {
+            harness.context.props.isRecordingAudio = true
+            harness.push()
+            const scene = harness.paintedScene()
+            expect(scene.notes.columns).toEqual([])
+            expect(scene.notes.playhead.visible).toBe(false)
+            expect(scene.timeline.strip.visible).toBe(false)
+
+            const initialRenders = harness.renders()
+            // Transport ticks arrive during recording
+            for (let i = 0; i < 5; i++) {
+                harness.context.song.selected += 1
+                harness.push()
+            }
+            // No renders happened during recording ticks
+            expect(harness.renders()).toBe(initialRenders)
+
+            // Once recording finishes, canvas and timeline are restored with a full render
+            harness.context.props.isRecordingAudio = false
+            harness.push()
+            const restoredScene = harness.paintedScene()
+            expect(restoredScene.notes.columns.length).toBeGreaterThan(0)
+            expect(restoredScene.timeline.strip.visible).toBe(true)
+            expect(harness.renders()).toBeGreaterThan(initialRenders)
         } finally {
             harness.destroy()
         }
