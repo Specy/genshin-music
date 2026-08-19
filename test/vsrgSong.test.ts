@@ -33,15 +33,18 @@ function buildVsrgSong(): VsrgSong {
 
 // vsrg-v2 rewrite (2026-08-03): `vsrg-song.json` is the frozen pre-v2 fixture — its
 // `serialized` member is a real v1 file (hitObject.notes as keyboard indices) and now
-// serves as the LEGACY INPUT; v2 outputs (notes as Note Ids) live in `vsrg-song-v2.json`.
+// serves as the LEGACY INPUT. ADR-0007 (2026-08-19) froze `vsrg-song-v2.json` the same
+// way: its `serialized` member is a real v2 file (Nominal Ids) and is now the MIGRATION
+// INPUT; v3 outputs (absolute Note Numbers) live in `vsrg-song-v3.json`.
 describe('VsrgSong formats', () => {
-    it('v2 serialize / roundtrip / legacy v1 conversion are stable', () => {
+    it('v3 serialize / roundtrip / v2 migration / legacy v1 conversion are stable', () => {
         const legacy = readFixture('vsrg-song')
         const song = buildVsrgSong()
         const serialized = song.serialize()
-        expectGolden('vsrg-song-v2', {
+        expectGolden('vsrg-song-v3', {
             serialized,
             roundtrip: VsrgSong.deserialize(serialized).serialize(),
+            fromV2: VsrgSong.deserialize(readFixture('vsrg-song-v2').serialized).serialize(),
             fromLegacyV1: VsrgSong.deserialize(legacy.serialized).serialize(),
             defaults: new VsrgSong('Empty vsrg').serialize(),
         })

@@ -12,10 +12,13 @@ import {expectGolden, readFixture} from './golden'
 import {noteIdToButton} from '$core/Songs/noteIds'
 
 // Format-v4 rewrite (2026-08-03): `composed-song.json` is the frozen pre-v4 fixture —
-// its `serialized` member is a real v3 file and now serves as the LEGACY INPUT; the
-// v4 outputs live in `composed-song-v4.json`. The old fixture is never regenerated.
+// its `serialized` member is a real v3 file and now serves as the LEGACY INPUT.
+// ADR-0007 (2026-08-19) froze `composed-song-v4.json` the same way: its `serialized`
+// member is a real v4 file (Nominal Ids, pre-Basepoint) and is now the MIGRATION INPUT
+// below; v5 outputs (absolute Note Numbers) live in `composed-song-v5.json`. Neither old
+// fixture is ever regenerated.
 describe('ComposedSong formats', () => {
-    it('v4 serialize / roundtrip / legacy v1+v2+v3 conversion / old-format export are stable', () => {
+    it('v5 serialize / roundtrip / v4 migration / legacy v1+v2+v3 conversion / old-format export are stable', () => {
         const legacy = readFixture('composed-song')
         const song = buildComposedSong()
         const serialized = song.serialize()
@@ -44,15 +47,44 @@ describe('ComposedSong formats', () => {
             ],
         }
 
-        expectGolden('composed-song-v4', {
+        expectGolden('composed-song-v5', {
             serialized,
             roundtrip: ComposedSong.deserialize(serialized).serialize(),
+            fromV4: ComposedSong.deserialize(readFixture('composed-song-v4').serialized).serialize(),
             fromLegacyV1: ComposedSong.deserialize(v1Payload as any).serialize(),
             fromLegacyV2: ComposedSong.deserialize(v2Payload as any).serialize(),
             fromLegacyV3: ComposedSong.deserialize(legacy.serialized).serialize(),
             oldFormatExport: song.toOldFormat(),
             toRecorded: song.toRecordedSong().serialize(),
         })
+    })
+
+    // The builders express their content as "the Note Number a v4 file's nominal migrates to"
+    // (see test/builders.ts), so this is not a tautology in either direction: it says the
+    // in-memory model and the on-disk upgrade path agree about what the committed pre-flip
+    // song means, and it fails if either one drifts.
+    it('a v4 file migrates to exactly the song the builder describes', () => {
+        const migrated = ComposedSong.deserialize(readFixture('composed-song-v4').serialized)
+        expect(JSON.parse(JSON.stringify(migrated.serialize())))
+            .toEqual(JSON.parse(JSON.stringify(buildComposedSong().serialize())))
+    })
+
+    // Every stored number moves by the Basepoint interval, stranded notes included, and the
+    // nominal-space view of the song is unchanged — which is what makes a Basepoint a view
+    // offset rather than a re-voicing (ADR-0007).
+    it('the same song saved at two Basepoints differs by exactly the interval', () => {
+        const payload = buildComposedSong().serialize()
+        const atE = ComposedSong.deserialize(payload)
+        const raised = {...payload, pitch: 'F' as const}
+        const atF = ComposedSong.deserialize(raised)
+        const numbersOf = (song: ComposedSong) =>
+            song.columns.flatMap((column) => column.notes.map((note) => note.id))
+        expect(numbersOf(atE)).toEqual(numbersOf(atF))
+        //...and a v4 file read at the two Basepoints does move, by one semitone
+        const v4 = readFixture('composed-song-v4').serialized
+        const migratedAtE = ComposedSong.deserialize({...v4, pitch: 'E'})
+        const migratedAtF = ComposedSong.deserialize({...v4, pitch: 'F'})
+        expect(numbersOf(migratedAtF)).toEqual(numbersOf(migratedAtE).map((n) => n + 1))
     })
 
     it('a converted legacy v3 song reproduces the pre-v4 exports byte-for-byte', () => {
@@ -70,7 +102,7 @@ describe('ComposedSong formats', () => {
         // record of what that older code produced, so it keeps the buggy `false` rather than
         // being rewritten; the divergence is asserted below instead of being hidden by relaxing
         // the comparison. (`composed-song-v4.json`, which records what TODAY's code produces,
-        // was corrected to `true` in the same change.)
+        // was corrected to `true` in the same change, and carried into composed-song-v5.json.)
         const {reverb: pre, ...preV4Rest} = JSON.parse(JSON.stringify(RecordedSong.deserialize(legacy.toRecorded).serialize()))
         const {reverb: now, ...currentRest} = JSON.parse(JSON.stringify(converted.toRecordedSong().serialize()))
         expect(currentRest).toEqual(preV4Rest)

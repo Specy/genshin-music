@@ -14,14 +14,25 @@ describe('real example files parse through the import pipeline', () => {
     it('example .skysheet files import identically', () => {
         // Format rewrite (2026-08-03): `example-import.json` holds the PRE-v4 parser's output
         // (legacy serializations) and serves as the conversion parity reference below.
+        // ADR-0007 (2026-08-19): `example-import-v4.json` is the same thing one generation on —
+        // the PRE-FLIP parser's v4/v3 output, now a migration input.
         const composed = parseAll('example-composed.skysheet.json')
         const recorded = parseAll('example-recorded.skysheet.json')
-        expectGolden('example-import-v4', {composed, recorded})
+        expectGolden('example-import-v5', {composed, recorded})
         const preV4 = readFixture('example-import')
         expect(preV4.composed.map((file: any) =>
             JSON.parse(JSON.stringify(ComposedSong.deserialize(file).serialize()))
         )).toEqual(composed)
         expect(preV4.recorded.map((file: any) =>
+            JSON.parse(JSON.stringify(RecordedSong.deserialize(file).serialize()))
+        )).toEqual(recorded)
+        //the same equality one generation on: loading the pre-flip output and re-saving it
+        //must land on exactly what the current parser produces from the original files
+        const preFlip = readFixture('example-import-v4')
+        expect(preFlip.composed.map((file: any) =>
+            JSON.parse(JSON.stringify(ComposedSong.deserialize(file).serialize()))
+        )).toEqual(composed)
+        expect(preFlip.recorded.map((file: any) =>
             JSON.parse(JSON.stringify(RecordedSong.deserialize(file).serialize()))
         )).toEqual(recorded)
     })

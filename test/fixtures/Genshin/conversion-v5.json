@@ -1,0 +1,52 @@
+{
+  "skyComposedToGenshin": {
+    "name": "Sky import",
+    "type": "composed",
+    "bpm": 240,
+    "pitch": "C",
+    "version": 5,
+    "folderId": null,
+    "data": {
+      "isComposed": true,
+      "isComposedVersion": true,
+      "appName": "Genshin"
+    },
+    "reverb": false,
+    "breakpoints": [
+      0
+    ],
+    "columnTempos": [
+      0,
+      1
+    ],
+    "tracks": [
+      {
+        "instrument": {
+          "name": "Lyre",
+          "volume": 90,
+          "pitch": "",
+          "visible": true,
+          "icon": "border",
+          "alias": "",
+          "muted": false,
+          "reverbOverride": null
+        },
+        "notes": [
+          [
+            0,
+            48
+          ],
+          [
+            0,
+            60
+          ],
+          [
+            1,
+            72
+          ]
+        ]
+      }
+    ],
+    "id": null
+  }
+}

@@ -4,7 +4,8 @@ import {APP_NAME, INSTRUMENTS, VSRG_TRACK_COLORS} from "$core/legacyConfig";
 import type {SnapPoint} from "$core/types";
 import {isLegacyAppName, LEGACY_NOTE_TABLES, legacyIndexToId} from "./legacyNoteTables";
 import {type ConversionGame, findSimilarInstrument} from "./instrumentSimilarity";
-import {foldIdIntoRange} from "./noteIds";
+import {foldNumberIntoRange, nominalToNumber} from "./noteIds";
+import {migrateTrackNotes} from "./noteNumberTransforms";
 import type {InstrumentName} from "$core/types";
 import {RecordedSong} from "./RecordedSong";
 import {type SerializedSong, Song} from "./Song.svelte";
@@ -110,7 +111,7 @@ export type VsrgTrackModifierPatch = {
  * VsrgPlayerRenderer.onSongPick, called by subscribeCurrentVsrgSong - it is wrapped in `untrack()`
  * for that reason; that wrapper's comment has the details.
  */
-export class VsrgSong extends Song<VsrgSong, SerializedVsrgSong, 2> {
+export class VsrgSong extends Song<VsrgSong, SerializedVsrgSong, 3> {
     keys: VsrgSongKeys = $state(4)
     duration: number = $state(60000)
     audioSongId: string | null = $state(null)
@@ -144,7 +145,7 @@ export class VsrgSong extends Song<VsrgSong, SerializedVsrgSong, 2> {
     #tracks: VsrgTrack[] = []
 
     constructor(name: string) {
-        super(name, 2, "vsrg")
+        super(name, 3, "vsrg")
         this.bpm = 100
     }
 
@@ -210,8 +211,11 @@ export class VsrgSong extends Song<VsrgSong, SerializedVsrgSong, 2> {
     }
 
     /**
-     * v1 hit objects stored keyboard note INDICES; v2 stores Note Ids. `importInto` is
-     * the legacy-cross-game target (see ComposedSong.deserialize): reproduces the
+     * v1 hit objects stored keyboard note INDICES; v2 stores Nominal Ids; v3 stores absolute
+     * Note Numbers. v1 and v2 both migrate here (ADR-0007 §9), the v1 chain by decoding through
+     * the frozen tables to a nominal first and taking the same one extra step afterwards.
+     *
+     * `importInto` is the legacy-cross-game target (see ComposedSong.deserialize): reproduces the
      * historic toGenshin() — every track forced to DunDun, indices remapped through
      * the target's frozen importPositions before id-ification. QUIRK preserved:
      * unlike composed/recorded, cross-game vsrg conversion does NOT rewrite
@@ -230,7 +234,7 @@ export class VsrgSong extends Song<VsrgSong, SerializedVsrgSong, 2> {
         song.breakpoints = [...(obj.breakpoints ?? [])]
         song.difficulty = obj.difficulty ?? 5
         song.snapPoint = obj.snapPoint ?? 1
-        const version = obj.version === 2 ? 2 : 1
+        const version = obj.version === 3 ? 3 : obj.version === 2 ? 2 : 1
         if (version === 1) {
             const crossGame = importInto !== undefined && song.data.appName !== importInto
             const appName = crossGame
@@ -239,16 +243,39 @@ export class VsrgSong extends Song<VsrgSong, SerializedVsrgSong, 2> {
             const importPositions = crossGame ? LEGACY_NOTE_TABLES[importInto].importPositions : null
             song.tracks.forEach(track => {
                 if (crossGame) track.instrument.name = "DunDun"
+                const pitch = track.instrument.pitch || song.pitch
                 track.hitObjects.forEach(hitObject => {
-                    const ids: number[] = []
+                    const numbers: number[] = []
                     hitObject.notes.forEach(note => {
                         const index = importPositions ? (importPositions[note] ?? -1) : note
                         if (index === -1) return
                         //out-of-table indices were silent in the legacy runtime — dropped
                         const id = legacyIndexToId(appName, track.instrument.name, index)
-                        if (id !== null && !ids.includes(id)) ids.push(id)
+                        if (id === null) return
+                        const number = nominalToNumber(track.instrument.name, pitch, id)
+                        if (!numbers.includes(number)) numbers.push(number)
                     })
-                    hitObject.notes = ids
+                    hitObject.notes = numbers
+                })
+            })
+        } else if (version === 2) {
+            song.tracks.forEach(track => {
+                const numbers = migrateTrackNotes(
+                    track.hitObjects.flatMap(hitObject => hitObject.notes),
+                    track.instrument.name,
+                    track.instrument.pitch || song.pitch
+                )
+                let cursor = 0
+                track.hitObjects.forEach(hitObject => {
+                    //a migration can collapse two nominals onto one number (a stranded id landing
+                    //on a real Sounding Pitch), and a hit object's notes are a SET
+                    const migrated: number[] = []
+                    for (let i = 0; i < hitObject.notes.length; i++) {
+                        const number = numbers[cursor + i]
+                        if (!migrated.includes(number)) migrated.push(number)
+                    }
+                    cursor += hitObject.notes.length
+                    hitObject.notes = migrated
                 })
             })
         }
@@ -288,12 +315,12 @@ export class VsrgSong extends Song<VsrgSong, SerializedVsrgSong, 2> {
     }
 
     /**
-     * NEW-format (v2) cross-game conversion: each track swaps to the target game's most
-     * similar instrument (settings kept; target default when unmapped), ids octave-fold
-     * into the mapped instrument's range (fold collisions dedupe), and — unlike the
-     * legacy path, which keeps the historic appName-preservation quirk — data.appName
-     * IS rewritten, so the song converts once instead of on every load. Legacy v1 files
-     * never reach this: their conversion happens inside deserialize(importInto).
+     * NEW-format (v3/v2) cross-game conversion: each track swaps to the target game's most
+     * similar instrument (settings kept; target default when unmapped), Note Numbers
+     * octave-fold into the mapped instrument's range IN SOUNDING SPACE (fold collisions
+     * dedupe), and — unlike the legacy path, which keeps the historic appName-preservation
+     * quirk — data.appName IS rewritten, so the song converts once instead of on every load.
+     * Legacy v1 files never reach this: their conversion happens inside deserialize(importInto).
      */
     toOtherGame(target: ConversionGame) {
         //everything below mutates the CLONE, which nobody is watching yet - the same contract
@@ -307,13 +334,14 @@ export class VsrgSong extends Song<VsrgSong, SerializedVsrgSong, 2> {
         song.tracks.forEach(t => {
             const similar = findSimilarInstrument(sourceGame, t.instrument.name, target)
             t.instrument.name = INSTRUMENTS.find(name => name === similar) ?? INSTRUMENTS[0]
+            const pitch = t.instrument.pitch || song.pitch
             t.hitObjects.forEach(h => {
-                const ids: number[] = []
+                const numbers: number[] = []
                 h.notes.forEach(n => {
-                    const folded = foldIdIntoRange(t.instrument.name, n)
-                    if (!ids.includes(folded)) ids.push(folded)
+                    const folded = foldNumberIntoRange(t.instrument.name, pitch, n)
+                    if (!numbers.includes(folded)) numbers.push(folded)
                 })
-                h.notes = ids
+                h.notes = numbers
             })
         })
         return song
@@ -637,7 +665,7 @@ export class VsrgSong extends Song<VsrgSong, SerializedVsrgSong, 2> {
             type: "vsrg",
             bpm: this.bpm,
             pitch: this.pitch,
-            version: 2,
+            version: 3,
             keys: this.keys,
             //spread, like ComposedSong/RecordedSong: `data` is a mutable object the song owns, and
             //a serialized payload outlives the call - it is what the autosave writes and what the

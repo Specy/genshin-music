@@ -496,6 +496,7 @@ const INTERNAL: string[] = [
     'adjustSpansForRemovedColumns',
     'groupColumnNotesById',
     'legacyColumnsView',
+    'nominalOf',
 ]
 
 function caseName(testCase: {name: string, label?: string}): string {

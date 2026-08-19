@@ -56,19 +56,26 @@ describe('cross-game import conversion (Genshin build only)', () => {
     // original Sky payloads directly — proof the historic cross-game remap is reproduced.
     it.runIf(APP_NAME === 'Genshin')('Sky composed song converts via parseSong', () => {
         const parsed = songService.parseSong(JSON.parse(JSON.stringify(SKY_COMPOSED_PAYLOAD)))
-        expectGolden('conversion-v4', {
+        expectGolden('conversion-v5', {
             skyComposedToGenshin: parsed.serialize(),
         })
         const preV4Output = readFixture('conversion').skyComposedToGenshin
         expect(JSON.parse(JSON.stringify(ComposedSong.deserialize(preV4Output).serialize())))
             .toEqual(JSON.parse(JSON.stringify(parsed.serialize())))
+        //ADR-0007: and the same against the PRE-FLIP v4 record of this conversion
+        const preFlipOutput = readFixture('conversion-v4').skyComposedToGenshin
+        expect(JSON.parse(JSON.stringify(ComposedSong.deserialize(preFlipOutput).serialize())))
+            .toEqual(JSON.parse(JSON.stringify(parsed.serialize())))
     })
 
     it.runIf(APP_NAME === 'Genshin')('Sky vsrg song converts via parseSong', () => {
         const parsed = songService.parseSong(JSON.parse(JSON.stringify(SKY_VSRG_PAYLOAD)))
-        expectGolden('vsrg-conversion-v2', parsed.serialize())
+        expectGolden('vsrg-conversion-v3', parsed.serialize())
         const preV2Output = readFixture('vsrg-conversion')
         expect(JSON.parse(JSON.stringify(VsrgSong.deserialize(preV2Output).serialize())))
+            .toEqual(JSON.parse(JSON.stringify(parsed.serialize())))
+        //ADR-0007: and the same against the PRE-FLIP v2 record of this conversion
+        expect(JSON.parse(JSON.stringify(VsrgSong.deserialize(readFixture('vsrg-conversion-v2')).serialize())))
             .toEqual(JSON.parse(JSON.stringify(parsed.serialize())))
     })
 
