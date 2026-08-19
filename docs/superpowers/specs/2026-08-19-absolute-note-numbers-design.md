@@ -65,7 +65,7 @@ Tuple shapes are IDENTICAL to v4/v3/v2 — `[column, number, span?]`, `[number, 
 
 ## 9. Migration & legacy chains
 
-Lazy, in-deserializer, like every prior bump: v4/v3/v2 in → memory in numbers → save writes v5/v4/v3. Legacy (composed ≤3, recorded ≤2, vsrg 1, oldFormat): existing frozen-table decode to nominal, then §4 migration formula. `validateBreakpoints`/`normalizeSpans` unchanged (same-number keys replace same-id keys — semantics identical per track).
+Lazy, in-deserializer, like every prior bump: v4/v3/v2 in → memory in numbers → save writes v5/v4/v3. Adjudicated (Phase B finding): a stranded id whose best-effort number lands on a tuned instrument's Sounding Pitch UN-STRANDS at migration and starts sounding — accepted as ADR-0007's promised fidelity gain (the number is the pitch the file always claimed), pinned in noteNumberTransforms.test.ts; the parity fixtures deliberately keep stranded notes off tuned tracks so the safety net stays exact. Legacy (composed ≤3, recorded ≤2, vsrg 1, oldFormat): existing frozen-table decode to nominal, then §4 migration formula. `validateBreakpoints`/`normalizeSpans` unchanged (same-number keys replace same-id keys — semantics identical per track).
 
 ## 10. Verification
 
