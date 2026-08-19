@@ -11,7 +11,7 @@ The universal identity of a note in a song: an absolute MIDI number on one share
 _Avoid_: note id (the retired nominal storage identity), note index, midi note (ambiguous with MIDI-file events)
 
 **Nominal Id**:
-The nominal MIDI number an instrument declares for a button — a name in the game's grid namespace, not a promise about sound. The currency of button correspondence: instrument swaps, Song-Grid rows and legacy-format decoding speak Nominal Ids. Songs never store them.
+The nominal MIDI number an instrument declares for a button — a name in the game's grid namespace, not a promise about sound. The currency of button correspondence: instrument swaps, Song-Grid rows, MIDI-import snapping and legacy-format decoding speak Nominal Ids. Songs never store them.
 _Avoid_: note id (retired), button number
 
 **Button**:
@@ -48,7 +48,7 @@ A game-scoped, named note list (per button: Nominal Id, base note, glyph) that i
 _Avoid_: kind (the retired term)
 
 **Song Grid**:
-The game-canonical rows×columns note grid that song-wide surfaces (composer canvas, sheet visualizer) render, regardless of which instruments the song's tracks use. Every Nominal Id has exactly one Song-Grid position, fixed by the game itself — never by any instrument. Distinct from any single instrument's Shape.
+The game-canonical rows×columns note grid that song-wide surfaces (composer canvas, sheet visualizer) render, regardless of which instruments the song's tracks use. Every Nominal Id has exactly one Song-Grid position, fixed by the game itself — never by any instrument; the grid doubles as the game's scale, the axis MIDI import snaps onto. Distinct from any single instrument's Shape.
 
 **Unlisted Instrument**:
 An instrument a game ships (fully loadable by songs and the engine) but hides from its instrument menus.
