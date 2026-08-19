@@ -352,9 +352,38 @@ const CASES: PublishCase[] = [
     },
     {
         name: 'setInstrument',
-        label: 'existing layer',
+        //name and Basepoint both unchanged: a pure presentation edit (colour, alias, mute), which
+        //is the roster signal alone. Every OTHER shape of this call rewrites notes - see below
+        label: 'existing layer, same instrument and Basepoint',
         publishes: ['instruments'],
         touches: 'none',
+        run: song => song.setInstrument(1, new InstrumentData({name: INSTRUMENTS[1], icon: 'line'})),
+    },
+    {
+        //ADR-0007: a swap is a NOTE edit (button-preserving rewrite through nominal
+        //correspondence), so it moves the graph as well as the roster
+        name: 'setInstrument',
+        label: 'existing layer, swapped instrument',
+        publishes: ['instruments', 'structure'],
+        touches: 'all',
+        run: song => song.setInstrument(1, new InstrumentData({name: INSTRUMENTS[0]})),
+    },
+    {
+        //...and so is a per-layer Basepoint override, by the interval
+        name: 'setInstrument',
+        label: 'existing layer, Basepoint override',
+        publishes: ['instruments', 'structure'],
+        touches: 'all',
+        run: song => song.setInstrument(1, new InstrumentData({name: INSTRUMENTS[1], pitch: 'D'})),
+    },
+    {
+        //a swap on a layer with no notes moves the roster and nothing else: there is no graph edit
+        //behind it, and a bump with no edit re-runs every consumer for nothing
+        name: 'setInstrument',
+        label: 'swapped instrument on an empty layer',
+        publishes: ['instruments'],
+        touches: 'none',
+        setup: song => song.eraseColumns(song.columns.map((_, i) => i), 1),
         run: song => song.setInstrument(1, new InstrumentData({name: INSTRUMENTS[0]})),
     },
     {
@@ -363,6 +392,37 @@ const CASES: PublishCase[] = [
         publishes: [],
         touches: 'none',
         run: song => song.setInstrument(9, new InstrumentData({name: INSTRUMENTS[0]})),
+    },
+    {
+        //ADR-0007: the song's Basepoint moving is a real edit of every note that follows it
+        name: 'applyBasepointChange',
+        label: 'song scope',
+        publishes: ['structure'],
+        touches: 'all',
+        run: song => song.applyBasepointChange('song', 'C', 'D'),
+    },
+    {
+        name: 'applyBasepointChange',
+        label: 'one track',
+        publishes: ['structure'],
+        touches: 'all',
+        run: song => song.applyBasepointChange(1, 'C', 'D'),
+    },
+    {
+        name: 'applyBasepointChange',
+        label: 'no interval',
+        publishes: [],
+        touches: 'none',
+        run: song => song.applyBasepointChange('song', 'D', 'D'),
+    },
+    {
+        //every track of makeSong() follows the song, so scoping to a track index that owns no
+        //notes leaves the graph untouched - and an untouched graph publishes nothing
+        name: 'applyBasepointChange',
+        label: 'a scope with no notes in it',
+        publishes: [],
+        touches: 'none',
+        run: song => song.applyBasepointChange(5, 'C', 'D'),
     },
     {
         name: 'swapInstruments',
@@ -851,6 +911,28 @@ const VSRG_CASES: VsrgPublishCase[] = [
         name: 'toggleNoteInHitObject',
         publishes: ['structure'],
         run: song => song.toggleNoteInHitObject(song.tracks[0].hitObjects[0], 60),
+    },
+    {
+        //ADR-0007's vsrg twin: hit-object numbers move with the Basepoint
+        name: 'applyBasepointChange',
+        label: 'song scope',
+        publishes: ['structure'],
+        setup: song => song.toggleNoteInHitObject(song.tracks[0].hitObjects[0], 60),
+        run: song => song.applyBasepointChange('song', 'C', 'D'),
+    },
+    {
+        name: 'applyBasepointChange',
+        label: 'no interval',
+        publishes: [],
+        setup: song => song.toggleNoteInHitObject(song.tracks[0].hitObjects[0], 60),
+        run: song => song.applyBasepointChange('song', 'D', 'D'),
+    },
+    {
+        //makeVsrgSong's hit objects carry no notes, so there is nothing to move and nothing to say
+        name: 'applyBasepointChange',
+        label: 'no notes to move',
+        publishes: [],
+        run: song => song.applyBasepointChange('song', 'C', 'D'),
     },
     {
         name: 'removeHitObjectInTrack',

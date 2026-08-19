@@ -5,6 +5,7 @@
   import { resolve } from '$app/paths';
   import { ClickType, clamp, isFocusable } from '$core/utils/Utilities';
   import { buttonToNumber, effectiveTrackPitch } from '$core/Songs/noteIds';
+  import type { Pitch } from '$core/legacyConfig';
   import { DEFAULT_VSRG_KEYS_MAP } from '$core/legacyConfig';
   import { t } from '$i18n/binding.svelte';
   import PageMetadata from '$cmp/shell/PageMetadata.svelte';
@@ -334,10 +335,11 @@
   function handleSettingChange({ key, data }: SettingUpdate) {
     // @ts-expect-error SettingUpdateKey spans all 4 settings families; narrower here by design
     settings[key] = { ...settings[key], value: data.value };
-    // QUIRK: only keys/bpm/difficulty are special-cased here - pitch is ALSO marked
-    // songSetting: true in VsrgComposerSettings.data, but changing it never propagates into
-    // vsrg.pitch for an already-open song (only createNewSong seeds vsrg.pitch). Preserved,
-    // not generalized to cover pitch too.
+    // The pitch branch below is NEW with ADR-0007, and it replaces a documented quirk: `pitch` was
+    // already marked songSetting: true, but changing it never reached `vsrg.pitch` for an
+    // already-open song (only createNewSong seeded it), so the setting silently did nothing.
+    // A Basepoint is now part of what every stored Note Number means, so "did nothing" is no
+    // longer an available behaviour: the setting either moves the song or must not exist.
     // All three branches below are now a bare write to a `$state` scalar, which is the whole
     // update: the canvas's $effect reads vsrg.keys and vsrg.bpm itself, and
     // VsrgComposerRenderer.needsSizes() diffs those captured VALUES, so both recalculate. Each of
@@ -365,6 +367,19 @@
     }
     if (key === 'difficulty') {
       vsrg.set({ difficulty: data.value as number });
+    }
+    if (key === 'pitch') {
+      const previousPitch = vsrg.pitch;
+      const next = data.value as Pitch;
+      if (next !== previousPitch) {
+        vsrg.set({ pitch: next });
+        //every track that follows the song moves by the interval; a track with its own override
+        //keeps its effective Basepoint and must not move (ADR-0007)
+        vsrg.applyBasepointChange('song', previousPitch, next);
+        //the audio player resolves stored numbers against this Basepoint, so it follows too
+        audioPlayer.setBasePitch(next);
+        changes++;
+      }
     }
     updateSettings();
   }

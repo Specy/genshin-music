@@ -83,7 +83,19 @@
   // rule that comes with it: assign a new array, never push/splice (every write below already
   // does, see selectColumn).
   let selectedColumns: number[] = $state.raw([]);
-  let undoHistory: NoteColumn[][] = $state([]);
+  /**
+   * One undo step. COMPOUND since ADR-0007, and it has to be: a Basepoint change or an instrument
+   * swap rewrites the notes AND moves the setting that says what they mean, so a columns-only
+   * snapshot would restore the notes into a song still claiming the new Basepoint — every one of
+   * them a semitone (or an instrument) out. The three are captured and restored together or the
+   * edit is not undoable at all.
+   */
+  type ComposerHistoryEntry = {
+    columns: NoteColumn[];
+    pitch: Pitch;
+    instruments: InstrumentData[];
+  };
+  let undoHistory: ComposerHistoryEntry[] = $state([]);
   let copiedColumns: NoteColumn[] = $state([]);
   let isToolsVisible = $state(false);
   // One-time seed from the prop; later showMidi changes (callers never send any) are not tracked.
@@ -359,6 +371,11 @@
   }
 
   function handleSettingChange({ data, key }: SettingUpdate) {
+    //captured BEFORE the write below, because a Basepoint change is a real note edit and needs
+    //both ends of the interval (ADR-0007). Undo has to see the song as it was, so the snapshot
+    //goes in first too.
+    const previousPitch = song.pitch;
+    if (key === 'pitch' && data.value !== previousPitch) addToHistory();
     // @ts-expect-error SettingUpdateKey spans all 4 settings families; narrower here by design
     settings[key] = { ...settings[key], value: data.value };
     if (data.songSetting) {
@@ -374,6 +391,11 @@
     if (key === 'reverb') {
       AudioProvider.setReverb(data.value as boolean);
     }
+    //ADR-0007: the song's Basepoint is part of every number its notes store, so moving it REWRITES
+    //them — every track that follows the song (a track with its own override keeps its effective
+    //Basepoint, so its notes must not move). The write above already installed the new value; this
+    //is handed both ends explicitly.
+    if (key === 'pitch') song.applyBasepointChange('song', previousPitch, data.value as Pitch);
     //ADR-0006 resync-on-mutation: bpm re-times every uncommitted boundary and pitch re-voices
     //every uncommitted note, so both retract and recommit the window. Reverb is a live node the
     //committed audio already flows through, and per-layer volume (see changeVolume) is a live
@@ -415,6 +437,14 @@
     // setInstrument clones and REPLACES the array entry. That fresh identity is load-bearing:
     // InstrumentControls renders a keyed {#each} over the roster, so an in-place field edit would
     // leave the layer panel showing the old name/colour/visibility. Do not "optimise" it away.
+    //
+    // ADR-0007: it is also where the two NOTE rewrites live — an instrument swap (button-preserving
+    // through nominal correspondence) and a per-layer Basepoint override change (the interval). The
+    // snapshot goes in first so undo restores the notes and the roster together.
+    const previous = song.instruments[index];
+    if (previous && (previous.name !== instrument.name || previous.pitch !== instrument.pitch)) {
+      addToHistory();
+    }
     song.setInstrument(index, instrument);
     //ADR-0006 resync-on-mutation: this is where mute and the per-layer pitch override land (the
     //instrument popup's onChange funnels here), and both change what committed audio should
@@ -635,9 +665,17 @@
   }
 
   function changePitch(value: Pitch) {
+    // MidiParser has its own pitch funnel rather than handleSettingChange, so the Basepoint rewrite
+    // has to be repeated here rather than inherited — the two entry points must leave the song in
+    // the same state, or the same edit means different things depending on which panel is open.
+    const previousPitch = song.pitch;
+    if (value === previousPitch) return;
+    addToHistory();
     settings.pitch = { ...settings.pitch, value };
-    // MidiParser has its own pitch funnel rather than handleSettingChange. Retract the existing
-    // horizon here too, otherwise it keeps the old pitch until every committed event drains.
+    song.pitch = value;
+    song.applyBasepointChange('song', previousPitch, value);
+    // Retract the existing horizon here too, otherwise it keeps the old pitch until every
+    // committed event drains.
     resyncPlayback();
     updateSettings();
   }
@@ -1423,13 +1461,27 @@
 
   function addToHistory() {
     if (!isToolsVisible) return;
-    undoHistory = [...undoHistory, song.clone().columns];
+    //ONE clone for all three members, so they cannot come from two different moments
+    const snapshot = song.clone();
+    undoHistory = [
+      ...undoHistory,
+      { columns: snapshot.columns, pitch: snapshot.pitch, instruments: snapshot.instruments },
+    ];
   }
 
   function undo() {
     const history = undoHistory.pop();
     if (!history) return;
-    song.restoreColumns(history);
+    song.restoreColumns(history.columns);
+    //restored TOGETHER with the columns (see ComposerHistoryEntry): the notes only mean what the
+    //Basepoint and the roster they were written against say they mean
+    song.pitch = history.pitch;
+    song.instruments = history.instruments.map((instrument) => instrument.clone());
+    //...and the settings panel is a second copy of the song's Basepoint, so it follows or the two
+    //disagree until the next edit
+    settings.pitch = { ...settings.pitch, value: history.pitch };
+    updateSettings();
+    syncInstruments();
     //undo is the one mutation path with NO changes++ (it restores toward the saved state), so
     //it cannot ride the funnel's resync in handleAutoSave — resync explicitly (ADR-0006)
     resyncPlayback(true);

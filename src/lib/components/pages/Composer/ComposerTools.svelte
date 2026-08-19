@@ -1,6 +1,5 @@
 <script lang="ts">
   import type { Snippet } from 'svelte';
-  import type { NoteColumn } from '$core/Songs/SongClasses';
   import { t } from '$i18n/binding.svelte';
   import DecoratedCard from '$cmp/layout/DecoratedCard.svelte';
   import AppButton from '$cmp/inputs/AppButton.svelte';
@@ -16,7 +15,9 @@
       hasCopiedColumns: boolean;
       selectedColumns: number[];
       layer: number;
-      undoHistory: NoteColumn[][];
+      //only its LENGTH is read here (the undo button's enabled state); what an entry holds is
+      //Composer.svelte's business (ComposerHistoryEntry — a compound snapshot since ADR-0007)
+      undoHistory: readonly unknown[];
     };
     functions: {
       toggleTools: () => void;
