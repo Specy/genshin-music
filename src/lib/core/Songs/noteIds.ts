@@ -418,20 +418,26 @@ export function nominalToNumber(instrumentName: RuntimeInstrumentName, pitch: Pi
     return sounding + basepointOffset(pitch)
 }
 
-/**
- * nominalToNumber's inverse, and the ONLY way back to the nominal axis: the voicing button's
- * Nominal Id, else (stranded) the virtual nominal `number − offset`.
- *
- * EXACTLY invertible against nominalToNumber for both cases, which is what keeps the
- * nominal-space exports (`toOldFormat`, its dropped-note count) byte-identical across the flip
- * even on a tuned instrument, and what lets gridRowForNumber place a tuned button on the row
- * its own label prints.
- */
-export function numberToNominal(instrumentName: RuntimeInstrumentName, pitch: Pitch, number: number): number {
-    const button = numberToButton(instrumentName, pitch, number)
-    if (button === -1) return number - basepointOffset(pitch)
-    return getNoteIdTable(instrumentName)[button] ?? number - basepointOffset(pitch)
-}
+// RETIRED with the old-format EXPORT it existed for (ADR-0007 phase E). Its only two callers
+// were ComposedSong/RecordedSong's `nominalOf`, and those are commented out beside their
+// `toOldFormat`; kept commented here so that reference block stays complete. Nothing else ever
+// needed the way BACK to the nominal axis — gridRowForNumber asks `numberToButton` for the
+// button and reads its nominal directly, which is the same answer without the round trip.
+//
+// /**
+//  * nominalToNumber's inverse, and the ONLY way back to the nominal axis: the voicing button's
+//  * Nominal Id, else (stranded) the virtual nominal `number − offset`.
+//  *
+//  * EXACTLY invertible against nominalToNumber for both cases, which is what keeps the
+//  * nominal-space exports (`toOldFormat`, its dropped-note count) byte-identical across the flip
+//  * even on a tuned instrument, and what lets gridRowForNumber place a tuned button on the row
+//  * its own label prints.
+//  */
+// export function numberToNominal(instrumentName: RuntimeInstrumentName, pitch: Pitch, number: number): number {
+//     const button = numberToButton(instrumentName, pitch, number)
+//     if (button === -1) return number - basepointOffset(pitch)
+//     return getNoteIdTable(instrumentName)[button] ?? number - basepointOffset(pitch)
+// }
 
 /**
  * foldIdIntoRange on the absolute axis — the cross-game conversion policy (ADR-0007 keeps it

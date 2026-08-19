@@ -45,8 +45,8 @@
     try {
       const songName = song.name;
       const parsed = songService.parseSong(song);
-      // Legacy Sky recovery export is intentionally disabled. To restore it:
-      // const converted = [parsed.toOldFormat()];
+      // Recovery downloads write the current format: the legacy old-format export was retired at
+      // ADR-0007 (see ComposedSong's commented block).
       const converted = [parsed.serialize()];
       fileService.downloadSong(converted, `${songName}.${APP_NAME.toLowerCase()}sheet`);
       logger.success(t('logs:song_downloaded'));

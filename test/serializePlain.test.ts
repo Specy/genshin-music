@@ -92,16 +92,9 @@ const PATHS: PersistencePath[] = [
             return {model: song, payload: song.serialize()}
         },
     },
-    {
-        label: 'ComposedSong.toOldFormat()',
-        //NoteLayer.serializeHex is on this path, not a path of its own: legacyColumnsView() embeds
-        //its output as the `columns` hex bitmasks (see the frozen fixture's [[0, "1"], [4, "3"]])
-        covers: ['ComposedSong.toOldFormat', 'NoteLayer.serializeHex'],
-        run: () => {
-            const song = liveComposedSong()
-            return {model: song, payload: song.toOldFormat()}
-        },
-    },
+    //The ComposedSong.toOldFormat() row lived here until ADR-0007 phase E retired that export
+    //(kept commented in the model). It carried NoteLayer.serializeHex with it, which is why that
+    //member now sits in NOT_PERSISTED below rather than under a `covers`.
     {
         label: 'ComposedSong.clone().serialize()',
         //the clone is what the library's "duplicate song" and the undo history persist
@@ -127,15 +120,7 @@ const PATHS: PersistencePath[] = [
             return {model: song, payload: song.serialize()}
         },
     },
-    {
-        label: 'RecordedSong.toOldFormat()',
-        //same embedding as ComposedSong.toOldFormat: the legacy note triples carry a hex bitmask
-        covers: ['RecordedSong.toOldFormat'],
-        run: () => {
-            const song = buildRecordedSong()
-            return {model: song, payload: song.toOldFormat()}
-        },
-    },
+    //RecordedSong.toOldFormat() was retired alongside the composed one (ADR-0007 phase E).
     {
         label: 'RecordedSong.clone().serialize()',
         covers: [],
@@ -209,13 +194,11 @@ const NOT_PERSISTED: Record<string, string> = {
     'ComposedSong.deserializeTo': 'Song static: reads a payload into a song',
     'ComposedSong.isSerializedType': 'type predicate, returns a boolean',
     'ComposedSong.isOldFormatSerializedType': 'type predicate, returns a boolean',
-    'ComposedSong.countOldFormatDroppedNotes': 'returns a count for the download UI',
     'RecordedSong.deserialize': 'reads a payload, returns a song',
     'RecordedSong.deserializeTo': 'Song static: reads a payload into a song',
     'RecordedSong.fromOldFormat': 'reads a legacy payload, returns a song',
     'RecordedSong.isSerializedType': 'type predicate, returns a boolean',
     'RecordedSong.isOldFormatSerializedType': 'type predicate, returns a boolean',
-    'RecordedSong.countOldFormatDroppedNotes': 'returns a count for the download UI',
     'VsrgSong.deserialize': 'reads a payload, returns a song',
     'VsrgSong.isSerializedType': 'type predicate, returns a boolean',
     'VsrgSong.deserializeTo': 'Song static: reads a payload into a song',
@@ -226,8 +209,11 @@ const NOT_PERSISTED: Record<string, string> = {
     'Folder.deserialize': 'reads a payload, returns a folder',
     'Folder.isSerializedType': 'type predicate, returns a boolean',
     //NoteLayer is squarely on the persistence path - the pre-v4 formats stored notes as (index,
-    //layer bitmask) pairs - which is why it now has to be reflected. serializeHex is the one member
-    //that reaches a payload, and it is covered by the two toOldFormat rows above.
+    //layer bitmask) pairs - which is why it has to be reflected. Since ADR-0007 phase E it is a
+    //READ-ONLY path: the only writers of a bitmask were the two toOldFormat exports, so no
+    //NoteLayer member reaches a payload any more.
+    'NoteLayer.serializeHex': 'returns a hex bitmask, and no writer emits it since the old-format ' +
+        'exports were retired (ADR-0007 phase E); the hex form is now an INPUT only (deserializeHex)',
     'NoteLayer.serializeBin': 'returns a string, and no writer emits it: the binary form is a v1 ' +
         'INPUT (deserializeBin), and the only caller is NoteLayer.toArray()',
     'NoteLayer.deserializeHex': 'reads a hex bitmask, returns a NoteLayer (composed v2/v3, recorded v2)',
@@ -378,7 +364,7 @@ describe('clone() shares nothing with the song it copied', () => {
 /**
  * Every class the model exports, each with a LIVE INSTANCE.
  *
- * The instance is not a convenience: ComposedSong.serialize/toOldFormat and RecordedSong's are
+ * The instance is not a convenience: ComposedSong.serialize and RecordedSong.serialize are
  * arrow-function INSTANCE fields, which exist on the object and on no prototype - reflecting the
  * classes alone would leave the two most important paths in this file out of the surface entirely
  * (verified against this tree: `ComposedSong.serialize` disappears).
@@ -439,8 +425,8 @@ const EXTERNAL_CLASSES: object[] = [Folder]
  * The model folder, read as MODULES rather than as a list of imports - the whole point of this
  * section. Its previous form reflected a hardcoded list of ten classes while claiming to catch
  * "the whole family": a reviewer added serializeBrandNewPersistencePath() to NoteLayer - which is
- * on the persistence path, carries five serialize-shaped callables and feeds
- * ComposedSong.legacyColumnsView() - and the entire sky suite stayed green.
+ * on the persistence path, carries five serialize-shaped callables and fed the composed
+ * old-format export (retired at ADR-0007 phase E) - and the entire sky suite stayed green.
  */
 const SONG_MODULES: Record<string, unknown> = import.meta.glob('../src/lib/core/Songs/*.ts', {eager: true})
 
@@ -469,8 +455,10 @@ function exportedModelClasses(): { source: string, klass: object }[] {
 
 /**
  * What makes something a persistence path, mechanically: its NAME. Every payload-producing method
- * in the model is `serialize`/`toOldFormat`, and every reader of one is `deserialize*`/
- * `isSerializedType`/`fromOldFormat`.
+ * in the model is `serialize`, and every reader of one is `deserialize*`/`isSerializedType`/
+ * `fromOldFormat`. The `oldformat` half of the pattern still earns its place after the export's
+ * retirement (ADR-0007 phase E): it is what catches the surviving old-format READERS, and what
+ * would catch a `toOldFormat` someone un-comments.
  *
  * Exactly what the pair of tests below delivers, and no more:
  * - the CLASS LIST is derived from the folder, so a persistence class cannot be missed by not

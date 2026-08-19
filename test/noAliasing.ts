@@ -25,9 +25,10 @@
  * WHAT IT DOES NOT CATCH, so it never becomes a false reassurance:
  * - aliasing to anything other than the model it is HANDED. A payload sharing a module-level
  *   mutable constant, or another song's array, walks straight past this.
- * - payload-to-payload sharing, which is deliberate: `ComposedSong.toOldFormat()` reuses the
- *   arrays of the `serialize()` result it is built on, and both are snapshots of the same instant
- *   with one of them discarded. Only the model -> payload direction is examined.
+ * - payload-to-payload sharing, which is deliberate: a payload built on top of another one (the
+ *   retired `ComposedSong.toOldFormat()` reused the arrays of the `serialize()` result it was
+ *   built on) holds two snapshots of the same instant. Only the model -> payload direction is
+ *   examined.
  * - FROZEN shared references, exempted on purpose (see findAlias).
  * - the model's own internal aliasing (a note object shared between two columns).
  * - whether the payload's VALUES are right - that is the golden fixtures' job.
