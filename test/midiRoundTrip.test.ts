@@ -65,7 +65,20 @@ function roundTrip(song: ComposedSong, layerSustains: boolean[] = [true, true, t
         localOffset: null,
         maxScaling: 0,
     }))
-    return {bpm, ...importMidiTracks(tracks, {bpm, offset: 0, includeAccidentals: true, layerSustains})}
+    return {
+        bpm,
+        ...importMidiTracks(tracks, {
+            bpm,
+            offset: 0,
+            includeAccidentals: true,
+            //Basepoint C throughout this file, where `snapped nominal + offset` is the snapped
+            //nominal itself — so a round trip is a comparison against the source song's own
+            //numbers rather than against a shifted copy of them. The non-C shape is a separate
+            //(and deliberately different) row at the end of this file.
+            pitch: 'C',
+            layerSustains,
+        }),
+    }
 }
 
 /** Column index -> sorted "id:span" list, skipping empties, for readable comparisons. */
@@ -232,6 +245,7 @@ describe('midi round trip', () => {
             bpm: 220,
             offset: 0,
             includeAccidentals: true,
+            pitch: 'C',
             layerSustains: [false],
         })
         expect(result.totalNotes).toBe(3)
@@ -253,10 +267,48 @@ describe('midi round trip', () => {
         for (const bpm of [0, -10, NaN, Infinity]) {
             const result = importMidiTracks(
                 [{notes: [{midi: 60, time: 0, duration: 1}], layer: 0, localOffset: null, maxScaling: 0}],
-                {bpm, offset: 0, includeAccidentals: true, layerSustains: [true]}
+                {bpm, offset: 0, includeAccidentals: true, pitch: 'C', layerSustains: [true]}
             )
             expect(result.columns, `bpm ${bpm}`).toEqual([])
         }
+    })
+})
+
+/**
+ * WHAT THE BASEPOINT DOES TO THIS PIPELINE, pinned because ADR-0007 moved the two halves of it in
+ * DIFFERENT directions and the result is a known, deferred limitation rather than a bug to find
+ * later:
+ *  - EXPORT became transposition-honest: `toMidi` writes the stored Note Numbers, so a song at
+ *    Basepoint D really does say D in a DAW, which it never did before;
+ *  - IMPORT did not move at all: it still reads every midi number as a grid nominal, snaps it to a
+ *    white key, and lifts the result by the Basepoint the user picked.
+ * So our own export of a non-C song re-imports SHIFTED by that Basepoint, twice over. Closing this
+ * is auto-Basepoint detection (subtract the detected Basepoint before snapping), which ADR-0007
+ * defers explicitly; until then the shape is written down here rather than discovered by whoever
+ * round-trips a transposed song.
+ */
+describe('the Basepoint asymmetry between export and import', () => {
+    it('re-imports our own non-C export shifted by the Basepoint, and at C does not', () => {
+        const song = buildSong(220, [[{id: 60}], null, [{id: 62}]])
+        const numbersOf = (columns: {notes: {id: number}[]}[]) =>
+            columns.flatMap(column => column.notes.map(note => note.id)).sort((a, b) => a - b)
+        const encoded = new Uint8Array(song.toMidi().toArray()).buffer as ArrayBuffer
+        const midi = new Midi(encoded)
+        const tracks: MidiImportTrack[] = midi.tracks.map((track, i) => ({
+            notes: track.notes.map(n => ({midi: n.midi, time: n.time, duration: n.duration})),
+            layer: i,
+            localOffset: null,
+            maxScaling: 0,
+        }))
+        const importAt = (pitch: 'C' | 'D') => numbersOf(importMidiTracks(tracks, {
+            bpm: 220, offset: 0, includeAccidentals: true, pitch, layerSustains: [true],
+        }).columns)
+
+        //at C the two axes coincide and the trip is exact
+        expect(importAt('C')).toEqual([60, 62])
+        //at D every note comes back two semitones up — the snap read the file's numbers as
+        //nominals and the Basepoint lifted them a second time
+        expect(importAt('D')).toEqual([62, 64])
     })
 })
 

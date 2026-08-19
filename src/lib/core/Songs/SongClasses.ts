@@ -298,6 +298,7 @@ export class RecordedNote {
         this.trackIndex = trackIndex || 0
     }
 
+    /** The MIDI number this note exports as: its stored Note Number, which is the pitch it sounds. */
     toMidi() {
         return this.id
     }

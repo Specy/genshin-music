@@ -23,11 +23,17 @@
 //    The composer already refuses to author a hold on a non-sustaining layer
 //    (Composer.svelte handleNoteLongPress), so import was the only path producing spans
 //    nothing could play. Capability is read from instrument config, never from the game id.
-import {INSTRUMENTS_DATA, MIDI_MAP_TO_NOTE, TEMPO_CHANGERS} from '$core/legacyConfig'
+import {INSTRUMENTS_DATA, MIDI_MAP_TO_NOTE, type Pitch, TEMPO_CHANGERS} from '$core/legacyConfig'
 import {MidiNote, NoteColumn, type ColumnNote} from './SongClasses'
-import {getNoteIdTable} from './noteIds'
+import {basepointOffset, getNoteIdTable} from './noteIds'
 
-/** The Note Ids an instrument can actually sound — the set suggestOffset scores against. */
+/**
+ * The NOMINAL ids an instrument can sound — the set suggestOffset scores against.
+ *
+ * Deliberately the nominal axis and not the sounding one: `suggestOffset` chooses a transposition
+ * for the SNAPPING stage, which happens entirely in grid space before the Basepoint is applied, so
+ * the two must speak the same axis or the suggestion optimises the wrong thing.
+ */
 export function playableIdsOf(instrumentName: string): ReadonlySet<number> {
     return new Set(getNoteIdTable(instrumentName))
 }
@@ -134,6 +140,20 @@ export type MidiImportOptions = {
     bpm: number
     offset: number
     includeAccidentals: boolean
+    /**
+     * The Basepoint the imported song will carry (MidiParser's pitch selector, seeded from the
+     * file's key signature or our own metadata). Every emitted note is `snapped white-key nominal
+     * + offset(pitch)` — the SNAPPING is unchanged from the id-storing generation (ADR-0007 keeps
+     * import policy exactly as it was, upgradeable later), and this is only what lifts the result
+     * onto the absolute axis so the composer draws it on the row the user picked.
+     *
+     * CONSEQUENCE, stated because it is a real one: re-importing our OWN export of a song whose
+     * Basepoint is not C double-shifts it. The exporter is transposition-honest now (it writes the
+     * stored numbers), while this importer still reads every midi number as a grid nominal and
+     * lifts it again. Fixing that is auto-Basepoint detection, which ADR-0007 explicitly defers;
+     * pinned in test/midiRoundTrip.test.ts so it is a known shape rather than a surprise.
+     */
+    pitch: Pitch
     /**
      * Sustain capability per composer layer, in layer order. Supplied by the caller rather
      * than looked up here so the UI can stay the single owner of the instrument list; use
@@ -336,7 +356,12 @@ export function importMidiTracks(
                 while (end < columnStartSlots.length - 1 && columnStartSlots[end] < endSlot) end++
                 span = Math.max(1, end - columnIndex)
             }
-            column.notes.push({trackIndex: note.layer, id: note.data.id, span} satisfies ColumnNote)
+            //`+ basepointOffset`: the snapped nominal lifted onto the absolute axis (see `pitch`)
+            column.notes.push({
+                trackIndex: note.layer,
+                id: note.data.id + basepointOffset(options.pitch),
+                span,
+            } satisfies ColumnNote)
         }
     })
 
