@@ -105,6 +105,10 @@
   // import and Application.init() are still running - see composerCanvasCssSize for the whole
   // rationale and for what it does and does not reproduce. Null in preview, and a null style
   // directive REMOVES the property, so App.css's `var(..., 0px)` fallback takes over there.
+  // BOTH WIDTHS GO ON THE ELEMENT and App.css's own media query binds one of them to
+  // `--composer-canvas-width` - see composerCanvasCssSize. Choosing here instead (from a
+  // `matchMedia` read) put the desktop breakpoint somewhere no browser could evaluate before
+  // hydration, and the composer opened 79px narrow for the ~800ms until it ran.
   const cssSize = $derived(composerCanvasCssSize({ inPreview: Boolean(inPreview) }));
 
   onMount(() => {
@@ -309,7 +313,8 @@
 <div
   class={['canvas-wrapper', inPreview && 'canvas-wrapper-in-preview']}
   style="width:{width}px;background-color:{hasCache ? 'unset' : backgroundHex}"
-  style:--composer-canvas-width={cssSize?.width}
+  style:--composer-canvas-width-mobile={cssSize?.mobileWidth}
+  style:--composer-canvas-width-desktop={cssSize?.desktopWidth}
   style:--composer-canvas-height={cssSize?.height}
 >
   <div class="canvas-relative" bind:this={canvasContainerEl}>

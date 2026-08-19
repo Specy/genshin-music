@@ -1743,7 +1743,11 @@
     }}
   />
 {/if}
-<div class="composer-grid appear-on-mount">
+<!-- `composer-grid-in-preview` keeps /theme's composer preview on the pre-existing centred layout:
+     App.css's desktop block gives the real page a permanent sidebar column and a canvas that fills
+     the window, neither of which fits a small box inside a scrolling page (same exclusion as
+     `.canvas-wrapper-in-preview` and ComposerMenu's `composer-menu-sidebar`). -->
+<div class={['composer-grid', 'appear-on-mount', inPreview && 'composer-grid-in-preview']}>
   <div class="column composer-left-control">
     <AppButton
       class="flex-centered"
