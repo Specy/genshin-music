@@ -1,7 +1,7 @@
 // Shared, game-INDEPENDENT constants. BASE_LAYER_LIMIT is deliberately NOT in
 // GameDefinition: it is BigInt-capability-based, not game data (audit Step-3
 // documented exception; both games' config-surface fixtures carry 52).
-import type { BaseNote } from '$lib/games/types';
+import { BASE_NOTES, type BaseNote } from '$lib/games/types';
 
 export const APP_VERSION = '4.0.0' as const
 
@@ -251,4 +251,21 @@ export const DO_RE_MI_NOTE_SCALE: Readonly<Record<BaseNote, readonly string[]>> 
     'la##',
   ],
   '': ['', '', '', '', '', '', '', '', '', '', '', ''],
+}
+
+/**
+ * The text a button's authored label shows in one spelling table at a Basepoint.
+ *
+ * An Assigned Button's `baseNote` is free display text — a chord name like 'G7' — which no
+ * scale table can respell, so it renders VERBATIM at every Basepoint (design 2026-08-19
+ * §6: chord labels deliberately do not transpose). Only labels the tables actually list
+ * transpose, which is every Pitched Button's, so tuned instruments are unaffected.
+ */
+export function baseNoteText(
+    scale: Readonly<Record<BaseNote, readonly string[]>>,
+    baseNote: string,
+    pitchIndex: number
+): string {
+    const spelled = BASE_NOTES.find((candidate) => candidate === baseNote)
+    return spelled === undefined ? baseNote : (scale[spelled][pitchIndex] ?? '')
 }

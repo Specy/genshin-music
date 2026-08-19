@@ -15,14 +15,14 @@
 // TS can't promise is checked here (Codex review M3/M4): path/URL-safe names and
 // files, integer + per-instrument-unique Note Ids (the reverse button map is
 // first-occurrence-wins — duplicates would silently break song round-trips), every
-// instrument note id being a member of the game's Song Grid (ADR-0004), legal
-// baseNote values, sane sustain/loop regions, required game.json sections, and a
-// duplicate-free roster. Filesystem-level checks (sample files exist on disk) live
-// in test/gameConfig.test.ts, where fs access exists; icon/shape/label checks need
-// the code side and live in defineGame().
+// instrument note id being a member of the game's Song Grid (ADR-0004), a derivable
+// and collision-free Sounding Pitch per Pitched Button (ADR-0007), sane sustain/loop
+// regions, required game.json sections, and a duplicate-free roster. Filesystem-level
+// checks (sample files exist on disk) live in test/gameConfig.test.ts, where fs access
+// exists; icon/shape/label checks need the code side and live in defineGame().
 import type { GameId, LoopRegion } from './types';
 import {
-  BASE_NOTES,
+  BASE_NOTE_PITCH_CLASSES,
   type InstrumentDefinition,
   type InstrumentNote,
   SUSTAIN_LOOP_MODES,
@@ -84,18 +84,38 @@ function assertLoop(context: string, label: string, loop: LoopRegion): void {
   }
 }
 
-function normalizeNotes(
+/**
+ * The Sounding Pitch of a Pitched Button (ADR-0007): the Note Number nearest `nominal`
+ * whose semitone class is `pitchClass`. null when the two are a tritone apart — the one
+ * distance a semitone class leaves two equally near answers at, since a class repeats
+ * every 12 semitones and so always has a match within 6 of any nominal. Ties are an
+ * authoring error, not something to break arbitrarily: an instrument really tuned that
+ * far from its nominal grid needs its own decision, not a coin flip.
+ */
+export function nearestChromaticMatch(nominal: number, pitchClass: number): number | null {
+  const upward = (((pitchClass - nominal) % 12) + 12) % 12;
+  const offset = upward <= 6 ? upward : upward - 12;
+  return Math.abs(offset) >= 6 ? null : nominal + offset;
+}
+
+/**
+ * Resolve one instrument's authored `notes` (a preset name or an inline array) into the
+ * runtime note structs, deriving each button's identity and rejecting what the JSON cast
+ * cannot promise. Takes the notes rather than the whole meta so the config tests can drive
+ * the same validator the registry runs, on authored note lists of their own.
+ */
+export function normalizeNotes(
   context: string,
-  meta: InstrumentMetaJson,
+  authoredNotes: InstrumentMetaJson['notes'],
   presets: NotePresetsJson
 ): InstrumentNote[] {
   let authored: NoteMetaJson[];
-  if (typeof meta.notes === 'string') {
-    const preset = presets[meta.notes];
-    if (!preset) fail(context, `unknown notes preset "${meta.notes}"`);
+  if (typeof authoredNotes === 'string') {
+    const preset = presets[authoredNotes];
+    if (!preset) fail(context, `unknown notes preset "${authoredNotes}"`);
     authored = preset;
   } else {
-    authored = meta.notes;
+    authored = authoredNotes;
   }
   if (!Array.isArray(authored) || authored.length === 0) {
     fail(context, 'notes must be a preset name or a non-empty array');
@@ -104,8 +124,28 @@ function normalizeNotes(
     if (!Number.isInteger(note.midi)) {
       fail(context, `note ${index}: Note Id (midi) must be an integer, got ${note.midi}`);
     }
-    if (!BASE_NOTES.includes(note.baseNote)) {
-      fail(context, `note ${index}: unknown baseNote "${note.baseNote}"`);
+    // Absent = Pitched Button (ADR-0007). `pitched: false` is the ONLY spelling of an
+    // Assigned Button, so a chord label can never quietly reclassify a tuned button.
+    const pitched = note.pitched !== false;
+    // An Assigned Button sounds no single pitch, so its Note Number is its Nominal Id
+    // carried by the Basepoint — its label is free text and nothing reads it.
+    let sounding = note.midi;
+    if (pitched) {
+      const pitchClass = BASE_NOTE_PITCH_CLASSES.get(note.baseNote);
+      if (pitchClass === undefined) {
+        fail(
+          context,
+          `note ${index}: a Pitched Button's baseNote must be a bare pitch class (C, Db, F#, …), got "${note.baseNote}" — a percussion, SFX or chord-strum button declares "pitched": false and may then label itself anything`
+        );
+      }
+      const match = nearestChromaticMatch(note.midi, pitchClass);
+      if (match === null) {
+        fail(
+          context,
+          `note ${index}: baseNote "${note.baseNote}" is a tritone from Nominal Id ${note.midi}, so its Sounding Pitch could be either neighbour — author the intended spelling, or "pitched": false if the button sounds no single pitch`
+        );
+      }
+      sounding = match;
     }
     assertNonEmptyString(context, `note ${index} icon`, note.icon);
     if (note.loop) assertLoop(context, `note ${index} loop`, note.loop);
@@ -118,15 +158,24 @@ function normalizeNotes(
       file,
       midi: note.midi,
       baseNote: note.baseNote,
+      pitched,
+      sounding,
       icon: note.icon,
       ...(note.loop ? { loop: note.loop } : {}),
       ...(note.minLength !== undefined ? { minLength: note.minLength } : {}),
     };
   });
-  // Note Ids are per-instrument identity (ADR-0001): the id->button reverse map is
+  // Nominal Ids are per-instrument identity (ADR-0001): the id->button reverse map is
   // first-occurrence-wins, so a duplicate would silently strand the later button.
   const ids = new Set(notes.map((n) => n.midi));
   if (ids.size !== notes.length) fail(context, 'duplicate Note Ids (midi) within the instrument');
+  // Two Pitched Buttons sounding the same pitch would enter the same Note Number, making
+  // them indistinguishable in every song (ADR-0007). Assigned Buttons are exempt by
+  // design: they keep their Nominal Ids precisely so alike-sounding ones never collapse.
+  const soundingPitches = notes.filter((n) => n.pitched).map((n) => n.sounding);
+  if (new Set(soundingPitches).size !== soundingPitches.length) {
+    fail(context, "duplicate Sounding Pitches among the instrument's Pitched Buttons");
+  }
   return notes;
 }
 
@@ -259,7 +308,7 @@ function buildGameMeta(id: string): GameMeta {
       // = held notes play their file once and note-off fades.
       if (meta.sustain.loop !== undefined) assertLoop(context, 'sustain.loop', meta.sustain.loop);
     }
-    const notes = normalizeNotes(context, meta, presets);
+    const notes = normalizeNotes(context, meta.notes, presets);
     for (const note of notes) {
       if (!gridIds.has(note.midi)) {
         fail(

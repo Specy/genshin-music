@@ -13,7 +13,6 @@
 // as these types via one cast at its boundary and then VALIDATES what TS can't
 // promise. Keep every field JSON-serializable — no components, no functions.
 import type {
-  BaseNote,
   BaseThemeConfig,
   GameId,
   LoopRegion,
@@ -29,9 +28,8 @@ import type {
 
 /**
  * One button's note, as authored. Position in the array IS the Button index.
- * `midi` is the Note Id (nominal MIDI id, ADR-0001) — required, it is note identity.
- * `baseNote` is the displayed note-name root; it can NOT be derived from `midi`
- * (Vintage-Lyre's nominal id 74 displays as Db; unpitched SFX use '').
+ * `midi` is the Nominal Id (ADR-0001) — required, it is the button's name in the
+ * game's grid namespace.
  * `file` defaults to `<index>.mp3` — the historical sample naming (URL-locked for
  * existing instruments). New instruments may name samples anything matching
  * `[A-Za-z0-9._-]+` — the registry rejects everything else, since file names land
@@ -42,7 +40,22 @@ import type {
 export type NoteMetaJson = {
   file?: string;
   midi: number;
-  baseNote: BaseNote;
+  /**
+   * Pitched Button (the default): a bare pitch-class spelling naming what the button
+   * SOUNDS — the registry derives its Sounding Pitch from this and rejects anything the
+   * BaseNote table doesn't list, so it can NOT be derived from `midi` (Vintage-Lyre's
+   * nominal id 74 really does sound Db).
+   * Assigned Button (`pitched: false`): free display text, chord names ('Dm', 'G7') and
+   * '' included — nothing derives from it.
+   */
+  baseNote: string;
+  /**
+   * Declares an Assigned Button (ADR-0007): a button with no single sounding pitch —
+   * percussion, SFX, a chord strum. It enters notes at its Nominal Id instead of a
+   * derived Sounding Pitch, and its `baseNote` becomes a free label. Absent = Pitched.
+   * Never inferred: a label alone must not be able to flip a button's identity class.
+   */
+  pitched?: false;
   icon: NoteImage;
   loop?: LoopRegion;
   /** Per-note override of sustain.minLength (minimum seconds the note sounds). */
