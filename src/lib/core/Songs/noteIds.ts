@@ -1,18 +1,29 @@
-// Runtime Note Id <-> Button resolution for the ACTIVE game (see CONTEXT.md: Note Id,
-// Button, Stranded Note). Songs store Note Ids; every button lookup happens here.
+// Runtime Note Number / Nominal Id <-> Button resolution for the ACTIVE game (see
+// CONTEXT.md: Note Number, Nominal Id, Basepoint, Button, Stranded Note). Every button
+// lookup on either axis happens here.
 //
-// The authoritative per-instrument table is the game definition's `midiNotes` array
-// (nominal ids — ADR-0001). This module reads it through the core-tier legacyConfig
-// adapter (INSTRUMENTS_DATA), never from `$game` directly, so it stays importable from
-// plain-TS domain code and vitest. The Song Grid's row order is a SEPARATE authored
-// list (CANONICAL_NOTE_IDS, ADR-0004) read through the same adapter — no instrument
-// defines it, which is why the *Grid* helpers below place by Note Id alone.
+// TWO AXES, ONE MODULE — deliberately, because a swap and a grid row need both at once:
+//  - NOMINAL IDS (ADR-0001): the instrument/grid namespace. Per-instrument tables come
+//    from the game definition's note structs (`note.midi`); the Song Grid's row order is a
+//    SEPARATE authored list (CANONICAL_NOTE_IDS, ADR-0004) that no instrument defines,
+//    which is why the *Grid* helpers below place by id alone. Songs stopped storing these
+//    at ADR-0007; they survive as the currency of button correspondence (swaps, grid rows,
+//    legacy decode).
+//  - NOTE NUMBERS (ADR-0007): what songs store — one absolute axis, Basepoint included.
+//    `number = sounding(button) + offset(effectivePitch)`, where `sounding` is a Pitched
+//    Button's derived Sounding Pitch and an Assigned Button's own Nominal Id (registry.ts
+//    derives and validates it), and `offset` is the Basepoint's PITCHES index.
+//
+// BOTH tables are read through the core-tier legacyConfig adapter (INSTRUMENTS_DATA),
+// never from `$game` directly, so this module stays importable from plain-TS domain code
+// and vitest — the sounding table is built exactly like the nominal one, off the same note
+// structs, for that reason and no other.
 //
 // Distinct from legacyNoteTables.ts: that file is a FROZEN snapshot used only to decode
 // legacy serialized songs (possibly of the OTHER game); this module reflects the current
 // build's live instrument data and is used for playback, rendering, and authoring.
 
-import {CANONICAL_NOTE_IDS, INSTRUMENTS, INSTRUMENTS_DATA} from '$core/legacyConfig'
+import {CANONICAL_NOTE_IDS, INSTRUMENTS, INSTRUMENTS_DATA, type Pitch, PITCH_TO_INDEX} from '$core/legacyConfig'
 import type {ColumnNote, InstrumentData, RecordedNote} from './SongClasses'
 import type {LayerStatus} from './Layer'
 
@@ -235,4 +246,134 @@ export function foldIdIntoRange(instrumentName: RuntimeInstrumentName, id: numbe
         return min + offsetAboveMin
     }
     return id
+}
+
+// ─── Note Numbers (ADR-0007) ───────────────────────────────────────────────────────────
+// The absolute axis songs store, and the Basepoint-aware resolution between it and an
+// instrument's Buttons. NOTHING outside tests consumes this half yet (spec phase B): the
+// formats, the engine and every surface still speak Nominal Ids until the phase-C flip, so
+// the nominal API above is deliberately left untouched rather than reimplemented on top.
+
+// Per-instrument Note Number tables, cached exactly like the nominal ones and built from
+// the SAME note structs (ADR-0003 entities) through the same adapter — `sounding` is
+// derived + validated once at registry build (registry.ts), never authored and never
+// recomputed here.
+// eslint-disable-next-line svelte/prefer-svelte-reactivity -- build-time constants cache
+const soundingTableCache = new Map<string, readonly number[]>()
+
+/**
+ * Ordered Note Number list AT BASEPOINT C (button b enters table[b] + offset(pitch)) of an
+ * instrument; unknown names use the default instrument's, matching getNoteIdTable and the
+ * legacy `new Instrument(name)` guard.
+ *
+ * Entry b is the Sounding Pitch of a Pitched Button and the Nominal Id of an Assigned one
+ * (percussion, SFX, chord strums) — the two are the same number for every instrument whose
+ * `baseNote`s match its nominal grid, and differ only where the game tuned a button away
+ * from it (genshin's Vintage-Lyre).
+ */
+export function getSoundingTable(instrumentName: RuntimeInstrumentName): readonly number[] {
+    const name = isInstrumentName(instrumentName) ? instrumentName : DEFAULT_INSTRUMENT
+    const cached = soundingTableCache.get(name)
+    if (cached) return cached
+    const table = INSTRUMENTS_DATA[name].notes.map((note) => note.sounding)
+    soundingTableCache.set(name, table)
+    return table
+}
+
+// QUIRK: plain module-level Map cache, not reactive — same reasoning as reverseCache.
+// eslint-disable-next-line svelte/prefer-svelte-reactivity
+const soundingReverseCache = new Map<string, Map<number, number>>()
+
+function getSoundingReverseMap(instrumentName: RuntimeInstrumentName): Map<number, number> {
+    const cached = soundingReverseCache.get(instrumentName)
+    if (cached) return cached
+    const map = new Map<number, number>()
+    getSoundingTable(instrumentName).forEach((sounding, button) => {
+        // First button wins, like the nominal map — but where a duplicate NOMINAL id is a
+        // registry error, a duplicate sounding value is only rejected AMONG PITCHED BUTTONS
+        // (two of those would be indistinguishable in every song). An Assigned Button keeps
+        // its Nominal Id precisely so alike-sounding ones never collapse, so it can legally
+        // repeat a pitched neighbour's number; the earlier button is then the one that
+        // sounds, and the later one is reachable only through its own Button.
+        if (!map.has(sounding)) map.set(sounding, button)
+    })
+    soundingReverseCache.set(instrumentName, map)
+    return map
+}
+
+/** The Basepoint's semitone rise (its PITCHES index, 0..11 — always upward, spec §4). */
+export function basepointOffset(pitch: Pitch): number {
+    return PITCH_TO_INDEX.get(pitch) ?? 0
+}
+
+/** The Note Number a button enters at this Basepoint, or null past the instrument's range. */
+export function buttonToNumber(instrumentName: RuntimeInstrumentName, pitch: Pitch, button: number): number | null {
+    const sounding = getSoundingTable(instrumentName)[button]
+    return sounding === undefined ? null : sounding + basepointOffset(pitch)
+}
+
+/**
+ * The button voicing a Note Number on this instrument at this Basepoint, or -1 when the
+ * number is STRANDED there (spec §4: `soundingTable.indexOf(number − offset)`).
+ *
+ * -1 is the playback answer too: a stranded note is skipped, never rewritten and never
+ * approximated onto a neighbouring button — exactly what an unplayable Note Id does today.
+ */
+export function numberToButton(instrumentName: RuntimeInstrumentName, pitch: Pitch, number: number): number {
+    return getSoundingReverseMap(instrumentName).get(number - basepointOffset(pitch)) ?? -1
+}
+
+/**
+ * Where a Note Number draws on the compressed composer view, whose rows are the Song Grid's
+ * canonical slots (ADR-0004) and NOT an instrument's Buttons:
+ * - `row` — the canonical slot, or -1 when the game's grid is empty (never in practice).
+ * - `stranded` — the track's instrument cannot voice this number at this Basepoint; the
+ *   note still draws (dimmed, as before ADR-0007) and still cannot sound.
+ * - `accidental` — -1 flat / 0 exact / +1 sharp: the note is OFF-SCALE, i.e. its virtual
+ *   nominal falls between two grid rows, and it is drawn on the nearest one with a hint.
+ */
+export type GridRowPlacement = {row: number, stranded: boolean, accidental: -1 | 0 | 1}
+
+/**
+ * Spec §4's grid-row rule, in the one place every surface with Song-Grid rows reads it:
+ *
+ *  1. VOICED (`numberToButton` finds a button) → the canonical slot of THAT BUTTON'S
+ *     NOMINAL ID. The button is the fact; its nominal is what the grid is indexed by, so a
+ *     tuned button draws on the row its instrument prints on it (Vintage-Lyre's Db button
+ *     sits on the D row, where its player expects to find it) even though it sounds a
+ *     semitone lower.
+ *  2. STRANDED, virtual nominal (`number − offset`) IS a canonical id → that row, marked
+ *     stranded. This is ADR-0004's stranded-note fallback, preserved exactly.
+ *  3. STRANDED and OFF-SCALE → the nearest canonical id by absolute distance (tie: the
+ *     LOWER id, so the choice never depends on the authored row order), marked stranded,
+ *     with the accidental hint signed by (virtual − chosen). Deliberately nearest-row and
+ *     not "drop it": an off-scale note is selectable and deletable, which is the whole
+ *     point of storing it honestly instead of snapping it at entry.
+ *
+ * A voiced note is never off-scale (accidental 0): whatever it sounds, it HAS a button, and
+ * every instrument's nominal ids are grid members (registry-validated).
+ */
+export function gridRowForNumber(instrumentName: RuntimeInstrumentName, pitch: Pitch, number: number): GridRowPlacement {
+    const button = numberToButton(instrumentName, pitch, number)
+    if (button !== -1) {
+        return {row: songGridSlotForId(getNoteIdTable(instrumentName)[button]), stranded: false, accidental: 0}
+    }
+    const virtual = number - basepointOffset(pitch)
+    const exactRow = songGridSlotForId(virtual)
+    if (exactRow !== -1) return {row: exactRow, stranded: true, accidental: 0}
+    let nearest = -1
+    let nearestDistance = Infinity
+    for (const id of CANONICAL_NOTE_IDS) {
+        const distance = Math.abs(virtual - id)
+        if (distance < nearestDistance || (distance === nearestDistance && id < nearest)) {
+            nearest = id
+            nearestDistance = distance
+        }
+    }
+    if (nearest === -1) return {row: -1, stranded: true, accidental: 0}
+    return {
+        row: songGridSlotForId(nearest),
+        stranded: true,
+        accidental: Math.sign(virtual - nearest) as -1 | 0 | 1,
+    }
 }
