@@ -137,6 +137,37 @@ describe('every VsrgSong conversion carries the whole song across', () => {
     })
 })
 
+/** ADR-0007's vsrg half: the same rule as ComposedSong's, over hit-object number arrays. */
+describe('a Basepoint change moves the vsrg hit objects', () => {
+    const numbersOf = (song: VsrgSong, trackIndex: number) =>
+        song.tracks[trackIndex].hitObjects.flatMap(hitObject => hitObject.notes)
+
+    it('moves every track that follows the song and leaves an overriding one alone', () => {
+        const song = buildFullSong()
+        const second = new VsrgTrack(INSTRUMENTS[0])
+        second.instrument.pitch = 'F'
+        const held = new VsrgHitObject(0, 500)
+        held.notes = [idOf(0), idOf(1)]
+        second.hitObjects = [held]
+        song.initTracksForConstruction([...song.tracks, second])
+        const before = [numbersOf(song, 0), numbersOf(song, 1)]
+
+        song.set({pitch: 'E'})
+        song.applyBasepointChange('song', 'D', 'E')
+
+        expect(numbersOf(song, 0)).toEqual(before[0].map(n => n + 2))
+        expect(numbersOf(song, 1)).toEqual(before[1])
+    })
+
+    it('ASSIGNS a fresh notes array rather than editing one in place', () => {
+        //VsrgHitObject's own convention, and what the mini keyboard's `{#each}` reacts to
+        const song = buildFullSong()
+        const original = song.tracks[0].hitObjects[0].notes
+        song.applyBasepointChange('song', 'D', 'E')
+        expect(song.tracks[0].hitObjects[0].notes).not.toBe(original)
+    })
+})
+
 describe('VsrgSong.deleteTrack addresses a track or does nothing', () => {
     // The guard is a deliberate behaviour change, not a preserved quirk - see deleteTrack's own
     // comment. The old body was a bare splice(), so a negative index deleted from the END.

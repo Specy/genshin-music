@@ -1,11 +1,11 @@
-import {APP_NAME, INSTRUMENTS, VSRG_TRACK_COLORS} from "$core/legacyConfig";
+import {APP_NAME, INSTRUMENTS, type Pitch, VSRG_TRACK_COLORS} from "$core/legacyConfig";
 // SnapPoint normally lives in $cmp/pages/VsrgComposer/VsrgBottom.tsx (not ported until the UI
 // phase) - hoisted into $core/types.ts instead, same pattern as VsrgKeyboardLayout (Task 6).
 import type {SnapPoint} from "$core/types";
 import {isLegacyAppName, LEGACY_NOTE_TABLES, legacyIndexToId} from "./legacyNoteTables";
 import {type ConversionGame, findSimilarInstrument} from "./instrumentSimilarity";
 import {foldNumberIntoRange, nominalToNumber} from "./noteIds";
-import {migrateTrackNotes} from "./noteNumberTransforms";
+import {basepointDelta, migrateTrackNotes, rewriteNumbersForBasepoint} from "./noteNumberTransforms";
 import type {InstrumentName} from "$core/types";
 import {RecordedSong} from "./RecordedSong";
 import {type SerializedSong, Song} from "./Song.svelte";
@@ -577,7 +577,7 @@ export class VsrgSong extends Song<VsrgSong, SerializedVsrgSong, 3> {
         hitObject.isHeld = true
     }
 
-    /** Toggle one Note Id on a hit object the song owns (the mini keyboard's edit). */
+    /** Toggle one Note Number on a hit object the song owns (the mini keyboard's edit). */
     toggleNoteInHitObject(hitObject: VsrgHitObject, note: number) {
         hitObject.toggleNote(note)
         this.#bumpStructure()
@@ -657,6 +657,32 @@ export class VsrgSong extends Song<VsrgSong, SerializedVsrgSong, 3> {
 
     changeKeys(keys: VsrgSongKeys) {
         this.keys = keys
+    }
+
+    /**
+     * ComposedSong.applyBasepointChange's twin, on the vsrg graph (ADR-0007): every hit object of
+     * every affected track has its Note Numbers moved by the interval, Stranded Notes included.
+     * The caller writes the new Basepoint itself; both ends are passed explicitly so the song-level
+     * and per-track cases state the same arithmetic.
+     *
+     * Hit objects keep their numbers in a bare array and follow VsrgHitObject's assign-never-mutate
+     * convention, so this ASSIGNS a fresh array per object (rewriteNumbersForBasepoint) rather than
+     * editing in place. Publishes nothing when nothing moved.
+     */
+    applyBasepointChange(scope: 'song' | number, oldPitch: Pitch, newPitch: Pitch) {
+        const delta = basepointDelta(oldPitch, newPitch)
+        if (delta === 0) return
+        let changed = false
+        this.#tracks.forEach((track, trackIndex) => {
+            const follows = scope === 'song' ? !track.instrument.pitch : trackIndex === scope
+            if (!follows) return
+            for (const hitObject of track.hitObjects) {
+                if (hitObject.notes.length === 0) continue
+                hitObject.notes = rewriteNumbersForBasepoint(hitObject.notes, delta)
+                changed = true
+            }
+        })
+        if (changed) this.#bumpStructure()
     }
 
     serialize(): SerializedVsrgSong {

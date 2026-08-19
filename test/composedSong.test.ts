@@ -3,6 +3,7 @@ import {
     CANONICAL_NOTE_IDS,
     COMPOSER_NOTE_POSITIONS,
     ComposedSong,
+    InstrumentData,
     INSTRUMENTS,
     INSTRUMENTS_DATA,
     RecordedSong,
@@ -139,6 +140,110 @@ describe('ComposedSong formats', () => {
         const recorded = composed.toRecordedSong()
         expect(settings(recorded.clone())).toEqual(expected)
         expect(settings(recorded.toComposedSong())).toEqual(expected)
+    })
+})
+
+/**
+ * ADR-0007's two whole-track rewrites, from the SONG's side: the pure transforms are pinned in
+ * noteNumberTransforms.test.ts, so what these rows are about is which notes each mutator picks and
+ * what it leaves alone — the half a pure-function test cannot see.
+ */
+describe('a Basepoint change is a real edit of the notes', () => {
+    /** Every note of one track, in column order. */
+    const numbersOf = (song: ComposedSong, trackIndex: number) =>
+        song.columns.flatMap((column) => column.notesOfTrack(trackIndex).map((note) => note.id))
+
+    function twoTrackSong(): ComposedSong {
+        const song = new ComposedSong('basepoint', [INSTRUMENTS[0], INSTRUMENTS[0]])
+        song.pitch = 'C'
+        INSTRUMENTS_DATA[INSTRUMENTS[0]].notes.slice(0, 5).forEach((note, column) => {
+            song.addNoteAt(column, 0, note.sounding)
+            song.addNoteAt(column, 1, note.sounding)
+        })
+        return song
+    }
+
+    it('moves every note of every track that FOLLOWS the song, by the interval', () => {
+        const song = twoTrackSong()
+        const before = [numbersOf(song, 0), numbersOf(song, 1)]
+        song.pitch = 'D'
+        song.applyBasepointChange('song', 'C', 'D')
+        expect(numbersOf(song, 0)).toEqual(before[0].map((n) => n + 2))
+        expect(numbersOf(song, 1)).toEqual(before[1].map((n) => n + 2))
+    })
+
+    it('leaves a track with its OWN Basepoint exactly where it was', () => {
+        //its effective Basepoint did not change, so moving its notes would transpose it against
+        //everything else in the song — the one case a blanket rewrite gets wrong
+        const song = twoTrackSong()
+        song.setInstrument(1, new InstrumentData({name: INSTRUMENTS[0], pitch: 'F'}))
+        const before = [numbersOf(song, 0), numbersOf(song, 1)]
+        song.pitch = 'D'
+        song.applyBasepointChange('song', 'C', 'D')
+        expect(numbersOf(song, 0)).toEqual(before[0].map((n) => n + 2))
+        expect(numbersOf(song, 1)).toEqual(before[1])
+    })
+
+    it('goes DOWN eleven semitones from B to C, never up one', () => {
+        //the interval is raw, not folded into an octave: folding it would silently octave-jump
+        //a whole track (see basepointDelta)
+        const song = twoTrackSong()
+        song.pitch = 'B'
+        song.applyBasepointChange('song', 'C', 'B')
+        const raised = numbersOf(song, 0)
+        song.pitch = 'C'
+        song.applyBasepointChange('song', 'B', 'C')
+        expect(numbersOf(song, 0)).toEqual(raised.map((n) => n - 11))
+    })
+
+    it('round-trips: a change and its inverse leave the song byte-identical', () => {
+        const song = twoTrackSong()
+        const before = JSON.parse(JSON.stringify(song.serialize()))
+        song.applyBasepointChange('song', 'C', 'Ab')
+        song.applyBasepointChange('song', 'Ab', 'C')
+        expect(JSON.parse(JSON.stringify(song.serialize()))).toEqual(before)
+    })
+})
+
+describe('an instrument swap rewrites the track button-preservingly', () => {
+    /** A second instrument that shares at least one nominal with the default one. */
+    const other = INSTRUMENTS.find((name) =>
+        name !== INSTRUMENTS[0]
+        && INSTRUMENTS_DATA[INSTRUMENTS[0]].notes.some(
+            (note) => noteIdToButton(name, note.midi) !== -1
+        ))!
+
+    it('keeps the BUTTON, so the shape of what was played survives the swap', () => {
+        const song = new ComposedSong('swap', [INSTRUMENTS[0]])
+        const shared = INSTRUMENTS_DATA[INSTRUMENTS[0]].notes.filter(
+            (note) => noteIdToButton(other, note.midi) !== -1
+        )
+        shared.forEach((note, column) => song.addNoteAt(column, 0, note.sounding))
+        song.setInstrument(0, new InstrumentData({name: other}))
+        //each note now sounds what the SAME nominal's button sounds on the new instrument
+        shared.forEach((note, column) => {
+            const expected = INSTRUMENTS_DATA[other].notes[noteIdToButton(other, note.midi)].sounding
+            expect(song.columns[column].notesOfTrack(0)[0].id).toBe(expected)
+        })
+    })
+
+    it('applies the swap at the OLD Basepoint when the same edit also moves the override', () => {
+        //a swap is not a transposition: doing the interval first would ask the old instrument to
+        //voice numbers that are already at the new Basepoint
+        const shared = INSTRUMENTS_DATA[INSTRUMENTS[0]].notes.find(
+            (note) => noteIdToButton(other, note.midi) !== -1
+        )!
+        const together = new ComposedSong('together', [INSTRUMENTS[0]])
+        together.addNoteAt(0, 0, shared.sounding)
+        together.setInstrument(0, new InstrumentData({name: other, pitch: 'E'}))
+
+        const inTwoSteps = new ComposedSong('two steps', [INSTRUMENTS[0]])
+        inTwoSteps.addNoteAt(0, 0, shared.sounding)
+        inTwoSteps.setInstrument(0, new InstrumentData({name: other}))
+        inTwoSteps.setInstrument(0, new InstrumentData({name: other, pitch: 'E'}))
+
+        expect(together.columns[0].notesOfTrack(0)[0].id)
+            .toBe(inTwoSteps.columns[0].notesOfTrack(0)[0].id)
     })
 })
 

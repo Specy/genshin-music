@@ -33,6 +33,92 @@ function assignedIdentifiers(functionName: string): Set<string> {
     return assigned
 }
 
+/**
+ * Every assignment TARGET inside a function, spelled as source text — so `song.pitch = x` is
+ * reported as `song.pitch` rather than being invisible the way assignedIdentifiers' bare-identifier
+ * walk leaves it.
+ */
+function assignedTargets(functionName: string): Set<string> {
+    const declaration = source.statements.find(
+        (statement): statement is ts.FunctionDeclaration =>
+            ts.isFunctionDeclaration(statement) && statement.name?.text === functionName,
+    )
+    if (!declaration) throw new Error(`Composer.svelte has no ${functionName} function`)
+    const assigned = new Set<string>()
+    const visit = (node: ts.Node) => {
+        if (ts.isBinaryExpression(node) && node.operatorToken.kind === ts.SyntaxKind.EqualsToken) {
+            assigned.add(node.left.getText())
+        }
+        ts.forEachChild(node, visit)
+    }
+    visit(declaration)
+    return assigned
+}
+
+/** The property names an object literal inside `functionName` supplies, across every literal in it. */
+function objectLiteralKeys(functionName: string): Set<string> {
+    const declaration = source.statements.find(
+        (statement): statement is ts.FunctionDeclaration =>
+            ts.isFunctionDeclaration(statement) && statement.name?.text === functionName,
+    )
+    if (!declaration) throw new Error(`Composer.svelte has no ${functionName} function`)
+    const keys = new Set<string>()
+    const visit = (node: ts.Node) => {
+        if (ts.isObjectLiteralExpression(node)) {
+            for (const property of node.properties) {
+                if (property.name && ts.isIdentifier(property.name)) keys.add(property.name.text)
+            }
+        }
+        ts.forEachChild(node, visit)
+    }
+    visit(declaration)
+    return keys
+}
+
+/**
+ * ADR-0007's undo requirement, which no runtime test in this project can reach (Composer's history
+ * is component-local and there is no component harness — see this file's header): a Basepoint
+ * change or an instrument swap rewrites the NOTES and moves the setting that says what they mean,
+ * so the snapshot has to carry all three or undo restores notes into a song that disagrees with
+ * them — every note a semitone, or an instrument, out.
+ */
+describe('composer undo is a compound snapshot (ADR-0007)', () => {
+    it('addToHistory captures columns, pitch and instruments in one entry', () => {
+        const keys = objectLiteralKeys('addToHistory')
+        expect(keys).toContain('columns')
+        expect(keys).toContain('pitch')
+        expect(keys).toContain('instruments')
+    })
+
+    it('undo restores all three, and the settings copy of the Basepoint with them', () => {
+        const assigned = assignedTargets('undo')
+        //the columns go back through the model's own restore path, not a bare assignment
+        expect(source.getText()).toContain('song.restoreColumns(history.columns)')
+        expect(assigned).toContain('song.pitch')
+        expect(assigned).toContain('song.instruments')
+        //`settings.pitch` is a SECOND copy of the song's Basepoint (the settings panel reads it),
+        //so undoing one without the other leaves the two disagreeing until the next edit
+        expect(assigned).toContain('settings.pitch')
+    })
+
+    it('the Basepoint edits take a snapshot before they rewrite', () => {
+        //both entry points: the settings panel's pitch key and MidiParser's own funnel. They must
+        //leave the song in the same state, or the same edit means different things depending on
+        //which panel is open.
+        for (const entry of ['handleSettingChange', 'changePitch']) {
+            const declaration = source.statements.find(
+                (statement): statement is ts.FunctionDeclaration =>
+                    ts.isFunctionDeclaration(statement) && statement.name?.text === entry,
+            )!
+            const text = declaration.getText()
+            expect(text).toContain('addToHistory()')
+            expect(text).toContain('applyBasepointChange')
+            //the snapshot is taken BEFORE the rewrite, or it records the state undo is meant to leave
+            expect(text.indexOf('addToHistory()')).toBeLessThan(text.indexOf('applyBasepointChange'))
+        }
+    })
+})
+
 describe('Composer tools clipboard lifecycle', () => {
     it.each(['loadSong', 'createNewSong'])(
         '%s resets song-addressed state without clearing the editor clipboard',

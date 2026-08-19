@@ -9,6 +9,7 @@ import {
     COMPOSER_NOTE_POSITIONS,
     INSTRUMENTS,
     INSTRUMENTS_DATA,
+    type Pitch,
     PITCHES,
     TEMPO_CHANGERS,
     type TempoChanger
@@ -33,6 +34,7 @@ import {clamp} from "../utils/Utilities"
 import {isLegacyAppName, LEGACY_NOTE_TABLES, legacyIndexToId} from "./legacyNoteTables"
 import {type ConversionGame, findSimilarInstrument} from "./instrumentSimilarity"
 import {foldNumberIntoRange, gridRowForNumber, nominalToNumber, numberToNominal} from "./noteIds"
+import {basepointDelta, rewriteForBasepoint, rewriteForSwap} from "./noteNumberTransforms"
 
 interface OldFormatNoteType {
     key: string,
@@ -508,12 +510,82 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 5> 
      * Replace one layer's instrument (the layer panel's edit). Clones on the way in so the stored
      * entry is not aliased to the panel's working copy, and assigns a new array - see
      * addInstrument for why in-place is not an option.
+     *
+     * SINCE ADR-0007 THIS IS ALSO A NOTE EDIT, because both halves of the entry it replaces are
+     * part of what the track's stored numbers mean:
+     *  - a changed INSTRUMENT NAME rewrites the track button-preservingly through nominal
+     *    correspondence (rewriteForSwap), which is what keeps Lyre -> Vintage-Lyre a re-flavoring
+     *    rather than a strand-everything;
+     *  - a changed BASEPOINT OVERRIDE (including clearing it back to the song's) moves the whole
+     *    track by the interval, exactly as a song-level change does.
+     * Applied in that order and at the OLD effective Basepoint, because a swap is not a
+     * transposition: doing the interval first would ask the old instrument to voice numbers that
+     * are already at the new Basepoint.
      */
     setInstrument(index: number, instrument: InstrumentData) {
-        if (this.instruments[index] === undefined) return
+        const previous = this.instruments[index]
+        if (previous === undefined) return
+        const oldName = previous.name
+        const oldPitch = previous.pitch || this.pitch
+        const newPitch = instrument.pitch || this.pitch
         const instruments = [...this.instruments]
         instruments[index] = instrument.clone()
         this.instruments = instruments
+        if (oldName === instrument.name && oldPitch === newPitch) return
+        const notes = this.#notesOfTrack(index)
+        if (notes.length === 0) return
+        if (oldName !== instrument.name) {
+            const swapped = rewriteForSwap(notes.map(note => note.id), oldName, instrument.name, oldPitch)
+            notes.forEach((note, i) => note.id = swapped[i])
+        }
+        rewriteForBasepoint(notes, basepointDelta(oldPitch, newPitch))
+        this.#touchAllColumns()
+        this.#bumpStructure()
+    }
+
+    /** Every note of one track, in column order — the working set of the whole-track rewrites. */
+    #notesOfTrack(trackIndex: number): ColumnNote[] {
+        const notes: ColumnNote[] = []
+        for (const column of this.#columns) {
+            for (const note of column.notes) {
+                if (note.trackIndex === trackIndex) notes.push(note)
+            }
+        }
+        return notes
+    }
+
+    /**
+     * A Basepoint change, as the real edit ADR-0007 makes it: every affected note moves by the
+     * interval, Stranded Notes included (rewriteForBasepoint says why). The caller writes the new
+     * Basepoint itself — this method is handed both ends explicitly, so the SONG-level and the
+     * PER-TRACK case can state the same arithmetic without either having to guess what changed.
+     *
+     * `scope`:
+     *  - `'song'` — the song's own Basepoint moved. Only tracks WITHOUT an override follow it: a
+     *    track that overrides it has the same effective Basepoint before and after, so moving its
+     *    notes would transpose it against everything else in the song.
+     *  - a track index — that track's override moved (`oldPitch`/`newPitch` are its EFFECTIVE
+     *    Basepoints, so clearing an override back to the song's is the same call).
+     *
+     * Publishes nothing when nothing moved: a zero interval, or a scope with no notes in it.
+     */
+    applyBasepointChange(scope: 'song' | number, oldPitch: Pitch, newPitch: Pitch) {
+        const delta = basepointDelta(oldPitch, newPitch)
+        if (delta === 0) return
+        const follows = (trackIndex: number) => scope === 'song'
+            ? !this.instruments[trackIndex]?.pitch
+            : trackIndex === scope
+        let changed = false
+        for (const column of this.#columns) {
+            for (const note of column.notes) {
+                if (!follows(note.trackIndex)) continue
+                note.id += delta
+                changed = true
+            }
+        }
+        if (!changed) return
+        this.#touchAllColumns()
+        this.#bumpStructure()
     }
 
     /** Swap two layers' instruments. Pair it with swapLayer(), which moves the notes to match. */
