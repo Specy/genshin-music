@@ -2,7 +2,12 @@
   import type { Snippet } from 'svelte';
   import Color from 'color';
   import { game } from '$game';
-  import type { VsrgHitObject, VsrgSong, VsrgTrack } from '$core/Songs/VsrgSong.svelte';
+  import type {
+    VsrgHitObject,
+    VsrgSong,
+    VsrgTrack,
+    VsrgTrackInstrumentIdentity,
+  } from '$core/Songs/VsrgSong.svelte';
   import { effectiveTrackPitch, numberToButton } from '$core/Songs/noteIds';
   import { ThemeProvider } from '$core/theme/ThemeProvider.svelte';
   import { t, tInstrument } from '$i18n/binding.svelte';
@@ -36,7 +41,11 @@
     onTrackAdd: () => void;
     onTrackDelete: (index: number) => void;
     onTrackSelect: (index: number) => void;
-    onTrackChange: (track: VsrgTrack, index: number) => void;
+    onTrackChange: (
+      track: VsrgTrack,
+      index: number,
+      previousInstrument?: VsrgTrackInstrumentIdentity
+    ) => void;
     onNoteSelect: (note: number) => void;
     onBreakpointChange: (remove: boolean) => void;
     onBreakpointSelect: (index: -1 | 1) => void;
@@ -226,7 +235,8 @@
       track={vsrg.tracks[selectedTrack]}
       onSave={() => (isTrackSettingsOpen = false)}
       onDelete={() => onTrackDelete(selectedTrack)}
-      onChange={(track) => onTrackChange(track, selectedTrack)}
+      onChange={(track, previousInstrument) =>
+        onTrackChange(track, selectedTrack, previousInstrument)}
     />
   {/if}
   <Row align="center" class="vsrg-breakpoints-buttons" style="margin-bottom:0.4rem">

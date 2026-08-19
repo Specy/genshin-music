@@ -1,6 +1,7 @@
 import {describe, expect, it} from 'vitest'
 import {
     APP_NAME,
+    CANONICAL_NOTE_IDS,
     INSTRUMENTS,
     INSTRUMENTS_DATA,
     VsrgHitObject,
@@ -9,6 +10,10 @@ import {
     VsrgTrackModifier,
 } from './imports'
 import {expectGolden, readFixture} from './golden'
+import {
+    basepointOffset, getNoteIdTable, getSoundingTable, numberToButton,
+} from '$core/Songs/noteIds'
+import type {Pitch} from '$core/legacyConfig'
 
 function buildVsrgSong(): VsrgSong {
     const song = new VsrgSong('Golden vsrg')
@@ -134,6 +139,157 @@ describe('every VsrgSong conversion carries the whole song across', () => {
             })),
         }))
         expect(placement(converted)).toEqual(placement(song))
+    })
+})
+
+// Instrument ROLES by capability, never by name (the project's config-driven rule): the same
+// derivations noteNumberTransforms.test.ts uses, so the two files agree about which instrument is
+// which without either restating a per-game roster.
+const notesOf = (name: string) => INSTRUMENTS_DATA[name as keyof typeof INSTRUMENTS_DATA].notes
+/** Instruments with a button tuned away from its Nominal Id (genshin: Vintage-Lyre; sky: none). */
+const TUNED = INSTRUMENTS.filter((name: string) =>
+    notesOf(name).some(note => note.pitched && note.sounding !== note.midi))
+/** One whose two axes coincide everywhere — the "ordinary" side of a swap. */
+const UNTUNED = INSTRUMENTS.find((name: string) =>
+    getSoundingTable(name).every((sounding, button) => sounding === getNoteIdTable(name)[button]))!
+const WIDE = INSTRUMENTS.reduce((widest: string, name: string) =>
+    getNoteIdTable(name).length > getNoteIdTable(widest).length ? name : widest, INSTRUMENTS[0])
+const NARROW = INSTRUMENTS.find((name: string) =>
+    CANONICAL_NOTE_IDS.some(id => !getNoteIdTable(name).includes(id)))!
+
+/**
+ * A track's instrument change is a NOTE edit (ADR-0007 §4), and the vsrg panel destroys the old
+ * identity before anything downstream sees it — so `setTrack` is handed the old pair explicitly.
+ * The pure rewrite is pinned in noteNumberTransforms.test.ts; what these rows are about is the
+ * WIRING: that setTrack applies it to every hit object, at the right Basepoint, in the right order,
+ * and not at all when the edit was presentation.
+ */
+describe('a vsrg instrument swap rewrites the track', () => {
+    /** A one-track song whose single hit object carries `numbers`. */
+    function songOn(instrument: string, numbers: number[], pitch: Pitch = 'C', override: Pitch | '' = '') {
+        const song = new VsrgSong('swap')
+        song.set({pitch})
+        const track = new VsrgTrack(instrument as never)
+        track.instrument.pitch = override
+        const hitObject = new VsrgHitObject(0, 500)
+        hitObject.notes = [...numbers]
+        track.hitObjects = [hitObject]
+        song.initTracksForConstruction([track])
+        return song
+    }
+
+    /** What the panel does: mutate the live track in place, then hand the old identity down. */
+    function swapTo(song: VsrgSong, instrument: string, override?: Pitch | '') {
+        const track = song.tracks[0]
+        const previous = {name: track.instrument.name, pitch: track.instrument.pitch}
+        track.instrument.set({name: instrument as never})
+        if (override !== undefined) track.instrument.set({pitch: override})
+        song.setTrack(0, track, previous)
+        return song.tracks[0].hitObjects[0].notes
+    }
+
+    it.runIf(TUNED.length > 0)('RE-FLAVORS onto a tuned instrument: same button, different pitch', () => {
+        //the behavior users rely on (Lyre -> Vintage-Lyre): the D button becomes the Db button,
+        //where a sound-preserving swap would have stranded it
+        const tuned = TUNED[0]
+        const reflavored = notesOf(tuned).find(note => note.pitched && note.sounding !== note.midi)!
+        const button = getNoteIdTable(tuned).indexOf(reflavored.midi)
+        for (const pitch of ['C', 'E'] as const) {
+            const offset = basepointOffset(pitch)
+            const song = songOn(UNTUNED, [reflavored.midi + offset], pitch)
+            expect(swapTo(song, tuned)).toEqual([reflavored.sounding + offset])
+            //...and it really is the SAME key of the new instrument that voices it
+            expect(numberToButton(tuned, pitch, song.tracks[0].hitObjects[0].notes[0])).toBe(button)
+        }
+    })
+
+    it.runIf(TUNED.length > 0)('swaps a tuned number back off by its nominal', () => {
+        const tuned = TUNED[0]
+        const reflavored = notesOf(tuned).find(note => note.pitched && note.sounding !== note.midi)!
+        const song = songOn(tuned, [reflavored.sounding])
+        expect(swapTo(song, UNTUNED)).toEqual([reflavored.midi])
+    })
+
+    it('STRANDS a number the new instrument has no button for, leaving it exactly where it was', () => {
+        const dropped = getNoteIdTable(WIDE).find(id => !getNoteIdTable(NARROW).includes(id))!
+        const song = songOn(WIDE, [dropped])
+        expect(swapTo(song, NARROW)).toEqual([dropped])
+        expect(numberToButton(NARROW, 'C', dropped)).toBe(-1)
+    })
+
+    it('lets a number stranded on the OLD instrument pass through and UN-STRAND', () => {
+        const stranded = CANONICAL_NOTE_IDS.find(id =>
+            !getNoteIdTable(NARROW).includes(id) && getNoteIdTable(WIDE).includes(id))!
+        const song = songOn(NARROW, [stranded])
+        expect(swapTo(song, WIDE)).toEqual([stranded])
+        expect(numberToButton(WIDE, 'C', stranded)).toBeGreaterThanOrEqual(0)
+    })
+
+    it('applies the swap at the OLD Basepoint when the same save also moves the override', () => {
+        //a swap is not a transposition: doing the interval first would ask the OLD instrument to
+        //voice numbers that are already at the NEW Basepoint
+        const number = getSoundingTable(WIDE)[0]
+        const together = swapTo(songOn(WIDE, [number]), UNTUNED, 'E')
+        const song = songOn(WIDE, [number])
+        swapTo(song, UNTUNED)
+        const inTwoSteps = swapTo(song, UNTUNED, 'E')
+        expect(together).toEqual(inTwoSteps)
+        expect(together[0]).toBe(inTwoSteps[0])
+    })
+
+    it('moves the track by the interval when only the Basepoint override changed', () => {
+        const number = getSoundingTable(WIDE)[0]
+        const song = songOn(WIDE, [number])
+        const track = song.tracks[0]
+        const previous = {name: track.instrument.name, pitch: track.instrument.pitch}
+        track.instrument.set({pitch: 'D'})
+        song.setTrack(0, track, previous)
+        expect(song.tracks[0].hitObjects[0].notes).toEqual([number + 2])
+    })
+
+    it('rewrites EVERY hit object of the track, and assigns a fresh array to each', () => {
+        const song = songOn(WIDE, [getSoundingTable(WIDE)[0]])
+        const second = new VsrgHitObject(1, 900)
+        second.notes = [getSoundingTable(WIDE)[1]]
+        song.tracks[0].hitObjects = [...song.tracks[0].hitObjects, second]
+        const originals = song.tracks[0].hitObjects.map(hitObject => hitObject.notes)
+        const track = song.tracks[0]
+        const previous = {name: track.instrument.name, pitch: track.instrument.pitch}
+        track.instrument.set({pitch: 'D'})
+        song.setTrack(0, track, previous)
+        song.tracks[0].hitObjects.forEach((hitObject, i) => {
+            expect(hitObject.notes).not.toBe(originals[i])
+            expect(hitObject.notes).toEqual(originals[i].map(n => n + 2))
+        })
+    })
+
+    it('keeps a hit object\'s notes a SET when a rewrite collapses two onto one', () => {
+        //hit-object notes are a SET (toggleNote/setNote enforce it), and a rewrite can map two of
+        //them onto one number — a strand passing through unchanged can land on a swapped
+        //neighbour. Two equal inputs are the guaranteed form of that collision, and they are what
+        //a v2 file migrated from the id axis can legitimately produce.
+        expect(WIDE).not.toBe(NARROW)
+        const song = songOn(WIDE, [getNoteIdTable(WIDE)[0], getNoteIdTable(WIDE)[0]])
+        const notes = swapTo(song, NARROW)
+        expect(notes).toHaveLength(1)
+    })
+
+    it('does NOT touch the notes when only presentation changed', () => {
+        //a colour/alias/volume edit hands no previous identity down, which is what tells setTrack
+        //there is nothing to rewrite — and it must still publish, as it always did
+        const song = songOn(WIDE, [getSoundingTable(WIDE)[0]])
+        const before = song.tracks[0].hitObjects[0].notes
+        const versionBefore = song.structureVersion
+        song.setTrack(0, song.tracks[0].set({color: '#123456'}))
+        expect(song.tracks[0].hitObjects[0].notes).toBe(before)
+        expect(song.structureVersion).toBeGreaterThan(versionBefore)
+    })
+
+    it('is a no-op on an index that addresses no track', () => {
+        const song = songOn(WIDE, [getSoundingTable(WIDE)[0]])
+        const before = song.tracks[0].hitObjects[0].notes
+        song.setTrack(9, new VsrgTrack(INSTRUMENTS[0]), {name: INSTRUMENTS[0], pitch: ''})
+        expect(song.tracks[0].hitObjects[0].notes).toBe(before)
     })
 })
 
