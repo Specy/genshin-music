@@ -24,6 +24,8 @@ export const i18n_en = {
     error_importing_file_generic: 'Error importing file',
     error_importing_invalid_format: `Error importing file, invalid format`,
     song_backup_downloaded: 'Song backup downloaded',
+    // Unused since the old-format export was retired (ADR-0007 phase E). Kept, like the export
+    // itself, so the warning does not have to be re-translated in nine locales if it returns.
     old_format_export_dropped_notes:
       '{{count}} note(s) could not be included in the old-format file (they have no position on the default instrument)',
     no_songs_to_backup: 'There are no songs to backup',
@@ -884,7 +886,15 @@ export const i18n_en = {
       'change-6': 'Slight redesigns throughout the app to improve User Experience',
       'change-7':
         'Composer playback now runs on a single clock — sound, visuals and recording stay exactly in sync (the lookahead setting is gone)',
-      'change-8': 'Many other bug fixes and improvements',
+      'change-8':
+        'Songs now store the note each button actually plays, instead of the position of the key you pressed. Your existing songs are upgraded automatically the first time you open them, and they sound exactly as they did before.',
+      'change-9':
+        'Changing the pitch of a song, or of a single layer, now really moves its notes instead of only renaming them. It is an ordinary edit, so you can undo it. Switching a layer to another instrument keeps its notes on the same keys where the two instruments share them.',
+      'change-10':
+        'Exporting to MIDI now writes the notes you actually hear, pitch included. Before, a song written at a pitch other than C exported as if it were at C.',
+      'change-11':
+        'Because of all this, saved songs carry a new format version (composed 5, recorded 4, VSRG 3). If you use third party tools that read the song JSON, they must check the "version" field: in the new versions each note is a real note number, not a keyboard position, so a tool that ignores the version will read them wrong.',
+      'change-12': 'Many other bug fixes and improvements',
     },
     '3-7-0': {
       title: 'New instruments (Genshin)',

@@ -18,6 +18,10 @@ export const CHANGELOG: Update[] = [
             'Used layers in a column are highlighted in the composer',
             'Slight redesigns throughout the app',
             'Composer playback now runs on a single clock — sound, visuals and recording stay exactly in sync (the lookahead setting is gone)',
+            'Songs now store the note each button actually plays; your existing songs are upgraded when you open them',
+            'Changing the pitch of a song or of a single layer now moves its notes, and can be undone like any other edit',
+            'MIDI export now writes the notes you actually hear, pitch included',
+            'Saved songs use a new format version — third party tools that read the song JSON must check the "version" field',
             'Other bug fixes and improvements',
         ]
     },
