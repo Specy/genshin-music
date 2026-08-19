@@ -72,10 +72,19 @@
       game.instruments.list[0],
     ])
   );
-  // One-time seed, not reactive: later bpm edits flow through handleSettingChange's
-  // songSetting branch instead, which writes song.bpm directly.
+  // One-time seed, not reactive: later bpm/pitch edits flow through handleSettingChange's
+  // songSetting branch instead, which writes song.bpm/song.pitch directly.
+  //
+  // THE SONG IS THE SINGLE SOURCE OF TRUTH for the Basepoint inside this component, and every
+  // read of it below goes through `song.pitch` for that reason. Since ADR-0007 the Basepoint
+  // decides what a stored number MEANS, so a settings copy that had drifted from the song would
+  // not be a wrong playback rate any more — the keyboard would enter numbers at one Basepoint
+  // while the canvas drew them at another. `settings.pitch` survives as the persisted UI copy,
+  // written together with the song on every edit and re-seeded FROM it on load and undo.
   // svelte-ignore state_referenced_locally
   song.bpm = settings.bpm.value;
+  // svelte-ignore state_referenced_locally
+  song.pitch = settings.pitch.value;
   let layer = $state(0);
   // `$state.raw`, like song.breakpoints/song.instruments: this array is handed to the canvas and
   // the renderer calls `selectedColumns.includes(i)` once per visible column on every draw, so it
@@ -160,6 +169,11 @@
       createReleaseGuard(endAllSustainRecordings)
     );
     settings = loadedSettings;
+    //the persisted settings arrive AFTER the defaults the song was seeded from, so re-seed both
+    //song-level values a fresh song carries (see their declaration) — nothing is loaded yet, so
+    //there are no notes for the Basepoint to move
+    song.bpm = loadedSettings.bpm.value;
+    song.pitch = loadedSettings.pitch.value;
     init(loadedSettings);
     broadcastChannel = window.BroadcastChannel
       ? new BroadcastChannel(APP_NAME + '_composer')
@@ -527,7 +541,7 @@
     const instrument = layers[layer];
     if (!instrument) return;
     if (song.instruments[layer].muted) return;
-    const pitch = song.instruments[layer].pitch || settings.pitch.value;
+    const pitch = song.instruments[layer].pitch || song.pitch;
     if (instrument.getNoteByNumber(number, pitch) === null) return;
     if (durationMs !== undefined && instrument.supportsSustain) {
       //spanned note on a sustaining instrument: hold for its musical length, then release
@@ -550,7 +564,7 @@
     const instrument = layers[layer];
     if (!instrument) return;
     if (song.instruments[layer].muted) return;
-    const pitch = song.instruments[layer].pitch || settings.pitch.value;
+    const pitch = song.instruments[layer].pitch || song.pitch;
     if (instrument.getNoteByNumber(number, pitch) === null) return;
     instrument.pressNote(number, pitch);
   }
@@ -857,7 +871,7 @@
    * resolving at one Basepoint while the canvas resolves at another is the whole class of bug
    * ADR-0007 makes possible.
    */
-  const layerPitch = $derived(song.instruments[layer]?.pitch || settings.pitch.value);
+  const layerPitch = $derived(song.instruments[layer]?.pitch || song.pitch);
 
   /** What pressing this key STORES and SOUNDS at the current Basepoint (ADR-0007 §4). */
   function numberOfNote(note: ObservableNote): number {
@@ -1031,7 +1045,7 @@
     const keyboard = layers[layer];
     if (!keyboard) return held;
     //the keyboard IS the selected layer's instrument, so its Basepoint is that track's
-    const pitch = song.instruments[layer]?.pitch || settings.pitch.value;
+    const pitch = song.instruments[layer]?.pitch || song.pitch;
     // eslint-disable-next-line svelte/prefer-svelte-reactivity -- transient local dedupe set
     const seen = new Set<number>();
     for (let start = song.selected - 1; start >= 0; start--) {
@@ -1122,6 +1136,12 @@
       game.instruments.list[0],
       game.instruments.list[0],
     ]);
+    //a fresh song starts at the Basepoint (and tempo) the composer is set to, not at the
+    //constructor's defaults: the settings panel is still showing those values, and since
+    //ADR-0007 a song whose Basepoint disagreed with the panel would draw its notes on
+    //different rows from the ones the keyboard entered them at
+    newSong.bpm = settings.bpm.value;
+    newSong.pitch = settings.pitch.value;
     changes = 0;
     if (!mounted) return;
     const added = (await addSong(newSong)) as ComposedSong;
@@ -1828,7 +1848,7 @@
       keyboard: layers[layer],
       currentColumn: song.selectedColumn,
       heldButtons,
-      pitch: song.instruments[layer]?.pitch || settings.pitch.value,
+      pitch: song.instruments[layer]?.pitch || song.pitch,
       noteNameType: settings.noteNameType.value,
     }}
   />

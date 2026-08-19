@@ -119,6 +119,27 @@ describe('composer undo is a compound snapshot (ADR-0007)', () => {
     })
 })
 
+/**
+ * ONE source of truth for the composer's Basepoint (ADR-0007). `settings.pitch` is a persisted UI
+ * copy of `song.pitch`, and the two can drift — a new song starts at the constructor's default
+ * while the panel still shows the last-used value, and the persisted settings arrive after the
+ * song is constructed. While a Basepoint was a playback rate that drift was an audible-but-local
+ * bug; now it decides what a stored number MEANS, so a keyboard reading one copy while the canvas
+ * reads the other enters notes on different rows from the ones it draws them on.
+ */
+describe('the composer resolves notes against the SONG\'s Basepoint', () => {
+    it('never falls back to the settings copy when resolving a track', () => {
+        //every per-track resolution is `instrument.pitch || <song-level Basepoint>`; the song is
+        //the only admissible right-hand side
+        expect(instanceScript).not.toContain('|| settings.pitch.value')
+        expect(instanceScript).toContain('|| song.pitch')
+    })
+
+    it('seeds a NEW song from the settings rather than letting the two disagree', () => {
+        expect(assignedTargets('createNewSong')).toContain('newSong.pitch')
+    })
+})
+
 describe('Composer tools clipboard lifecycle', () => {
     it.each(['loadSong', 'createNewSong'])(
         '%s resets song-addressed state without clearing the editor clipboard',
