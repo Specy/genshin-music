@@ -29,7 +29,7 @@ Songs store Nominal Ids pre-transposition; pitch is a runtime playback-rate labe
 - `effectivePitch(track) = track.instrument.pitch || song.pitch` (both survive; unchanged).
 - Per instrument, per button `b`:
   `sounding(b) = pitched(b) ? nearestChromaticMatch(nominal(b), pitchClass(baseNote(b))) : nominal(b)`.
-  Registry errors: pitched button whose `baseNote` isn't a bare pitch class; match distance > 6 or ambiguous ±6 tie; duplicate sounding values among one instrument's pitched buttons.
+  Registry errors: pitched button whose `baseNote` isn't a bare pitch class; the exact ±6 tritone tie (a pitch class repeats every 12 semitones, so a nearest match always exists within 6 — the tie is the only reachable failure; Phase A finding); duplicate sounding values among one instrument's pitched buttons.
 - Entry (keyboard press / composer toggle / recording): `number = sounding(b) + offset(effectivePitch)`.
 - Playback resolution: `b = soundingTable.indexOf(number − offset)`; miss → stranded, skip; `rate = getPitchChanger(effectivePitch)` — audio output byte-identical to today for every migrated song.
 - Grid row (compressed view): resolve `b`; row = `canonicalSlot(nominal(b))`. Stranded: `virtual = number − offset`; if `virtual` is a canonical id → that row + stranded mark (today's ADR-0004 fallback preserved); else nearest canonical id by absolute distance (tie: lower) + stranded mark + ♯/♭ hint by sign.
