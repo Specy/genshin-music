@@ -77,7 +77,8 @@ Each note (inline or in a preset) is:
   actually SOUNDS: the registry derives the button's Sounding Pitch from it (nearest
   chromatic match to `midi`) and rejects any other string, so it is NOT derivable from
   `midi` (Vintage-Lyre's nominal 74 really does sound Db). On an **Assigned Button** it
-  is free display text.
+  is free display text. There is no `sounding` field to author: since ADR-0007 songs
+  store that derived pitch, and a second authored copy of it could only drift.
 - `pitched` — optional, only ever `false`: declares an **Assigned Button** (ADR-0007) —
   percussion, SFX, a chord strum. It has no single sounding pitch, so it enters notes at
   its Nominal Id and its `baseNote` becomes a free label (`"G7"`, `""`). Never inferred
@@ -157,6 +158,12 @@ without data migrations.
 Data (the folder): `game.json` (see `schema.ts` for every field — `id` must
 equal the folder name; `storageId` is the storage prefix, `=== id` for new
 games), `presets.json`, `instruments/…`, `static/` (favicon, manifest, logos).
+
+One coupling worth knowing before you write `game.json`: `notes.canonicalNoteIds`
+is both the game's Song Grid (row order) and its SCALE. Since ADR-0007 the MIDI
+importer snaps every imported note onto that list — nearest id at or below, and a
+number whose pitch class is absent from it counts as an accidental — so there is no
+snap table to author, and `midi.bounds` must be the range that list spans.
 
 Code (what data can't express):
 
