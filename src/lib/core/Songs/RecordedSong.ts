@@ -25,7 +25,7 @@ import {type SerializedSong, Song} from "./Song.svelte"
 import type {OldFormat, OldNote} from "$core/types"
 import {isLegacyAppName, LEGACY_NOTE_TABLES, legacyIndexToId} from "./legacyNoteTables"
 import {type ConversionGame, findSimilarInstrument} from "./instrumentSimilarity"
-import {foldNumberIntoRange, nominalToNumber, numberToNominal} from "./noteIds"
+import {foldNumberIntoRange, nominalToNumber} from "./noteIds"
 
 /** Legacy (≤v2): flat index+layer notes, top-level instruments. */
 /**
@@ -88,89 +88,98 @@ export class RecordedSong extends Song<RecordedSong, SerializedRecordedSong> {
         return false
     }
 
-    /**
-     * The NOMINAL Id a note names on its own track — the axis the legacy/old wire formats and
-     * the frozen tables speak, exactly inverting the number the note carries (see
-     * ComposedSong.nominalOf, same rule, same reason).
-     */
-    private nominalOf(note: RecordedNote): number {
-        const instrument = this.instruments[note.trackIndex]
-        return numberToNominal(instrument?.name ?? '', instrument?.pitch || this.pitch, note.id)
-    }
-
-    /** How many (time-grouped) notes toOldFormat() would drop — nominals without a frozen default-table button. Download UIs surface this before exporting to the legacy ecosystem. */
-    countOldFormatDroppedNotes(): number {
-        const legacyTables = LEGACY_NOTE_TABLES[APP_NAME]
-        const defaultTable = legacyTables.tables[legacyTables.defaultInstrument]
-        const seen = new Set<string>()
-        let dropped = 0
-        this.notes.forEach(note => {
-            const nominal = this.nominalOf(note)
-            if (defaultTable.indexOf(nominal) !== -1) return
-            const key = `${note.time}-${nominal}`
-            if (seen.has(key)) return
-            seen.add(key)
-            dropped++
-        })
-        return dropped
-    }
-
-    /**
-     * Old-format export. Emits the legacy V2 wire shape (version 2, flat [index, time,
-     * hexLayer] notes via the frozen default table, top-level instruments) so files keep
-     * round-tripping through the well-tested v2 import path and stay byte-compatible with
-     * what the pre-v3 exporter produced. Notes whose id has no frozen-default-table
-     * button are dropped. Byte-identical across the ADR-0007 flip: `nominalOf` inverts the
-     * migration, so the same notes reach the same frozen-table indices.
-     */
-    toOldFormat = () => {
-        const legacyTables = LEGACY_NOTE_TABLES[APP_NAME]
-        const defaultTable = legacyTables.tables[legacyTables.defaultInstrument]
-        //regroup per-track notes into the legacy merged shape: one entry per (time, index)
-        //with the track set as a NoteLayer bitmask
-        const merged = new Map<string, { index: number, time: number, layer: NoteLayer }>()
-        const legacyNotes: { index: number, time: number, layer: NoteLayer }[] = []
-        this.notes.forEach(note => {
-            const index = defaultTable.indexOf(this.nominalOf(note))
-            if (index === -1) return
-            const key = `${note.time}-${index}`
-            const existing = merged.get(key)
-            if (existing) {
-                existing.layer.set(note.trackIndex, true)
-            } else {
-                const layer = new NoteLayer()
-                layer.set(note.trackIndex, true)
-                const entry = {index, time: note.time, layer}
-                merged.set(key, entry)
-                legacyNotes.push(entry)
-            }
-        })
-        const song: OldFormatRecorded = {
-            name: this.name,
-            type: 'recorded',
-            folderId: this.folderId,
-            instruments: this.instruments.map(instrument => instrument.serialize()),
-            //old-format consumers were built against the legacy version
-            version: 2,
-            pitch: this.pitch,
-            bpm: this.bpm,
-            reverb: this.reverb,
-            data: {...this.data},
-            notes: legacyNotes.map(note =>
-                [note.index, note.time, note.layer.serializeHex()] satisfies SerializedRecordedNoteV2
-            ),
-            id: this.id,
-            isComposed: false,
-            pitchLevel: PITCHES.indexOf(this.pitch),
-            bitsPerPage: 16,
-            isEncrypted: false,
-            songNotes: legacyNotes.map(note => ({
-                time: note.time,
-                key: "1Key" + note.index
-            }))
-        }
-        return song
-    }
+    // ─── RETIRED: the old-format EXPORT (ADR-0007 phase E) ───────────────────────────────
+    // Kept COMMENTED for the same reason and on the same terms as ComposedSong's block (see its
+    // header for the full why): the old wire format names a note by its POSITION in a frozen
+    // default-instrument table, which cannot state a Note Number, so exporting one now would
+    // silently re-nominalize and drop notes. IMPORT of these files is untouched — `fromOldFormat`
+    // below still reads every one of them.
+    //
+    // Restoring this needs `noteIds.numberToNominal`, commented out there for the same reason.
+    //
+    // /**
+    //  * The NOMINAL Id a note names on its own track — the axis the legacy/old wire formats and
+    //  * the frozen tables speak, exactly inverting the number the note carries (see
+    //  * ComposedSong.nominalOf, same rule, same reason).
+    //  */
+    // private nominalOf(note: RecordedNote): number {
+    //     const instrument = this.instruments[note.trackIndex]
+    //     return numberToNominal(instrument?.name ?? '', instrument?.pitch || this.pitch, note.id)
+    // }
+    //
+    // /** How many (time-grouped) notes toOldFormat() would drop — nominals without a frozen default-table button. Download UIs surface this before exporting to the legacy ecosystem. */
+    // countOldFormatDroppedNotes(): number {
+    //     const legacyTables = LEGACY_NOTE_TABLES[APP_NAME]
+    //     const defaultTable = legacyTables.tables[legacyTables.defaultInstrument]
+    //     const seen = new Set<string>()
+    //     let dropped = 0
+    //     this.notes.forEach(note => {
+    //         const nominal = this.nominalOf(note)
+    //         if (defaultTable.indexOf(nominal) !== -1) return
+    //         const key = `${note.time}-${nominal}`
+    //         if (seen.has(key)) return
+    //         seen.add(key)
+    //         dropped++
+    //     })
+    //     return dropped
+    // }
+    //
+    // /**
+    //  * Old-format export. Emits the legacy V2 wire shape (version 2, flat [index, time,
+    //  * hexLayer] notes via the frozen default table, top-level instruments) so files keep
+    //  * round-tripping through the well-tested v2 import path and stay byte-compatible with
+    //  * what the pre-v3 exporter produced. Notes whose id has no frozen-default-table
+    //  * button are dropped. Byte-identical across the ADR-0007 flip: `nominalOf` inverts the
+    //  * migration, so the same notes reach the same frozen-table indices.
+    //  */
+    // toOldFormat = () => {
+    //     const legacyTables = LEGACY_NOTE_TABLES[APP_NAME]
+    //     const defaultTable = legacyTables.tables[legacyTables.defaultInstrument]
+    //     //regroup per-track notes into the legacy merged shape: one entry per (time, index)
+    //     //with the track set as a NoteLayer bitmask
+    //     const merged = new Map<string, { index: number, time: number, layer: NoteLayer }>()
+    //     const legacyNotes: { index: number, time: number, layer: NoteLayer }[] = []
+    //     this.notes.forEach(note => {
+    //         const index = defaultTable.indexOf(this.nominalOf(note))
+    //         if (index === -1) return
+    //         const key = `${note.time}-${index}`
+    //         const existing = merged.get(key)
+    //         if (existing) {
+    //             existing.layer.set(note.trackIndex, true)
+    //         } else {
+    //             const layer = new NoteLayer()
+    //             layer.set(note.trackIndex, true)
+    //             const entry = {index, time: note.time, layer}
+    //             merged.set(key, entry)
+    //             legacyNotes.push(entry)
+    //         }
+    //     })
+    //     const song: OldFormatRecorded = {
+    //         name: this.name,
+    //         type: 'recorded',
+    //         folderId: this.folderId,
+    //         instruments: this.instruments.map(instrument => instrument.serialize()),
+    //         //old-format consumers were built against the legacy version
+    //         version: 2,
+    //         pitch: this.pitch,
+    //         bpm: this.bpm,
+    //         reverb: this.reverb,
+    //         data: {...this.data},
+    //         notes: legacyNotes.map(note =>
+    //             [note.index, note.time, note.layer.serializeHex()] satisfies SerializedRecordedNoteV2
+    //         ),
+    //         id: this.id,
+    //         isComposed: false,
+    //         pitchLevel: PITCHES.indexOf(this.pitch),
+    //         bitsPerPage: 16,
+    //         isEncrypted: false,
+    //         songNotes: legacyNotes.map(note => ({
+    //             time: note.time,
+    //             key: "1Key" + note.index
+    //         }))
+    //     }
+    //     return song
+    // }
 
     /**
      * `importInto`: legacy-cross-game target (see ComposedSong.deserialize). Reproduces

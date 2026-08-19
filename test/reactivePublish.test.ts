@@ -518,7 +518,9 @@ const CASES: PublishCase[] = [
 /** Same driver, empty expectations: these must not publish or touch anything at all. */
 const READERS: PublishCase[] = [
     {name: 'serialize', publishes: [], touches: 'none', run: song => void song.serialize()},
-    {name: 'toOldFormat', publishes: [], touches: 'none', run: song => void song.toOldFormat()},
+    //`toOldFormat` and `countOldFormatDroppedNotes` had rows here until ADR-0007 phase E retired
+    //the old-format export (kept commented in ComposedSong), along with the three private steps
+    //they owned in INTERNAL below: groupColumnNotesById, legacyColumnsView, nominalOf.
     {name: 'toRecordedSong', publishes: [], touches: 'none', run: song => void song.toRecordedSong()},
     {name: 'toComposedSong', publishes: [], touches: 'none', run: song => void song.toComposedSong()},
     {name: 'toMidi', publishes: [], touches: 'none', run: song => void song.toMidi()},
@@ -537,12 +539,6 @@ const READERS: PublishCase[] = [
     },
     {name: 'getSpanCovering', publishes: [], touches: 'none', run: song => void song.getSpanCovering(2, 0, idOf(0))},
     {name: 'maxSpanAt', publishes: [], touches: 'none', run: song => void song.maxSpanAt(0, 1, idOf(4))},
-    {
-        name: 'countOldFormatDroppedNotes',
-        publishes: [],
-        touches: 'none',
-        run: song => void song.countOldFormatDroppedNotes(),
-    },
 ]
 
 /**
@@ -554,9 +550,6 @@ const READERS: PublishCase[] = [
 const INTERNAL: string[] = [
     'adjustSpansForInsertedColumns',
     'adjustSpansForRemovedColumns',
-    'groupColumnNotesById',
-    'legacyColumnsView',
-    'nominalOf',
 ]
 
 function caseName(testCase: {name: string, label?: string}): string {

@@ -1592,9 +1592,9 @@
         const parsed = songService.parseSong(songToDownload);
         songToDownload.data.appName = APP_NAME;
         const songName = songToDownload.name;
-        // Legacy Sky export is intentionally disabled. To restore it, use
-        // `parsed.toOldFormat()` for composed/recorded songs here.
-        // const converted = [parsed.toOldFormat()];
+        // Downloads write the current format. The legacy old-format export was retired at
+        // ADR-0007 (it cannot state an absolute Note Number) and its producer is kept,
+        // commented, in ComposedSong/RecordedSong — old-format files still IMPORT fine.
         const converted = [parsed.serialize()];
         fileService.downloadSong(converted, `${songName}.${APP_NAME.toLowerCase()}sheet`);
         logger.success(t('logs:song_downloaded'));

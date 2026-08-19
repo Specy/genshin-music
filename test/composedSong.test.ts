@@ -19,7 +19,11 @@ import {gridRowForNumber, noteIdToButton} from '$core/Songs/noteIds'
 // below; v5 outputs (absolute Note Numbers) live in `composed-song-v5.json`. Neither old
 // fixture is ever regenerated.
 describe('ComposedSong formats', () => {
-    it('v5 serialize / roundtrip / v4 migration / legacy v1+v2+v3 conversion / old-format export are stable', () => {
+    // No `oldFormatExport` member any more: that export was retired at ADR-0007 phase E (kept
+    // commented in ComposedSong), so the golden lost the key with its producer. Old-format
+    // IMPORT is unaffected and still covered — here by the legacy v1/v2/v3 rows, and in full by
+    // test/oldFormatImport.test.ts.
+    it('v5 serialize / roundtrip / v4 migration / legacy v1+v2+v3 conversion are stable', () => {
         const legacy = readFixture('composed-song')
         const song = buildComposedSong()
         const serialized = song.serialize()
@@ -55,7 +59,6 @@ describe('ComposedSong formats', () => {
             fromLegacyV1: ComposedSong.deserialize(v1Payload as any).serialize(),
             fromLegacyV2: ComposedSong.deserialize(v2Payload as any).serialize(),
             fromLegacyV3: ComposedSong.deserialize(legacy.serialized).serialize(),
-            oldFormatExport: song.toOldFormat(),
             toRecorded: song.toRecordedSong().serialize(),
         })
     })
@@ -88,12 +91,12 @@ describe('ComposedSong formats', () => {
         expect(numbersOf(migratedAtF)).toEqual(numbersOf(migratedAtE).map((n) => n + 1))
     })
 
-    it('a converted legacy v3 song reproduces the pre-v4 exports byte-for-byte', () => {
+    // The frozen fixture's `oldFormatExport` member is no longer read by anything: the export
+    // that produced it was retired at ADR-0007 phase E. It stays in the file (frozen fixtures
+    // are never rewritten) as the record of what the pre-v4 exporter emitted.
+    it('a converted legacy v3 song reproduces the pre-v4 recorded conversion byte-for-byte', () => {
         const legacy = readFixture('composed-song')
         const converted = ComposedSong.deserialize(legacy.serialized)
-        // old-format export of the converted song == what the pre-v4 code exported
-        expect(JSON.parse(JSON.stringify(converted.toOldFormat())))
-            .toEqual(legacy.oldFormatExport)
         // conversion commutes with toRecordedSong: converting the legacy v3 then flattening
         // equals flattening pre-v4 (the committed v2 recorded) then converting.
         //

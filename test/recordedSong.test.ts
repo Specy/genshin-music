@@ -10,7 +10,10 @@ import {expectGolden, readFixture} from './golden'
 // v4 outputs (absolute Note Numbers) live in `recorded-song-v4.json`. Neither old fixture
 // is ever regenerated.
 describe('RecordedSong formats', () => {
-    it('v4 serialize / roundtrip / v3 migration / legacy v1+v2 conversion / old-format export are stable', () => {
+    // No `oldFormatExport` member any more: that export was retired at ADR-0007 phase E (kept
+    // commented in RecordedSong), so the golden lost the key with its producer. Old-format
+    // IMPORT is unaffected — the legacy v1/v2 rows below and test/oldFormatImport.test.ts.
+    it('v4 serialize / roundtrip / v3 migration / legacy v1+v2 conversion are stable', () => {
         const legacy = readFixture('recorded-song')
         const song = buildRecordedSong()
         const serialized = song.serialize()
@@ -28,7 +31,6 @@ describe('RecordedSong formats', () => {
             fromV3: RecordedSong.deserialize(readFixture('recorded-song-v3').serialized).serialize(),
             fromLegacyV1: RecordedSong.deserialize(v1Payload as any).serialize(),
             fromLegacyV2: RecordedSong.deserialize(legacy.serialized).serialize(),
-            oldFormatExport: song.toOldFormat(),
         })
     })
 
@@ -52,10 +54,7 @@ describe('RecordedSong formats', () => {
         expect(second.span).toBe(3)
     })
 
-    it('a converted legacy v2 song reproduces the pre-v3 old-format export byte-for-byte', () => {
-        const legacy = readFixture('recorded-song')
-        const converted = RecordedSong.deserialize(legacy.serialized)
-        expect(JSON.parse(JSON.stringify(converted.toOldFormat())))
-            .toEqual(legacy.oldFormatExport)
-    })
+    // The pre-v3 old-format export round-trip that used to close this file went with the
+    // exporter itself (ADR-0007 phase E). `recorded-song.json`'s `oldFormatExport` member stays
+    // in the frozen fixture as the record of what that exporter emitted; nothing reads it.
 })
