@@ -8,7 +8,7 @@
 //    SEPARATE authored list (CANONICAL_NOTE_IDS, ADR-0004) that no instrument defines,
 //    which is why the *Grid* helpers below place by id alone. Songs stopped storing these
 //    at ADR-0007; they survive as the currency of button correspondence (swaps, grid rows,
-//    legacy decode).
+//    legacy decode, and the MIDI importer's snap onto the grid).
 //  - NOTE NUMBERS (ADR-0007): what songs store — one absolute axis, Basepoint included.
 //    `number = sounding(button) + offset(effectivePitch)`, where `sounding` is a Pitched
 //    Button's derived Sounding Pitch and an Assigned Button's own Nominal Id (registry.ts
