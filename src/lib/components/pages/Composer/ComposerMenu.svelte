@@ -11,6 +11,8 @@
   import { fileService } from '$core/Services/FileService';
   import { KeyboardProvider } from '$lib/providers/KeyboardProvider';
   import { clickOutside } from '$lib/utils/clickOutside';
+  import { createMediaQuery } from '$lib/utils/mediaQuery.svelte';
+  import { COMPOSER_DESKTOP_MEDIA_QUERY } from './composerCanvasGeometry';
   import { isAudioFormat, isMidiFormat, isVideoFormat } from '$core/utils/Utilities';
   import type { SerializedSong, SongType } from '$core/Songs/Song.svelte';
   import type { ComposerSettingsDataType } from '$core/BaseSettings';
@@ -63,10 +65,40 @@
 
   const excludedSongs: SongType[] = ['vsrg'];
 
+  // THE SIDEBAR IS A COLUMN OF THE PAGE ON DESKTOP, not something the user opens. Above
+  // COMPOSER_MOBILE_MAX_WIDTH App.css pushes `.composer-grid` clear of the strip and hides both
+  // controls that used to toggle it (the hamburger and the close button), so the only thing left to
+  // open and close there is the sliding panel. Below it nothing changes: the strip still starts
+  // hidden behind the hamburger, which is what a phone has room for.
+  //
+  // `inPreview` opts /theme's composer preview out. That is a small box inside a scrolling page
+  // rather than the composer route, and it keeps its own hamburger - the same exclusion
+  // `.canvas-wrapper-in-preview` and composerCanvasCssSize already make.
+  const desktopLayout = createMediaQuery(COMPOSER_DESKTOP_MEDIA_QUERY);
+  const isSidebarPinned = $derived(desktopLayout.matches && !inPreview);
+
   let isOpen = $state(false);
-  let isVisible = $state(false);
+  /** The strip's own state, consulted only while the sidebar is NOT pinned. */
+  let isStripVisible = $state(false);
+  const isVisible = $derived(isSidebarPinned || isStripVisible);
   let selectedMenu = $state('Settings');
   let wrapperEl: HTMLDivElement | undefined = $state();
+
+  /**
+   * EVERY "hide the menu" PATH GOES THROUGH HERE - the close button, Escape, click-outside, and the
+   * song/MIDI actions that dismiss the menu once they have done their work.
+   *
+   * While the sidebar is pinned there is no hiding the strip, so the request lands on the sliding
+   * panel instead: that is the thing actually covering the composer, and it is what every one of
+   * those call sites wanted gone.
+   */
+  function setVisible(visible: boolean) {
+    if (!isSidebarPinned) {
+      isStripVisible = visible;
+      return;
+    }
+    if (!visible) isOpen = false;
+  }
 
   $effect(() => {
     if (!wrapperEl) return;
@@ -75,9 +107,12 @@
       ignoreFocusable: true,
       onOutside: () => {
         // On mobile this closes only the panel (isVisible), leaving the hamburger
-        // sidebar open; on desktop it closes the whole sidebar (isOpen).
+        // sidebar open; on desktop it closes the whole sidebar (isOpen). With the sidebar
+        // pinned the mobile branch lands on the panel too - see setVisible - which is what
+        // keeps a UA-mobile tablet wide enough for the desktop layout from being left with an
+        // open panel it just asked to dismiss.
         if (isMobile()) {
-          isVisible = false;
+          setVisible(false);
         } else {
           isOpen = false;
         }
@@ -92,7 +127,7 @@
     KeyboardProvider.register(
       'Escape',
       () => {
-        isVisible = false;
+        setVisible(false);
       },
       { id: 'composer_menu' }
     );
@@ -100,7 +135,7 @@
   });
 
   function toggleMenu(override?: boolean) {
-    isVisible = override !== undefined ? override : !isVisible;
+    setVisible(override !== undefined ? override : !isVisible);
   }
 
   async function removeSong(name: string, id: string) {
@@ -242,20 +277,26 @@
   >
 {/snippet}
 
+<!-- `composer-menu-sidebar` is what App.css's desktop block hangs the pinned sidebar off: it pins
+     the strip open and hides the hamburger and the close button below. Dropped in preview, so
+     /theme's composer keeps the hamburger it has always had - the class going missing IS the
+     exclusion here, where the shared `.menu`/`.hamburger` class names leave nothing else to
+     select on. -->
 <MenuSidebar
   bind:wrapperEl
+  class={inPreview ? '' : 'composer-menu-sidebar'}
   style={inPreview ? 'position:absolute' : ''}
   current={selectedMenu}
   setCurrent={(c) => (selectedMenu = c)}
   open={isOpen}
   setOpen={(o) => (isOpen = o)}
   visible={isVisible}
-  setVisible={(v) => (isVisible = v)}
+  {setVisible}
 >
   {#snippet hamburger()}
     <!-- svelte-ignore a11y_click_events_have_key_events -->
     <!-- svelte-ignore a11y_no_static_element_interactions -->
-    <div class="hamburger" onclick={() => (isVisible = !isVisible)}>
+    <div class="hamburger" onclick={() => setVisible(!isVisible)}>
       {@render faBarsIcon()}
     </div>
   {/snippet}

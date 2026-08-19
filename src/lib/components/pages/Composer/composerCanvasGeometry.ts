@@ -76,6 +76,77 @@ const CANVAS_WIDTH_VW = 85;
 const CANVAS_WIDTH_INSET_PX = 45;
 const CANVAS_HEIGHT_VH = 45;
 
+/**
+ * THE COMPOSER'S DESKTOP/MOBILE BOUNDARY, and it is `.composer-grid`'s own pre-existing one: every
+ * composer rule in src/lib/css/App.css that reshapes the page for phones already lives in that
+ * file's `@media only screen and (max-width: 1000px)` block (`.composer-grid { width: 100% }`,
+ * `.composer-left-control { width: 5.4rem }`, `.tool { flex: 1; width: 100% }`, the
+ * `.canvas-buttons` the desktop layout never shows).
+ *
+ * DESKTOP IS THE EXACT COMPLEMENT of that block - `not all and (max-width: 1000px)`, i.e. strictly
+ * WIDER than 1000px - rather than `(min-width: 1001px)`: the two forms agree on every integer
+ * viewport, but a fractional one (browser zoom, fractional device pixel ratios) falls in the gap
+ * between `<= 1000` and `>= 1001` and would match NEITHER block, leaving the composer with the
+ * desktop base rules and none of the desktop overrides.
+ */
+export const COMPOSER_MOBILE_MAX_WIDTH = 1000;
+/** The media query for the desktop layout - see COMPOSER_MOBILE_MAX_WIDTH. Mirrors App.css. */
+export const COMPOSER_DESKTOP_MEDIA_QUERY = `not all and (max-width: ${COMPOSER_MOBILE_MAX_WIDTH}px)`;
+
+/**
+ * The JS side of COMPOSER_DESKTOP_MEDIA_QUERY, for the one path that has a width rather than a
+ * `matchMedia` handle: composerCanvasSize below, which ComposerRenderer calls with the BODY's
+ * measured rect. On the composer route that rect is the viewport exactly (no root scrollbar - see
+ * composerCanvasCssSize for why), so the two forms of the boundary cannot disagree there.
+ */
+export function isComposerDesktopWidth(bodyWidth: number): boolean {
+  return bodyWidth > COMPOSER_MOBILE_MAX_WIDTH;
+}
+
+/**
+ * THE DESKTOP CANVAS FILLS THE WINDOW. The sidebar is permanently open above
+ * COMPOSER_MOBILE_MAX_WIDTH (ComposerMenu.svelte), so nothing overlays the page any more and the
+ * canvas takes every pixel the sidebar and the composer's own two button columns leave, instead of
+ * the `85vw - 45px` card that used to be centred in the window with the sidebar hidden off-screen.
+ *
+ * The inset is EVERY FIXED-WIDTH THING ON THAT ROW, in src/lib/css/App.css:
+ *   `--menu-size` 4rem            the permanent sidebar `.composer-grid` is pushed clear of
+ *   DESKTOP_SIDEBAR_GAP_REM       the breathing room between the two, below
+ *   `.composer-grid` padding      0.2rem on each side
+ *   `.composer-left-control`      6.2rem
+ *   `.composer-grid` gap          0.2rem, between the left control and the canvas
+ *   `.buttons-composer-wrapper-right` margin-left 0.2rem
+ * ...and the ONE non-fixed thing, `.tool`'s `width: 4vw`, is the vw term: the canvas gets what is
+ * left of the viewport, `100vw - 4vw`.
+ *
+ * test/composerCanvasCss.test.ts reads all six declarations out of the stylesheet, so this list
+ * cannot drift away from what the browser actually lays out.
+ */
+const DESKTOP_TOOL_COLUMN_VW = 4;
+const DESKTOP_CANVAS_WIDTH_VW = 100 - DESKTOP_TOOL_COLUMN_VW;
+/**
+ * THE GAP BETWEEN THE PINNED SIDEBAR AND THE COMPOSER, on top of `--menu-size`: `.composer-grid`'s
+ * desktop `margin-left` is `calc(var(--menu-size) + 0.1rem)` and this is that `0.1rem`. It comes
+ * out of the canvas' width like every other term here, so widening it moves the canvas' left edge
+ * right rather than pushing its right edge off the window.
+ */
+const DESKTOP_SIDEBAR_GAP_REM = 0.1;
+/**
+ * ROUNDED, because this number is also printed into a CSS string: the sum of these six rem values
+ * lands on 177.60000000000002 in binary floating point, and `calc(96vw - 177.60000000000002px)` is
+ * what would end up in the DOM. Three decimals is far below the sub-pixel the browser rounds to.
+ */
+const DESKTOP_CANVAS_INSET_PX =
+  Math.round(
+    (4 * ROOT_FONT_SIZE + //--menu-size
+      DESKTOP_SIDEBAR_GAP_REM * ROOT_FONT_SIZE + //the gap that clears the sidebar
+      0.2 * ROOT_FONT_SIZE * 2 + //.composer-grid padding, both sides
+      6.2 * ROOT_FONT_SIZE + //.composer-left-control
+      0.2 * ROOT_FONT_SIZE + //.composer-grid gap
+      0.2 * ROOT_FONT_SIZE) * //.buttons-composer-wrapper-right margin-left
+      1000
+  ) / 1000;
+
 /** Below this body width the theme preview shrinks the canvas less aggressively - see below. */
 const PREVIEW_NARROW_BODY = 900;
 const PREVIEW_WIDTH_FACTOR_NARROW = 0.8;
@@ -119,7 +190,13 @@ export function composerCanvasSize(input: {
   rowHeightScale?: number;
 }): { width: number; height: number } {
   const scale = input.rowHeightScale ?? game.notes.composerRowHeightScale;
-  let width = nearestEven(input.bodyWidth * (CANVAS_WIDTH_VW / 100) - CANVAS_WIDTH_INSET_PX);
+  //the desktop layout is the composer page's, not the theme preview's - see composerCanvasCssSize
+  const fillsWindow = !input.inPreview && isComposerDesktopWidth(input.bodyWidth);
+  let width = nearestEven(
+    fillsWindow
+      ? input.bodyWidth * (DESKTOP_CANVAS_WIDTH_VW / 100) - DESKTOP_CANVAS_INSET_PX
+      : input.bodyWidth * (CANVAS_WIDTH_VW / 100) - CANVAS_WIDTH_INSET_PX
+  );
   let height = nearestEven(input.bodyHeight * (CANVAS_HEIGHT_VH / 100));
   height = nearestEven(height * scale);
   if (input.inPreview) {
@@ -158,6 +235,19 @@ export function composerCanvasSize(input: {
  *    wide by 0.85 x its width: ~4.3px in Blink (App.css sets `::-webkit-scrollbar { width: 5px }`),
  *    ~12.8px in Firefox, 0 on mobile's overlay scrollbars.
  *
+ * IT RETURNS BOTH WIDTHS AND LETS CSS CHOOSE, and that shape is load-bearing. These strings go on
+ * the element as INLINE custom properties, which no media query can reach, so an earlier version
+ * picked the breakpoint here from a `matchMedia` result and emitted one width. That was a real
+ * layout shift, measured: the server-rendered HTML necessarily carried the mobile string (there is
+ * no `matchMedia` in a prerender), and nothing corrected it until hydration ran - 812ms after first
+ * paint in dev - so the composer opened 79px narrow and jumped. Emitting both and letting App.css's
+ * own `@media` block bind `--composer-canvas-width` to one of them puts the breakpoint back where a
+ * browser can evaluate it before any JS exists.
+ *
+ * The BODY-width branch in composerCanvasSize is the one that stays in JS, because the renderer has
+ * a measured rect rather than a media query. A viewport width and a body width part company over a
+ * classic root scrollbar; the composer route has none, so on that route they agree.
+ *
  * WHAT IT DOES NOT REPRODUCE: nearestEven. CSS `round(nearest, x, 2px)` needs Chrome 125+/Firefox
  * 118+/Safari 15.4+, and on an unsupporting browser the whole declaration is invalid at
  * computed-value time and `min-width` falls back to its INITIAL value - worse than the <=1px (<=2px
@@ -172,14 +262,15 @@ export function composerCanvasCssSize(input: {
   inPreview: boolean;
   rowHeightScale?: number;
   timelineHeight?: number;
-}): { width: string; height: string } | null {
+}): { mobileWidth: string; desktopWidth: string; height: string } | null {
   if (input.inPreview) return null;
   const scale = input.rowHeightScale ?? game.notes.composerRowHeightScale;
   const timelineHeight = input.timelineHeight ?? composerTimelineHeight();
   //the band, as one literal - composerCanvasElementHeight's `notesHeight` is the `45vh * scale` term
   const band = composerCanvasElementHeight(0, timelineHeight);
   return {
-    width: `calc(${CANVAS_WIDTH_VW}vw - ${CANVAS_WIDTH_INSET_PX}px)`,
+    mobileWidth: `calc(${CANVAS_WIDTH_VW}vw - ${CANVAS_WIDTH_INSET_PX}px)`,
+    desktopWidth: `calc(${DESKTOP_CANVAS_WIDTH_VW}vw - ${DESKTOP_CANVAS_INSET_PX}px)`,
     height: `calc(${CANVAS_HEIGHT_VH}vh * ${scale} + ${band}px)`,
   };
 }

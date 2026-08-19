@@ -713,7 +713,12 @@ const BODY_WIDTH = 1920
  * geometry() asserts the renderer reports this same width and derives this same column width, so
  * the duplication fails loudly there instead of quietly moving every window in this file.
  */
-const CANVAS_WIDTH = nearestEven(BODY_WIDTH * 0.85 - 45)
+//1920 is a DESKTOP body (> COMPOSER_MOBILE_MAX_WIDTH), so this is the desktop half of
+//composerCanvasSize's formula: the canvas fills the window - `100vw` less `.tool`'s own `4vw`
+//column - rather than the `85vw - 45px` card the layout used before the sidebar became permanent.
+//Restated rather than imported, like every other number in this block, so that changing the
+//formula fails here instead of moving the whole file's window definition with it.
+const CANVAS_WIDTH = nearestEven(BODY_WIDTH * 0.96 - 177.6)
 const COLUMN_WIDTH = nearestEven(CANVAS_WIDTH / COLUMNS_PER_CANVAS)
 const WINDOW_GEOMETRY: ColumnWindowGeometry = {
     width: CANVAS_WIDTH,
@@ -6607,7 +6612,9 @@ describe('the momentum coast', () => {
             await throwLeft(harness, 3, 40, 20)
             const releasePosition = SELECTED + 1.5
             const to = coastLanding(releasePosition, 2, harness.context.song.columns.length)
-            expect(to).toBe(SELECTED + 9)
+            //2px/ms decaying at 0.0035/ms is 571px of travel, which is 8 columns at the desktop
+            //canvas' 84px column (it was 9 at the 80px one the narrower canvas gave)
+            expect(to).toBe(SELECTED + 8)
             //ENTRY PUBLISHES NOTHING: unlike the ease, whose callers select the target on the way
             //in, the Coast's floors arrive one frame crossing at a time
             const publishedAtRelease = harness.selectColumnCalls.length
@@ -6744,8 +6751,8 @@ describe('the momentum coast', () => {
             expect(harness.frameLoop().started).toBe(false)
 
             //JUST OVER: 0.42px/ms over the same 50ms, and the same shape of gesture coasts.
-            //0.42px/ms is 1.5 columns of travel, so the landing is two columns out where the
-            //settle above went back to zero.
+            //0.42px/ms is 120px, about 1.4 columns of travel, so the landing is two columns out
+            //where the settle above went back to zero.
             const over = (FLICK_MIN_SPEED_PX_PER_MS + 0.02) * 50
             const releasePosition = SELECTED + over / COLUMN_WIDTH
             const to = coastLanding(releasePosition, FLICK_MIN_SPEED_PX_PER_MS + 0.02, columns)
@@ -6783,9 +6790,11 @@ describe('the momentum coast', () => {
             harness.releasePointerOverNotes(start - COLUMN_WIDTH * 5)
             const releasePosition = SELECTED + 5
             const capped = coastLanding(releasePosition, 40, columns)
-            expect(capped).toBe(SELECTED + 16)
+            //the 3px/ms cap decaying at 0.0035/ms is 857px, 10 columns at the desktop canvas'
+            //84px column (it was 11 at the 80px one the narrower canvas gave)
+            expect(capped).toBe(SELECTED + 15)
             //...and the cap is what separates that from the end of the song: uncapped, v/λ is
-            //142 columns of travel and the landing clamps to the last column
+            //136 columns of travel and the landing clamps to the last column
             const uncapped = Math.min(
                 Math.round(releasePosition + 40 / COLUMN_WIDTH / COAST_DECAY_PER_MS),
                 columns - 1

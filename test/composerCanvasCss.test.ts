@@ -29,6 +29,8 @@ import {describe, expect, it} from 'vitest'
 import {readFileSync} from 'node:fs'
 import {nearestEven} from '$core/utils/Utilities'
 import {
+    COMPOSER_DESKTOP_MEDIA_QUERY,
+    COMPOSER_MOBILE_MAX_WIDTH,
     TIMELINE_BAND_PADDING,
     TIMELINE_BUTTON_MARGIN,
     TIMELINE_BUTTON_SIZE,
@@ -37,6 +39,7 @@ import {
     composerCanvasCssSize,
     composerCanvasElementHeight,
     composerCanvasSize,
+    isComposerDesktopWidth,
 } from '$cmp/pages/Composer/composerCanvasGeometry'
 
 //repo-relative, like test/midiConstructor.test.ts's own fixture read - vitest runs from the root
@@ -70,20 +73,49 @@ const CSS_WITHOUT_COMMENTS = APP_CSS.replace(/\/\*[\s\S]*?\*\//g, '')
  * Deliberately narrow: it finds `\n<selector> {` and reads to the next `}`. A restructuring of the
  * stylesheet - nesting the rule, merging the selector with another, moving it into a media query -
  * makes this throw rather than silently match something else.
+ *
+ * `mustDeclare` picks between SEVERAL top-level rules sharing one selector, which App.css genuinely
+ * has: two `:root` blocks, the palette one first and the `--menu-size` one 1000 lines later. Without
+ * it a lookup for the second silently reads the first and finds nothing.
  */
-function declarationsOf(selector: string): Map<string, string> {
-    const start = CSS_WITHOUT_COMMENTS.indexOf(`\n${selector} {`)
-    if (start < 0) throw new Error(`src/lib/css/App.css has no top-level \`${selector}\` rule`)
-    const open = CSS_WITHOUT_COMMENTS.indexOf('{', start)
-    const close = CSS_WITHOUT_COMMENTS.indexOf('}', open)
-    if (close < 0) throw new Error(`\`${selector}\` is never closed`)
-    const declarations = new Map<string, string>()
-    for (const piece of CSS_WITHOUT_COMMENTS.slice(open + 1, close).split(';')) {
-        const colon = piece.indexOf(':')
-        if (colon < 0) continue
-        declarations.set(piece.slice(0, colon).trim(), piece.slice(colon + 1).trim())
+function declarationsOf(selector: string, mustDeclare?: string): Map<string, string> {
+    let from = 0
+    for (;;) {
+        const start = CSS_WITHOUT_COMMENTS.indexOf(`\n${selector} {`, from)
+        if (start < 0) {
+            const which = mustDeclare ? ` declaring \`${mustDeclare}\`` : ''
+            throw new Error(`src/lib/css/App.css has no top-level \`${selector}\` rule${which}`)
+        }
+        const open = CSS_WITHOUT_COMMENTS.indexOf('{', start)
+        const close = CSS_WITHOUT_COMMENTS.indexOf('}', open)
+        if (close < 0) throw new Error(`\`${selector}\` is never closed`)
+        const declarations = new Map<string, string>()
+        for (const piece of CSS_WITHOUT_COMMENTS.slice(open + 1, close).split(';')) {
+            const colon = piece.indexOf(':')
+            if (colon < 0) continue
+            declarations.set(piece.slice(0, colon).trim(), piece.slice(colon + 1).trim())
+        }
+        if (!mustDeclare || declarations.has(mustDeclare)) return declarations
+        from = close
     }
-    return declarations
+}
+
+/**
+ * ONE `@media` BLOCK'S BODY, by its exact prelude, with braces counted so a nested rule cannot end
+ * it early. The desktop layout's declarations live inside a query and are therefore out of
+ * declarationsOf's reach, but they are half of what the canvas' desktop width is stated against.
+ */
+function mediaBlock(prelude: string): string {
+    const at = CSS_WITHOUT_COMMENTS.indexOf(`@media ${prelude} {`)
+    if (at < 0) throw new Error(`src/lib/css/App.css has no \`@media ${prelude}\` block`)
+    let depth = 0
+    for (let i = CSS_WITHOUT_COMMENTS.indexOf('{', at); i < CSS_WITHOUT_COMMENTS.length; i++) {
+        if (CSS_WITHOUT_COMMENTS[i] === '{') depth++
+        else if (CSS_WITHOUT_COMMENTS[i] === '}' && --depth === 0) {
+            return CSS_WITHOUT_COMMENTS.slice(at, i + 1)
+        }
+    }
+    throw new Error(`\`@media ${prelude}\` is never closed`)
 }
 
 interface CssContext {
@@ -249,6 +281,16 @@ describe('the composer canvas placeholder and the size the renderer computes', (
         expect(wrapper.get('min-height')).toBe(
             'max(calc(45vh + 14px), var(--composer-canvas-height, 0px))'
         )
+        //...and the ONE INDIRECTION between that and the inline properties: the width the max()
+        //reads is bound to the mobile inline property here and to the desktop one in the desktop
+        //block, so a browser picks the breakpoint before any JS runs. Collapsing this back to a
+        //single inline `--composer-canvas-width` reinstates the 79px hydration jump.
+        expect(wrapper.get('--composer-canvas-width')).toBe(
+            'var(--composer-canvas-width-mobile, 0px)'
+        )
+        expect(mediaBlock(COMPOSER_DESKTOP_MEDIA_QUERY)).toContain(
+            '--composer-canvas-width: var(--composer-canvas-width-desktop, 0px);'
+        )
     })
 
     //`document.body.getBoundingClientRect()` on the composer route is (100vw, 100vh) exactly - see
@@ -262,6 +304,9 @@ describe('the composer canvas placeholder and the size the renderer computes', (
         {width: 1920, height: 1080},
         {width: 1440, height: 900},
         {width: 1280, height: 800},
+        //the two rows either side of COMPOSER_MOBILE_MAX_WIDTH, where the desktop formula starts
+        {width: 1001, height: 800},
+        {width: 1000, height: 800},
         {width: 900, height: 700},
         {width: 643, height: 900},
         {width: 400, height: 800},
@@ -280,6 +325,12 @@ describe('the composer canvas placeholder and the size the renderer computes', (
                     ` timeline ${timelineHeight}px`
 
                 it(`agrees with computeCanvasSize at ${label}`, () => {
+                    //CSS PICKS ONE OF THE TWO WIDTHS, composerCanvasSize derives the same choice
+                    //from the body width it is given. Reproducing the cascade below rather than
+                    //asking composerCanvasCssSize for one width is what makes a disagreement about
+                    //WHERE the boundary is fail here.
+                    const isDesktop = viewport.width > COMPOSER_MOBILE_MAX_WIDTH
+                    expect(isComposerDesktopWidth(viewport.width)).toBe(isDesktop)
                     const css = composerCanvasCssSize({
                         inPreview: false,
                         rowHeightScale,
@@ -290,7 +341,14 @@ describe('the composer canvas placeholder and the size the renderer computes', (
                         viewportWidth: viewport.width,
                         viewportHeight: viewport.height,
                         vars: {
-                            '--composer-canvas-width': css.width,
+                            //the two inline properties the component sets...
+                            '--composer-canvas-width-mobile': css.mobileWidth,
+                            '--composer-canvas-width-desktop': css.desktopWidth,
+                            //...and what the cascade resolves the one the max() reads to, which is
+                            //the declaration this file just pinned, per side of the breakpoint
+                            '--composer-canvas-width': isDesktop
+                                ? 'var(--composer-canvas-width-desktop, 0px)'
+                                : 'var(--composer-canvas-width-mobile, 0px)',
                             '--composer-canvas-height': css.height,
                         },
                     }
@@ -303,9 +361,12 @@ describe('the composer canvas placeholder and the size the renderer computes', (
                     const jsCanvasHeight = composerCanvasElementHeight(js.height, timelineHeight)
 
                     //THE FORMULA ITSELF, restated here rather than imported, so that changing 0.85
-                    //or 0.45 in composerCanvasGeometry fails instead of moving both sides together
-                    expect(evaluateCss(css.width, context)).toBeCloseTo(
-                        viewport.width * 0.85 - 45,
+                    //or 0.45 in composerCanvasGeometry fails instead of moving both sides together.
+                    //Above the breakpoint the canvas FILLS THE WINDOW - `100vw` less the `.tool`
+                    //column's own `4vw` and the 177.6px of fixed chrome the dedicated test below
+                    //reads out of App.css - instead of being a `85vw` card centred in it.
+                    expect(evaluateCss(context.vars['--composer-canvas-width'], context)).toBeCloseTo(
+                        isDesktop ? viewport.width * 0.96 - 177.6 : viewport.width * 0.85 - 45,
                         6
                     )
                     expect(
@@ -316,7 +377,7 @@ describe('the composer canvas placeholder and the size the renderer computes', (
                     //...and EXACTLY the renderer's width once rounded, which is the only thing the
                     //CSS cannot reproduce (nearestEven; see composerCanvasCssSize for why not
                     //`round(nearest, x, 2px)`)
-                    expect(nearestEven(evaluateCss(css.width, context))).toBe(js.width)
+                    expect(nearestEven(evaluateCss(context.vars['--composer-canvas-width'], context))).toBe(js.width)
 
                     //THE HEIGHT'S TWO ROUNDINGS, restated, because the CSS side cannot see either of
                     //them and `toBeCloseTo` above cannot either: the inner one exists so that the
@@ -358,7 +419,11 @@ describe('the composer canvas placeholder and the size the renderer computes', (
         //canvas element for good - a transparent strip under the mini-timeline inside the card - and
         //because the same value holds before AND after the canvas lands, the layout shift is 0.
         const context: CssContext = {viewportWidth: 2560, viewportHeight: 1440, vars: {}}
-        const css = composerCanvasCssSize({inPreview: false, rowHeightScale: 0.95, timelineHeight: 36.4})
+        const css = composerCanvasCssSize({
+            inPreview: false,
+            rowHeightScale: 0.95,
+            timelineHeight: 36.4,
+        })
         if (!css) throw new Error('composerCanvasCssSize returned null outside preview')
         context.vars['--composer-canvas-height'] = css.height
         const js = composerCanvasSize({
@@ -383,6 +448,82 @@ describe('the composer canvas placeholder and the size the renderer computes', (
         //band of widths. Deliberately out of scope; a null here removes the custom properties and
         //App.css's `0px` fallback restores exactly the pre-existing rule.
         expect(composerCanvasCssSize({inPreview: true})).toBeNull()
+    })
+})
+
+describe('the desktop layout the canvas fills, and the chrome it fills around', () => {
+    const DESKTOP = mediaBlock(COMPOSER_DESKTOP_MEDIA_QUERY)
+
+    it('states the desktop breakpoint as the exact complement of the composer mobile block', () => {
+        //Two queries, one boundary. `not all and (max-width: 1000px)` rather than
+        //`(min-width: 1001px)` so no viewport - including a fractional one under browser zoom -
+        //can fall between them and get the desktop base rules with none of either block's
+        //overrides.
+        expect(COMPOSER_DESKTOP_MEDIA_QUERY).toBe(`not all and (max-width: ${COMPOSER_MOBILE_MAX_WIDTH}px)`)
+        expect(APP_CSS).toContain(`@media only screen and (max-width: ${COMPOSER_MOBILE_MAX_WIDTH}px) {`)
+        expect(APP_CSS).toContain(`@media ${COMPOSER_DESKTOP_MEDIA_QUERY} {`)
+        //...and the JS predicate ComposerRenderer reaches the same boundary through
+        expect(isComposerDesktopWidth(COMPOSER_MOBILE_MAX_WIDTH)).toBe(false)
+        expect(isComposerDesktopWidth(COMPOSER_MOBILE_MAX_WIDTH + 1)).toBe(true)
+    })
+
+    it('pins the sidebar open and takes away both controls that used to toggle it', () => {
+        //What makes the sidebar a COLUMN rather than an overlay, and therefore what makes the
+        //176px of fixed chrome below start with `--menu-size`. ComposerMenu.svelte pins the same
+        //thing in state; this is the half that holds before hydration.
+        expect(DESKTOP).toContain('.composer-menu-sidebar .menu {\n    margin-left: 0;\n  }')
+        expect(DESKTOP).toMatch(
+            /\.composer-menu-sidebar \.hamburger,\s*\.composer-menu-sidebar \.close-menu \{\s*display: none;/
+        )
+    })
+
+    it('pushes the grid and the keyboard clear of the sidebar, by the same two terms', () => {
+        //The canvas is sized to fill what is LEFT of the window, so the row it sits in has to start
+        //where the sidebar ends plus the gap - `85vw` used to leave room for an overlay instead.
+        //Both offsets are `--menu-size + DESKTOP_SIDEBAR_GAP_REM`, and the keyboard's width gives
+        //back exactly what its `left` took, so it stays centred on the composer rather than on the
+        //window.
+        expect(DESKTOP).toMatch(
+            /\.composer-grid:not\(\.composer-grid-in-preview\) \{\s*margin-left: calc\(var\(--menu-size\) \+ 0\.1rem\);\s*margin-right: auto;/
+        )
+        expect(DESKTOP).toContain('left: calc(var(--menu-size) + 0.1rem);')
+        expect(DESKTOP).toContain('width: calc(100% - var(--menu-size) - 0.1rem);')
+    })
+
+    it('still declares every value DESKTOP_CANVAS_INSET_PX is the sum of', () => {
+        //THE SECOND BRIDGE between this stylesheet and composerCanvasGeometry (the timeline
+        //buttons' rem values are the first). The desktop canvas is `100vw` less `.tool`'s own
+        //column and less these fixed widths; edit any of them alone and the canvas either
+        //overflows the window or leaves a gap at its right edge, with nothing else failing.
+        expect(declarationsOf(':root', '--menu-size').get('--menu-size')).toBe('4rem')
+        const grid = declarationsOf('.composer-grid')
+        expect(grid.get('padding')).toBe('0.2rem')
+        expect(grid.get('gap')).toBe('0.2rem')
+        expect(declarationsOf('.composer-left-control').get('width')).toBe('6.2rem')
+        const rightButtons = declarationsOf(
+            '.buttons-composer-wrapper,\n.buttons-composer-wrapper-right'
+        )
+        expect(rightButtons.get('margin-left')).toBe('0.2rem')
+        //...and the ONE non-fixed term, which is why the desktop width is 96vw and not 100vw.
+        //`mustDeclare` skips the `.tool-slim, .tool` rule that shares this selector and carries
+        //only the shape/colour the two buttons have in common.
+        expect(declarationsOf('.tool', 'width').get('width')).toBe('4vw')
+        //...and the gap between the sidebar and the composer, the one term of the sum that is not a
+        //pre-existing width but a deliberate piece of spacing (asserted in full above)
+        expect(DESKTOP).toContain('+ 0.1rem)')
+        //the sum, at the 16px root font size composerCanvasGeometry assumes and states
+        expect((4 + 0.1 + 0.2 * 2 + 6.2 + 0.2 + 0.2) * 16).toBeCloseTo(177.6, 6)
+    })
+
+    it('leaves the mobile layout on the formula and the chrome it always had', () => {
+        //The whole point of the exclusion: below the breakpoint App.css reshapes this row
+        //completely (the left control narrows, `.tool` goes full-width, `.composer-grid` takes the
+        //whole window) and none of the numbers above hold there - so the canvas keeps `85vw - 45`.
+        const mobile = mediaBlock(`only screen and (max-width: ${COMPOSER_MOBILE_MAX_WIDTH}px)`)
+        expect(mobile).toContain('.composer-left-control {\n    width: 5.4rem;\n  }')
+        expect(mobile).toMatch(/\.tool \{\s*flex: 1;\s*width: 100%;/)
+        expect(mobile).toContain('.composer-grid {\n    width: 100%;\n  }')
+        expect(composerCanvasCssSize({inPreview: false})?.mobileWidth).toBe('calc(85vw - 45px)')
     })
 })
 
@@ -435,19 +576,29 @@ describe('the inline styles in ComposerCanvas.svelte that both couplings actuall
         //this element. Delete the two directives - or typo either property name on one side only -
         //and `var(..., 0px)` takes over: the wrapper silently reverts to `78vw`/`calc(45vh + 14px)`
         //and the whole +90.4px/+22.4px jump at 1920x1080 comes back, with every other test green.
-        const names = [wrapper.get('min-width')!, wrapper.get('min-height')!].map(declaration => {
+        const names = [
+            wrapper.get('--composer-canvas-width')!,
+            wrapper.get('min-height')!,
+        ].map(declaration => {
             const found = /var\(\s*(--[A-Za-z0-9-]+)/.exec(declaration)
             if (!found) throw new Error(`\`${declaration}\` reads no custom property`)
             return found[1]
         })
-        expect(names).toEqual(['--composer-canvas-width', '--composer-canvas-height'])
+        expect(names).toEqual(['--composer-canvas-width-mobile', '--composer-canvas-height'])
         const tag = openTagContaining(`'canvas-wrapper'`)
-        expect(tag).toContain(`style:${names[0]}={cssSize?.width}`)
+        expect(tag).toContain(`style:${names[0]}={cssSize?.mobileWidth}`)
         expect(tag).toContain(`style:${names[1]}={cssSize?.height}`)
+        //BOTH widths, or the desktop block's `var(--composer-canvas-width-desktop, 0px)` resolves
+        //to its 0px fallback and every desktop viewport silently drops to the `78vw` floor
+        expect(tag).toContain('style:--composer-canvas-width-desktop={cssSize?.desktopWidth}')
         //...and `cssSize` is the geometry module's, not a second formula written in the template
         expect(COMPOSER_CANVAS).toContain(
             'const cssSize = $derived(composerCanvasCssSize({ inPreview: Boolean(inPreview) }));'
         )
+        //NO BREAKPOINT IN THE TEMPLATE. The component emitting one width from a `matchMedia` read
+        //is what caused the 79px jump at hydration: a prerender has no `matchMedia`, so the served
+        //HTML carried the mobile width on every viewport.
+        expect(COMPOSER_CANVAS).not.toContain('createMediaQuery')
     })
 
     it('places the three timeline buttons in the bands the insets reserve', () => {

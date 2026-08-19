@@ -2255,6 +2255,13 @@ a {
      0.95) a 1440px-tall viewport leaves the wrapper 9.6px taller than the canvas element - a
      transparent tail under the mini-timeline, not a layout shift, since the same value holds before
      and after the canvas lands. test/composerCanvasCss.test.ts carries a 2560x1440 row for it. */
+  /* WHICH OF THE TWO WIDTHS ComposerCanvas.svelte PUTS ON THIS ELEMENT APPLIES - the mobile one
+     here, the desktop one in this file's `not all and (max-width: 1000px)` block. The choice lives
+     in CSS and not in the component for one reason: those are INLINE custom properties, so a
+     component that picked between them could only do it from `matchMedia`, which does not exist
+     during the prerender - the served HTML would carry the mobile width on every viewport and the
+     composer would jump ~79px wider when hydration finally ran (measured at 812ms in dev). */
+  --composer-canvas-width: var(--composer-canvas-width-mobile, 0px);
   min-width: max(78vw, var(--composer-canvas-width, 0px));
   min-height: max(calc(45vh + 14px), var(--composer-canvas-height, 0px));
   justify-content: space-between;
@@ -3107,6 +3114,67 @@ select {
   .layer-3-ball {
     width: 1.5vw;
     height: 1.5vw;
+  }
+}
+
+/* ==================================================================================
+   THE COMPOSER'S DESKTOP LAYOUT — a permanent sidebar column, and a canvas that fills what is left
+   of the window instead of a card centred in it.
+
+   THIS QUERY IS THE EXACT COMPLEMENT OF THE `max-width: 1000px` BLOCK ABOVE, which is where every
+   composer rule that reshapes the page for phones already lives. `not all and (max-width: 1000px)`
+   and not `(min-width: 1001px)`: the two agree on every integer viewport, but a fractional one
+   (browser zoom, fractional device pixel ratios) falls in the gap between `<= 1000` and `>= 1001`
+   and would match NEITHER block, leaving the composer with the desktop base rules and none of these
+   overrides. composerCanvasGeometry states the same boundary for the JS half of the canvas' size
+   (COMPOSER_MOBILE_MAX_WIDTH / COMPOSER_DESKTOP_MEDIA_QUERY) and test/composerCanvasCss.test.ts
+   reads the declarations below back out of this file, so the two halves cannot drift.
+
+   THE PREVIEW IS EXCLUDED throughout, by class rather than by `:not()` where it can be: /theme's
+   composer preview is a small box inside a scrolling page, so it keeps the centred layout and its
+   own hamburger. ComposerMenu.svelte drops `composer-menu-sidebar` there and Composer.svelte adds
+   `composer-grid-in-preview`, matching `.canvas-wrapper-in-preview`'s own exclusion.
+   ================================================================================== */
+@media not all and (max-width: 1000px) {
+  /* The strip is a COLUMN OF THE PAGE here, not an overlay over it: nothing opens it, so nothing
+     closes it either. ComposerMenu.svelte pins its `isVisible` true to match - this rule only
+     keeps the server-rendered markup from sliding in from -4rem when hydration flips that. */
+  .composer-menu-sidebar .menu {
+    margin-left: 0;
+  }
+
+  .composer-menu-sidebar .hamburger,
+  .composer-menu-sidebar .close-menu {
+    display: none;
+  }
+
+  /* Pushed clear of the strip rather than centred underneath it, with 0.1rem of air between the
+     two - composerCanvasGeometry's DESKTOP_SIDEBAR_GAP_REM, which takes that 1.6px out of the
+     canvas' width so the row still ends exactly at the right edge of the window.
+
+     `margin-right: auto` is what pins the grid there: it absorbs the row's free space so `.app`'s
+     `justify-content: center` has none left to re-centre the grid with, and in the overflow case
+     (the canvas is nearestEven-rounded, so it can exceed its CSS width by up to 1px) an auto margin
+     resolves to 0 and the overflow goes off the right, where `.app`'s `overflow: hidden` takes it -
+     never back over the sidebar. */
+  .composer-grid:not(.composer-grid-in-preview) {
+    margin-left: calc(var(--menu-size) + 0.1rem);
+    margin-right: auto;
+  }
+
+  /* THE PLACEHOLDER'S WIDTH, switched here rather than in the component - see `.canvas-wrapper`'s
+     own comment for why. Both custom properties are absent in the theme preview (composerCanvasCssSize
+     returns null there), so both branches degrade to the same `0px` and `.canvas-wrapper-in-preview`
+     unsets the floors anyway. */
+  .canvas-wrapper {
+    --composer-canvas-width: var(--composer-canvas-width-desktop, 0px);
+  }
+
+  /* ...and the keyboard centres itself in what is left of the window, not under the sidebar. It is
+     `position: absolute` with no positioned ancestor, so both of these are against the viewport. */
+  .composer-grid:not(.composer-grid-in-preview) .composer-keyboard-wrapper {
+    left: calc(var(--menu-size) + 0.1rem);
+    width: calc(100% - var(--menu-size) - 0.1rem);
   }
 }
 
