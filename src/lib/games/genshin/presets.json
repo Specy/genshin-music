@@ -110,36 +110,43 @@
     {
       "midi": 72,
       "baseNote": "C",
+      "pitched": false,
       "icon": "do"
     },
     {
       "midi": 74,
-      "baseNote": "Db",
+      "baseNote": "Dm",
+      "pitched": false,
       "icon": "re"
     },
     {
       "midi": 76,
-      "baseNote": "Eb",
+      "baseNote": "Em",
+      "pitched": false,
       "icon": "mi"
     },
     {
       "midi": 77,
       "baseNote": "F",
+      "pitched": false,
       "icon": "fa"
     },
     {
       "midi": 79,
       "baseNote": "G",
+      "pitched": false,
       "icon": "so"
     },
     {
       "midi": 81,
-      "baseNote": "Ab",
+      "baseNote": "Am",
+      "pitched": false,
       "icon": "la"
     },
     {
       "midi": 83,
-      "baseNote": "G",
+      "baseNote": "G7",
+      "pitched": false,
       "icon": "ti"
     },
     {
@@ -217,41 +224,49 @@
     {
       "midi": 60,
       "baseNote": "C",
+      "pitched": false,
       "icon": "do"
     },
     {
       "midi": 62,
       "baseNote": "D",
+      "pitched": false,
       "icon": "re"
     },
     {
       "midi": 64,
       "baseNote": "E",
+      "pitched": false,
       "icon": "mi"
     },
     {
       "midi": 65,
       "baseNote": "F",
+      "pitched": false,
       "icon": "fa"
     },
     {
       "midi": 67,
       "baseNote": "G",
+      "pitched": false,
       "icon": "do"
     },
     {
       "midi": 69,
       "baseNote": "A",
+      "pitched": false,
       "icon": "re"
     },
     {
       "midi": 71,
       "baseNote": "B",
+      "pitched": false,
       "icon": "mi"
     },
     {
       "midi": 72,
       "baseNote": "C",
+      "pitched": false,
       "icon": "fa"
     }
   ]

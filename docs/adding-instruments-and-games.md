@@ -71,10 +71,18 @@ Each note (inline or in a preset) is:
 { "file": "0.mp3", "midi": 72, "baseNote": "C", "icon": "do", "loop": { "start": 0.9, "end": 1.1 } }
 ```
 
-- `midi` — the **Note Id** (nominal MIDI id, ADR-0001). Required; it is the
-  note's identity in songs. Position in the array is the button position.
-- `baseNote` — the displayed note-name root. NOT derivable from `midi`
-  (Vintage-Lyre's nominal 74 displays as Db; unpitched SFX use `""`).
+- `midi` — the **Nominal Id** (ADR-0001). Required; it is the button's name in the
+  game's grid namespace. Position in the array is the button position.
+- `baseNote` — on a **Pitched Button** (the default), the bare pitch class the button
+  actually SOUNDS: the registry derives the button's Sounding Pitch from it (nearest
+  chromatic match to `midi`) and rejects any other string, so it is NOT derivable from
+  `midi` (Vintage-Lyre's nominal 74 really does sound Db). On an **Assigned Button** it
+  is free display text.
+- `pitched` — optional, only ever `false`: declares an **Assigned Button** (ADR-0007) —
+  percussion, SFX, a chord strum. It has no single sounding pitch, so it enters notes at
+  its Nominal Id and its `baseNote` becomes a free label (`"G7"`, `""`). Never inferred
+  from the label: only this flag decides. Chord labels do not transpose with the pitch
+  setting; pitch-class labels do.
 - `icon` — a glyph name the game's `glyphs/` provides.
 - `file` — optional; defaults to `<index>.mp3`.
 - `loop` — optional per-note sustain loop, overriding `sustain.loop`. Only

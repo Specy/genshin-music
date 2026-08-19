@@ -15,10 +15,10 @@ import {
   type Pitch,
   PITCH_TO_INDEX,
 } from '$core/legacyConfig';
+import { baseNoteText } from '$core/sharedConfig';
 import type { InstrumentName, NoteStatus } from '$core/types';
 import { capitalize, getPitchChanger } from '$core/utils/Utilities';
 import type {
-  BaseNote,
   InstrumentSustain,
   NoteImage,
   ShapeDefinition,
@@ -221,7 +221,7 @@ export class Instrument {
     try {
       if (type === 'Note name') {
         const baseNote = this.notes[index].baseNote;
-        return NOTE_SCALE[baseNote][PITCH_TO_INDEX.get(pitch) ?? 0];
+        return baseNoteText(NOTE_SCALE, baseNote, PITCH_TO_INDEX.get(pitch) ?? 0);
       }
       if (type === 'Your Keyboard layout') {
         const key =
@@ -237,7 +237,7 @@ export class Instrument {
       }
       if (type === 'Do Re Mi') {
         const baseNote = this.notes[index].baseNote;
-        return DO_RE_MI_NOTE_SCALE[baseNote][PITCH_TO_INDEX.get(pitch) ?? 0];
+        return baseNoteText(DO_RE_MI_NOTE_SCALE, baseNote, PITCH_TO_INDEX.get(pitch) ?? 0);
       }
       if (type === 'ABC') return layout.abc[slot];
       if (type === '1 2 3') return layout.number[slot];
@@ -605,7 +605,8 @@ export class ObservableNote {
   instrument: InstrumentName = INSTRUMENTS[0];
   noteNames: NoteName;
   url: string;
-  baseNote: BaseNote = 'C';
+  /** Display label; free text on an Assigned Button (see InstrumentNote.baseNote). */
+  baseNote: string = 'C';
   buffer: ArrayBuffer = new ArrayBuffer(8);
   // Treated as readonly by convention only - always mutated in place via setState()'s
   // Object.assign, never reassigned.
@@ -618,13 +619,7 @@ export class ObservableNote {
     holdTimerId: 0,
   });
 
-  constructor(
-    index: number,
-    noteNames: NoteName,
-    url: string,
-    baseNote: BaseNote,
-    midiNote: number
-  ) {
+  constructor(index: number, noteNames: NoteName, url: string, baseNote: string, midiNote: number) {
     this.index = index;
     this.noteNames = noteNames;
     this.url = url;

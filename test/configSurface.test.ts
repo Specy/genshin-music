@@ -121,6 +121,27 @@ describe('game config surface', () => {
             }
         }
 
+        // Deliberate VALUE divergence (2026-08-19, ADR-0007 Phase A). Ukulele and
+        // LingeringEuphonia share the ukulele-21 preset, whose top row is not a scale at all:
+        // those seven buttons strum chords in game (in-game capture 2026-08-19), so they are
+        // Assigned Buttons now and carry their real chord names. The frozen labels were
+        // copy-pasted from the Vintage-Lyre row and named pitches those buttons never sounded;
+        // an Assigned Button's label feeds nothing but the on-screen text, so this moves display
+        // text only. Nominal Ids, icons and Label Sets are untouched, and the two lower rows —
+        // genuinely pitched — still reproduce the frozen surface exactly. Asserted before
+        // patching, like the re-capture edits above: any OTHER label drift still fails.
+        const FROZEN_CHORD_ROW = ['C', 'Db', 'Eb', 'F', 'G', 'Ab', 'G']
+        const CHORD_ROW = ['C', 'Dm', 'Em', 'F', 'G', 'Am', 'G7']
+        const CHORD_ROW_INSTRUMENTS = APP_NAME === 'Genshin' ? ['Ukulele', 'LingeringEuphonia'] : []
+        for (const name of CHORD_ROW_INSTRUMENTS) {
+            const baseNotes: string[] = frozen.instrumentsData[name].baseNotes
+            expect(
+                baseNotes.slice(0, FROZEN_CHORD_ROW.length),
+                `${name}'s top row is not the frozen label row this exception was written against`
+            ).toEqual(FROZEN_CHORD_ROW)
+            baseNotes.splice(0, CHORD_ROW.length, ...CHORD_ROW)
+        }
+
         // Instruments added AFTER the v1 freeze have no old surface to reproduce —
         // they exist only in the v2 fixture.
         const POST_FREEZE_INSTRUMENTS = new Set(['sustained_recorder', 'NightwindHorn'])

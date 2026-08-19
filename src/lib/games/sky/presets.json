@@ -80,41 +80,49 @@
     {
       "midi": 60,
       "baseNote": "C",
+      "pitched": false,
       "icon": "cr"
     },
     {
       "midi": 62,
       "baseNote": "D",
+      "pitched": false,
       "icon": "dm"
     },
     {
       "midi": 64,
       "baseNote": "E",
+      "pitched": false,
       "icon": "cr"
     },
     {
       "midi": 65,
       "baseNote": "F",
+      "pitched": false,
       "icon": "dm"
     },
     {
       "midi": 67,
       "baseNote": "G",
+      "pitched": false,
       "icon": "cr"
     },
     {
       "midi": 69,
       "baseNote": "A",
+      "pitched": false,
       "icon": "dm"
     },
     {
       "midi": 71,
       "baseNote": "B",
+      "pitched": false,
       "icon": "cr"
     },
     {
       "midi": 72,
       "baseNote": "C",
+      "pitched": false,
       "icon": "dm"
     }
   ],

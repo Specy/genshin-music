@@ -49,90 +49,120 @@
           "file": "0.mp3",
           "midi": 60,
           "baseNote": "C",
+          "pitched": true,
+          "sounding": 60,
           "icon": "dmcr"
         },
         {
           "file": "1.mp3",
           "midi": 62,
           "baseNote": "D",
+          "pitched": true,
+          "sounding": 62,
           "icon": "dm"
         },
         {
           "file": "2.mp3",
           "midi": 64,
           "baseNote": "E",
+          "pitched": true,
+          "sounding": 64,
           "icon": "cr"
         },
         {
           "file": "3.mp3",
           "midi": 65,
           "baseNote": "F",
+          "pitched": true,
+          "sounding": 65,
           "icon": "dm"
         },
         {
           "file": "4.mp3",
           "midi": 67,
           "baseNote": "G",
+          "pitched": true,
+          "sounding": 67,
           "icon": "cr"
         },
         {
           "file": "5.mp3",
           "midi": 69,
           "baseNote": "A",
+          "pitched": true,
+          "sounding": 69,
           "icon": "cr"
         },
         {
           "file": "6.mp3",
           "midi": 71,
           "baseNote": "B",
+          "pitched": true,
+          "sounding": 71,
           "icon": "dm"
         },
         {
           "file": "7.mp3",
           "midi": 72,
           "baseNote": "C",
+          "pitched": true,
+          "sounding": 72,
           "icon": "dmcr"
         },
         {
           "file": "8.mp3",
           "midi": 74,
           "baseNote": "D",
+          "pitched": true,
+          "sounding": 74,
           "icon": "dm"
         },
         {
           "file": "9.mp3",
           "midi": 76,
           "baseNote": "E",
+          "pitched": true,
+          "sounding": 76,
           "icon": "cr"
         },
         {
           "file": "10.mp3",
           "midi": 77,
           "baseNote": "F",
+          "pitched": true,
+          "sounding": 77,
           "icon": "cr"
         },
         {
           "file": "11.mp3",
           "midi": 79,
           "baseNote": "G",
+          "pitched": true,
+          "sounding": 79,
           "icon": "dm"
         },
         {
           "file": "12.mp3",
           "midi": 81,
           "baseNote": "A",
+          "pitched": true,
+          "sounding": 81,
           "icon": "cr"
         },
         {
           "file": "13.mp3",
           "midi": 83,
           "baseNote": "B",
+          "pitched": true,
+          "sounding": 83,
           "icon": "dm"
         },
         {
           "file": "14.mp3",
           "midi": 84,
           "baseNote": "C",
+          "pitched": true,
+          "sounding": 84,
           "icon": "dmcr"
         }
       ]
@@ -148,48 +178,64 @@
           "file": "0.mp3",
           "midi": 60,
           "baseNote": "C",
+          "pitched": true,
+          "sounding": 60,
           "icon": "cr"
         },
         {
           "file": "1.mp3",
           "midi": 62,
           "baseNote": "D",
+          "pitched": true,
+          "sounding": 62,
           "icon": "dm"
         },
         {
           "file": "2.mp3",
           "midi": 67,
           "baseNote": "G",
+          "pitched": true,
+          "sounding": 67,
           "icon": "cr"
         },
         {
           "file": "3.mp3",
           "midi": 69,
           "baseNote": "A",
+          "pitched": true,
+          "sounding": 69,
           "icon": "dm"
         },
         {
           "file": "4.mp3",
           "midi": 72,
           "baseNote": "C",
+          "pitched": true,
+          "sounding": 72,
           "icon": "cr"
         },
         {
           "file": "5.mp3",
           "midi": 74,
           "baseNote": "D",
+          "pitched": true,
+          "sounding": 74,
           "icon": "dm"
         },
         {
           "file": "6.mp3",
           "midi": 79,
           "baseNote": "G",
+          "pitched": true,
+          "sounding": 79,
           "icon": "cr"
         },
         {
           "file": "7.mp3",
           "midi": 81,
           "baseNote": "A",
+          "pitched": true,
+          "sounding": 81,
           "icon": "dm"
         }
       ]
@@ -205,90 +251,120 @@
           "file": "0.mp3",
           "midi": 60,
           "baseNote": "C",
+          "pitched": true,
+          "sounding": 60,
           "icon": "dmcr"
         },
         {
           "file": "1.mp3",
           "midi": 62,
           "baseNote": "D",
+          "pitched": true,
+          "sounding": 62,
           "icon": "dm"
         },
         {
           "file": "2.mp3",
           "midi": 64,
           "baseNote": "E",
+          "pitched": true,
+          "sounding": 64,
           "icon": "cr"
         },
         {
           "file": "3.mp3",
           "midi": 65,
           "baseNote": "F",
+          "pitched": true,
+          "sounding": 65,
           "icon": "dm"
         },
         {
           "file": "4.mp3",
           "midi": 67,
           "baseNote": "G",
+          "pitched": true,
+          "sounding": 67,
           "icon": "cr"
         },
         {
           "file": "5.mp3",
           "midi": 69,
           "baseNote": "A",
+          "pitched": true,
+          "sounding": 69,
           "icon": "cr"
         },
         {
           "file": "6.mp3",
           "midi": 71,
           "baseNote": "B",
+          "pitched": true,
+          "sounding": 71,
           "icon": "dm"
         },
         {
           "file": "7.mp3",
           "midi": 72,
           "baseNote": "C",
+          "pitched": true,
+          "sounding": 72,
           "icon": "dmcr"
         },
         {
           "file": "8.mp3",
           "midi": 74,
           "baseNote": "D",
+          "pitched": true,
+          "sounding": 74,
           "icon": "dm"
         },
         {
           "file": "9.mp3",
           "midi": 76,
           "baseNote": "E",
+          "pitched": true,
+          "sounding": 76,
           "icon": "cr"
         },
         {
           "file": "10.mp3",
           "midi": 77,
           "baseNote": "F",
+          "pitched": true,
+          "sounding": 77,
           "icon": "cr"
         },
         {
           "file": "11.mp3",
           "midi": 79,
           "baseNote": "G",
+          "pitched": true,
+          "sounding": 79,
           "icon": "dm"
         },
         {
           "file": "12.mp3",
           "midi": 81,
           "baseNote": "A",
+          "pitched": true,
+          "sounding": 81,
           "icon": "cr"
         },
         {
           "file": "13.mp3",
           "midi": 83,
           "baseNote": "B",
+          "pitched": true,
+          "sounding": 83,
           "icon": "dm"
         },
         {
           "file": "14.mp3",
           "midi": 84,
           "baseNote": "C",
+          "pitched": true,
+          "sounding": 84,
           "icon": "dmcr"
         }
       ]
@@ -304,48 +380,64 @@
           "file": "0.mp3",
           "midi": 60,
           "baseNote": "C",
+          "pitched": false,
+          "sounding": 60,
           "icon": "cr"
         },
         {
           "file": "1.mp3",
           "midi": 62,
           "baseNote": "D",
+          "pitched": false,
+          "sounding": 62,
           "icon": "dm"
         },
         {
           "file": "2.mp3",
           "midi": 64,
           "baseNote": "E",
+          "pitched": false,
+          "sounding": 64,
           "icon": "cr"
         },
         {
           "file": "3.mp3",
           "midi": 65,
           "baseNote": "F",
+          "pitched": false,
+          "sounding": 65,
           "icon": "dm"
         },
         {
           "file": "4.mp3",
           "midi": 67,
           "baseNote": "G",
+          "pitched": false,
+          "sounding": 67,
           "icon": "cr"
         },
         {
           "file": "5.mp3",
           "midi": 69,
           "baseNote": "A",
+          "pitched": false,
+          "sounding": 69,
           "icon": "dm"
         },
         {
           "file": "6.mp3",
           "midi": 71,
           "baseNote": "B",
+          "pitched": false,
+          "sounding": 71,
           "icon": "cr"
         },
         {
           "file": "7.mp3",
           "midi": 72,
           "baseNote": "C",
+          "pitched": false,
+          "sounding": 72,
           "icon": "dm"
         }
       ]
@@ -361,48 +453,64 @@
           "file": "0.mp3",
           "midi": 60,
           "baseNote": "C",
+          "pitched": false,
+          "sounding": 60,
           "icon": "cr"
         },
         {
           "file": "1.mp3",
           "midi": 62,
           "baseNote": "D",
+          "pitched": false,
+          "sounding": 62,
           "icon": "dm"
         },
         {
           "file": "2.mp3",
           "midi": 64,
           "baseNote": "E",
+          "pitched": false,
+          "sounding": 64,
           "icon": "cr"
         },
         {
           "file": "3.mp3",
           "midi": 65,
           "baseNote": "F",
+          "pitched": false,
+          "sounding": 65,
           "icon": "dm"
         },
         {
           "file": "4.mp3",
           "midi": 67,
           "baseNote": "G",
+          "pitched": false,
+          "sounding": 67,
           "icon": "cr"
         },
         {
           "file": "5.mp3",
           "midi": 69,
           "baseNote": "A",
+          "pitched": false,
+          "sounding": 69,
           "icon": "dm"
         },
         {
           "file": "6.mp3",
           "midi": 71,
           "baseNote": "B",
+          "pitched": false,
+          "sounding": 71,
           "icon": "cr"
         },
         {
           "file": "7.mp3",
           "midi": 72,
           "baseNote": "C",
+          "pitched": false,
+          "sounding": 72,
           "icon": "dm"
         }
       ]
@@ -418,90 +526,120 @@
           "file": "0.mp3",
           "midi": 60,
           "baseNote": "C",
+          "pitched": true,
+          "sounding": 60,
           "icon": "dmcr"
         },
         {
           "file": "1.mp3",
           "midi": 62,
           "baseNote": "D",
+          "pitched": true,
+          "sounding": 62,
           "icon": "dm"
         },
         {
           "file": "2.mp3",
           "midi": 64,
           "baseNote": "E",
+          "pitched": true,
+          "sounding": 64,
           "icon": "cr"
         },
         {
           "file": "3.mp3",
           "midi": 65,
           "baseNote": "F",
+          "pitched": true,
+          "sounding": 65,
           "icon": "dm"
         },
         {
           "file": "4.mp3",
           "midi": 67,
           "baseNote": "G",
+          "pitched": true,
+          "sounding": 67,
           "icon": "cr"
         },
         {
           "file": "5.mp3",
           "midi": 69,
           "baseNote": "A",
+          "pitched": true,
+          "sounding": 69,
           "icon": "cr"
         },
         {
           "file": "6.mp3",
           "midi": 71,
           "baseNote": "B",
+          "pitched": true,
+          "sounding": 71,
           "icon": "dm"
         },
         {
           "file": "7.mp3",
           "midi": 72,
           "baseNote": "C",
+          "pitched": true,
+          "sounding": 72,
           "icon": "dmcr"
         },
         {
           "file": "8.mp3",
           "midi": 74,
           "baseNote": "D",
+          "pitched": true,
+          "sounding": 74,
           "icon": "dm"
         },
         {
           "file": "9.mp3",
           "midi": 76,
           "baseNote": "E",
+          "pitched": true,
+          "sounding": 76,
           "icon": "cr"
         },
         {
           "file": "10.mp3",
           "midi": 77,
           "baseNote": "F",
+          "pitched": true,
+          "sounding": 77,
           "icon": "cr"
         },
         {
           "file": "11.mp3",
           "midi": 79,
           "baseNote": "G",
+          "pitched": true,
+          "sounding": 79,
           "icon": "dm"
         },
         {
           "file": "12.mp3",
           "midi": 81,
           "baseNote": "A",
+          "pitched": true,
+          "sounding": 81,
           "icon": "cr"
         },
         {
           "file": "13.mp3",
           "midi": 83,
           "baseNote": "B",
+          "pitched": true,
+          "sounding": 83,
           "icon": "dm"
         },
         {
           "file": "14.mp3",
           "midi": 84,
           "baseNote": "C",
+          "pitched": true,
+          "sounding": 84,
           "icon": "dmcr"
         }
       ]
@@ -517,90 +655,120 @@
           "file": "0.mp3",
           "midi": 60,
           "baseNote": "C",
+          "pitched": true,
+          "sounding": 60,
           "icon": "dmcr"
         },
         {
           "file": "1.mp3",
           "midi": 62,
           "baseNote": "D",
+          "pitched": true,
+          "sounding": 62,
           "icon": "dm"
         },
         {
           "file": "2.mp3",
           "midi": 64,
           "baseNote": "E",
+          "pitched": true,
+          "sounding": 64,
           "icon": "cr"
         },
         {
           "file": "3.mp3",
           "midi": 65,
           "baseNote": "F",
+          "pitched": true,
+          "sounding": 65,
           "icon": "dm"
         },
         {
           "file": "4.mp3",
           "midi": 67,
           "baseNote": "G",
+          "pitched": true,
+          "sounding": 67,
           "icon": "cr"
         },
         {
           "file": "5.mp3",
           "midi": 69,
           "baseNote": "A",
+          "pitched": true,
+          "sounding": 69,
           "icon": "cr"
         },
         {
           "file": "6.mp3",
           "midi": 71,
           "baseNote": "B",
+          "pitched": true,
+          "sounding": 71,
           "icon": "dm"
         },
         {
           "file": "7.mp3",
           "midi": 72,
           "baseNote": "C",
+          "pitched": true,
+          "sounding": 72,
           "icon": "dmcr"
         },
         {
           "file": "8.mp3",
           "midi": 74,
           "baseNote": "D",
+          "pitched": true,
+          "sounding": 74,
           "icon": "dm"
         },
         {
           "file": "9.mp3",
           "midi": 76,
           "baseNote": "E",
+          "pitched": true,
+          "sounding": 76,
           "icon": "cr"
         },
         {
           "file": "10.mp3",
           "midi": 77,
           "baseNote": "F",
+          "pitched": true,
+          "sounding": 77,
           "icon": "cr"
         },
         {
           "file": "11.mp3",
           "midi": 79,
           "baseNote": "G",
+          "pitched": true,
+          "sounding": 79,
           "icon": "dm"
         },
         {
           "file": "12.mp3",
           "midi": 81,
           "baseNote": "A",
+          "pitched": true,
+          "sounding": 81,
           "icon": "cr"
         },
         {
           "file": "13.mp3",
           "midi": 83,
           "baseNote": "B",
+          "pitched": true,
+          "sounding": 83,
           "icon": "dm"
         },
         {
           "file": "14.mp3",
           "midi": 84,
           "baseNote": "C",
+          "pitched": true,
+          "sounding": 84,
           "icon": "dmcr"
         }
       ]
@@ -616,90 +784,120 @@
           "file": "0.mp3",
           "midi": 60,
           "baseNote": "C",
+          "pitched": true,
+          "sounding": 60,
           "icon": "dmcr"
         },
         {
           "file": "1.mp3",
           "midi": 62,
           "baseNote": "D",
+          "pitched": true,
+          "sounding": 62,
           "icon": "dm"
         },
         {
           "file": "2.mp3",
           "midi": 64,
           "baseNote": "E",
+          "pitched": true,
+          "sounding": 64,
           "icon": "cr"
         },
         {
           "file": "3.mp3",
           "midi": 65,
           "baseNote": "F",
+          "pitched": true,
+          "sounding": 65,
           "icon": "dm"
         },
         {
           "file": "4.mp3",
           "midi": 67,
           "baseNote": "G",
+          "pitched": true,
+          "sounding": 67,
           "icon": "cr"
         },
         {
           "file": "5.mp3",
           "midi": 69,
           "baseNote": "A",
+          "pitched": true,
+          "sounding": 69,
           "icon": "cr"
         },
         {
           "file": "6.mp3",
           "midi": 71,
           "baseNote": "B",
+          "pitched": true,
+          "sounding": 71,
           "icon": "dm"
         },
         {
           "file": "7.mp3",
           "midi": 72,
           "baseNote": "C",
+          "pitched": true,
+          "sounding": 72,
           "icon": "dmcr"
         },
         {
           "file": "8.mp3",
           "midi": 74,
           "baseNote": "D",
+          "pitched": true,
+          "sounding": 74,
           "icon": "dm"
         },
         {
           "file": "9.mp3",
           "midi": 76,
           "baseNote": "E",
+          "pitched": true,
+          "sounding": 76,
           "icon": "cr"
         },
         {
           "file": "10.mp3",
           "midi": 77,
           "baseNote": "F",
+          "pitched": true,
+          "sounding": 77,
           "icon": "cr"
         },
         {
           "file": "11.mp3",
           "midi": 79,
           "baseNote": "G",
+          "pitched": true,
+          "sounding": 79,
           "icon": "dm"
         },
         {
           "file": "12.mp3",
           "midi": 81,
           "baseNote": "A",
+          "pitched": true,
+          "sounding": 81,
           "icon": "cr"
         },
         {
           "file": "13.mp3",
           "midi": 83,
           "baseNote": "B",
+          "pitched": true,
+          "sounding": 83,
           "icon": "dm"
         },
         {
           "file": "14.mp3",
           "midi": 84,
           "baseNote": "C",
+          "pitched": true,
+          "sounding": 84,
           "icon": "dmcr"
         }
       ]
@@ -715,48 +913,64 @@
           "file": "0.mp3",
           "midi": 62,
           "baseNote": "D",
+          "pitched": true,
+          "sounding": 62,
           "icon": "cr"
         },
         {
           "file": "1.mp3",
           "midi": 69,
           "baseNote": "A",
+          "pitched": true,
+          "sounding": 69,
           "icon": "dm"
         },
         {
           "file": "2.mp3",
           "midi": 72,
           "baseNote": "C",
+          "pitched": true,
+          "sounding": 72,
           "icon": "cr"
         },
         {
           "file": "3.mp3",
           "midi": 74,
           "baseNote": "D",
+          "pitched": true,
+          "sounding": 74,
           "icon": "dm"
         },
         {
           "file": "4.mp3",
           "midi": 77,
           "baseNote": "F",
+          "pitched": true,
+          "sounding": 77,
           "icon": "cr"
         },
         {
           "file": "5.mp3",
           "midi": 79,
           "baseNote": "G",
+          "pitched": true,
+          "sounding": 79,
           "icon": "dm"
         },
         {
           "file": "6.mp3",
           "midi": 81,
           "baseNote": "A",
+          "pitched": true,
+          "sounding": 81,
           "icon": "cr"
         },
         {
           "file": "7.mp3",
           "midi": 84,
           "baseNote": "C",
+          "pitched": true,
+          "sounding": 84,
           "icon": "dm"
         }
       ]
@@ -772,90 +986,120 @@
           "file": "0.mp3",
           "midi": 60,
           "baseNote": "C",
+          "pitched": true,
+          "sounding": 60,
           "icon": "dmcr"
         },
         {
           "file": "1.mp3",
           "midi": 62,
           "baseNote": "D",
+          "pitched": true,
+          "sounding": 62,
           "icon": "dm"
         },
         {
           "file": "2.mp3",
           "midi": 64,
           "baseNote": "E",
+          "pitched": true,
+          "sounding": 64,
           "icon": "cr"
         },
         {
           "file": "3.mp3",
           "midi": 65,
           "baseNote": "F",
+          "pitched": true,
+          "sounding": 65,
           "icon": "dm"
         },
         {
           "file": "4.mp3",
           "midi": 67,
           "baseNote": "G",
+          "pitched": true,
+          "sounding": 67,
           "icon": "cr"
         },
         {
           "file": "5.mp3",
           "midi": 69,
           "baseNote": "A",
+          "pitched": true,
+          "sounding": 69,
           "icon": "cr"
         },
         {
           "file": "6.mp3",
           "midi": 71,
           "baseNote": "B",
+          "pitched": true,
+          "sounding": 71,
           "icon": "dm"
         },
         {
           "file": "7.mp3",
           "midi": 72,
           "baseNote": "C",
+          "pitched": true,
+          "sounding": 72,
           "icon": "dmcr"
         },
         {
           "file": "8.mp3",
           "midi": 74,
           "baseNote": "D",
+          "pitched": true,
+          "sounding": 74,
           "icon": "dm"
         },
         {
           "file": "9.mp3",
           "midi": 76,
           "baseNote": "E",
+          "pitched": true,
+          "sounding": 76,
           "icon": "cr"
         },
         {
           "file": "10.mp3",
           "midi": 77,
           "baseNote": "F",
+          "pitched": true,
+          "sounding": 77,
           "icon": "cr"
         },
         {
           "file": "11.mp3",
           "midi": 79,
           "baseNote": "G",
+          "pitched": true,
+          "sounding": 79,
           "icon": "dm"
         },
         {
           "file": "12.mp3",
           "midi": 81,
           "baseNote": "A",
+          "pitched": true,
+          "sounding": 81,
           "icon": "cr"
         },
         {
           "file": "13.mp3",
           "midi": 83,
           "baseNote": "B",
+          "pitched": true,
+          "sounding": 83,
           "icon": "dm"
         },
         {
           "file": "14.mp3",
           "midi": 84,
           "baseNote": "C",
+          "pitched": true,
+          "sounding": 84,
           "icon": "dmcr"
         }
       ]
@@ -871,90 +1115,120 @@
           "file": "0.mp3",
           "midi": 60,
           "baseNote": "C",
+          "pitched": true,
+          "sounding": 60,
           "icon": "dmcr"
         },
         {
           "file": "1.mp3",
           "midi": 62,
           "baseNote": "D",
+          "pitched": true,
+          "sounding": 62,
           "icon": "dm"
         },
         {
           "file": "2.mp3",
           "midi": 64,
           "baseNote": "E",
+          "pitched": true,
+          "sounding": 64,
           "icon": "cr"
         },
         {
           "file": "3.mp3",
           "midi": 65,
           "baseNote": "F",
+          "pitched": true,
+          "sounding": 65,
           "icon": "dm"
         },
         {
           "file": "4.mp3",
           "midi": 67,
           "baseNote": "G",
+          "pitched": true,
+          "sounding": 67,
           "icon": "cr"
         },
         {
           "file": "5.mp3",
           "midi": 69,
           "baseNote": "A",
+          "pitched": true,
+          "sounding": 69,
           "icon": "cr"
         },
         {
           "file": "6.mp3",
           "midi": 71,
           "baseNote": "B",
+          "pitched": true,
+          "sounding": 71,
           "icon": "dm"
         },
         {
           "file": "7.mp3",
           "midi": 72,
           "baseNote": "C",
+          "pitched": true,
+          "sounding": 72,
           "icon": "dmcr"
         },
         {
           "file": "8.mp3",
           "midi": 74,
           "baseNote": "D",
+          "pitched": true,
+          "sounding": 74,
           "icon": "dm"
         },
         {
           "file": "9.mp3",
           "midi": 76,
           "baseNote": "E",
+          "pitched": true,
+          "sounding": 76,
           "icon": "cr"
         },
         {
           "file": "10.mp3",
           "midi": 77,
           "baseNote": "F",
+          "pitched": true,
+          "sounding": 77,
           "icon": "cr"
         },
         {
           "file": "11.mp3",
           "midi": 79,
           "baseNote": "G",
+          "pitched": true,
+          "sounding": 79,
           "icon": "dm"
         },
         {
           "file": "12.mp3",
           "midi": 81,
           "baseNote": "A",
+          "pitched": true,
+          "sounding": 81,
           "icon": "cr"
         },
         {
           "file": "13.mp3",
           "midi": 83,
           "baseNote": "B",
+          "pitched": true,
+          "sounding": 83,
           "icon": "dm"
         },
         {
           "file": "14.mp3",
           "midi": 84,
           "baseNote": "C",
+          "pitched": true,
+          "sounding": 84,
           "icon": "dmcr"
         }
       ]
@@ -970,90 +1244,120 @@
           "file": "0.mp3",
           "midi": 60,
           "baseNote": "C",
+          "pitched": true,
+          "sounding": 60,
           "icon": "dmcr"
         },
         {
           "file": "1.mp3",
           "midi": 62,
           "baseNote": "D",
+          "pitched": true,
+          "sounding": 62,
           "icon": "dm"
         },
         {
           "file": "2.mp3",
           "midi": 64,
           "baseNote": "E",
+          "pitched": true,
+          "sounding": 64,
           "icon": "cr"
         },
         {
           "file": "3.mp3",
           "midi": 65,
           "baseNote": "F",
+          "pitched": true,
+          "sounding": 65,
           "icon": "dm"
         },
         {
           "file": "4.mp3",
           "midi": 67,
           "baseNote": "G",
+          "pitched": true,
+          "sounding": 67,
           "icon": "cr"
         },
         {
           "file": "5.mp3",
           "midi": 69,
           "baseNote": "A",
+          "pitched": true,
+          "sounding": 69,
           "icon": "cr"
         },
         {
           "file": "6.mp3",
           "midi": 71,
           "baseNote": "B",
+          "pitched": true,
+          "sounding": 71,
           "icon": "dm"
         },
         {
           "file": "7.mp3",
           "midi": 72,
           "baseNote": "C",
+          "pitched": true,
+          "sounding": 72,
           "icon": "dmcr"
         },
         {
           "file": "8.mp3",
           "midi": 74,
           "baseNote": "D",
+          "pitched": true,
+          "sounding": 74,
           "icon": "dm"
         },
         {
           "file": "9.mp3",
           "midi": 76,
           "baseNote": "E",
+          "pitched": true,
+          "sounding": 76,
           "icon": "cr"
         },
         {
           "file": "10.mp3",
           "midi": 77,
           "baseNote": "F",
+          "pitched": true,
+          "sounding": 77,
           "icon": "cr"
         },
         {
           "file": "11.mp3",
           "midi": 79,
           "baseNote": "G",
+          "pitched": true,
+          "sounding": 79,
           "icon": "dm"
         },
         {
           "file": "12.mp3",
           "midi": 81,
           "baseNote": "A",
+          "pitched": true,
+          "sounding": 81,
           "icon": "cr"
         },
         {
           "file": "13.mp3",
           "midi": 83,
           "baseNote": "B",
+          "pitched": true,
+          "sounding": 83,
           "icon": "dm"
         },
         {
           "file": "14.mp3",
           "midi": 84,
           "baseNote": "C",
+          "pitched": true,
+          "sounding": 84,
           "icon": "dmcr"
         }
       ]
@@ -1069,90 +1373,120 @@
           "file": "0.mp3",
           "midi": 60,
           "baseNote": "C",
+          "pitched": true,
+          "sounding": 60,
           "icon": "dmcr"
         },
         {
           "file": "1.mp3",
           "midi": 62,
           "baseNote": "D",
+          "pitched": true,
+          "sounding": 62,
           "icon": "dm"
         },
         {
           "file": "2.mp3",
           "midi": 64,
           "baseNote": "E",
+          "pitched": true,
+          "sounding": 64,
           "icon": "cr"
         },
         {
           "file": "3.mp3",
           "midi": 65,
           "baseNote": "F",
+          "pitched": true,
+          "sounding": 65,
           "icon": "dm"
         },
         {
           "file": "4.mp3",
           "midi": 67,
           "baseNote": "G",
+          "pitched": true,
+          "sounding": 67,
           "icon": "cr"
         },
         {
           "file": "5.mp3",
           "midi": 69,
           "baseNote": "A",
+          "pitched": true,
+          "sounding": 69,
           "icon": "cr"
         },
         {
           "file": "6.mp3",
           "midi": 71,
           "baseNote": "B",
+          "pitched": true,
+          "sounding": 71,
           "icon": "dm"
         },
         {
           "file": "7.mp3",
           "midi": 72,
           "baseNote": "C",
+          "pitched": true,
+          "sounding": 72,
           "icon": "dmcr"
         },
         {
           "file": "8.mp3",
           "midi": 74,
           "baseNote": "D",
+          "pitched": true,
+          "sounding": 74,
           "icon": "dm"
         },
         {
           "file": "9.mp3",
           "midi": 76,
           "baseNote": "E",
+          "pitched": true,
+          "sounding": 76,
           "icon": "cr"
         },
         {
           "file": "10.mp3",
           "midi": 77,
           "baseNote": "F",
+          "pitched": true,
+          "sounding": 77,
           "icon": "cr"
         },
         {
           "file": "11.mp3",
           "midi": 79,
           "baseNote": "G",
+          "pitched": true,
+          "sounding": 79,
           "icon": "dm"
         },
         {
           "file": "12.mp3",
           "midi": 81,
           "baseNote": "A",
+          "pitched": true,
+          "sounding": 81,
           "icon": "cr"
         },
         {
           "file": "13.mp3",
           "midi": 83,
           "baseNote": "B",
+          "pitched": true,
+          "sounding": 83,
           "icon": "dm"
         },
         {
           "file": "14.mp3",
           "midi": 84,
           "baseNote": "C",
+          "pitched": true,
+          "sounding": 84,
           "icon": "dmcr"
         }
       ]
@@ -1168,90 +1502,120 @@
           "file": "0.mp3",
           "midi": 60,
           "baseNote": "C",
+          "pitched": true,
+          "sounding": 60,
           "icon": "dmcr"
         },
         {
           "file": "1.mp3",
           "midi": 62,
           "baseNote": "D",
+          "pitched": true,
+          "sounding": 62,
           "icon": "dm"
         },
         {
           "file": "2.mp3",
           "midi": 64,
           "baseNote": "E",
+          "pitched": true,
+          "sounding": 64,
           "icon": "cr"
         },
         {
           "file": "3.mp3",
           "midi": 65,
           "baseNote": "F",
+          "pitched": true,
+          "sounding": 65,
           "icon": "dm"
         },
         {
           "file": "4.mp3",
           "midi": 67,
           "baseNote": "G",
+          "pitched": true,
+          "sounding": 67,
           "icon": "cr"
         },
         {
           "file": "5.mp3",
           "midi": 69,
           "baseNote": "A",
+          "pitched": true,
+          "sounding": 69,
           "icon": "cr"
         },
         {
           "file": "6.mp3",
           "midi": 71,
           "baseNote": "B",
+          "pitched": true,
+          "sounding": 71,
           "icon": "dm"
         },
         {
           "file": "7.mp3",
           "midi": 72,
           "baseNote": "C",
+          "pitched": true,
+          "sounding": 72,
           "icon": "dmcr"
         },
         {
           "file": "8.mp3",
           "midi": 74,
           "baseNote": "D",
+          "pitched": true,
+          "sounding": 74,
           "icon": "dm"
         },
         {
           "file": "9.mp3",
           "midi": 76,
           "baseNote": "E",
+          "pitched": true,
+          "sounding": 76,
           "icon": "cr"
         },
         {
           "file": "10.mp3",
           "midi": 77,
           "baseNote": "F",
+          "pitched": true,
+          "sounding": 77,
           "icon": "cr"
         },
         {
           "file": "11.mp3",
           "midi": 79,
           "baseNote": "G",
+          "pitched": true,
+          "sounding": 79,
           "icon": "dm"
         },
         {
           "file": "12.mp3",
           "midi": 81,
           "baseNote": "A",
+          "pitched": true,
+          "sounding": 81,
           "icon": "cr"
         },
         {
           "file": "13.mp3",
           "midi": 83,
           "baseNote": "B",
+          "pitched": true,
+          "sounding": 83,
           "icon": "dm"
         },
         {
           "file": "14.mp3",
           "midi": 84,
           "baseNote": "C",
+          "pitched": true,
+          "sounding": 84,
           "icon": "dmcr"
         }
       ]
@@ -1267,90 +1631,120 @@
           "file": "0.mp3",
           "midi": 60,
           "baseNote": "C",
+          "pitched": true,
+          "sounding": 60,
           "icon": "dmcr"
         },
         {
           "file": "1.mp3",
           "midi": 62,
           "baseNote": "D",
+          "pitched": true,
+          "sounding": 62,
           "icon": "dm"
         },
         {
           "file": "2.mp3",
           "midi": 64,
           "baseNote": "E",
+          "pitched": true,
+          "sounding": 64,
           "icon": "cr"
         },
         {
           "file": "3.mp3",
           "midi": 65,
           "baseNote": "F",
+          "pitched": true,
+          "sounding": 65,
           "icon": "dm"
         },
         {
           "file": "4.mp3",
           "midi": 67,
           "baseNote": "G",
+          "pitched": true,
+          "sounding": 67,
           "icon": "cr"
         },
         {
           "file": "5.mp3",
           "midi": 69,
           "baseNote": "A",
+          "pitched": true,
+          "sounding": 69,
           "icon": "cr"
         },
         {
           "file": "6.mp3",
           "midi": 71,
           "baseNote": "B",
+          "pitched": true,
+          "sounding": 71,
           "icon": "dm"
         },
         {
           "file": "7.mp3",
           "midi": 72,
           "baseNote": "C",
+          "pitched": true,
+          "sounding": 72,
           "icon": "dmcr"
         },
         {
           "file": "8.mp3",
           "midi": 74,
           "baseNote": "D",
+          "pitched": true,
+          "sounding": 74,
           "icon": "dm"
         },
         {
           "file": "9.mp3",
           "midi": 76,
           "baseNote": "E",
+          "pitched": true,
+          "sounding": 76,
           "icon": "cr"
         },
         {
           "file": "10.mp3",
           "midi": 77,
           "baseNote": "F",
+          "pitched": true,
+          "sounding": 77,
           "icon": "cr"
         },
         {
           "file": "11.mp3",
           "midi": 79,
           "baseNote": "G",
+          "pitched": true,
+          "sounding": 79,
           "icon": "dm"
         },
         {
           "file": "12.mp3",
           "midi": 81,
           "baseNote": "A",
+          "pitched": true,
+          "sounding": 81,
           "icon": "cr"
         },
         {
           "file": "13.mp3",
           "midi": 83,
           "baseNote": "B",
+          "pitched": true,
+          "sounding": 83,
           "icon": "dm"
         },
         {
           "file": "14.mp3",
           "midi": 84,
           "baseNote": "C",
+          "pitched": true,
+          "sounding": 84,
           "icon": "dmcr"
         }
       ]
@@ -1366,90 +1760,120 @@
           "file": "0.mp3",
           "midi": 60,
           "baseNote": "C",
+          "pitched": true,
+          "sounding": 60,
           "icon": "dmcr"
         },
         {
           "file": "1.mp3",
           "midi": 62,
           "baseNote": "D",
+          "pitched": true,
+          "sounding": 62,
           "icon": "dm"
         },
         {
           "file": "2.mp3",
           "midi": 64,
           "baseNote": "E",
+          "pitched": true,
+          "sounding": 64,
           "icon": "cr"
         },
         {
           "file": "3.mp3",
           "midi": 65,
           "baseNote": "F",
+          "pitched": true,
+          "sounding": 65,
           "icon": "dm"
         },
         {
           "file": "4.mp3",
           "midi": 67,
           "baseNote": "G",
+          "pitched": true,
+          "sounding": 67,
           "icon": "cr"
         },
         {
           "file": "5.mp3",
           "midi": 69,
           "baseNote": "A",
+          "pitched": true,
+          "sounding": 69,
           "icon": "cr"
         },
         {
           "file": "6.mp3",
           "midi": 71,
           "baseNote": "B",
+          "pitched": true,
+          "sounding": 71,
           "icon": "dm"
         },
         {
           "file": "7.mp3",
           "midi": 72,
           "baseNote": "C",
+          "pitched": true,
+          "sounding": 72,
           "icon": "dmcr"
         },
         {
           "file": "8.mp3",
           "midi": 74,
           "baseNote": "D",
+          "pitched": true,
+          "sounding": 74,
           "icon": "dm"
         },
         {
           "file": "9.mp3",
           "midi": 76,
           "baseNote": "E",
+          "pitched": true,
+          "sounding": 76,
           "icon": "cr"
         },
         {
           "file": "10.mp3",
           "midi": 77,
           "baseNote": "F",
+          "pitched": true,
+          "sounding": 77,
           "icon": "cr"
         },
         {
           "file": "11.mp3",
           "midi": 79,
           "baseNote": "G",
+          "pitched": true,
+          "sounding": 79,
           "icon": "dm"
         },
         {
           "file": "12.mp3",
           "midi": 81,
           "baseNote": "A",
+          "pitched": true,
+          "sounding": 81,
           "icon": "cr"
         },
         {
           "file": "13.mp3",
           "midi": 83,
           "baseNote": "B",
+          "pitched": true,
+          "sounding": 83,
           "icon": "dm"
         },
         {
           "file": "14.mp3",
           "midi": 84,
           "baseNote": "C",
+          "pitched": true,
+          "sounding": 84,
           "icon": "dmcr"
         }
       ]
@@ -1465,90 +1889,120 @@
           "file": "0.mp3",
           "midi": 60,
           "baseNote": "C",
+          "pitched": true,
+          "sounding": 60,
           "icon": "dmcr"
         },
         {
           "file": "1.mp3",
           "midi": 62,
           "baseNote": "D",
+          "pitched": true,
+          "sounding": 62,
           "icon": "dm"
         },
         {
           "file": "2.mp3",
           "midi": 64,
           "baseNote": "E",
+          "pitched": true,
+          "sounding": 64,
           "icon": "cr"
         },
         {
           "file": "3.mp3",
           "midi": 65,
           "baseNote": "F",
+          "pitched": true,
+          "sounding": 65,
           "icon": "dm"
         },
         {
           "file": "4.mp3",
           "midi": 67,
           "baseNote": "G",
+          "pitched": true,
+          "sounding": 67,
           "icon": "cr"
         },
         {
           "file": "5.mp3",
           "midi": 69,
           "baseNote": "A",
+          "pitched": true,
+          "sounding": 69,
           "icon": "cr"
         },
         {
           "file": "6.mp3",
           "midi": 71,
           "baseNote": "B",
+          "pitched": true,
+          "sounding": 71,
           "icon": "dm"
         },
         {
           "file": "7.mp3",
           "midi": 72,
           "baseNote": "C",
+          "pitched": true,
+          "sounding": 72,
           "icon": "dmcr"
         },
         {
           "file": "8.mp3",
           "midi": 74,
           "baseNote": "D",
+          "pitched": true,
+          "sounding": 74,
           "icon": "dm"
         },
         {
           "file": "9.mp3",
           "midi": 76,
           "baseNote": "E",
+          "pitched": true,
+          "sounding": 76,
           "icon": "cr"
         },
         {
           "file": "10.mp3",
           "midi": 77,
           "baseNote": "F",
+          "pitched": true,
+          "sounding": 77,
           "icon": "cr"
         },
         {
           "file": "11.mp3",
           "midi": 79,
           "baseNote": "G",
+          "pitched": true,
+          "sounding": 79,
           "icon": "dm"
         },
         {
           "file": "12.mp3",
           "midi": 81,
           "baseNote": "A",
+          "pitched": true,
+          "sounding": 81,
           "icon": "cr"
         },
         {
           "file": "13.mp3",
           "midi": 83,
           "baseNote": "B",
+          "pitched": true,
+          "sounding": 83,
           "icon": "dm"
         },
         {
           "file": "14.mp3",
           "midi": 84,
           "baseNote": "C",
+          "pitched": true,
+          "sounding": 84,
           "icon": "dmcr"
         }
       ]
@@ -1564,90 +2018,120 @@
           "file": "0.mp3",
           "midi": 60,
           "baseNote": "C",
+          "pitched": true,
+          "sounding": 60,
           "icon": "dmcr"
         },
         {
           "file": "1.mp3",
           "midi": 62,
           "baseNote": "D",
+          "pitched": true,
+          "sounding": 62,
           "icon": "dm"
         },
         {
           "file": "2.mp3",
           "midi": 64,
           "baseNote": "E",
+          "pitched": true,
+          "sounding": 64,
           "icon": "cr"
         },
         {
           "file": "3.mp3",
           "midi": 65,
           "baseNote": "F",
+          "pitched": true,
+          "sounding": 65,
           "icon": "dm"
         },
         {
           "file": "4.mp3",
           "midi": 67,
           "baseNote": "G",
+          "pitched": true,
+          "sounding": 67,
           "icon": "cr"
         },
         {
           "file": "5.mp3",
           "midi": 69,
           "baseNote": "A",
+          "pitched": true,
+          "sounding": 69,
           "icon": "cr"
         },
         {
           "file": "6.mp3",
           "midi": 71,
           "baseNote": "B",
+          "pitched": true,
+          "sounding": 71,
           "icon": "dm"
         },
         {
           "file": "7.mp3",
           "midi": 72,
           "baseNote": "C",
+          "pitched": true,
+          "sounding": 72,
           "icon": "dmcr"
         },
         {
           "file": "8.mp3",
           "midi": 74,
           "baseNote": "D",
+          "pitched": true,
+          "sounding": 74,
           "icon": "dm"
         },
         {
           "file": "9.mp3",
           "midi": 76,
           "baseNote": "E",
+          "pitched": true,
+          "sounding": 76,
           "icon": "cr"
         },
         {
           "file": "10.mp3",
           "midi": 77,
           "baseNote": "F",
+          "pitched": true,
+          "sounding": 77,
           "icon": "cr"
         },
         {
           "file": "11.mp3",
           "midi": 79,
           "baseNote": "G",
+          "pitched": true,
+          "sounding": 79,
           "icon": "dm"
         },
         {
           "file": "12.mp3",
           "midi": 81,
           "baseNote": "A",
+          "pitched": true,
+          "sounding": 81,
           "icon": "cr"
         },
         {
           "file": "13.mp3",
           "midi": 83,
           "baseNote": "B",
+          "pitched": true,
+          "sounding": 83,
           "icon": "dm"
         },
         {
           "file": "14.mp3",
           "midi": 84,
           "baseNote": "C",
+          "pitched": true,
+          "sounding": 84,
           "icon": "dmcr"
         }
       ]
@@ -1663,48 +2147,64 @@
           "file": "0.mp3",
           "midi": 60,
           "baseNote": "C",
+          "pitched": true,
+          "sounding": 60,
           "icon": "dmcr"
         },
         {
           "file": "1.mp3",
           "midi": 62,
           "baseNote": "D",
+          "pitched": true,
+          "sounding": 62,
           "icon": "dm"
         },
         {
           "file": "2.mp3",
           "midi": 64,
           "baseNote": "E",
+          "pitched": true,
+          "sounding": 64,
           "icon": "cr"
         },
         {
           "file": "3.mp3",
           "midi": 65,
           "baseNote": "F",
+          "pitched": true,
+          "sounding": 65,
           "icon": "dm"
         },
         {
           "file": "4.mp3",
           "midi": 67,
           "baseNote": "G",
+          "pitched": true,
+          "sounding": 67,
           "icon": "cr"
         },
         {
           "file": "5.mp3",
           "midi": 69,
           "baseNote": "A",
+          "pitched": true,
+          "sounding": 69,
           "icon": "dm"
         },
         {
           "file": "6.mp3",
           "midi": 71,
           "baseNote": "B",
+          "pitched": true,
+          "sounding": 71,
           "icon": "cr"
         },
         {
           "file": "7.mp3",
           "midi": 72,
           "baseNote": "C",
+          "pitched": true,
+          "sounding": 72,
           "icon": "dmcr"
         }
       ]
@@ -1720,90 +2220,120 @@
           "file": "0.mp3",
           "midi": 60,
           "baseNote": "C",
+          "pitched": true,
+          "sounding": 60,
           "icon": "dmcr"
         },
         {
           "file": "1.mp3",
           "midi": 62,
           "baseNote": "D",
+          "pitched": true,
+          "sounding": 62,
           "icon": "dm"
         },
         {
           "file": "2.mp3",
           "midi": 64,
           "baseNote": "E",
+          "pitched": true,
+          "sounding": 64,
           "icon": "cr"
         },
         {
           "file": "3.mp3",
           "midi": 65,
           "baseNote": "F",
+          "pitched": true,
+          "sounding": 65,
           "icon": "dm"
         },
         {
           "file": "4.mp3",
           "midi": 67,
           "baseNote": "G",
+          "pitched": true,
+          "sounding": 67,
           "icon": "cr"
         },
         {
           "file": "5.mp3",
           "midi": 69,
           "baseNote": "A",
+          "pitched": true,
+          "sounding": 69,
           "icon": "cr"
         },
         {
           "file": "6.mp3",
           "midi": 71,
           "baseNote": "B",
+          "pitched": true,
+          "sounding": 71,
           "icon": "dm"
         },
         {
           "file": "7.mp3",
           "midi": 72,
           "baseNote": "C",
+          "pitched": true,
+          "sounding": 72,
           "icon": "dmcr"
         },
         {
           "file": "8.mp3",
           "midi": 74,
           "baseNote": "D",
+          "pitched": true,
+          "sounding": 74,
           "icon": "dm"
         },
         {
           "file": "9.mp3",
           "midi": 76,
           "baseNote": "E",
+          "pitched": true,
+          "sounding": 76,
           "icon": "cr"
         },
         {
           "file": "10.mp3",
           "midi": 77,
           "baseNote": "F",
+          "pitched": true,
+          "sounding": 77,
           "icon": "cr"
         },
         {
           "file": "11.mp3",
           "midi": 79,
           "baseNote": "G",
+          "pitched": true,
+          "sounding": 79,
           "icon": "dm"
         },
         {
           "file": "12.mp3",
           "midi": 81,
           "baseNote": "A",
+          "pitched": true,
+          "sounding": 81,
           "icon": "cr"
         },
         {
           "file": "13.mp3",
           "midi": 83,
           "baseNote": "B",
+          "pitched": true,
+          "sounding": 83,
           "icon": "dm"
         },
         {
           "file": "14.mp3",
           "midi": 84,
           "baseNote": "C",
+          "pitched": true,
+          "sounding": 84,
           "icon": "dmcr"
         }
       ]
@@ -1819,48 +2349,64 @@
           "file": "0.mp3",
           "midi": 60,
           "baseNote": "C",
+          "pitched": true,
+          "sounding": 60,
           "icon": "dmcr"
         },
         {
           "file": "1.mp3",
           "midi": 62,
           "baseNote": "D",
+          "pitched": true,
+          "sounding": 62,
           "icon": "dm"
         },
         {
           "file": "2.mp3",
           "midi": 64,
           "baseNote": "E",
+          "pitched": true,
+          "sounding": 64,
           "icon": "cr"
         },
         {
           "file": "3.mp3",
           "midi": 65,
           "baseNote": "F",
+          "pitched": true,
+          "sounding": 65,
           "icon": "dm"
         },
         {
           "file": "4.mp3",
           "midi": 67,
           "baseNote": "G",
+          "pitched": true,
+          "sounding": 67,
           "icon": "cr"
         },
         {
           "file": "5.mp3",
           "midi": 69,
           "baseNote": "A",
+          "pitched": true,
+          "sounding": 69,
           "icon": "dm"
         },
         {
           "file": "6.mp3",
           "midi": 71,
           "baseNote": "B",
+          "pitched": true,
+          "sounding": 71,
           "icon": "cr"
         },
         {
           "file": "7.mp3",
           "midi": 72,
           "baseNote": "C",
+          "pitched": true,
+          "sounding": 72,
           "icon": "dmcr"
         }
       ]
@@ -1876,90 +2422,120 @@
           "file": "0.mp3",
           "midi": 60,
           "baseNote": "C",
+          "pitched": true,
+          "sounding": 60,
           "icon": "dmcr"
         },
         {
           "file": "1.mp3",
           "midi": 62,
           "baseNote": "D",
+          "pitched": true,
+          "sounding": 62,
           "icon": "dm"
         },
         {
           "file": "2.mp3",
           "midi": 64,
           "baseNote": "E",
+          "pitched": true,
+          "sounding": 64,
           "icon": "cr"
         },
         {
           "file": "3.mp3",
           "midi": 65,
           "baseNote": "F",
+          "pitched": true,
+          "sounding": 65,
           "icon": "dm"
         },
         {
           "file": "4.mp3",
           "midi": 67,
           "baseNote": "G",
+          "pitched": true,
+          "sounding": 67,
           "icon": "cr"
         },
         {
           "file": "5.mp3",
           "midi": 69,
           "baseNote": "A",
+          "pitched": true,
+          "sounding": 69,
           "icon": "cr"
         },
         {
           "file": "6.mp3",
           "midi": 71,
           "baseNote": "B",
+          "pitched": true,
+          "sounding": 71,
           "icon": "dm"
         },
         {
           "file": "7.mp3",
           "midi": 72,
           "baseNote": "C",
+          "pitched": true,
+          "sounding": 72,
           "icon": "dmcr"
         },
         {
           "file": "8.mp3",
           "midi": 74,
           "baseNote": "D",
+          "pitched": true,
+          "sounding": 74,
           "icon": "dm"
         },
         {
           "file": "9.mp3",
           "midi": 76,
           "baseNote": "E",
+          "pitched": true,
+          "sounding": 76,
           "icon": "cr"
         },
         {
           "file": "10.mp3",
           "midi": 77,
           "baseNote": "F",
+          "pitched": true,
+          "sounding": 77,
           "icon": "cr"
         },
         {
           "file": "11.mp3",
           "midi": 79,
           "baseNote": "G",
+          "pitched": true,
+          "sounding": 79,
           "icon": "dm"
         },
         {
           "file": "12.mp3",
           "midi": 81,
           "baseNote": "A",
+          "pitched": true,
+          "sounding": 81,
           "icon": "cr"
         },
         {
           "file": "13.mp3",
           "midi": 83,
           "baseNote": "B",
+          "pitched": true,
+          "sounding": 83,
           "icon": "dm"
         },
         {
           "file": "14.mp3",
           "midi": 84,
           "baseNote": "C",
+          "pitched": true,
+          "sounding": 84,
           "icon": "dmcr"
         }
       ]
@@ -1975,36 +2551,48 @@
           "file": "0.mp3",
           "midi": 60,
           "baseNote": "",
+          "pitched": false,
+          "sounding": 60,
           "icon": "cr"
         },
         {
           "file": "1.mp3",
           "midi": 62,
           "baseNote": "",
+          "pitched": false,
+          "sounding": 62,
           "icon": "dm"
         },
         {
           "file": "2.mp3",
           "midi": 64,
           "baseNote": "",
+          "pitched": false,
+          "sounding": 64,
           "icon": "cr"
         },
         {
           "file": "3.mp3",
           "midi": 65,
           "baseNote": "",
+          "pitched": false,
+          "sounding": 65,
           "icon": "cr"
         },
         {
           "file": "4.mp3",
           "midi": 67,
           "baseNote": "",
+          "pitched": false,
+          "sounding": 67,
           "icon": "dm"
         },
         {
           "file": "5.mp3",
           "midi": 69,
           "baseNote": "",
+          "pitched": false,
+          "sounding": 69,
           "icon": "cr"
         }
       ]
@@ -2020,90 +2608,120 @@
           "file": "0.mp3",
           "midi": 60,
           "baseNote": "C",
+          "pitched": true,
+          "sounding": 60,
           "icon": "dmcr"
         },
         {
           "file": "1.mp3",
           "midi": 62,
           "baseNote": "D",
+          "pitched": true,
+          "sounding": 62,
           "icon": "dm"
         },
         {
           "file": "2.mp3",
           "midi": 64,
           "baseNote": "E",
+          "pitched": true,
+          "sounding": 64,
           "icon": "cr"
         },
         {
           "file": "3.mp3",
           "midi": 65,
           "baseNote": "F",
+          "pitched": true,
+          "sounding": 65,
           "icon": "dm"
         },
         {
           "file": "4.mp3",
           "midi": 67,
           "baseNote": "G",
+          "pitched": true,
+          "sounding": 67,
           "icon": "cr"
         },
         {
           "file": "5.mp3",
           "midi": 69,
           "baseNote": "A",
+          "pitched": true,
+          "sounding": 69,
           "icon": "cr"
         },
         {
           "file": "6.mp3",
           "midi": 71,
           "baseNote": "B",
+          "pitched": true,
+          "sounding": 71,
           "icon": "dm"
         },
         {
           "file": "7.mp3",
           "midi": 72,
           "baseNote": "C",
+          "pitched": true,
+          "sounding": 72,
           "icon": "dmcr"
         },
         {
           "file": "8.mp3",
           "midi": 74,
           "baseNote": "D",
+          "pitched": true,
+          "sounding": 74,
           "icon": "dm"
         },
         {
           "file": "9.mp3",
           "midi": 76,
           "baseNote": "E",
+          "pitched": true,
+          "sounding": 76,
           "icon": "cr"
         },
         {
           "file": "10.mp3",
           "midi": 77,
           "baseNote": "F",
+          "pitched": true,
+          "sounding": 77,
           "icon": "cr"
         },
         {
           "file": "11.mp3",
           "midi": 79,
           "baseNote": "G",
+          "pitched": true,
+          "sounding": 79,
           "icon": "dm"
         },
         {
           "file": "12.mp3",
           "midi": 81,
           "baseNote": "A",
+          "pitched": true,
+          "sounding": 81,
           "icon": "cr"
         },
         {
           "file": "13.mp3",
           "midi": 83,
           "baseNote": "B",
+          "pitched": true,
+          "sounding": 83,
           "icon": "dm"
         },
         {
           "file": "14.mp3",
           "midi": 84,
           "baseNote": "C",
+          "pitched": true,
+          "sounding": 84,
           "icon": "dmcr"
         }
       ]
@@ -2119,90 +2737,120 @@
           "file": "0.mp3",
           "midi": 60,
           "baseNote": "C",
+          "pitched": true,
+          "sounding": 60,
           "icon": "dmcr"
         },
         {
           "file": "1.mp3",
           "midi": 62,
           "baseNote": "D",
+          "pitched": true,
+          "sounding": 62,
           "icon": "dm"
         },
         {
           "file": "2.mp3",
           "midi": 64,
           "baseNote": "E",
+          "pitched": true,
+          "sounding": 64,
           "icon": "cr"
         },
         {
           "file": "3.mp3",
           "midi": 65,
           "baseNote": "F",
+          "pitched": true,
+          "sounding": 65,
           "icon": "dm"
         },
         {
           "file": "4.mp3",
           "midi": 67,
           "baseNote": "G",
+          "pitched": true,
+          "sounding": 67,
           "icon": "cr"
         },
         {
           "file": "5.mp3",
           "midi": 69,
           "baseNote": "A",
+          "pitched": true,
+          "sounding": 69,
           "icon": "cr"
         },
         {
           "file": "6.mp3",
           "midi": 71,
           "baseNote": "B",
+          "pitched": true,
+          "sounding": 71,
           "icon": "dm"
         },
         {
           "file": "7.mp3",
           "midi": 72,
           "baseNote": "C",
+          "pitched": true,
+          "sounding": 72,
           "icon": "dmcr"
         },
         {
           "file": "8.mp3",
           "midi": 74,
           "baseNote": "D",
+          "pitched": true,
+          "sounding": 74,
           "icon": "dm"
         },
         {
           "file": "9.mp3",
           "midi": 76,
           "baseNote": "E",
+          "pitched": true,
+          "sounding": 76,
           "icon": "cr"
         },
         {
           "file": "10.mp3",
           "midi": 77,
           "baseNote": "F",
+          "pitched": true,
+          "sounding": 77,
           "icon": "cr"
         },
         {
           "file": "11.mp3",
           "midi": 79,
           "baseNote": "G",
+          "pitched": true,
+          "sounding": 79,
           "icon": "dm"
         },
         {
           "file": "12.mp3",
           "midi": 81,
           "baseNote": "A",
+          "pitched": true,
+          "sounding": 81,
           "icon": "cr"
         },
         {
           "file": "13.mp3",
           "midi": 83,
           "baseNote": "B",
+          "pitched": true,
+          "sounding": 83,
           "icon": "dm"
         },
         {
           "file": "14.mp3",
           "midi": 84,
           "baseNote": "C",
+          "pitched": true,
+          "sounding": 84,
           "icon": "dmcr"
         }
       ]
@@ -2218,90 +2866,120 @@
           "file": "0.mp3",
           "midi": 60,
           "baseNote": "C",
+          "pitched": true,
+          "sounding": 60,
           "icon": "dmcr"
         },
         {
           "file": "1.mp3",
           "midi": 62,
           "baseNote": "D",
+          "pitched": true,
+          "sounding": 62,
           "icon": "dm"
         },
         {
           "file": "2.mp3",
           "midi": 64,
           "baseNote": "E",
+          "pitched": true,
+          "sounding": 64,
           "icon": "cr"
         },
         {
           "file": "3.mp3",
           "midi": 65,
           "baseNote": "F",
+          "pitched": true,
+          "sounding": 65,
           "icon": "dm"
         },
         {
           "file": "4.mp3",
           "midi": 67,
           "baseNote": "G",
+          "pitched": true,
+          "sounding": 67,
           "icon": "cr"
         },
         {
           "file": "5.mp3",
           "midi": 69,
           "baseNote": "A",
+          "pitched": true,
+          "sounding": 69,
           "icon": "cr"
         },
         {
           "file": "6.mp3",
           "midi": 71,
           "baseNote": "B",
+          "pitched": true,
+          "sounding": 71,
           "icon": "dm"
         },
         {
           "file": "7.mp3",
           "midi": 72,
           "baseNote": "C",
+          "pitched": true,
+          "sounding": 72,
           "icon": "dmcr"
         },
         {
           "file": "8.mp3",
           "midi": 74,
           "baseNote": "D",
+          "pitched": true,
+          "sounding": 74,
           "icon": "dm"
         },
         {
           "file": "9.mp3",
           "midi": 76,
           "baseNote": "E",
+          "pitched": true,
+          "sounding": 76,
           "icon": "cr"
         },
         {
           "file": "10.mp3",
           "midi": 77,
           "baseNote": "F",
+          "pitched": true,
+          "sounding": 77,
           "icon": "cr"
         },
         {
           "file": "11.mp3",
           "midi": 79,
           "baseNote": "G",
+          "pitched": true,
+          "sounding": 79,
           "icon": "dm"
         },
         {
           "file": "12.mp3",
           "midi": 81,
           "baseNote": "A",
+          "pitched": true,
+          "sounding": 81,
           "icon": "cr"
         },
         {
           "file": "13.mp3",
           "midi": 83,
           "baseNote": "B",
+          "pitched": true,
+          "sounding": 83,
           "icon": "dm"
         },
         {
           "file": "14.mp3",
           "midi": 84,
           "baseNote": "C",
+          "pitched": true,
+          "sounding": 84,
           "icon": "dmcr"
         }
       ]
@@ -2317,90 +2995,120 @@
           "file": "0.mp3",
           "midi": 60,
           "baseNote": "C",
+          "pitched": true,
+          "sounding": 60,
           "icon": "dmcr"
         },
         {
           "file": "1.mp3",
           "midi": 62,
           "baseNote": "D",
+          "pitched": true,
+          "sounding": 62,
           "icon": "dm"
         },
         {
           "file": "2.mp3",
           "midi": 64,
           "baseNote": "E",
+          "pitched": true,
+          "sounding": 64,
           "icon": "cr"
         },
         {
           "file": "3.mp3",
           "midi": 65,
           "baseNote": "F",
+          "pitched": true,
+          "sounding": 65,
           "icon": "dm"
         },
         {
           "file": "4.mp3",
           "midi": 67,
           "baseNote": "G",
+          "pitched": true,
+          "sounding": 67,
           "icon": "cr"
         },
         {
           "file": "5.mp3",
           "midi": 69,
           "baseNote": "A",
+          "pitched": true,
+          "sounding": 69,
           "icon": "cr"
         },
         {
           "file": "6.mp3",
           "midi": 71,
           "baseNote": "B",
+          "pitched": true,
+          "sounding": 71,
           "icon": "dm"
         },
         {
           "file": "7.mp3",
           "midi": 72,
           "baseNote": "C",
+          "pitched": true,
+          "sounding": 72,
           "icon": "dmcr"
         },
         {
           "file": "8.mp3",
           "midi": 74,
           "baseNote": "D",
+          "pitched": true,
+          "sounding": 74,
           "icon": "dm"
         },
         {
           "file": "9.mp3",
           "midi": 76,
           "baseNote": "E",
+          "pitched": true,
+          "sounding": 76,
           "icon": "cr"
         },
         {
           "file": "10.mp3",
           "midi": 77,
           "baseNote": "F",
+          "pitched": true,
+          "sounding": 77,
           "icon": "cr"
         },
         {
           "file": "11.mp3",
           "midi": 79,
           "baseNote": "G",
+          "pitched": true,
+          "sounding": 79,
           "icon": "dm"
         },
         {
           "file": "12.mp3",
           "midi": 81,
           "baseNote": "A",
+          "pitched": true,
+          "sounding": 81,
           "icon": "cr"
         },
         {
           "file": "13.mp3",
           "midi": 83,
           "baseNote": "B",
+          "pitched": true,
+          "sounding": 83,
           "icon": "dm"
         },
         {
           "file": "14.mp3",
           "midi": 84,
           "baseNote": "C",
+          "pitched": true,
+          "sounding": 84,
           "icon": "dmcr"
         }
       ]
@@ -2416,48 +3124,64 @@
           "file": "0.mp3",
           "midi": 60,
           "baseNote": "C",
+          "pitched": true,
+          "sounding": 60,
           "icon": "dmcr"
         },
         {
           "file": "1.mp3",
           "midi": 62,
           "baseNote": "D",
+          "pitched": true,
+          "sounding": 62,
           "icon": "dm"
         },
         {
           "file": "2.mp3",
           "midi": 64,
           "baseNote": "E",
+          "pitched": true,
+          "sounding": 64,
           "icon": "cr"
         },
         {
           "file": "3.mp3",
           "midi": 65,
           "baseNote": "F",
+          "pitched": true,
+          "sounding": 65,
           "icon": "dm"
         },
         {
           "file": "4.mp3",
           "midi": 67,
           "baseNote": "G",
+          "pitched": true,
+          "sounding": 67,
           "icon": "cr"
         },
         {
           "file": "5.mp3",
           "midi": 69,
           "baseNote": "A",
+          "pitched": true,
+          "sounding": 69,
           "icon": "dm"
         },
         {
           "file": "6.mp3",
           "midi": 71,
           "baseNote": "B",
+          "pitched": true,
+          "sounding": 71,
           "icon": "cr"
         },
         {
           "file": "7.mp3",
           "midi": 72,
           "baseNote": "C",
+          "pitched": true,
+          "sounding": 72,
           "icon": "dmcr"
         }
       ]
@@ -2473,90 +3197,120 @@
           "file": "0.mp3",
           "midi": 60,
           "baseNote": "C",
+          "pitched": true,
+          "sounding": 60,
           "icon": "dmcr"
         },
         {
           "file": "1.mp3",
           "midi": 62,
           "baseNote": "D",
+          "pitched": true,
+          "sounding": 62,
           "icon": "dm"
         },
         {
           "file": "2.mp3",
           "midi": 64,
           "baseNote": "E",
+          "pitched": true,
+          "sounding": 64,
           "icon": "cr"
         },
         {
           "file": "3.mp3",
           "midi": 65,
           "baseNote": "F",
+          "pitched": true,
+          "sounding": 65,
           "icon": "dm"
         },
         {
           "file": "4.mp3",
           "midi": 67,
           "baseNote": "G",
+          "pitched": true,
+          "sounding": 67,
           "icon": "cr"
         },
         {
           "file": "5.mp3",
           "midi": 69,
           "baseNote": "A",
+          "pitched": true,
+          "sounding": 69,
           "icon": "cr"
         },
         {
           "file": "6.mp3",
           "midi": 71,
           "baseNote": "B",
+          "pitched": true,
+          "sounding": 71,
           "icon": "dm"
         },
         {
           "file": "7.mp3",
           "midi": 72,
           "baseNote": "C",
+          "pitched": true,
+          "sounding": 72,
           "icon": "dmcr"
         },
         {
           "file": "8.mp3",
           "midi": 74,
           "baseNote": "D",
+          "pitched": true,
+          "sounding": 74,
           "icon": "dm"
         },
         {
           "file": "9.mp3",
           "midi": 76,
           "baseNote": "E",
+          "pitched": true,
+          "sounding": 76,
           "icon": "cr"
         },
         {
           "file": "10.mp3",
           "midi": 77,
           "baseNote": "F",
+          "pitched": true,
+          "sounding": 77,
           "icon": "cr"
         },
         {
           "file": "11.mp3",
           "midi": 79,
           "baseNote": "G",
+          "pitched": true,
+          "sounding": 79,
           "icon": "dm"
         },
         {
           "file": "12.mp3",
           "midi": 81,
           "baseNote": "A",
+          "pitched": true,
+          "sounding": 81,
           "icon": "cr"
         },
         {
           "file": "13.mp3",
           "midi": 83,
           "baseNote": "B",
+          "pitched": true,
+          "sounding": 83,
           "icon": "dm"
         },
         {
           "file": "14.mp3",
           "midi": 84,
           "baseNote": "C",
+          "pitched": true,
+          "sounding": 84,
           "icon": "dmcr"
         }
       ]
@@ -2572,48 +3326,64 @@
           "file": "0.mp3",
           "midi": 60,
           "baseNote": "C",
+          "pitched": true,
+          "sounding": 60,
           "icon": "dmcr"
         },
         {
           "file": "1.mp3",
           "midi": 62,
           "baseNote": "D",
+          "pitched": true,
+          "sounding": 62,
           "icon": "dm"
         },
         {
           "file": "2.mp3",
           "midi": 64,
           "baseNote": "E",
+          "pitched": true,
+          "sounding": 64,
           "icon": "cr"
         },
         {
           "file": "3.mp3",
           "midi": 65,
           "baseNote": "F",
+          "pitched": true,
+          "sounding": 65,
           "icon": "dm"
         },
         {
           "file": "4.mp3",
           "midi": 67,
           "baseNote": "G",
+          "pitched": true,
+          "sounding": 67,
           "icon": "cr"
         },
         {
           "file": "5.mp3",
           "midi": 69,
           "baseNote": "A",
+          "pitched": true,
+          "sounding": 69,
           "icon": "dm"
         },
         {
           "file": "6.mp3",
           "midi": 71,
           "baseNote": "B",
+          "pitched": true,
+          "sounding": 71,
           "icon": "cr"
         },
         {
           "file": "7.mp3",
           "midi": 72,
           "baseNote": "C",
+          "pitched": true,
+          "sounding": 72,
           "icon": "dmcr"
         }
       ]
@@ -2629,90 +3399,120 @@
           "file": "0.mp3",
           "midi": 60,
           "baseNote": "C",
+          "pitched": true,
+          "sounding": 60,
           "icon": "dmcr"
         },
         {
           "file": "1.mp3",
           "midi": 62,
           "baseNote": "D",
+          "pitched": true,
+          "sounding": 62,
           "icon": "dm"
         },
         {
           "file": "2.mp3",
           "midi": 64,
           "baseNote": "E",
+          "pitched": true,
+          "sounding": 64,
           "icon": "cr"
         },
         {
           "file": "3.mp3",
           "midi": 65,
           "baseNote": "F",
+          "pitched": true,
+          "sounding": 65,
           "icon": "dm"
         },
         {
           "file": "4.mp3",
           "midi": 67,
           "baseNote": "G",
+          "pitched": true,
+          "sounding": 67,
           "icon": "cr"
         },
         {
           "file": "5.mp3",
           "midi": 69,
           "baseNote": "A",
+          "pitched": true,
+          "sounding": 69,
           "icon": "cr"
         },
         {
           "file": "6.mp3",
           "midi": 71,
           "baseNote": "B",
+          "pitched": true,
+          "sounding": 71,
           "icon": "dm"
         },
         {
           "file": "7.mp3",
           "midi": 72,
           "baseNote": "C",
+          "pitched": true,
+          "sounding": 72,
           "icon": "dmcr"
         },
         {
           "file": "8.mp3",
           "midi": 74,
           "baseNote": "D",
+          "pitched": true,
+          "sounding": 74,
           "icon": "dm"
         },
         {
           "file": "9.mp3",
           "midi": 76,
           "baseNote": "E",
+          "pitched": true,
+          "sounding": 76,
           "icon": "cr"
         },
         {
           "file": "10.mp3",
           "midi": 77,
           "baseNote": "F",
+          "pitched": true,
+          "sounding": 77,
           "icon": "cr"
         },
         {
           "file": "11.mp3",
           "midi": 79,
           "baseNote": "G",
+          "pitched": true,
+          "sounding": 79,
           "icon": "dm"
         },
         {
           "file": "12.mp3",
           "midi": 81,
           "baseNote": "A",
+          "pitched": true,
+          "sounding": 81,
           "icon": "cr"
         },
         {
           "file": "13.mp3",
           "midi": 83,
           "baseNote": "B",
+          "pitched": true,
+          "sounding": 83,
           "icon": "dm"
         },
         {
           "file": "14.mp3",
           "midi": 84,
           "baseNote": "C",
+          "pitched": true,
+          "sounding": 84,
           "icon": "dmcr"
         }
       ]
@@ -2728,90 +3528,120 @@
           "file": "0.mp3",
           "midi": 60,
           "baseNote": "C",
+          "pitched": true,
+          "sounding": 60,
           "icon": "dmcr"
         },
         {
           "file": "1.mp3",
           "midi": 62,
           "baseNote": "D",
+          "pitched": true,
+          "sounding": 62,
           "icon": "dm"
         },
         {
           "file": "2.mp3",
           "midi": 64,
           "baseNote": "E",
+          "pitched": true,
+          "sounding": 64,
           "icon": "cr"
         },
         {
           "file": "3.mp3",
           "midi": 65,
           "baseNote": "F",
+          "pitched": true,
+          "sounding": 65,
           "icon": "dm"
         },
         {
           "file": "4.mp3",
           "midi": 67,
           "baseNote": "G",
+          "pitched": true,
+          "sounding": 67,
           "icon": "cr"
         },
         {
           "file": "5.mp3",
           "midi": 69,
           "baseNote": "A",
+          "pitched": true,
+          "sounding": 69,
           "icon": "cr"
         },
         {
           "file": "6.mp3",
           "midi": 71,
           "baseNote": "B",
+          "pitched": true,
+          "sounding": 71,
           "icon": "dm"
         },
         {
           "file": "7.mp3",
           "midi": 72,
           "baseNote": "C",
+          "pitched": true,
+          "sounding": 72,
           "icon": "dmcr"
         },
         {
           "file": "8.mp3",
           "midi": 74,
           "baseNote": "D",
+          "pitched": true,
+          "sounding": 74,
           "icon": "dm"
         },
         {
           "file": "9.mp3",
           "midi": 76,
           "baseNote": "E",
+          "pitched": true,
+          "sounding": 76,
           "icon": "cr"
         },
         {
           "file": "10.mp3",
           "midi": 77,
           "baseNote": "F",
+          "pitched": true,
+          "sounding": 77,
           "icon": "cr"
         },
         {
           "file": "11.mp3",
           "midi": 79,
           "baseNote": "G",
+          "pitched": true,
+          "sounding": 79,
           "icon": "dm"
         },
         {
           "file": "12.mp3",
           "midi": 81,
           "baseNote": "A",
+          "pitched": true,
+          "sounding": 81,
           "icon": "cr"
         },
         {
           "file": "13.mp3",
           "midi": 83,
           "baseNote": "B",
+          "pitched": true,
+          "sounding": 83,
           "icon": "dm"
         },
         {
           "file": "14.mp3",
           "midi": 84,
           "baseNote": "C",
+          "pitched": true,
+          "sounding": 84,
           "icon": "dmcr"
         }
       ]
@@ -2827,90 +3657,120 @@
           "file": "0.mp3",
           "midi": 60,
           "baseNote": "C",
+          "pitched": true,
+          "sounding": 60,
           "icon": "dmcr"
         },
         {
           "file": "1.mp3",
           "midi": 62,
           "baseNote": "D",
+          "pitched": true,
+          "sounding": 62,
           "icon": "dm"
         },
         {
           "file": "2.mp3",
           "midi": 64,
           "baseNote": "E",
+          "pitched": true,
+          "sounding": 64,
           "icon": "cr"
         },
         {
           "file": "3.mp3",
           "midi": 65,
           "baseNote": "F",
+          "pitched": true,
+          "sounding": 65,
           "icon": "dm"
         },
         {
           "file": "4.mp3",
           "midi": 67,
           "baseNote": "G",
+          "pitched": true,
+          "sounding": 67,
           "icon": "cr"
         },
         {
           "file": "5.mp3",
           "midi": 69,
           "baseNote": "A",
+          "pitched": true,
+          "sounding": 69,
           "icon": "cr"
         },
         {
           "file": "6.mp3",
           "midi": 71,
           "baseNote": "B",
+          "pitched": true,
+          "sounding": 71,
           "icon": "dm"
         },
         {
           "file": "7.mp3",
           "midi": 72,
           "baseNote": "C",
+          "pitched": true,
+          "sounding": 72,
           "icon": "dmcr"
         },
         {
           "file": "8.mp3",
           "midi": 74,
           "baseNote": "D",
+          "pitched": true,
+          "sounding": 74,
           "icon": "dm"
         },
         {
           "file": "9.mp3",
           "midi": 76,
           "baseNote": "E",
+          "pitched": true,
+          "sounding": 76,
           "icon": "cr"
         },
         {
           "file": "10.mp3",
           "midi": 77,
           "baseNote": "F",
+          "pitched": true,
+          "sounding": 77,
           "icon": "cr"
         },
         {
           "file": "11.mp3",
           "midi": 79,
           "baseNote": "G",
+          "pitched": true,
+          "sounding": 79,
           "icon": "dm"
         },
         {
           "file": "12.mp3",
           "midi": 81,
           "baseNote": "A",
+          "pitched": true,
+          "sounding": 81,
           "icon": "cr"
         },
         {
           "file": "13.mp3",
           "midi": 83,
           "baseNote": "B",
+          "pitched": true,
+          "sounding": 83,
           "icon": "dm"
         },
         {
           "file": "14.mp3",
           "midi": 84,
           "baseNote": "C",
+          "pitched": true,
+          "sounding": 84,
           "icon": "dmcr"
         }
       ]
@@ -2926,90 +3786,120 @@
           "file": "0.mp3",
           "midi": 60,
           "baseNote": "C",
+          "pitched": true,
+          "sounding": 60,
           "icon": "dmcr"
         },
         {
           "file": "1.mp3",
           "midi": 62,
           "baseNote": "D",
+          "pitched": true,
+          "sounding": 62,
           "icon": "dm"
         },
         {
           "file": "2.mp3",
           "midi": 64,
           "baseNote": "E",
+          "pitched": true,
+          "sounding": 64,
           "icon": "cr"
         },
         {
           "file": "3.mp3",
           "midi": 65,
           "baseNote": "F",
+          "pitched": true,
+          "sounding": 65,
           "icon": "dm"
         },
         {
           "file": "4.mp3",
           "midi": 67,
           "baseNote": "G",
+          "pitched": true,
+          "sounding": 67,
           "icon": "cr"
         },
         {
           "file": "5.mp3",
           "midi": 69,
           "baseNote": "A",
+          "pitched": true,
+          "sounding": 69,
           "icon": "cr"
         },
         {
           "file": "6.mp3",
           "midi": 71,
           "baseNote": "B",
+          "pitched": true,
+          "sounding": 71,
           "icon": "dm"
         },
         {
           "file": "7.mp3",
           "midi": 72,
           "baseNote": "C",
+          "pitched": true,
+          "sounding": 72,
           "icon": "dmcr"
         },
         {
           "file": "8.mp3",
           "midi": 74,
           "baseNote": "D",
+          "pitched": true,
+          "sounding": 74,
           "icon": "dm"
         },
         {
           "file": "9.mp3",
           "midi": 76,
           "baseNote": "E",
+          "pitched": true,
+          "sounding": 76,
           "icon": "cr"
         },
         {
           "file": "10.mp3",
           "midi": 77,
           "baseNote": "F",
+          "pitched": true,
+          "sounding": 77,
           "icon": "cr"
         },
         {
           "file": "11.mp3",
           "midi": 79,
           "baseNote": "G",
+          "pitched": true,
+          "sounding": 79,
           "icon": "dm"
         },
         {
           "file": "12.mp3",
           "midi": 81,
           "baseNote": "A",
+          "pitched": true,
+          "sounding": 81,
           "icon": "cr"
         },
         {
           "file": "13.mp3",
           "midi": 83,
           "baseNote": "B",
+          "pitched": true,
+          "sounding": 83,
           "icon": "dm"
         },
         {
           "file": "14.mp3",
           "midi": 84,
           "baseNote": "C",
+          "pitched": true,
+          "sounding": 84,
           "icon": "dmcr"
         }
       ]
@@ -3034,6 +3924,8 @@
           "file": "0.mp3",
           "midi": 60,
           "baseNote": "C",
+          "pitched": true,
+          "sounding": 60,
           "icon": "dmcr",
           "loop": {
             "start": 0.789396,
@@ -3044,6 +3936,8 @@
           "file": "1.mp3",
           "midi": 62,
           "baseNote": "D",
+          "pitched": true,
+          "sounding": 62,
           "icon": "dm",
           "loop": {
             "start": 2.667771,
@@ -3054,6 +3948,8 @@
           "file": "2.mp3",
           "midi": 64,
           "baseNote": "E",
+          "pitched": true,
+          "sounding": 64,
           "icon": "cr",
           "loop": {
             "start": 2.885313,
@@ -3064,6 +3960,8 @@
           "file": "3.mp3",
           "midi": 65,
           "baseNote": "F",
+          "pitched": true,
+          "sounding": 65,
           "icon": "dm",
           "loop": {
             "start": 1.629167,
@@ -3074,6 +3972,8 @@
           "file": "4.mp3",
           "midi": 67,
           "baseNote": "G",
+          "pitched": true,
+          "sounding": 67,
           "icon": "cr",
           "loop": {
             "start": 2.873125,
@@ -3084,6 +3984,8 @@
           "file": "5.mp3",
           "midi": 69,
           "baseNote": "A",
+          "pitched": true,
+          "sounding": 69,
           "icon": "cr",
           "loop": {
             "start": 2.258521,
@@ -3094,6 +3996,8 @@
           "file": "6.mp3",
           "midi": 71,
           "baseNote": "B",
+          "pitched": true,
+          "sounding": 71,
           "icon": "dm",
           "loop": {
             "start": 2.856417,
@@ -3104,6 +4008,8 @@
           "file": "7.mp3",
           "midi": 72,
           "baseNote": "C",
+          "pitched": true,
+          "sounding": 72,
           "icon": "dmcr",
           "loop": {
             "start": 2.723813,
@@ -3114,6 +4020,8 @@
           "file": "8.mp3",
           "midi": 74,
           "baseNote": "D",
+          "pitched": true,
+          "sounding": 74,
           "icon": "dm",
           "loop": {
             "start": 2.450146,
@@ -3124,6 +4032,8 @@
           "file": "9.mp3",
           "midi": 76,
           "baseNote": "E",
+          "pitched": true,
+          "sounding": 76,
           "icon": "cr",
           "loop": {
             "start": 2.814104,
@@ -3134,6 +4044,8 @@
           "file": "10.mp3",
           "midi": 77,
           "baseNote": "F",
+          "pitched": true,
+          "sounding": 77,
           "icon": "cr",
           "loop": {
             "start": 2.871083,
@@ -3144,6 +4056,8 @@
           "file": "11.mp3",
           "midi": 79,
           "baseNote": "G",
+          "pitched": true,
+          "sounding": 79,
           "icon": "dm",
           "loop": {
             "start": 2.605438,
@@ -3154,6 +4068,8 @@
           "file": "12.mp3",
           "midi": 81,
           "baseNote": "A",
+          "pitched": true,
+          "sounding": 81,
           "icon": "cr",
           "loop": {
             "start": 2.706375,
@@ -3164,6 +4080,8 @@
           "file": "13.mp3",
           "midi": 83,
           "baseNote": "B",
+          "pitched": true,
+          "sounding": 83,
           "icon": "dm",
           "loop": {
             "start": 2.997688,
@@ -3174,6 +4092,8 @@
           "file": "14.mp3",
           "midi": 84,
           "baseNote": "C",
+          "pitched": true,
+          "sounding": 84,
           "icon": "dmcr",
           "loop": {
             "start": 2.868646,

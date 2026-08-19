@@ -61,6 +61,43 @@ export const BASE_NOTES = [
 ] as const;
 export type BaseNote = (typeof BASE_NOTES)[number];
 
+// The semitone class (0 = C) each spelling names, the derivation input for a Pitched
+// Button's Sounding Pitch (registry.ts). Kept beside BASE_NOTES so a spelling cannot be
+// added to one table without the other; '' is deliberately absent — it names no pitch, so
+// a button labelled with it can only be an Assigned Button.
+const PITCH_CLASSES = {
+  Cb: 11,
+  C: 0,
+  'C#': 1,
+  Db: 1,
+  D: 2,
+  'D#': 3,
+  Eb: 3,
+  E: 4,
+  'E#': 5,
+  Fb: 4,
+  F: 5,
+  'F#': 6,
+  Gb: 6,
+  G: 7,
+  'G#': 8,
+  Ab: 8,
+  A: 9,
+  'A#': 10,
+  Bb: 10,
+  B: 11,
+  'B#': 0,
+} satisfies Partial<Record<BaseNote, number>>;
+
+/**
+ * Semitone class of a base-note spelling, or undefined when the label names no single
+ * pitch. Keyed by plain string on purpose: an Assigned Button's `baseNote` is free
+ * display text ('Dm', 'G7', ''), so callers look up untrusted labels here without a cast.
+ */
+export const BASE_NOTE_PITCH_CLASSES: ReadonlyMap<string, number> = new Map(
+  Object.entries(PITCH_CLASSES)
+);
+
 export type NoteNameType =
   | 'Note name'
   | 'Keyboard layout'
@@ -154,13 +191,26 @@ export type InstrumentSustain = {
 
 /**
  * One button's note, normalized. Array position IS the Button index.
- * `midi` is the Note Id (ADR-0001); `file` is always resolved (default `<index>.mp3`);
+ * `midi` is the Nominal Id (ADR-0001); `file` is always resolved (default `<index>.mp3`);
  * `loop` and `minLength` override the instrument's sustain values for this note.
  */
 export type InstrumentNote = {
   file: string;
   midi: number;
-  baseNote: BaseNote;
+  /**
+   * Display label. A Pitched Button's is a bare pitch-class spelling that `sounding` is
+   * derived from; an Assigned Button's is free text ('Dm', 'G7', ''), hence `string` —
+   * see baseNoteText in $core/sharedConfig for how a label with no scale row renders.
+   */
+  baseNote: string;
+  /** false = Assigned Button (percussion, SFX, chord strum): no single Sounding Pitch. */
+  pitched: boolean;
+  /**
+   * The Note Number this button enters at Basepoint C (ADR-0007): its Sounding Pitch when
+   * Pitched, its Nominal Id when Assigned. Derived and validated at registry build, never
+   * authored — see registry.ts.
+   */
+  sounding: number;
   icon: NoteImage;
   loop?: LoopRegion;
   minLength?: number;
@@ -174,9 +224,10 @@ export type InstrumentNote = {
  * addressing per-note state through its own object instead of through a slot index.
  */
 export type ShapeNote = {
-  /** Note Id (ADR-0001): the note's identity in songs and at the engine boundary. */
+  /** Nominal Id (ADR-0001): the note's identity in the instrument/grid namespace. */
   id: number;
-  baseNote: BaseNote;
+  /** Display label — free text on an Assigned Button (see InstrumentNote.baseNote). */
+  baseNote: string;
   icon: NoteImage;
 };
 
