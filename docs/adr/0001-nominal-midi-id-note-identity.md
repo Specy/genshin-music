@@ -1,5 +1,7 @@
 # Song notes are identified by nominal MIDI id, not true sounding pitch
 
+> **Superseded by [ADR-0007](0007-absolute-note-numbers-basepoint.md) (2026-08-19) for song-side identity**: songs now store absolute Note Numbers; the nominal id survives as the instrument/grid namespace this ADR defined.
+
 Songs must stop storing keyboard-layout indices (0–20 Genshin, 0–14 Sky — with _opposite_ octave orderings) so that new games with different layouts don't inherit the layout coupling. We decided the universal identifier is the **nominal MIDI id** each instrument already declares per button (`midiNotes`): white-key nominal numbers for Genshin's accidental-tuned instruments (Vintage-Lyre's Db button keeps id 74), real pitches for Sky's handpan/bell, assigned numbers for unpitched SFX. Ids are stored pre-transposition; the song/instrument pitch setting remains a playback-rate transform. Buttons are derived per instrument as the position of an id in the instrument's ordered id list.
 
 ## Considered Options

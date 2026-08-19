@@ -6,21 +6,32 @@ A web app for composing, recording, and practicing songs played on the in-game i
 
 ### Notes
 
-**Note Id**:
-The universal identity of a note in a song: the nominal MIDI number an instrument declares for a button. It is a name in a shared namespace, not necessarily the actual sounding pitch (Genshin's accidental-tuned instruments keep white-key nominal ids; unpitched SFX use assigned ids).
-_Avoid_: note index, note number, midi note (ambiguous with true pitch)
+**Note Number**:
+The universal identity of a note in a song: an absolute MIDI number on one shared axis, stored Basepoint-included. For a Pitched Button it is the Sounding Pitch the listener hears; for an Assigned Button it is the button's Nominal Id carried onto the axis by the Basepoint.
+_Avoid_: note id (the retired nominal storage identity), note index, midi note (ambiguous with MIDI-file events)
+
+**Nominal Id**:
+The nominal MIDI number an instrument declares for a button — a name in the game's grid namespace, not a promise about sound. The currency of button correspondence: instrument swaps, Song-Grid rows and legacy-format decoding speak Nominal Ids. Songs never store them.
+_Avoid_: note id (retired), button number
 
 **Button**:
-One key slot of an instrument: the position of a Note Id in the instrument's authored (ordered) note list. Keybinds and Label Sets attach to Buttons; where a Button appears on screen is its Shape's decision. Songs never store buttons.
+One key slot of an instrument: the position of a note (with its Nominal Id) in the instrument's authored (ordered) note list. Keybinds and Label Sets attach to Buttons; where a Button appears on screen is its Shape's decision. Songs never store buttons.
 _Avoid_: note position, key (ambiguous with keybind and musical key), index
 
-**Sounding Pitch**:
-The actual concert pitch of the sample a button plays. An instrument concern (display, future pitch-true export), never a song-format concern.
-_Avoid_: base note, real pitch
+**Pitched Button**:
+A button that plays one single pitch. Pressing it stores that Sounding Pitch, so an instrument's real tuning — Vintage-Lyre's flats included — is visible in the song itself.
 
-**Transposition**:
-The song-level or per-instrument playback transform (C, Db, … B) applied at play time via playback rate. Stored Note Ids are always pre-transposition (what the button plays at C).
-_Avoid_: pitch (alone — overloaded with Sounding Pitch)
+**Assigned Button**:
+A button with no single sounding pitch: percussion, SFX, chord strums (Ukulele's whole top row, C through G7). Declared in config, never inferred; pressing it stores its Nominal Id carried by the Basepoint, so two Assigned Buttons never collapse however alike they sound.
+_Avoid_: unpitched note (a chord is pitched — just not singly)
+
+**Sounding Pitch**:
+The actual pitch a Pitched Button plays, derived per button from its authored base note. It is what a Pitched Button's Note Numbers record; an Assigned Button has none.
+_Avoid_: base note (the authored label it derives from), real pitch
+
+**Basepoint**:
+The pitch a track's view starts at (C, Db, … B; song-level default, per-track override). Buttons enter and display notes relative to it, and changing it rewrites every Note Number in the affected tracks by the same interval — a real, undoable edit, stranded notes included. Applied to audio as a playback-rate shift at play time.
+_Avoid_: transposition (the retired play-time-only meaning), pitch (alone — overloaded with Sounding Pitch)
 
 ### Instruments
 
@@ -33,11 +44,11 @@ The per-button display texts a Shape provides for one naming mode (default key b
 _Avoid_: keyboard layout (ambiguous with Shape and with user-rebound keys)
 
 **Note Preset**:
-A game-scoped, named note list (per button: Note Id, display note name, glyph) that instruments reference instead of restating shared tables; an instrument may instead declare its notes inline. Authoring vocabulary only — resolved away into each instrument before the app runs.
+A game-scoped, named note list (per button: Nominal Id, base note, glyph) that instruments reference instead of restating shared tables; an instrument may instead declare its notes inline. Authoring vocabulary only — resolved away into each instrument before the app runs.
 _Avoid_: kind (the retired term)
 
 **Song Grid**:
-The game-canonical rows×columns note grid that song-wide surfaces (composer canvas, sheet visualizer) render, regardless of which instruments the song's tracks use. Every Note Id has exactly one Song-Grid position, fixed by the game itself — never by any instrument. Distinct from any single instrument's Shape.
+The game-canonical rows×columns note grid that song-wide surfaces (composer canvas, sheet visualizer) render, regardless of which instruments the song's tracks use. Every Nominal Id has exactly one Song-Grid position, fixed by the game itself — never by any instrument. Distinct from any single instrument's Shape.
 
 **Unlisted Instrument**:
 An instrument a game ships (fully loadable by songs and the engine) but hides from its instrument menus.
@@ -49,14 +60,14 @@ One instrument's owned sequence of notes within a song. Every note belongs to ex
 _Avoid_: layer (the legacy bitmask-slot meaning)
 
 **Duration**:
-How long a note sounds: an integer column span (≥1) in composed songs, milliseconds from press to release in recorded songs. Stored on every note regardless of whether its instrument can sustain. A composed note's span occupies its Note Id on its track for every covered column — same-id spans on one track never overlap.
+How long a note sounds: an integer column span (≥1) in composed songs, milliseconds from press to release in recorded songs. Stored on every note regardless of whether its instrument can sustain. A composed note's span occupies its Note Number on its track for every covered column — same-number spans on one track never overlap.
 
 **Sustain**:
 An instrument's _capability_ to keep sounding while a note is held and to stop sounding on release. Instruments without it always ring out naturally and ignore Duration at playback.
 _Avoid_: hold (reserved for the VSRG gameplay mechanic — a scored held lane press, which exists independently of audio sustain)
 
 **Stranded Note**:
-A note whose Note Id the track's current instrument doesn't offer. Skipped at playback and visually marked in the composer; never silently rewritten. Exceptions are explicit imports only: legacy files cross-convert through the frozen historic index remap, and new-format cross-game imports octave-fold out-of-range ids while producing the converted copy.
+A note whose Note Number the track's instrument cannot voice at the current Basepoint — including off-scale numbers that fall between the grid's rows. Skipped at playback, marked in the composer (nearest row, accidental hint), never silently rewritten; Basepoint changes move it with its track and instrument swaps pass it through, either of which may un-strand it. Explicit imports still remap: legacy files decode through the frozen historic remap, and cross-game imports octave-fold out-of-range numbers while producing the converted copy.
 
 **Similar Instrument**:
 The target game's curated counterpart for a source game's instrument — the one a track swaps to during cross-game conversion so the song keeps a comparable timbre. Unmapped instruments fall back to the target's default.
