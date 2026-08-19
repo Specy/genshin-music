@@ -67,7 +67,7 @@ An instrument's _capability_ to keep sounding while a note is held and to stop s
 _Avoid_: hold (reserved for the VSRG gameplay mechanic — a scored held lane press, which exists independently of audio sustain)
 
 **Stranded Note**:
-A note whose Note Number the track's instrument cannot voice at the current Basepoint — including off-scale numbers that fall between the grid's rows. Skipped at playback, marked in the composer (nearest row, accidental hint), never silently rewritten; Basepoint changes move it with its track and instrument swaps pass it through, either of which may un-strand it. Explicit imports still remap: legacy files decode through the frozen historic remap, and cross-game imports octave-fold out-of-range numbers while producing the converted copy.
+A note whose Note Number the track's instrument cannot voice at the current Basepoint — including off-scale numbers that fall between the grid's rows. Skipped at playback, marked in the composer (nearest row, accidental hint), never silently rewritten; Basepoint changes move it with its track — never changing whether it strands, since the view moves with the notes — while instrument swaps pass it through and may un-strand it. Explicit imports still remap: legacy files decode through the frozen historic remap, and cross-game imports octave-fold out-of-range numbers while producing the converted copy.
 
 **Similar Instrument**:
 The target game's curated counterpart for a source game's instrument — the one a track swaps to during cross-game conversion so the song keeps a comparable timbre. Unmapped instruments fall back to the target's default.
