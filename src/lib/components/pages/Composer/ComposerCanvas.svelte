@@ -5,6 +5,7 @@
   import { colorToRGB } from '$core/utils/Utilities';
   import { createShortcutListener } from '$stores/KeybindsStore.svelte';
   import type { InstrumentData, NoteColumn } from '$core/Songs/SongClasses';
+  import type { Pitch } from '$core/legacyConfig';
   import type { ComposerSettingsDataType } from '$core/BaseSettings';
   import type { ComposerRenderer } from './ComposerRenderer';
   import { composerCanvasCssSize } from './composerCanvasGeometry';
@@ -37,6 +38,10 @@
     // The roster is its own prop, not reached through a `song` prop - see ComposerRendererState's
     // note. The $effect below has to READ it for an instrument edit to repaint the canvas.
     instruments: InstrumentData[];
+    // The SONG's Basepoint. Its own prop for the same reason the roster is: what grid row a
+    // note draws on depends on it (ADR-0007), so the $effect below has to READ it for a
+    // Basepoint change to repaint the canvas.
+    songPitch: Pitch;
     selected: number;
     currentLayer: number;
     inPreview?: boolean;
@@ -55,6 +60,7 @@
     playbackAnchorGeneration,
     isRecordingAudio,
     instruments,
+    songPitch,
     selected,
     currentLayer,
     inPreview,
@@ -117,6 +123,7 @@
           playbackAnchorGeneration,
           isRecordingAudio,
           instruments,
+          songPitch,
           selected,
           currentLayer,
           inPreview,
@@ -195,6 +202,7 @@
       playbackAnchorGeneration,
       isRecordingAudio,
       instruments,
+      songPitch,
       selected,
       currentLayer,
       inPreview,

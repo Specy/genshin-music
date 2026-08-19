@@ -228,7 +228,7 @@
       //the PHYSICAL key holds the note, not the shortcut name, so a keyboard LAYOUT change
       //mid-hold cannot orphan the release (KeyboardEvent.code is layout-independent). Rebinding
       //the key itself mid-hold still can: the key-up half only fires for keys that are bound.
-      if (startSustainRecording(holderToken('keyboard', code), note.id)) return;
+      if (startSustainRecording(holderToken('keyboard', code), note.numberAt(layerPitch))) return;
       toggleNoteImmediate(note);
     }
   };
@@ -320,7 +320,8 @@
         //so resolve the note object here and hand THAT on - never the raw slot number
         const pressed = currentInstrument.notes[keyboardNote.index];
         if (!pressed) return;
-        if (startSustainRecording(midiHolderToken(note, keyboardNote.index), pressed.id)) return;
+        if (startSustainRecording(midiHolderToken(note, keyboardNote.index), pressed.numberAt(layerPitch)))
+          return;
         toggleNoteImmediate(pressed);
       });
       const shortcut = MIDIProvider.settings.shortcuts.find((e) => e.midi === note);
@@ -811,10 +812,24 @@
     return endAllSustainRecordings;
   });
 
+  /**
+   * The DISPLAYED track's effective Basepoint — the composer keyboard draws the selected
+   * layer's instrument, so this is the Basepoint every press on it enters at and every note's
+   * number is read at. Kept as one derived rather than re-spelled per handler: a keyboard
+   * resolving at one Basepoint while the canvas resolves at another is the whole class of bug
+   * ADR-0007 makes possible.
+   */
+  const layerPitch = $derived(song.instruments[layer]?.pitch || settings.pitch.value);
+
+  /** What pressing this key STORES and SOUNDS at the current Basepoint (ADR-0007 §4). */
+  function numberOfNote(note: ObservableNote): number {
+    return note.numberAt(layerPitch);
+  }
+
   function handleClick(note: ObservableNote, pointerId: number) {
-    //the clicked button's Note Id on the current layer's instrument - the one currency the
-    //song edits below and the audio engine both speak (ADR-0005)
-    const id = note.id;
+    //the clicked button's Note Number on the current layer's instrument - the one currency the
+    //song edits below and the audio engine both speak (ADR-0005/ADR-0007)
+    const id = numberOfNote(note);
     //while playing on a sustaining track the press is a PERFORMANCE, not an edit: it sounds
     //its own held attack, records its duration, and never deletes on release
     if (startSustainRecording(holderToken('pointer', pointerId), id)) return;
@@ -842,7 +857,7 @@
 
   /** Physical-keyboard / MIDI note entry: no pointer gesture exists there, so toggling stays immediate (the pre-popover behavior), occupancy rule included. */
   function toggleNoteImmediate(note: ObservableNote) {
-    const id = note.id;
+    const id = numberOfNote(note);
     playSound(layer, id);
     if (song.getSpanCovering(song.selected, layer, id)) return;
     const existing = song.selectedColumn.findNote(layer, id);
@@ -857,15 +872,16 @@
   function handleNoteRelease(note: ObservableNote, pointerId: number) {
     //a recording press left no press record behind, so this is its only release path
     endSustainRecording(holderToken('pointer', pointerId));
-    const press = notePresses.get(note.id);
+    const id = numberOfNote(note);
+    const press = notePresses.get(id);
     //fires twice per pointer (pointerup then pointerleave): the delete below consumes the
     //record, so the second call misses and does nothing
     if (!press) return;
-    notePresses.delete(note.id);
+    notePresses.delete(id);
     if (press.longPressFired) return;
     if (press.coveringStart !== null) return; //occupancy: covered buttons don't toggle
     if (press.existedAtPress) {
-      song.removeNoteAt(song.selected, layer, note.id);
+      song.removeNoteAt(song.selected, layer, id);
       handleAutoSave();
     }
   }
@@ -879,17 +895,18 @@
     //durations are only authorable on instruments that can actually sustain — long-press
     //does nothing on the others (the press still completes as a normal tap)
     if (!layers[layer]?.supportsSustain) return;
-    const press = notePresses.get(note.id);
+    const id = numberOfNote(note);
+    const press = notePresses.get(id);
     if (!press) return;
     press.longPressFired = true;
     const startColumn = press.coveringStart ?? song.selected;
-    const existing = song.columns[startColumn]?.findNote(layer, note.id);
+    const existing = song.columns[startColumn]?.findNote(layer, id);
     if (!existing) return;
     addToHistory();
     durationPopover = {
       startColumn,
       trackIndex: layer,
-      id: note.id,
+      id,
       anchor,
       spanAtOpen: existing.span,
       //one column per HALF A KEY of travel: derived from the button that was pressed, so the
@@ -912,7 +929,7 @@
    */
   function handleNoteDrag(note: ObservableNote, deltaX: number) {
     const popover = durationPopover;
-    if (!popover || popover.id !== note.id) return;
+    if (!popover || popover.id !== numberOfNote(note)) return;
     const span = clamp(
       popover.spanAtOpen + Math.round(deltaX / popover.dragStepPx),
       1,
@@ -1697,6 +1714,7 @@
           {playbackAnchorGeneration}
           {isRecordingAudio}
           instruments={song.instruments}
+          songPitch={song.pitch}
           selected={song.selected}
           currentLayer={layer}
           {inPreview}

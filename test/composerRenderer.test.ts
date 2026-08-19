@@ -129,7 +129,7 @@ import type {ComposerCache} from '$cmp/pages/Composer/ComposerCache'
  *  - teardown: nothing requires the Application to be destroyed, though destroy()'s own comment
  *    calls that a hard requirement against a WebGL leak on remount.
  *  - the rules this file imports from production rather than restating - nearestEven,
- *    computeGridRowLayerStatuses, computeGridStrandedRows, songGridSlotForId, isColumnVisible. A
+ *    computeGridRowLayerStatuses, computeGridStrandedRows, gridRowForNumber, isColumnVisible. A
  *    defect inside one of those is followed by the reference rather than caught, EXCEPT where a
  *    second, independent statement pins it (the closed-form window range does this for
  *    isColumnVisible; 'one Note Id, one row, whatever the track's instrument' does it for the
@@ -628,14 +628,21 @@ import {
 //the renderer's own rounding helper, used here to DERIVE the column geometry rather than read it
 //back off the ComposerCache the renderer built - see Geometry
 import {nearestEven} from '$core/utils/Utilities'
-//the CANVAS placement rules (ADR-0004): a row is the Note Id's canonical Song Grid slot, so the
-//oracles below take the *Grid* helpers. computeButtonLayerStatuses, keyed by the Buttons of the
-//keyboard on screen, belongs to the composer KEYBOARD and deliberately does not appear in this file.
+//the CANVAS placement rules (ADR-0004 under ADR-0007): a row is gridRowForNumber's answer for the
+//note's OWN track at its own Basepoint, so the oracles below take the *Grid* helpers.
+//computeButtonLayerStatuses, keyed by the Buttons of the keyboard on screen, belongs to the composer
+//KEYBOARD and deliberately does not appear in this file.
+//
+//Every song here sits at the default Basepoint C, so a note's number equals the Sounding Pitch of
+//the button it is entered from; the helpers below still go through the real conversion rather than
+//assuming that, because "C makes the two axes coincide" is a property of the fixture, not a rule.
 import {
-    songGridSlotForId,
     computeGridRowLayerStatuses,
     computeGridStrandedRows,
-    noteIdToButton,
+    effectiveTrackPitch,
+    gridRowForNumber,
+    nominalToNumber,
+    numberToButton,
 } from '$core/Songs/noteIds'
 import {
     ComposerRenderer,
@@ -698,9 +705,19 @@ const WINDOW_GEOMETRY: ColumnWindowGeometry = {
     playheadX: CANVAS_WIDTH / 2,
 }
 
-/** Note Id of a button on the game's default instrument. */
+/** Nominal Id of a button on the game's default instrument — a Song-Grid row name, never a stored value. */
 function idOf(button: number): number {
     return INSTRUMENTS_DATA[INSTRUMENTS[0]].notes[button].midi
+}
+
+/** What a track of `instrument` STORES for that grid row at Basepoint C (ADR-0007 §4). */
+function numberOn(instrument: (typeof INSTRUMENTS)[number], nominal: number): number {
+    return nominalToNumber(instrument, 'C', nominal)
+}
+
+/** numberOn for the two-track songs below: track 0 is INSTRUMENTS[0], track 1 is INSTRUMENTS[1]. */
+function numberOf(button: number, track: 0 | 1): number {
+    return numberOn(INSTRUMENTS[track], idOf(button))
 }
 
 /**
@@ -711,8 +728,8 @@ function idOf(button: number): number {
 function makeSong(): ComposedSong {
     const song = new ComposedSong('composer renderer', [INSTRUMENTS[0], INSTRUMENTS[1]])
     for (let column = 0; column < song.columns.length; column++) {
-        song.addNoteAt(column, 0, idOf(column % 7), column % 8 === 0 ? 3 : 1)
-        song.addNoteAt(column, 1, idOf((column % 5) + 7))
+        song.addNoteAt(column, 0, numberOf(column % 7, 0), column % 8 === 0 ? 3 : 1)
+        song.addNoteAt(column, 1, numberOf((column % 5) + 7, 1))
     }
     song.setTempoChangerAt(5, TEMPO_CHANGERS[1])
     song.breakpoints = [0, 42]
@@ -731,8 +748,8 @@ function makeSong(): ComposedSong {
 function makeOtherSong(): ComposedSong {
     const song = new ComposedSong('other song', [INSTRUMENTS[0], INSTRUMENTS[1]])
     for (let column = 0; column < song.columns.length; column++) {
-        song.addNoteAt(column, 0, idOf((column + 3) % 7), 1)
-        song.addNoteAt(column, 1, idOf(((column + 2) % 5) + 7))
+        song.addNoteAt(column, 0, numberOf((column + 3) % 7, 0), 1)
+        song.addNoteAt(column, 1, numberOf(((column + 2) % 5) + 7, 1))
     }
     song.setTempoChangerAt(9, TEMPO_CHANGERS[2])
     song.breakpoints = [0]
@@ -746,15 +763,15 @@ function makeOtherSong(): ComposedSong {
  * long note replaces one of the loop's per-column calls rather than being added after it, because
  * every graph mutation bumps the version and the two songs have to end up equal.
  *
- * idOf(12) is outside both the track-0 (0..6) and track-1 (7..11) id ranges the loop uses, so
+ * Button 12 is outside both the track-0 (0..6) and track-1 (7..11) button ranges the loop uses, so
  * nothing later in the song truncates the span.
  */
 function makeEquallyVersionedLongSpanSong(): ComposedSong {
     const song = new ComposedSong('long span', [INSTRUMENTS[0], INSTRUMENTS[1]])
     for (let column = 0; column < song.columns.length; column++) {
-        song.addNoteAt(column, 0, idOf(column % 7), 1)
-        if (column === 0) song.addNoteAt(0, 1, idOf(12), 90)
-        else song.addNoteAt(column, 1, idOf((column % 5) + 7))
+        song.addNoteAt(column, 0, numberOf(column % 7, 0), 1)
+        if (column === 0) song.addNoteAt(0, 1, numberOf(12, 1), 90)
+        else song.addNoteAt(column, 1, numberOf((column % 5) + 7, 1))
     }
     song.setTempoChangerAt(5, TEMPO_CHANGERS[1])
     song.breakpoints = [0, 42]
@@ -768,24 +785,35 @@ function makeEquallyVersionedLongSpanSong(): ComposedSong {
  * row and dimmed there. Searched for rather than named so this file carries no per-game list; both
  * shipped games have percussion whose table is narrower than the melodic default's.
  */
-function strandingPair(): {instrument: (typeof INSTRUMENTS)[number], id: number, row: number} {
+function strandingPair(): {instrument: (typeof INSTRUMENTS)[number], number: number, row: number} {
     const buttons = INSTRUMENTS_DATA[INSTRUMENTS[0]].notes.length
     for (const instrument of INSTRUMENTS) {
         for (let button = 0; button < buttons; button++) {
-            const id = idOf(button)
-            const row = songGridSlotForId(id)
-            if (row !== -1 && noteIdToButton(instrument, id) === -1) return {instrument, id, row}
+            //the number the DEFAULT track stores for that button; the question is whether the
+            //candidate instrument can voice it, which is what "stranded on its own track" means
+            const number = numberOf(button, 0)
+            const placement = gridRowForNumber(instrument, 'C', number)
+            if (placement.row !== -1 && placement.stranded) {
+                return {instrument, number, row: placement.row}
+            }
         }
     }
-    throw new Error('no instrument in this game strands any of the default instrument note ids')
+    throw new Error('no instrument in this game strands any of the default instrument Note Numbers')
 }
 
 /** The first drawn column with no note on `row`, so a note added there is the row's only one. */
 function drawnColumnWithoutRow(song: ComposedSong, row: number): number {
     for (let index = 0; index < song.columns.length; index++) {
         if (!isColumnVisible(index, song.selected, WINDOW_GEOMETRY)) continue
-        //by the canvas' own placement rule: the id's canonical row, whatever track it is on
-        const taken = song.columns[index].notes.some(note => songGridSlotForId(note.id) === row)
+        //by the canvas' own placement rule: the note's row on ITS OWN track
+        const taken = song.columns[index].notes.some(note => {
+            const instrument = song.instruments[note.trackIndex]
+            return gridRowForNumber(
+                instrument?.name ?? '',
+                effectiveTrackPitch(instrument, song.pitch),
+                note.id
+            ).row === row
+        })
         if (!taken) return index
     }
     throw new Error(`every drawn column already carries a note on row ${row}`)
@@ -815,11 +843,13 @@ function subGridPair(): {
     const candidates = INSTRUMENTS.map(instrument => ({
         instrument,
         //index INTO CANONICAL_NOTE_IDS is the canonical row, by game.json's positional pairing -
-        //stated here rather than taken from songGridSlotForId, which is what production places by
+        //stated here rather than taken from gridRowForNumber, which is what production places by
         playableId: CANONICAL_NOTE_IDS.find(
-            (id, row) => ![-1, row].includes(noteIdToButton(instrument, id))
+            (id, row) => ![-1, row].includes(numberToButton(instrument, 'C', numberOn(instrument, id)))
         ),
-        strandedId: CANONICAL_NOTE_IDS.find(id => noteIdToButton(instrument, id) === -1),
+        strandedId: CANONICAL_NOTE_IDS.find(
+            id => numberToButton(instrument, 'C', numberOn(instrument, id)) === -1
+        ),
         width: INSTRUMENTS_DATA[instrument].notes.length,
     }))
         .filter(candidate => candidate.playableId !== undefined && candidate.strandedId !== undefined)
@@ -830,7 +860,7 @@ function subGridPair(): {
     return {
         instrument: best.instrument,
         playableId: best.playableId!,
-        ownButton: noteIdToButton(best.instrument, best.playableId!),
+        ownButton: numberToButton(best.instrument, 'C', numberOn(best.instrument, best.playableId!)),
         strandedId: best.strandedId!,
     }
 }
@@ -1371,6 +1401,7 @@ async function mount(context: Context = makeContext()): Promise<Harness> {
         playbackAnchorGeneration: context.props.playbackAnchorGeneration,
         isRecordingAudio: context.props.isRecordingAudio,
         instruments: context.song.instruments,
+        songPitch: context.song.pitch,
         selected: context.song.selected,
         currentLayer: context.props.currentLayer,
         beatMarks: context.props.beatMarks,
@@ -1839,7 +1870,11 @@ function expectedTails(context: Context, index: number, geometry: Geometry, acce
             if (!isCurrentLayer && !instrument?.visible) continue
             //a tail sits on the SAME canonical row as the note sprite it leaves - the instrument
             //above decides only whether the tail is drawn at all, never where
-            const row = songGridSlotForId(note.id)
+            const row = gridRowForNumber(
+                instrument?.name ?? '',
+                effectiveTrackPitch(instrument, song.pitch),
+                note.id
+            ).row
             if (row === -1) continue
             //centred in its Song Grid row, and a stub over the right 45% in the column the note
             //STARTS in so the bar reads as leaving the note icon
@@ -1908,12 +1943,13 @@ function expectedWindow(
         const isSelected = !props.smoothScroll && index === song.selected
         const isToolsSelected = props.selectedColumns.includes(index)
         const toolsOnly = isToolsSelected && !isSelected
-        const stranded = computeGridStrandedRows(column.notes, song.instruments)
+        const stranded = computeGridStrandedRows(column.notes, song.instruments, song.pitch)
         const notes: PaintedSpriteData[] = []
         for (const [row, status] of computeGridRowLayerStatuses(
             column.notes,
             props.currentLayer,
-            song.instruments
+            song.instruments,
+            song.pitch
         )) {
             if (status === 0) continue
             notes.push({
@@ -2356,7 +2392,7 @@ const REPAINTS: RepaintCase[] = [
     // RepaintCase.columnPaints. Everything below them marks the whole song and stays 'window'.
     {
         what: 'a note is added',
-        change: context => void context.song.addNoteAt(41, 0, idOf(3)),
+        change: context => void context.song.addNoteAt(41, 0, numberOf(3, 0)),
         renders: 1,
         //a span of 1 covers only the column that owns the note
         columnPaints: [41],
@@ -2367,7 +2403,7 @@ const REPAINTS: RepaintCase[] = [
         //column 40, not 41: makeSong gives every 8th column a span of 3, and 41 has span 1 - so
         //[41] would read the same under the range rule and under a column-only one, and the row
         //would state nothing about #touchColumns
-        change: context => context.song.removeNoteAt(40, 0, idOf(40 % 7)),
+        change: context => context.song.removeNoteAt(40, 0, numberOf(40 % 7, 0)),
         renders: 1,
         columnPaints: [40, 41, 42],
         timelineRebuilds: 1,
@@ -2376,7 +2412,7 @@ const REPAINTS: RepaintCase[] = [
         what: "a note's span changes",
         //makeSong gives column 40 a span of 3 (every 8th), so this grows it to 4 and the marked
         //range is the UNION of the two - [40, 40 + max(3, 4))
-        change: context => void context.song.setNoteSpan(40, 0, idOf(40 % 7), 4),
+        change: context => void context.song.setNoteSpan(40, 0, numberOf(40 % 7, 0), 4),
         renders: 1,
         columnPaints: [40, 41, 42, 43],
         timelineRebuilds: 1,
@@ -2399,7 +2435,7 @@ const REPAINTS: RepaintCase[] = [
         //matching row.
         what: 'a note is added while selected also moved',
         change: context => {
-            context.song.addNoteAt(41, 0, idOf(3))
+            context.song.addNoteAt(41, 0, numberOf(3, 0))
             context.song.selected += 1
         },
         renders: 1,
@@ -2734,7 +2770,7 @@ function parkedAcross(what: string, change: (harness: Harness) => void): WindowC
             //...and back, on an update that also edits the graph: that is what selects the narrowed
             //repaint rather than the playback fast path
             song.selected = returnTo
-            song.addNoteAt(returnTo, 0, idOf(3))
+            song.addNoteAt(returnTo, 0, numberOf(3, 0))
             harness.push()
         },
     }
@@ -2771,7 +2807,7 @@ const WINDOWS: WindowCase[] = [
         what: 'after an edit arrived in the same update as a moved playhead',
         drive: harness => {
             const edited = harness.context.song.selected + 3
-            harness.context.song.addNoteAt(edited, 0, idOf(edited % 7))
+            harness.context.song.addNoteAt(edited, 0, numberOf(edited % 7, 0))
             harness.context.song.selected += 1
             harness.push()
         },
@@ -2790,14 +2826,14 @@ const WINDOWS: WindowCase[] = [
         //sprites now needs one, and the surplus sprite has to stop being shown
         what: 'after a note is removed from a drawn column',
         drive: harness => {
-            harness.context.song.removeNoteAt(41, 0, idOf(41 % 7))
+            harness.context.song.removeNoteAt(41, 0, numberOf(41 % 7, 0))
             harness.push()
         },
     },
     {
         what: 'after a note is added to a drawn column',
         drive: harness => {
-            harness.context.song.addNoteAt(41, 0, idOf(3))
+            harness.context.song.addNoteAt(41, 0, numberOf(3, 0))
             harness.push()
         },
     },
@@ -2822,7 +2858,7 @@ const WINDOWS: WindowCase[] = [
             //a span on the track about to be hidden: a tail belonging to a track that is neither
             //the current layer nor visible is not drawn at all, and makeSong puts spans only on
             //track 0. Painted DIM first (another track's visible tail), then gone.
-            song.setNoteSpan(38, 1, idOf((38 % 5) + 7), 5)
+            song.setNoteSpan(38, 1, numberOf((38 % 5) + 7, 1), 5)
             harness.push()
             song.setInstrument(1, song.instruments[1].set({visible: false}))
             harness.push()
@@ -2835,16 +2871,15 @@ const WINDOWS: WindowCase[] = [
         what: 'with a row whose only note is stranded on its own instrument',
         drive: harness => {
             const song = harness.context.song
-            const {instrument, id, row} = strandingPair()
+            const {instrument, number, row} = strandingPair()
             song.addInstrument(instrument)
             const column = drawnColumnWithoutRow(song, row)
-            song.addNoteAt(column, 2, id)
+            song.addNoteAt(column, 2, number)
             harness.push()
             //the scenario is worth nothing if nothing ended up stranded, and two empty sets compare
             //equal - so the precondition is asserted rather than assumed
-            expect(computeGridStrandedRows(song.columns[column].notes, song.instruments)).toEqual(
-                new Set([row])
-            )
+            expect(computeGridStrandedRows(song.columns[column].notes, song.instruments, song.pitch))
+                .toEqual(new Set([row]))
         },
     },
     {
@@ -2865,17 +2900,17 @@ const WINDOWS: WindowCase[] = [
     {
         what: 'with a span reaching the window from far off-screen',
         drive: harness => {
-            //idOf(12) is a note id makeSong never uses, so nothing truncates the span
-            harness.context.song.addNoteAt(0, 1, idOf(12), 90)
+            //numberOf(12, 1) is a Note Number makeSong never uses, so nothing truncates the span
+            harness.context.song.addNoteAt(0, 1, numberOf(12, 1), 90)
             harness.push()
         },
     },
     {
         what: 'with a span grown after it was first painted',
         drive: harness => {
-            harness.context.song.addNoteAt(24, 1, idOf(12), 1)
+            harness.context.song.addNoteAt(24, 1, numberOf(12, 1), 1)
             harness.push()
-            harness.context.song.setNoteSpan(24, 1, idOf(12), 30)
+            harness.context.song.setNoteSpan(24, 1, numberOf(12, 1), 30)
             harness.push()
         },
     },
@@ -2893,7 +2928,7 @@ const WINDOWS: WindowCase[] = [
         //has to have lost the flag without being repainted, 41 to have gained it.
         what: 'after a note was added in the same update that moved the playhead',
         drive: harness => {
-            harness.context.song.addNoteAt(41, 0, idOf(3))
+            harness.context.song.addNoteAt(41, 0, numberOf(3, 0))
             harness.context.song.selected += 1
             harness.push()
         },
@@ -2915,14 +2950,14 @@ const WINDOWS: WindowCase[] = [
             const tailOpsAt = (index: number) =>
                 harness.paintedScene().notes.columns.find(column => column.index === index)?.tails
                     .ops.length
-            //column 5 is far outside the window (29..51); the span covers 5..44. idOf(12) is a note
+            //column 5 is far outside the window (29..51); the span covers 5..44. numberOf(12, 1) is a note
             //id makeSong never uses, so nothing truncates it, and makeSong's own spans (every 8th
             //column, 3 long) reach 42 at the furthest - so column 44's bars come from this note
             //alone.
-            song.addNoteAt(5, 1, idOf(12), 40)
+            song.addNoteAt(5, 1, numberOf(12, 1), 40)
             harness.push()
             expect(tailOpsAt(44)).toBeGreaterThan(0)
-            song.setNoteSpan(5, 1, idOf(12), 1)
+            song.setNoteSpan(5, 1, numberOf(12, 1), 1)
             harness.push()
             expect(tailOpsAt(44)).toBe(0)
         },
@@ -3036,11 +3071,12 @@ describe('the canvas places every note at its Note Id row, on every track', () =
         //own rather than makeSong's, so each column below carries only the notes under test.
         const song = new ComposedSong('canonical placement', [INSTRUMENTS[0], instrument])
         song.selected = SELECTED
-        song.addNoteAt(SELECTED - 2, 0, playableId)
-        song.addNoteAt(SELECTED - 1, 1, playableId)
-        song.addNoteAt(SELECTED, 0, playableId)
-        song.addNoteAt(SELECTED, 1, playableId)
-        song.addNoteAt(SELECTED + 1, 1, strandedId)
+        //each track stores the number ITS instrument enters that grid row at (ADR-0007)
+        song.addNoteAt(SELECTED - 2, 0, numberOn(INSTRUMENTS[0], playableId))
+        song.addNoteAt(SELECTED - 1, 1, numberOn(instrument, playableId))
+        song.addNoteAt(SELECTED, 0, numberOn(INSTRUMENTS[0], playableId))
+        song.addNoteAt(SELECTED, 1, numberOn(instrument, playableId))
+        song.addNoteAt(SELECTED + 1, 1, numberOn(instrument, strandedId))
         context.song = song
         const harness = await mount(context)
         try {
@@ -3077,7 +3113,7 @@ describe('the canvas places every note at its Note Id row, on every track', () =
         const song = new ComposedSong('canonical tails', [INSTRUMENTS[0], instrument])
         song.selected = SELECTED
         //on the sub-grid track, where a tail placed by own button would part company with its head
-        song.addNoteAt(SELECTED, 1, playableId, 3)
+        song.addNoteAt(SELECTED, 1, numberOn(instrument, playableId), 3)
         context.song = song
         const harness = await mount(context)
         try {
@@ -3120,9 +3156,9 @@ describe('span tails are found by a bounded backward scan, exactly', () => {
             //precisely that bound, so one column tighter drops the final bar of every
             //maximum-length span - the conservative direction, which draws too little rather than
             //too much and therefore looks like nothing at all.
-            //(idOf(12) is a note id makeSong never uses, so nothing truncates the span; 8 becomes
+            //(numberOf(12, 1) is a Note Number makeSong never uses, so nothing truncates the span; 8 becomes
             //the longest span in the song, over makeSong's 3.)
-            harness.context.song.addNoteAt(30, 1, idOf(12), 8)
+            harness.context.song.addNoteAt(30, 1, numberOf(12, 1), 8)
             harness.push()
             //30 + 8 - 1 = 37 is the last column the span covers, and 30 is exactly `37 - 8 + 1`
             expect(columnsWithTails(harness)).toContain(37)
@@ -3156,10 +3192,10 @@ describe('span tails are found by a bounded backward scan, exactly', () => {
     it('shortening a span clears the bars it used to draw', async () => {
         const harness = await mount()
         try {
-            harness.context.song.setNoteSpan(32, 0, idOf(32 % 7), 6)
+            harness.context.song.setNoteSpan(32, 0, numberOf(32 % 7, 0), 6)
             harness.push()
             expect(columnsWithTails(harness)).toContain(36)
-            harness.context.song.setNoteSpan(32, 0, idOf(32 % 7), 1)
+            harness.context.song.setNoteSpan(32, 0, numberOf(32 % 7, 0), 1)
             harness.push()
             expect(columnsWithTails(harness)).not.toContain(36)
         } finally {
@@ -4063,8 +4099,8 @@ describe('a theme edit reaches the pool as one repaint', () => {
             //a span on the CURRENT layer long enough that every drawn column carries an accent-
             //coloured bar, including the one that is about to enter the window - without it the
             //entering column has no tail and there is nothing for a wrong accent to show up on.
-            //(idOf(12) is a note id makeSong never uses, so nothing truncates the span.)
-            harness.context.song.addNoteAt(0, 0, idOf(12), 90)
+            //(numberOf(12, 0) is a Note Number makeSong never uses, so nothing truncates the span.)
+            harness.context.song.addNoteAt(0, 0, numberOf(12, 0), 90)
             harness.push()
             expect(
                 harness.paintedScene().notes.columns.every(column => column.tails.ops.length > 0)
@@ -4763,7 +4799,7 @@ describe('the smooth scroll', () => {
             //note entry is not gated on isPlaying, so this is a real state an edit arrives in. It
             //takes the repaint path, which draws at the position the glide has reached - a path
             //that redrew from `selected` would snap the canvas forward under the user's hand.
-            harness.context.song.addNoteAt(SELECTED + 3, 0, idOf(11))
+            harness.context.song.addNoteAt(SELECTED + 3, 0, numberOf(11, 0))
             harness.push()
             expect(harness.scrollPosition()).toBeCloseTo(midColumn, 5)
 
@@ -4866,7 +4902,7 @@ describe('the static timeline minimap', () => {
 
             context.props.isPlaying = true
             harness.push()
-            context.song.addNoteAt(10, 0, idOf(14), 2)
+            context.song.addNoteAt(10, 0, numberOf(14, 0), 2)
             harness.push()
             const rendersAfterEdit = harness.renders()
 

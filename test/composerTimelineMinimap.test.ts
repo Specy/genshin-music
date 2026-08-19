@@ -32,15 +32,20 @@ function recordingSink(): { sink: ComposerTimelineMinimapSink; ops: RectOp[] } {
   };
 }
 
-function noteId(instrument: (typeof INSTRUMENTS)[number], button: number): number {
-  return INSTRUMENTS_DATA[instrument].notes[button].midi;
+/**
+ * The Note Number a button enters at Basepoint C — what a song stores since ADR-0007, and
+ * deliberately NOT `note.midi`: on a tuned instrument the nominal is a number no button
+ * sounds, so a song built from nominals would draw every note dimmed as a Stranded Note.
+ */
+function noteNumber(instrument: (typeof INSTRUMENTS)[number], button: number): number {
+  return INSTRUMENTS_DATA[instrument].notes[button].sounding;
 }
 
 describe('ComposerTimelineMinimapBuilder', () => {
   it('draws tempo backgrounds, tails, and heads in complete passes one column per call', () => {
     const columns = [new NoteColumn(), new NoteColumn(), new NoteColumn()];
-    columns[0].addNote(0, noteId(INSTRUMENTS[0], 0), 3);
-    columns[1].addNote(1, noteId(INSTRUMENTS[1], 1));
+    columns[0].addNote(0, noteNumber(INSTRUMENTS[0], 0), 3);
+    columns[1].addNote(1, noteNumber(INSTRUMENTS[1], 1));
     columns[1].tempoChanger = 1;
     const instruments = [
       new InstrumentData({ name: INSTRUMENTS[0], icon: 'circle' }),
@@ -51,6 +56,7 @@ describe('ComposerTimelineMinimapBuilder', () => {
       {
         columns,
         instruments,
+        songPitch: 'C',
         currentLayer: 0,
         width: 300,
         height: 36.4,
@@ -89,7 +95,7 @@ describe('ComposerTimelineMinimapBuilder', () => {
   it('omits hidden secondary tracks and can compile out sustain tails through source config', () => {
     expect(COMPOSER_TIMELINE_MINIMAP_CONFIG.showSustainTails).toBe(true);
     const column = new NoteColumn();
-    column.addNote(1, noteId(INSTRUMENTS[1], 0), 4);
+    column.addNote(1, noteNumber(INSTRUMENTS[1], 0), 4);
     const hiddenInstruments = [
       new InstrumentData({ name: INSTRUMENTS[0] }),
       new InstrumentData({ name: INSTRUMENTS[1], icon: 'border', visible: false }),
@@ -99,6 +105,7 @@ describe('ComposerTimelineMinimapBuilder', () => {
       {
         columns: [column],
         instruments: hiddenInstruments,
+        songPitch: 'C',
         currentLayer: 0,
         width: 100,
         height: 36.4,
@@ -118,6 +125,7 @@ describe('ComposerTimelineMinimapBuilder', () => {
       {
         columns: [column],
         instruments: hiddenInstruments,
+        songPitch: 'C',
         currentLayer: 0,
         width: 100,
         height: 36.4,
