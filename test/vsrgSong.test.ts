@@ -11,7 +11,7 @@ import {
 } from './imports'
 import {expectGolden, readFixture} from './golden'
 import {
-    basepointOffset, getNoteIdTable, getSoundingTable, numberToButton,
+    basepointOffset, getNoteIdTable, getSoundingTable, gridRowForNumber, numberToButton,
 } from '$core/Songs/noteIds'
 import type {Pitch} from '$core/legacyConfig'
 
@@ -221,8 +221,37 @@ describe('a vsrg instrument swap rewrites the track', () => {
         const stranded = CANONICAL_NOTE_IDS.find(id =>
             !getNoteIdTable(NARROW).includes(id) && getNoteIdTable(WIDE).includes(id))!
         const song = songOn(NARROW, [stranded])
+        //both halves of an un-strand, either of which a bug satisfies alone: the number SURVIVES
+        //the swap untouched, and the placement flips stranded -> voiced (ADR-0007 phase D)
+        expect(gridRowForNumber(NARROW, 'C', stranded).stranded).toBe(true)
         expect(swapTo(song, WIDE)).toEqual([stranded])
         expect(numberToButton(WIDE, 'C', stranded)).toBeGreaterThanOrEqual(0)
+        expect(gridRowForNumber(WIDE, 'C', stranded))
+            .toEqual({row: CANONICAL_NOTE_IDS.indexOf(stranded), stranded: false, accidental: 0})
+    })
+
+    it.runIf(TUNED.length > 0)('un-strands an OFF-SCALE number onto the tuned button that sounds it', () => {
+        //the vsrg twin of ComposedSong's row: a tuned instrument's Sounding Pitch is not a grid id
+        //at all, so on an untuned track it draws on the NEAREST row with a ♯/♭ hint. Swapping to the
+        //instrument that owns that pitch gives it a button and moves it to that button's own row.
+        const tuned = TUNED[0]
+        const reflavored = notesOf(tuned).find(note =>
+            note.pitched && note.sounding !== note.midi && !CANONICAL_NOTE_IDS.includes(note.sounding))
+        if (!reflavored) return
+        const host = INSTRUMENTS.find((name: string) => numberToButton(name, 'C', reflavored.sounding) === -1)!
+        const before = gridRowForNumber(host, 'C', reflavored.sounding)
+        expect(before).toMatchObject({stranded: true})
+        expect(before.accidental).not.toBe(0)
+
+        const song = songOn(host, [reflavored.sounding])
+        expect(swapTo(song, tuned)).toEqual([reflavored.sounding])
+        const after = gridRowForNumber(tuned, 'C', reflavored.sounding)
+        expect(after).toEqual({
+            row: CANONICAL_NOTE_IDS.indexOf(reflavored.midi),
+            stranded: false,
+            accidental: 0,
+        })
+        expect(after.row).not.toBe(before.row)
     })
 
     it('applies the swap at the OLD Basepoint when the same save also moves the override', () => {
@@ -321,6 +350,33 @@ describe('a Basepoint change moves the vsrg hit objects', () => {
         const original = song.tracks[0].hitObjects[0].notes
         song.applyBasepointChange('song', 'D', 'E')
         expect(song.tracks[0].hitObjects[0].notes).not.toBe(original)
+    })
+
+    /**
+     * ComposedSong's twin row (see 'moves a STRANDED note with the view'): the notes and the view
+     * move by the SAME interval, so the virtual nominal every placement is resolved against is
+     * unchanged and nothing strands or un-strands. An off-scale number keeps its row and its sign;
+     * the un-strand that a rewrite CAN produce is the swap's pass-through, above.
+     */
+    it('carries an off-scale strand with the view: the number moves, the placement does not', () => {
+        const offScale = Math.max(...CANONICAL_NOTE_IDS) + 1
+        const song = new VsrgSong('off-scale under basepoint')
+        song.set({pitch: 'C'})
+        const track = new VsrgTrack(INSTRUMENTS[0] as never)
+        const hitObject = new VsrgHitObject(0, 500)
+        hitObject.notes = [offScale]
+        track.hitObjects = [hitObject]
+        song.initTracksForConstruction([track])
+        const before = gridRowForNumber(INSTRUMENTS[0], 'C', offScale)
+        expect(before.stranded).toBe(true)
+        expect(before.accidental).not.toBe(0)
+
+        song.set({pitch: 'F'})
+        song.applyBasepointChange('song', 'C', 'F')
+
+        const moved = song.tracks[0].hitObjects[0].notes[0]
+        expect(moved).toBe(offScale + basepointOffset('F'))
+        expect(gridRowForNumber(INSTRUMENTS[0], 'F', moved)).toEqual(before)
     })
 })
 

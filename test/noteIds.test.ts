@@ -3,8 +3,9 @@ import {CANONICAL_NOTE_IDS, INSTRUMENTS, InstrumentData} from './imports'
 import type {ColumnNote} from './imports'
 import type {InstrumentNoteIcon} from '../src/lib/core/Songs/SongClasses'
 import {
-    songGridSlotForId, computeButtonLayerStatuses, displayButtonForId, foldIdIntoRange,
-    getNoteIdTable, nominalToNumber, noteIdToButton, numberToButton,
+    songGridSlotForId, computeButtonLayerStatuses, computeGridStrandedMarks, displayButtonForId,
+    foldIdIntoRange, getNoteIdTable, gridRowForNumber, nominalToNumber, noteIdToButton,
+    numberToButton,
 } from '../src/lib/core/Songs/noteIds'
 import type {Pitch} from '../src/lib/core/legacyConfig'
 import type {InstrumentName} from '../src/lib/core/types'
@@ -191,5 +192,80 @@ describe('computeButtonLayerStatuses', () => {
                 expect(button).toBeLessThan(keyboardTable.length)
             }
         })
+    })
+})
+
+/**
+ * THE COMPOSER CANVAS' TWO STRANDED FACTS, in one pass (ADR-0007 phase D). The KEYS are the rows
+ * the canvas dims — every note contributing to them stranded on its own instrument — and the VALUE
+ * is the accidental hint those notes agree on, which is what tells an OFF-SCALE strand (a number
+ * between two grid rows) apart from a merely un-voiced one sitting on its own row.
+ *
+ * Written game-agnostically: instruments are chosen by capability and the off-scale numbers are
+ * derived from the grid's own ends, so both PUBLIC_GAMEs run the same rows.
+ */
+describe('computeGridStrandedMarks', () => {
+    const DEFAULT = INSTRUMENTS[0]
+    const track = (name = DEFAULT, visible = true) => new InstrumentData({name, visible})
+    const columnNote = (trackIndex: number, id: number): ColumnNote => ({trackIndex, id, span: 1})
+    /** A semitone past an end of the grid: off-scale on every instrument, whatever the ladder. */
+    const above = Math.max(...CANONICAL_NOTE_IDS) + 1
+    const below = Math.min(...CANONICAL_NOTE_IDS) - 1
+
+    it('this game leaves both of the derived numbers off-scale', () => {
+        //guards every row below from going vacuous
+        expect(gridRowForNumber(DEFAULT, 'C', above)).toMatchObject({stranded: true, accidental: 1})
+        expect(gridRowForNumber(DEFAULT, 'C', below)).toMatchObject({stranded: true, accidental: -1})
+    })
+
+    it('marks an off-scale row with the sign of its notes, and a voiced row not at all', () => {
+        const sharpRow = gridRowForNumber(DEFAULT, 'C', above).row
+        const flatRow = gridRowForNumber(DEFAULT, 'C', below).row
+        //a playable nominal on neither of the two rows above — the off-scale ones land on the
+        //grid's own ends, and a voiced note sharing one of those rows would (correctly) clear it
+        const nominal = CANONICAL_NOTE_IDS.find((id, row) =>
+            ![sharpRow, flatRow].includes(row) && noteIdToButton(DEFAULT, id) !== -1)!
+        const voiced = nominalToNumber(DEFAULT, 'C', nominal)
+        const marks = computeGridStrandedMarks(
+            [columnNote(0, voiced), columnNote(0, above), columnNote(0, below)], [track()], 'C')
+        expect(marks.get(sharpRow)).toBe(1)
+        expect(marks.get(flatRow)).toBe(-1)
+        expect(marks.has(songGridSlotForId(nominal))).toBe(false)
+    })
+
+    it('marks an ON-SCALE strand 0: dimmed, but not claiming to be off the scale', () => {
+        //a grid row this instrument has no button for, if the game ships such an instrument
+        const narrow = INSTRUMENTS.find((name: InstrumentName) =>
+            CANONICAL_NOTE_IDS.some(id => noteIdToButton(name, id) === -1))
+        if (!narrow) return
+        const stranded = CANONICAL_NOTE_IDS.find(id => noteIdToButton(narrow, id) === -1)!
+        expect(computeGridStrandedMarks([columnNote(0, stranded)], [track(narrow)], 'C'))
+            .toEqual(new Map([[songGridSlotForId(stranded), 0]]))
+    })
+
+    it('a HEALTHY contributor clears the row, hint and dimming together', () => {
+        //the row is drawn as ONE sprite, so a row that reads as voiced must not also claim to be
+        //a semitone off — the same "any healthy contributor is not dimmed" rule, extended
+        const nearest = gridRowForNumber(DEFAULT, 'C', above).row
+        const onThatRow = nominalToNumber(DEFAULT, 'C', CANONICAL_NOTE_IDS[nearest])
+        expect(gridRowForNumber(DEFAULT, 'C', onThatRow).row).toBe(nearest)
+        expect(computeGridStrandedMarks(
+            [columnNote(0, above), columnNote(1, onThatRow)], [track(), track()], 'C'))
+            .toEqual(new Map())
+    })
+
+    it('collapses DISAGREEING contributors to no hint rather than to either one', () => {
+        //one sprite cannot honestly carry two hints; no hint reads as "stranded, look at the
+        //notes" instead of a wrong one. Two strands a semitone either side of one row is the
+        //constructible form of that (the grid's end row, approached from outside and from inside).
+        const row = gridRowForNumber(DEFAULT, 'C', above).row
+        const top = CANONICAL_NOTE_IDS[row]
+        const fromBelow = top - 1
+        //only meaningful while that number really is off-scale AND lands on the same row
+        const inside = gridRowForNumber(DEFAULT, 'C', fromBelow)
+        if (inside.row !== row || inside.accidental !== -1) return
+        expect(computeGridStrandedMarks(
+            [columnNote(0, above), columnNote(1, fromBelow)], [track(), track()], 'C'))
+            .toEqual(new Map([[row, 0]]))
     })
 })

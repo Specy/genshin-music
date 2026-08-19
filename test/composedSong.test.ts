@@ -10,7 +10,7 @@ import {
 } from './imports'
 import {buildComposedSong} from './builders'
 import {expectGolden, readFixture} from './golden'
-import {noteIdToButton} from '$core/Songs/noteIds'
+import {gridRowForNumber, noteIdToButton} from '$core/Songs/noteIds'
 
 // Format-v4 rewrite (2026-08-03): `composed-song.json` is the frozen pre-v4 fixture —
 // its `serialized` member is a real v3 file and now serves as the LEGACY INPUT.
@@ -203,6 +203,55 @@ describe('a Basepoint change is a real edit of the notes', () => {
         song.applyBasepointChange('song', 'Ab', 'C')
         expect(JSON.parse(JSON.stringify(song.serialize()))).toEqual(before)
     })
+
+    /**
+     * WHAT A BASEPOINT CHANGE DOES TO WHERE NOTES DRAW: nothing, and that is the point (ADR-0007
+     * phase D). The rewrite moves every affected note by the same interval the view moved, so the
+     * VIRTUAL NOMINAL every placement question is asked of — `number − offset(effective Basepoint)`
+     * — comes out identical on both sides of the change. Nothing strands, nothing un-strands, and
+     * an off-scale note keeps its row AND its ♯/♭ sign.
+     *
+     * Stated as its own row because it is the property that makes the rewrite and the grid-row rule
+     * ONE decision rather than two that happen to agree: a placement that moved under a Basepoint
+     * change would mean the two disagree about what a stored number means, and the user would watch
+     * their notes crawl up the canvas as they transposed.
+     *
+     * (It is also why the phase-D brief's "a Basepoint change un-strands a note" is unconstructible
+     * on this model — see the swap rows below for the rewrite that genuinely does un-strand.)
+     */
+    it('moves a STRANDED note with the view: same row, same accidental, still stranded', () => {
+        const instrument = INSTRUMENTS[0]
+        const song = new ComposedSong('strand under basepoint', [instrument])
+        song.pitch = 'C'
+        //an on-scale strand (a grid row this instrument has no button for, if it has one) and an
+        //off-scale one (a semitone past the top of the grid, which every instrument leaves off it)
+        const onScale = CANONICAL_NOTE_IDS.find(id => noteIdToButton(instrument, id) === -1)
+        const offScale = Math.max(...CANONICAL_NOTE_IDS) + 1
+        const numbers = onScale === undefined ? [offScale] : [onScale, offScale]
+        numbers.forEach((number, column) => song.addNoteAt(column, 0, number))
+        const before = numbers.map(number => gridRowForNumber(instrument, 'C', number))
+        //non-vacuous: the off-scale note really is between two rows on this build
+        expect(before.at(-1)!.stranded).toBe(true)
+        expect(before.at(-1)!.accidental).not.toBe(0)
+
+        song.pitch = 'Eb'
+        song.applyBasepointChange('song', 'C', 'Eb')
+
+        expect(numbersOf(song, 0)).toEqual(numbers.map(number => number + 3))
+        numbersOf(song, 0).forEach((number, i) => {
+            expect(gridRowForNumber(instrument, 'Eb', number)).toEqual(before[i])
+        })
+    })
+
+    it('leaves a VOICED note voiced, on the row it was already on', () => {
+        const song = twoTrackSong()
+        const number = numbersOf(song, 0)[0]
+        const before = gridRowForNumber(INSTRUMENTS[0], 'C', number)
+        expect(before.stranded).toBe(false)
+        song.pitch = 'B'
+        song.applyBasepointChange('song', 'C', 'B')
+        expect(gridRowForNumber(INSTRUMENTS[0], 'B', numbersOf(song, 0)[0])).toEqual(before)
+    })
 })
 
 describe('an instrument swap rewrites the track button-preservingly', () => {
@@ -244,6 +293,70 @@ describe('an instrument swap rewrites the track button-preservingly', () => {
 
         expect(together.columns[0].notesOfTrack(0)[0].id)
             .toBe(inTwoSteps.columns[0].notesOfTrack(0)[0].id)
+    })
+
+    /**
+     * THE UN-STRAND FLOW, end to end on the song (ADR-0007 phase D). A number the OLD instrument
+     * cannot voice has no button to correspond from, so the swap passes it through UNCHANGED — and
+     * the new instrument may well have a button for it, which is the whole reason pass-through beats
+     * approximating it onto some neighbouring key.
+     *
+     * Both halves are asserted, because either alone is satisfiable by a bug: the NUMBER survives
+     * (nothing rewrote it on the way through) and the PLACEMENT flips stranded → voiced (the canvas
+     * stops dimming it, and the composer stops skipping it at playback).
+     */
+    it('a strand passes through a swap UNCHANGED and un-strands on an instrument that has it', () => {
+        //by capability, never by game id: an instrument missing a grid row another one carries
+        const narrow = INSTRUMENTS.find((name) =>
+            CANONICAL_NOTE_IDS.some((id) => noteIdToButton(name, id) === -1))!
+        const stranded = CANONICAL_NOTE_IDS.find((id) =>
+            noteIdToButton(narrow, id) === -1
+            && INSTRUMENTS.some((name) => noteIdToButton(name, id) !== -1))!
+        const wide = INSTRUMENTS.find((name) => noteIdToButton(name, stranded) !== -1)!
+        const song = new ComposedSong('un-strand by swap', [narrow])
+        song.addNoteAt(0, 0, stranded)
+        expect(gridRowForNumber(narrow, 'C', stranded).stranded).toBe(true)
+
+        song.setInstrument(0, new InstrumentData({name: wide}))
+
+        expect(song.columns[0].notesOfTrack(0)[0].id).toBe(stranded)
+        const after = gridRowForNumber(wide, 'C', stranded)
+        expect(after.stranded).toBe(false)
+        expect(after.accidental).toBe(0)
+    })
+
+    it.runIf(INSTRUMENTS.some((name) =>
+        INSTRUMENTS_DATA[name].notes.some((note) => note.pitched && note.sounding !== note.midi)
+    ))('an OFF-SCALE strand un-strands onto the tuned button that sounds it, moving to its row', () => {
+        //the Lyre -> Vintage-Lyre case the composer smoke pass walks through: a tuned instrument's
+        //Sounding Pitch, stored on an untuned track, is not a grid id at all — it draws on the
+        //nearest row with a ♯/♭ hint. Swapping the track to the instrument that OWNS that pitch
+        //gives it a button, and the note moves to the row that button's nominal id prints.
+        const tuned = INSTRUMENTS.find((name) =>
+            INSTRUMENTS_DATA[name].notes.some((note) => note.pitched && note.sounding !== note.midi))!
+        const reflavored = INSTRUMENTS_DATA[tuned].notes.find(
+            (note) => note.pitched && note.sounding !== note.midi
+            && !CANONICAL_NOTE_IDS.includes(note.sounding))
+        if (!reflavored) return
+        const host = INSTRUMENTS.find((name) => noteIdToButton(name, reflavored.sounding) === -1)!
+        const before = gridRowForNumber(host, 'C', reflavored.sounding)
+        expect(before.stranded).toBe(true)
+        expect(before.accidental).not.toBe(0)
+
+        const song = new ComposedSong('off-scale un-strand', [host])
+        song.addNoteAt(0, 0, reflavored.sounding)
+        song.setInstrument(0, new InstrumentData({name: tuned}))
+
+        //the number is the pitch the file claimed all along, and it survives the swap untouched
+        expect(song.columns[0].notesOfTrack(0)[0].id).toBe(reflavored.sounding)
+        const after = gridRowForNumber(tuned, 'C', reflavored.sounding)
+        expect(after).toEqual({
+            row: CANONICAL_NOTE_IDS.indexOf(reflavored.midi),
+            stranded: false,
+            accidental: 0,
+        })
+        //...and it left the row it was merely NEAREST to
+        expect(after.row).not.toBe(before.row)
     })
 })
 
@@ -360,6 +473,27 @@ describe('moveNotesBy steps through the Song Grid rows the canvas draws', () => 
             //only the top row has nowhere to go; every other note keeps its column, on both tracks
             expect(ids).toEqual(landed === undefined ? [] : [landed, landed])
         })
+    })
+
+    it('moves an OFF-SCALE note from the row it draws on, exactly like any other strand', () => {
+        //ADR-0007 phase D: an off-scale note is drawn on its NEAREST row, so the tool has to step
+        //from that row and not from wherever its raw number would sit. It lands on the target row's
+        //own Note Number, which is what un-strands it — the same landing every stranded note gets.
+        const instrument = INSTRUMENTS[0]
+        const offScale = Math.max(...CANONICAL_NOTE_IDS) + 1
+        const placement = gridRowForNumber(instrument, 'C', offScale)
+        expect(placement.stranded).toBe(true)
+        expect(placement.accidental).not.toBe(0)
+        const song = new ComposedSong('move off-scale', [instrument])
+        song.columns[0].addNote(0, offScale)
+
+        //DOWN one row: the nearest row is the grid's top, which has nothing above it
+        song.moveNotesBy([0], -1, 'all')
+
+        const landed = idAtRow(COMPOSER_NOTE_POSITIONS[placement.row] + 1)!
+        expect(song.columns[0].notes.map((note) => note.id)).toEqual([landed])
+        expect(gridRowForNumber(instrument, 'C', song.columns[0].notes[0].id))
+            .toEqual({row: CANONICAL_NOTE_IDS.indexOf(landed), stranded: false, accidental: 0})
     })
 
     it('moves a single track without disturbing the others', () => {

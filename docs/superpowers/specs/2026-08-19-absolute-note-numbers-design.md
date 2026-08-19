@@ -33,7 +33,7 @@ Songs store Nominal Ids pre-transposition; pitch is a runtime playback-rate labe
 - Entry (keyboard press / composer toggle / recording): `number = sounding(b) + offset(effectivePitch)`.
 - Playback resolution: `b = soundingTable.indexOf(number − offset)`; miss → stranded, skip; `rate = getPitchChanger(effectivePitch)` — audio output byte-identical to today for every migrated song.
 - Grid row (compressed view): resolve `b`; row = `canonicalSlot(nominal(b))`. Stranded: `virtual = number − offset`; if `virtual` is a canonical id → that row + stranded mark (today's ADR-0004 fallback preserved); else nearest canonical id by absolute distance (tie: lower) + stranded mark + ♯/♭ hint by sign.
-- Basepoint rewrite: `delta = offset(new) − offset(old)`; every note of affected tracks `number += delta`.
+- Basepoint rewrite: `delta = offset(new) − offset(old)`; every note of affected tracks `number += delta`. **Phase D finding**: this makes every affected note's VIRTUAL nominal (`number − offset`) invariant, so a Basepoint change never moves a note's grid row and never strands or un-strands one — the notes and the view move together, by construction. ADR-0007's "either of which may un-strand it" therefore holds for the SWAP alone (and for migration, §9); the Basepoint half is pinned as the invariance instead, in composedSong/vsrgSong tests.
 - Swap rewrite (old instrument → new): `b = soundingIndexOld(number − offset)`; `b === -1` → unchanged; else `nom = nominalOld(b)`; `b2 = nominalIndexNew(nom)`; `b2 === -1` → unchanged (now stranded); else `number = soundingNew(b2) + offset`.
 - Migration (per track, old format → memory): `b = nominalIndex(instr, id)`; `number = (b === -1 ? id : sounding(b)) + offset(effectivePitch)`. Stranded best-effort keeps relative position.
 
@@ -80,7 +80,7 @@ Lazy, in-deserializer, like every prior bump: v4/v3/v2 in → memory in numbers 
 - **A — Config & labels**: §6 complete; chord names display; zero format/runtime change.
 - **B — Machinery**: §7 pure module + full test tables; unwired. Pre-flip audio-parity recordings captured here.
 - **C — The Flip (atomic)**: C1 formats+converters (three classes + parseSong + legacy chains + goldens); C2 engine + audio call paths; C3 composer surfaces; C4 player/sheet/vsrg surfaces; C5 rewrites (basepoint, swap, compound undo, transport resync); C6 MIDI I/O; C7 parity suite green.
-- **D — Off-scale UX**: nearest-row + accidental mark in renderer/minimap; un-strand flows verified end-to-end.
+- **D — Off-scale UX**: nearest-row + accidental mark in renderer/minimap; un-strand flows verified end-to-end. SHIPPED 2026-08-19: the hint is a ♯/♭ baked into the note icon (one texture per layer status per accidental, `ComposerCache.noteTextureKey`), sign only — every in-grid off-scale number is exactly one semitone off its row; the minimap keeps dimming as its only strand mark (a 2px head has no legible glyph). Two findings: the §4 Basepoint invariance above, and a C5 wiring defect the smoke pass caught — the layer panel edited the LIVE roster entry, so `setInstrument` could not see a name/Basepoint change and the swap + override rewrites never ran from the UI (fixed in InstrumentSettingsPopup; pinned by composerInstrumentPanel.test.ts).
 - **E — Deletions & docs**: `toOldFormat`+`legacyColumnsView`+`countOldFormatDroppedNotes` commented out; `MIDI_MAP_TO_NOTE`/`NOTE_MAP_TO_MIDI` → arithmetic; dead nominal-only helpers pruned; changelog (+ third-party `version` warning), i18n, memory/docs sync.
 
 ## 12. Risks & mitigations
