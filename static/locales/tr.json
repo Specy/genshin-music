@@ -750,7 +750,7 @@
             "change-5": "Besteleyicide, bir sütunda kullanılan katmanlar vurgulanır",
             "change-6": "Kullanıcı deneyimini iyileştirmek için uygulama genelinde küçük tasarım değişiklikleri yapıldı",
             "change-7": "Besteleyici oynatması artık tek bir saat üzerinden çalışıyor; ses, görseller ve kayıt tamamen senkron kalıyor (lookahead ayarı kaldırıldı)",
-            "change-8": "Diğer birçok hata düzeltmesi ve iyileştirme"
+            "change-12": "Diğer birçok hata düzeltmesi ve iyileştirme"
         },
         "3-7-0": {
             "title": "Yeni enstrümanlar (Genshin)",
