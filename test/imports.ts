@@ -19,8 +19,8 @@ export {
     NOTES_CSS_CLASSES,
     BASE_THEME_CONFIG,
     NOTE_NAME_TYPES,
-    MIDI_MAP_TO_NOTE,
-    NOTE_MAP_TO_MIDI,
+    // MIDI_MAP_TO_NOTE / NOTE_MAP_TO_MIDI retired at ADR-0007 phase E — the snap is derived
+    // from CANONICAL_NOTE_IDS now (Songs/noteIds.snapMidiToGrid, isAccidentalMidi).
     MIDI_BOUNDS,
     MIDI_PRESETS,
 } from '$core/legacyConfig'

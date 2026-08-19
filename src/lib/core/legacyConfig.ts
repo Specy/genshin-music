@@ -123,20 +123,15 @@ export const TEMPO_CHANGERS = game.composer.tempoChangers
 export const BASE_THEME_CONFIG = game.themes.baseConfig
 
 // ---- MIDI ----
-// old Config.ts:775 built this as `new Map(Object.entries(APP_NAME === 'Sky' ? {...} : {...}))`
-// over a plain object keyed by MIDI note number. Object.entries() always stringifies numeric
-// object keys, so the resulting Map is STRING-keyed - consumers rely on this exact shape (e.g.
-// `MIDI_MAP_TO_NOTE.get(\`${midiNote}\`)` in Songs/SongClasses.ts). Preserve it exactly.
-export const MIDI_MAP_TO_NOTE = new Map(Object.entries(game.midi.mapToNote))
-
-// Derivation loop copied verbatim from old Config.ts:869-871 (comment included):
-//   //get only non accidentals
-//   const entries = Object.entries(Object.fromEntries(MIDI_MAP_TO_NOTE)).filter(([k, v]) => v[1] === false)
-//   export const NOTE_MAP_TO_MIDI = new Map(entries.map(([k, v]) => [v[0], Number(k)]))
-//get only non accidentals
-const entries = Object.entries(Object.fromEntries(MIDI_MAP_TO_NOTE)).filter(([k, v]) => v[1] === false)
-export const NOTE_MAP_TO_MIDI = new Map(entries.map(([k, v]) => [v[0], Number(k)]))
-
+// MIDI_MAP_TO_NOTE and NOTE_MAP_TO_MIDI (old Config.ts:775/869-871, and the `midi.mapToNote`
+// section both game.json files used to carry) are GONE as of ADR-0007 phase E:
+//  - the forward map said, per in-range MIDI number, which grid id it snaps to and whether it
+//    is an accidental. Both are facts about the Song Grid, and noteIds.snapMidiToGrid /
+//    isAccidentalMidi derive them from it — so the table can no longer drift from the grid it
+//    was a hand-copy of.
+//  - the reverse map (non-accidentals only) was already dead before this: MIDI export writes
+//    the note's stored Note Number directly now that songs store sounding pitches
+//    (RecordedNote.toMidi), so nothing needs a nominal→MIDI lookup.
 export const MIDI_BOUNDS = game.midi.bounds
 export const MIDI_PRESETS = game.midi.presets
 

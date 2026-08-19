@@ -193,8 +193,11 @@ export type GameJson = {
   };
 
   midi: {
-    /** JSON object keys are strings; the normalizer builds the numeric Map. */
-    mapToNote: Record<string, [number, boolean]>;
+    /**
+     * The MIDI range the importer accepts. Numbers outside it are octave-folded and then
+     * dropped; inside it they snap onto the Song Grid (there is no authored snap table any
+     * more — ADR-0007 phase E derives it from notes.canonicalNoteIds).
+     */
     bounds: { upper: number; lower: number };
     presets: MIDIPreset[];
   };

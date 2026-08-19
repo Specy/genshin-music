@@ -3,9 +3,10 @@ import {game} from '$game'
 import {
     APP_NAME, BASE_LAYER_LIMIT, BASE_THEME_CONFIG, COMPOSER_NOTE_POSITIONS,
     DO_RE_MI_NOTE_SCALE, IMPORT_NOTE_POSITIONS, INSTRUMENTS, INSTRUMENTS_DATA,
-    MIDI_BOUNDS, MIDI_MAP_TO_NOTE, MIDI_PRESETS, NOTE_MAP_TO_MIDI, NOTE_NAME_TYPES,
+    MIDI_BOUNDS, MIDI_PRESETS, NOTE_NAME_TYPES,
     NOTE_SCALE, NOTES_CSS_CLASSES, NOTES_PER_COLUMN, PITCHES, TEMPO_CHANGERS,
 } from './imports'
+import {snapMidiToGrid} from '$core/Songs/noteIds'
 import {expectGolden, readFixture} from './golden'
 
 describe('game config surface', () => {
@@ -39,8 +40,9 @@ describe('game config surface', () => {
             notesCssClasses: NOTES_CSS_CLASSES,
             baseThemeConfig: BASE_THEME_CONFIG,
             noteNameTypes: NOTE_NAME_TYPES,
-            midiMapToNote: Object.fromEntries(MIDI_MAP_TO_NOTE),
-            noteMapToMidi: Object.fromEntries(NOTE_MAP_TO_MIDI),
+            //no midiMapToNote/noteMapToMidi rows: both constants were retired at ADR-0007
+            //phase E (the snap is derived from canonicalNoteIds — see the v1 proof below, which
+            //rebuilds the frozen tables out of the arithmetic and so still checks their values)
             midiBounds: MIDI_BOUNDS,
             midiPresets: MIDI_PRESETS,
             notesPerColumn: NOTES_PER_COLUMN,
@@ -67,7 +69,7 @@ describe('game config surface', () => {
         const frozen = readFixture('config-surface')
         // Deliberate VALUE divergence (2026-08-09, midi round-trip work) — the one place this
         // proof no longer reproduces the frozen surface, because the frozen value was wrong.
-        // Genshin declared midi bounds.upper 84 while the highest key in its own mapToNote is
+        // Genshin declared midi bounds.upper 84 while the highest key in its own mapToNote was
         // 83. A C6 therefore counted as in range, was never octave-folded back, resolved to id
         // -1 anyway, and was tallied under NEITHER out-of-range direction — silently dropped
         // and invisible in the importer's counters. Corrected so the bound agrees with the map
@@ -184,6 +186,26 @@ describe('game config surface', () => {
             })
         )
 
+        // The two MIDI tables are the one part of the frozen surface with no constant left to
+        // read: ADR-0007 phase E deleted `midi.mapToNote` from both games and replaced it with
+        // arithmetic over the Song Grid. So they are rebuilt HERE, from that arithmetic, and
+        // compared like every other value — which makes this proof the byte-parity check for the
+        // replacement: one number snapped differently, or one accidental flagged differently,
+        // from what both games shipped for years and this test goes red.
+        // The key range is MIDI_BOUNDS (as corrected above), not a list read out of the frozen
+        // file, so a table entry outside the range the arithmetic accepts would fail too.
+        const midiMapToNote: Record<string, [number, boolean]> = {}
+        for (let midi = MIDI_BOUNDS.lower; midi <= MIDI_BOUNDS.upper; midi++) {
+            const snapped = snapMidiToGrid(midi)
+            midiMapToNote[`${midi}`] = [snapped.id, snapped.isAccidental]
+        }
+        //the same "get only non accidentals" inversion the retired NOTE_MAP_TO_MIDI was built by
+        const noteMapToMidi = Object.fromEntries(
+            Object.entries(midiMapToNote)
+                .filter(([, value]) => value[1] === false)
+                .map(([key, value]) => [value[0], Number(key)])
+        )
+
         const derived = JSON.parse(JSON.stringify({
             appName: APP_NAME,
             instruments: INSTRUMENTS.filter((name) => !POST_FREEZE_INSTRUMENTS.has(name)),
@@ -196,8 +218,8 @@ describe('game config surface', () => {
             notesCssClasses: NOTES_CSS_CLASSES,
             baseThemeConfig: BASE_THEME_CONFIG,
             noteNameTypes: NOTE_NAME_TYPES,
-            midiMapToNote: Object.fromEntries(MIDI_MAP_TO_NOTE),
-            noteMapToMidi: Object.fromEntries(NOTE_MAP_TO_MIDI),
+            midiMapToNote,
+            noteMapToMidi,
             midiBounds: MIDI_BOUNDS,
             midiPresets: MIDI_PRESETS,
             notesPerColumn: NOTES_PER_COLUMN,

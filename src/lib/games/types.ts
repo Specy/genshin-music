@@ -416,8 +416,9 @@ export interface GameDefinition {
 
   // ── MIDI ──────────────────────────────────────────────────────────────────
   midi: {
-    mapToNote: Readonly<Record<number, [number, boolean]>>; // MIDI_MAP_TO_NOTE (built into a Map)
-    bounds: { upper: number; lower: number }; // MIDI_BOUNDS
+    // No `mapToNote`: the MIDI→grid snap is derived from notes.canonicalNoteIds instead of
+    // authored beside it (ADR-0007 phase E, see Songs/noteIds.snapMidiToGrid).
+    bounds: { upper: number; lower: number }; // MIDI_BOUNDS — the range the snap accepts
     presets: MIDIPreset[]; // MIDI_PRESETS
   };
 

@@ -23,7 +23,7 @@
 // legacy serialized songs (possibly of the OTHER game); this module reflects the current
 // build's live instrument data and is used for playback, rendering, and authoring.
 
-import {CANONICAL_NOTE_IDS, INSTRUMENTS, INSTRUMENTS_DATA, type Pitch, PITCH_TO_INDEX} from '$core/legacyConfig'
+import {CANONICAL_NOTE_IDS, INSTRUMENTS, INSTRUMENTS_DATA, MIDI_BOUNDS, type Pitch, PITCH_TO_INDEX} from '$core/legacyConfig'
 import type {ColumnNote, InstrumentData, RecordedNote} from './SongClasses'
 import type {LayerStatus} from './Layer'
 
@@ -95,6 +95,49 @@ const canonicalSlotById = new Map<number, number>(CANONICAL_NOTE_IDS.map((id, sl
  */
 export function songGridSlotForId(id: number): number {
     return canonicalSlotById.get(id) ?? -1
+}
+
+// ─── MIDI import snapping (ADR-0007 phase E) ───────────────────────────────────────────
+// Arithmetic over the Song Grid, replacing the per-game `midi.mapToNote` tables both games
+// used to author. Those tables stated two things per in-range MIDI number — the grid id it
+// snaps to, and whether it is an accidental — and both are facts ABOUT THE GRID that the
+// grid already carries:
+//   * a game's grid IS its scale, so an accidental is a pitch class the grid has no row for;
+//   * the tables snapped every accidental DOWN one row, i.e. to the nearest grid id at or
+//     below the number.
+// Derived rather than authored so the two can never disagree (a hand-maintained table is a
+// second, silently-drifting copy of the grid), and so a game whose scale is not the white
+// keys gets the right answer without a branch. Byte-parity with the retired tables is exact
+// for both shipped games — their grids are the gapless white keys of exactly the MIDI_BOUNDS
+// range — and the midi fixtures pin it.
+
+// Pitch classes the Song Grid has a row for, built once from the same build-time constant.
+// eslint-disable-next-line svelte/prefer-svelte-reactivity -- build-time constant cache
+const gridPitchClasses = new Set<number>(CANONICAL_NOTE_IDS.map((id) => ((id % 12) + 12) % 12))
+
+/** A MIDI number is ACCIDENTAL when the grid has no row for its pitch class. By pitch class, so it answers for numbers outside MIDI_BOUNDS too — the importer's offset search scores un-shifted notes. */
+export function isAccidentalMidi(midiNote: number): boolean {
+    return !gridPitchClasses.has(((midiNote % 12) + 12) % 12)
+}
+
+/**
+ * A foreign MIDI number snapped onto the Song Grid, exactly as the retired table did:
+ * - outside MIDI_BOUNDS → `{id: -1, isAccidental: false}`. The bounds ARE the range the table
+ *   had keys for, so out-of-range notes come back unmapped and unflagged (the importer counts
+ *   them under out-of-range, never under accidentals) — MidiNote.fromMidi's octave-folding
+ *   loop is what gives them a second chance first.
+ * - in range → the nearest grid id AT OR BELOW the number, flagged accidental when the number
+ *   is not a grid pitch class itself.
+ */
+export function snapMidiToGrid(midiNote: number): {id: number, isAccidental: boolean} {
+    if (!Number.isFinite(midiNote) || midiNote < MIDI_BOUNDS.lower || midiNote > MIDI_BOUNDS.upper) {
+        return {id: -1, isAccidental: false}
+    }
+    let id = -1
+    for (const candidate of CANONICAL_NOTE_IDS) {
+        if (candidate <= midiNote && candidate > id) id = candidate
+    }
+    return {id, isAccidental: isAccidentalMidi(midiNote)}
 }
 
 /**
