@@ -129,7 +129,7 @@ import type {ComposerCache} from '$cmp/pages/Composer/ComposerCache'
  *  - teardown: nothing requires the Application to be destroyed, though destroy()'s own comment
  *    calls that a hard requirement against a WebGL leak on remount.
  *  - the rules this file imports from production rather than restating - nearestEven,
- *    computeGridRowLayerStatuses, computeGridStrandedRows, gridRowForNumber, isColumnVisible. A
+ *    computeGridRowLayerStatuses, computeGridStrandedMarks, gridRowForNumber, isColumnVisible. A
  *    defect inside one of those is followed by the reference rather than caught, EXCEPT where a
  *    second, independent statement pins it (the closed-form window range does this for
  *    isColumnVisible; 'one Note Id, one row, whatever the track's instrument' does it for the
@@ -217,6 +217,18 @@ const pixi = vi.hoisted(() => {
     //comparison, and the harness identifies a texture by looking it up in the cache it came from
     class FakeTexture {
         readonly textureId = nextTextureId++
+        /**
+         * The draw ops the Graphics this texture was rasterised FROM carried, snapshotted at
+         * generateTexture. Nothing in the scene descriptions reads it - a sprite is still named by
+         * the cache slot its texture sits in - and it exists for the one claim a slot name cannot
+         * make: that two slots hold DIFFERENT PICTURES. The off-scale ♯/♭ variants are the case
+         * (ADR-0007 phase D): they differ from the plain icon only by the glyph drawn into them.
+         */
+        readonly ops: unknown[]
+
+        constructor(ops: unknown[] = []) {
+            this.ops = [...ops]
+        }
 
         destroy() {}
     }
@@ -536,7 +548,8 @@ const pixi = vi.hoisted(() => {
             resize: (width: number, height: number) => {
                 this.resizes.push([width, height])
             },
-            generateTexture: () => new FakeTexture(),
+            generateTexture: (options?: {target?: {ops?: unknown[]}}) =>
+                new FakeTexture(options?.target?.ops ?? []),
         }
 
         constructor() {
@@ -638,12 +651,15 @@ import {nearestEven} from '$core/utils/Utilities'
 //assuming that, because "C makes the two axes coincide" is a property of the fixture, not a rule.
 import {
     computeGridRowLayerStatuses,
-    computeGridStrandedRows,
+    computeGridStrandedMarks,
     effectiveTrackPitch,
     gridRowForNumber,
     nominalToNumber,
     numberToButton,
 } from '$core/Songs/noteIds'
+//the note icon's cache key, which is where the OFF-SCALE hint lives: one texture per (layer
+//status, accidental), so the sprite that carries the ♯/♭ is the note's own sprite
+import {noteTextureKey} from '$cmp/pages/Composer/ComposerCache'
 import {
     ComposerRenderer,
     COMPOSER_PLAYHEAD_CONFIG,
@@ -799,6 +815,33 @@ function strandingPair(): {instrument: (typeof INSTRUMENTS)[number], number: num
         }
     }
     throw new Error('no instrument in this game strands any of the default instrument Note Numbers')
+}
+
+/**
+ * AN OFF-SCALE NUMBER and where it lands (ADR-0007 phase D): a Note Number whose virtual nominal
+ * falls BETWEEN two Song-Grid rows, so gridRowForNumber puts it on the nearest one and signs the
+ * accidental. `sign` picks which way it sits off that row.
+ *
+ * Derived from the grid's own ends rather than from a note table, and game-agnostically so: one
+ * semitone past the lowest canonical id can only be flat of the lowest row, one past the highest can
+ * only be sharp of the highest, whatever ladder the game's grid is. The strandedness is asserted
+ * rather than assumed - a game whose instruments sounded past the grid would break the premise, and
+ * the row is worth nothing if the note is voiced.
+ */
+function offScalePair(sign: -1 | 1): {
+    instrument: (typeof INSTRUMENTS)[number]
+    number: number
+    row: number
+} {
+    const virtual = sign < 0
+        ? Math.min(...CANONICAL_NOTE_IDS) - 1
+        : Math.max(...CANONICAL_NOTE_IDS) + 1
+    for (const instrument of INSTRUMENTS) {
+        const placement = gridRowForNumber(instrument, 'C', virtual)
+        if (placement.row === -1 || !placement.stranded || placement.accidental !== sign) continue
+        return {instrument, number: virtual, row: placement.row}
+    }
+    throw new Error(`no instrument in this game leaves ${virtual} off-scale`)
 }
 
 /** The first drawn column with no note on `row`, so a note added there is the row's only one. */
@@ -1914,8 +1957,11 @@ function expectedTails(context: Context, index: number, geometry: Geometry, acce
  *  - a breakpoint column shows the marker;
  *  - one note sprite per Song Grid row that computeGridRowLayerStatuses gives a non-zero status, at
  *    that row's y, dimmed to 0.45 when every note contributing to the row is stranded on its own
- *    instrument. A row is the note ID's canonical slot on EVERY track (ADR-0004), so two tracks on
- *    differently-sized instruments carrying one id contribute to one row rather than two;
+ *    instrument, and taking the ♯/♭ VARIANT of its icon texture when those notes are also OFF-SCALE
+ *    (ADR-0007 phase D: the hint is baked into the note's own texture, so it is the sprite's
+ *    identity that carries it and not a second child). A row is the note ID's canonical slot on
+ *    EVERY track (ADR-0004), so two tracks on differently-sized instruments carrying one id
+ *    contribute to one row rather than two;
  *  - and the tails above, in a Graphics that is itself shown and opaque - the per-bar alpha is in
  *    the fill ops, and a transparent Graphics would draw none of them.
  *
@@ -1943,7 +1989,7 @@ function expectedWindow(
         const isSelected = !props.smoothScroll && index === song.selected
         const isToolsSelected = props.selectedColumns.includes(index)
         const toolsOnly = isToolsSelected && !isSelected
-        const stranded = computeGridStrandedRows(column.notes, song.instruments, song.pitch)
+        const stranded = computeGridStrandedMarks(column.notes, song.instruments, song.pitch)
         const notes: PaintedSpriteData[] = []
         for (const [row, status] of computeGridRowLayerStatuses(
             column.notes,
@@ -1952,11 +1998,12 @@ function expectedWindow(
             song.pitch
         )) {
             if (status === 0) continue
+            const mark = stranded.get(row)
             notes.push({
-                texture: `notes[${status}]`,
+                texture: `notes[${noteTextureKey(status, mark ?? 0)}]`,
                 x: 0,
                 y: (COMPOSER_NOTE_POSITIONS[row] * height) / NOTES_PER_COLUMN,
-                alpha: stranded.has(row) ? 0.45 : 1,
+                alpha: mark === undefined ? 1 : 0.45,
             })
         }
         drawn.push({
@@ -2876,12 +2923,29 @@ const WINDOWS: WindowCase[] = [
             const column = drawnColumnWithoutRow(song, row)
             song.addNoteAt(column, 2, number)
             harness.push()
-            //the scenario is worth nothing if nothing ended up stranded, and two empty sets compare
-            //equal - so the precondition is asserted rather than assumed
-            expect(computeGridStrandedRows(song.columns[column].notes, song.instruments, song.pitch))
-                .toEqual(new Set([row]))
+            //the scenario is worth nothing if nothing ended up stranded, and two empty maps compare
+            //equal - so the precondition is asserted rather than assumed. 0 is "stranded, but on
+            //its own row": this note's number IS a grid id, it simply has no button here
+            expect(computeGridStrandedMarks(song.columns[column].notes, song.instruments, song.pitch))
+                .toEqual(new Map([[row, 0]]))
         },
     },
+    ...([1, -1] as const).map(sign => ({
+        //ADR-0007 phase D: a strand whose number falls BETWEEN two grid rows draws on the nearest
+        //one with a ♯/♭ hint baked into its icon, so it reads as off the scale rather than merely
+        //un-voiced. Both signs, because the two are different textures.
+        what: `with a row whose only note is off-scale ${sign > 0 ? 'above' : 'below'} it`,
+        drive: (harness: Harness) => {
+            const song = harness.context.song
+            const {instrument, number, row} = offScalePair(sign)
+            song.addInstrument(instrument)
+            const column = drawnColumnWithoutRow(song, row)
+            song.addNoteAt(column, 2, number)
+            harness.push()
+            expect(computeGridStrandedMarks(song.columns[column].notes, song.instruments, song.pitch))
+                .toEqual(new Map([[row, sign]]))
+        },
+    })),
     {
         what: 'with the bar groups regrouped',
         drive: harness => {
@@ -3044,7 +3108,7 @@ describe('the painted scene is what the drawing rules say it is', () => {
 /**
  * ADR-0004, stated INDEPENDENTLY of the helper the renderer places with.
  *
- * The table above compares the scene against computeGridRowLayerStatuses/computeGridStrandedRows, so
+ * The table above compares the scene against computeGridRowLayerStatuses/computeGridStrandedMarks, so
  * a defect inside either is followed rather than caught - the header says so. This states the rows
  * the other way round, from game.json's two positionally-paired lists: row N of the Song Grid holds
  * Note Id CANONICAL_NOTE_IDS[N] and draws at COMPOSER_NOTE_POSITIONS[N]. A canvas that went back to
@@ -3130,6 +3194,147 @@ describe('the canvas places every note at its Note Id row, on every track', () =
                 const x = index === SELECTED ? geometry.columnWidth * 0.55 : 0
                 expect(ops[0]).toEqual(['rect', x, tailY, geometry.columnWidth - x, tailHeight])
             }
+        } finally {
+            harness.destroy()
+        }
+    })
+})
+
+/**
+ * ADR-0007 PHASE D, the half the scene table cannot state on its own.
+ *
+ * The table compares the painted texture against `noteTextureKey`, so it would follow the production
+ * key straight into a variant that drew nothing at all. These rows say the other two things: that
+ * the three variants are three DIFFERENT PICTURES (the hint is ink on the canvas, not a second name
+ * for the same icon), and that a note which stops being off-scale stops carrying it - the end of the
+ * un-strand flow, on the surface the user watches.
+ */
+describe('an off-scale note draws the accidental hint into its own icon', () => {
+    /** The draw ops behind the plain / sharp / flat variants of one layer status. */
+    function variants(harness: Harness, status: number): {plain: unknown[], sharp: unknown[], flat: unknown[]} {
+        const notes = harness.currentCache().cache.notes as unknown as Record<string, {ops: unknown[]}>
+        const at = (accidental: -1 | 0 | 1) => {
+            const texture = notes[noteTextureKey(status, accidental)]
+            if (!texture) throw new Error(`the cache holds no ${noteTextureKey(status, accidental)} icon`)
+            return texture.ops
+        }
+        return {plain: at(0), sharp: at(1), flat: at(-1)}
+    }
+
+    it('the sharp and the flat variant each draw MORE than the plain icon, and differ from each other', async () => {
+        const harness = await mount()
+        try {
+            //status 1 is the current layer's filled note - the icon nearly every drawn note takes
+            const {plain, sharp, flat} = variants(harness, 1)
+            //the glyph goes ON TOP, so each variant opens with every op the plain icon has
+            expect(sharp.slice(0, plain.length)).toEqual(plain)
+            expect(flat.slice(0, plain.length)).toEqual(plain)
+            expect(sharp.length).toBeGreaterThan(plain.length)
+            expect(flat.length).toBeGreaterThan(plain.length)
+            //...and the two hints are not the same picture, which is what makes the SIGN readable
+            expect(sharp).not.toEqual(flat)
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    it('draws the hint in the theme\'s own readable ink for the layer colour it sits on', async () => {
+        //BOTH THEMES, without mounting two: the canvas takes its colours from the theme, and the
+        //ink here is whatever ThemeProvider says is readable over `composer_main_layer` - so a
+        //light theme and a dark one get opposite glyph colours from this one expression, and
+        //neither can come out as the fill the glyph is drawn over.
+        const harness = await mount()
+        try {
+            const {plain, sharp} = variants(harness, 1)
+            const glyph = sharp.slice(plain.length)
+            const strokes = glyph.filter(op => Array.isArray(op) && op[0] === 'stroke')
+            expect(strokes.length).toBeGreaterThan(0)
+            const ink = (strokes[0] as [string, {color: number}])[1].color
+            expect(ink).not.toBe(ThemeProvider.get('composer_main_layer').rgbNumber())
+            expect(ink).toBe(
+                ThemeProvider
+                    .getTextColorFromBackground(ThemeProvider.get('composer_main_layer'))
+                    .rgbNumber()
+            )
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    it('an off-scale note is one sprite, on the nearest row, dimmed and marked', async () => {
+        const {instrument, number, row} = offScalePair(1)
+        const context = makeContext()
+        const song = new ComposedSong('off-scale', [instrument])
+        song.selected = SELECTED
+        song.addNoteAt(SELECTED, 0, number)
+        context.song = song
+        const harness = await mount(context)
+        try {
+            const geometry = harness.geometry()
+            const notes = harness.paintedScene().notes.columns
+                .find(column => column.index === SELECTED)!.notes
+            //ONE sprite: the hint rides the note's own icon, so an off-scale note costs the canvas
+            //nothing a voiced one does not
+            expect(notes).toEqual([{
+                texture: `notes[${noteTextureKey(1, 1)}]`,
+                x: 0,
+                y: (COMPOSER_NOTE_POSITIONS[row] * geometry.height) / NOTES_PER_COLUMN,
+                alpha: 0.45,
+            }])
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    it.runIf(INSTRUMENTS.some(name =>
+        INSTRUMENTS_DATA[name].notes.some(note => note.pitched && note.sounding !== note.midi)
+    ))('an instrument swap that UN-STRANDS the note takes the hint off it', async () => {
+        //THE UN-STRAND FLOW, END TO END ON THE CANVAS, and the composer smoke pass in miniature:
+        //a tuned instrument's Sounding Pitch stored on an untuned track is off-scale there - drawn
+        //on its nearest row, dimmed, marked. Swapping the track to the instrument that owns that
+        //pitch passes the number through untouched and gives it a button, so the same note becomes
+        //an ordinary voiced one on the row that button's nominal id prints.
+        const tuned = INSTRUMENTS.find(name =>
+            INSTRUMENTS_DATA[name].notes.some(note => note.pitched && note.sounding !== note.midi))!
+        const reflavored = INSTRUMENTS_DATA[tuned].notes.find(note =>
+            note.pitched && note.sounding !== note.midi && !CANONICAL_NOTE_IDS.includes(note.sounding))
+        if (!reflavored) return
+        const host = INSTRUMENTS.find(name => numberToButton(name, 'C', reflavored.sounding) === -1)!
+        const before = gridRowForNumber(host, 'C', reflavored.sounding)
+        expect(before.stranded).toBe(true)
+        expect(before.accidental).not.toBe(0)
+
+        const context = makeContext()
+        const song = new ComposedSong('un-strand by swap', [host])
+        song.selected = SELECTED
+        song.addNoteAt(SELECTED, 0, reflavored.sounding)
+        context.song = song
+        const harness = await mount(context)
+        try {
+            const geometry = harness.geometry()
+            const rowY = (row: number) => (COMPOSER_NOTE_POSITIONS[row] * geometry.height) / NOTES_PER_COLUMN
+            const notesAt = () => harness.paintedScene().notes.columns
+                .find(column => column.index === SELECTED)!.notes
+            expect(notesAt()).toEqual([{
+                texture: `notes[${noteTextureKey(1, before.accidental)}]`,
+                x: 0,
+                y: rowY(before.row),
+                alpha: 0.45,
+            }])
+
+            //the swap, exactly as the layer panel makes it: a fresh entry carrying the new name
+            song.setInstrument(0, song.instruments[0].clone().set({name: tuned}))
+            harness.push()
+
+            //the stored number survived the swap, which is what makes this an un-strand and not a
+            //rewrite - and the sprite is now plain, opaque, and on the tuned button's own row
+            expect(song.columns[SELECTED].notes[0].id).toBe(reflavored.sounding)
+            expect(notesAt()).toEqual([{
+                texture: 'notes[1]',
+                x: 0,
+                y: rowY(CANONICAL_NOTE_IDS.indexOf(reflavored.midi)),
+                alpha: 1,
+            }])
         } finally {
             harness.destroy()
         }

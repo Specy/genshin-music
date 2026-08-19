@@ -47,11 +47,11 @@ import type { NoteColumn, ColumnNote, InstrumentData } from '$core/Songs/SongCla
 // stay visible.
 import {
   computeGridRowLayerStatuses,
-  computeGridStrandedRows,
+  computeGridStrandedMarks,
   effectiveTrackPitch,
   gridRowForNumberCached,
 } from '$core/Songs/noteIds';
-import { ComposerCache, type ComposerCacheData } from './ComposerCache';
+import { ComposerCache, noteTextureKey, type ComposerCacheData } from './ComposerCache';
 import {
   TIMELINE_BAND_PADDING,
   TIMELINE_INSET_LEFT,
@@ -771,8 +771,10 @@ class ColumnView {
     this.breakpointMarker.visible = params.isBreakpoint;
     //`row` is the note's CANONICAL Song-Grid slot, not any instrument's button (ADR-0004),
     //resolved for the note's OWN track at its own Basepoint (ADR-0007) — which is what puts a
-    //tuned button on the row its label prints and an off-scale strand on its nearest row
-    const strandedRows = computeGridStrandedRows(notes, instruments, songPitch);
+    //tuned button on the row its label prints and an off-scale strand on its nearest row.
+    //The MARK carries both of the row's stranded facts: whether to dim it, and (for an off-scale
+    //strand) which way its number sits off the row it is drawn on.
+    const strandedRows = computeGridStrandedMarks(notes, instruments, songPitch);
     let painted = 0;
     for (const [row, layerStatus] of computeGridRowLayerStatuses(
       notes,
@@ -781,12 +783,16 @@ class ColumnView {
       songPitch
     )) {
       if (layerStatus === 0) continue;
-      const texture = cache.notes[layerStatus];
+      const mark = strandedRows.get(row);
+      //the hint is part of the note's own icon (ComposerCache.noteTextureKey), so it repaints
+      //with the sprite and needs no invalidation channel of its own
+      const texture =
+        cache.notes[noteTextureKey(layerStatus, mark ?? 0)] ?? cache.notes[layerStatus];
       const sprite = this.noteSpriteAt(painted, texture);
       sprite.texture = texture;
       sprite.y = (COMPOSER_NOTE_POSITIONS[row] * sizes.height) / NOTES_PER_COLUMN;
       //stranded notes (no button on their own instrument at its Basepoint) are visibly dimmed
-      sprite.alpha = strandedRows.has(row) ? 0.45 : 1;
+      sprite.alpha = mark === undefined ? 1 : 0.45;
       sprite.visible = true;
       painted++;
     }
@@ -1692,6 +1698,11 @@ export class ComposerRenderer {
         accent: breakpointColor,
         mainLayer: ThemeProvider.get('composer_main_layer'),
         secondLayer: ThemeProvider.get('composer_secondary_layer'),
+        //the theme's own readable-text answer for the layer colour the off-scale hint is drawn
+        //over, so the glyph flips with the theme instead of this file guessing at contrast
+        accidental: ThemeProvider.getTextColorFromBackground(
+          ThemeProvider.get('composer_main_layer')
+        ),
         bars: [
           { color: colors.l.rgb().rgbNumber() }, //lighter
           { color: colors.d.rgb().rgbNumber() }, //darker
@@ -3274,7 +3285,7 @@ export class ComposerRenderer {
    * column whose own `version` counter did not move, so the per-column skip cannot see them; the
    * last two are cheap gates that a narrowed path would reach a different way:
    *  - `instruments` decides note textures (computeGridRowLayerStatuses), the dimming of stranded
-   *    rows (computeGridStrandedRows) and which tails draw at all, for every column. It no longer
+   *    rows (computeGridStrandedMarks) and which tails draw at all, for every column. It no longer
    *    decides WHERE a note sits - placement is the Note Id's canonical row (ADR-0004) - but each
    *    of those three still changes the pixels of a column whose `version` counter did not move;
    *  - `currentLayer` is bit 0 of every layer status plus the tail accent/dim, for every column;

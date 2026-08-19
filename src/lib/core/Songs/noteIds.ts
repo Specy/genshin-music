@@ -249,17 +249,32 @@ export function computeGridRowLayerStatuses(notes: readonly ColumnNote[], curren
 }
 
 /**
- * Song-Grid rows whose every contributing note is STRANDED on its own instrument, which
- * the composer canvas dims. Stranded notes render exactly as before ADR-0004 — canonical
- * row, dimmed — and the "a row with any healthy contributor is not dimmed" rule is
- * unchanged; what changed is that healthy notes are now keyed by the SAME canonical row
- * as stranded ones, so a misplaced healthy note can no longer land on an unrelated row
- * and either collide with a stranded marker or silently clear it. There is no own-button
- * counterpart: the canvas was the only surface that dimmed stranded rows, so the
- * pre-ADR-0004 own-button version was deleted rather than left as a second answer.
+ * Song-Grid rows whose every contributing note is STRANDED on its own instrument — the rows the
+ * composer canvas dims — each mapped to the ACCIDENTAL HINT its notes agree on: -1 flat, +1 sharp,
+ * 0 none. The KEYS are exactly the old `computeGridStrandedRows` set (`.has(row)` still answers
+ * "dim this row"); the VALUE is the second half of the same question, which is what tells an
+ * OFF-SCALE strand — a number whose virtual nominal falls between two grid rows — apart from a
+ * merely un-voiced one sitting on its own row (ADR-0007 phase D).
+ *
+ * Stranded notes render exactly as before ADR-0004 — canonical row, dimmed — and the "a row with
+ * any healthy contributor is not dimmed" rule is unchanged; what changed at ADR-0004 is that
+ * healthy notes are now keyed by the SAME canonical row as stranded ones, so a misplaced healthy
+ * note can no longer land on an unrelated row and either collide with a stranded marker or silently
+ * clear it. A healthy contributor clears the HINT with the dimming, for the same reason and in the
+ * same step: the row is drawn as one sprite, and a row that reads as voiced must not also claim to
+ * be a semitone off.
+ *
+ * DISAGREEING contributors (a sharp and a flat, or an off-scale strand sharing a row with an
+ * on-scale one) collapse to 0 rather than to either answer: one sprite cannot honestly carry two
+ * hints, and no hint reads as "stranded, look at the notes" instead of a wrong one.
+ *
+ * ONE function for both facts, not two: the dimming and the hint must describe the row the note is
+ * DRAWN on, and two independent passes over the same notes are two chances to disagree about it.
+ * There is no own-button counterpart — the canvas was the only surface that dimmed stranded rows,
+ * so the pre-ADR-0004 own-button version was deleted rather than left as a second answer.
  */
-export function computeGridStrandedRows(notes: readonly ColumnNote[], instruments: InstrumentData[], songPitch: Pitch): Set<number> {
-    const stranded = new Set<number>()
+export function computeGridStrandedMarks(notes: readonly ColumnNote[], instruments: InstrumentData[], songPitch: Pitch): Map<number, -1 | 0 | 1> {
+    const stranded = new Map<number, -1 | 0 | 1>()
     const healthy = new Set<number>()
     for (const note of notes) {
         const instrument = instruments[note.trackIndex]
@@ -267,8 +282,12 @@ export function computeGridStrandedRows(notes: readonly ColumnNote[], instrument
         //from the one it is drawn on (they were two lookups before ADR-0007)
         const placement = gridRowForNumberCached(instrument?.name ?? '', effectiveTrackPitch(instrument, songPitch), note.id)
         if (placement.row === -1) continue
-        if (placement.stranded) stranded.add(placement.row)
-        else healthy.add(placement.row)
+        if (!placement.stranded) {
+            healthy.add(placement.row)
+            continue
+        }
+        const marked = stranded.get(placement.row)
+        stranded.set(placement.row, marked === undefined || marked === placement.accidental ? placement.accidental : 0)
     }
     for (const row of healthy) stranded.delete(row)
     return stranded

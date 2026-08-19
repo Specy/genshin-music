@@ -2,7 +2,7 @@ import { game } from '$game';
 import type { InstrumentData, NoteColumn } from '$core/Songs/SongClasses';
 import {
   computeGridRowLayerStatuses,
-  computeGridStrandedRows,
+  computeGridStrandedMarks,
   effectiveTrackPitch,
   gridRowForNumberCached,
 } from '$core/Songs/noteIds';
@@ -177,7 +177,12 @@ export class ComposerTimelineMinimapBuilder {
       this.input.instruments,
       this.input.songPitch
     );
-    const strandedRows = computeGridStrandedRows(
+    //ONE lane for every strand, off-scale ones included: the mark's accidental is deliberately
+    //ignored here. A minimap head is ~2px tall - there is no glyph to be read at that size, and a
+    //lane of its own would be a second row for a note the canvas draws on ITS nearest row, which
+    //is exactly the disagreement gridRowForNumber exists to prevent. Off-scale notes dim in the
+    //strip, like every other strand, and the canvas is where the ♯/♭ is legible.
+    const strandedRows = computeGridStrandedMarks(
       notes,
       this.input.instruments,
       this.input.songPitch

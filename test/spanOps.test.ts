@@ -1,7 +1,8 @@
 // Phase-C span (Duration) model tests: covering lookup, clamped span setting, and the
 // no-overlap invariant re-enforced after bulk edits (see CONTEXT.md: Duration).
 import {describe, expect, it} from 'vitest'
-import {ComposedSong, INSTRUMENTS, INSTRUMENTS_DATA, NoteColumn} from './imports'
+import {CANONICAL_NOTE_IDS, ComposedSong, INSTRUMENTS, INSTRUMENTS_DATA, NoteColumn} from './imports'
+import {gridRowForNumber} from '$core/Songs/noteIds'
 
 function idOf(button: number): number {
     return INSTRUMENTS_DATA[INSTRUMENTS[0]].notes[button].midi
@@ -54,6 +55,66 @@ describe('setNoteSpan / maxSpanAt', () => {
     it('returns null for a nonexistent note', () => {
         const song = makeSong()
         expect(song.setNoteSpan(0, 0, idOf(0), 2)).toBeNull()
+    })
+})
+
+/**
+ * ADR-0007 phase D: AN OFF-SCALE NOTE IS AN ORDINARY NOTE TO EVERY EDIT — the same claim already
+ * true of a Stranded Note, restated for the numbers that fall BETWEEN two Song-Grid rows, because
+ * they are the ones a "snap it to a row" shortcut would quietly rewrite.
+ *
+ * These are the exact model calls the composer's three note gestures make (Composer.svelte):
+ *  - the duration popover reads `findNote` + `maxSpanAt` and writes `setNoteSpan`;
+ *  - the press state machine's occupancy rule reads `getSpanCovering`;
+ *  - the short-press release deletes with `removeNoteAt`, and the tools erase whole columns.
+ * Every one of them is keyed by (column, track, NOTE NUMBER) and never by a Button, which is why an
+ * off-scale number — a number no button of the track's instrument voices — needs no special case:
+ * it is unreachable from the KEYBOARD (there is no key to press for it, exactly as for any strand),
+ * and fully reachable from everything that addresses notes by number.
+ */
+describe('an off-scale note is edited exactly like a voiced one', () => {
+    /** A number one semitone past the top of the grid: off-scale on every instrument. */
+    const offScale = Math.max(...CANONICAL_NOTE_IDS) + 1
+
+    it('this game leaves that number off-scale on the track instrument', () => {
+        //guards the rows below from testing an ordinary voiced note by accident
+        const placement = gridRowForNumber(INSTRUMENTS[0], 'C', offScale)
+        expect(placement.stranded).toBe(true)
+        expect(placement.accidental).not.toBe(0)
+    })
+
+    it('the duration popover\'s three calls answer for it as they do for any note', () => {
+        const song = makeSong()
+        song.columns[0].addNote(0, offScale)
+        song.columns[6].addNote(0, offScale)
+        //what the popover opens on
+        expect(song.columns[0].findNote(0, offScale)?.span).toBe(1)
+        //...the slider's ceiling, clamped by the next same-number note exactly as usual
+        expect(song.maxSpanAt(0, 0, offScale)).toBe(6)
+        expect(song.setNoteSpan(0, 0, offScale, 99)).toBe(6)
+        //...and the occupancy rule the press state machine consults
+        expect(song.getSpanCovering(3, 0, offScale)?.startColumn).toBe(0)
+        expect(song.getSpanCovering(6, 0, offScale)).toBeNull()
+    })
+
+    it('deletes on the release path and on the tools\' erase, leaving nothing behind', () => {
+        const song = makeSong()
+        song.addNoteAt(0, 0, offScale)
+        song.addNoteAt(1, 0, offScale)
+        song.removeNoteAt(0, 0, offScale)
+        expect(song.columns[0].findNote(0, offScale)).toBeNull()
+        song.eraseColumns([1], 'all')
+        expect(song.columns[1].notes).toEqual([])
+    })
+
+    it('survives copy/paste with its number intact, still off-scale where it lands', () => {
+        const song = makeSong()
+        song.addNoteAt(0, 0, offScale, 2)
+        const copied = song.copyColumns([0], 'all')
+        song.selected = 4
+        void song.pasteColumns(copied, true)
+        expect(song.columns[4].findNote(0, offScale)?.span).toBe(2)
+        expect(gridRowForNumber(INSTRUMENTS[0], 'C', song.columns[4].notes[0].id).stranded).toBe(true)
     })
 })
 
