@@ -560,9 +560,12 @@ export class RecordedSong extends Song<RecordedSong, SerializedRecordedSong> {
                 track.addNote({
                     time: note.time / 1000,
                     duration: note.duration > 0 ? note.duration / 1000 : tapMs / 1000,
-                    //a Note Id is a nominal midi number, but nothing upstream guarantees it
-                    //fits midi's 0..127 — an out-of-range id used to be written verbatim and
-                    //produced a malformed file
+                    //THE STORED NUMBER, unshifted — which since ADR-0007 makes the export
+                    //transposition-honest for the first time: a song at Basepoint D now says D
+                    //in a DAW instead of writing the untransposed grid nominals it used to.
+                    //Nothing upstream guarantees the number fits midi's 0..127 (a Basepoint can
+                    //push it past the top), and an out-of-range value used to be written verbatim
+                    //and produce a malformed file.
                     midi: clamp(Math.round(note.toMidi()) || 0, 0, 127),
                 })
             })

@@ -207,9 +207,10 @@
       //back can sit a hair under the original and lose a whole bpm to truncation
       bpm = Math.round(midiBpm * 4) || 220;
       offset = 0;
-      //`pitch` is a playback setting here, not a transposition of the written notes, so it
-      //rides in the metadata alongside the rest of the instrument config. The key signature is
-      //still preferred when a foreign file supplies one.
+      //`pitch` is the Basepoint the imported song will carry, so it rides in the metadata
+      //alongside the rest of the instrument config. The key signature is still preferred when a
+      //foreign file supplies one. Since ADR-0007 it also decides what the emitted notes ARE (the
+      //snapped nominals are lifted by it), which is why convertMidi below is re-run on any change.
       pitch = PITCHES.find((candidate) => candidate === key) ?? importedMetadata?.pitch ?? 'C';
       if (tracks.length) convertMidi();
     } catch (e) {
@@ -234,6 +235,9 @@
         bpm,
         offset,
         includeAccidentals,
+        //the Basepoint the song below is given: the importer emits its snapped nominals lifted
+        //onto the absolute axis by it (ADR-0007), so the two must be the same value
+        pitch,
         //capability comes from instrument config, so a game gains sustained imports the
         //moment it gains a sustaining instrument — nothing here knows which game is loaded
         layerSustains: layers.map((ins) => instrumentSupportsSustain(ins.name)),
@@ -313,6 +317,9 @@
   function changePitch(value: Pitch) {
     functions.changePitch(value);
     pitch = value;
+    //the Basepoint is an input to the CONVERSION now, not just a playback label the composer
+    //keeps beside it: re-run so the preview the user is looking at is the song they would load
+    if (tracks.length > 0) convertMidi();
   }
 
   function toggleAccidentals() {
