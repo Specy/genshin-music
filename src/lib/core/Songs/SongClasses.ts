@@ -1,5 +1,7 @@
-import {APP_NAME, INSTRUMENTS, MIDI_BOUNDS, MIDI_MAP_TO_NOTE, type Pitch, TEMPO_CHANGERS, type TempoChanger} from "$core/legacyConfig"
+import {APP_NAME, INSTRUMENTS, MIDI_BOUNDS, type Pitch, TEMPO_CHANGERS, type TempoChanger} from "$core/legacyConfig"
 import type {InstrumentName} from "$core/types"
+//value import, and it stays acyclic: noteIds imports this module for TYPES only (erased)
+import {snapMidiToGrid} from "./noteIds"
 // InstrumentNoteIcon used to live in Songs/ComposedSong.svelte.ts (old SongClasses.ts imported it
 // FROM there). Task 5 relocated the canonical definition here instead (needed for
 // InstrumentData/SerializedInstrumentData before ComposedSong was ported). Task 7's
@@ -427,10 +429,12 @@ export class MidiNote {
                 midiNote -= 12
             }
         }
-        const note = MIDI_MAP_TO_NOTE.get(`${midiNote}`) ?? ([-1, false] satisfies [number, boolean])
+        //snapMidiToGrid replaces the authored midi.mapToNote table (ADR-0007 phase E): same
+        //answer, derived from the grid instead of restated beside it
+        const snapped = snapMidiToGrid(midiNote)
         toReturn.data = {
-            id: note[0],
-            isAccidental: note[1],
+            id: snapped.id,
+            isAccidental: snapped.isAccidental,
             outOfRangeBound: 0
         }
         if (midiNote > MIDI_BOUNDS.upper) toReturn.data.outOfRangeBound = 1

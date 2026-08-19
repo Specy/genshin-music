@@ -23,9 +23,9 @@
 //    The composer already refuses to author a hold on a non-sustaining layer
 //    (Composer.svelte handleNoteLongPress), so import was the only path producing spans
 //    nothing could play. Capability is read from instrument config, never from the game id.
-import {INSTRUMENTS_DATA, MIDI_MAP_TO_NOTE, type Pitch, TEMPO_CHANGERS} from '$core/legacyConfig'
+import {INSTRUMENTS_DATA, type Pitch, TEMPO_CHANGERS} from '$core/legacyConfig'
 import {MidiNote, NoteColumn, type ColumnNote} from './SongClasses'
-import {basepointOffset, getNoteIdTable} from './noteIds'
+import {basepointOffset, getNoteIdTable, isAccidentalMidi, snapMidiToGrid} from './noteIds'
 
 /**
  * The NOMINAL ids an instrument can sound — the set suggestOffset scores against.
@@ -36,18 +36,6 @@ import {basepointOffset, getNoteIdTable} from './noteIds'
  */
 export function playableIdsOf(instrumentName: string): ReadonlySet<number> {
     return new Set(getNoteIdTable(instrumentName))
-}
-
-/**
- * Pitch classes the game's map marks as accidental, derived from config rather than assumed
- * to be the black keys — a game whose instruments are not C-major would have a different set.
- */
-function accidentalPitchClasses(): ReadonlySet<number> {
-    const classes = new Set<number>()
-    for (const [midi, entry] of MIDI_MAP_TO_NOTE) {
-        if (entry[1]) classes.add(((Number(midi) % 12) + 12) % 12)
-    }
-    return classes
 }
 
 export type OffsetSuggestion = {
@@ -68,9 +56,9 @@ export type OffsetSuggestion = {
  * absolute pitch. Picking the semitone first and the octave second is exact, where a single
  * combined scan trades one against the other arbitrarily.
  *
- * Deliberately scored against the TARGET INSTRUMENT's own ids, not just the game-wide map:
+ * Deliberately scored against the TARGET INSTRUMENT's own ids, not just the game-wide grid:
  * instruments with gapped layouts (Sky's 8-note Bells, its 6-note SFX sets) strand notes that
- * the game map calls perfectly playable, and nothing in the UI reports that today.
+ * the Song Grid calls perfectly playable, and nothing in the UI reports that today.
  *
  * Ties resolve to the smallest shift, and 0 always wins an outright tie — so running this over
  * a file the app itself exported can never transpose it away from where it started.
@@ -79,15 +67,16 @@ export function suggestOffset(
     notes: readonly {midi: number}[],
     playableIds: ReadonlySet<number>
 ): OffsetSuggestion {
-    const accidentals = accidentalPitchClasses()
+    //accidental-ness and the snapped id both come from the Song Grid now (noteIds, ADR-0007
+    //phase E) instead of the retired per-game midi table — same answers, one source
     const score = (offset: number) => {
         let accidental = 0
         let stranded = 0
         for (const note of notes) {
             const shifted = note.midi - offset
-            if (accidentals.has(((shifted % 12) + 12) % 12)) accidental++
-            const mapped = MIDI_MAP_TO_NOTE.get(`${shifted}`)
-            if (!mapped || !playableIds.has(mapped[0])) stranded++
+            if (isAccidentalMidi(shifted)) accidental++
+            const snapped = snapMidiToGrid(shifted)
+            if (snapped.id === -1 || !playableIds.has(snapped.id)) stranded++
         }
         return {accidental, stranded}
     }
@@ -99,7 +88,7 @@ export function suggestOffset(
     for (let semitone = -6; semitone <= 5; semitone++) {
         let count = 0
         for (const note of notes) {
-            if (accidentals.has((((note.midi - semitone) % 12) + 12) % 12)) count++
+            if (isAccidentalMidi(note.midi - semitone)) count++
         }
         //strictly less, and candidates are walked from the outside in ending at +5, so an
         //equal score never displaces a shift already found closer to zero

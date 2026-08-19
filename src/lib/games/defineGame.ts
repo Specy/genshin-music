@@ -90,10 +90,6 @@ export function defineGame(
       defaultVolume: gameJson.instruments.defaultVolume,
     },
     midi: {
-      // JSON object keys are strings; the runtime contract is numeric keys.
-      mapToNote: Object.fromEntries(
-        Object.entries(gameJson.midi.mapToNote).map(([k, v]) => [Number(k), v])
-      ),
       bounds: gameJson.midi.bounds,
       presets: gameJson.midi.presets,
     },
