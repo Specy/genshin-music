@@ -3,27 +3,38 @@ import {CANONICAL_NOTE_IDS, INSTRUMENTS, InstrumentData} from './imports'
 import type {ColumnNote} from './imports'
 import type {InstrumentNoteIcon} from '../src/lib/core/Songs/SongClasses'
 import {
-    songGridSlotForId, computeButtonLayerStatuses, computeGridStrandedMarks, displayButtonForId,
-    foldIdIntoRange, getNoteIdTable, gridRowForNumber, nominalToNumber, noteIdToButton,
-    numberToButton,
+    songGridSlotForId, computeButtonLayerStatuses, computeGridStrandedMarks,
+    displayButtonForNumber, foldNumberIntoRange, getNoteIdTable, getSoundingTable,
+    gridRowForNumber, nominalToNumber, noteIdToButton, numberToButton,
 } from '../src/lib/core/Songs/noteIds'
 import type {Pitch} from '../src/lib/core/legacyConfig'
 import type {InstrumentName} from '../src/lib/core/types'
 
-describe('foldIdIntoRange', () => {
-    it('octave-folds ordinary ids without changing their pitch class', () => {
+// The cross-game import policy, on the axis songs actually store (its nominal predecessor
+// `foldIdIntoRange` was deleted at ADR-0007 phase E along with every other nominal-only helper
+// the flip left unconsumed — these rows moved over rather than being dropped with it).
+describe('foldNumberIntoRange', () => {
+    it('octave-folds ordinary numbers without changing their pitch class', () => {
         const instrument = INSTRUMENTS[0]
-        const table = getNoteIdTable(instrument)
+        const table = getSoundingTable(instrument)
         const min = Math.min(...table)
         const max = Math.max(...table)
 
-        expect(foldIdIntoRange(instrument, max + 1) % 12).toBe((max + 1) % 12)
-        expect(foldIdIntoRange(instrument, min - 1) % 12).toBe((min - 1 + 12) % 12)
+        expect(foldNumberIntoRange(instrument, 'C', max + 1) % 12).toBe((max + 1) % 12)
+        expect(foldNumberIntoRange(instrument, 'C', min - 1) % 12).toBe((min - 1 + 12) % 12)
     })
 
-    it('handles huge finite ids in bounded time', () => {
-        expect(Number.isFinite(foldIdIntoRange(INSTRUMENTS[0], 1e308))).toBe(true)
-        expect(Number.isFinite(foldIdIntoRange(INSTRUMENTS[0], -1e308))).toBe(true)
+    it('folds in SOUNDING space, carrying the Basepoint back afterwards', () => {
+        //what the listener hears moves by whole octaves only, whatever Basepoint the track is at
+        const instrument = INSTRUMENTS[0]
+        const max = Math.max(...getSoundingTable(instrument))
+        expect(foldNumberIntoRange(instrument, 'D', max + 1 + 2))
+            .toBe(foldNumberIntoRange(instrument, 'C', max + 1) + 2)
+    })
+
+    it('handles huge finite numbers in bounded time', () => {
+        expect(Number.isFinite(foldNumberIntoRange(INSTRUMENTS[0], 'C', 1e308))).toBe(true)
+        expect(Number.isFinite(foldNumberIntoRange(INSTRUMENTS[0], 'C', -1e308))).toBe(true)
     })
 })
 
@@ -184,9 +195,13 @@ describe('computeButtonLayerStatuses', () => {
 
             //...while both dropped ids did have a row under the old own-track/grid-slot keying:
             //that is the regression, since the keyboard then indexed those numbers as its own
-            //Buttons and lit keys that play unrelated notes
-            expect(displayButtonForId(keyboard, strandedId)).toBeGreaterThanOrEqual(0)
-            expect(displayButtonForId(DEFAULT_INSTRUMENT, foreignId)).toBeGreaterThanOrEqual(0)
+            //Buttons and lit keys that play unrelated notes. Asked here of the own-track
+            //resolver that still exists (displayButtonForNumber, the sounding-space successor
+            //of the deleted displayButtonForId), at the Basepoint these notes were built at.
+            expect(displayButtonForNumber(keyboard, 'C', nominalToNumber(keyboard, 'C', strandedId)))
+                .toBeGreaterThanOrEqual(0)
+            expect(displayButtonForNumber(DEFAULT_INSTRUMENT, 'C', nominalToNumber(DEFAULT_INSTRUMENT, 'C', foreignId)))
+                .toBeGreaterThanOrEqual(0)
             //every button it does light is a key this keyboard actually has
             for (const button of statuses.keys()) {
                 expect(button).toBeLessThan(keyboardTable.length)

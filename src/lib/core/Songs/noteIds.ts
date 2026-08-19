@@ -69,11 +69,6 @@ function getReverseMap(instrumentName: RuntimeInstrumentName): Map<number, numbe
     return map
 }
 
-/** The Note Id of a button, or null past the instrument's range. */
-export function buttonToNoteId(instrumentName: RuntimeInstrumentName, button: number): number | null {
-    return getNoteIdTable(instrumentName)[button] ?? null
-}
-
 /** The button playing a Note Id on this instrument, or -1 when the note is stranded on it. */
 export function noteIdToButton(instrumentName: RuntimeInstrumentName, id: number): number {
     return getReverseMap(instrumentName).get(id) ?? -1
@@ -142,31 +137,22 @@ export function snapMidiToGrid(midiNote: number): {id: number, isAccidental: boo
 
 /**
  * Where a note renders on a surface whose rows are its OWN track instrument's Buttons (the
- * player's approach/practice queue, the sheet visualizer): that instrument's button, else —
- * when the note is STRANDED there — the id's canonical Song-Grid slot as a fallback row,
- * else -1 (not renderable). The fallback is a game-authored grid position (ADR-0004), not
- * "the row this id has on the default instrument"; the two coincide for both shipped games.
+ * player's approach/practice queue, the sheet visualizer): that instrument's Button at this
+ * Basepoint, else — when the number is STRANDED there — the grid row it draws on, else -1
+ * (not renderable). The fallback row is a game-authored grid position (ADR-0004), not "the row
+ * this id has on the default instrument"; the two coincide for both shipped games.
+ *
+ * It goes through `gridRowForNumber`, so an OFF-SCALE strand gets its nearest row rather than
+ * dropping out of the sheet entirely — the surfaces that read this (the player's sheet frames,
+ * the visual song) then draw it where the composer canvas already does.
  *
  * NOT for surfaces that draw ONE instrument's keyboard and index it by that instrument's
  * Buttons: there the answer belongs to a different coordinate space (the note's own track,
  * or the grid) and lights the wrong key — the composer keyboard used to do exactly that, see
- * computeButtonLayerStatuses. Surfaces whose rows ARE the Song Grid (the composer canvas)
- * use songGridSlotForId for every note instead.
- */
-export function displayButtonForId(instrumentName: RuntimeInstrumentName, id: number): number {
-    const own = noteIdToButton(instrumentName, id)
-    if (own !== -1) return own
-    return songGridSlotForId(id)
-}
-
-/**
- * displayButtonForId on the absolute axis (ADR-0007) — the same two-step answer, asked of a Note
- * Number at a Basepoint: the track instrument's own Button, else the grid row the number draws
- * on when it is stranded there, else -1.
+ * computeButtonLayerStatuses.
  *
- * The stranded fallback goes through `gridRowForNumber`, so an OFF-SCALE strand gets its nearest
- * row rather than dropping out of the sheet entirely — the surfaces that read this (the player's
- * sheet frames, the visual song) then draw it where the composer canvas already does.
+ * (Its nominal-axis predecessor `displayButtonForId` is gone — ADR-0007 phase E: songs stopped
+ * storing nominals at the flip, and no surface asked it anything afterwards.)
  */
 export function displayButtonForNumber(instrumentName: RuntimeInstrumentName, pitch: Pitch, number: number): number {
     const own = numberToButton(instrumentName, pitch, number)
@@ -336,7 +322,7 @@ export function computeGridStrandedMarks(notes: readonly ColumnNote[], instrumen
     return stranded
 }
 
-/** Octave-fold a value into the [min, max] of a table, keeping its pitch class. Shared by both axes. */
+/** Octave-fold a value into the [min, max] of a table, keeping its pitch class. */
 function foldIntoTable(table: readonly number[], value: number): number {
     if (table.length === 0 || !Number.isFinite(value)) return value
     let min = table[0], max = table[0]
@@ -355,16 +341,11 @@ function foldIntoTable(table: readonly number[], value: number): number {
     return value
 }
 
-/** Octave-fold an id into an instrument's range (cross-game NEW-format import policy: fold into range, keep even if it lands on a gap — the note strands visibly instead of being rewritten twice). */
-export function foldIdIntoRange(instrumentName: RuntimeInstrumentName, id: number): number {
-    return foldIntoTable(getNoteIdTable(instrumentName), id)
-}
-
 // ─── Note Numbers (ADR-0007) ───────────────────────────────────────────────────────────
 // The absolute axis songs store, and the Basepoint-aware resolution between it and an
-// instrument's Buttons. NOTHING outside tests consumes this half yet (spec phase B): the
-// formats, the engine and every surface still speak Nominal Ids until the phase-C flip, so
-// the nominal API above is deliberately left untouched rather than reimplemented on top.
+// instrument's Buttons. Since the phase-C flip this is what every format, the engine and
+// every surface speak; the nominal half above survives as the currency of button
+// correspondence (swaps, grid rows, legacy decode, MIDI-import snapping) and nothing else.
 
 // Per-instrument Note Number tables, cached exactly like the nominal ones and built from
 // the SAME note structs (ADR-0003 entities) through the same adapter — `sounding` is
