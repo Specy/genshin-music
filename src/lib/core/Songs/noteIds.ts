@@ -144,16 +144,27 @@ export function resolvePlayerNoteButtons(notes: readonly RecordedNote[], instrum
 }
 
 /**
+ * A track's EFFECTIVE Basepoint: its own override, else the song's (spec §4 — unchanged by
+ * ADR-0007, but load-bearing now that it decides what a stored number means, not just a
+ * playback rate). Every surface that resolves a note asks through here, so the rule has one
+ * spelling rather than a dozen `instrument?.pitch || songPitch` expressions to keep in step.
+ */
+export function effectiveTrackPitch(instrument: {pitch: Pitch | ''} | undefined, songPitch: Pitch): Pitch {
+    return instrument?.pitch || songPitch
+}
+
+/**
  * Replicates the legacy NoteLayer.toLayerStatus texture/status selection over per-track
  * notes, per BUTTON OF THE KEYBOARD ON SCREEN: bit 0 = the current layer has a note on this
  * button; bits 1-3 = the icon classes of OTHER visible tracks with a note there. Used by the
  * composer KEYBOARD only.
  *
  * ONE coordinate space — the DISPLAYED instrument's Buttons (ADR-0004: the keyboard's rows
- * ARE the instrument's Buttons). Every note, whatever track it sits on, resolves through
- * noteIdToButton against `keyboardInstrumentName`; an id that keyboard cannot play resolves
- * to -1 and lights NOTHING, because the keyboard has no key that plays it. Such notes stay
- * visible on the canvas, which places by Note Id (ADR-0004) — see computeGridRowLayerStatuses.
+ * ARE the instrument's Buttons), at the DISPLAYED instrument's own Basepoint. Every note,
+ * whatever track it sits on, is asked the one question this keyboard can answer: which of MY
+ * keys sounds that number? A number it cannot voice resolves to -1 and lights NOTHING. Such
+ * notes stay visible on the canvas, which places by grid row — see
+ * computeGridRowLayerStatuses.
  *
  * Deliberately not displayButtonForId (which is what this did before, and the bug): that
  * answers in the note's OWN track's Buttons, with the canonical Song-Grid slot as the
@@ -161,10 +172,10 @@ export function resolvePlayerNoteButtons(notes: readonly RecordedNote[], instrum
  * numbers from two foreign spaces and indexed them as its own — a stranded id's grid slot and
  * another track's button both lit keys that play unrelated notes.
  */
-export function computeButtonLayerStatuses(notes: readonly ColumnNote[], currentLayer: number, instruments: InstrumentData[], keyboardInstrumentName: RuntimeInstrumentName): Map<number, LayerStatus> {
+export function computeButtonLayerStatuses(notes: readonly ColumnNote[], currentLayer: number, instruments: InstrumentData[], keyboardInstrumentName: RuntimeInstrumentName, keyboardPitch: Pitch): Map<number, LayerStatus> {
     const buttons = new Map<number, LayerStatus>()
     for (const note of notes) {
-        const button = noteIdToButton(keyboardInstrumentName, note.id)
+        const button = numberToButton(keyboardInstrumentName, keyboardPitch, note.id)
         if (button === -1) continue
         let status = buttons.get(button) ?? 0
         if (note.trackIndex === currentLayer) {
@@ -179,17 +190,19 @@ export function computeButtonLayerStatuses(notes: readonly ColumnNote[], current
 
 /**
  * The composer CANVAS counterpart of computeButtonLayerStatuses: identical texture/status
- * bits, but rows are canonical Song-Grid slots (songGridSlotForId) instead of the Buttons of
- * one keyboard. Placement reads the Note Id and NOTHING else (ADR-0004), so one id occupies
- * one row on every track; the track's instrument is consulted only for the visible/icon bits.
- * Ids with no grid row are skipped. The keyboard's counterpart keys by the Buttons of the
- * instrument it draws, and drops the ids that instrument cannot play — the canvas is where
- * those notes remain visible.
+ * bits, but rows are canonical Song-Grid slots instead of the Buttons of one keyboard.
+ * Placement is `gridRowForNumber`'s answer for the note's OWN track (ADR-0004 under
+ * ADR-0007): the track's instrument and Basepoint decide which grid row a number draws on,
+ * which is what puts a tuned button on the row its own label prints and an off-scale strand
+ * on its nearest row. Numbers with no grid row at all are skipped. The keyboard's counterpart
+ * keys by the Buttons of the instrument it draws, and drops the numbers that instrument
+ * cannot voice — the canvas is where those notes remain visible.
  */
-export function computeGridRowLayerStatuses(notes: readonly ColumnNote[], currentLayer: number, instruments: InstrumentData[]): Map<number, LayerStatus> {
+export function computeGridRowLayerStatuses(notes: readonly ColumnNote[], currentLayer: number, instruments: InstrumentData[], songPitch: Pitch): Map<number, LayerStatus> {
     const rows = new Map<number, LayerStatus>()
     for (const note of notes) {
-        const row = songGridSlotForId(note.id)
+        const instrument = instruments[note.trackIndex]
+        const row = gridRowForNumberCached(instrument?.name ?? '', effectiveTrackPitch(instrument, songPitch), note.id).row
         if (row === -1) continue
         let status = rows.get(row) ?? 0
         if (note.trackIndex === currentLayer) {
@@ -212,17 +225,17 @@ export function computeGridRowLayerStatuses(notes: readonly ColumnNote[], curren
  * counterpart: the canvas was the only surface that dimmed stranded rows, so the
  * pre-ADR-0004 own-button version was deleted rather than left as a second answer.
  */
-export function computeGridStrandedRows(notes: readonly ColumnNote[], instruments: InstrumentData[]): Set<number> {
+export function computeGridStrandedRows(notes: readonly ColumnNote[], instruments: InstrumentData[], songPitch: Pitch): Set<number> {
     const stranded = new Set<number>()
     const healthy = new Set<number>()
     for (const note of notes) {
-        const row = songGridSlotForId(note.id)
-        if (row === -1) continue
-        if (noteIdToButton(instruments[note.trackIndex]?.name ?? '', note.id) !== -1) {
-            healthy.add(row)
-        } else {
-            stranded.add(row)
-        }
+        const instrument = instruments[note.trackIndex]
+        //ONE call for both facts, so the row a note is dimmed on can never be a different row
+        //from the one it is drawn on (they were two lookups before ADR-0007)
+        const placement = gridRowForNumberCached(instrument?.name ?? '', effectiveTrackPitch(instrument, songPitch), note.id)
+        if (placement.row === -1) continue
+        if (placement.stranded) stranded.add(placement.row)
+        else healthy.add(placement.row)
     }
     for (const row of healthy) stranded.delete(row)
     return stranded
@@ -422,4 +435,32 @@ export function gridRowForNumber(instrumentName: RuntimeInstrumentName, pitch: P
         stranded: true,
         accidental: Math.sign(virtual - nearest) as -1 | 0 | 1,
     }
+}
+
+// Per-track row LUTs (spec §8 "cached by (instrumentName, effectivePitch)"). NOT invalidated,
+// and deliberately so: both halves of the key are IN the key, and everything the answer is
+// derived from below them — the instrument's nominal and sounding tables, CANONICAL_NOTE_IDS —
+// is a build-time constant of the selected game. A cache keyed by every input it reads cannot
+// go stale; the roster/pitch signals the composer already has are what select WHICH LUT a draw
+// reads, not what expires one.
+//
+// It exists for the OFF-SCALE branch above, which scans the whole grid per note. Voiced notes
+// are two map lookups either way; a canvas full of strands would pay that scan on every draw.
+// The entries are bounded by the numbers a song actually contains.
+// eslint-disable-next-line svelte/prefer-svelte-reactivity -- memo of a pure function over build-time constants
+const gridRowCache = new Map<string, Map<number, GridRowPlacement>>()
+
+/** gridRowForNumber memoized per (instrument, Basepoint) — what per-draw surfaces call. */
+export function gridRowForNumberCached(instrumentName: RuntimeInstrumentName, pitch: Pitch, number: number): GridRowPlacement {
+    const key = `${instrumentName} ${pitch}`
+    let lut = gridRowCache.get(key)
+    if (lut === undefined) {
+        lut = new Map<number, GridRowPlacement>()
+        gridRowCache.set(key, lut)
+    }
+    const cached = lut.get(number)
+    if (cached !== undefined) return cached
+    const placement = gridRowForNumber(instrumentName, pitch, number)
+    lut.set(number, placement)
+    return placement
 }

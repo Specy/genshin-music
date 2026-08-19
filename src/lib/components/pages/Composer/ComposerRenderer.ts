@@ -38,16 +38,18 @@ import {
 import { ThemeProvider, subscribeTheme } from '$core/theme/ThemeProvider.svelte';
 import { clamp, colorToRGB, nearestEven } from '$core/utils/Utilities';
 import type { Timer } from '$core/utils/Utilities';
-import { TEMPO_CHANGERS } from '$core/legacyConfig';
+import { TEMPO_CHANGERS, type Pitch } from '$core/legacyConfig';
 import type { NoteColumn, ColumnNote, InstrumentData } from '$core/Songs/SongClasses';
-// The canvas is the Song Grid, so it places by Note Id alone (ADR-0004): the *Grid* helpers and
-// songGridSlotForId, never computeButtonLayerStatuses, which the composer KEYBOARD uses - there a
-// row genuinely IS a Button of the selected instrument, and ids it cannot play are dropped rather
-// than drawn. This surface is where those notes stay visible.
+// The canvas is the Song Grid, so it places through the *Grid* helpers (ADR-0004/ADR-0007: a
+// note's row is gridRowForNumber's answer for its OWN track), never computeButtonLayerStatuses,
+// which the composer KEYBOARD uses - there a row genuinely IS a Button of the selected instrument,
+// and numbers it cannot voice are dropped rather than drawn. This surface is where those notes
+// stay visible.
 import {
-  songGridSlotForId,
   computeGridRowLayerStatuses,
   computeGridStrandedRows,
+  effectiveTrackPitch,
+  gridRowForNumberCached,
 } from '$core/Songs/noteIds';
 import { ComposerCache, type ComposerCacheData } from './ComposerCache';
 import {
@@ -392,6 +394,15 @@ export interface ComposerRendererState {
   // ComposedSong.setInstrument then publishes a clone of it, so a value comparison between two
   // captures compares the mutated object against its own copy and reports equal.
   instruments: InstrumentData[];
+  /**
+   * The SONG's Basepoint. Its own field for the same reason `instruments` is: since ADR-0007 a
+   * note's grid row is `gridRowForNumber(track instrument, effective Basepoint, number)`, so
+   * this decides where every note DRAWS, not just how it sounds. Diffed in
+   * needsUnconditionalRepaint — a Basepoint change also rewrites every number and touches every
+   * column, so the narrowed path would repaint anyway; the field is diffed so the two reasons
+   * stay independent rather than one silently relying on the other.
+   */
+  songPitch: Pitch;
   selected: number;
   currentLayer: number;
   // Read by computeCanvasSize, which runs at init and on the resize/theme path rather than per
@@ -510,6 +521,7 @@ interface ColumnPaintParams {
   notes: ColumnNote[];
   currentLayer: number;
   instruments: InstrumentData[];
+  songPitch: Pitch;
   sizes: { width: number; height: number };
   cache: ComposerCacheData;
   background: Texture;
@@ -743,7 +755,7 @@ class ColumnView {
   }
 
   paint(params: ColumnPaintParams): void {
-    const { cache, notes, instruments, currentLayer, sizes } = params;
+    const { cache, notes, instruments, currentLayer, songPitch, sizes } = params;
     this.container.x = sizes.width * params.index;
     // The other three of the container's own presentation properties, written for the same reason
     // the child properties below are: this object outlives the column it is painting for, and the
@@ -757,21 +769,23 @@ class ColumnView {
     this.paintSelection(cache, params.isSelected, params.isToolsSelected);
     this.breakpointMarker.texture = cache.breakpoints[1];
     this.breakpointMarker.visible = params.isBreakpoint;
-    //`row` is the note's CANONICAL Song-Grid slot, not any instrument's button: one Note Id owns
-    //one row on every track (ADR-0004), so a 14-note horn's id 60 lands on the same row as a lyre's
-    const strandedRows = computeGridStrandedRows(notes, instruments);
+    //`row` is the note's CANONICAL Song-Grid slot, not any instrument's button (ADR-0004),
+    //resolved for the note's OWN track at its own Basepoint (ADR-0007) — which is what puts a
+    //tuned button on the row its label prints and an off-scale strand on its nearest row
+    const strandedRows = computeGridStrandedRows(notes, instruments, songPitch);
     let painted = 0;
     for (const [row, layerStatus] of computeGridRowLayerStatuses(
       notes,
       currentLayer,
-      instruments
+      instruments,
+      songPitch
     )) {
       if (layerStatus === 0) continue;
       const texture = cache.notes[layerStatus];
       const sprite = this.noteSpriteAt(painted, texture);
       sprite.texture = texture;
       sprite.y = (COMPOSER_NOTE_POSITIONS[row] * sizes.height) / NOTES_PER_COLUMN;
-      //stranded notes (id has no button on its own instrument) are visibly dimmed
+      //stranded notes (no button on their own instrument at its Basepoint) are visibly dimmed
       sprite.alpha = strandedRows.has(row) ? 0.45 : 1;
       sprite.visible = true;
       painted++;
@@ -884,6 +898,7 @@ export class ComposerRenderer {
     columns: NoteColumn[];
     structureVersion: number;
     instruments: InstrumentData[];
+    songPitch: Pitch;
     currentLayer: number;
     width: number;
     height: number;
@@ -1698,6 +1713,7 @@ export class ComposerRenderer {
       columns: this.state.columns,
       structureVersion: this.state.structureVersion,
       instruments: this.state.instruments,
+      songPitch: this.state.songPitch,
       currentLayer: this.state.currentLayer,
       width: this.stripWidth(),
       height: this.timelineHeight,
@@ -1712,6 +1728,7 @@ export class ComposerRenderer {
       {
         columns: this.state.columns,
         instruments: this.state.instruments,
+        songPitch: this.state.songPitch,
         currentLayer: this.state.currentLayer,
         width: this.stripWidth(),
         height: this.timelineHeight,
@@ -1859,6 +1876,7 @@ export class ComposerRenderer {
       key.columns !== next.columns ||
       key.structureVersion !== next.structureVersion ||
       key.instruments !== next.instruments ||
+      key.songPitch !== next.songPitch ||
       key.currentLayer !== next.currentLayer ||
       key.width !== this.stripWidth() ||
       key.height !== this.timelineHeight ||
@@ -3313,6 +3331,7 @@ export class ComposerRenderer {
       previous.isRecordingAudio !== next.isRecordingAudio ||
       previous.columns !== next.columns ||
       previous.instruments !== next.instruments ||
+      previous.songPitch !== next.songPitch ||
       previous.breakpoints !== next.breakpoints ||
       previous.selectedColumns !== next.selectedColumns ||
       previous.currentLayer !== next.currentLayer ||
@@ -3419,6 +3438,7 @@ export class ComposerRenderer {
       notes: column.notes,
       currentLayer: state.currentLayer,
       instruments: state.instruments,
+      songPitch: state.songPitch,
       sizes,
       cache: cacheData,
       background,
@@ -3480,7 +3500,7 @@ export class ComposerRenderer {
     sizes: { width: number; height: number }
   ): void {
     graphics.clear();
-    const { columns, instruments, currentLayer } = this.state;
+    const { columns, instruments, currentLayer, songPitch } = this.state;
     const rowHeight = sizes.height / NOTES_PER_COLUMN;
     const tailHeight = Math.max(2, rowHeight * 0.22);
     const accentColor = this.paintTailAccent;
@@ -3494,7 +3514,11 @@ export class ComposerRenderer {
         const isCurrentLayer = note.trackIndex === currentLayer;
         if (!isCurrentLayer && !instrument?.visible) continue;
         //same canonical placement as the note sprite above - a tail must start under its own head
-        const row = songGridSlotForId(note.id);
+        const row = gridRowForNumberCached(
+          instrument?.name ?? '',
+          effectiveTrackPitch(instrument, songPitch),
+          note.id
+        ).row;
         if (row === -1) continue;
         const y = COMPOSER_NOTE_POSITIONS[row] * rowHeight + (rowHeight - tailHeight) / 2;
         const x = index === start ? sizes.width * 0.55 : 0;

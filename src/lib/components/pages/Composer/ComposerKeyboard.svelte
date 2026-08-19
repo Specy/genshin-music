@@ -42,13 +42,18 @@
   // Keyed by the Buttons of the keyboard actually on screen (`data.keyboard`), which is the
   // number the `button` snippet below hands back — never the note's own track button, which
   // for a sub-grid instrument is a different coordinate space and lit the wrong key.
+  //
+  // `data.pitch` is the DISPLAYED track's effective Basepoint (Composer.svelte resolves the
+  // override there), which is the Basepoint every note's number has to be read at to answer
+  // "which of THIS keyboard's keys sounds it" (ADR-0007).
   const layerStatuses = $derived.by(() => {
     try {
       return computeButtonLayerStatuses(
         data.currentColumn.notes,
         data.currentLayer,
         data.instruments,
-        data.keyboard.name
+        data.keyboard.name,
+        data.pitch
       );
     } catch {
       return null;
