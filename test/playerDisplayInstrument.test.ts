@@ -33,7 +33,8 @@
 import {describe, expect, it} from 'vitest'
 import {displayInstrumentNameFor} from '../src/lib/core/Songs/displayInstrument'
 import {
-    displayButtonForId, getNoteIdTable, noteIdToButton, resolvePlayerNoteButtons, songGridSlotForId,
+    displayButtonForNumber, getNoteIdTable, getSoundingTable, gridRowForNumber, noteIdToButton,
+    resolvePlayerNoteButtons, songGridSlotForId,
 } from '../src/lib/core/Songs/noteIds'
 import {Instrument} from '../src/lib/audio/Instrument.svelte'
 import {playerStore} from '../src/lib/stores/PlayerStore.svelte'
@@ -184,6 +185,11 @@ describe('the keyboard the player publishes to the Shape', () => {
 // below comes out of the live tables, so the same assertions run under both PUBLIC_GAMEs — measured,
 // genshin picks the reported 14-key NightwindHorn against the 21-key Lyre, sky the 8-key HandPan
 // against the 15-key Piano.
+//
+// EVERYTHING HERE SITS AT BASEPOINT C on instruments whose two axes coincide, so a grid Nominal Id
+// doubles as the Note Number a song would store for it (ADR-0007). That is a property of the chosen
+// fixtures, not a rule — so it is ASSERTED below rather than assumed, and every call still goes
+// through the real Basepoint-aware resolution.
 describe('the two display coordinates of a player-loaded note', () => {
     const subGridInstruments = INSTRUMENTS.filter((name: InstrumentName) =>
         CANONICAL_NOTE_IDS.some((id) => !getNoteIdTable(name).includes(id)))
@@ -233,6 +239,10 @@ describe('the two display coordinates of a player-loaded note', () => {
     it('this game really does ship the shape of song this is about', () => {
         //if any of these stops holding, the rows below are vacuous rather than failing
         expect(keyboardName).toBeTruthy()
+        //the block header's premise: on these two instruments a nominal IS the number stored at C
+        for (const name of [keyboardName, DEFAULT_INSTRUMENT]) {
+            expect(getSoundingTable(name)).toEqual(getNoteIdTable(name))
+        }
         expect(keyboardTable.length).toBeLessThan(CANONICAL_NOTE_IDS.length)
         expect(wrongKeyCollisions(keyboardName)).toBeGreaterThan(0)
         expect(sharedId).toBeDefined()
@@ -249,7 +259,7 @@ describe('the two display coordinates of a player-loaded note', () => {
 
         it('gives a foreign track’s note the key THIS keyboard plays that id with', () => {
             const notes = [note(1, sharedId)]
-            resolvePlayerNoteButtons(notes, instruments, keyboardName)
+            resolvePlayerNoteButtons(notes, instruments, keyboardName, 'C', 'C')
             //the keyboard coordinate is the displayed instrument's own Button, and the key at it
             //really does play the note the song asked for - the invariant the bug broke
             expect(notes[0].keyboardButton).toBe(noteIdToButton(keyboardName, sharedId))
@@ -263,7 +273,7 @@ describe('the two display coordinates of a player-loaded note', () => {
 
         it('gives it NO key when this keyboard cannot play the id, though its own track can', () => {
             const notes = [note(1, foreignId)]
-            resolvePlayerNoteButtons(notes, instruments, keyboardName)
+            resolvePlayerNoteButtons(notes, instruments, keyboardName, 'C', 'C')
             //-1 is what every keyboard path skips on; the note still sounds (playSong falls back to
             //playing it by id) and still draws in the sheet, which reads the other field
             expect(notes[0].keyboardButton).toBe(-1)
@@ -281,11 +291,11 @@ describe('the two display coordinates of a player-loaded note', () => {
             const mixed = () => [note(0, keyboardTable[0]), note(0, strandedId), note(1, sharedId), note(1, foreignId)]
             const onSubGrid = mixed()
             const onDefault = mixed()
-            resolvePlayerNoteButtons(onSubGrid, instruments, keyboardName)
-            resolvePlayerNoteButtons(onDefault, instruments, DEFAULT_INSTRUMENT)
+            resolvePlayerNoteButtons(onSubGrid, instruments, keyboardName, 'C', 'C')
+            resolvePlayerNoteButtons(onDefault, instruments, DEFAULT_INSTRUMENT, 'C', 'C')
             onSubGrid.forEach((n, i) => {
                 //byte-identical, and equal to the exact expression the pre-fix code computed
-                expect(n.displayButton).toBe(displayButtonForId(instruments[n.trackIndex].name, n.id))
+                expect(n.displayButton).toBe(displayButtonForNumber(instruments[n.trackIndex].name, 'C', n.id))
                 expect(n.displayButton).toBe(onDefault[i].displayButton)
             })
             expect(onSubGrid.map((n) => n.keyboardButton))
@@ -297,7 +307,7 @@ describe('the two display coordinates of a player-loaded note', () => {
             //mixed song: whatever survives their `keyboardButton >= 0` filter is a key that plays
             //exactly that note. Under the old resolution the same walk over `displayButton` fails.
             const notes = [note(0, keyboardTable[0]), note(0, strandedId), note(1, sharedId), note(1, foreignId)]
-            resolvePlayerNoteButtons(notes, instruments, keyboardName)
+            resolvePlayerNoteButtons(notes, instruments, keyboardName, 'C', 'C')
             const playable = notes.filter((n) => n.keyboardButton >= 0)
             expect(playable.length).toBeGreaterThan(0)
             playable.forEach((n) => expect(keyboardTable[n.keyboardButton]).toBe(n.id))
@@ -315,11 +325,12 @@ describe('the two display coordinates of a player-loaded note', () => {
             //above, displayButtonForId's canonical fallback here - which is why one field cannot
             //serve both surfaces.
             const notes = [note(0, strandedId)]
-            resolvePlayerNoteButtons(notes, [track(keyboardName)], keyboardName)
+            resolvePlayerNoteButtons(notes, [track(keyboardName)], keyboardName, 'C', 'C')
             expect(noteIdToButton(keyboardName, strandedId)).toBe(-1)
             expect(notes[0].keyboardButton).toBe(-1)
-            //the sheet coordinate is unchanged: the id's canonical Song-Grid slot (ADR-0004)
+            //the sheet coordinate is unchanged: the grid row the Stranded Note draws on (ADR-0004)
             expect(notes[0].displayButton).toBe(songGridSlotForId(strandedId))
+            expect(notes[0].displayButton).toBe(gridRowForNumber(keyboardName, 'C', strandedId).row)
             expect(notes[0].displayButton).toBeGreaterThanOrEqual(0)
             //THE BITE: that slot is a real key of this keyboard, and it plays another note
             expect(notes[0].displayButton).toBeLessThan(keyboardTable.length)
@@ -328,26 +339,28 @@ describe('the two display coordinates of a player-loaded note', () => {
     })
 })
 
-describe('what the player hands the engine (ADR-0005 §4)', () => {
-    it('is a Note Id, which resolves back to the very note that was pressed', () => {
-        //handleClick passes note.id; the engine looks it up on whichever instrument is sounding
+describe('what the player hands the engine (ADR-0005 §4 under ADR-0007)', () => {
+    it('is a Note Number, which resolves back to the very note that was pressed', () => {
+        //handleClick passes note.numberAt(pitch); the engine resolves it on whichever instrument
+        //is sounding, at the same Basepoint
         const instrument = new Instrument(NARROW_INSTRUMENT)
-        instrument.notes.forEach(note => {
-            expect(instrument.getNoteById(note.id)).toBe(note)
-        })
+        for (const pitch of ['C', 'Eb', 'B'] as const) {
+            instrument.notes.forEach(note => {
+                expect(instrument.getNoteByNumber(note.numberAt(pitch), pitch)).toBe(note)
+            })
+        }
     })
 
     it('keeps the pitch when the sounding instrument is not the one on screen', () => {
         //the player can show the song's instrument while the user's own is still the live one.
-        //An id names the same note everywhere it exists (and nothing where it doesn't), so this
-        //no longer sounds whatever the live instrument keeps at the same BUTTON.
+        //A Note Number names the same PITCH everywhere it can be voiced (and nothing where it
+        //cannot), so this no longer sounds whatever the live instrument keeps at the same BUTTON.
         const shown = new Instrument(NARROW_INSTRUMENT)
         const sounding = new Instrument(DEFAULT_INSTRUMENT)
         shown.notes.forEach(note => {
-            const sounded = sounding.getNoteById(note.id)
+            const sounded = sounding.getNoteByNumber(note.numberAt('C'), 'C')
             if (sounded === null) return //stranded on the live instrument: silent, by design
-            expect(sounded.id).toBe(note.id)
-            expect(sounded.baseNote).toBe(note.baseNote)
+            expect(sounded.soundingNote).toBe(note.soundingNote)
         })
     })
 })

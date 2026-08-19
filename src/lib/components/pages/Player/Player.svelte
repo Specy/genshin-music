@@ -356,22 +356,24 @@
   }
 
   /**
-   * The surface→engine entry point, keyed by NOTE ID (ADR-0005 §4): PlayerKeyboard hands
-   * over the id of the note the user pressed (or the song note's own id), never a button —
-   * so an instrument that doesn't offer that id is simply silent instead of sounding
-   * whatever its button of the same number happens to be.
+   * The surface→engine entry point, keyed by NOTE NUMBER (ADR-0005 §4 / ADR-0007):
+   * PlayerKeyboard hands over the number the pressed key ENTERS at the player's Basepoint (or
+   * the song note's own stored number), never a button — so an instrument that cannot voice
+   * that number is simply silent instead of sounding whatever its button of the same index
+   * happens to be.
    */
-  function playSound(id: number, songNote?: RecordedNote) {
+  function playSound(number: number, songNote?: RecordedNote) {
     if (!songNote) {
-      //live playing on the main instrument; the recording stores the pressed Note Id, which
-      //is also what the saved song carries. pressNote = one-shot on non-sustaining
-      //instruments, held Voice on sustaining ones (released by releaseSound on key/pointer up)
-      if (isRecording) handleRecording(id);
-      instruments[0].pressNote(id, settings.pitch.value);
+      //live playing on the main instrument; the recording stores the pressed Note Number, which
+      //is also what the saved song carries (the recording is saved at settings.pitch, the same
+      //Basepoint the press entered at). pressNote = one-shot on non-sustaining instruments, held
+      //Voice on sustaining ones (released by releaseSound on key/pointer up)
+      if (isRecording) handleRecording(number);
+      instruments[0].pressNote(number, settings.pitch.value);
     } else {
       //song playback: the note belongs to exactly one track — play it on that track's
-      //instrument (an id that track lacks is stranded, and silent). Notes with a duration
-      //self-release after it (speed-scaled upstream) when the instrument sustains.
+      //instrument (a number that track cannot voice is stranded, and silent). Notes with a
+      //duration self-release after it (speed-scaled upstream) when the instrument sustains.
       if (isRecording) handleRecording(songNote.id);
       const ins = instruments[songNote.trackIndex];
       const insData = instrumentsData[songNote.trackIndex];
@@ -385,11 +387,11 @@
     }
   }
 
-  function releaseSound(id: number) {
-    //both sides are id-keyed and ignore an id they are not holding: the recording closes the
-    //open note of that id, the engine releases the live voice held on it
-    if (isRecording) recording.releaseNote(id);
-    instruments[0]?.releaseNote(id);
+  function releaseSound(number: number) {
+    //both sides are number-keyed and ignore a number they are not holding: the recording closes
+    //the open note of that number, the engine releases the live voice held on it
+    if (isRecording) recording.releaseNote(number);
+    instruments[0]?.releaseNote(number);
   }
 
   function releaseAllSounds() {
@@ -469,9 +471,9 @@
     await songsStore.renameSong(id, newName);
   }
 
-  function handleRecording(id: number) {
+  function handleRecording(number: number) {
     if (isRecording) {
-      recording.addNote(id);
+      recording.addNote(number);
     }
   }
 

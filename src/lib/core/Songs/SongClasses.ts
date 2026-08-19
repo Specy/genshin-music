@@ -11,8 +11,12 @@ export type InstrumentNoteIcon = 'line' | 'circle' | 'border'
 // Serialized shapes.
 // V3-and-earlier COMPOSED columns and V2-and-earlier RECORDED notes stored a
 // layout index + NoteLayer bitmask; they survive only as deserialization inputs
-// (format spec 2026-08-03, ADR-0002). The current formats are per-track:
-// every note belongs to exactly one track and stores a Note Id (ADR-0001).
+// (format spec 2026-08-03, ADR-0002). The current formats are per-track: every
+// note belongs to exactly one track and stores an absolute Note Number, i.e. the
+// pitch it sounds, Basepoint included (ADR-0007). The TUPLE SHAPES below are
+// unchanged from the id-storing generation before it — only `version` and the
+// meaning of the number moved, which is why a reader that ignores `version`
+// misreads one as the other.
 // ---------------------------------------------------------------------------
 
 /** Legacy (composed ≤v3): [index, hex-or-bin layer bitmask]. */
@@ -20,7 +24,7 @@ export type SerializedColumnNoteV3 = [index: number, layer: string]
 /** Legacy (composed ≤v3): [tempoChanger, notes]. */
 export type SerializedColumnV3 = [tempoChanger: number, notes: SerializedColumnNoteV3[]]
 
-/** Composed v4: [column, noteId] or [column, noteId, span] (span omitted when 1). */
+/** Composed v5: [column, number] or [column, number, span] (span omitted when 1). */
 export type SerializedTrackNote = [column: number, id: number, span?: number]
 export type SerializedComposedTrack = {
     instrument: SerializedInstrumentData
@@ -30,7 +34,7 @@ export type SerializedComposedTrack = {
 /** Legacy (recorded ≤v2): [index, timeMs, hex layer bitmask]. */
 export type SerializedRecordedNoteV2 = [index: number, time: number, layer: string]
 
-/** Recorded v3: [noteId, timeMs] or [noteId, timeMs, durationMs] (duration omitted when 0). */
+/** Recorded v4: [number, timeMs] or [number, timeMs, durationMs] (duration omitted when 0). */
 export type SerializedRecordedTrackNote = [id: number, time: number, duration?: number]
 export type SerializedRecordedTrack = {
     instrument: SerializedInstrumentData
@@ -255,7 +259,7 @@ export class ApproachingNote {
 }
 
 export class RecordedNote {
-    /** Note Id (nominal MIDI number) — not a button. */
+    /** Note Number (absolute MIDI number, Basepoint included) — not a button, not a nominal. */
     id: number
     time: number
     /** Sustain duration in ms; 0 = one-shot (the pre-sustain behavior). */
@@ -268,16 +272,16 @@ export class RecordedNote {
      * instrument is also the one the on-screen keyboard is drawn from.
      *
      * `displayButton` — the note's row on a surface whose rows are its OWN TRACK
-     * instrument's Buttons (displayButtonForId: that instrument's button, else the id's
-     * canonical Song-Grid slot when it is stranded there, else -1). Its consumer is the
-     * player's sheet frames (PlayerPagesRenderer -> SheetFrame), which ADR-0004 leaves
-     * deliberately own-button. Nothing that indexes the keyboard may read it.
+     * instrument's Buttons, at that TRACK's effective Basepoint (displayButtonForNumber: that
+     * instrument's button, else the grid row the number draws on when it is stranded there).
+     * Its consumer is the player's sheet frames (PlayerPagesRenderer -> SheetFrame), which
+     * ADR-0004 leaves deliberately own-button. Nothing that indexes the keyboard may read it.
      */
     displayButton: number = -1
     /**
-     * `keyboardButton` — the SAME note's key on the keyboard ACTUALLY ON SCREEN: its Button
-     * on the display instrument (noteIdToButton), -1 when that instrument has no key for the
-     * id. This is the only coordinate the keyboard/practice/approach paths may use, because
+     * `keyboardButton` — the SAME note's key on the keyboard ACTUALLY ON SCREEN: the Button of
+     * the display instrument that sounds this number at the Basepoint that keyboard sounds at,
+     * -1 when it has none. This is the only coordinate the keyboard/practice/approach paths may use, because
      * `playerStore.keyboard` holds exactly that instrument's notes; a -1 note is skipped by
      * all of them (it still sounds, and still draws in the sheet through the field above).
      *
@@ -333,16 +337,19 @@ export class Recording {
         console.log("Started new recording")
     }
     /**
-     * A re-press of a still-open id closes the previous press first (exact
+     * A re-press of a still-open number closes the previous press first (exact
      * press↔release pairing, mirroring the audio engine's one-voice-per-button
-     * retrigger) — at most one note per id is ever open, so releases are unambiguous
+     * retrigger) — at most one note per number is ever open, so releases are unambiguous
      * even with concurrent keyboard/pointer/MIDI input on the same button.
+     *
+     * What arrives here is what the PRESS entered (`ObservableNote.numberAt(pitch)`, ADR-0007),
+     * so a recording saved at the Basepoint it was played at reads back as the same pitches.
      */
-    addNote = (id: number) => {
+    addNote = (number: number) => {
         if (this.notes.length === 0) this.start()
-        if (this.captureDurations) this.releaseNote(id)
+        if (this.captureDurations) this.releaseNote(number)
         const currentTime = Date.now()
-        const note: RecordedNote = new RecordedNote(id, currentTime - this.startTimestamp)
+        const note: RecordedNote = new RecordedNote(number, currentTime - this.startTimestamp)
         this.notes.push(note)
     }
     /**
@@ -351,11 +358,11 @@ export class Recording {
      * Captured on EVERY instrument, sustaining or not (spec 2026-08-03) —
      * re-instrumenting a recording onto a sustaining instrument then just works.
      */
-    releaseNote = (id: number) => {
+    releaseNote = (number: number) => {
         if (!this.captureDurations) return
         for (let i = this.notes.length - 1; i >= 0; i--) {
             const note = this.notes[i]
-            if (note.id !== id || note.duration !== 0) continue
+            if (note.id !== number || note.duration !== 0) continue
             note.duration = Math.max(1, Date.now() - this.startTimestamp - note.time)
             return
         }

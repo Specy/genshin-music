@@ -4,7 +4,7 @@
   import { goto } from '$app/navigation';
   import { resolve } from '$app/paths';
   import { ClickType, clamp, isFocusable } from '$core/utils/Utilities';
-  import { buttonToNoteId } from '$core/Songs/noteIds';
+  import { buttonToNumber, effectiveTrackPitch } from '$core/Songs/noteIds';
   import { DEFAULT_VSRG_KEYS_MAP } from '$core/legacyConfig';
   import { t } from '$i18n/binding.svelte';
   import PageMetadata from '$cmp/shell/PageMetadata.svelte';
@@ -609,9 +609,15 @@
   }
 
   function onNoteSelect(button: number) {
-    //the picker passes button positions; hit objects store Note Ids of the track's instrument.
-    //Buttons past a short instrument's range were silent pseudo-notes pre-v2 — no id, not stored.
-    const id = buttonToNoteId(vsrg.tracks[selectedTrack]?.instrument.name ?? '', button);
+    //the picker passes button positions; hit objects store the Note NUMBER that button enters at
+    //the track's effective Basepoint (ADR-0007). Buttons past a short instrument's range were
+    //silent pseudo-notes pre-v2 — no number, not stored.
+    const track = vsrg.tracks[selectedTrack];
+    const id = buttonToNumber(
+      track?.instrument.name ?? '',
+      effectiveTrackPitch(track?.instrument, vsrg.pitch),
+      button
+    );
     if (id === null) return;
     //through the song: hitObject.toggleNote() alone rewrites a plain array on a plain object, so
     //neither the canvas nor the mini keyboard's own highlight would see it. This used to reassign
@@ -713,6 +719,11 @@
     settings.bpm = { ...settings.bpm, value: song.bpm };
     settings.keys = { ...settings.keys, value: song.keys };
     settings.pitch = { ...settings.pitch, value: song.pitch };
+    //the loaded song's Basepoint is what its stored Note Numbers were entered at, so the audio
+    //player has to adopt it or every one of them resolves against the wrong keys (ADR-0007). It
+    //used to be seeded from the SETTINGS at mount and never updated, which under the old
+    //play-time-rate meaning was merely the wrong playback speed.
+    audioPlayer.setBasePitch(song.pitch);
     updateSettings();
     changes++;
     vsrg = song;

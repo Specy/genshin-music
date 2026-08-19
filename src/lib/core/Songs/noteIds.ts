@@ -117,13 +117,35 @@ export function displayButtonForId(instrumentName: RuntimeInstrumentName, id: nu
 }
 
 /**
+ * displayButtonForId on the absolute axis (ADR-0007) — the same two-step answer, asked of a Note
+ * Number at a Basepoint: the track instrument's own Button, else the grid row the number draws
+ * on when it is stranded there, else -1.
+ *
+ * The stranded fallback goes through `gridRowForNumber`, so an OFF-SCALE strand gets its nearest
+ * row rather than dropping out of the sheet entirely — the surfaces that read this (the player's
+ * sheet frames, the visual song) then draw it where the composer canvas already does.
+ */
+export function displayButtonForNumber(instrumentName: RuntimeInstrumentName, pitch: Pitch, number: number): number {
+    const own = numberToButton(instrumentName, pitch, number)
+    if (own !== -1) return own
+    return gridRowForNumber(instrumentName, pitch, number).row
+}
+
+/**
  * Fills BOTH display coordinates of the notes the PLAYER is about to play, in one pass at
  * queue-build (the fields are documented on RecordedNote):
  *
- * - `displayButton` = displayButtonForId against the note's OWN TRACK instrument. Unchanged
- *   and deliberately so — the player's sheet frames read it and ADR-0004 keeps them own-button.
- * - `keyboardButton` = noteIdToButton against the instrument the on-screen keyboard is drawn
- *   from, -1 when that keyboard has no key for the id.
+ * - `displayButton` = displayButtonForNumber against the note's OWN TRACK instrument at that
+ *   TRACK's effective Basepoint (`songPitch` plus the track's own override). Unchanged in
+ *   meaning and deliberately so — the player's sheet frames read it and ADR-0004 keeps them
+ *   own-button.
+ * - `keyboardButton` = the key of the on-screen keyboard that sounds this number at
+ *   `keyboardPitch`, -1 when that keyboard has none.
+ *
+ * TWO Basepoints, and they are genuinely different questions: "where does this note belong on
+ * its own track's staff" is asked of the track that owns it, while "which key do I press"
+ * is asked of the one keyboard on screen at the Basepoint IT sounds at. They coincide for the
+ * ordinary single-instrument song, which is exactly when nobody would notice them collapsed.
  *
  * ONE keyboard, ONE coordinate space — the same rule computeButtonLayerStatuses states for the
  * composer's keyboard, and the same bug on the other surface. The player's display keyboard
@@ -136,10 +158,21 @@ export function displayButtonForId(instrumentName: RuntimeInstrumentName, id: nu
  * their place in the timing stream (they still SOUND, by id, on their own track's instrument) and
  * they still draw in the sheet, which speaks the other coordinate.
  */
-export function resolvePlayerNoteButtons(notes: readonly RecordedNote[], instruments: readonly InstrumentData[], keyboardInstrumentName: RuntimeInstrumentName): void {
+export function resolvePlayerNoteButtons(
+    notes: readonly RecordedNote[],
+    instruments: readonly InstrumentData[],
+    keyboardInstrumentName: RuntimeInstrumentName,
+    songPitch: Pitch,
+    keyboardPitch: Pitch
+): void {
     for (const note of notes) {
-        note.displayButton = displayButtonForId(instruments[note.trackIndex]?.name ?? '', note.id)
-        note.keyboardButton = noteIdToButton(keyboardInstrumentName, note.id)
+        const instrument = instruments[note.trackIndex]
+        note.displayButton = displayButtonForNumber(
+            instrument?.name ?? '',
+            effectiveTrackPitch(instrument, songPitch),
+            note.id
+        )
+        note.keyboardButton = numberToButton(keyboardInstrumentName, keyboardPitch, note.id)
     }
 }
 
