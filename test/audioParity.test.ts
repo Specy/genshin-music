@@ -75,7 +75,7 @@ type ParityRecording = {
  * `pressNote()` do, so a parity run asks the engine the same question playback does.
  */
 function resolveButton(instrument: Instrument, stored: number, pitch: Pitch): number {
-    return instrument.getButtonFromId(stored)
+    return instrument.getButtonOfNumber(stored, pitch)
 }
 
 /** The effective Basepoint of a track — its own override, else the song's (unchanged by ADR-0007). */
