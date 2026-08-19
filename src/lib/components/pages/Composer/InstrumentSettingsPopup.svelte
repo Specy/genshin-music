@@ -42,6 +42,26 @@
     onDelete: () => void;
     onClose: () => void;
   } = $props();
+
+  /**
+   * EVERY EDIT BELOW GOES THROUGH HERE, and the clone is the point: `instrument` is the LIVE
+   * roster entry (InstrumentControls passes `instruments[selected]`), and `InstrumentData.set`
+   * assigns onto the object it is called on. Editing it in place hands the song an object that is
+   * already the new value, so `ComposedSong.setInstrument`'s `previous` — read out of the roster —
+   * IS the edited object, and its "did the name or the Basepoint move?" comparison answers NO for
+   * an edit that moved both.
+   *
+   * That is harmless for a colour or a volume, and it was silently fatal for the two halves of the
+   * instrument's IDENTITY once ADR-0007 made them note edits: an instrument swap never ran its
+   * button-preserving rewrite and a per-layer Basepoint override never moved its track's notes, so
+   * Lyre → Vintage-Lyre stopped re-flavoring and Composer.editInstrument never took its undo
+   * snapshot either. The vsrg panel states the same fact the other way round, by handing
+   * `VsrgSong.setTrack` the previous identity explicitly.
+   *
+   * A fresh object per edit, therefore: the popup DESCRIBES the entry it wants, and the song is
+   * left able to see what moved.
+   */
+  const edited = (changes: Partial<InstrumentData>) => instrument.clone().set(changes);
 </script>
 
 {#if !instrument}
@@ -62,7 +82,7 @@
         class="input"
         style="width:7.4rem"
         value={instrument.alias}
-        oninput={(e) => onChange(instrument.set({ alias: e.currentTarget.value }))}
+        oninput={(e) => onChange(edited({ alias: e.currentTarget.value }))}
         placeholder={tInstrument(instrument.name)}
       />
     </div>
@@ -72,7 +92,7 @@
       <InstrumentSelect
         style="width:8rem"
         selected={instrument.name}
-        onChange={(name) => onChange(instrument.set({ name }))}
+        onChange={(name) => onChange(edited({ name }))}
       />
     </div>
     <div class="row space-between" style="margin-top:0.4rem">
@@ -80,7 +100,7 @@
       <PitchSelect
         style="padding:0.3rem;width:8rem"
         selected={instrument.pitch as Pitch}
-        onChange={(pitch) => onChange(instrument.set({ pitch }))}
+        onChange={(pitch) => onChange(edited({ pitch }))}
       >
         <option value="">
           {t('instrument_settings:use_song_pitch')}
@@ -92,7 +112,7 @@
       <Select
         style="padding:0.3rem;width:8rem"
         onchange={(e) => {
-          onChange(instrument.set({ reverbOverride: toReverbValue(e.currentTarget.value) }));
+          onChange(edited({ reverbOverride: toReverbValue(e.currentTarget.value) }));
         }}
         value={getReverbValue(instrument.reverbOverride)}
       >
@@ -112,8 +132,7 @@
       {t('instrument_settings:note_icon')}
       <Select
         style="padding:0.3rem;width:8rem"
-        onchange={(e) =>
-          onChange(instrument.set({ icon: e.currentTarget.value as InstrumentNoteIcon }))}
+        onchange={(e) => onChange(edited({ icon: e.currentTarget.value as InstrumentNoteIcon }))}
         value={instrument.icon}
       >
         {#each noteIcons as iconKind (iconKind)}
@@ -142,7 +161,7 @@
         min={0}
         max={125}
         value={instrument.volume}
-        oninput={(e) => onChange(instrument.set({ volume: Number(e.currentTarget.value) }))}
+        oninput={(e) => onChange(edited({ volume: Number(e.currentTarget.value) }))}
       />
       <AppButton
         class="flex-centered"
@@ -150,7 +169,7 @@
         style="padding:0;min-width:unset;width:1.6rem;height:1.6rem;border-radius:2rem"
         onclick={() => {
           if (instrument.volume === 0 && !instrument.muted) return;
-          onChange(instrument.set({ muted: !instrument.muted }));
+          onChange(edited({ muted: !instrument.muted }));
         }}
       >
         {#if instrument.muted || instrument.volume === 0}
