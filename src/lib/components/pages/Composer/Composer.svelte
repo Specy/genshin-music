@@ -480,24 +480,31 @@
   /**
    * Sound one NOTE ID on a track: immediately when `at` is omitted (previews, live entry), or
    * committed at the ABSOLUTE AudioContext time `at` — the engine speaks audio-clock time end
-   * to end, never relative delays (ADR-0006). Every caller already holds an id — song
-   * notes store ids, and the keyboard hands back the note object — so nothing here resolves a
-   * Button any more (ADR-0005 §4: the engine's public API is id-keyed). An id the track's
-   * instrument doesn't offer is STRANDED there and stays silent, which is why the lookup below
-   * is still a guard.
+   * to end, never relative delays (ADR-0006). Every caller already holds a number — song
+   * notes store them, and the keyboard's note answers `numberAt(pitch)` — so nothing here
+   * resolves a Button any more (ADR-0005 §4 / ADR-0007: the engine's public API is
+   * number-keyed). A number the track's instrument cannot voice at its Basepoint is STRANDED
+   * there and stays silent, which is why the lookup below is still a guard.
    */
-  function playSound(layer: number, id: number, at?: number, durationMs?: number, skipMs?: number) {
+  function playSound(
+    layer: number,
+    number: number,
+    at?: number,
+    durationMs?: number,
+    skipMs?: number
+  ) {
     const instrument = layers[layer];
-    if (!instrument || instrument.getNoteById(id) === null) return;
+    if (!instrument) return;
     if (song.instruments[layer].muted) return;
     const pitch = song.instruments[layer].pitch || settings.pitch.value;
+    if (instrument.getNoteByNumber(number, pitch) === null) return;
     if (durationMs !== undefined && instrument.supportsSustain) {
       //spanned note on a sustaining instrument: hold for its musical length, then release
-      instrument.pressNote(id, pitch, { at, durationMs, skipMs });
+      instrument.pressNote(number, pitch, { at, durationMs, skipMs });
     } else {
       //on sustaining instruments play() IS the tap (minLength + release inside the
       //Instrument) — previews, span-1 columns and non-sustaining one-shots all land here
-      instrument.play(id, pitch, at);
+      instrument.play(number, pitch, at);
     }
   }
 
@@ -508,11 +515,13 @@
    * and a live press is a held voice sounding NOW, never committed into the future, so there is
    * no scheduled start for its release to race.
    */
-  function playHeldSound(layer: number, id: number) {
+  function playHeldSound(layer: number, number: number) {
     const instrument = layers[layer];
-    if (!instrument || instrument.getNoteById(id) === null) return;
+    if (!instrument) return;
     if (song.instruments[layer].muted) return;
-    instrument.pressNote(id, song.instruments[layer].pitch || settings.pitch.value);
+    const pitch = song.instruments[layer].pitch || settings.pitch.value;
+    if (instrument.getNoteByNumber(number, pitch) === null) return;
+    instrument.pressNote(number, pitch);
   }
 
   /** Real length in ms of columns [from, to) at the current bpm, honoring each column's tempo changer (same math and rounding as the transport's grid — it sums exactly what this returns). */
@@ -953,18 +962,21 @@
    * Buttons of the current layer's instrument occupied by a span in the selected column
    * (tails, plus span starts so a long note reads as long).
    *
-   * Deliberately BUTTONS, not Note Ids (ADR-0004/0005): the composer keyboard's rows really
-   * are the current instrument's Buttons, and its other per-button side table
+   * Deliberately BUTTONS, not Note Numbers (ADR-0004/0005/0007): the composer keyboard's rows
+   * really are the current instrument's Buttons, and its other per-button side table
    * (`computeButtonLayerStatuses`) keys by the SAME instrument's Buttons — every track's notes
-   * resolved against the keyboard on screen, dropping the ids it cannot play. One coordinate
-   * space for both side tables, addressed through the Button the Shape hands the snippet; the
-   * -1 drop keeps ids this instrument lacks out of it, here and there alike.
+   * resolved against the keyboard on screen at ITS Basepoint, dropping the numbers it cannot
+   * voice. One coordinate space for both side tables, addressed through the Button the Shape
+   * hands the snippet; the -1 drop keeps numbers this instrument lacks out of it, here and
+   * there alike.
    */
   const heldButtons = $derived.by(() => {
     // eslint-disable-next-line svelte/prefer-svelte-reactivity -- rebuilt wholesale by this derived, never mutated after return
     const held = new Set<number>();
     const keyboard = layers[layer];
     if (!keyboard) return held;
+    //the keyboard IS the selected layer's instrument, so its Basepoint is that track's
+    const pitch = song.instruments[layer]?.pitch || settings.pitch.value;
     // eslint-disable-next-line svelte/prefer-svelte-reactivity -- transient local dedupe set
     const seen = new Set<number>();
     for (let start = song.selected - 1; start >= 0; start--) {
@@ -972,14 +984,14 @@
         if (seen.has(spanNote.id)) continue;
         seen.add(spanNote.id);
         if (start + spanNote.span > song.selected) {
-          const button = keyboard.getButtonFromId(spanNote.id);
+          const button = keyboard.getButtonOfNumber(spanNote.id, pitch);
           if (button !== -1) held.add(button);
         }
       }
     }
     for (const spanNote of song.selectedColumn?.notesOfTrack(layer) ?? []) {
       if (spanNote.span > 1) {
-        const button = keyboard.getButtonFromId(spanNote.id);
+        const button = keyboard.getButtonOfNumber(spanNote.id, pitch);
         if (button !== -1) held.add(button);
       }
     }

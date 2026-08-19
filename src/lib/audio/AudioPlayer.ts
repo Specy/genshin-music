@@ -67,28 +67,38 @@ export class AudioPlayer {
     return Promise.all(promises);
   }
 
-  /** Play a Note Id on one instrument — the engine is id-keyed, so a stranded id is silent. */
-  playNoteOfInstrument(instrumentIndex: number, id: number, pitch?: Pitch) {
+  /**
+   * Play a Note Number on one instrument. The effective Basepoint (the track's override, else
+   * this player's base) is resolved HERE and handed to the engine, which is what makes the
+   * number mean the same thing on both sides — a number the instrument cannot voice at that
+   * Basepoint is stranded, and silent.
+   */
+  playNoteOfInstrument(instrumentIndex: number, number: number, pitch?: Pitch) {
     const instrumentData = this.instruments[instrumentIndex];
     const audioInstrument = this.audioInstruments[instrumentIndex];
     if (!audioInstrument || !instrumentData) return;
-    audioInstrument.play(id, pitch ?? (instrumentData.pitch || this.basePitch));
+    audioInstrument.play(number, pitch ?? (instrumentData.pitch || this.basePitch));
   }
 
-  playNotesOfInstrument(instrumentIndex: number, ids: number[], pitch?: Pitch) {
-    ids.forEach((id) => this.playNoteOfInstrument(instrumentIndex, id, pitch));
+  playNotesOfInstrument(instrumentIndex: number, numbers: number[], pitch?: Pitch) {
+    numbers.forEach((number) => this.playNoteOfInstrument(instrumentIndex, number, pitch));
   }
 
   /** Like playNoteOfInstrument, but holds for `durationMs` when the instrument sustains (VSRG hold notes); one-shot otherwise. */
-  pressNoteOfInstrument(instrumentIndex: number, id: number, durationMs?: number, pitch?: Pitch) {
+  pressNoteOfInstrument(
+    instrumentIndex: number,
+    number: number,
+    durationMs?: number,
+    pitch?: Pitch
+  ) {
     const instrumentData = this.instruments[instrumentIndex];
     const audioInstrument = this.audioInstruments[instrumentIndex];
     if (!audioInstrument || !instrumentData) return;
     const resolvedPitch = pitch ?? (instrumentData.pitch || this.basePitch);
     if (durationMs !== undefined && durationMs > 0 && audioInstrument.supportsSustain) {
-      audioInstrument.pressNote(id, resolvedPitch, { durationMs });
+      audioInstrument.pressNote(number, resolvedPitch, { durationMs });
     } else {
-      audioInstrument.play(id, resolvedPitch);
+      audioInstrument.play(number, resolvedPitch);
     }
   }
 

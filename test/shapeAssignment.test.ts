@@ -107,20 +107,32 @@ describe('Shape note→position assignment', () => {
     })
 })
 
-describe('Instrument id-keyed lookups (ADR-0005 §4)', () => {
-    it('getNoteById resolves a Note Id to its note and null for an id the instrument lacks', () => {
+describe('Instrument number-keyed lookups (ADR-0005 §4 under ADR-0007)', () => {
+    it('getNoteByNumber resolves a Note Number to its note and null for one the instrument cannot voice', () => {
         const instrument = new Instrument(INSTRUMENTS[0])
         const note = instrument.notes[1]
-        expect(instrument.getNoteById(note.id)).toBe(note)
-        expect(instrument.getNoteById(-999)).toBeNull()
-        // the id accessor is just the ShapeNote-facing name of midiNote
+        expect(instrument.getNoteByNumber(note.numberAt('C'), 'C')).toBe(note)
+        expect(instrument.getNoteByNumber(-999, 'C')).toBeNull()
+        // the id accessor is just the ShapeNote-facing name of midiNote (the NOMINAL axis)
         expect(note.id).toBe(note.midiNote)
         expect(note.icon).toBe(note.noteImage)
     })
 
-    it('getButtonFromId still answers in Buttons, -1 when the id is stranded', () => {
+    it('the same button answers a different Note Number at every Basepoint', () => {
         const instrument = new Instrument(INSTRUMENTS[0])
-        expect(instrument.getButtonFromId(instrument.notes[2].id)).toBe(2)
-        expect(instrument.getButtonFromId(-999)).toBe(-1)
+        const note = instrument.notes[1]
+        // 'Db' is one semitone up from C: the button is the same, the number it enters is not
+        expect(note.numberAt('Db')).toBe(note.numberAt('C') + 1)
+        expect(instrument.getNoteByNumber(note.numberAt('Db'), 'Db')).toBe(note)
+        // ...and reading a Db-Basepoint number at C resolves to the button one semitone up,
+        // or to nothing at all where the instrument has no such button
+        expect(instrument.getNoteByNumber(note.numberAt('Db'), 'C'))
+            .toBe(instrument.notes.find((candidate) => candidate.soundingNote === note.soundingNote + 1) ?? null)
+    })
+
+    it('getButtonOfNumber still answers in Buttons, -1 when the number is stranded', () => {
+        const instrument = new Instrument(INSTRUMENTS[0])
+        expect(instrument.getButtonOfNumber(instrument.notes[2].numberAt('C'), 'C')).toBe(2)
+        expect(instrument.getButtonOfNumber(-999, 'C')).toBe(-1)
     })
 })
