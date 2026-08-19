@@ -19,6 +19,7 @@
     VsrgSong,
     type VsrgHitObject,
     type VsrgTrack,
+    type VsrgTrackInstrumentIdentity,
     type VsrgTrackModifierPatch,
     type VsrgSongKeys,
   } from '$core/Songs/VsrgSong.svelte';
@@ -614,12 +615,22 @@
     forgetRemovedHitObjects();
   }
 
-  function onTrackChange(track: VsrgTrack, index: number) {
+  function onTrackChange(
+    track: VsrgTrack,
+    index: number,
+    previousInstrument?: VsrgTrackInstrumentIdentity
+  ) {
     //setTrack, not `vsrg.tracks[index] = track`: the track array is private behind a getter that
     //reads the structure signal, and an element write would publish nothing. VsrgTrackSettings
     //has already mutated this exact object in place, so `track` is usually the object already at
     //`index` - setTrack bumps regardless, which is what rebuilds the canvas's per-colour textures.
-    vsrg.setTrack(index, track);
+    //
+    //`previousInstrument` is present only when the panel changed the instrument's NAME or its
+    //Basepoint override, which since ADR-0007 rewrites the track's Note Numbers - the panel is the
+    //last place the old values still exist, so it hands them down rather than anything here
+    //trying to recover them (see setTrack).
+    vsrg.setTrack(index, track, previousInstrument);
+    if (previousInstrument) changes++;
     syncInstruments();
   }
 

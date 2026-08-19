@@ -5,7 +5,7 @@ import type {SnapPoint} from "$core/types";
 import {isLegacyAppName, LEGACY_NOTE_TABLES, legacyIndexToId} from "./legacyNoteTables";
 import {type ConversionGame, findSimilarInstrument} from "./instrumentSimilarity";
 import {foldNumberIntoRange, nominalToNumber} from "./noteIds";
-import {basepointDelta, migrateTrackNotes, rewriteNumbersForBasepoint} from "./noteNumberTransforms";
+import {basepointDelta, migrateTrackNotes, rewriteForSwap, rewriteNumbersForBasepoint} from "./noteNumberTransforms";
 import type {InstrumentName} from "$core/types";
 import {RecordedSong} from "./RecordedSong";
 import {type SerializedSong, Song} from "./Song.svelte";
@@ -72,6 +72,19 @@ export type VsrgSongPatch = Partial<Pick<VsrgSong,
     | 'keys' | 'duration' | 'audioSongId' | 'trackModifiers' | 'breakpoints' | 'difficulty'
     | 'snapPoint'
 >>
+
+/**
+ * The half of a track's InstrumentData that decides what its stored Note Numbers MEAN (ADR-0007):
+ * which buttons exist to voice them, and the Basepoint they were entered at. Everything else on
+ * an InstrumentData is presentation.
+ *
+ * It travels from VsrgTrackSettings (which mutates the track in place, so it is the last place the
+ * OLD values still exist) down to setTrack, rather than being re-derived anywhere in between.
+ */
+export type VsrgTrackInstrumentIdentity = {
+    name: InstrumentName
+    pitch: Pitch | ''
+}
 
 /** What setTrackModifier may change. The three fields VsrgTrackModifier actually carries. */
 export type VsrgTrackModifierPatch = {
@@ -375,11 +388,59 @@ export class VsrgSong extends Song<VsrgSong, SerializedVsrgSong, 3> {
      * edit already happened", not "nothing changed". An early return on identity would freeze the
      * canvas's texture cache and the track list on every colour/instrument edit. (An index that
      * addresses no track returns without bumping, like deleteTrack below.)
+     *
+     * `previousInstrument` IS THE CONSEQUENCE OF THAT IN-PLACE MUTATION (ADR-0007): the track's
+     * instrument name and Basepoint override are both part of what its stored Note Numbers MEAN,
+     * so changing either is a note edit — and by the time this method runs, the only record of
+     * what they used to be has already been overwritten. The panel is the one place that knows
+     * both sides at the instant of the change, so it hands the old identity down with the track.
+     * Omitting it means "nothing about the instrument's identity moved" (a colour, alias, volume
+     * or mute edit), which is why it is optional rather than required.
      */
-    setTrack(index: number, track: VsrgTrack) {
+    setTrack(index: number, track: VsrgTrack, previousInstrument?: VsrgTrackInstrumentIdentity) {
         if (this.#tracks[index] === undefined) return
         this.#tracks[index] = track
+        if (previousInstrument) this.#rewriteForInstrumentChange(index, previousInstrument)
         this.#bumpStructure()
+    }
+
+    /**
+     * ComposedSong.setInstrument's rewrite half, on the vsrg graph (spec §4). Both halves of the
+     * instrument's identity can move in one save, so both are applied, in this order and at the
+     * OLD effective Basepoint:
+     *  - a changed NAME rewrites button-preservingly through nominal correspondence, so
+     *    Lyre -> Vintage-Lyre re-flavors (the D button becomes the Db button) and a nominal the
+     *    new instrument has no button for passes through unchanged, now visibly stranded;
+     *  - a changed BASEPOINT OVERRIDE then moves the whole track by the interval.
+     * The order is load-bearing: a swap is not a transposition, and doing the interval first would
+     * ask the OLD instrument to voice numbers that are already at the NEW Basepoint.
+     *
+     * Assigns a fresh array per hit object (VsrgHitObject's own convention). A hit object's notes
+     * are a SET, and a rewrite can collapse two of them onto one number - a strand passing through
+     * unchanged can land on a swapped neighbour - so the result is deduped, exactly as the v2
+     * migration in deserialize() does.
+     */
+    #rewriteForInstrumentChange(trackIndex: number, previous: VsrgTrackInstrumentIdentity) {
+        const track = this.#tracks[trackIndex]
+        const oldPitch = previous.pitch || this.pitch
+        const newPitch = track.instrument.pitch || this.pitch
+        const swapped = previous.name !== track.instrument.name
+        if (!swapped && oldPitch === newPitch) return
+        const delta = basepointDelta(oldPitch, newPitch)
+        for (const hitObject of track.hitObjects) {
+            if (hitObject.notes.length === 0) continue
+            const rewritten = rewriteNumbersForBasepoint(
+                swapped
+                    ? rewriteForSwap(hitObject.notes, previous.name, track.instrument.name, oldPitch)
+                    : hitObject.notes,
+                delta
+            )
+            const deduped: number[] = []
+            for (const number of rewritten) {
+                if (!deduped.includes(number)) deduped.push(number)
+            }
+            hitObject.notes = deduped
+        }
     }
 
     // First palette color no existing track is using, so tracks stay visually distinct without

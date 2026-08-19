@@ -805,6 +805,21 @@ const VSRG_CASES: VsrgPublishCase[] = [
         run: song => song.setTrack(0, song.tracks[0].set({color: '#123456'})),
     },
     {
+        //ADR-0007: the same call, told what the instrument's identity USED to be, also rewrites the
+        //track's Note Numbers. Still exactly one publish — the rewrite rides the bump setTrack
+        //already does rather than adding a second one
+        name: 'setTrack',
+        label: 'with the previous instrument identity (a swap)',
+        publishes: ['structure'],
+        setup: song => song.toggleNoteInHitObject(song.tracks[0].hitObjects[0], 60),
+        run: song => {
+            const track = song.tracks[0]
+            const previous = {name: track.instrument.name, pitch: track.instrument.pitch}
+            track.instrument.set({name: INSTRUMENTS[1]})
+            song.setTrack(0, track, previous)
+        },
+    },
+    {
         name: 'setTrack',
         label: 'no such track',
         publishes: [],
