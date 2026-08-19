@@ -15,7 +15,7 @@
   import Analytics from '$core/Analytics';
   import { ApproachingNote, type RecordedNote } from '$core/Songs/SongClasses';
   import type { NoteStatus } from '$core/types';
-  import { resolvePlayerNoteButtons } from '$core/Songs/noteIds';
+  import { effectiveTrackPitch, resolvePlayerNoteButtons } from '$core/Songs/noteIds';
   import type { Instrument, ObservableNote } from '$lib/audio/Instrument.svelte';
   import { RecordedSong, type Chunk } from '$core/Songs/RecordedSong';
   import { MIDIProvider, type MIDIEvent } from '$lib/providers/MIDIProvider';
@@ -325,7 +325,10 @@
 
   function handleRelease(note: ObservableNote) {
     if (!note) return;
-    functions.releaseSound(note.id);
+    //released at the CURRENT Basepoint: a change under a held key would name a number no voice
+    //is held on, which the engine ignores — the blur/visibility guard's releaseHeldNotes() is
+    //what still stops it
+    functions.releaseSound(note.numberAt(data.pitch));
     //finger lifted: the ring has nothing left to count down, whether or not it ran out
     if (note.data.holdTimerMs !== 0) playerStore.setNoteState(note, { holdTimerMs: 0 });
     const held = heldVisualPresses.get(note);
@@ -376,6 +379,8 @@
       const keyboardNote = keyboard[notes[i].keyboardButton];
       if (keyboardNote) handleClick(keyboardNote, notes[i]);
       else functions.playSound(notes[i].id, notes[i]);
+      //(both branches sound `notes[i]` itself: playSound ignores its first argument whenever a
+      //song note is supplied, so a key with no note on screen is still heard)
       if (chunkPlayedNotes >= (playerControlsStore.currentChunk?.notes.length ?? 0)) {
         chunkPlayedNotes = 1;
         playerControlsStore.incrementChunkPositionAndSetCurrent(start + i + 1);
@@ -570,9 +575,11 @@
     const ownsCurrentRun = activeRunKey === playerStore.state.key;
     if (ownsCurrentRun && mode === 'practice' && playerStore.eventType === 'practice')
       handlePracticeClick(note);
-    //the engine speaks Note Ids: play THIS note, not whatever the sounding instrument keeps
-    //at the same button
-    functions.playSound(note.id, songNote);
+    //the engine speaks Note Numbers: play what THIS key enters at the player's Basepoint, not
+    //whatever the sounding instrument keeps at the same button. (With a `songNote` the sound is
+    //the song note's own stored number — see Player.playSound — so this argument is the free-play
+    //half alone.)
+    functions.playSound(note.numberAt(data.pitch), songNote);
     if (ownsCurrentRun && mode === 'approaching' && playerStore.eventType === 'approaching') {
       const status = handleApproachClick(note);
       playerStore.setNoteState(note, { status });
@@ -673,7 +680,13 @@
           resolvePlayerNoteButtons(
             lostReference.notes,
             songInstruments,
-            data.songDisplayInstrument.name
+            data.songDisplayInstrument.name,
+            lostReference.pitch,
+            //the Basepoint the keyboard on screen SOUNDS at: `data.pitch` is the player's own
+            //(which syncSongData has already set to the song's), plus track 0's override, since
+            //this keyboard follows track 0 (displayInstrument.ts) and Player.svelte sounds that
+            //track through the same override
+            effectiveTrackPitch(songInstruments[0], data.pitch)
           );
 
           lostReference.timestamp = Date.now();

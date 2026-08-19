@@ -92,6 +92,10 @@
     } else {
       audioSong = null;
     }
+    //the vsrg song's own Basepoint: its hit objects store Note Numbers entered at it, so the
+    //keyboard player must resolve them at it (ADR-0007). Previously left at the constructor's 'C',
+    //which under the old play-time-rate meaning was only the wrong playback speed.
+    keyboardAudioPlayer.setBasePitch(newSong.pitch);
     await keyboardAudioPlayer.syncInstruments(newSong.tracks.map((track) => track.instrument));
     logger.hidePill();
     song = newSong;
