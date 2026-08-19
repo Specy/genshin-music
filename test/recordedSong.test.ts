@@ -4,10 +4,13 @@ import {buildRecordedSong} from './builders'
 import {expectGolden, readFixture} from './golden'
 
 // Format-v3 rewrite (2026-08-03): `recorded-song.json` is the frozen pre-v3 fixture —
-// its `serialized` member is a real v2 file and now serves as the LEGACY INPUT; the
-// v3 outputs live in `recorded-song-v3.json`. The old fixture is never regenerated.
+// its `serialized` member is a real v2 file and now serves as the LEGACY INPUT.
+// ADR-0007 (2026-08-19) froze `recorded-song-v3.json` the same way: its `serialized`
+// member is a real v3 file (Nominal Ids, pre-Basepoint) and is now the MIGRATION INPUT;
+// v4 outputs (absolute Note Numbers) live in `recorded-song-v4.json`. Neither old fixture
+// is ever regenerated.
 describe('RecordedSong formats', () => {
-    it('v3 serialize / roundtrip / legacy v1+v2 conversion / old-format export are stable', () => {
+    it('v4 serialize / roundtrip / v3 migration / legacy v1+v2 conversion / old-format export are stable', () => {
         const legacy = readFixture('recorded-song')
         const song = buildRecordedSong()
         const serialized = song.serialize()
@@ -19,13 +22,21 @@ describe('RecordedSong formats', () => {
             notes: [[0, 100], [5, 400]],
         }
 
-        expectGolden('recorded-song-v3', {
+        expectGolden('recorded-song-v4', {
             serialized,
             roundtrip: RecordedSong.deserialize(serialized).serialize(),
+            fromV3: RecordedSong.deserialize(readFixture('recorded-song-v3').serialized).serialize(),
             fromLegacyV1: RecordedSong.deserialize(v1Payload as any).serialize(),
             fromLegacyV2: RecordedSong.deserialize(legacy.serialized).serialize(),
             oldFormatExport: song.toOldFormat(),
         })
+    })
+
+    /** See the composed twin: the builders describe a song as the migration of the committed v3 one. */
+    it('a v3 file migrates to exactly the song the builder describes', () => {
+        const migrated = RecordedSong.deserialize(readFixture('recorded-song-v3').serialized)
+        expect(JSON.parse(JSON.stringify(migrated.serialize())))
+            .toEqual(JSON.parse(JSON.stringify(buildRecordedSong().serialize())))
     })
 
     it('converts durations to spans only after laying out the composed tempo grid', () => {

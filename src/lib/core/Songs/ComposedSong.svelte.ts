@@ -32,7 +32,7 @@ import {type SerializedSong, Song} from "./Song.svelte"
 import {clamp} from "../utils/Utilities"
 import {isLegacyAppName, LEGACY_NOTE_TABLES, legacyIndexToId} from "./legacyNoteTables"
 import {type ConversionGame, findSimilarInstrument} from "./instrumentSimilarity"
-import {songGridSlotForId, foldIdIntoRange, getNoteIdTable} from "./noteIds"
+import {foldNumberIntoRange, gridRowForNumber, nominalToNumber, numberToNominal} from "./noteIds"
 
 interface OldFormatNoteType {
     key: string,
@@ -59,8 +59,12 @@ export type SerializedComposedSongV3 = BaseSerializedComposedSong & {
     version: 3
     instruments: SerializedInstrumentData[]
 }
-/** Current format (v4): per-track Note Id notes on a shared column-tempo timeline. */
-export type SerializedComposedSong = SerializedSong & {
+/**
+ * Legacy (v4): the SAME per-track tuple shape as v5, with the numbers meaning Nominal Ids
+ * stored pre-Basepoint (ADR-0001). Only `version` tells the two apart — which is why a
+ * third-party reader that ignores it misreads one as the other (ADR-0007 consequence).
+ */
+export type SerializedComposedSongV4 = SerializedSong & {
     type: "composed"
     version: 4
     breakpoints: number[]
@@ -68,11 +72,16 @@ export type SerializedComposedSong = SerializedSong & {
     columnTempos: number[]
     tracks: SerializedComposedTrack[]
 }
+/** Current format (v5): per-track absolute Note Numbers on a shared column-tempo timeline. */
+export type SerializedComposedSong = Omit<SerializedComposedSongV4, 'version'> & {
+    version: 5
+}
 
 export type UnknownSerializedComposedSong =
     SerializedComposedSongV1
     | SerializedComposedSongV2
     | SerializedComposedSongV3
+    | SerializedComposedSongV4
     | SerializedComposedSong
 
 
@@ -102,7 +111,7 @@ export const defaultInstrumentMap: InstrumentNoteIcon[] = ['border', 'circle', '
  *   path of least resistance - a missed bump goes stale silently, the same way a forgotten
  *   refreshSong() did.
  */
-export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 4> {
+export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 5> {
     /**
      * `$state.raw`, not `$state`, for the same reason as Song.instruments: the composer's renderer
      * calls `breakpoints.includes(i)` once per visible column on every draw, and each element read
@@ -132,7 +141,7 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 4> 
     #columns: NoteColumn[] = []
 
     constructor(name: string, instruments: InstrumentName[] = []) {
-        super(name, 4, 'composed', {
+        super(name, 5, 'composed', {
             appName: APP_NAME,
             isComposed: true,
             isComposedVersion: true
@@ -272,7 +281,11 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 4> 
         //untrusted input, and only COPIED here: validateBreakpoints() at the end of both branches
         //below is what checks it, because "addresses a column" needs the columns to exist first
         parsed.breakpoints = [...(song.breakpoints ?? [])]
-        if (song.version === 4) {
+        if (song.version === 4 || song.version === 5) {
+            //v4 stored Nominal Ids pre-Basepoint; v5 stores absolute Note Numbers. Same tuple
+            //shape, so `version` is the ONLY thing that decides whether the migration below runs
+            //(ADR-0007 §9: lazy upgrade in the deserializer, save writes v5).
+            const migrating = song.version === 4
             parsed.instruments = (song.tracks ?? []).map(track => InstrumentData.deserialize(track.instrument))
             parsed.initColumnsForConstruction((song.columnTempos ?? []).map(tempo => {
                 const column = new NoteColumn()
@@ -281,19 +294,27 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 4> 
                 return column
             }))
             ;(song.tracks ?? []).forEach((track, trackIndex) => {
+                //PER TRACK, because the migration formula reads the track's own instrument and
+                //its EFFECTIVE Basepoint (its override, else the song's) — that is what the
+                //file's playback used, so it is what keeps the audio identical
+                const instrument = parsed.instruments[trackIndex]
+                const toNumber = migrating
+                    ? (id: number) => nominalToNumber(instrument?.name ?? '', instrument?.pitch || parsed.pitch, id)
+                    : (id: number) => id
                 //defensive: hand-edited/malformed files must import cleanly, not throw
-                (track.notes ?? []).forEach(([columnIndex, id, span]) => {
-                    if (!Number.isInteger(columnIndex) || !Number.isFinite(id)) return
+                ;(track.notes ?? []).forEach(([columnIndex, stored, span]) => {
+                    if (!Number.isInteger(columnIndex) || !Number.isFinite(stored)) return
                     const column = parsed.columns[columnIndex]
                     if (column === undefined) return
+                    const number = toNumber(stored)
                     const safeSpan = typeof span === 'number' && Number.isFinite(span) ? span : 1
-                    //duplicate (column, track, id) entries merge keeping the longest span
-                    const existing = column.findNote(trackIndex, id)
+                    //duplicate (column, track, number) entries merge keeping the longest span
+                    const existing = column.findNote(trackIndex, number)
                     if (existing) {
                         existing.span = Math.max(existing.span, safeSpan)
                         return
                     }
-                    column.addNote(trackIndex, id, safeSpan)
+                    column.addNote(trackIndex, number, safeSpan)
                 })
             })
             //file spans are untrusted input — sanitize + re-enforce the no-overlap invariant
@@ -377,7 +398,9 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 4> 
                 return ins
             })
         }
-        //expand (index, mask) into per-track Note Id notes
+        //expand (index, mask) into per-track notes: the frozen tables decode to a NOMINAL id,
+        //then ADR-0007's migration formula lifts it onto the absolute axis (spec §9 — the legacy
+        //chain gains exactly one step, run per track at its effective Basepoint)
         const appName = isLegacyAppName(parsed.data.appName) ? parsed.data.appName : APP_NAME
         const importPositions = crossGame ? LEGACY_NOTE_TABLES[importInto].importPositions : null
         parsed.initColumnsForConstruction(legacyColumns.map(legacyColumn => {
@@ -388,9 +411,11 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 4> 
                 if (index === -1) return
                 for (let trackIndex = 0; trackIndex < parsed.instruments.length; trackIndex++) {
                     if (!note.layer.test(trackIndex)) continue
-                    const id = legacyIndexToId(appName, parsed.instruments[trackIndex].name, index)
+                    const instrument = parsed.instruments[trackIndex]
+                    const id = legacyIndexToId(appName, instrument.name, index)
                     if (id === null) continue
-                    if (column.findNote(trackIndex, id) === null) column.addNote(trackIndex, id)
+                    const number = nominalToNumber(instrument.name, instrument.pitch || parsed.pitch, id)
+                    if (column.findNote(trackIndex, number) === null) column.addNote(trackIndex, number)
                 }
             })
             return column
@@ -639,7 +664,18 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 4> 
         })
     }
 
-    /** How many (column-grouped) notes toOldFormat() would drop — ids without a frozen default-table button. Download UIs surface this before exporting to the legacy ecosystem. */
+    /**
+     * The NOMINAL Id a note names on its own track — the only axis the legacy/old wire formats
+     * and the frozen tables speak. Exactly inverts the number the note was entered/migrated as
+     * (noteIds.numberToNominal), so every nominal-space export below stayed byte-identical
+     * across the ADR-0007 flip, tuned instruments included.
+     */
+    private nominalOf(note: ColumnNote): number {
+        const instrument = this.instruments[note.trackIndex]
+        return numberToNominal(instrument?.name ?? '', instrument?.pitch || this.pitch, note.id)
+    }
+
+    /** How many (column-grouped) notes toOldFormat() would drop — nominals without a frozen default-table button. Download UIs surface this before exporting to the legacy ecosystem. */
     countOldFormatDroppedNotes(): number {
         const legacyTables = LEGACY_NOTE_TABLES[APP_NAME]
         const defaultTable = legacyTables.tables[legacyTables.defaultInstrument]
@@ -647,22 +683,23 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 4> 
         this.columns.forEach(column => {
             const seen = new Set<number>()
             column.notes.forEach(note => {
-                if (defaultTable.indexOf(note.id) !== -1) return
-                if (seen.has(note.id)) return
-                seen.add(note.id)
+                const nominal = this.nominalOf(note)
+                if (defaultTable.indexOf(nominal) !== -1) return
+                if (seen.has(nominal)) return
+                seen.add(nominal)
                 dropped++
             })
         })
         return dropped
     }
 
-    /** Group a column's notes by legacy index (frozen default-table position of their id), merging tracks — the shape the pre-v4 formats stored. Stranded ids are dropped. */
+    /** Group a column's notes by legacy index (frozen default-table position of their nominal), merging tracks — the shape the pre-v4 formats stored. Stranded nominals are dropped. */
     private groupColumnNotesById(column: NoteColumn): { index: number, trackIndices: number[] }[] {
         const legacyTables = LEGACY_NOTE_TABLES[APP_NAME]
         const defaultTable = legacyTables.tables[legacyTables.defaultInstrument]
         const grouped = new Map<number, { index: number, trackIndices: number[] }>()
         column.notes.forEach(note => {
-            const index = defaultTable.indexOf(note.id)
+            const index = defaultTable.indexOf(this.nominalOf(note))
             if (index === -1) return
             const existing = grouped.get(index)
             if (existing) {
@@ -1020,17 +1057,19 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 4> 
 
     /**
      * Shift notes vertically on the Song Grid, one grid row per unit of `amount`
-     * (positive = up). A note's row is the canonical row of its Note Id and the landing
-     * row's new id is that row's canonical id — the SAME id-only rule the canvas draws
-     * by (ADR-0004), so the tool moves notes exactly where the user sees them. The
-     * note's instrument is deliberately not consulted: before ADR-0004 this read the
-     * own-instrument `displayButtonForId`, which put the tool in each note's OWN track
-     * Button space (nobody's rows: not the canvas's, not the keyboard's) and made a
-     * sub-grid track's notes (NightwindHorn, the drums) jump bands or vanish off a row
-     * that visibly had space above it. A note landing on a row
-     * its own instrument cannot play simply becomes stranded there — canonical row,
-     * dimmed — which is how the canvas already renders stranded notes. Notes pushed off
-     * the top or bottom of the grid are dropped.
+     * (positive = up). A note's row is `gridRowForNumber`'s — the SAME rule the canvas
+     * draws by (ADR-0004/ADR-0007), so the tool moves notes exactly where the user sees
+     * them, off-scale strands included. The landing row's new Note Number is that row's
+     * canonical nominal carried onto the axis by the track's own instrument and
+     * Basepoint (nominalToNumber): the note lands sounding what that button sounds, and
+     * on a row its instrument cannot play it simply becomes stranded there — canonical
+     * row, dimmed — which is how the canvas already renders stranded notes.
+     *
+     * Before ADR-0004 this read the own-instrument `displayButtonForId`, which put the
+     * tool in each note's OWN track Button space (nobody's rows: not the canvas's, not
+     * the keyboard's) and made a sub-grid track's notes (NightwindHorn, the drums) jump
+     * bands or vanish off a row that visibly had space above it. Notes pushed off the
+     * top or bottom of the grid are dropped.
      */
     moveNotesBy(selectedColumns: number[], amount: number, layer: number | 'all') {
         //inverse of COMPOSER_NOTE_POSITIONS (slot -> row), built over GRID slots only:
@@ -1038,12 +1077,15 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 4> 
         //registry's canonicalNoteIds check), and a note must never land on one.
         const slotAtRow = new Map(CANONICAL_NOTE_IDS.map((_, slot) => [COMPOSER_NOTE_POSITIONS[slot], slot]))
         const moveId = (note: ColumnNote): number | null => {
-            const slot = songGridSlotForId(note.id)
+            const instrument = this.instruments[note.trackIndex]
+            const name = instrument?.name ?? ''
+            const pitch = instrument?.pitch || this.pitch
+            const slot = gridRowForNumber(name, pitch, note.id).row
             if (slot === -1) return null
             //rows count downward on the canvas, so moving UP is a smaller row
             const toSlot = slotAtRow.get(COMPOSER_NOTE_POSITIONS[slot] - amount)
             if (toSlot === undefined) return null
-            return CANONICAL_NOTE_IDS[toSlot]
+            return nominalToNumber(name, pitch, CANONICAL_NOTE_IDS[toSlot])
         }
         if (layer === 'all') {
             selectedColumns.forEach(index => {
@@ -1160,17 +1202,18 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 4> 
         if (valid.length !== this.breakpoints.length) this.breakpoints = valid
     }
     /**
-     * NEW-format cross-game conversion (v4 songs imported into another game's build,
+     * NEW-format cross-game conversion (v5/v4 songs imported into another game's build,
      * many-to-many by design): each track's instrument swaps to the target game's most
      * similar instrument (instrumentSimilarity map; target default when unmapped),
-     * keeping the track's volume/pitch/icon/alias; ids octave-fold into the mapped
-     * instrument's range (ids landing on scale gaps stay as stranded notes — never
+     * keeping the track's volume/pitch/icon/alias; Note Numbers octave-fold into the
+     * mapped instrument's range IN SOUNDING SPACE (ADR-0007 keeps this conversion
+     * sound-preserving; numbers landing on scale gaps stay as stranded notes — never
      * rewritten further); fold collisions merge keeping the longest span; the Duration
      * no-overlap invariant is re-enforced. Legacy (≤v3) files never reach this: their
      * cross-game path remaps indices inside deserialization via the frozen tables,
      * reproducing the historic converter byte-for-byte.
      *
-     * Note ids can only fold against the RUNNING game's live tables, so `target` must
+     * Numbers can only fold against the RUNNING game's live tables, so `target` must
      * be it — the parameter exists so call sites already express the many-to-many
      * intent (game #3 needs no signature change).
      */
@@ -1191,7 +1234,12 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 4> 
         })
         clone.columns.forEach(column => {
             column.notes.forEach(note => {
-                note.id = foldIdIntoRange(clone.instruments[note.trackIndex]?.name ?? INSTRUMENTS[0], note.id)
+                const instrument = clone.instruments[note.trackIndex]
+                note.id = foldNumberIntoRange(
+                    instrument?.name ?? INSTRUMENTS[0],
+                    instrument?.pitch || clone.pitch,
+                    note.id
+                )
             })
             //fold collisions merge, keeping the longest span
             const seen = new Map<string, ColumnNote>()

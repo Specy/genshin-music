@@ -18,6 +18,7 @@ import {
     basepointOffset,
     getNoteIdTable,
     getSoundingTable,
+    nominalToNumber,
     noteIdToButton,
     numberToButton,
     type RuntimeInstrumentName,
@@ -126,10 +127,5 @@ export function migrateTrackNotes(
     instrumentName: RuntimeInstrumentName,
     effectivePitch: Pitch
 ): number[] {
-    const offset = basepointOffset(effectivePitch)
-    const sounding = getSoundingTable(instrumentName)
-    return ids.map((id) => {
-        const button = noteIdToButton(instrumentName, id)
-        return (button === -1 ? id : (sounding[button] ?? id)) + offset
-    })
+    return ids.map((id) => nominalToNumber(instrumentName, effectivePitch, id))
 }

@@ -228,24 +228,28 @@ export function computeGridStrandedRows(notes: readonly ColumnNote[], instrument
     return stranded
 }
 
-/** Octave-fold an id into an instrument's range (cross-game NEW-format import policy: fold into range, keep even if it lands on a gap — the note strands visibly instead of being rewritten twice). */
-export function foldIdIntoRange(instrumentName: RuntimeInstrumentName, id: number): number {
-    const table = getNoteIdTable(instrumentName)
-    if (table.length === 0 || !Number.isFinite(id)) return id
+/** Octave-fold a value into the [min, max] of a table, keeping its pitch class. Shared by both axes. */
+function foldIntoTable(table: readonly number[], value: number): number {
+    if (table.length === 0 || !Number.isFinite(value)) return value
     let min = table[0], max = table[0]
     for (const t of table) {
         if (t < min) min = t
         if (t > max) max = t
     }
-    if (id > max) {
-        const offsetBelowMax = ((max - id) % 12 + 12) % 12
+    if (value > max) {
+        const offsetBelowMax = ((max - value) % 12 + 12) % 12
         return max - offsetBelowMax
     }
-    if (id < min) {
-        const offsetAboveMin = ((id - min) % 12 + 12) % 12
+    if (value < min) {
+        const offsetAboveMin = ((value - min) % 12 + 12) % 12
         return min + offsetAboveMin
     }
-    return id
+    return value
+}
+
+/** Octave-fold an id into an instrument's range (cross-game NEW-format import policy: fold into range, keep even if it lands on a gap — the note strands visibly instead of being rewritten twice). */
+export function foldIdIntoRange(instrumentName: RuntimeInstrumentName, id: number): number {
+    return foldIntoTable(getNoteIdTable(instrumentName), id)
 }
 
 // ─── Note Numbers (ADR-0007) ───────────────────────────────────────────────────────────
@@ -333,6 +337,48 @@ export function numberToButton(instrumentName: RuntimeInstrumentName, pitch: Pit
  *   nominal falls between two grid rows, and it is drawn on the nearest one with a hint.
  */
 export type GridRowPlacement = {row: number, stranded: boolean, accidental: -1 | 0 | 1}
+
+/**
+ * A Nominal Id lifted onto the absolute axis for one instrument at one Basepoint (spec §4's
+ * migration formula, which is the same arithmetic wherever a NOMINAL is the thing being named:
+ * legacy decode, an instrument-space grid tool, the MIDI importer's snapped white keys).
+ *
+ * A nominal the instrument HAS becomes that button's Sounding Pitch carried by the Basepoint —
+ * so the note sounds what the button sounds. A nominal it does not have has no button to ask
+ * and is carried across as itself, which strands it exactly where it would have been.
+ */
+export function nominalToNumber(instrumentName: RuntimeInstrumentName, pitch: Pitch, nominal: number): number {
+    const button = noteIdToButton(instrumentName, nominal)
+    const sounding = button === -1 ? nominal : (getSoundingTable(instrumentName)[button] ?? nominal)
+    return sounding + basepointOffset(pitch)
+}
+
+/**
+ * nominalToNumber's inverse, and the ONLY way back to the nominal axis: the voicing button's
+ * Nominal Id, else (stranded) the virtual nominal `number − offset`.
+ *
+ * EXACTLY invertible against nominalToNumber for both cases, which is what keeps the
+ * nominal-space exports (`toOldFormat`, its dropped-note count) byte-identical across the flip
+ * even on a tuned instrument, and what lets gridRowForNumber place a tuned button on the row
+ * its own label prints.
+ */
+export function numberToNominal(instrumentName: RuntimeInstrumentName, pitch: Pitch, number: number): number {
+    const button = numberToButton(instrumentName, pitch, number)
+    if (button === -1) return number - basepointOffset(pitch)
+    return getNoteIdTable(instrumentName)[button] ?? number - basepointOffset(pitch)
+}
+
+/**
+ * foldIdIntoRange on the absolute axis — the cross-game conversion policy (ADR-0007 keeps it
+ * SOUND-preserving): fold in SOUNDING space, so what the listener hears moves by whole octaves
+ * only, then carry the Basepoint back. A number landing on a gap of the target instrument stays
+ * where it fell and strands visibly, exactly as an id did.
+ */
+export function foldNumberIntoRange(instrumentName: RuntimeInstrumentName, pitch: Pitch, number: number): number {
+    if (!Number.isFinite(number)) return number
+    const offset = basepointOffset(pitch)
+    return foldIntoTable(getSoundingTable(instrumentName), number - offset) + offset
+}
 
 /**
  * Spec §4's grid-row rule, in the one place every surface with Song-Grid rows reads it:

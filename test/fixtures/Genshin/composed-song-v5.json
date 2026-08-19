@@ -1,0 +1,1358 @@
+{
+  "serialized": {
+    "name": "Golden composed",
+    "type": "composed",
+    "bpm": 160,
+    "pitch": "E",
+    "version": 5,
+    "folderId": null,
+    "data": {
+      "isComposed": true,
+      "isComposedVersion": true,
+      "appName": "Genshin"
+    },
+    "reverb": true,
+    "breakpoints": [
+      0,
+      3
+    ],
+    "columnTempos": [
+      0,
+      1,
+      0,
+      3,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "tracks": [
+      {
+        "instrument": {
+          "name": "Lyre",
+          "volume": 90,
+          "pitch": "",
+          "visible": true,
+          "icon": "border",
+          "alias": "",
+          "muted": false,
+          "reverbOverride": null
+        },
+        "notes": [
+          [
+            0,
+            76
+          ],
+          [
+            0,
+            83
+          ],
+          [
+            3,
+            69
+          ]
+        ]
+      },
+      {
+        "instrument": {
+          "name": "Vintage-Lyre",
+          "volume": 90,
+          "pitch": "",
+          "visible": true,
+          "icon": "circle",
+          "alias": "",
+          "muted": false,
+          "reverbOverride": null
+        },
+        "notes": [
+          [
+            0,
+            83
+          ],
+          [
+            1,
+            79
+          ]
+        ]
+      }
+    ],
+    "id": null
+  },
+  "roundtrip": {
+    "name": "Golden composed",
+    "type": "composed",
+    "bpm": 160,
+    "pitch": "E",
+    "version": 5,
+    "folderId": null,
+    "data": {
+      "isComposed": true,
+      "isComposedVersion": true,
+      "appName": "Genshin"
+    },
+    "reverb": true,
+    "breakpoints": [
+      0,
+      3
+    ],
+    "columnTempos": [
+      0,
+      1,
+      0,
+      3,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "tracks": [
+      {
+        "instrument": {
+          "name": "Lyre",
+          "volume": 90,
+          "pitch": "",
+          "visible": true,
+          "icon": "border",
+          "alias": "",
+          "muted": false,
+          "reverbOverride": null
+        },
+        "notes": [
+          [
+            0,
+            76
+          ],
+          [
+            0,
+            83
+          ],
+          [
+            3,
+            69
+          ]
+        ]
+      },
+      {
+        "instrument": {
+          "name": "Vintage-Lyre",
+          "volume": 90,
+          "pitch": "",
+          "visible": true,
+          "icon": "circle",
+          "alias": "",
+          "muted": false,
+          "reverbOverride": null
+        },
+        "notes": [
+          [
+            0,
+            83
+          ],
+          [
+            1,
+            79
+          ]
+        ]
+      }
+    ],
+    "id": null
+  },
+  "fromV4": {
+    "name": "Golden composed",
+    "type": "composed",
+    "bpm": 160,
+    "pitch": "E",
+    "version": 5,
+    "folderId": null,
+    "data": {
+      "isComposed": true,
+      "isComposedVersion": true,
+      "appName": "Genshin"
+    },
+    "reverb": true,
+    "breakpoints": [
+      0,
+      3
+    ],
+    "columnTempos": [
+      0,
+      1,
+      0,
+      3,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "tracks": [
+      {
+        "instrument": {
+          "name": "Lyre",
+          "volume": 90,
+          "pitch": "",
+          "visible": true,
+          "icon": "border",
+          "alias": "",
+          "muted": false,
+          "reverbOverride": null
+        },
+        "notes": [
+          [
+            0,
+            76
+          ],
+          [
+            0,
+            83
+          ],
+          [
+            3,
+            69
+          ]
+        ]
+      },
+      {
+        "instrument": {
+          "name": "Vintage-Lyre",
+          "volume": 90,
+          "pitch": "",
+          "visible": true,
+          "icon": "circle",
+          "alias": "",
+          "muted": false,
+          "reverbOverride": null
+        },
+        "notes": [
+          [
+            0,
+            83
+          ],
+          [
+            1,
+            79
+          ]
+        ]
+      }
+    ],
+    "id": null
+  },
+  "fromLegacyV1": {
+    "name": "Legacy v1",
+    "type": "composed",
+    "bpm": 220,
+    "pitch": "C",
+    "version": 5,
+    "folderId": null,
+    "data": {
+      "isComposed": true,
+      "isComposedVersion": true,
+      "appName": "Genshin"
+    },
+    "reverb": false,
+    "breakpoints": [
+      0
+    ],
+    "columnTempos": [
+      0,
+      1
+    ],
+    "tracks": [
+      {
+        "instrument": {
+          "name": "Lyre",
+          "volume": 90,
+          "pitch": "",
+          "visible": true,
+          "icon": "border",
+          "alias": "",
+          "muted": false,
+          "reverbOverride": null
+        },
+        "notes": [
+          [
+            0,
+            72
+          ]
+        ]
+      },
+      {
+        "instrument": {
+          "name": "Lyre",
+          "volume": 90,
+          "pitch": "",
+          "visible": true,
+          "icon": "circle",
+          "alias": "",
+          "muted": false,
+          "reverbOverride": null
+        },
+        "notes": [
+          [
+            1,
+            77
+          ]
+        ]
+      }
+    ],
+    "id": null
+  },
+  "fromLegacyV2": {
+    "name": "Legacy v2",
+    "type": "composed",
+    "bpm": 200,
+    "pitch": "C",
+    "version": 5,
+    "folderId": null,
+    "data": {
+      "isComposed": true,
+      "isComposedVersion": true,
+      "appName": "Genshin"
+    },
+    "reverb": false,
+    "breakpoints": [],
+    "columnTempos": [
+      0,
+      2
+    ],
+    "tracks": [
+      {
+        "instrument": {
+          "name": "Lyre",
+          "volume": 90,
+          "pitch": "",
+          "visible": true,
+          "icon": "border",
+          "alias": "",
+          "muted": false,
+          "reverbOverride": null
+        },
+        "notes": [
+          [
+            0,
+            72
+          ],
+          [
+            1,
+            81
+          ]
+        ]
+      },
+      {
+        "instrument": {
+          "name": "Lyre",
+          "volume": 90,
+          "pitch": "",
+          "visible": true,
+          "icon": "circle",
+          "alias": "",
+          "muted": false,
+          "reverbOverride": null
+        },
+        "notes": [
+          [
+            1,
+            81
+          ]
+        ]
+      }
+    ],
+    "id": null
+  },
+  "fromLegacyV3": {
+    "name": "Golden composed",
+    "type": "composed",
+    "bpm": 160,
+    "pitch": "E",
+    "version": 5,
+    "folderId": null,
+    "data": {
+      "isComposed": true,
+      "isComposedVersion": true,
+      "appName": "Genshin"
+    },
+    "reverb": true,
+    "breakpoints": [
+      0,
+      3
+    ],
+    "columnTempos": [
+      0,
+      1,
+      0,
+      3,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "tracks": [
+      {
+        "instrument": {
+          "name": "Lyre",
+          "volume": 90,
+          "pitch": "",
+          "visible": true,
+          "icon": "border",
+          "alias": "",
+          "muted": false,
+          "reverbOverride": null
+        },
+        "notes": [
+          [
+            0,
+            76
+          ],
+          [
+            0,
+            83
+          ],
+          [
+            3,
+            69
+          ]
+        ]
+      },
+      {
+        "instrument": {
+          "name": "Vintage-Lyre",
+          "volume": 90,
+          "pitch": "",
+          "visible": true,
+          "icon": "circle",
+          "alias": "",
+          "muted": false,
+          "reverbOverride": null
+        },
+        "notes": [
+          [
+            0,
+            83
+          ],
+          [
+            1,
+            79
+          ]
+        ]
+      }
+    ],
+    "id": null
+  },
+  "oldFormatExport": {
+    "name": "Golden composed",
+    "type": "composed",
+    "bpm": 160,
+    "pitch": "E",
+    "version": 3,
+    "folderId": null,
+    "data": {
+      "isComposed": true,
+      "isComposedVersion": true,
+      "appName": "Genshin"
+    },
+    "reverb": true,
+    "breakpoints": [
+      0,
+      3
+    ],
+    "instruments": [
+      {
+        "name": "Lyre",
+        "volume": 90,
+        "pitch": "",
+        "visible": true,
+        "icon": "border",
+        "alias": "",
+        "muted": false,
+        "reverbOverride": null
+      },
+      {
+        "name": "Vintage-Lyre",
+        "volume": 90,
+        "pitch": "",
+        "visible": true,
+        "icon": "circle",
+        "alias": "",
+        "muted": false,
+        "reverbOverride": null
+      }
+    ],
+    "columns": [
+      [
+        0,
+        [
+          [
+            0,
+            "1"
+          ],
+          [
+            4,
+            "3"
+          ]
+        ]
+      ],
+      [
+        1,
+        [
+          [
+            2,
+            "2"
+          ]
+        ]
+      ],
+      [
+        0,
+        []
+      ],
+      [
+        3,
+        [
+          [
+            10,
+            "1"
+          ]
+        ]
+      ],
+      [
+        0,
+        []
+      ],
+      [
+        0,
+        []
+      ],
+      [
+        0,
+        []
+      ],
+      [
+        0,
+        []
+      ],
+      [
+        0,
+        []
+      ],
+      [
+        0,
+        []
+      ],
+      [
+        0,
+        []
+      ],
+      [
+        0,
+        []
+      ],
+      [
+        0,
+        []
+      ],
+      [
+        0,
+        []
+      ],
+      [
+        0,
+        []
+      ],
+      [
+        0,
+        []
+      ],
+      [
+        0,
+        []
+      ],
+      [
+        0,
+        []
+      ],
+      [
+        0,
+        []
+      ],
+      [
+        0,
+        []
+      ],
+      [
+        0,
+        []
+      ],
+      [
+        0,
+        []
+      ],
+      [
+        0,
+        []
+      ],
+      [
+        0,
+        []
+      ],
+      [
+        0,
+        []
+      ],
+      [
+        0,
+        []
+      ],
+      [
+        0,
+        []
+      ],
+      [
+        0,
+        []
+      ],
+      [
+        0,
+        []
+      ],
+      [
+        0,
+        []
+      ],
+      [
+        0,
+        []
+      ],
+      [
+        0,
+        []
+      ],
+      [
+        0,
+        []
+      ],
+      [
+        0,
+        []
+      ],
+      [
+        0,
+        []
+      ],
+      [
+        0,
+        []
+      ],
+      [
+        0,
+        []
+      ],
+      [
+        0,
+        []
+      ],
+      [
+        0,
+        []
+      ],
+      [
+        0,
+        []
+      ],
+      [
+        0,
+        []
+      ],
+      [
+        0,
+        []
+      ],
+      [
+        0,
+        []
+      ],
+      [
+        0,
+        []
+      ],
+      [
+        0,
+        []
+      ],
+      [
+        0,
+        []
+      ],
+      [
+        0,
+        []
+      ],
+      [
+        0,
+        []
+      ],
+      [
+        0,
+        []
+      ],
+      [
+        0,
+        []
+      ],
+      [
+        0,
+        []
+      ],
+      [
+        0,
+        []
+      ],
+      [
+        0,
+        []
+      ],
+      [
+        0,
+        []
+      ],
+      [
+        0,
+        []
+      ],
+      [
+        0,
+        []
+      ],
+      [
+        0,
+        []
+      ],
+      [
+        0,
+        []
+      ],
+      [
+        0,
+        []
+      ],
+      [
+        0,
+        []
+      ],
+      [
+        0,
+        []
+      ],
+      [
+        0,
+        []
+      ],
+      [
+        0,
+        []
+      ],
+      [
+        0,
+        []
+      ],
+      [
+        0,
+        []
+      ],
+      [
+        0,
+        []
+      ],
+      [
+        0,
+        []
+      ],
+      [
+        0,
+        []
+      ],
+      [
+        0,
+        []
+      ],
+      [
+        0,
+        []
+      ],
+      [
+        0,
+        []
+      ],
+      [
+        0,
+        []
+      ],
+      [
+        0,
+        []
+      ],
+      [
+        0,
+        []
+      ],
+      [
+        0,
+        []
+      ],
+      [
+        0,
+        []
+      ],
+      [
+        0,
+        []
+      ],
+      [
+        0,
+        []
+      ],
+      [
+        0,
+        []
+      ],
+      [
+        0,
+        []
+      ],
+      [
+        0,
+        []
+      ],
+      [
+        0,
+        []
+      ],
+      [
+        0,
+        []
+      ],
+      [
+        0,
+        []
+      ],
+      [
+        0,
+        []
+      ],
+      [
+        0,
+        []
+      ],
+      [
+        0,
+        []
+      ],
+      [
+        0,
+        []
+      ],
+      [
+        0,
+        []
+      ],
+      [
+        0,
+        []
+      ],
+      [
+        0,
+        []
+      ],
+      [
+        0,
+        []
+      ],
+      [
+        0,
+        []
+      ],
+      [
+        0,
+        []
+      ],
+      [
+        0,
+        []
+      ],
+      [
+        0,
+        []
+      ],
+      [
+        0,
+        []
+      ],
+      [
+        0,
+        []
+      ],
+      [
+        0,
+        []
+      ],
+      [
+        0,
+        []
+      ]
+    ],
+    "id": null,
+    "pitchLevel": 4,
+    "isComposed": true,
+    "bitsPerPage": 16,
+    "isEncrypted": false,
+    "songNotes": [
+      {
+        "key": "1Key0",
+        "time": 100
+      },
+      {
+        "key": "2Key4",
+        "time": 100,
+        "l": 3
+      },
+      {
+        "key": "2Key2",
+        "time": 475
+      },
+      {
+        "key": "1Key10",
+        "time": 1037
+      }
+    ]
+  },
+  "toRecorded": {
+    "name": "Golden composed",
+    "type": "recorded",
+    "folderId": null,
+    "version": 4,
+    "pitch": "E",
+    "bpm": 160,
+    "reverb": true,
+    "data": {
+      "isComposed": false,
+      "isComposedVersion": false,
+      "appName": "Genshin"
+    },
+    "tracks": [
+      {
+        "instrument": {
+          "name": "Lyre",
+          "volume": 90,
+          "pitch": "",
+          "visible": true,
+          "icon": "border",
+          "alias": "",
+          "muted": false,
+          "reverbOverride": null
+        },
+        "notes": [
+          [
+            76,
+            100
+          ],
+          [
+            83,
+            100
+          ],
+          [
+            69,
+            1038
+          ]
+        ]
+      },
+      {
+        "instrument": {
+          "name": "Vintage-Lyre",
+          "volume": 90,
+          "pitch": "",
+          "visible": true,
+          "icon": "circle",
+          "alias": "",
+          "muted": false,
+          "reverbOverride": null
+        },
+        "notes": [
+          [
+            83,
+            100
+          ],
+          [
+            79,
+            475
+          ]
+        ]
+      }
+    ],
+    "id": null
+  }
+}

@@ -60,7 +60,7 @@ describe('old-format (pre-versioned Sky) import', () => {
         const composedPayload = buildOldFormatPayload(true)
         const recorded = songService.parseSong(clone(recordedPayload))
         const composed = songService.parseSong(clone(composedPayload))
-        expectGolden('old-format-import-v4', {
+        expectGolden('old-format-import-v5', {
             recorded: recorded.serialize(),
             composed: composed.serialize(),
         })
@@ -68,6 +68,13 @@ describe('old-format (pre-versioned Sky) import', () => {
         expect(clone(RecordedSong.deserialize(preV4.recorded).serialize()))
             .toEqual(clone(recorded.serialize()))
         expect(clone(ComposedSong.deserialize(preV4.composed).serialize()))
+            .toEqual(clone(composed.serialize()))
+        //ADR-0007 (2026-08-19): the same parity one generation on — `old-format-import-v4.json`
+        //is the PRE-FLIP parser's v4/v3 output, and migrating it must land where we land now
+        const preFlip = readFixture('old-format-import-v4')
+        expect(clone(RecordedSong.deserialize(preFlip.recorded).serialize()))
+            .toEqual(clone(recorded.serialize()))
+        expect(clone(ComposedSong.deserialize(preFlip.composed).serialize()))
             .toEqual(clone(composed.serialize()))
     })
 })
