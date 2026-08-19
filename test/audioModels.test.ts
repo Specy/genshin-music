@@ -19,7 +19,7 @@ import {capitalize} from '../src/lib/core/utils/Utilities'
 import {PITCH_TO_INDEX} from '../src/lib/core/legacyConfig'
 import {Instrument} from '../src/lib/audio/Instrument.svelte'
 import {MIDIProvider} from '../src/lib/providers/MIDIProvider'
-import {APP_NAME, INSTRUMENTS, NOTE_SCALE, DO_RE_MI_NOTE_SCALE, MIDI_PRESETS} from './imports'
+import {APP_NAME, INSTRUMENTS, NOTE_SCALE, DO_RE_MI_NOTE_SCALE, MIDI_PRESETS, PITCHES} from './imports'
 
 describe('Instrument.getNoteText per NoteNameType', () => {
     // INSTRUMENTS[0]'s own data is enough state to populate an Instrument without .load() -
@@ -70,6 +70,25 @@ describe('Instrument.getNoteText per NoteNameType', () => {
 
     it('returns the empty string for an out-of-range index instead of throwing (old blob\'s empty catch)', () => {
         expect(instrument.getNoteText(9999, 'Note name', 'C')).toBe('')
+    })
+
+    it('renders an Assigned Button\'s free label verbatim at every pitch (design 2026-08-19 §6)', () => {
+        // Driven by this game's config rather than by its name: genshin's ukulele-21 chord row
+        // is the case today. Empty for a game whose buttons all spell scale rows - which of the
+        // two a game is, gameConfig.test.ts pins across every game folder at once.
+        const freeLabelled = INSTRUMENTS
+            .flatMap((name) => {
+                const built = new Instrument(name)
+                return built.notes.map((note, button) => ({built, note, button}))
+            })
+            .filter(({note}) => !(note.baseNote in NOTE_SCALE))
+        for (const {built, note, button} of freeLabelled) {
+            for (const pitch of PITCHES) {
+                expect(built.getNoteText(button, 'Note name', pitch),
+                    `${built.name} button ${button} at ${pitch}`).toBe(note.baseNote)
+                expect(built.getNoteText(button, 'Do Re Mi', pitch)).toBe(note.baseNote)
+            }
+        }
     })
 })
 
