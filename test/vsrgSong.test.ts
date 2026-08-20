@@ -1,3 +1,5 @@
+import {readFileSync} from 'node:fs'
+import ts from 'typescript'
 import {describe, expect, it} from 'vitest'
 import {
     APP_NAME,
@@ -406,5 +408,94 @@ describe('VsrgSong.deleteTrack addresses a track or does nothing', () => {
         song.deleteTrack(0)
         expect(song.tracks).toEqual([second])
         expect(song.tracks).not.toContain(first)
+    })
+})
+
+// The vsrg composer opens on a PLACEHOLDER song built at module scope, where only the DEFAULT
+// settings are readable — the persisted ones arrive in onMount, which also hands the persisted
+// Basepoint to both audio players. A placeholder left at the constructor's 'C' therefore stores
+// every note entered into it at C while the engine resolves those numbers at the settings'
+// Basepoint (ADR-0007): on the default 4-key track most pads are silent and the rest sound the
+// wrong key. Nothing here can mount that page (pixi canvas plus the song/settings services), so
+// the re-seed is pinned at the AST level, the way composerNewSongInstrumentSync.test.ts pins
+// Composer's own new-song wiring.
+const vsrgComposerPage = readFileSync('src/routes/vsrg-composer/+page.svelte', 'utf8')
+const vsrgComposerScript = vsrgComposerPage.match(/<script lang="ts">([\s\S]*?)<\/script>/)?.[1]
+if (!vsrgComposerScript) throw new Error('vsrg-composer/+page.svelte has no TypeScript instance script')
+const vsrgComposerSource = ts.createSourceFile(
+    'vsrgComposerPage.ts', vsrgComposerScript, ts.ScriptTarget.Latest, true)
+
+describe('the vsrg composer re-seeds its placeholder song from the persisted settings', () => {
+    const onMountBodies: ts.Node[] = []
+    const collectOnMount = (node: ts.Node) => {
+        if (
+            ts.isCallExpression(node) &&
+            ts.isIdentifier(node.expression) &&
+            node.expression.text === 'onMount' &&
+            node.arguments.length > 0 &&
+            (ts.isArrowFunction(node.arguments[0]) || ts.isFunctionExpression(node.arguments[0]))
+        ) {
+            onMountBodies.push((node.arguments[0] as ts.ArrowFunction).body)
+        }
+        ts.forEachChild(node, collectOnMount)
+    }
+    collectOnMount(vsrgComposerSource)
+
+    function visitOnMount(visitor: (node: ts.Node) => void) {
+        const walk = (node: ts.Node) => {
+            visitor(node)
+            ts.forEachChild(node, walk)
+        }
+        onMountBodies.forEach(walk)
+    }
+
+    /** Which song-level fields `vsrg.set({...})` re-seeds FROM THE LOADED settings inside onMount. */
+    function reSeededFields(): string[] {
+        const fields: string[] = []
+        visitOnMount(node => {
+            if (
+                !ts.isCallExpression(node) ||
+                !ts.isPropertyAccessExpression(node.expression) ||
+                !ts.isIdentifier(node.expression.expression) ||
+                node.expression.expression.text !== 'vsrg' ||
+                node.expression.name.text !== 'set' ||
+                node.arguments.length !== 1 ||
+                !ts.isObjectLiteralExpression(node.arguments[0])
+            ) return
+            for (const property of node.arguments[0].properties) {
+                if (!ts.isPropertyAssignment(property) || !ts.isIdentifier(property.name)) continue
+                //a value read off the LOADED settings is the only kind that closes the gap; the
+                //module-scope seeding reads plain `settings`, which is still the defaults there
+                if (!property.initializer.getText(vsrgComposerSource).startsWith('loadedSettings.')) continue
+                fields.push(property.name.text)
+            }
+        })
+        return fields
+    }
+
+    it('a fresh VsrgSong is at the constructor Basepoint and tempo — what the re-seed is for', () => {
+        const placeholder = new VsrgSong('Untitled')
+        expect(placeholder.pitch).toBe('C')
+        expect(placeholder.bpm).toBe(100)
+    })
+
+    it('adopts the persisted Basepoint (and bpm) into the placeholder song on mount', () => {
+        expect(onMountBodies.length).toBeGreaterThan(0)
+        expect(reSeededFields()).toEqual(expect.arrayContaining(['bpm', 'pitch']))
+    })
+
+    it('gives that same Basepoint to both audio players, so song and engine agree', () => {
+        const basePitchArguments: string[] = []
+        visitOnMount(node => {
+            if (
+                ts.isCallExpression(node) &&
+                ts.isPropertyAccessExpression(node.expression) &&
+                node.expression.name.text === 'setBasePitch' &&
+                node.arguments.length === 1
+            ) {
+                basePitchArguments.push(node.arguments[0].getText(vsrgComposerSource))
+            }
+        })
+        expect(basePitchArguments).toEqual(['loadedSettings.pitch.value', 'loadedSettings.pitch.value'])
     })
 })

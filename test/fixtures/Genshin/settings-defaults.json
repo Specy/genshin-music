@@ -129,7 +129,7 @@
   },
   "player": {
     "other": {
-      "settingVersion": "Genshin83"
+      "settingVersion": "Genshin84"
     },
     "data": {
       "instrument": {
@@ -189,14 +189,6 @@
         ],
         "value": 220,
         "category": "song_settings"
-      },
-      "syncSongData": {
-        "name": "player_sync_song_data",
-        "tooltip": "player_sync_song_data_description",
-        "type": "checkbox",
-        "songSetting": false,
-        "value": true,
-        "category": "player_settings"
       },
       "metronomeBeats": {
         "name": "player_metronome_beats",

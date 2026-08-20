@@ -28,11 +28,11 @@ import {
     type SerializedInstrumentData,
     type SerializedTrackNote,
 } from "./SongClasses"
-import {type SerializedSong, Song} from "./Song.svelte"
+import {assertKnownSongVersion, type SerializedSong, Song} from "./Song.svelte"
 import {clamp} from "../utils/Utilities"
 import {isLegacyAppName, LEGACY_NOTE_TABLES, legacyIndexToId} from "./legacyNoteTables"
 import {type ConversionGame, findSimilarInstrument} from "./instrumentSimilarity"
-import {foldNumberIntoRange, gridRowForNumber, nominalToNumber} from "./noteIds"
+import {effectiveTrackPitch, foldNumberIntoRange, gridRowForNumber, nominalToNumber} from "./noteIds"
 import {basepointDelta, rewriteForBasepoint, rewriteForSwap} from "./noteNumberTransforms"
 
 // Used only by the retired old-format EXPORT (see the commented block beside serialize()); kept
@@ -268,6 +268,19 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 5> 
         for (let i = 0; i < amount; i++) this.#columns.push(new NoteColumn())
     }
 
+    /** The newest composed format this build writes and reads. Above it is a file from a newer app. */
+    static readonly LATEST_VERSION = 5
+
+    /**
+     * The PER-TRACK versions (v4 Nominal Ids, v5 absolute Note Numbers): the ones deserialize
+     * decodes directly rather than through the frozen legacy tables, and the ones a cross-game
+     * import converts with toOtherGame instead of the legacy index remap. Owned here so that
+     * SongService's dispatch and this deserializer cannot drift apart on a version bump.
+     */
+    static isNewFormat(song: { version?: number }): song is SerializedComposedSongV4 | SerializedComposedSong {
+        return song.version === 4 || song.version === 5
+    }
+
     /**
      * `importInto`: legacy-cross-game target. When set (parseSong, legacy file whose
      * appName ≠ the running game), the legacy path reproduces the historic
@@ -279,12 +292,15 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 5> 
     static deserialize(song: UnknownSerializedComposedSong, importInto?: 'Genshin' | 'Sky'): ComposedSong {
         //@ts-ignore
         if (song.version === undefined) song.version = 1
+        //before anything is decoded: an unrecognised HIGHER version would fall through to
+        //deserializeLegacy, which reads a wire shape the file does not have
+        assertKnownSongVersion('composed', song.version, ComposedSong.LATEST_VERSION)
         const parsed = Song.deserializeTo(new ComposedSong(song.name), song)
         parsed.reverb = song.reverb ?? false
         //untrusted input, and only COPIED here: validateBreakpoints() at the end of both branches
         //below is what checks it, because "addresses a column" needs the columns to exist first
         parsed.breakpoints = [...(song.breakpoints ?? [])]
-        if (song.version === 4 || song.version === 5) {
+        if (ComposedSong.isNewFormat(song)) {
             //v4 stored Nominal Ids pre-Basepoint; v5 stores absolute Note Numbers. Same tuple
             //shape, so `version` is the ONLY thing that decides whether the migration below runs
             //(ADR-0007 §9: lazy upgrade in the deserializer, save writes v5).
@@ -522,6 +538,9 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 5> 
      * Applied in that order and at the OLD effective Basepoint, because a swap is not a
      * transposition: doing the interval first would ask the old instrument to voice numbers that
      * are already at the new Basepoint.
+     *
+     * NEITHER REWRITE IS INJECTIVE, so the pass ends by merging the collisions they can create -
+     * see #mergeTrackDuplicates.
      */
     setInstrument(index: number, instrument: InstrumentData) {
         const previous = this.instruments[index]
@@ -540,8 +559,50 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 5> 
             notes.forEach((note, i) => note.id = swapped[i])
         }
         rewriteForBasepoint(notes, basepointDelta(oldPitch, newPitch))
+        if (this.#mergeTrackDuplicates(index)) {
+            //a merge keeps the LONGEST of the two spans, which can now reach into a later note of
+            //the same (track, number) - normalizeSpans re-enforces the invariant, and it is also
+            //what publishes the whole method in this branch
+            this.normalizeSpans()
+            return
+        }
         this.#touchAllColumns()
         this.#bumpStructure()
+    }
+
+    /**
+     * Merge one track's duplicate (track, number) notes within each column, keeping the longest
+     * span - the same rule the v4/v5 deserializer, moveNotesBy and toOtherGame apply, and the one
+     * VsrgSong's #rewriteForInstrumentChange states for hit-object note SETS. Returns whether
+     * anything merged, because a merged span may now overlap a later note.
+     *
+     * setInstrument needs it because NEITHER whole-track rewrite is injective: a number the old
+     * instrument cannot voice passes through a swap unchanged (rewriteForSwap's documented
+     * pass-through) and can land exactly on a swapped neighbour - on genshin,
+     * rewriteForSwap([73, 74], 'Vintage-Lyre', 'Lyre', 'C') is [74, 74]. Two notes at the same
+     * (track, number) in one column double-trigger at playback, and only the FIRST of them is
+     * reachable through findNote/removeNote, so the second is a note the user can hear but not
+     * select, delete or re-span - until a save/reload merges it away silently.
+     */
+    #mergeTrackDuplicates(trackIndex: number): boolean {
+        let merged = false
+        for (const column of this.#columns) {
+            const seen = new Map<number, ColumnNote>()
+            const kept = column.notes.filter(note => {
+                if (note.trackIndex !== trackIndex) return true
+                const existing = seen.get(note.id)
+                if (existing) {
+                    existing.span = Math.max(existing.span, note.span)
+                    return false
+                }
+                seen.set(note.id, note)
+                return true
+            })
+            if (kept.length === column.notes.length) continue
+            column.notes = kept
+            merged = true
+        }
+        return merged
     }
 
     /** Every note of one track, in column order — the working set of the whole-track rewrites. */
@@ -1099,9 +1160,25 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 5> 
         return this
     }
 
-    pasteLayer(copiedColumns: NoteColumn[], insert: boolean, layer: number) {
+    /**
+     * Paste a clipboard onto ONE layer: every note, whichever track it was copied from, lands on
+     * `layer` and the ones that collide there merge keeping the longest span.
+     *
+     * `sourcePitches` is the clipboard's own, per SOURCE track (see #rewriteForPaste). The rewrite
+     * is the DESTINATION LAYER's — one Basepoint for the whole paste, because that is where every
+     * note is going — and it runs BEFORE the retag, since the source Basepoint is looked up by the
+     * track index the retag is about to overwrite. The merge has to follow the rewrite for the
+     * same reason it does everywhere else: two numbers are only comparable once both are stated in
+     * the same terms.
+     */
+    pasteLayer(copiedColumns: NoteColumn[], insert: boolean, layer: number, sourcePitches: readonly Pitch[] = []) {
+        const targetPitch = effectiveTrackPitch(this.instruments[layer], this.pitch)
         const layerColumns = copiedColumns.map(col => {
             const clone = col.clone()
+            clone.notes.forEach(note => {
+                note.id += basepointDelta(sourcePitches[note.trackIndex] ?? targetPitch, targetPitch)
+                note.trackIndex = layer
+            })
             const seen = new Map<number, ColumnNote>()
             clone.notes = clone.notes.filter(note => {
                 const existing = seen.get(note.id)
@@ -1110,17 +1187,64 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 5> 
                     return false
                 }
                 seen.set(note.id, note)
-                note.trackIndex = layer
                 return true
             })
             return clone
         })
+        //already stated in this song's terms, so no sourcePitches are handed on: rewriting twice
+        //would move the whole paste by the interval a second time
         this.pasteColumns(layerColumns, insert)
         this.ensureInstruments()
     }
 
-    pasteColumns = async (copiedColumns: NoteColumn[], insert: boolean) => {
+    /**
+     * Restate a clipboard's Note Numbers in THIS song's terms, in place, and merge what that
+     * collapses (ADR-0007).
+     *
+     * A copied number is ABSOLUTE, so it names the button it was copied from only together with
+     * the Basepoint it was authored at. Pasted verbatim into a song at another Basepoint it is a
+     * different button, and the clipboard would stop reproducing what was copied — so each note
+     * moves by the interval from its source Basepoint to the one its destination track is stated
+     * at. `sourcePitches[trackIndex]` is the effective Basepoint of the SOURCE track, captured at
+     * copy time (the composer's clipboard); a track it has no entry for is taken to be in this
+     * song's terms already and moves by nothing, which is what the in-model callers (a copy inside
+     * one song, the span fixtures) want.
+     *
+     * Only the BASEPOINT half is rewritten. A destination track with a different INSTRUMENT keeps
+     * the number, i.e. the note goes on sounding what it sounded: re-flavoring notes onto another
+     * instrument's buttons is what setInstrument's swap does, deliberately and on the user's
+     * request, and a paste is not a swap.
+     *
+     * The merge is the one every non-injective rewrite here ends with (#mergeTrackDuplicates,
+     * moveNotesBy, toOtherGame): tracks at different Basepoints can carry two notes of one column
+     * onto the same (track, number), and a duplicate double-triggers and hides from findNote.
+     */
+    #rewriteForPaste(columns: NoteColumn[], sourcePitches: readonly Pitch[]) {
+        if (sourcePitches.length === 0) return
+        for (const column of columns) {
+            const seen = new Map<string, ColumnNote>()
+            column.notes = column.notes.filter(note => {
+                //per NOTE, because each one lands on its own track, which may override the
+                //Basepoint the rest of the song is stated at
+                const targetPitch = effectiveTrackPitch(this.instruments[note.trackIndex], this.pitch)
+                note.id += basepointDelta(sourcePitches[note.trackIndex] ?? targetPitch, targetPitch)
+                const key = `${note.trackIndex}-${note.id}`
+                const existing = seen.get(key)
+                if (existing) {
+                    existing.span = Math.max(existing.span, note.span)
+                    return false
+                }
+                seen.set(key, note)
+                return true
+            })
+        }
+    }
+
+    pasteColumns = async (copiedColumns: NoteColumn[], insert: boolean, sourcePitches: readonly Pitch[] = []) => {
         const cloned: NoteColumn[] = copiedColumns.map(column => column.clone())
+        //on the CLONES, before either branch below inserts them: the clipboard is the editor's and
+        //outlives this paste
+        this.#rewriteForPaste(cloned, sourcePitches)
         if (!insert) {
             this.adjustSpansForInsertedColumns(this.selected, cloned.length)
             this.#columns.splice(this.selected, 0, ...cloned)
@@ -1228,6 +1352,17 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 5> 
         //shifted notes can land inside another same-id note's span - and normalizeSpans() is
         //also what publishes this whole method
         this.normalizeSpans()
+    }
+
+    /**
+     * Every track's EFFECTIVE Basepoint, indexed by track index. What a COPY captures beside the
+     * columns (the composer's clipboard) so that a later paste can restate their absolute numbers
+     * — the source song, its Basepoint and its per-track overrides are all gone by then, and a
+     * number without the Basepoint it was authored at names no button in particular. See
+     * #rewriteForPaste for what the paste does with it.
+     */
+    trackPitches(): Pitch[] {
+        return this.instruments.map(instrument => effectiveTrackPitch(instrument, this.pitch))
     }
 
     copyColumns = (selectedColumns: number[], layer: number | 'all') => {

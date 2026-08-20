@@ -105,7 +105,24 @@
     instruments: InstrumentData[];
   };
   let undoHistory: ComposerHistoryEntry[] = $state([]);
-  let copiedColumns: NoteColumn[] = $state([]);
+  /**
+   * The tools panel's clipboard. COMPOUND for the same reason the undo entry above is: the copied
+   * columns hold ABSOLUTE Note Numbers (ADR-0007), which name the buttons they were copied from
+   * only together with the Basepoint each SOURCE track was stated at — so that is captured with
+   * them (`ComposedSong.trackPitches`, indexed by source track) and the paste restates the numbers
+   * in the destination's terms. Without it a copy at Basepoint C pasted into a song at F reproduces
+   * different buttons, which is the one thing a clipboard may not do.
+   *
+   * ONE value rather than two parallel `$state`s: the clipboard deliberately outlives the song it
+   * was copied from (see loadSong), so a copy that installed columns beside the PREVIOUS copy's
+   * Basepoints would silently transpose every paste after it.
+   *
+   * `$state.raw`, like selectedColumns: every write below replaces the whole value, and the
+   * columns are handed to the model rather than read element-by-element. The rule that comes with
+   * it: assign a new object, never mutate this one in place.
+   */
+  type ComposerClipboard = { columns: NoteColumn[]; pitches: Pitch[] };
+  let clipboard: ComposerClipboard = $state.raw({ columns: [], pitches: [] });
   let isToolsVisible = $state(false);
   // One-time seed from the prop; later showMidi changes (callers never send any) are not tracked.
   // svelte-ignore state_referenced_locally
@@ -389,7 +406,8 @@
     //both ends of the interval (ADR-0007). Undo has to see the song as it was, so the snapshot
     //goes in first too.
     const previousPitch = song.pitch;
-    if (key === 'pitch' && data.value !== previousPitch) addToHistory();
+    const pitchChanged = key === 'pitch' && data.value !== previousPitch;
+    if (pitchChanged) addToHistory();
     // @ts-expect-error SettingUpdateKey spans all 4 settings families; narrower here by design
     settings[key] = { ...settings[key], value: data.value };
     if (data.songSetting) {
@@ -409,12 +427,22 @@
     //them — every track that follows the song (a track with its own override keeps its effective
     //Basepoint, so its notes must not move). The write above already installed the new value; this
     //is handed both ends explicitly.
-    if (key === 'pitch') song.applyBasepointChange('song', previousPitch, data.value as Pitch);
-    //ADR-0006 resync-on-mutation: bpm re-times every uncommitted boundary and pitch re-voices
-    //every uncommitted note, so both retract and recommit the window. Reverb is a live node the
-    //committed audio already flows through, and per-layer volume (see changeVolume) is a live
-    //gain for the same reason — neither changes what should be committed, so neither resyncs.
-    if (key === 'bpm' || key === 'pitch') resyncPlayback();
+    //
+    //...which makes it a NOTE EDIT, so it rides the note-edit funnel rather than resyncing on its
+    //own: handleAutoSave() is what marks the song dirty, and the dirty count is what the
+    //unsaved-changes prompts (loadSong, createNewSong, prepareToLeave) and the menu's dot read. A
+    //transposed song that still counted as saved was silently discarded by all three.
+    if (pitchChanged) {
+      song.applyBasepointChange('song', previousPitch, data.value as Pitch);
+      handleAutoSave();
+    } else if (key === 'bpm' || key === 'pitch') {
+      //ADR-0006 resync-on-mutation: bpm re-times every uncommitted boundary, so it retracts and
+      //recommits the window (a pitch key that changed nothing lands here too, and recommitting an
+      //unchanged window is the harmless half of the same rule). Reverb is a live node the committed
+      //audio already flows through, and per-layer volume (see changeVolume) is a live gain for the
+      //same reason — neither changes what should be committed, so neither resyncs.
+      resyncPlayback();
+    }
     updateSettings();
   }
 
@@ -460,11 +488,15 @@
       addToHistory();
     }
     song.setInstrument(index, instrument);
-    //ADR-0006 resync-on-mutation: this is where mute and the per-layer pitch override land (the
-    //instrument popup's onChange funnels here), and both change what committed audio should
-    //contain, synchronously — playSound reads the roster entry just written. A NAME change
-    //resyncs a second time from syncInstruments, once the replacement instrument exists.
-    resyncPlayback();
+    //THE NOTE-EDIT FUNNEL, not a bare resync: everything the popup writes is part of the saved song
+    //(name, Basepoint override, volume, mute, alias, icon, visibility), and a swap or an override
+    //change rewrites the track's notes as well — none of which counted as a change before, so the
+    //save prompts and the menu's dirty dot never saw an edit made entirely from this panel.
+    //It carries the ADR-0006 resync with it: this is where mute and the per-layer pitch override
+    //land, and both change what committed audio should contain, synchronously — playSound reads the
+    //roster entry just written. A NAME change resyncs a second time from syncInstruments, once the
+    //replacement instrument exists.
+    handleAutoSave();
     syncInstruments(song);
   }
 
@@ -679,19 +711,17 @@
   }
 
   function changePitch(value: Pitch) {
-    // MidiParser has its own pitch funnel rather than handleSettingChange, so the Basepoint rewrite
-    // has to be repeated here rather than inherited — the two entry points must leave the song in
-    // the same state, or the same edit means different things depending on which panel is open.
-    const previousPitch = song.pitch;
-    if (value === previousPitch) return;
-    addToHistory();
-    settings.pitch = { ...settings.pitch, value };
-    song.pitch = value;
-    song.applyBasepointChange('song', previousPitch, value);
-    // Retract the existing horizon here too, otherwise it keeps the old pitch until every
-    // committed event drains.
-    resyncPlayback();
-    updateSettings();
+    // MidiParser's own pitch funnel. It DELEGATES rather than repeating handleSettingChange's pitch
+    // branch: the two entry points have to leave the song in the same state, and the copy that used
+    // to live here had already drifted — it rewrote the notes and resynced but never counted the
+    // change, so a Basepoint moved from the MIDI panel was a transposition the save prompts never
+    // heard about.
+    //
+    // The guard is load-bearing rather than an optimisation: MidiParser calls this for the side
+    // effects alone (its <PitchSelect> re-emits the value it is showing), and the branch it feeds
+    // takes an undo snapshot and rewrites every note only when the Basepoint really moved.
+    if (value === song.pitch) return;
+    handleSettingChange({ key: 'pitch', data: { ...settings.pitch, value } });
   }
 
   // ── note press state machine (spec 2026-08-03 §2 "Composer duration UX") ─────────
@@ -1155,8 +1185,8 @@
     // newly-created song displays its three default instruments while still playing the previous
     // song's layer instruments until another roster action happens to synchronize them.
     syncInstruments(added);
-    // Selection and undo entries address the replaced song, while copiedColumns is an
-    // editor-level clipboard: preserving it is what allows copy -> new song -> paste.
+    // Selection and undo entries address the replaced song, while the clipboard is an
+    // editor-level one: preserving it is what allows copy -> new song -> paste.
     selectedColumns = [];
     undoHistory = [];
     Analytics.songEvent({ type: 'create' });
@@ -1221,8 +1251,10 @@
       // clone, undoing after a load installs the old song's columns into the new one - and then
       // autosaves the result.
       undoHistory = [];
-      // copiedColumns is deliberately NOT reset: its NoteColumns were cloned by copyColumns(),
-      // so they are safe to carry across songs and serve as the tools panel's clipboard.
+      // the clipboard is deliberately NOT reset: its NoteColumns were cloned by copyColumns(), so
+      // they are safe to carry across songs and serve as the tools panel's clipboard — and it
+      // carries the Basepoints they were copied at, which is what lets the incoming song restate
+      // them rather than paste another song's numbers verbatim (see its declaration).
       syncInstruments();
     } catch (e) {
       console.error(e);
@@ -1417,7 +1449,7 @@
       abandonNotePresses();
     }
     song.selected = index;
-    if (isToolsVisible && copiedColumns.length === 0) {
+    if (isToolsVisible && clipboard.columns.length === 0) {
       // the clicked column only ever feeds the min/max below, which then replace the array
       // wholesale - so extend the RANGE rather than pushing into the array (see its declaration)
       const min = Math.min(index, ...selectedColumns);
@@ -1475,7 +1507,7 @@
   }
 
   function resetSelection() {
-    copiedColumns = [];
+    clipboard = { columns: [], pitches: [] };
     selectedColumns = [song.selected];
   }
 
@@ -1512,7 +1544,12 @@
   // mutation. (copyColumns mutates nothing that sounds; its resync is the uniform rule
   // recommitting an unchanged window, and keeping the sites identical beats special-casing one.)
   function copyColumns(targetLayer: number | 'all') {
-    copiedColumns = song.copyColumns(selectedColumns, targetLayer);
+    // the Basepoints go in the same assignment as the columns, and they are the SOURCE song's:
+    // read them now, because by paste time this component may be showing another song entirely
+    clipboard = {
+      columns: song.copyColumns(selectedColumns, targetLayer),
+      pitches: song.trackPitches(),
+    };
     changes++;
     resyncPlayback();
     selectedColumns = [];
@@ -1520,8 +1557,9 @@
 
   function pasteColumns(insert: boolean, targetLayer: number | 'all') {
     addToHistory();
-    if (targetLayer === 'all') song.pasteColumns(copiedColumns, insert);
-    else if (Number.isFinite(targetLayer)) song.pasteLayer(copiedColumns, insert, targetLayer);
+    if (targetLayer === 'all') song.pasteColumns(clipboard.columns, insert, clipboard.pitches);
+    else if (Number.isFinite(targetLayer))
+      song.pasteLayer(clipboard.columns, insert, targetLayer, clipboard.pitches);
     syncInstruments();
     changes++;
     resyncPlayback();
@@ -1891,7 +1929,7 @@
   data={{
     isToolsVisible,
     layer,
-    hasCopiedColumns: copiedColumns.length > 0,
+    hasCopiedColumns: clipboard.columns.length > 0,
     selectedColumns,
     undoHistory,
   }}

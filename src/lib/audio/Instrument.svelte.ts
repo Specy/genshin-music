@@ -68,9 +68,11 @@ type ScheduledOneShot = {
  * place — a second copy is exactly how an engine and a surface come to disagree about which
  * key a stored number means.
  *
- * `releaseNote(number)` takes NO Basepoint, deliberately: a held voice remembers the Button
- * it was pressed on (see heldVoices), so a Basepoint change under a held key releases the key
- * that is actually sounding rather than whichever one the new Basepoint would resolve to.
+ * `releaseNote(number)` takes NO Basepoint, deliberately: the number a press ENTERED at is
+ * remembered as an alias of the Button it landed on (see heldVoices/heldNumberAliases), so a
+ * Basepoint change under a held key releases the key that is actually sounding rather than
+ * whichever one the new Basepoint would resolve to. What a surface owes the engine in return
+ * is to release the number it pressed, not one re-derived at key-up.
  *
  * Buttons survive only as PRIVATE STORAGE: the position of a note in the authored note list
  * indexes `notes`, `buffers` and `instrumentData.notes`. Where a button is drawn is neither
@@ -97,14 +99,33 @@ export class Instrument {
   /** Sounding sustained voices (pruned opportunistically); engine state, never UI-observed. */
   private activeVoices: Voice[] = [];
   /**
-   * Live (key-still-down) voice per NOTE NUMBER, for release-by-number — with the BUTTON it
-   * was pressed on. The button is stored rather than re-resolved because release must act on
-   * the key that is sounding: a Basepoint change (or an instrument swap) between press and
-   * release would otherwise resolve the same number to a different button, and the minimum
-   * note length would be read off a key the listener never pressed.
+   * Live (key-still-down) voice per BUTTON — the registry the one-voice-per-key retrigger choke
+   * in pressNote is enforced through, and where the minimum note length is read from the key
+   * that is actually sounding.
+   *
+   * Keyed by BUTTON, not by the Note Number the press entered at, because a number names a
+   * different key at every Basepoint: number-keyed, a re-press of the same key after a Basepoint
+   * change looked up an entry that was filed under the old number, choked nothing, and left two
+   * voices on one button — the first of them sounding forever on a looping instrument.
    */
   // eslint-disable-next-line svelte/prefer-svelte-reactivity -- engine state, never UI-observed
-  private heldVoices = new Map<number, { voice: Voice; button: number }>();
+  private heldVoices = new Map<number, Voice>();
+  /**
+   * PRESS-TIME Note Number -> the Button it was pressed on, which is how `releaseNote(number)`
+   * (Basepoint-less by design) reaches a voice held from before a Basepoint change. Registered
+   * at press, so it stays valid however the Basepoint moves afterwards — what it asks of a
+   * surface is that it release the number it PRESSED, which every keyboard surface remembers
+   * per held key.
+   *
+   * SEMANTICS when two live aliases name one button (two holders on one key, or a re-press at a
+   * new Basepoint while the old holder is still down): every alias resolves to that button's
+   * CURRENT voice, so the first release to arrive ends the sound and drops all of the button's
+   * aliases with it, and the later one finds nothing held and is a no-op. That is exactly what a
+   * number-keyed store did when two holders shared one number, and it is the safe direction: a
+   * stale release can silence a key nobody expects to be silenced, but it can never leak a voice.
+   */
+  // eslint-disable-next-line svelte/prefer-svelte-reactivity -- engine state, never UI-observed
+  private heldNumberAliases = new Map<number, number>();
   /**
    * One-shots committed to a future audio-clock start (ADR-0006) — the retractable set
    * cancelScheduledAfter operates on. An immediately-started one-shot never enters: it
@@ -230,8 +251,15 @@ export class Instrument {
     const slot = this.slotOf(index);
     try {
       if (type === 'Note name') {
-        const baseNote = this.notes[index].baseNote;
-        return baseNoteText(NOTE_SCALE, baseNote, PITCH_TO_INDEX.get(pitch) ?? 0);
+        // the label AND whether it may transpose both come from the authored note
+        // (`instrumentData.notes` is button-indexed private storage, like minNoteMs')
+        const note = this.instrumentData.notes[index];
+        return baseNoteText(
+          NOTE_SCALE,
+          note.baseNote,
+          PITCH_TO_INDEX.get(pitch) ?? 0,
+          note.pitched
+        );
       }
       if (type === 'Your Keyboard layout') {
         const key =
@@ -246,8 +274,13 @@ export class Instrument {
         return capitalize(res);
       }
       if (type === 'Do Re Mi') {
-        const baseNote = this.notes[index].baseNote;
-        return baseNoteText(DO_RE_MI_NOTE_SCALE, baseNote, PITCH_TO_INDEX.get(pitch) ?? 0);
+        const note = this.instrumentData.notes[index];
+        return baseNoteText(
+          DO_RE_MI_NOTE_SCALE,
+          note.baseNote,
+          PITCH_TO_INDEX.get(pitch) ?? 0,
+          note.pitched
+        );
       }
       if (type === 'ABC') return layout.abc[slot];
       if (type === '1 2 3') return layout.number[slot];
@@ -353,10 +386,13 @@ export class Instrument {
     //must not choke what the player is hearing NOW merely because it was scheduled
     //early; scheduled song voices also stay out of heldVoices below.
     if (!scheduledAhead) {
-      const previous = this.heldVoices.get(number);
+      //by BUTTON, so a re-press at another Basepoint still finds what that key is holding.
+      //Its aliases are deliberately left in place: they name the key, and the new voice is
+      //about to become what they resolve to (see heldNumberAliases).
+      const previous = this.heldVoices.get(button);
       if (previous) {
-        this.heldVoices.delete(number);
-        if (!previous.voice.isDisposed) previous.voice.choke();
+        this.heldVoices.delete(button);
+        if (!previous.isDisposed) previous.choke();
       }
     }
     this.pruneVoices();
@@ -395,9 +431,18 @@ export class Instrument {
       const minRemainingMs = Math.max(0, this.minNoteMs(button) - (options.skipMs ?? 0));
       voice.releaseAt(voice.startedAt + Math.max(options.durationMs, minRemainingMs) / 1000);
     } else {
-      this.heldVoices.set(number, { voice, button });
+      this.heldVoices.set(button, voice);
+      this.heldNumberAliases.set(number, button);
     }
     return voice;
+  };
+
+  /** Drop a button's held voice and every press-time number that aliased it. */
+  private forgetHeldButton = (button: number) => {
+    this.heldVoices.delete(button);
+    for (const [number, aliased] of this.heldNumberAliases) {
+      if (aliased === button) this.heldNumberAliases.delete(number);
+    }
   };
 
   /**
@@ -413,14 +458,22 @@ export class Instrument {
     return typeof min === 'number' && Number.isFinite(min) && min > 0 ? min * 1000 : 0;
   };
 
-  /** Release the live voice held on a Note Number (no-op for one-shot instruments and unheld numbers). */
+  /**
+   * Release the live voice held on a PRESS-TIME Note Number (no-op for one-shot instruments and
+   * for numbers nothing was pressed on). The number is resolved to its button through the
+   * press-time alias, never through the current Basepoint.
+   */
   releaseNote = (number: number) => {
-    const held = this.heldVoices.get(number);
-    if (!held) return;
-    this.heldVoices.delete(number);
+    const button = this.heldNumberAliases.get(number);
+    if (button === undefined) return;
+    const voice = this.heldVoices.get(button);
+    // the alias outlives its voice when another holder of the same key released first: drop it
+    // and leave whatever is sounding now alone
+    this.forgetHeldButton(button);
+    if (!voice) return;
     // releaseAt clamps to "now" once the minimum has already elapsed, so held
     // notes released late act exactly on the key-up
-    held.voice.releaseAt(held.voice.startedAt + this.minNoteMs(held.button) / 1000);
+    voice.releaseAt(voice.startedAt + this.minNoteMs(button) / 1000);
   };
 
   /**
@@ -429,15 +482,17 @@ export class Instrument {
    * keeps playing in a background tab.
    */
   releaseHeldNotes = () => {
-    this.heldVoices.forEach((held) =>
-      held.voice.releaseAt(held.voice.startedAt + this.minNoteMs(held.button) / 1000)
+    this.heldVoices.forEach((voice, button) =>
+      voice.releaseAt(voice.startedAt + this.minNoteMs(button) / 1000)
     );
     this.heldVoices.clear();
+    this.heldNumberAliases.clear();
   };
 
   /** Release everything sounding, live and scheduled — ramped (playback stop) or hard (teardown). */
   releaseAllNotes = (hard = false) => {
     this.heldVoices.clear();
+    this.heldNumberAliases.clear();
     // Clear ownership before stopping: hard stop invokes the per-voice dispose callback,
     // which must not splice the array while this traversal is in progress.
     const voices = this.activeVoices;
@@ -486,8 +541,8 @@ export class Instrument {
     // A voice with a future release scheduled is still sounding and must continue to
     // count toward the cap (and remain available to releaseAllNotes on stop/blur).
     this.activeVoices = this.activeVoices.filter((voice) => !voice.isDisposed);
-    for (const [number, held] of this.heldVoices) {
-      if (held.voice.isDisposed) this.heldVoices.delete(number);
+    for (const [button, voice] of this.heldVoices) {
+      if (voice.isDisposed) this.forgetHeldButton(button);
     }
   };
 
@@ -495,8 +550,8 @@ export class Instrument {
   private forgetVoice = (voice: Voice) => {
     const index = this.activeVoices.indexOf(voice);
     if (index !== -1) this.activeVoices.splice(index, 1);
-    for (const [number, held] of this.heldVoices) {
-      if (held.voice === voice) this.heldVoices.delete(number);
+    for (const [button, held] of this.heldVoices) {
+      if (held === voice) this.forgetHeldButton(button);
     }
   };
 

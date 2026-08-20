@@ -525,6 +525,60 @@ describe('Instrument sustain', () => {
         expect(created.sources[1].calls.some((c: Call) => c.method === 'stop')).toBe(false)
     })
 
+    // ADR-0007: a Note Number names a different button at every Basepoint, so press and release
+    // can only meet on the BUTTON. heldVoices is keyed by it, and the press-time number is kept
+    // as an alias so releaseNote (which takes no Basepoint) can still find its way there.
+    it('releases a voice held from before a Basepoint change, through the press-time number', () => {
+        const {instrument, created} = sustainingInstrument()
+        const pressed = instrument.notes[0].numberAt('C')
+        instrument.pressNote(pressed, 'C')
+        //the Basepoint moves under the held key: the same button now enters another number
+        expect(instrument.notes[0].numberAt('D')).not.toBe(pressed)
+
+        instrument.releaseNote(pressed)
+        expect(created.sources[0].calls).toContainEqual({method: 'stop', args: [10.3]})
+        expect((instrument as any).heldVoices.size).toBe(0)
+        expect((instrument as any).heldNumberAliases.size).toBe(0)
+    })
+
+    it('a number re-derived at the NEW Basepoint releases nothing — surfaces owe the press-time one', () => {
+        const {instrument, created} = sustainingInstrument()
+        instrument.pressNote(instrument.notes[0].numberAt('C'), 'C')
+        instrument.releaseNote(instrument.notes[0].numberAt('D'))
+        expect(created.sources[0].calls.some((c: Call) => c.method === 'stop')).toBe(false)
+        //...and the blur guard still catches whatever a surface failed to release
+        instrument.releaseHeldNotes()
+        expect(created.sources[0].calls).toContainEqual({method: 'stop', args: [10.3]})
+        expect((instrument as any).heldNumberAliases.size).toBe(0)
+    })
+
+    it('a re-press of the same BUTTON chokes its live voice at any Basepoint (one voice per key)', () => {
+        const {instrument, created} = sustainingInstrument()
+        instrument.pressNote(instrument.notes[0].numberAt('C'), 'C')
+        instrument.pressNote(instrument.notes[0].numberAt('D'), 'D')
+        expect(created.sources).toHaveLength(2)
+        //number-keyed, the second press missed the first entirely: two voices on one button, the
+        //first of them looping until the next blur
+        expect(created.sources[0].calls).toContainEqual({method: 'stop', args: [10.02]})
+        expect(created.sources[1].calls.some((c: Call) => c.method === 'stop')).toBe(false)
+        expect((instrument as any).heldVoices.size).toBe(1)
+    })
+
+    it('two live aliases on one button: the first release ends the voice, the second is a no-op', () => {
+        const {instrument, created} = sustainingInstrument()
+        const atC = instrument.notes[0].numberAt('C')
+        const atD = instrument.notes[0].numberAt('D')
+        instrument.pressNote(atC, 'C')
+        instrument.pressNote(atD, 'D') // re-pressed at the new Basepoint; both aliases are live
+
+        instrument.releaseNote(atC) // the older holder lifts: releases what the key sounds NOW
+        expect(created.sources[1].calls).toContainEqual({method: 'stop', args: [10.3]})
+        const stops = created.sources[1].calls.filter((c: Call) => c.method === 'stop').length
+        instrument.releaseNote(atD) // nothing held on that button any more
+        expect(created.sources[1].calls.filter((c: Call) => c.method === 'stop')).toHaveLength(stops)
+        expect((instrument as any).heldNumberAliases.size).toBe(0)
+    })
+
     it('caps already-sounding voices at 64 and steals the oldest for the 65th immediate voice', () => {
         const {instrument, created, number} = sustainingInstrument()
         for (let i = 0; i < 65; i++) {
@@ -546,6 +600,8 @@ describe('Instrument sustain', () => {
 
         expect((instrument as any).activeVoices).toHaveLength(0)
         expect((instrument as any).heldVoices.size).toBe(0)
+        //the press-time alias goes with the voice it named — nothing accumulates over a session
+        expect((instrument as any).heldNumberAliases.size).toBe(0)
     })
 
     it('same note on separate instrument instances has independent voice and release state', () => {
@@ -758,7 +814,9 @@ describe('Instrument committed scheduling', () => {
         instrument.pressNote(number(0), 'C', {at: 11, durationMs: 500})
 
         expect(created.sources[0].calls).not.toContainEqual({method: 'stop', args: [10.02]})
-        expect((instrument as any).heldVoices.get(number(0)).voice).toBe((instrument as any).activeVoices[0])
+        //heldVoices is keyed by BUTTON (see its declaration); the press-time number is the alias
+        expect((instrument as any).heldVoices.get(0)).toBe((instrument as any).activeVoices[0])
+        expect((instrument as any).heldNumberAliases.get(number(0))).toBe(0)
 
         instrument.releaseNote(number(0))
         expect(created.sources[0].calls).toContainEqual({method: 'stop', args: [10.3]})

@@ -84,6 +84,9 @@
   let vsrg: VsrgSong = $state(new VsrgSong('Untitled'));
   // svelte-ignore state_referenced_locally
   vsrg.addTrack('DunDun');
+  // One-time seed from the DEFAULT settings - the persisted ones are not readable yet, so onMount
+  // re-seeds the same fields (pitch included, which this placeholder would otherwise keep at the
+  // constructor's 'C'). Later edits flow through handleSettingChange instead.
   // svelte-ignore state_referenced_locally
   vsrg.set({
     bpm: settings.bpm.value,
@@ -184,6 +187,17 @@
     const id = 'vsrg-composer';
     const loadedSettings = settingsService.getVsrgComposerSettings();
     settings = loadedSettings;
+    //the persisted settings arrive AFTER the defaults the placeholder song above was seeded
+    //from, so re-seed every song-level value it carries (Composer.svelte does the same for its
+    //own fresh song). The Basepoint is the one that bites: the audio players adopt the persisted
+    //pitch on the next two lines, so a placeholder left at the constructor's 'C' would store
+    //every note entered in it at C and resolve it at the settings' Basepoint. Nothing is loaded
+    //yet, so there are no hit objects for any of these to move.
+    vsrg.set({
+      bpm: loadedSettings.bpm.value,
+      keys: loadedSettings.keys.value,
+      pitch: loadedSettings.pitch.value,
+    });
     audioPlayer.setBasePitch(loadedSettings.pitch.value);
     audioPlaybackPlayer.setBasePitch(loadedSettings.pitch.value);
     mounted = true;

@@ -256,16 +256,25 @@ export const DO_RE_MI_NOTE_SCALE: Readonly<Record<BaseNote, readonly string[]>> 
 /**
  * The text a button's authored label shows in one spelling table at a Basepoint.
  *
- * An Assigned Button's `baseNote` is free display text — a chord name like 'G7' — which no
- * scale table can respell, so it renders VERBATIM at every Basepoint (design 2026-08-19
- * §6: chord labels deliberately do not transpose). Only labels the tables actually list
- * transpose, which is every Pitched Button's, so tuned instruments are unaffected.
+ * The BUTTON'S KIND decides, not its label. A Pitched Button's `baseNote` is a bare pitch class,
+ * so it is respelled at the Basepoint (a tuned instrument keeps transposing). An Assigned
+ * Button's is free display text — 'Dm', 'G7', a percussion name, '' — which names no single
+ * pitch, so it renders VERBATIM at every Basepoint (design 2026-08-19 §6: chord labels
+ * deliberately do not transpose).
+ *
+ * Asking the label instead ("is it listed in the tables?") half-transposed every chord row that
+ * happens to name bare triads: genshin's ukulele-21 rendered C/F/G respelled and Dm/Em/Am/G7
+ * untouched, i.e. one row of chords in two different keys. The fallback for an unlisted label
+ * survives for a Pitched Button too, so a spelling the tables somehow miss shows as authored
+ * rather than blanking.
  */
 export function baseNoteText(
     scale: Readonly<Record<BaseNote, readonly string[]>>,
     baseNote: string,
-    pitchIndex: number
+    pitchIndex: number,
+    pitched: boolean
 ): string {
+    if (!pitched) return baseNote
     const spelled = BASE_NOTES.find((candidate) => candidate === baseNote)
     return spelled === undefined ? baseNote : (scale[spelled][pitchIndex] ?? '')
 }

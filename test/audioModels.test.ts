@@ -76,13 +76,17 @@ describe('Instrument.getNoteText per NoteNameType', () => {
         // Driven by this game's config rather than by its name: genshin's ukulele-21 chord row
         // is the case today. Empty for a game whose buttons all spell scale rows - which of the
         // two a game is, gameConfig.test.ts pins across every game folder at once.
-        const freeLabelled = INSTRUMENTS
+        //
+        // The BUTTON'S KIND selects them, not the label: an Assigned Button labelled with a bare
+        // triad ('C', 'F', 'G' on that same chord row) is listed in every spelling table, so a
+        // label-based filter would silently skip exactly the buttons that used to half-transpose.
+        const assigned = INSTRUMENTS
             .flatMap((name) => {
                 const built = new Instrument(name)
-                return built.notes.map((note, button) => ({built, note, button}))
+                return built.instrumentData.notes.map((note, button) => ({built, note, button}))
             })
-            .filter(({note}) => !(note.baseNote in NOTE_SCALE))
-        for (const {built, note, button} of freeLabelled) {
+            .filter(({note}) => !note.pitched)
+        for (const {built, note, button} of assigned) {
             for (const pitch of PITCHES) {
                 expect(built.getNoteText(button, 'Note name', pitch),
                     `${built.name} button ${button} at ${pitch}`).toBe(note.baseNote)
@@ -90,6 +94,39 @@ describe('Instrument.getNoteText per NoteNameType', () => {
             }
         }
     })
+
+    // The shipped case the gate above is abstracted from, spelled out end to end: one row of
+    // Assigned chord buttons sitting directly above two octaves of Pitched ones, at a Basepoint
+    // that moves everything. Gated on the instrument being configured, not on the game's name.
+    describe.runIf(INSTRUMENTS.includes('Ukulele' as typeof INSTRUMENTS[number]))(
+        'the ukulele-21 chord row at Basepoint D', () => {
+            const ukulele = new Instrument('Ukulele' as typeof INSTRUMENTS[number])
+            const label = (button: number, type: 'Note name' | 'Do Re Mi') =>
+                ukulele.getNoteText(button, type, 'D')
+            const buttons = (from: number, to: number) =>
+                Array.from({length: to - from}, (_, index) => from + index)
+
+            it('is authored as seven Assigned Buttons above the pitched octaves', () => {
+                expect(ukulele.instrumentData.notes.slice(0, 7).map(note => note.pitched))
+                    .toEqual(Array(7).fill(false))
+                expect(ukulele.instrumentData.notes.slice(7, 14).every(note => note.pitched))
+                    .toBe(true)
+            })
+
+            it('renders every chord verbatim in both spelled label modes', () => {
+                // half-respelled, this row read 'D Dm Em G A Am G7' - chords in two keys at once
+                const chords = ['C', 'Dm', 'Em', 'F', 'G', 'Am', 'G7']
+                expect(buttons(0, 7).map(button => label(button, 'Note name'))).toEqual(chords)
+                expect(buttons(0, 7).map(button => label(button, 'Do Re Mi'))).toEqual(chords)
+            })
+
+            it('while the Pitched Buttons beside them transpose in both modes', () => {
+                expect(buttons(7, 14).map(button => label(button, 'Note name')))
+                    .toEqual(['D', 'E', 'F#', 'G', 'A', 'B', 'C#'])
+                expect(buttons(7, 14).map(button => label(button, 'Do Re Mi')))
+                    .toEqual(['re', 'mi', 'fa#', 'sol', 'la', 'ti', 'do#'])
+            })
+        })
 })
 
 describe('Instrument note index/code mapping', () => {

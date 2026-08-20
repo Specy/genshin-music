@@ -8,7 +8,7 @@ import {foldNumberIntoRange, nominalToNumber} from "./noteIds";
 import {basepointDelta, migrateTrackNotes, rewriteForSwap, rewriteNumbersForBasepoint} from "./noteNumberTransforms";
 import type {InstrumentName} from "$core/types";
 import {RecordedSong} from "./RecordedSong";
-import {type SerializedSong, Song} from "./Song.svelte";
+import {assertKnownSongVersion, type SerializedSong, Song} from "./Song.svelte";
 import {InstrumentData, RecordedNote, type SerializedInstrumentData} from "./SongClasses";
 
 // VsrgSongKeys hoisted into $core/types.ts by Task 6 (BaseSettings.ts needs it before this file
@@ -223,6 +223,19 @@ export class VsrgSong extends Song<VsrgSong, SerializedVsrgSong, 3> {
         this.#tracks = [...tracks]
     }
 
+    /** The newest vsrg format this build writes and reads. Above it is a file from a newer app. */
+    static readonly LATEST_VERSION = 3
+
+    /**
+     * The versions whose hit objects already carry per-track note numbers (v2 Nominal Ids, v3
+     * absolute Note Numbers): the ones a cross-game import converts with toOtherGame instead of
+     * the legacy index remap inside deserialize(importInto). Owned here so that SongService's
+     * dispatch and this deserializer cannot drift apart on a version bump.
+     */
+    static isNewFormat(obj: { version?: number }): boolean {
+        return obj.version === 2 || obj.version === 3
+    }
+
     /**
      * v1 hit objects stored keyboard note INDICES; v2 stores Nominal Ids; v3 stores absolute
      * Note Numbers. v1 and v2 both migrate here (ADR-0007 §9), the v1 chain by decoding through
@@ -235,6 +248,9 @@ export class VsrgSong extends Song<VsrgSong, SerializedVsrgSong, 3> {
      * data.appName — a converted vsrg song keeps the exporting game's appName.
      */
     static deserialize(obj: SerializedVsrgSong, importInto?: 'Genshin' | 'Sky'): VsrgSong {
+        //before anything is decoded: the version collapse below reads ANY unrecognised version as
+        //v1, and a newer file's Note Numbers decode through the frozen v1 tables to nothing
+        assertKnownSongVersion('vsrg', obj.version, VsrgSong.LATEST_VERSION)
         const song = Song.deserializeTo(new VsrgSong(obj.name), obj)
         song.initTracksForConstruction((obj.tracks ?? []).map(track => VsrgTrack.deserialize(track)))
         song.audioSongId = obj.audioSongId ?? null
@@ -247,6 +263,8 @@ export class VsrgSong extends Song<VsrgSong, SerializedVsrgSong, 3> {
         song.breakpoints = [...(obj.breakpoints ?? [])]
         song.difficulty = obj.difficulty ?? 5
         song.snapPoint = obj.snapPoint ?? 1
+        //everything the guard let through that is neither v3 nor v2 is a v1 file: the version
+        //field was introduced WITH v2, so a legacy vsrg song carries none at all
         const version = obj.version === 3 ? 3 : obj.version === 2 ? 2 : 1
         if (version === 1) {
             const crossGame = importInto !== undefined && song.data.appName !== importInto

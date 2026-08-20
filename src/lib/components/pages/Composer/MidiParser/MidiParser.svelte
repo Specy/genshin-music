@@ -25,12 +25,8 @@
   import { ThemeProvider } from '$core/theme/ThemeProvider.svelte';
   import { ComposedSong } from '$core/Songs/ComposedSong.svelte';
   import { type InstrumentData } from '$core/Songs/SongClasses';
-  import {
-    importMidiTracks,
-    instrumentSupportsSustain,
-    playableIdsOf,
-    suggestOffset,
-  } from '$core/Songs/midiImport';
+  import { importMidiTracks, playableIdsOf, suggestOffset } from '$core/Songs/midiImport';
+  import { basepointOffset } from '$core/Songs/noteIds';
   import { decodeMidiMetadata, type MidiMetadata } from '$core/Songs/midiMetadata';
   import { delay, isAudioFormat, isVideoFormat } from '$core/utils/Utilities';
   import { t } from '$i18n/binding.svelte';
@@ -81,6 +77,14 @@
   // QUIRK: ignoreEmptytracks (not ignoreEmptyTracks) is an intentional preserved typo.
   let ignoreEmptytracks = $state(false);
   let warnedOfExperimental = false;
+
+  //the layer roster the tracks land on: the file's own when it is one of our exports, otherwise
+  //the layers the open composer song already has — which is what this screen has always mapped
+  //tracks onto. Derived once so the conversion and the offset suggestion below can never score
+  //against a different roster from the one the import actually uses.
+  //($derived.by, not $derived: read directly here, `importedMetadata` is still flow-narrowed to
+  //the null it was declared with, and `null?.instruments` does not type-check)
+  const layers = $derived.by(() => importedMetadata?.instruments ?? data.instruments);
 
   const midiInputsStyle = $derived(
     `background-color:${ThemeProvider.layer('primary', 0.2).toString()};color:${ThemeProvider.getText('primary').toString()}`
@@ -221,9 +225,6 @@
 
   function convertMidi() {
     const selectedTracks = tracks.filter((track) => track.selected);
-    //the file's own layer roster when it is one of our exports, otherwise the layers the open
-    //composer song already has — which is what this screen has always mapped tracks onto
-    const layers = importedMetadata?.instruments ?? data.instruments;
     const result = importMidiTracks(
       selectedTracks.map((track) => ({
         notes: track.track.notes,
@@ -235,12 +236,13 @@
         bpm,
         offset,
         includeAccidentals,
-        //the Basepoint the song below is given: the importer emits its snapped nominals lifted
-        //onto the absolute axis by it (ADR-0007), so the two must be the same value
+        //the Basepoint the song below is given: the importer takes it off every incoming number
+        //and puts it back on every emitted one (ADR-0007), so the two must be the same value
         pitch,
-        //capability comes from instrument config, so a game gains sustained imports the
-        //moment it gains a sustaining instrument — nothing here knows which game is loaded
-        layerSustains: layers.map((ins) => instrumentSupportsSustain(ins.name)),
+        //the layers themselves, not a capability flag derived from them: the importer needs each
+        //layer's instrument to know what a snapped nominal sounds there, and reads the sustain
+        //capability off the same config — nothing here knows which game is loaded
+        layers,
       }
     );
     selectedTracks.forEach((track, index) => {
@@ -294,9 +296,15 @@
     // eslint-disable-next-line svelte/prefer-svelte-reactivity -- transient local accumulator, never UI-observed
     const playable = new Set<number>();
     for (const track of selected) {
-      for (const id of playableIdsOf(data.instruments[track.layer]?.name ?? '')) playable.add(id);
+      for (const id of playableIdsOf(layers[track.layer]?.name ?? '')) playable.add(id);
     }
-    const suggestion = suggestOffset(notes, playable);
+    //scored in GRID space, which is where the importer snaps: the Basepoint comes off there
+    //first, so it has to come off here too or the suggestion optimises a shift of the wrong
+    //notes. The offset it answers is still in the file's own space — the reduction cancels.
+    const suggestion = suggestOffset(
+      notes.map(({ midi }) => ({ midi: midi - basepointOffset(pitch) })),
+      playable
+    );
     changeOffset(suggestion.offset);
     logger.success(
       t('composer:midi_parser.suggested_offset', {

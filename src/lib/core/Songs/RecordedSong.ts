@@ -21,7 +21,7 @@ import {NoteLayer} from "./Layer"
 import type {Midi} from "@tonejs/midi"
 import {Midi as MidiConstructor} from "./midiConstructor"
 import type {InstrumentName} from "$core/types"
-import {type SerializedSong, Song} from "./Song.svelte"
+import {assertKnownSongVersion, type SerializedSong, Song} from "./Song.svelte"
 import type {OldFormat, OldNote} from "$core/types"
 import {isLegacyAppName, LEGACY_NOTE_TABLES, legacyIndexToId} from "./legacyNoteTables"
 import {type ConversionGame, findSimilarInstrument} from "./instrumentSimilarity"
@@ -181,6 +181,19 @@ export class RecordedSong extends Song<RecordedSong, SerializedRecordedSong> {
     //     return song
     // }
 
+    /** The newest recorded format this build writes and reads. Above it is a file from a newer app. */
+    static readonly LATEST_VERSION = 4
+
+    /**
+     * The PER-TRACK versions (v3 Nominal Ids, v4 absolute Note Numbers): the ones deserialize
+     * decodes directly rather than through the frozen legacy tables, and the ones a cross-game
+     * import converts with toOtherGame instead of the legacy index remap. Owned here so that
+     * SongService's dispatch and this deserializer cannot drift apart on a version bump.
+     */
+    static isNewFormat(obj: { version?: number }): obj is SerializedRecordedSongV3 | SerializedRecordedSong {
+        return obj.version === 3 || obj.version === 4
+    }
+
     /**
      * `importInto`: legacy-cross-game target (see ComposedSong.deserialize). Reproduces
      * the historic deserialize-then-toGenshin pipeline: indices remapped through the
@@ -190,10 +203,13 @@ export class RecordedSong extends Song<RecordedSong, SerializedRecordedSong> {
      */
     static deserialize(obj: UnknownSerializedRecordedSong, importInto?: 'Genshin' | 'Sky'): RecordedSong {
         const {name} = obj
+        //before anything is decoded: an unrecognised HIGHER version would fall through to the
+        //legacy branch below and return a song with no notes at all
+        assertKnownSongVersion('recorded', obj.version, RecordedSong.LATEST_VERSION)
         const version = obj.version || 1
         const song = Song.deserializeTo(new RecordedSong(name || 'Untitled'), obj)
         song.reverb = obj.reverb ?? false
-        if (version === 3 || version === 4) {
+        if (RecordedSong.isNewFormat(obj)) {
             //v3 stored Nominal Ids pre-Basepoint; v4 stores absolute Note Numbers. Same tuple
             //shape, so `version` alone decides whether the per-track migration runs (ADR-0007 §9).
             const migrating = version === 3
@@ -572,6 +588,11 @@ export class RecordedSong extends Song<RecordedSong, SerializedRecordedSong> {
                     //THE STORED NUMBER, unshifted — which since ADR-0007 makes the export
                     //transposition-honest for the first time: a song at Basepoint D now says D
                     //in a DAW instead of writing the untransposed grid nominals it used to.
+                    //Unshifted is also SOUNDING: the number already is the pitch the listener
+                    //hears (the engine resolves it to a button at the track's Basepoint and
+                    //plays that sample at the Basepoint's rate), so subtracting anything here
+                    //would write a file that disagrees with the song. midiImport reads a file's
+                    //numbers back as exactly that, which is what makes the trip an inverse.
                     //Nothing upstream guarantees the number fits midi's 0..127 (a Basepoint can
                     //push it past the top), and an out-of-range value used to be written verbatim
                     //and produce a malformed file.

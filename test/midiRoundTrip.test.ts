@@ -10,24 +10,37 @@
 // bug found in this pipeline was invisible at the integer-ms tempos (120, 240) and only bit
 // where the column length is fractional.
 import {describe, expect, it} from 'vitest'
-import {INSTRUMENTS} from './imports'
+import {CANONICAL_NOTE_IDS, INSTRUMENTS, PITCHES} from './imports'
 import {ComposedSong} from '../src/lib/core/Songs/ComposedSong.svelte'
 import {NoteColumn} from '../src/lib/core/Songs/SongClasses'
 import {Midi} from '../src/lib/core/Songs/midiConstructor'
+import {basepointOffset, isAccidentalMidi, numberToButton} from '../src/lib/core/Songs/noteIds'
+import type {Pitch} from '../src/lib/core/legacyConfig'
 import {
     importMidiTracks,
     playableIdsOf,
     suggestOffset,
+    type MidiImportLayer,
     type MidiImportTrack,
 } from '../src/lib/core/Songs/midiImport'
 
 const TEMPOS = [60, 120, 220, 400]
 
+/**
+ * A layer roster for the importer: every layer on the default instrument, holding where the case
+ * says so. Capability is stated rather than read off the roster because neither shipped game is
+ * guaranteed to ship a sustaining instrument (genshin ships none), and span layout has to be
+ * exercised in both.
+ */
+const layersOf = (sustains: readonly boolean[]): MidiImportLayer[] =>
+    sustains.map(holds => ({name: INSTRUMENTS[0], pitch: '', sustains: holds}))
+
 /** A song of `layout` columns; each entry is the notes in that column, `null` for an empty one. */
 function buildSong(
     bpm: number,
     layout: (null | {id: number; span?: number; track?: number}[])[],
-    tempoChangers: number[] = []
+    tempoChangers: number[] = [],
+    pitch: Pitch = 'C'
 ): ComposedSong {
     //a fresh ComposedSong has NO instruments, and toMidi() iterates them to build tracks — so
     //the song needs a layer for every trackIndex used or it exports nothing at all
@@ -40,6 +53,7 @@ function buildSong(
         new Array(highestTrack + 1).fill(INSTRUMENTS[0])
     )
     song.bpm = bpm
+    song.pitch = pitch
     const columns = layout.map((entry, index) => {
         const column = new NoteColumn()
         column.tempoChanger = tempoChangers[index] ?? 0
@@ -54,29 +68,36 @@ function buildSong(
     return song
 }
 
-/** The full trip: song -> midi -> bytes -> midi -> columns, exactly as the app does it. */
-function roundTrip(song: ComposedSong, layerSustains: boolean[] = [true, true, true]) {
+/** The tracks of a song's own exported bytes, ready to hand back to the importer. */
+function exportedTracks(song: ComposedSong): {bpm: number; tracks: MidiImportTrack[]} {
     const encoded = new Uint8Array(song.toMidi().toArray()).buffer as ArrayBuffer
     const midi = new Midi(encoded)
-    const bpm = Math.round((midi.header.tempos[0]?.bpm ?? 55) * 4) || 220
-    const tracks: MidiImportTrack[] = midi.tracks.map((track, i) => ({
-        notes: track.notes.map(n => ({midi: n.midi, time: n.time, duration: n.duration})),
-        layer: i,
-        localOffset: null,
-        maxScaling: 0,
-    }))
+    return {
+        bpm: Math.round((midi.header.tempos[0]?.bpm ?? 55) * 4) || 220,
+        tracks: midi.tracks.map((track, i) => ({
+            notes: track.notes.map(n => ({midi: n.midi, time: n.time, duration: n.duration})),
+            layer: i,
+            localOffset: null,
+            maxScaling: 0,
+        })),
+    }
+}
+
+/** The full trip: song -> midi -> bytes -> midi -> columns, exactly as the app does it. */
+function roundTrip(song: ComposedSong, layerSustains: boolean[] = [true, true, true]) {
+    const {bpm, tracks} = exportedTracks(song)
     return {
         bpm,
         ...importMidiTracks(tracks, {
             bpm,
             offset: 0,
             includeAccidentals: true,
-            //Basepoint C throughout this file, where `snapped nominal + offset` is the snapped
-            //nominal itself — so a round trip is a comparison against the source song's own
-            //numbers rather than against a shifted copy of them. The non-C shape is a separate
-            //(and deliberately different) row at the end of this file.
-            pitch: 'C',
-            layerSustains,
+            //re-imported at the Basepoint the export carries, which is what MidiParser does with
+            //our own files (the key signature and our metadata both say it). The importer takes
+            //that Basepoint off before snapping and puts it back after, so the comparison below
+            //is against the source song's own numbers at ANY Basepoint, not a shifted copy.
+            pitch: song.pitch,
+            layers: layersOf(layerSustains),
         }),
     }
 }
@@ -246,7 +267,7 @@ describe('midi round trip', () => {
             offset: 0,
             includeAccidentals: true,
             pitch: 'C',
-            layerSustains: [false],
+            layers: layersOf([false]),
         })
         expect(result.totalNotes).toBe(3)
         expect(result.outOfRange).toBe(2)
@@ -267,7 +288,7 @@ describe('midi round trip', () => {
         for (const bpm of [0, -10, NaN, Infinity]) {
             const result = importMidiTracks(
                 [{notes: [{midi: 60, time: 0, duration: 1}], layer: 0, localOffset: null, maxScaling: 0}],
-                {bpm, offset: 0, includeAccidentals: true, pitch: 'C', layerSustains: [true]}
+                {bpm, offset: 0, includeAccidentals: true, pitch: 'C', layers: layersOf([true])}
             )
             expect(result.columns, `bpm ${bpm}`).toEqual([])
         }
@@ -275,40 +296,93 @@ describe('midi round trip', () => {
 })
 
 /**
- * WHAT THE BASEPOINT DOES TO THIS PIPELINE, pinned because ADR-0007 moved the two halves of it in
- * DIFFERENT directions and the result is a known, deferred limitation rather than a bug to find
- * later:
- *  - EXPORT became transposition-honest: `toMidi` writes the stored Note Numbers, so a song at
- *    Basepoint D really does say D in a DAW, which it never did before;
- *  - IMPORT did not move at all: it still reads every midi number as a grid nominal, snaps it to a
- *    white key, and lifts the result by the Basepoint the user picked.
- * So our own export of a non-C song re-imports SHIFTED by that Basepoint, twice over. Closing this
- * is auto-Basepoint detection (subtract the detected Basepoint before snapping), which ADR-0007
- * defers explicitly; until then the shape is written down here rather than discovered by whoever
- * round-trips a transposed song.
+ * WHAT THE BASEPOINT DOES TO THIS PIPELINE, pinned because ADR-0007 moved BOTH halves of it and
+ * they have to move together:
+ *  - EXPORT is transposition-honest: `toMidi` writes the stored Note Numbers, which ARE the pitches
+ *    the listener hears (the engine resolves a number to a button at the Basepoint and plays it at
+ *    that Basepoint's rate), so a song at Basepoint D really does say D in a DAW;
+ *  - IMPORT reads a file's numbers as the same thing — absolute sounding pitches — so it takes the
+ *    layer's Basepoint OFF before snapping onto the grid (the nominal axis) and puts it back on
+ *    after, through the layer's own instrument.
+ * The two used to disagree: import treated every number as a grid nominal and lifted it a second
+ * time, so our own non-C export came back shifted, with distinct notes colliding onto one row.
  */
-describe('the Basepoint asymmetry between export and import', () => {
-    it('re-imports our own non-C export shifted by the Basepoint, and at C does not', () => {
-        const song = buildSong(220, [[{id: 60}], null, [{id: 62}]])
-        const numbersOf = (columns: {notes: {id: number}[]}[]) =>
-            columns.flatMap(column => column.notes.map(note => note.id)).sort((a, b) => a - b)
-        const encoded = new Uint8Array(song.toMidi().toArray()).buffer as ArrayBuffer
-        const midi = new Midi(encoded)
-        const tracks: MidiImportTrack[] = midi.tracks.map((track, i) => ({
-            notes: track.notes.map(n => ({midi: n.midi, time: n.time, duration: n.duration})),
-            layer: i,
-            localOffset: null,
-            maxScaling: 0,
-        }))
-        const importAt = (pitch: 'C' | 'D') => numbersOf(importMidiTracks(tracks, {
-            bpm: 220, offset: 0, includeAccidentals: true, pitch, layerSustains: [true],
-        }).columns)
+describe('the Basepoint, on both sides of the pipeline', () => {
+    const numbersOf = (columns: {notes: {id: number}[]}[]) =>
+        columns.flatMap(column => column.notes.map(note => note.id)).sort((a, b) => a - b)
 
-        //at C the two axes coincide and the trip is exact
-        expect(importAt('C')).toEqual([60, 62])
-        //at D every note comes back two semitones up — the snap read the file's numbers as
-        //nominals and the Basepoint lifted them a second time
-        expect(importAt('D')).toEqual([62, 64])
+    it('re-imports our own export unchanged at every Basepoint', () => {
+        for (const pitch of PITCHES as readonly Pitch[]) {
+            //two notes the default instrument really voices at this Basepoint, so every case is a
+            //song the composer could have authored: the same two buttons, carried by the Basepoint
+            const carried = [60, 62].map(number => number + basepointOffset(pitch))
+            const song = buildSong(220, [[{id: carried[0]}], null, [{id: carried[1]}]], [], pitch)
+            expect(numbersOf(roundTrip(song).columns), pitch).toEqual(carried)
+        }
+    })
+
+    it('keeps two adjacent notes of a non-C song distinct instead of merging them', () => {
+        //THE collision the double lift caused: at Db the buttons sounding E and F store 65 and 66,
+        //and both used to snap to the nominal 65 and lift to 66 — one note absorbed by the other
+        //(or dropped outright with accidentals off, since 66 read as an accidental).
+        const song = buildSong(220, [[{id: 65}, {id: 66}]], [], 'Db')
+        const result = roundTrip(song)
+        expect(numbersOf(result.columns)).toEqual([65, 66])
+        expect(result.merged).toBe(0)
+        //and both are notes the layer can actually sound at that Basepoint
+        for (const number of numbersOf(result.columns)) {
+            expect(numberToButton(INSTRUMENTS[0], 'Db', number)).not.toBe(-1)
+        }
+    })
+
+    it("honours a LAYER's own Basepoint, not just the song's", () => {
+        //a track's override is part of what its numbers MEAN (ADR-0007 §4), so it has to be part
+        //of what the trip through grid space takes off and puts back. The song below is the end
+        //state the composer would leave after overriding layer 0 to D: the notes are already
+        //carried, which is what setInstrument's rewrite does to them.
+        //
+        //The rows chosen are the ones that expose an import which ignores the override: carried,
+        //they are accidentals in absolute space, so snapping them WITHOUT taking the override off
+        //first pulls them onto a neighbouring row the track cannot voice at D.
+        const rows = [...CANONICAL_NOTE_IDS]
+            .sort((a, b) => a - b)
+            .filter(id => isAccidentalMidi(id + basepointOffset('D')))
+        expect(rows.length).toBeGreaterThanOrEqual(2)
+        const carried = rows.slice(0, 2).map(id => id + basepointOffset('D'))
+        const song = buildSong(220, [[{id: carried[0]}], null, [{id: carried[1]}]])
+        song.instruments[0].pitch = 'D'
+        const {bpm, tracks} = exportedTracks(song)
+        const imported = numbersOf(importMidiTracks(tracks, {
+            bpm,
+            offset: 0,
+            includeAccidentals: true,
+            //the SONG stays at C; only the layer is at D, exactly as the metadata records it
+            pitch: 'C',
+            layers: [{name: INSTRUMENTS[0], pitch: 'D', sustains: true}],
+        }).columns)
+        expect(imported).toEqual(carried)
+        for (const number of imported) expect(numberToButton(INSTRUMENTS[0], 'D', number)).not.toBe(-1)
+    })
+
+    it('snaps a foreign file onto the grid the Basepoint tunes, rather than transposing it', () => {
+        //a file in C imported at Basepoint D: a note that Basepoint can voice keeps its own pitch,
+        //and one it cannot snaps DOWN to the nearest it can, exactly as an accidental does at C.
+        //What it must NOT do is shift the whole file UP by the Basepoint, which is what reading
+        //its numbers as grid nominals did. Rows from the middle of the grid, so nothing falls off
+        //the bottom once the Basepoint comes off.
+        const grid = [...CANONICAL_NOTE_IDS].sort((a, b) => a - b)
+        const source = [grid[3], grid[4]]
+        const song = buildSong(220, [[{id: source[0]}], null, [{id: source[1]}]])
+        const {tracks} = exportedTracks(song)
+        const imported = numbersOf(importMidiTracks(tracks, {
+            bpm: 220, offset: 0, includeAccidentals: true, pitch: 'D', layers: layersOf([true]),
+        }).columns)
+        expect(imported.length).toBe(2)
+        imported.forEach((number, index) => {
+            expect(source[index] - number).toBeGreaterThanOrEqual(0)
+            expect(source[index] - number).toBeLessThanOrEqual(1)
+            expect(numberToButton(INSTRUMENTS[0], 'D', number)).not.toBe(-1)
+        })
     })
 })
 

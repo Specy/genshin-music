@@ -10,7 +10,8 @@ import {
 } from './imports'
 import {buildComposedSong} from './builders'
 import {expectGolden, readFixture} from './golden'
-import {gridRowForNumber, noteIdToButton} from '$core/Songs/noteIds'
+import {basepointOffset, gridRowForNumber, noteIdToButton} from '$core/Songs/noteIds'
+import {rewriteForSwap} from '$core/Songs/noteNumberTransforms'
 
 // Format-v4 rewrite (2026-08-03): `composed-song.json` is the frozen pre-v4 fixture —
 // its `serialized` member is a real v3 file and now serves as the LEGACY INPUT.
@@ -360,6 +361,88 @@ describe('an instrument swap rewrites the track button-preservingly', () => {
         })
         //...and it left the row it was merely NEAREST to
         expect(after.row).not.toBe(before.row)
+    })
+
+    /**
+     * NEITHER whole-track rewrite is injective, and setInstrument runs both — so a swap can carry
+     * two of a column's notes onto ONE number, and did, silently: the strand pass-through above
+     * lands on exactly the numbers the swap moves other notes TO. On genshin it is
+     * rewriteForSwap([73, 74], 'Vintage-Lyre', 'Lyre', 'C') === [74, 74].
+     *
+     * What a surviving duplicate costs: the note double-triggers at playback, findNote/removeNote
+     * only ever reach the FIRST of the pair (so the second cannot be selected, deleted or
+     * re-spanned), normalizeSpans truncates one of them to a span of 0 against the other — below
+     * the span ≥ 1 invariant SongClasses states — and a save/reload merges them away without
+     * saying so, which makes the file and the open editor disagree.
+     *
+     * AT A NON-C BASEPOINT deliberately: the suite's C-only coverage of these rewrites is why this
+     * shipped, and the merge must key on the numbers as the song actually stores them.
+     */
+    describe('and merges the duplicates it creates', () => {
+        const BASEPOINT = 'F' as const
+        /**
+         * Two numbers one track can hold that a swap collapses onto one, derived rather than
+         * named: every number any instrument of this build can voice at BASEPOINT, run through
+         * every ordered pair of instruments, looking for two inputs with one output. Null on a
+         * build whose instruments are all in nominal correspondence (nothing to collide).
+         */
+        const collision = (() => {
+            const offset = basepointOffset(BASEPOINT)
+            const numbers = [...new Set(INSTRUMENTS.flatMap((name) =>
+                INSTRUMENTS_DATA[name].notes.map((note) => note.sounding + offset)))]
+            for (const from of INSTRUMENTS) {
+                for (const to of INSTRUMENTS) {
+                    if (from === to) continue
+                    const after = rewriteForSwap(numbers, from, to, BASEPOINT)
+                    for (let i = 0; i < after.length; i++) {
+                        for (let j = i + 1; j < after.length; j++) {
+                            if (after[i] !== after[j]) continue
+                            return {from, to, kept: after[i], numbers: [numbers[i], numbers[j]]}
+                        }
+                    }
+                }
+            }
+            return null
+        })()
+
+        it.runIf(collision !== null)('leaves ONE note where the swap collapsed two', () => {
+            const {from, to, kept, numbers} = collision!
+            const song = new ComposedSong('swap collision', [from])
+            song.pitch = BASEPOINT
+            //the longer span goes on the note that is NOT kept as the survivor's identity, so a
+            //merge that dropped the wrong one would still be visible
+            song.addNoteAt(0, 0, numbers[0], 1)
+            song.addNoteAt(0, 0, numbers[1], 3)
+
+            song.setInstrument(0, new InstrumentData({name: to}))
+
+            const notes = song.columns[0].notesOfTrack(0)
+            expect(notes).toHaveLength(1)
+            expect(notes[0].id).toBe(kept)
+            //the merge keeps the longest span, like every other one in this class
+            expect(notes[0].span).toBe(3)
+            //...and the survivor is the note the editor can reach: with a duplicate behind it,
+            //removeNote would take the first and leave the second sounding
+            song.removeNoteAt(0, 0, kept)
+            expect(song.columns[0].notes).toEqual([])
+        })
+
+        it.runIf(collision !== null)('never leaves a span below the invariant behind', () => {
+            //normalizeSpans truncates a note's span to the distance to the NEXT same-(track,
+            //number) note, so two of them in ONE column used to produce a span of 0 (SongClasses:
+            //span ≥ 1). It is the same corruption seen from the pass that would hide it.
+            const {from, to, numbers} = collision!
+            const song = new ComposedSong('swap collision spans', [from])
+            song.pitch = BASEPOINT
+            song.addNoteAt(0, 0, numbers[0], 2)
+            song.addNoteAt(0, 0, numbers[1], 2)
+            song.setInstrument(0, new InstrumentData({name: to}))
+            //the pass any later bulk edit (and every reload) runs over the song anyway
+            song.normalizeSpans()
+            song.columns.forEach((column) => column.notes.forEach((note) => {
+                expect(note.span).toBeGreaterThanOrEqual(1)
+            }))
+        })
     })
 })
 
