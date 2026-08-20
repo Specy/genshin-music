@@ -9,7 +9,7 @@
 // (Vintage-Lyre, Ukulele) are guarded by roster PRESENCE for the same reason — they pin the
 // exact numbers the audit produced, on the build that actually ships those instruments.
 import {describe, expect, it} from 'vitest'
-import {CANONICAL_NOTE_IDS, INSTRUMENTS, INSTRUMENTS_DATA, PITCHES} from './imports'
+import {CANONICAL_NOTE_IDS, ComposedSong, INSTRUMENTS, INSTRUMENTS_DATA, InstrumentData, PITCHES} from './imports'
 import {
     basepointOffset, buttonToNumber, getNoteIdTable, getSoundingTable, gridRowForNumber,
     numberToButton, songGridSlotForId,
@@ -248,5 +248,34 @@ describe.runIf(TUNED.length > 0)('tuned instruments seen from an untuned track',
         expect(placement.stranded).toBe(true)
         expect(placement.accidental).not.toBe(0)
         expect(placement.row).toBeGreaterThanOrEqual(0)
+    })
+})
+
+describe('a track that states no Basepoint follows the song\'s', () => {
+    // `pitch` is an OVERRIDE and only "" means "no override" (effectiveTrackPitch), so a
+    // deserializer defaulting it to "C" made a file that omits the field claim a hard Basepoint
+    // of C — which since ADR-0007 also decides what its stored numbers MEAN.
+    it('deserialize defaults `pitch` to "" (follow), never to a hard C', () => {
+        expect(InstrumentData.deserialize({} as never).pitch).toBe('')
+    })
+
+    it('a v4 track omitting `pitch` migrates at the SONG\'s Basepoint', () => {
+        const instrument = INSTRUMENTS[0]
+        const nominal = INSTRUMENTS_DATA[instrument].notes[0].midi
+        const song = ComposedSong.deserialize({
+            id: null, folderId: null, name: 'No Basepoint', type: 'composed', version: 4,
+            bpm: 220, pitch: 'F', reverb: false, breakpoints: [],
+            data: {isComposed: true, isComposedVersion: true, appName: new ComposedSong('probe').data.appName},
+            columnTempos: [0],
+            //the instrument payload a hand-written or very old file leaves `pitch` out of
+            tracks: [{instrument: {name: instrument}, notes: [[0, nominal, 1]]}],
+        } as never)
+        expect(song.instruments[0].pitch).toBe('')
+        //+5 (the song's F), not the +0 a defaulted "C" produced
+        expect(song.columns[0].notes[0].id).toBe(buttonToNumber(instrument, 'F', 0))
+        expect(song.columns[0].notes[0].id - buttonToNumber(instrument, 'C', 0)!).toBe(basepointOffset('F'))
+        //...and the track stays free to follow a later song-level Basepoint change
+        song.applyBasepointChange('song', 'F', 'C')
+        expect(song.columns[0].notes[0].id).toBe(buttonToNumber(instrument, 'C', 0))
     })
 })

@@ -281,9 +281,6 @@ export const i18n_en = {
       player_bpm: 'Bpm',
       player_bpm_description:
         'Beats per minute, used by the metronome and will be used when converting the song with the composer',
-      player_sync_song_data: "Auto sync the song's instruments and pitch",
-      player_sync_song_data_description:
-        'Whenever you load a song, the instruments and pitch of that song will be loaded too',
       player_metronome_beats: 'Metronome beats',
       player_metronome_beats_description: 'After how many times a stronger beat is played',
       player_metronome_volume: 'Metronome volume',
@@ -889,12 +886,14 @@ export const i18n_en = {
       'change-8':
         'Songs now store the note each button actually plays, instead of the position of the key you pressed. Your existing songs are upgraded automatically the first time you open them, and they sound exactly as they did before.',
       'change-9':
-        'Changing the pitch of a song, or of a single layer, now really moves its notes instead of only renaming them. It is an ordinary edit, so you can undo it. Switching a layer to another instrument keeps its notes on the same keys where the two instruments share them.',
+        'Changing the pitch of a song, or of a single layer, now really moves its notes instead of only renaming them. Switching a layer to another instrument keeps its notes on the same keys where the two instruments share them.',
       'change-10':
         'Exporting to MIDI now writes the notes you actually hear, pitch included. Before, a song written at a pitch other than C exported as if it were at C.',
       'change-11':
         'Because of all this, saved songs carry a new format version (composed 5, recorded 4, VSRG 3). If you use third party tools that read the song JSON, they must check the "version" field: in the new versions each note is a real note number, not a keyboard position, so a tool that ignores the version will read them wrong.',
-      'change-12': 'Many other bug fixes and improvements',
+      'change-12':
+        'The player now always follows the loaded song\'s pitch and instruments — songs can no longer play silently because your own pitch differed from theirs. Your settings come back when the song stops, so the "sync song data" setting is gone.',
+      'change-13': 'Many other bug fixes and improvements',
     },
     '3-7-0': {
       title: 'New instruments (Genshin)',

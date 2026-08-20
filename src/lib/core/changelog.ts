@@ -19,9 +19,10 @@ export const CHANGELOG: Update[] = [
             'Slight redesigns throughout the app',
             'Composer playback now runs on a single clock — sound, visuals and recording stay exactly in sync (the lookahead setting is gone)',
             'Songs now store the note each button actually plays; your existing songs are upgraded when you open them',
-            'Changing the pitch of a song or of a single layer now moves its notes, and can be undone like any other edit',
+            'Changing the pitch of a song or of a single layer now moves its notes',
             'MIDI export now writes the notes you actually hear, pitch included',
             'Saved songs use a new format version — third party tools that read the song JSON must check the "version" field',
+            'The player always follows the loaded song\'s pitch and instruments, and returns to your own settings when the song stops (the "sync song data" setting is gone)',
             'Other bug fixes and improvements',
         ]
     },

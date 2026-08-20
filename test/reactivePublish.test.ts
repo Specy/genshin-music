@@ -526,6 +526,8 @@ const READERS: PublishCase[] = [
     {name: 'toMidi', publishes: [], touches: 'none', run: song => void song.toMidi()},
     {name: 'clone', publishes: [], touches: 'none', run: song => void song.clone()},
     {name: 'copyColumns', publishes: [], touches: 'none', run: song => void song.copyColumns([0, 1], 'all')},
+    //the other half of a copy (the Basepoints its numbers were authored at) — a read of the roster
+    {name: 'trackPitches', publishes: [], touches: 'none', run: song => void song.trackPitches()},
     {
         name: 'toOtherGame',
         //genuinely worth pinning: it normalizes spans and rewrites ids, but only on the clone it

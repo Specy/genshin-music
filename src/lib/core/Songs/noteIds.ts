@@ -382,12 +382,13 @@ function getSoundingReverseMap(instrumentName: RuntimeInstrumentName): Map<numbe
     if (cached) return cached
     const map = new Map<number, number>()
     getSoundingTable(instrumentName).forEach((sounding, button) => {
-        // First button wins, like the nominal map — but where a duplicate NOMINAL id is a
-        // registry error, a duplicate sounding value is only rejected AMONG PITCHED BUTTONS
-        // (two of those would be indistinguishable in every song). An Assigned Button keeps
-        // its Nominal Id precisely so alike-sounding ones never collapse, so it can legally
-        // repeat a pitched neighbour's number; the earlier button is then the one that
-        // sounds, and the later one is reachable only through its own Button.
+        // First button wins, like the nominal map — but unlike that map it never has to
+        // choose: registry validation rejects an instrument whose buttons repeat a sounding
+        // value, across BOTH kinds (registry.normalizeNotes), precisely because nothing can
+        // address the shadowed button any more. No button-keyed play path survives ADR-0007
+        // — every note, from a song or from the keyboard, is a Note Number resolved through
+        // here — so a shadowed button would simply sound the earlier one's sample. The `has`
+        // check is the belt to validation's braces, not a policy of its own.
         if (!map.has(sounding)) map.set(sounding, button)
     })
     soundingReverseCache.set(instrumentName, map)

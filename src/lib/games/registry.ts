@@ -16,10 +16,11 @@
 // files, integer + per-instrument-unique Note Ids (the reverse button map is
 // first-occurrence-wins — duplicates would silently break song round-trips), every
 // instrument note id being a member of the game's Song Grid (ADR-0004), a derivable
-// and collision-free Sounding Pitch per Pitched Button (ADR-0007), sane sustain/loop
-// regions, required game.json sections, and a duplicate-free roster. Filesystem-level
-// checks (sample files exist on disk) live in test/gameConfig.test.ts, where fs access
-// exists; icon/shape/label checks need the code side and live in defineGame().
+// Sounding Pitch per Pitched Button and a collision-free Note Number per BUTTON of
+// either kind (ADR-0007), sane sustain/loop regions, required game.json sections, and
+// a duplicate-free roster. Filesystem-level checks (sample files exist on disk) live in
+// test/gameConfig.test.ts, where fs access exists; icon/shape/label checks need the
+// code side and live in defineGame().
 import type { GameId, LoopRegion } from './types';
 import {
   BASE_NOTE_PITCH_CLASSES,
@@ -169,12 +170,19 @@ export function normalizeNotes(
   // first-occurrence-wins, so a duplicate would silently strand the later button.
   const ids = new Set(notes.map((n) => n.midi));
   if (ids.size !== notes.length) fail(context, 'duplicate Note Ids (midi) within the instrument');
-  // Two Pitched Buttons sounding the same pitch would enter the same Note Number, making
-  // them indistinguishable in every song (ADR-0007). Assigned Buttons are exempt by
-  // design: they keep their Nominal Ids precisely so alike-sounding ones never collapse.
-  const soundingPitches = notes.filter((n) => n.pitched).map((n) => n.sounding);
-  if (new Set(soundingPitches).size !== soundingPitches.length) {
-    fail(context, "duplicate Sounding Pitches among the instrument's Pitched Buttons");
+  // Two buttons entering the same Note Number are indistinguishable in every song (ADR-0007),
+  // and the Note Number -> button map (noteIds.getSoundingReverseMap) is first-occurrence-wins,
+  // so the later one would be voiced by the earlier one's sample. Checked across BOTH kinds:
+  // an Assigned Button's Note Number is its Nominal Id, so it can land on a Pitched neighbour's
+  // Sounding Pitch just as easily as two Pitched Buttons can land on each other. Two ASSIGNED
+  // buttons cannot collide here at all — their soundings are their (already unique) Nominal Ids.
+  const soundingPitches = notes.map((n) => n.sounding);
+  const collision = soundingPitches.find((sounding, i) => soundingPitches.indexOf(sounding) !== i);
+  if (collision !== undefined) {
+    fail(
+      context,
+      `duplicate Sounding Pitches: two buttons both enter Note Number ${collision}, so a song could only ever address the first of them`
+    );
   }
   return notes;
 }

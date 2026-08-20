@@ -7,7 +7,7 @@
   import { logger } from '$stores/LoggerStore.svelte';
   import type { MIDINote, MIDIShortcut as MIDIShortcutData } from '$core/utils/Utilities';
   import type { InstrumentName } from '$core/types';
-  import type { MIDIPreset } from '$lib/games/types';
+  import type { MIDIPreset, Pitch } from '$lib/games/types';
   import { MIDIProvider, type MIDIEvent } from '$lib/providers/MIDIProvider';
   import { AudioProvider } from '$lib/providers/AudioProvider';
   import { AudioPlayer } from '$lib/audio/AudioPlayer';
@@ -41,7 +41,13 @@
   // Shape, the notes the Shape places, their glyphs, and the Note Id each button plays -
   // a MIDI preset maps hardware keys onto THOSE buttons.
   const baseInstrument = new Instrument();
-  const audioPlayer = new AudioPlayer('C');
+  // The Basepoint this page auditions at, in ONE place: the player is built at it, and every
+  // button's Note Number is asked for at it (ADR-0007 - the two must be the same value, or a
+  // press enters a number the engine then resolves against a different Basepoint). This page
+  // has no song and no pitch selector, so it is simply C; the layer it syncs below carries no
+  // override, so `playNoteOfInstrument` resolves the player's base.
+  const AUDITION_PITCH: Pitch = 'C';
+  const audioPlayer = new AudioPlayer(AUDITION_PITCH);
   let mounted = true;
 
   // QUIRK (load-bearing): MIDINote/MIDIShortcut are plain, non-reactive classes - their fields
@@ -151,19 +157,23 @@
       const keyboardNotes = notes.filter((e) => e.midi === note);
       keyboardNotes.forEach((keyboardNote) => {
         // A preset slot is addressed by BUTTON (persisted MIDI settings stay button-keyed);
-        // the default instrument is what turns that Button into the Note Id the engine plays.
-        handleClick(keyboardNote, baseInstrument.getNoteFromIndex(keyboardNote.index)?.id, true);
+        // the default instrument is what turns that Button into the Note Number the engine plays.
+        handleClick(
+          keyboardNote,
+          baseInstrument.getNoteFromIndex(keyboardNote.index)?.numberAt(AUDITION_PITCH),
+          true
+        );
       });
     }
   }
 
   /**
-   * Select (or animate) one preset slot and audition it. `id` is the Note Id the drawn button
-   * plays - the caller holds the note object the Shape gave it, so nothing here has to guess
-   * where the button lives; `undefined` when the slot maps to no note of the loaded
-   * instrument, in which case there is simply nothing to audition.
+   * Select (or animate) one preset slot and audition it. `number` is the Note Number the drawn
+   * button ENTERS at this page's Basepoint - the caller holds the note object the Shape gave it,
+   * so nothing here has to guess where the button lives; `undefined` when the slot maps to no
+   * note of the loaded instrument, in which case there is simply nothing to audition.
    */
-  function handleClick(note: MIDINote, id: number | undefined, animate = false) {
+  function handleClick(note: MIDINote, number: number | undefined, animate = false) {
     if (!animate) deselectNotes();
     note.status = 'clicked';
     if (animate) {
@@ -178,7 +188,7 @@
       selectedNote = note;
       selectedShortcut = null;
     }
-    playSound(id);
+    playSound(number);
   }
 
   function handleShortcutClick(shortcut: string) {
@@ -192,10 +202,16 @@
     selectedNote = null;
   }
 
-  /** Audition one Note Id on the loaded instrument - the engine is id-keyed (ADR-0005 §4). */
-  function playSound(id: number | undefined) {
-    if (id === undefined) return;
-    audioPlayer.playNoteOfInstrument(0, id);
+  /**
+   * Audition one Note Number on the loaded instrument - the engine is Number-keyed since
+   * ADR-0007 (it resolves the number back to a button at the layer's Basepoint), so what is
+   * handed over here is `numberAt(AUDITION_PITCH)`, never the button's Nominal Id. The two
+   * coincide only for an untuned instrument at Basepoint C, which both games' first instrument
+   * happens to be - a tuned default would have auditioned the wrong key, or nothing at all.
+   */
+  function playSound(number: number | undefined) {
+    if (number === undefined) return;
+    audioPlayer.playNoteOfInstrument(0, number);
   }
 
   async function createPreset() {
@@ -349,7 +365,7 @@
       {@const note = notes[button]}
       {#if note}
         <BaseNote
-          handleClick={() => handleClick(note, instrumentNote.id)}
+          handleClick={() => handleClick(note, instrumentNote.numberAt(AUDITION_PITCH))}
           data={note}
           noteImage={instrumentNote.icon}
           noteText={note.midi < 0 ? 'N/A' : String(note.midi)}

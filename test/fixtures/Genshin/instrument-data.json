@@ -32,7 +32,7 @@
   "fromEmpty": {
     "name": "Lyre",
     "volume": 100,
-    "pitch": "C",
+    "pitch": "",
     "visible": true,
     "icon": "circle",
     "alias": "",

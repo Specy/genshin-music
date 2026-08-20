@@ -208,8 +208,9 @@ describe('registry rejections around note identity (ADR-0007)', () => {
     expect(normalize([note({ midi: 72, baseNote: 'C' }), note({ midi: 73, baseNote: 'C' })])).toThrow(
       /duplicate Sounding Pitches/
     );
-    // Assigned Buttons are exempt: they keep their Nominal Ids exactly so alike-sounding
-    // buttons stay distinct
+    // Two Assigned Buttons cannot collide: their Sounding Pitches are their Nominal Ids, which
+    // the check above already keeps distinct — which is exactly why an Assigned Button keeps its
+    // Nominal Id in the first place, so alike-sounding buttons stay addressable.
     expect(
       normalize([
         note({ midi: 72, baseNote: 'C', pitched: false }),
@@ -217,24 +218,45 @@ describe('registry rejections around note identity (ADR-0007)', () => {
       ])
     ).not.toThrow();
   });
+
+  it('an Assigned Button landing on a Pitched neighbour’s Sounding Pitch', () => {
+    // The cross-kind case, which the pitched-only check used to wave through: distinct Nominal
+    // Ids (73 and 72), but the pitched button is tuned DOWN onto 72, so both buttons enter Note
+    // Number 72 and only the first of them could ever be addressed (noteIds.numberToButton is
+    // first-occurrence-wins). Both orders, since the reverse map's answer depends on it.
+    expect(
+      normalize([note({ midi: 73, baseNote: 'C' }), note({ midi: 72, baseNote: 'C', pitched: false })])
+    ).toThrow(/duplicate Sounding Pitches.*72/);
+    expect(
+      normalize([note({ midi: 72, baseNote: 'C', pitched: false }), note({ midi: 73, baseNote: 'C' })])
+    ).toThrow(/duplicate Sounding Pitches.*72/);
+    // ...and the same pair with the pitched button tuned anywhere else is fine
+    expect(
+      normalize([note({ midi: 73, baseNote: 'Db' }), note({ midi: 72, baseNote: 'C', pitched: false })])
+    ).not.toThrow();
+  });
 });
 
 describe('chord-label fallback (design 2026-08-19 §6)', () => {
-  it('a label no spelling table lists renders verbatim at every Basepoint', () => {
+  it('an Assigned Button renders its authored label verbatim at every Basepoint', () => {
     for (const [index] of PITCHES.entries()) {
-      expect(baseNoteText(NOTE_SCALE, 'G7', index)).toBe('G7');
-      expect(baseNoteText(DO_RE_MI_NOTE_SCALE, 'Dm', index)).toBe('Dm');
+      expect(baseNoteText(NOTE_SCALE, 'G7', index, false)).toBe('G7');
+      expect(baseNoteText(DO_RE_MI_NOTE_SCALE, 'Dm', index, false)).toBe('Dm');
+      // the half a label-based test cannot see: a chord row's bare triads ('C', 'F', 'G') are
+      // listed in every table, and respelling THOSE put one row of chords in two keys
+      expect(baseNoteText(NOTE_SCALE, 'C', index, false)).toBe('C');
+      expect(baseNoteText(DO_RE_MI_NOTE_SCALE, 'F', index, false)).toBe('F');
     }
   });
 
-  it('a label the tables DO list still transposes with the Basepoint', () => {
-    expect(baseNoteText(NOTE_SCALE, 'C', 0)).toBe('C');
-    expect(baseNoteText(NOTE_SCALE, 'C', 2)).toBe('D');
-    expect(baseNoteText(NOTE_SCALE, 'Db', 1)).toBe('Ebb');
-    expect(baseNoteText(DO_RE_MI_NOTE_SCALE, 'C', 2)).toBe('re');
+  it('a Pitched Button still transposes with the Basepoint', () => {
+    expect(baseNoteText(NOTE_SCALE, 'C', 0, true)).toBe('C');
+    expect(baseNoteText(NOTE_SCALE, 'C', 2, true)).toBe('D');
+    expect(baseNoteText(NOTE_SCALE, 'Db', 1, true)).toBe('Ebb');
+    expect(baseNoteText(DO_RE_MI_NOTE_SCALE, 'C', 2, true)).toBe('re');
     // '' is a listed spelling with an all-empty row: silent SFX buttons stay blank rather
     // than falling through to the verbatim branch
-    expect(baseNoteText(NOTE_SCALE, '', 5)).toBe('');
+    expect(baseNoteText(NOTE_SCALE, '', 5, true)).toBe('');
   });
 
   it('every shipped button either spells a scale row or is an Assigned Button', () => {
@@ -246,7 +268,7 @@ describe('chord-label fallback (design 2026-08-19 §6)', () => {
         for (const note of instrument.notes) {
           if (note.baseNote in NOTE_SCALE) continue;
           expect(note.pitched, `${gameId}/${instrument.name} "${note.baseNote}"`).toBe(false);
-          expect(baseNoteText(NOTE_SCALE, note.baseNote, 7)).toBe(note.baseNote);
+          expect(baseNoteText(NOTE_SCALE, note.baseNote, 7, note.pitched)).toBe(note.baseNote);
         }
       }
     }

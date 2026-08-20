@@ -171,7 +171,6 @@ export type PlayerSettingsDataType = {
     metronomeBeats: SettingsNumber
     bpm: SettingsNumber
     metronomeVolume: SettingsSlider
-    syncSongData: SettingsCheckbox
     showVisualSheet: SettingsCheckbox
     numberOfVisualRows: SettingsSelect<number>
     numberOfVisualColumns: SettingsSelect<number>
@@ -182,7 +181,7 @@ export type PlayerSettingsDataType = {
 export type PlayerSettingsType = BaseSettings<PlayerSettingsDataType>
 export const PlayerSettings = {
     other: {
-        settingVersion: APP_NAME + 83 //change when instrument is added
+        settingVersion: APP_NAME + 84 //change when instrument is added
     },
     data: {
         instrument: {
@@ -213,14 +212,6 @@ export const PlayerSettings = {
             threshold: [0, 10000],
             value: 220,
             category: "song_settings",
-        },
-        syncSongData: {
-            name: "player_sync_song_data",
-            tooltip: "player_sync_song_data_description",
-            type: "checkbox",
-            songSetting: false,
-            value: true,
-            category: "player_settings",
         },
         metronomeBeats: {
             name: "player_metronome_beats",

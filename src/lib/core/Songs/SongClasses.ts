@@ -211,7 +211,13 @@ export class InstrumentData {
         return new InstrumentData().set({
             name: data.name ?? INSTRUMENTS[0],
             volume: data.volume ?? 100,
-            pitch: data.pitch ?? "C",
+            //"" (FOLLOW the song's Basepoint), never "C": `pitch` is a per-track OVERRIDE, and only
+            //the empty string means "no override" (noteIds.effectiveTrackPitch). A defaulted "C"
+            //made a file that omits the field claim a hard Basepoint of C, which since ADR-0007
+            //also mis-migrates its notes (+0 instead of +songPitch) and then freezes the track out
+            //of song-level Basepoint changes. It was never a legacy meaning either: before the
+            //2022 commit that filled these defaults in, a missing pitch left the class default "".
+            pitch: data.pitch ?? "",
             visible: data.visible ?? true,
             icon: data.icon ?? 'circle',
             alias: data.alias ?? "",
