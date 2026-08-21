@@ -401,6 +401,7 @@
             "icon": "border",
             "alias": "",
             "muted": false,
+            "solo": false,
             "reverbOverride": null
           },
           "notes": [
@@ -1847,6 +1848,7 @@
             "icon": "circle",
             "alias": "",
             "muted": false,
+            "solo": false,
             "reverbOverride": null
           },
           "notes": [
@@ -2353,6 +2355,7 @@
             "icon": "line",
             "alias": "",
             "muted": false,
+            "solo": false,
             "reverbOverride": null
           },
           "notes": []
@@ -2366,6 +2369,7 @@
             "icon": "border",
             "alias": "",
             "muted": false,
+            "solo": false,
             "reverbOverride": null
           },
           "notes": []
@@ -2398,6 +2402,7 @@
             "icon": "circle",
             "alias": "",
             "muted": false,
+            "solo": false,
             "reverbOverride": null
           },
           "notes": [

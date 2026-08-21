@@ -18,6 +18,13 @@
       //only its LENGTH is read here (the undo button's enabled state); what an entry holds is
       //Composer.svelte's business (ComposerHistoryEntry — a compound snapshot since ADR-0007)
       undoHistory: readonly unknown[];
+      /**
+       * CONTEXT.md: Pro View. Nothing in this panel changes with it — it only picks up the
+       * translucency modifier below, because there the canvas it floats over IS the window and
+       * the rows under the panel are worth a glimpse. A PROP and not a descendant selector: see
+       * that modifier's own note.
+       */
+      proView: boolean;
     };
     functions: {
       toggleTools: () => void;
@@ -36,6 +43,16 @@
   let selectionType: SelectionType = $state('all');
 
   const selectedTarget = $derived(selectionType === 'all' ? ('all' as const) : data.layer);
+
+  // THE PRO VIEW'S MODIFIER RIDES ON THIS ELEMENT, and it has to: this card is a SIBLING of
+  // `.composer-grid` (Composer.svelte renders it after that div, like `.song-info-pro`), so a
+  // `.composer-grid-pro .tools-visible` rule could never match it. Only while the panel is open,
+  // since `.tools-visible` is what it overrides.
+  const visibleClasses = $derived(
+    data.isToolsVisible
+      ? `floating-tools tools-visible${data.proView ? ' tools-visible-pro' : ''}`
+      : ''
+  );
 </script>
 
 {#snippet toolButton(
@@ -201,7 +218,7 @@
 
 <!-- QUIRK: this repeats the "floating-tools" token when the tools are visible — old built the same duplicate and browsers dedupe it, so keep it rather than tidying the expression. -->
 <DecoratedCard
-  class="floating-tools {data.isToolsVisible ? 'floating-tools tools-visible' : ''}"
+  class="floating-tools {visibleClasses}"
   size="1.2rem"
   isRelative={false}
   offset="0.1rem"

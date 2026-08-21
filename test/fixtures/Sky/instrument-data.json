@@ -7,6 +7,7 @@
     "icon": "circle",
     "alias": "",
     "muted": false,
+    "solo": false,
     "reverbOverride": null
   },
   "custom": {
@@ -17,6 +18,7 @@
     "icon": "line",
     "alias": "my alias",
     "muted": true,
+    "solo": false,
     "reverbOverride": true
   },
   "roundtrip": {
@@ -27,6 +29,7 @@
     "icon": "line",
     "alias": "my alias",
     "muted": true,
+    "solo": false,
     "reverbOverride": true
   },
   "fromEmpty": {
@@ -37,6 +40,7 @@
     "icon": "circle",
     "alias": "",
     "muted": false,
+    "solo": false,
     "reverbOverride": null
   },
   "noteIcons": [

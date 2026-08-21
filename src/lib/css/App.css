@@ -2410,8 +2410,15 @@ select {
   margin: 0;
 }
 
+/* The floor is what keeps this column usable on a laptop: 4vw is under 3.5rem on every viewport
+   narrower than 1400px, which is where the icons start running out of room. THE CANVAS IS THIS
+   COLUMN'S COMPLEMENT, so the floor belongs to both sides or the canvas slides under the column
+   exactly where it engages - composerCanvasGeometry states the same max()
+   (DESKTOP_TOOL_COLUMN_MIN_REM), and test/composerCanvasCss.test.ts reads this declaration to hold
+   the two together. Below the composer's mobile breakpoint the media block's `width: 100%` rules
+   instead, and the desktop formula is already scoped away from there. */
 .tool {
-  width: 4vw;
+  width: max(4vw, 3.5rem);
 }
 
 .tool-icon {
@@ -2422,6 +2429,13 @@ select {
 .tool:hover,
 .tool-slim:hover {
   background-color: var(--primary-layer-15);
+}
+
+/* A tool whose STATE is on — the open View Lock and the open tools panel (user additions
+   2026-08-22): the button that turns the state back off says so, in a half-accent tint of the
+   column's own resting surface. Two classes so it also holds through :hover above. */
+.tool.tool-toggled {
+  background-color: color-mix(in srgb, var(--accent) 50%, var(--primary-darken-10));
 }
 
 select {
@@ -2587,10 +2601,25 @@ select {
   animation: delayBackdrop calc(0.4s * 1.2) forwards;
 }
 
+/* PRO VIEW ONLY: there the canvas this panel floats over is the whole window rather than a card in
+   the middle of the page, so the rows it covers are the ones being edited - the panel lets a little
+   of them through instead of hiding them outright, and eases off the backdrop blur to match.
+   A MODIFIER ON THE PANEL ITSELF and not `.composer-grid-pro .tools-visible`: ComposerTools is a
+   SIBLING of `.composer-grid` (as `.song-info-pro` is), so no descendant selector can reach it -
+   ComposerTools.svelte takes `proView` as a prop for exactly this. After `.tools-visible`, whose
+   values it overrides at equal specificity. */
+.tools-visible-pro {
+  opacity: 0.8;
+  --backdrop-amount: 2px;
+}
+
 .tempo-changers-wrapper {
   position: absolute;
-  color: white;
+  color: var(--icon-color);
+  background-color: var(--primary-darken-10);
+  padding: 0.2rem;
   right: 0.2rem;
+  border-radius: 0.3rem;
   bottom: 0.2rem;
   flex-direction: column;
   width: 4rem;
@@ -2779,15 +2808,39 @@ select {
   background-color: rgba(var(--composer-secondary-layer-rgb), 0.2);
 }
 
+/* An unselected row that carries the solo bar, and only that row: the selected one below is
+   taller anyway because it always shows the bar. Declared first so the selected height wins
+   when a row is both. */
+.instrument-button-with-solo {
+  height: 4.6rem;
+  min-height: 4.6rem;
+}
+
 .instrument-button-selected {
-  height: 4.2rem;
-  min-height: 4.2rem;
+  height: 6rem;
+  min-height: 6rem;
   background-color: var(--composer-main-layer);
   color: var(--composer-main-layer-text);
 }
 
+/* The dim cue for a track outside the solo set — the selected row included, since it is just as
+   silent as the rest and the panel stays honest about that. Opacity on the whole row, so the
+   mute/hidden icons dim WITH it rather than disappearing. */
+.instrument-button-outside-solo {
+  opacity: 0.55;
+}
+
 .instrument-button-selected .app-button {
   color: var(--composer-main-layer-text);
+}
+
+/* Selecting a layer must not FADE the row's text from one colour into the other — .app-button's
+   base transition carries a `color` term, so the same declaration is repeated here without it.
+   Background and filter keep transitioning, as they do on every other button. */
+.instrument-button .app-button {
+  transition:
+    background-color 0.2s,
+    filter 0.2s;
 }
 
 .instrument-settings {
@@ -2795,13 +2848,31 @@ select {
   display: grid;
   width: 100%;
   grid-template-columns: 1fr 1fr;
+  gap: 0.2rem;
+  padding: 0.2rem;
 }
 
+/* One resting surface for the gear, the eye and the solo bar alike, in the secondary pair —
+   which carries its own text colour, so nothing here depends on what the row underneath
+   inherits. DECLARED AFTER `.instrument-button-selected .app-button`: equal specificity, so
+   source order is what keeps the secondary text colour on the selected row too.
+   `.app-button.active` then paints all three the accent pair when their state is on.
+   The fixed height is what makes the gear and the eye the same box despite their 15px/16px
+   icons — `height: fit-content` sized each to its own glyph. */
 .instrument-settings .app-button {
   padding: 0.1rem;
-  background-color: transparent;
+  height: 1.2rem;
+  background-color: var(--secondary);
+  color: var(--secondary-text);
   min-width: unset;
   flex: 1;
+}
+
+/* The bar is a row of its own under the gear|eye pair, and the only child on an unselected
+   soloed row — 1 / -1 spans the grid in both cases. */
+.instrument-solo-button {
+  grid-column: 1 / -1;
+  font-size: 0.75rem;
 }
 
 .floating-instrument-settings {

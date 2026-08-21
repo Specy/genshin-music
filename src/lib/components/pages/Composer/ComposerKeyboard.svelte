@@ -1,3 +1,19 @@
+<script module lang="ts">
+  import type { LayerStatus } from '$core/Songs/Layer';
+
+  /**
+   * WHAT EVERY KEY READS UNSELECTED THROUGH while the lowered sheet is cleared (spec §4): ONE Map
+   * for the life of the module, so `get(i) ?? 0` answers 0 on every key AND the derived below keeps
+   * its value's identity across a column advance - which is what stops any key's `layer` prop from
+   * changing and the keyboard from repainting. A fresh empty Map would show the same thing and
+   * repaint every key to do it.
+   *
+   * NOT `null`, which is the derived's error branch and prints "Err" over the keyboard. A plain Map
+   * and not a SvelteMap: it is never written and nothing may observe it change.
+   */
+  const NO_LAYER_STATUSES = new Map<number, LayerStatus>();
+</script>
+
 <script lang="ts">
   import { game } from '$game';
   import type { NoteNameType, Pitch } from '$lib/games/types';
@@ -30,10 +46,19 @@
       /**
        * CONTEXT.md: Pro View. The keyboard's own markup does not change with it - it is the same
        * surface, flashing the same active notes, and it stays MOUNTED while lowered so it keeps
-       * doing so. What it decides here is only whether the tempo changers ride along: see the
-       * `{#if}` at the bottom of this file.
+       * doing so WHILE THE SONG IS STOPPED, which is what makes browsing and editing with the sheet
+       * down work. Under a lowered PLAYBACK it shows nothing instead: `noteStatesCleared` below is
+       * that rule, and this flag is not it. What this one decides here is only whether the tempo
+       * changers ride along: see the `{#if}` at the bottom of this file.
        */
       proView: boolean;
+      /**
+       * THE LOWERED SHEET'S PLAYBACK CLEAR (spec §4), decided in one place by Composer.svelte
+       * (`proView && !keyboardSheetRaised && isPlaying` - see it there for the exclusions). While
+       * it holds, every key here reads unselected and un-held, and stays so without this component
+       * reading the column at all.
+       */
+      noteStatesCleared: boolean;
     };
     functions: {
       handleClick: (note: ObservableNote, pointerId: number) => void;
@@ -54,6 +79,11 @@
   // override there), which is the Basepoint every note's number has to be read at to answer
   // "which of THIS keyboard's keys sounds it" (ADR-0007).
   const layerStatuses = $derived.by(() => {
+    //BEFORE the column is read, and reading nothing but the gate. The `data` object literal
+    //upstream takes a fresh identity on every column advance, so this derived does re-enter under
+    //the clear - what it must not do is hand back a fresh Map, or every key repaints to show the
+    //same nothing (see NO_LAYER_STATUSES).
+    if (data.noteStatesCleared) return NO_LAYER_STATUSES;
     try {
       return computeButtonLayerStatuses(
         data.currentColumn.notes,

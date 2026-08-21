@@ -22,6 +22,7 @@
           "icon": "circle",
           "alias": "",
           "muted": false,
+          "solo": false,
           "reverbOverride": null
         },
         "notes": [
@@ -48,6 +49,7 @@
           "icon": "circle",
           "alias": "",
           "muted": false,
+          "solo": false,
           "reverbOverride": null
         },
         "notes": [
@@ -87,6 +89,7 @@
           "icon": "circle",
           "alias": "",
           "muted": false,
+          "solo": false,
           "reverbOverride": null
         },
         "notes": [
@@ -113,6 +116,7 @@
           "icon": "circle",
           "alias": "",
           "muted": false,
+          "solo": false,
           "reverbOverride": null
         },
         "notes": [
@@ -152,6 +156,7 @@
           "icon": "circle",
           "alias": "",
           "muted": false,
+          "solo": false,
           "reverbOverride": null
         },
         "notes": [
@@ -178,6 +183,7 @@
           "icon": "circle",
           "alias": "",
           "muted": false,
+          "solo": false,
           "reverbOverride": null
         },
         "notes": [
@@ -217,6 +223,7 @@
           "icon": "circle",
           "alias": "",
           "muted": false,
+          "solo": false,
           "reverbOverride": null
         },
         "notes": [
@@ -256,6 +263,7 @@
           "icon": "circle",
           "alias": "",
           "muted": false,
+          "solo": false,
           "reverbOverride": null
         },
         "notes": [
@@ -282,6 +290,7 @@
           "icon": "circle",
           "alias": "",
           "muted": false,
+          "solo": false,
           "reverbOverride": null
         },
         "notes": [

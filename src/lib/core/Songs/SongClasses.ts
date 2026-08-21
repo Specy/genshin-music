@@ -169,6 +169,7 @@ export interface SerializedInstrumentData {
     icon: InstrumentNoteIcon
     alias: string
     muted: boolean
+    solo: boolean
     reverbOverride: boolean | null
 }
 
@@ -189,6 +190,7 @@ export class InstrumentData {
     reverbOverride: boolean | null = null
     alias = ''
     muted = false
+    solo = false
 
     constructor(data: Partial<InstrumentData> = {}) {
         Object.assign(this, data)
@@ -203,6 +205,7 @@ export class InstrumentData {
             icon: this.icon,
             alias: this.alias,
             muted: this.muted,
+            solo: this.solo,
             reverbOverride: this.reverbOverride
         }
     }
@@ -222,6 +225,9 @@ export class InstrumentData {
             icon: data.icon ?? 'circle',
             alias: data.alias ?? "",
             muted: data.muted ?? false,
+            //no version bump came with this field: files written before it load with no solos, and
+            //an older app reading a file that has it ignores it and plays every unmuted track
+            solo: data.solo ?? false,
             reverbOverride: data.reverbOverride ?? null
         })
     }
@@ -238,6 +244,22 @@ export class InstrumentData {
     clone() {
         return new InstrumentData(this)
     }
+}
+
+/**
+ * Whether track `index` sounds, DERIVED from the roster every time and never written onto anyone:
+ * Solo picks the set, the track's own Mute still silences it inside that set, and stacking falls
+ * out of it (soloing a track cannot un-solo another). Every playback seam asks this - composer
+ * previews and committed audio, and the player - so a saved solo state sounds the same everywhere.
+ *
+ * A track with no roster entry stays audible while no solo exists, which is the lenient gate the
+ * player has always had (`insData?.muted`); once a solo set exists it is silent, because a track
+ * the roster does not list cannot be in it.
+ */
+export function isTrackAudible(instruments: readonly InstrumentData[], index: number): boolean {
+    const data = instruments[index]
+    if (data?.muted) return false
+    return !instruments.some(instrument => instrument.solo) || !!data?.solo
 }
 
 interface ApproachingNoteProps {

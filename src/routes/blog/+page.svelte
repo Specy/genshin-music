@@ -38,11 +38,13 @@
   import Grid from '$cmp/layout/Grid.svelte';
   import AppLink from '$cmp/AppLink.svelte';
   import PromotionCard from '$cmp/PromotionCard.svelte';
+  import Partners from '$cmp/blog/Partners.svelte';
   import ComboBox, { comboBoxItem, comboBoxTitle } from '$cmp/inputs/ComboBox.svelte';
   import { blogNavbar, hasVisitedBlogPost } from '$cmp/blog/BaseBlogPost.svelte';
   import { blogAuthorRenderer, blogTagsRenderer } from '$cmp/blog/BlogMetadataRenderers.svelte';
   import { game } from '$game';
   import { setPageVisited } from '$stores/PageVisitStore.svelte';
+  import { t } from '$i18n/binding.svelte';
 
   // Distinct from BaseBlogPost.svelte's own per-post visited map: this call is the page-level
   // visit tracker only.
@@ -131,21 +133,23 @@
     </Header>
     <PromotionCard alwaysVisible />
     <Column gap="1rem">
-      <Row justify="between" align="center">
+      <Row justify="between" align="center" gap="1rem" style="flex-wrap:wrap">
         <Header>Posts</Header>
-        <ComboBox
-          items={selectedTags}
-          onChange={(newItems) => (selectedTags = newItems)}
-          style="z-index:3"
-        >
-          {#snippet title()}
-            {@render comboBoxTitle(selectTagsLabel)}
-          {/snippet}
-          {#snippet children(item, onClick)}
-            {#snippet tagLabel()}{item.item}{/snippet}
-            {@render comboBoxItem(item.selected, onClick, tagLabel)}
-          {/snippet}
-        </ComboBox>
+        <Row align="center" gap="0.5rem">
+          <ComboBox
+            items={selectedTags}
+            onChange={(newItems) => (selectedTags = newItems)}
+            style="z-index:3"
+          >
+            {#snippet title()}
+              {@render comboBoxTitle(selectTagsLabel)}
+            {/snippet}
+            {#snippet children(item, onClick)}
+              {#snippet tagLabel()}{item.item}{/snippet}
+              {@render comboBoxItem(item.selected, onClick, tagLabel)}
+            {/snippet}
+          </ComboBox>
+        </Row>
       </Row>
 
       <!-- auto-fit rather than a scripted 1fr/2fr swap: it collapses to one column exactly when
@@ -155,6 +159,13 @@
           {@render blogPostCard(metadata)}
         {/each}
       </Grid>
+    </Column>
+
+    <!-- The partners have no page of their own any more; this is where they live. Last on the
+         index because the posts are what the page is for. -->
+    <Column gap="1rem">
+      <Header>{t('home:partners_name')}</Header>
+      <Partners />
     </Column>
   </Column>
 </DefaultPage>
