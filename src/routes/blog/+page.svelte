@@ -37,8 +37,8 @@
   import Row from '$cmp/layout/Row.svelte';
   import Grid from '$cmp/layout/Grid.svelte';
   import AppLink from '$cmp/AppLink.svelte';
-  import AppButton from '$cmp/inputs/AppButton.svelte';
   import PromotionCard from '$cmp/PromotionCard.svelte';
+  import Partners from '$cmp/blog/Partners.svelte';
   import ComboBox, { comboBoxItem, comboBoxTitle } from '$cmp/inputs/ComboBox.svelte';
   import { blogNavbar, hasVisitedBlogPost } from '$cmp/blog/BaseBlogPost.svelte';
   import { blogAuthorRenderer, blogTagsRenderer } from '$cmp/blog/BlogMetadataRenderers.svelte';
@@ -74,7 +74,6 @@
   <AppLink href="/">Home</AppLink>
   <AppLink href="/">Player</AppLink>
   <AppLink href="/composer">Composer</AppLink>
-  <AppLink href="/partners">{t('home:partners_name')}</AppLink>
 {/snippet}
 
 {#snippet selectTagsLabel()}Select tags{/snippet}
@@ -137,13 +136,6 @@
       <Row justify="between" align="center" gap="1rem" style="flex-wrap:wrap">
         <Header>Posts</Header>
         <Row align="center" gap="0.5rem">
-          <!-- The partners page has no home-menu entry any more, and the .blog-nav row above is
-               portrait-only, so this is the sole desktop way in. -->
-          <AppLink href="/partners">
-            <AppButton cssVar="accent">
-              {t('home:partners_name')}
-            </AppButton>
-          </AppLink>
           <ComboBox
             items={selectedTags}
             onChange={(newItems) => (selectedTags = newItems)}
@@ -167,6 +159,13 @@
           {@render blogPostCard(metadata)}
         {/each}
       </Grid>
+    </Column>
+
+    <!-- The partners have no page of their own any more; this is where they live. Last on the
+         index because the posts are what the page is for. -->
+    <Column gap="1rem">
+      <Header>{t('home:partners_name')}</Header>
+      <Partners />
     </Column>
   </Column>
 </DefaultPage>

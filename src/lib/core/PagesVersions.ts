@@ -16,7 +16,6 @@ export const PAGES_VERSIONS = {
     donate: makePageVersion('donate', 0),
     error: makePageVersion('error', 0),
     keybinds: makePageVersion('keybinds', 1, ['Fixed bug not allowing MIDI connection']),
-    partners: makePageVersion('partners', 1, ['Added new partner!']),
     player: makePageVersion('player', 9, [
         "Hold a note to sustain it, on the instruments that support it",
         ...(APP_NAME === "Sky"
