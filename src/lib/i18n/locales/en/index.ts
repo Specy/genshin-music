@@ -138,7 +138,6 @@ export const i18n_en = {
       'Create or edit songs with a fully fledged music composer. Also with MIDI.',
     player_description:
       'Play, download, record and import songs. Learn a song with approaching circle mode and practice mode.',
-    cache_reload_warning: 'Are you sure you want to clear the cache? The page will reload',
     cache_cleared: 'Cache cleared',
     error_clearing_cache: 'Error clearing cache',
     close_home_menu: 'Close home menu',
@@ -150,14 +149,13 @@ export const i18n_en = {
     zen_keyboard_name: 'Zen Keyboard',
     sheet_visualizer_name: 'Sheet Visualizer',
     themes_name: 'Themes',
-    blog_and_guides_name: 'Blog & Guides',
+    blog_and_guides_name: 'Blog, Guides & Partners',
     keybinds_or_midi_name: 'Keybinds / MIDI',
     keybinds_name: 'Keybinds',
     partners_name: 'Partners',
     backup_name: 'Backup',
     changelog_name: 'Changelog',
     other_apps_name: 'Other Apps',
-    clear_cache_name: 'Clear Cache',
     scale: 'Scale',
     rights:
       '© All rights reserved by {{company_name}}. Other properties belong to their respective owners.',
