@@ -30,6 +30,13 @@ const defaultShortcuts = {
     ArrowDown: createShortcut('next_layer', true, 'next_layer_description'),
     ArrowRight: createShortcut('next_breakpoint', true, 'next_breakpoint_description'),
     ArrowLeft: createShortcut('previous_breakpoint', true, 'previous_breakpoint_description'),
+    //THE PRO VIEW'S KEYBOARD SHEET (CONTEXT.md: Pro View), which the mouse raises by tapping the
+    //sliver and lowers by tapping the canvas - this is the hands-on-the-keys way to do both.
+    //`KeyK` is free in BOTH games and on both maps: no composer shortcut above uses it, and it is
+    //in neither game's note Label Set (genshin's 21 are QWERTYU/ASDFGHJ/ZXCVBNM, sky's 15 are
+    //QWERT/ASDFG/ZXCVB, and the drum/SFX sets are subsets of those), so it cannot shadow a note key
+    //while `keyboard`'s own listener is live. Not holdable: an auto-repeating toggle is a flicker.
+    KeyK: createShortcut('toggle_keyboard', false, 'toggle_keyboard_description'),
   },
   player: {
     Space: createShortcut('toggle_record', false, 'toggle_record_description'),

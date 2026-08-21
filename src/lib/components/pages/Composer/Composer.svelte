@@ -343,6 +343,11 @@
       const nextLayer = layer + 1;
       if (nextLayer < layers.length) changeLayer(nextLayer);
     }
+    //THE KEYBOARD SHEET, and only where there is one: in the Compressed View the keyboard is simply
+    //the bottom of the page and this flag reaches no rule at all (see its declaration). The sheet is
+    //held up for the length of a recording whatever this says, so a press during one is inert by
+    //construction rather than by a guard here.
+    if (name === 'toggle_keyboard' && proView) keyboardRaised = !keyboardRaised;
     if (name === 'toggle_play') {
       if (event.repeat) return;
       if ((event.target as HTMLElement | null)?.tagName === 'BUTTON') {
