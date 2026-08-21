@@ -845,25 +845,31 @@ export const i18n_en = {
     NightwindHorn: 'Nightwind Horn',
     Piano: 'Piano',
     Contrabass: 'Contrabass',
+    Cello: 'Cello',
+    Violin: 'Violin',
     Ukulele: 'Ukulele',
     Guitar: 'Guitar',
     LightGuitar: 'Light Guitar',
     Harp: 'Harp',
     Horn: 'Horn',
     Trumpet: 'Trumpet',
+    Saxophone: 'Saxophone',
     Pipa: 'Pipa',
     WinterPiano: 'Winter Piano',
     Xylophone: 'Xylophone',
     Flute: 'Flute',
+    TransverseFlute: 'Transverse Flute', //side-blown flute, as opposed to the end-blown Flute above
     Panflute: 'Panflute',
     Ocarina: 'Ocarina',
     MantaOcarina: 'Manta Ocarina',
+    Harmonica: 'Harmonica',
     Aurora: 'Aurora', //leave as is
-    sustained_recorder: 'Sustained recorder', //real sustained samples (VCSL recorders, CC0): sky pairs alto+soprano, genshin adds tenor for its low octave
     Kalimba: 'Kalimba',
     ToyUkulele: 'Toy Ukulele',
     Drum: 'Drum',
+    FortuneDrum: 'Fortune Drum', //from the Days of Fortune event; the only 4-sound instrument
     Bells: 'Bells',
+    SmallBell: 'Small Bell',
     HandPan: 'HandPan',
     SFX_SineSynth: 'Sine Synth',
     SFX_BassSynth: 'Bass Synth',
@@ -910,7 +916,11 @@ export const i18n_en = {
         'The composer has a new "Pro view", which you can turn on in its settings: every semitone gets its own row and every note sits at its real pitch, so you see exactly what the song plays.',
       'change-14':
         'In pro view you edit on the canvas itself: tap a cell to add or remove a note, long press one of your notes to choose how long it lasts, and unlock the view to drag the rows up and down freely.',
-      'change-15': 'Many other bug fixes and improvements',
+      'change-15':
+        'Sky gains seven instruments it was missing: the Cello, Violin, Saxophone, Harmonica, Transverse Flute, Small Bell and Fortune Drum.',
+      'change-16':
+        'The Aurora and the Light Guitar hold their notes now, like they do in game. They shipped with the short samples before, so holding a key did nothing.',
+      'change-17': 'Many other bug fixes and improvements',
     },
     '3-7-0': {
       title: 'New instruments (Genshin)',

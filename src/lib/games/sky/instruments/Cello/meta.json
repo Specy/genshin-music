@@ -1,0 +1,149 @@
+{
+  "displayName": "Cello",
+  "family": "strings",
+  "midiName": "cello",
+  "shape": "sky-3x5",
+  "sustain": {
+    "release": 0.3,
+    "minLength": 0.25,
+    "loopMode": "loop-continuous",
+    "loopCrossfade": 0.08
+  },
+  "notes": [
+    {
+      "midi": 60,
+      "baseNote": "C",
+      "icon": "dmcr",
+      "loop": {
+        "start": 1.316893,
+        "end": 6.940975
+      }
+    },
+    {
+      "midi": 62,
+      "baseNote": "D",
+      "icon": "dm",
+      "loop": {
+        "start": 2.047982,
+        "end": 5.823878
+      }
+    },
+    {
+      "midi": 64,
+      "baseNote": "E",
+      "icon": "cr",
+      "loop": {
+        "start": 1.586145,
+        "end": 4.730658
+      }
+    },
+    {
+      "midi": 65,
+      "baseNote": "F",
+      "icon": "dm",
+      "loop": {
+        "start": 2.07932,
+        "end": 6.3861
+      }
+    },
+    {
+      "midi": 67,
+      "baseNote": "G",
+      "icon": "cr",
+      "loop": {
+        "start": 1.20161,
+        "end": 4.66068
+      }
+    },
+    {
+      "midi": 69,
+      "baseNote": "A",
+      "icon": "cr",
+      "loop": {
+        "start": 2.081111,
+        "end": 6.591315
+      }
+    },
+    {
+      "midi": 71,
+      "baseNote": "B",
+      "icon": "dm",
+      "loop": {
+        "start": 2.174354,
+        "end": 5.465873
+      }
+    },
+    {
+      "midi": 72,
+      "baseNote": "C",
+      "icon": "dmcr",
+      "loop": {
+        "start": 0.959569,
+        "end": 7.883401
+      }
+    },
+    {
+      "midi": 74,
+      "baseNote": "D",
+      "icon": "dm",
+      "loop": {
+        "start": 2.019206,
+        "end": 5.836417
+      }
+    },
+    {
+      "midi": 76,
+      "baseNote": "E",
+      "icon": "cr",
+      "loop": {
+        "start": 0.93839,
+        "end": 5.159524
+      }
+    },
+    {
+      "midi": 77,
+      "baseNote": "F",
+      "icon": "cr",
+      "loop": {
+        "start": 1.846032,
+        "end": 4.830068
+      }
+    },
+    {
+      "midi": 79,
+      "baseNote": "G",
+      "icon": "dm",
+      "loop": {
+        "start": 1.530317,
+        "end": 6.591746
+      }
+    },
+    {
+      "midi": 81,
+      "baseNote": "A",
+      "icon": "cr",
+      "loop": {
+        "start": 2.061814,
+        "end": 4.58839
+      }
+    },
+    {
+      "midi": 83,
+      "baseNote": "B",
+      "icon": "dm",
+      "loop": {
+        "start": 1.867506,
+        "end": 5.170454
+      }
+    },
+    {
+      "midi": 84,
+      "baseNote": "C",
+      "icon": "dmcr",
+      "loop": {
+        "start": 2.462744,
+        "end": 5.902925
+      }
+    }
+  ]
+}

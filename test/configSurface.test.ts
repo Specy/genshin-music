@@ -65,7 +65,9 @@ describe('game config surface', () => {
         //    legacy conversion tables in code are untouched
         //  - test_sustain (Sky): the dummy sustaining instrument (2026-08-04,
         //    predates the freeze) deleted 2026-08-05 when `sustained_recorder`
-        //    replaced it — removed from both the list and the data below
+        //    replaced it — removed from both the list and the data below.
+        //    `sustained_recorder` was itself a stress test and is gone too
+        //    (2026-08-21), but it post-dates the freeze so it never appears here
         const frozen = readFixture('config-surface')
         // Deliberate VALUE divergence (2026-08-09, midi round-trip work) — the one place this
         // proof no longer reproduces the frozen surface, because the frozen value was wrong.
@@ -112,7 +114,19 @@ describe('game config surface', () => {
                         {field: 'sustain', from: undefined, to: {release: 0.3}},
                     ],
                 }
-                : {}
+                // Same exception, same reasoning, for Sky (2026-08-21). The wiki marks six
+                // Instruments with the fermata 𝄐 — their notes can be HELD — and two of them,
+                // the Voice of AURORA and the Electric Guitar, shipped here as tap-only because
+                // the 2026-08-03 set had the game's SHORT samples (Aurora 2.9 s, LightGuitar
+                // 1.9 s). Both now carry the full holds (9–12.5 s and 7.5–10.9 s) and so gained
+                // a LOOPLESS sustain block. Nothing else about them moved: same Note Ids, base
+                // notes, icons and layout, and no fill/clickColor was ever authored for either.
+                // Aurora's samples were also repitched −2 semitones (the rip is in D major, the
+                // app is C) — that changes only the audio, which this surface does not describe.
+                : {
+                    Aurora: [{field: 'sustain', from: undefined, to: {release: 0.4}}],
+                    LightGuitar: [{field: 'sustain', from: undefined, to: {release: 0.35}}],
+                }
         for (const [name, edits] of Object.entries(RECAPTURE_EDITS)) {
             for (const {field, from, to} of edits) {
                 expect(
@@ -146,7 +160,17 @@ describe('game config surface', () => {
 
         // Instruments added AFTER the v1 freeze have no old surface to reproduce —
         // they exist only in the v2 fixture.
-        const POST_FREEZE_INSTRUMENTS = new Set(['sustained_recorder', 'NightwindHorn'])
+        const POST_FREEZE_INSTRUMENTS = new Set([
+            'NightwindHorn',
+            //Sky, 2026-08-21: in-game Instruments the app was missing (see games/sky/instruments)
+            'Cello',
+            'Violin',
+            'Saxophone',
+            'Harmonica',
+            'TransverseFlute',
+            'SmallBell',
+            'FortuneDrum',
+        ])
 
         const derivedInstrumentsData = Object.fromEntries(
             Object.entries(INSTRUMENTS_DATA)

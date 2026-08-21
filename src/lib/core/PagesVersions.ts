@@ -17,9 +17,14 @@ export const PAGES_VERSIONS = {
     error: makePageVersion('error', 0),
     keybinds: makePageVersion('keybinds', 1, ['Fixed bug not allowing MIDI connection']),
     partners: makePageVersion('partners', 1, ['Added new partner!']),
-    player: makePageVersion('player', 8, [
+    player: makePageVersion('player', 9, [
         "Hold a note to sustain it, on the instruments that support it",
-        ...(APP_NAME === "Sky" ? ["Added the Sustained recorder instrument"] : []),
+        ...(APP_NAME === "Sky"
+            ? [
+                "Added the Cello, Violin, Saxophone, Harmonica, Transverse Flute, Small Bell and Fortune Drum",
+                "The Aurora and the Light Guitar hold their notes now, like they do in game",
+            ]
+            : []),
     ]),
     privacy: makePageVersion('privacy', 0),
     sheetVisualizer: makePageVersion('sheetVisualizer', 3, [
