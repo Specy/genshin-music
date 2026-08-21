@@ -115,6 +115,32 @@ export function isAccidentalMidi(midiNote: number): boolean {
     return !gridPitchClasses.has(((midiNote % 12) + 12) % 12)
 }
 
+// Absolute pitch names, SHARP-SPELLED. The one spelling choice this file makes, and it is made
+// because a Note Number is a number and not a key signature: nothing in a stored song says whether
+// its C#/Db means the raised C or the lowered D, so a single spelling is the only honest one to
+// print. Sharps to match the '#' the composer already prints for an off-scale hint
+// (ComposerCache.noteTextureKey's "1#"/"1b" pair) rather than the flats the BASEPOINT list spells
+// (PITCHES: C, Db, D, …) — the Basepoint list names the twelve transpositions a user picks from, a
+// different question from what pitch a row is.
+const SHARP_PITCH_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'] as const
+
+/**
+ * A Note Number's absolute pitch name, C#4-style — what the Pro View's row-label strip prints on the
+ * rows that map to no button (spec §4; a row that IS a button prints that button's own label
+ * instead, in the user's chosen wording).
+ *
+ * MIDI's own octave numbering, `floor(n / 12) − 1`, so 60 is C4 and the name matches every external
+ * tool a user might compare against. Absolute and instrument-free by design: it names the axis, not
+ * a Button, so it needs no instrument and no Basepoint — the two things a Button's label needs.
+ *
+ * Negative numbers keep working (C-1 downward): the axis can hold one, and a row-label that threw or
+ * blanked there would be a hole exactly where the weird file the Pro View exists to fix is looked at.
+ */
+export function noteNameForMidi(midiNote: number): string {
+    const pitchClass = ((midiNote % 12) + 12) % 12
+    return `${SHARP_PITCH_NAMES[pitchClass]}${Math.floor(midiNote / 12) - 1}`
+}
+
 /**
  * A foreign MIDI number snapped onto the Song Grid, exactly as the retired table did:
  * - outside MIDI_BOUNDS → `{id: -1, isAccidental: false}`. The bounds ARE the range the table

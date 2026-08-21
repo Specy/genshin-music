@@ -46,13 +46,14 @@ export type ComposerSettingsDataType = {
     syncTabs: SettingsCheckbox
     useKeyboardSideButtons: SettingsCheckbox
     smoothScroll: SettingsCheckbox
+    proView: SettingsCheckbox
 }
 export type ComposerSettingsType = BaseSettings<ComposerSettingsDataType>
 
 
 export const ComposerSettings = {
     other: {
-        settingVersion: APP_NAME + 73,
+        settingVersion: APP_NAME + 74,
     },
     data: {
         bpm: {
@@ -151,6 +152,17 @@ export const ComposerSettings = {
         syncTabs: {
             name: "composer_sync_tabs",
             tooltip: "composer_sync_tabs_description",
+            type: "checkbox",
+            category: "composer_settings",
+            songSetting: false,
+            value: false
+        },
+        //CONTEXT.md: the Pro View / Compressed View toggle. A per-user choice and never a property
+        //of the song (`songSetting: false`) — a song opens identically in either view, so this must
+        //not travel in a file the way bpm and base pitch do.
+        proView: {
+            name: "composer_pro_view",
+            tooltip: "composer_pro_view_description",
             type: "checkbox",
             category: "composer_settings",
             songSetting: false,

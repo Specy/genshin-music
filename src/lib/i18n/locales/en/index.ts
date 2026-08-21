@@ -257,6 +257,9 @@ export const i18n_en = {
       composer_sync_tabs: 'Autoplay in all tabs (pc only)',
       composer_sync_tabs_description:
         'Advanced feature, it syncs other browser tabs to all play at the same time',
+      composer_pro_view: 'Pro view',
+      composer_pro_view_description:
+        'Shows every semitone as its own row, with all the notes at their real pitch, and lets you add or remove them by tapping the canvas itself',
       sheet_visualizer_note_names: 'Show note names',
       sheet_visualizer_note_names_description:
         'Writes the name of each note inside it, using the layout selected below',
