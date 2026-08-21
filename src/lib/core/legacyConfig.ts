@@ -29,7 +29,20 @@
 // derivation of one (`new Map(PITCHES.map(...))` over PITCHES = game.notes.pitches) that has NO
 // `$game` equivalent to read instead - it exists only here, exactly as it existed only in old
 // Config.ts. Either way no game-selection coupling is added beyond what the adapter already has.
-// The carve-out is scoped to exactly these two named files - it is not a license for UI code to
+// PRO VIEW GEOMETRY CARVE-OUT (Pro View phase A, stated in the module's own header; recorded here
+// phase E so this rule is true as written): two more files sit under $cmp/pages/Composer/ and read
+// their game data through this adapter rather than through `$game` -
+// proViewGeometry.ts, which VALUE-imports the GAME-DATA constants INSTRUMENTS_DATA,
+// NOTES_PER_COLUMN and PITCHES, and proViewNotes.ts beside it, whose `Pitch` is type-only today and
+// which is named with it because the two are one module family and the reason is the same one.
+// They live in the Composer folder for locality, but neither is UI: they are pure arithmetic over
+// the instrument tables $core/Songs/noteIds owns and they call straight into it, so a second import
+// path for those same tables would be a second thing to keep in step for zero behavioral difference
+// (INSTRUMENTS_DATA/NOTES_PER_COLUMN ARE game.instruments.data/game.notes.perColumn, aliased).
+// It is also what keeps them importable from plain vitest with no SvelteKit graph, which is how
+// every formula in them is tested. Same shape of exception as the audio/provider tier above, and
+// scoped the same way: to exactly these two named files.
+// The carve-outs are scoped to exactly the four named files - they are not a license for UI code to
 // do the same.
 // The config-surface golden fixture is the acceptance test for these derivations.
 import {game} from '$game'
@@ -123,20 +136,15 @@ export const TEMPO_CHANGERS = game.composer.tempoChangers
 export const BASE_THEME_CONFIG = game.themes.baseConfig
 
 // ---- MIDI ----
-// old Config.ts:775 built this as `new Map(Object.entries(APP_NAME === 'Sky' ? {...} : {...}))`
-// over a plain object keyed by MIDI note number. Object.entries() always stringifies numeric
-// object keys, so the resulting Map is STRING-keyed - consumers rely on this exact shape (e.g.
-// `MIDI_MAP_TO_NOTE.get(\`${midiNote}\`)` in Songs/SongClasses.ts). Preserve it exactly.
-export const MIDI_MAP_TO_NOTE = new Map(Object.entries(game.midi.mapToNote))
-
-// Derivation loop copied verbatim from old Config.ts:869-871 (comment included):
-//   //get only non accidentals
-//   const entries = Object.entries(Object.fromEntries(MIDI_MAP_TO_NOTE)).filter(([k, v]) => v[1] === false)
-//   export const NOTE_MAP_TO_MIDI = new Map(entries.map(([k, v]) => [v[0], Number(k)]))
-//get only non accidentals
-const entries = Object.entries(Object.fromEntries(MIDI_MAP_TO_NOTE)).filter(([k, v]) => v[1] === false)
-export const NOTE_MAP_TO_MIDI = new Map(entries.map(([k, v]) => [v[0], Number(k)]))
-
+// MIDI_MAP_TO_NOTE and NOTE_MAP_TO_MIDI (old Config.ts:775/869-871, and the `midi.mapToNote`
+// section both game.json files used to carry) are GONE as of ADR-0007 phase E:
+//  - the forward map said, per in-range MIDI number, which grid id it snaps to and whether it
+//    is an accidental. Both are facts about the Song Grid, and noteIds.snapMidiToGrid /
+//    isAccidentalMidi derive them from it — so the table can no longer drift from the grid it
+//    was a hand-copy of.
+//  - the reverse map (non-accidentals only) was already dead before this: MIDI export writes
+//    the note's stored Note Number directly now that songs store sounding pitches
+//    (RecordedNote.toMidi), so nothing needs a nominal→MIDI lookup.
 export const MIDI_BOUNDS = game.midi.bounds
 export const MIDI_PRESETS = game.midi.presets
 

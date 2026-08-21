@@ -1,6 +1,6 @@
 /**
  * Tripwire for the 2026-08-06 reactive-model plan's #1 risk: a `$state` proxy escaping through a
- * serialize()/toOldFormat() path into IndexedDB. Called from `expectGolden` (so every golden
+ * serialize() path into IndexedDB. Called from `expectGolden` (so every golden
  * assertion in the suite is checked) and per entry point from test/serializePlain.test.ts.
  *
  * IT IS DORMANT TODAY - stated up front, because a guard believed to be watching something it is

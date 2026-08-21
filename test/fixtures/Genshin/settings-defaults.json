@@ -1,7 +1,7 @@
 {
   "composer": {
     "other": {
-      "settingVersion": "Genshin73"
+      "settingVersion": "Genshin74"
     },
     "data": {
       "bpm": {
@@ -124,12 +124,20 @@
         "category": "composer_settings",
         "songSetting": false,
         "value": false
+      },
+      "proView": {
+        "name": "composer_pro_view",
+        "tooltip": "composer_pro_view_description",
+        "type": "checkbox",
+        "category": "composer_settings",
+        "songSetting": false,
+        "value": false
       }
     }
   },
   "player": {
     "other": {
-      "settingVersion": "Genshin83"
+      "settingVersion": "Genshin86"
     },
     "data": {
       "instrument": {
@@ -150,8 +158,7 @@
           "HarmonicKey",
           "DunDun",
           "DjemDjemDrum",
-          "NightwindHorn",
-          "sustained_recorder"
+          "NightwindHorn"
         ],
         "category": "song_settings"
       },
@@ -189,14 +196,6 @@
         ],
         "value": 220,
         "category": "song_settings"
-      },
-      "syncSongData": {
-        "name": "player_sync_song_data",
-        "tooltip": "player_sync_song_data_description",
-        "type": "checkbox",
-        "songSetting": false,
-        "value": true,
-        "category": "player_settings"
       },
       "metronomeBeats": {
         "name": "player_metronome_beats",
@@ -661,7 +660,7 @@
   },
   "zenKeyboard": {
     "other": {
-      "settingVersion": "Genshin28"
+      "settingVersion": "Genshin30"
     },
     "data": {
       "instrument": {
@@ -682,8 +681,7 @@
           "HarmonicKey",
           "DunDun",
           "DjemDjemDrum",
-          "NightwindHorn",
-          "sustained_recorder"
+          "NightwindHorn"
         ],
         "category": "keyboard"
       },

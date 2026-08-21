@@ -7,31 +7,37 @@
     {
       "midi": 60,
       "baseNote": "",
+      "pitched": false,
       "icon": "cr"
     },
     {
       "midi": 62,
       "baseNote": "",
+      "pitched": false,
       "icon": "dm"
     },
     {
       "midi": 64,
       "baseNote": "",
+      "pitched": false,
       "icon": "cr"
     },
     {
       "midi": 65,
       "baseNote": "",
+      "pitched": false,
       "icon": "cr"
     },
     {
       "midi": 67,
       "baseNote": "",
+      "pitched": false,
       "icon": "dm"
     },
     {
       "midi": 69,
       "baseNote": "",
+      "pitched": false,
       "icon": "cr"
     }
   ]

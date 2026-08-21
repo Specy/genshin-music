@@ -5,9 +5,11 @@
   import { colorToRGB } from '$core/utils/Utilities';
   import { createShortcutListener } from '$stores/KeybindsStore.svelte';
   import type { InstrumentData, NoteColumn } from '$core/Songs/SongClasses';
+  import type { Pitch } from '$core/legacyConfig';
   import type { ComposerSettingsDataType } from '$core/BaseSettings';
   import type { ComposerRenderer } from './ComposerRenderer';
-  import { composerCanvasCssSize } from './composerCanvasGeometry';
+  import { composerCanvasCssSize, composerNotesRegionY } from './composerCanvasGeometry';
+  import { proStripWidth } from './proViewGeometry';
   import TimelineButton from './TimelineButton.svelte';
 
   // The class names below (canvas-wrapper, canvas-relative, canvas-buttons, timeline-controls,
@@ -37,14 +39,47 @@
     // The roster is its own prop, not reached through a `song` prop - see ComposerRendererState's
     // note. The $effect below has to READ it for an instrument edit to repaint the canvas.
     instruments: InstrumentData[];
+    // The SONG's Basepoint. Its own prop for the same reason the roster is: what grid row a
+    // note draws on depends on it (ADR-0007), so the $effect below has to READ it for a
+    // Basepoint change to repaint the canvas.
+    songPitch: Pitch;
     selected: number;
     currentLayer: number;
     inPreview?: boolean;
     settings: ComposerSettingsDataType;
     breakpoints: number[];
     selectedColumns: number[];
+    /**
+     * CONTEXT.md: View Lock. Ephemeral UI state owned by Composer.svelte (every mount starts locked),
+     * read HERE in the $effect object like every other reactive value - the renderer both READS it
+     * (an unlocked drag pans the camera) and DIFFS it (re-locking eases back to the Editable Zone).
+     */
+    viewLocked: boolean;
+    /**
+     * CONTEXT.md: Pro View. Whether the keyboard sheet is up, which the renderer needs for the ONE
+     * rule that depends on it: a settled tap on the canvas puts the sheet down instead of editing a
+     * cell (composerInput.stageReleaseIntent). Read HERE in the $effect object like every other
+     * reactive value - a drag is unaffected, so the canvas goes on scrolling with the sheet up.
+     */
+    keyboardRaised: boolean;
     selectColumn: (index: number, ignoreAudio?: boolean, forceAnchor?: boolean) => void;
     toggleBreakpoint: () => void;
+    /** A settled Pro View tap, as the cell it landed on - what it EDITS is Composer.svelte's. */
+    onProCellTap: (column: number, number: number) => void;
+    /** A Pro View cell held past the keyboard's long-press threshold; returns whether anything took it. */
+    onProCellLongPress: (
+      column: number,
+      number: number,
+      rect: { x: number; y: number; width: number; height: number }
+    ) => boolean;
+    /** A settled Pro View tap made while the keyboard sheet is up: lower it, and edit nothing. */
+    onKeyboardDismiss: () => void;
+    /**
+     * CONTEXT.md: View Lock. A pinch or a ctrl+wheel zoomed the Pro View's rows while the frame was
+     * locked - the user has taken it, so the padlock opens. One-way: nothing here ever asks for the
+     * lock to close, and closing it is what resets the zoom to the layer's fit.
+     */
+    onViewUnlock: () => void;
   }
 
   let {
@@ -55,14 +90,21 @@
     playbackAnchorGeneration,
     isRecordingAudio,
     instruments,
+    songPitch,
     selected,
     currentLayer,
     inPreview,
     settings,
     breakpoints,
     selectedColumns,
+    viewLocked,
+    keyboardRaised,
     selectColumn,
     toggleBreakpoint,
+    onProCellTap,
+    onProCellLongPress,
+    onKeyboardDismiss,
+    onViewUnlock,
   }: ComposerCanvasProps = $props();
 
   let canvasContainerEl: HTMLDivElement | undefined;
@@ -76,8 +118,17 @@
   // `isMobile() ? 25 : 30` here, which could disagree with it silently.
   let width = $state(0);
   let height = $state(0);
-  let timelinePadding = $state(0);
   let timelineHeight = $state(0);
+  // WHERE THE STRIP IS, which is the Pro View's one layout difference here: the canvas draws the
+  // mini-timeline at its TOP there and the notes region below it, so the DOM row of buttons lands
+  // at top:0 instead of under the notes region. Reported rather than derived from `height` for the
+  // reason the whole report exists - one statement of the split, on the side that drew it.
+  let timelineTop = $state(0);
+  // ...and ONE ROW'S HEIGHT in the Pro View, which is the other number this template cannot derive:
+  // it is a property of the current layer there (the row height fits that layer's Editable Zone,
+  // capped at the game's note size), so it moves with an instrument swap and not only with the
+  // canvas. 0 in the Compressed View, where nothing reads it.
+  let rowHeight = $state(0);
   let hasCache = $state(false);
 
   const isBreakpointSelected = $derived(breakpoints.includes(selected));
@@ -99,7 +150,27 @@
   // import and Application.init() are still running - see composerCanvasCssSize for the whole
   // rationale and for what it does and does not reproduce. Null in preview, and a null style
   // directive REMOVES the property, so App.css's `var(..., 0px)` fallback takes over there.
-  const cssSize = $derived(composerCanvasCssSize({ inPreview: Boolean(inPreview) }));
+  // BOTH WIDTHS GO ON THE ELEMENT and App.css's own media query binds one of them to
+  // `--composer-canvas-width` - see composerCanvasCssSize. Choosing here instead (from a
+  // `matchMedia` read) put the desktop breakpoint somewhere no browser could evaluate before
+  // hydration, and the composer opened 79px narrow for the ~800ms until it ran.
+  // CONTEXT.md: Pro View. ANDed with `!inPreview` HERE, once, so everything downstream - the CSS
+  // placeholder, the renderer's state, composerCanvasSize's own branch - is handed a flag that is
+  // already false in /theme's composer preview, where a canvas sized to the WINDOW would overrun
+  // the little box it lives in.
+  const proView = $derived(Boolean(settings.proView.value) && !inPreview);
+  const cssSize = $derived(composerCanvasCssSize({ inPreview: Boolean(inPreview), proView }));
+  // ...and where the notes region starts inside the canvas box, which is what the two side chevrons
+  // below are held to. The same function ComposerRenderer places the region with, given the same
+  // two inputs, rather than a second `proView ? ... : 0` written in the template.
+  const notesTop = $derived(composerNotesRegionY(proView, timelineHeight));
+  // ...and how far the LEFT side chevron is held clear of the row-label strip, which it would
+  // otherwise stand on top of: the strip is drawn at the notes region's left inside edge, and this
+  // button is a DOM element floating over the canvas, so nothing else keeps the two apart. Same
+  // discipline as `notesTop` above - the strip's own width function, given the row height the
+  // RENDERER reported, rather than a second formula here. The right chevron needs none of this
+  // (the strip is at the left edge only).
+  const stripInset = $derived(proView && rowHeight > 0 ? proStripWidth(rowHeight) : 0);
 
   onMount(() => {
     let cancelled = false;
@@ -117,24 +188,34 @@
           playbackAnchorGeneration,
           isRecordingAudio,
           instruments,
+          songPitch,
           selected,
           currentLayer,
           inPreview,
           beatMarks: Number(settings.beatMarks.value),
           columnsPerCanvas: Number(settings.columnsPerCanvas.value),
+          proView,
+          noteNameType: settings.noteNameType.value,
           breakpoints,
           selectedColumns,
+          viewLocked,
+          keyboardRaised,
           bpm: Number(settings.bpm.value),
           smoothScroll: Boolean(settings.smoothScroll.value),
         },
         {
           selectColumn,
           toggleBreakpoint,
+          onProCellTap,
+          onProCellLongPress,
+          onKeyboardDismiss,
+          onViewUnlock,
           onGeometryChange: (geometry) => {
             width = geometry.width;
             height = geometry.height;
-            timelinePadding = geometry.timelinePadding;
             timelineHeight = geometry.timelineHeight;
+            timelineTop = geometry.timelineTop;
+            rowHeight = geometry.rowHeight;
             hasCache = geometry.hasCache;
           },
         }
@@ -195,13 +276,32 @@
       playbackAnchorGeneration,
       isRecordingAudio,
       instruments,
+      songPitch,
       selected,
       currentLayer,
       inPreview,
       beatMarks: Number(settings.beatMarks.value),
       columnsPerCanvas: Number(settings.columnsPerCanvas.value),
+      // Read here like every other scalar, per the rule above, even though the renderer only takes
+      // it at construction: a flip arrives as a fresh instance through the parent's `{#key}`, the
+      // same way columnsPerCanvas does.
+      proView,
+      // The wording the keyboard prints on its keys, which the Pro View's row-label strip prints on
+      // the rows that ARE keys. Read HERE and not inside the renderer for the reason the whole
+      // comment above gives: update() is free to skip work, so a value first read inside it would
+      // be dropped from this effect's dependency set by the first run that skipped.
+      noteNameType: settings.noteNameType.value,
       breakpoints,
       selectedColumns,
+      // The View Lock, read HERE for the reason the whole comment above gives: update() is free to
+      // skip work, so a value first read inside it would be dropped from this effect's dependency
+      // set by the first run that skipped - and this one changes only when the user presses a button
+      // that changes nothing else on the state object.
+      viewLocked,
+      // ...and the keyboard sheet's position, read here for the same reason and diffed by nothing:
+      // it decides what a settled TAP means (dismiss instead of edit) and no pixel this renderer
+      // draws depends on it.
+      keyboardRaised,
       bpm: Number(settings.bpm.value),
       smoothScroll: Boolean(settings.smoothScroll.value),
     });
@@ -301,14 +401,17 @@
 <div
   class={['canvas-wrapper', inPreview && 'canvas-wrapper-in-preview']}
   style="width:{width}px;background-color:{hasCache ? 'unset' : backgroundHex}"
-  style:--composer-canvas-width={cssSize?.width}
+  style:--composer-canvas-width-mobile={cssSize?.mobileWidth}
+  style:--composer-canvas-width-desktop={cssSize?.desktopWidth}
   style:--composer-canvas-height={cssSize?.height}
 >
   <div class="canvas-relative" bind:this={canvasContainerEl}>
     <!--
       `height` is the NOTES region, and the inline height is what holds these chevrons to it:
       `.canvas-buttons`' own `height: 100%` is 100% of `.canvas-relative`, which since the merge
-      holds the mini-timeline strip as well, so it would run them down over the strip.
+      holds the mini-timeline strip as well, so it would run them down over the strip. The inline
+      `top` is the other half of the same job in the Pro View, where the strip is at the canvas' TOP
+      and the region these stand on therefore starts below it rather than at 0.
 
       Gated on the first geometry report for the same reason the timeline controls below are: that
       report only exists once the dynamic pixi import and Application.init() have resolved, and a
@@ -319,14 +422,14 @@
       <button
         onpointerdown={() => selectColumn(selected - 1)}
         class={['canvas-buttons', !isPlaying && 'canvas-buttons-visible']}
-        style="height:{height}px;left:0;padding-right:0.5rem;justify-content:flex-start;background:linear-gradient(90deg, rgba({sideButtonsRgb},0.80) 30%, rgba({sideButtonsRgb},0.30) 80%, rgba({sideButtonsRgb},0) 100%)"
+        style="height:{height}px;top:{notesTop}px;left:{stripInset}px;padding-right:0.5rem;justify-content:flex-start;background:linear-gradient(90deg, rgba({sideButtonsRgb},0.80) 30%, rgba({sideButtonsRgb},0.30) 80%, rgba({sideButtonsRgb},0) 100%)"
       >
         {@render chevronLeftIcon()}
       </button>
       <button
         onpointerdown={() => selectColumn(selected + 1)}
         class={['canvas-buttons', !isPlaying && 'canvas-buttons-visible']}
-        style="height:{height}px;right:0;padding-left:0.5rem;justify-content:flex-end;background:linear-gradient(270deg, rgba({sideButtonsRgb},0.80) 30%, rgba({sideButtonsRgb},0.30) 80%, rgba({sideButtonsRgb},0) 100%)"
+        style="height:{height}px;top:{notesTop}px;right:0;padding-left:0.5rem;justify-content:flex-end;background:linear-gradient(270deg, rgba({sideButtonsRgb},0.80) 30%, rgba({sideButtonsRgb},0.30) 80%, rgba({sideButtonsRgb},0) 100%)"
       >
         {@render chevronRightIcon()}
       </button>
@@ -347,7 +450,8 @@
     its BORDER box is [W-38.4, W-3.2]. The 41.6px it is held clear by is 0.2rem of clearance before
     it, the 2.2rem button, and its own trailing 0.2rem margin.
 
-    Pinned to the CANVAS box - `top` at the reported notes height (timelinePadding is now zero),
+    Pinned to the CANVAS box - `top` at the strip's own reported y (below the notes region in the
+    Compressed View, 0 in the Pro View, where the canvas draws the strip at its TOP),
     `width` from the reported canvas width - and not to the wrapper. On a tall viewport `.canvas-wrapper`'s
     min-height gives `.canvas-relative` a sliver of slack under the canvas, so anchoring vertically
     to the wrapper would put the row below the strip. Horizontally it is a DELIBERATE divergence:
@@ -372,7 +476,7 @@
   {#if width > 0}
     <div
       class="timeline-controls"
-      style="top:{height + timelinePadding}px;width:{width}px;height:{timelineHeight}px"
+      style="top:{timelineTop}px;width:{width}px;height:{timelineHeight}px"
     >
       <TimelineButton
         onclick={() => renderer?.handleBreakpoints(-1)}

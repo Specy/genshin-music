@@ -406,11 +406,13 @@ const SUSTAIN = {
 }
 
 /**
- * The Note Id of a button. The engine's public API is keyed by Note Id (ADR-0005 §4) while
- * the per-note config overrides below are still authored per BUTTON (private storage), so
- * the tests state the button they mean and translate here.
+ * The Note Number a button enters at Basepoint C — the engine's key since ADR-0007 (its public
+ * API is keyed by Note Number + Basepoint, ADR-0005 §4 under the absolute axis), while the
+ * per-note config overrides below are still authored per BUTTON (private storage). So the tests
+ * state the button they mean and translate here. Every press below is at 'C', where the two axes
+ * of an untuned instrument coincide — this file is about voices and timing, not about resolution.
  */
-const idAt = (instrument: Instrument, button: number) => instrument.notes[button].id
+const numberAt = (instrument: Instrument, button: number) => instrument.notes[button].numberAt('C')
 
 /**
  * A real Instrument, force-fed a sustain config and fake audio plumbing (the default
@@ -418,7 +420,7 @@ const idAt = (instrument: Instrument, button: number) => instrument.notes[button
  * the note struct itself (button 1 here), and instrumentData is a REFERENCE to the
  * shared config — so this builds a fresh copy instead of mutating it in place.
  * The registry normalizes loopMode to 'loop-continuous' when unauthored; mirrored here.
- * `id(button)` is that button's Note Id, the engine's key.
+ * `number(button)` is that button's Note Number at Basepoint C, the engine's key.
  */
 function sustainingInstrument(loopMode: SustainLoopMode = 'loop-continuous') {
     const instrument = new Instrument(INSTRUMENTS[0])
@@ -433,7 +435,7 @@ function sustainingInstrument(loopMode: SustainLoopMode = 'loop-continuous') {
     instrument.audioContext = context as any
     instrument.volumeNode = (context as any).createGain()
     instrument.buffers = instrument.notes.map(() => FAKE_BUFFER)
-    return {instrument, created, id: (button: number) => idAt(instrument, button)}
+    return {instrument, created, number: (button: number) => numberAt(instrument, button)}
 }
 
 /** A real one-shot Instrument (the default is one) with fake audio plumbing, for the scheduled-one-shot registry tests. */
@@ -443,12 +445,12 @@ function oneShotInstrument() {
     instrument.audioContext = context as any
     instrument.volumeNode = (context as any).createGain()
     instrument.buffers = instrument.notes.map(() => FAKE_BUFFER)
-    return {instrument, created, context, id: (button: number) => idAt(instrument, button)}
+    return {instrument, created, context, number: (button: number) => numberAt(instrument, button)}
 }
 
 /** sustainingInstrument with sustain.minLength authored (and optionally a per-note override on button 1). */
 function minLengthInstrument(minLength: number, options: {noteOneMinLength?: number} = {}) {
-    const {instrument, created, id} = sustainingInstrument()
+    const {instrument, created, number} = sustainingInstrument()
     instrument.instrumentData = {
         ...instrument.instrumentData,
         sustain: {...SUSTAIN, loopMode: 'loop-continuous', minLength},
@@ -458,7 +460,7 @@ function minLengthInstrument(minLength: number, options: {noteOneMinLength?: num
                 : note
         ),
     }
-    return {instrument, created, id}
+    return {instrument, created, number}
 }
 
 describe('Instrument sustain', () => {
@@ -474,7 +476,7 @@ describe('Instrument sustain', () => {
         instrument.audioContext = context as any
         instrument.volumeNode = (context as any).createGain()
         instrument.buffers = instrument.notes.map(() => FAKE_BUFFER)
-        const voice = instrument.pressNote(idAt(instrument, 0), 'C')
+        const voice = instrument.pressNote(numberAt(instrument, 0), 'C')
         expect(voice).toBeNull()
         const source = created.sources[0]
         expect(source.loop).toBe(false)
@@ -482,52 +484,106 @@ describe('Instrument sustain', () => {
     })
 
     it('pressNote starts a held voice with the per-note loop override (default loop otherwise) and releaseNote releases it', () => {
-        const {instrument, created, id} = sustainingInstrument()
-        instrument.pressNote(id(0), 'C')
-        instrument.pressNote(id(1), 'C')
+        const {instrument, created, number} = sustainingInstrument()
+        instrument.pressNote(number(0), 'C')
+        instrument.pressNote(number(1), 'C')
         expect(created.sources[0].loopStart).toBe(0.1) // default region (note 0 has no loop override)
         expect(created.sources[1].loopStart).toBe(0.2) // per-note override
-        instrument.releaseNote(id(1))
+        instrument.releaseNote(number(1))
         // loop-continuous default: fades out over `release`, spawns no tail source
         expect(created.sources).toHaveLength(2)
         expect(created.sources[1].calls).toContainEqual({method: 'stop', args: [10.3]})
         expect(created.sources[0].calls.some((c: Call) => c.method === 'stop')).toBe(false)
         //releasing an unheld button is a no-op
-        instrument.releaseNote(id(5))
+        instrument.releaseNote(number(5))
     })
 
     it('a loop-sustain instrument plays out from the current phase on release', () => {
-        const {instrument, created, id} = sustainingInstrument('loop-sustain')
-        instrument.pressNote(id(1), 'C')
-        instrument.releaseNote(id(1)) // released at start time — position 0, file front to back
+        const {instrument, created, number} = sustainingInstrument('loop-sustain')
+        instrument.pressNote(number(1), 'C')
+        instrument.releaseNote(number(1)) // released at start time — position 0, file front to back
         expect(created.sources[1].calls).toContainEqual({method: 'start', args: [10, 0]})
         expect(created.sources[0].calls).toContainEqual({method: 'stop', args: [10.02]})
     })
 
     it("loopMode 'one-shot' ignores note-off entirely — the explicit \"tap\" spelling", () => {
-        const {instrument, created, id} = sustainingInstrument('one-shot')
+        const {instrument, created, number} = sustainingInstrument('one-shot')
         expect(instrument.supportsSustain).toBe(false)
-        const voice = instrument.pressNote(id(0), 'C')
+        const voice = instrument.pressNote(number(0), 'C')
         expect(voice).toBeNull() // plain play() path, same as an instrument without sustain
         expect(created.sources[0].loop).toBe(false)
-        instrument.releaseNote(id(0)) // nothing held — no-op, the sample rings out fully
+        instrument.releaseNote(number(0)) // nothing held — no-op, the sample rings out fully
         expect(created.sources[0].calls.some((c: Call) => c.method === 'stop')).toBe(false)
     })
 
     it('re-pressing a held button releases the previous voice (retrigger)', () => {
-        const {instrument, created, id} = sustainingInstrument()
-        instrument.pressNote(id(0), 'C')
-        instrument.pressNote(id(0), 'C')
+        const {instrument, created, number} = sustainingInstrument()
+        instrument.pressNote(number(0), 'C')
+        instrument.pressNote(number(0), 'C')
         expect(created.sources.length).toBe(2)
         expect(created.sources[0].calls).toContainEqual({method: 'stop', args: [10.02]})
         expect(created.sources[1].calls.some((c: Call) => c.method === 'stop')).toBe(false)
     })
 
+    // ADR-0007: a Note Number names a different button at every Basepoint, so press and release
+    // can only meet on the BUTTON. heldVoices is keyed by it, and the press-time number is kept
+    // as an alias so releaseNote (which takes no Basepoint) can still find its way there.
+    it('releases a voice held from before a Basepoint change, through the press-time number', () => {
+        const {instrument, created} = sustainingInstrument()
+        const pressed = instrument.notes[0].numberAt('C')
+        instrument.pressNote(pressed, 'C')
+        //the Basepoint moves under the held key: the same button now enters another number
+        expect(instrument.notes[0].numberAt('D')).not.toBe(pressed)
+
+        instrument.releaseNote(pressed)
+        expect(created.sources[0].calls).toContainEqual({method: 'stop', args: [10.3]})
+        expect((instrument as any).heldVoices.size).toBe(0)
+        expect((instrument as any).heldNumberAliases.size).toBe(0)
+    })
+
+    it('a number re-derived at the NEW Basepoint releases nothing — surfaces owe the press-time one', () => {
+        const {instrument, created} = sustainingInstrument()
+        instrument.pressNote(instrument.notes[0].numberAt('C'), 'C')
+        instrument.releaseNote(instrument.notes[0].numberAt('D'))
+        expect(created.sources[0].calls.some((c: Call) => c.method === 'stop')).toBe(false)
+        //...and the blur guard still catches whatever a surface failed to release
+        instrument.releaseHeldNotes()
+        expect(created.sources[0].calls).toContainEqual({method: 'stop', args: [10.3]})
+        expect((instrument as any).heldNumberAliases.size).toBe(0)
+    })
+
+    it('a re-press of the same BUTTON chokes its live voice at any Basepoint (one voice per key)', () => {
+        const {instrument, created} = sustainingInstrument()
+        instrument.pressNote(instrument.notes[0].numberAt('C'), 'C')
+        instrument.pressNote(instrument.notes[0].numberAt('D'), 'D')
+        expect(created.sources).toHaveLength(2)
+        //number-keyed, the second press missed the first entirely: two voices on one button, the
+        //first of them looping until the next blur
+        expect(created.sources[0].calls).toContainEqual({method: 'stop', args: [10.02]})
+        expect(created.sources[1].calls.some((c: Call) => c.method === 'stop')).toBe(false)
+        expect((instrument as any).heldVoices.size).toBe(1)
+    })
+
+    it('two live aliases on one button: the first release ends the voice, the second is a no-op', () => {
+        const {instrument, created} = sustainingInstrument()
+        const atC = instrument.notes[0].numberAt('C')
+        const atD = instrument.notes[0].numberAt('D')
+        instrument.pressNote(atC, 'C')
+        instrument.pressNote(atD, 'D') // re-pressed at the new Basepoint; both aliases are live
+
+        instrument.releaseNote(atC) // the older holder lifts: releases what the key sounds NOW
+        expect(created.sources[1].calls).toContainEqual({method: 'stop', args: [10.3]})
+        const stops = created.sources[1].calls.filter((c: Call) => c.method === 'stop').length
+        instrument.releaseNote(atD) // nothing held on that button any more
+        expect(created.sources[1].calls.filter((c: Call) => c.method === 'stop')).toHaveLength(stops)
+        expect((instrument as any).heldNumberAliases.size).toBe(0)
+    })
+
     it('caps already-sounding voices at 64 and steals the oldest for the 65th immediate voice', () => {
-        const {instrument, created, id} = sustainingInstrument()
+        const {instrument, created, number} = sustainingInstrument()
         for (let i = 0; i < 65; i++) {
             // A duration makes these independent playback voices rather than same-key retriggers.
-            instrument.pressNote(id(0), 'C', {durationMs: 5000})
+            instrument.pressNote(number(0), 'C', {durationMs: 5000})
         }
 
         expect((instrument as any).activeVoices).toHaveLength(64)
@@ -536,22 +592,24 @@ describe('Instrument sustain', () => {
     })
 
     it('drops disposed voices from both the active and held registries immediately', () => {
-        const {instrument, created, id} = sustainingInstrument()
-        instrument.pressNote(id(0), 'C')
+        const {instrument, created, number} = sustainingInstrument()
+        instrument.pressNote(number(0), 'C')
         expect((instrument as any).heldVoices.size).toBe(1)
 
         created.sources[0].emitEnded()
 
         expect((instrument as any).activeVoices).toHaveLength(0)
         expect((instrument as any).heldVoices.size).toBe(0)
+        //the press-time alias goes with the voice it named — nothing accumulates over a session
+        expect((instrument as any).heldNumberAliases.size).toBe(0)
     })
 
     it('same note on separate instrument instances has independent voice and release state', () => {
         const first = sustainingInstrument()
         const second = sustainingInstrument()
-        first.instrument.pressNote(first.id(0), 'C')
-        second.instrument.pressNote(second.id(0), 'C')
-        first.instrument.releaseNote(first.id(0))
+        first.instrument.pressNote(first.number(0), 'C')
+        second.instrument.pressNote(second.number(0), 'C')
+        first.instrument.releaseNote(first.number(0))
         expect(first.created.sources).toHaveLength(1) // continuous: fade only, no tail source
         expect(first.created.sources[0].calls.some((c: Call) => c.method === 'stop')).toBe(true)
         expect(second.created.sources).toHaveLength(1)
@@ -559,18 +617,18 @@ describe('Instrument sustain', () => {
     })
 
     it('a durationMs press self-releases exactly at its musical end and is not registered as held', () => {
-        const {instrument, created, id} = sustainingInstrument()
-        const voice = instrument.pressNote(id(0), 'C', {durationMs: 500})
+        const {instrument, created, number} = sustainingInstrument()
+        const voice = instrument.pressNote(number(0), 'C', {durationMs: 500})
         expect(voice?.isReleased).toBe(true) // scheduled release counts as released
         // release acts at the requested time (10.5) — never deferred to a loop boundary
         expect(created.sources[0].calls).toContainEqual({method: 'stop', args: [10.5 + 0.3]})
-        instrument.releaseNote(id(0)) // no live voice to release
+        instrument.releaseNote(number(0)) // no live voice to release
         expect(created.sources.length).toBe(1)
     })
 
     it('a scheduled durationMs press on a loop-sustain instrument plays out from the phase at its end', () => {
-        const {instrument, created, id} = sustainingInstrument('loop-sustain')
-        instrument.pressNote(id(0), 'C', {durationMs: 2500})
+        const {instrument, created, number} = sustainingInstrument('loop-sustain')
+        instrument.pressNote(number(0), 'C', {durationMs: 2500})
         // phase at 12.5: played 2.5 sample-seconds >= loop.end 1.9 -> 0.1 + (2.5 - 1.9) % 1.8
         expect(created.sources[1].calls).toContainEqual(
             {method: 'start', args: [12.5, 0.1 + (2.5 - 1.9) % (1.9 - 0.1)]})
@@ -578,84 +636,84 @@ describe('Instrument sustain', () => {
     })
 
     it('releaseAllNotes releases every sounding voice (ramped) or hard-stops on teardown', () => {
-        const {instrument, created, id} = sustainingInstrument()
-        instrument.pressNote(id(0), 'C')
-        instrument.pressNote(id(1), 'C')
+        const {instrument, created, number} = sustainingInstrument()
+        instrument.pressNote(number(0), 'C')
+        instrument.pressNote(number(1), 'C')
         instrument.releaseAllNotes()
         expect(created.sources).toHaveLength(2) // global stop fades; it does not spawn tails
         expect(created.sources[0].calls.some((c: Call) => c.method === 'stop')).toBe(true)
         expect(created.sources[1].calls.some((c: Call) => c.method === 'stop')).toBe(true)
 
         const second = sustainingInstrument()
-        second.instrument.pressNote(second.id(0), 'C')
+        second.instrument.pressNote(second.number(0), 'C')
         second.instrument.dispose()
         expect(second.created.sources[0].calls).toContainEqual({method: 'stop', args: [undefined]})
     })
 
     it('play() on a sustaining instrument is a tap (press + immediate release), never the raw whole file', () => {
-        const {instrument, created, id} = sustainingInstrument()
-        instrument.play(id(0), 'C')
+        const {instrument, created, number} = sustainingInstrument()
+        instrument.play(number(0), 'C')
         const source = created.sources[0]
         expect(source.loop).toBe(true) // a Voice with the loop region, not a bare one-shot source
         expect(source.loopStart).toBe(0.1)
         // no minLength authored: released at start, fades over `release` (0.3)
         expect(source.calls).toContainEqual({method: 'stop', args: [10.3]})
-        instrument.releaseNote(id(0)) // taps are scheduled, not held
+        instrument.releaseNote(number(0)) // taps are scheduled, not held
         expect(created.sources).toHaveLength(1)
     })
 
     it('sustain.minLength shapes taps from play(): the note sounds minLength, then releases', () => {
-        const {instrument, created, id} = minLengthInstrument(0.5)
-        instrument.play(id(0), 'C')
+        const {instrument, created, number} = minLengthInstrument(0.5)
+        instrument.play(number(0), 'C')
         // released at 10.5 (the minimum, measured from the note start), faded by 10.8
         expect(created.sources[0].calls).toContainEqual({method: 'stop', args: [10.5 + 0.3]})
     })
 
     it('per-note minLength overrides the instrument default (0 = no minimum)', () => {
-        const {instrument, created, id} = minLengthInstrument(0.5, {noteOneMinLength: 0})
-        instrument.play(id(1), 'C')
+        const {instrument, created, number} = minLengthInstrument(0.5, {noteOneMinLength: 0})
+        instrument.play(number(1), 'C')
         expect(created.sources[0].calls).toContainEqual({method: 'stop', args: [10 + 0.3]})
     })
 
     it('a live release before minLength is deferred to it; a late release acts on the key-up', () => {
         const early = minLengthInstrument(0.5)
-        early.instrument.pressNote(early.id(0), 'C')
-        early.instrument.releaseNote(early.id(0)) // key-up at 10 — the note still sounds until 10.5
+        early.instrument.pressNote(early.number(0), 'C')
+        early.instrument.releaseNote(early.number(0)) // key-up at 10 — the note still sounds until 10.5
         expect(early.created.sources[0].calls).toContainEqual({method: 'stop', args: [10.5 + 0.3]})
 
         const late = minLengthInstrument(0.5)
-        late.instrument.pressNote(late.id(0), 'C')
+        late.instrument.pressNote(late.number(0), 'C')
         ;(late.instrument.audioContext as any).currentTime = 11
-        late.instrument.releaseNote(late.id(0)) // minimum long elapsed — releases now
+        late.instrument.releaseNote(late.number(0)) // minimum long elapsed — releases now
         expect(late.created.sources[0].calls).toContainEqual({method: 'stop', args: [11 + 0.3]})
     })
 
     it('scheduled durations shorter than minLength stretch to it; longer ones are untouched', () => {
         const short = minLengthInstrument(0.5)
-        short.instrument.pressNote(short.id(0), 'C', {durationMs: 125})
+        short.instrument.pressNote(short.number(0), 'C', {durationMs: 125})
         expect(short.created.sources[0].calls).toContainEqual({method: 'stop', args: [10.5 + 0.3]})
 
         const long = minLengthInstrument(0.5)
-        long.instrument.pressNote(long.id(0), 'C', {durationMs: 1000})
+        long.instrument.pressNote(long.number(0), 'C', {durationMs: 1000})
         expect(long.created.sources[0].calls).toContainEqual({method: 'stop', args: [11 + 0.3]})
     })
 
     it('skipMs counts toward minLength — a resumed mid-note press is not re-stretched', () => {
         // 125ms already served: 375ms of the minimum remain and win over the 125ms hold
         const partial = minLengthInstrument(0.5)
-        partial.instrument.pressNote(partial.id(0), 'C', {durationMs: 125, skipMs: 125})
+        partial.instrument.pressNote(partial.number(0), 'C', {durationMs: 125, skipMs: 125})
         expect(partial.created.sources[0].calls).toContainEqual(
             {method: 'stop', args: [10.375 + 0.3]})
         // resumed past the whole minimum: the remaining hold applies as-is
         const served = minLengthInstrument(0.5)
-        served.instrument.pressNote(served.id(0), 'C', {durationMs: 125, skipMs: 750})
+        served.instrument.pressNote(served.number(0), 'C', {durationMs: 125, skipMs: 750})
         expect(served.created.sources[0].calls).toContainEqual(
             {method: 'stop', args: [10.125 + 0.3]})
     })
 
     it('releaseAllNotes ignores minLength — playback stop stays immediate', () => {
-        const {instrument, created, id} = minLengthInstrument(0.5)
-        instrument.pressNote(id(0), 'C')
+        const {instrument, created, number} = minLengthInstrument(0.5)
+        instrument.pressNote(number(0), 'C')
         instrument.releaseAllNotes()
         expect(created.sources[0].calls).toContainEqual({method: 'stop', args: [10.3]})
     })
@@ -665,15 +723,15 @@ describe('Instrument sustain', () => {
 // future start is retractable through cancelScheduledAfter until the moment it starts.
 describe('Instrument committed scheduling', () => {
     it('play with a future `at` commits the one-shot at that absolute time', () => {
-        const {instrument, created, id} = oneShotInstrument()
-        instrument.play(id(0), 'C', 10.4)
+        const {instrument, created, number} = oneShotInstrument()
+        instrument.play(number(0), 'C', 10.4)
         expect(created.sources[0].calls).toContainEqual({method: 'start', args: [10.4]})
     })
 
     it('play with no `at` (or one already past) starts now and is fire-and-forget — sounding audio always rings out', () => {
-        const {instrument, created, id} = oneShotInstrument()
-        instrument.play(id(0), 'C')
-        instrument.play(id(1), 'C', 9.5)
+        const {instrument, created, number} = oneShotInstrument()
+        instrument.play(number(0), 'C')
+        instrument.play(number(1), 'C', 9.5)
         expect(created.sources[0].calls).toContainEqual({method: 'start', args: [undefined]})
         expect(created.sources[1].calls).toContainEqual({method: 'start', args: [undefined]})
         instrument.cancelScheduledAfter(0) // nothing registered — nothing to retract
@@ -682,9 +740,9 @@ describe('Instrument committed scheduling', () => {
     })
 
     it('cancelScheduledAfter retracts committed one-shots from `at` on, leaving earlier ones committed', () => {
-        const {instrument, created, id} = oneShotInstrument()
-        instrument.play(id(0), 'C', 10.3)
-        instrument.play(id(1), 'C', 10.6)
+        const {instrument, created, number} = oneShotInstrument()
+        instrument.play(number(0), 'C', 10.3)
+        instrument.play(number(1), 'C', 10.6)
         instrument.cancelScheduledAfter(10.5)
         const [first, second] = created.sources
         expect(first.calls.some((c: Call) => c.method === 'stop')).toBe(false)
@@ -698,16 +756,16 @@ describe('Instrument committed scheduling', () => {
     })
 
     it('a cutoff already in the past clamps to now — a one-shot that began sounding is never cut', () => {
-        const {instrument, created, id, context} = oneShotInstrument()
-        instrument.play(id(0), 'C', 10.4)
+        const {instrument, created, number, context} = oneShotInstrument()
+        instrument.play(number(0), 'C', 10.4)
         ;(context as any).currentTime = 10.5 // started sounding at 10.4
         instrument.cancelScheduledAfter(10)
         expect(created.sources[0].calls.some((c: Call) => c.method === 'stop')).toBe(false)
     })
 
     it("the 'ended' handler deregisters a committed one-shot", () => {
-        const {instrument, created, id} = oneShotInstrument()
-        instrument.play(id(0), 'C', 10.4)
+        const {instrument, created, number} = oneShotInstrument()
+        instrument.play(number(0), 'C', 10.4)
         const source = created.sources[0]
         source.emitEnded()
         const stops = source.calls.filter((c: Call) => c.method === 'stop').length
@@ -716,21 +774,21 @@ describe('Instrument committed scheduling', () => {
     })
 
     it("play() prunes entries long past their start — a lost 'ended' must not grow the registry over a session", () => {
-        const {instrument, id, context} = oneShotInstrument()
-        instrument.play(id(0), 'C', 10.4)
-        instrument.play(id(1), 'C', 10.6)
+        const {instrument, number, context} = oneShotInstrument()
+        instrument.play(number(0), 'C', 10.4)
+        instrument.play(number(1), 'C', 10.6)
         expect((instrument as any).scheduledOneShots).toHaveLength(2)
         ;(context as any).currentTime = 11.2 // both within the 1s retention bound — kept
-        instrument.play(id(0), 'C')
+        instrument.play(number(0), 'C')
         expect((instrument as any).scheduledOneShots).toHaveLength(2)
         ;(context as any).currentTime = 20 // both long past it — dropped
-        instrument.play(id(0), 'C')
+        instrument.play(number(0), 'C')
         expect((instrument as any).scheduledOneShots).toHaveLength(0)
     })
 
     it('pressNote with `at` starts the voice at that absolute time and durationMs counts from it', () => {
-        const {instrument, created, id} = sustainingInstrument()
-        const voice = instrument.pressNote(id(0), 'C', {at: 12, durationMs: 500})
+        const {instrument, created, number} = sustainingInstrument()
+        const voice = instrument.pressNote(number(0), 'C', {at: 12, durationMs: 500})
         expect(voice?.startedAt).toBe(12)
         expect(created.sources[0].calls).toContainEqual({method: 'start', args: [12]})
         // released at startedAt + durationMs, faded over `release` (0.3)
@@ -738,9 +796,9 @@ describe('Instrument committed scheduling', () => {
     })
 
     it('does not spend the sounding-voice cap or steal audio while committing more than 64 future voices', () => {
-        const {instrument, created, id} = sustainingInstrument()
+        const {instrument, created, number} = sustainingInstrument()
         for (let i = 0; i < 65; i++) {
-            instrument.pressNote(id(0), 'C', {at: 11, durationMs: 500})
+            instrument.pressNote(number(0), 'C', {at: 11, durationMs: 500})
         }
 
         expect((instrument as any).activeVoices).toHaveLength(65)
@@ -750,29 +808,31 @@ describe('Instrument committed scheduling', () => {
         )).toBe(true)
     })
 
-    it('a future same-id playback voice does not choke or replace the live held voice', () => {
-        const {instrument, created, id} = sustainingInstrument()
-        instrument.pressNote(id(0), 'C')
-        instrument.pressNote(id(0), 'C', {at: 11, durationMs: 500})
+    it('a future same-number playback voice does not choke or replace the live held voice', () => {
+        const {instrument, created, number} = sustainingInstrument()
+        instrument.pressNote(number(0), 'C')
+        instrument.pressNote(number(0), 'C', {at: 11, durationMs: 500})
 
         expect(created.sources[0].calls).not.toContainEqual({method: 'stop', args: [10.02]})
-        expect((instrument as any).heldVoices.get(id(0))).toBe((instrument as any).activeVoices[0])
+        //heldVoices is keyed by BUTTON (see its declaration); the press-time number is the alias
+        expect((instrument as any).heldVoices.get(0)).toBe((instrument as any).activeVoices[0])
+        expect((instrument as any).heldNumberAliases.get(number(0))).toBe(0)
 
-        instrument.releaseNote(id(0))
+        instrument.releaseNote(number(0))
         expect(created.sources[0].calls).toContainEqual({method: 'stop', args: [10.3]})
         expect(created.sources[1].calls).not.toContainEqual({method: 'stop', args: [undefined]})
     })
 
     it('the audio-clock start boundary is already sounding and cannot be retracted', () => {
         const sustain = sustainingInstrument()
-        sustain.instrument.pressNote(sustain.id(0), 'C', {at: 11, durationMs: 500})
+        sustain.instrument.pressNote(sustain.number(0), 'C', {at: 11, durationMs: 500})
         ;(sustain.instrument.audioContext as any).currentTime = 11
         sustain.instrument.cancelScheduledAfter(11)
         expect(sustain.created.sources[0].calls)
             .not.toContainEqual({method: 'stop', args: [undefined]})
 
         const oneShot = oneShotInstrument()
-        oneShot.instrument.play(oneShot.id(0), 'C', 11)
+        oneShot.instrument.play(oneShot.number(0), 'C', 11)
         ;(oneShot.context as any).currentTime = 11
         oneShot.instrument.cancelScheduledAfter(11)
         expect(oneShot.created.sources[0].calls)
@@ -780,9 +840,9 @@ describe('Instrument committed scheduling', () => {
     })
 
     it('cancelScheduledAfter retracts a committed-but-unstarted Voice and leaves a sounding one ringing', () => {
-        const {instrument, created, id} = sustainingInstrument()
-        instrument.pressNote(id(0), 'C', {durationMs: 5000}) // sounding since 10
-        instrument.pressNote(id(1), 'C', {at: 11, durationMs: 500}) // committed, starts at 11
+        const {instrument, created, number} = sustainingInstrument()
+        instrument.pressNote(number(0), 'C', {durationMs: 5000}) // sounding since 10
+        instrument.pressNote(number(1), 'C', {at: 11, durationMs: 500}) // committed, starts at 11
         instrument.cancelScheduledAfter(10.5)
         expect(created.sources[1].calls).toContainEqual({method: 'stop', args: [undefined]})
         expect(created.sources[1].calls).toContainEqual({method: 'disconnect', args: []})

@@ -129,7 +129,7 @@ import type {ComposerCache} from '$cmp/pages/Composer/ComposerCache'
  *  - teardown: nothing requires the Application to be destroyed, though destroy()'s own comment
  *    calls that a hard requirement against a WebGL leak on remount.
  *  - the rules this file imports from production rather than restating - nearestEven,
- *    computeGridRowLayerStatuses, computeGridStrandedRows, songGridSlotForId, isColumnVisible. A
+ *    computeGridRowLayerStatuses, computeGridStrandedMarks, gridRowForNumber, isColumnVisible. A
  *    defect inside one of those is followed by the reference rather than caught, EXCEPT where a
  *    second, independent statement pins it (the closed-form window range does this for
  *    isColumnVisible; 'one Note Id, one row, whatever the track's instrument' does it for the
@@ -196,16 +196,18 @@ import type {ComposerCache} from '$cmp/pages/Composer/ComposerCache'
  */
 
 const counters = vi.hoisted(() => ({
-    constructed: {containers: 0, sprites: 0, graphics: 0},
-    destroyed: {containers: 0, sprites: 0, graphics: 0},
+    constructed: {containers: 0, sprites: 0, graphics: 0, texts: 0},
+    destroyed: {containers: 0, sprites: 0, graphics: 0, texts: 0},
     graphicsClears: 0,
     reset() {
         this.constructed.containers = 0
         this.constructed.sprites = 0
         this.constructed.graphics = 0
+        this.constructed.texts = 0
         this.destroyed.containers = 0
         this.destroyed.sprites = 0
         this.destroyed.graphics = 0
+        this.destroyed.texts = 0
         this.graphicsClears = 0
     },
 }))
@@ -217,6 +219,18 @@ const pixi = vi.hoisted(() => {
     //comparison, and the harness identifies a texture by looking it up in the cache it came from
     class FakeTexture {
         readonly textureId = nextTextureId++
+        /**
+         * The draw ops the Graphics this texture was rasterised FROM carried, snapshotted at
+         * generateTexture. Nothing in the scene descriptions reads it - a sprite is still named by
+         * the cache slot its texture sits in - and it exists for the one claim a slot name cannot
+         * make: that two slots hold DIFFERENT PICTURES. The off-scale ♯/♭ variants are the case
+         * (ADR-0007 phase D): they differ from the plain icon only by the glyph drawn into them.
+         */
+        readonly ops: unknown[]
+
+        constructor(ops: unknown[] = []) {
+            this.ops = [...ops]
+        }
 
         destroy() {}
     }
@@ -395,6 +409,27 @@ const pixi = vi.hoisted(() => {
         }
     }
 
+    /**
+     * pixi's Text, modelled as the thing the Pro View's row-label strip does to it and nothing more:
+     * a container that carries a string, a style object and an anchor. PART NINE never reads a label
+     * (nothing rasterises here, so a Text's whole visible output is its own texture), and the earlier
+     * parts never construct one - what this exists for is to let a PRO renderer mount at all.
+     */
+    class FakeText extends FakeContainer {
+        override readonly kind = 'text' as const
+        text: string
+        style: Record<string, unknown>
+        readonly anchor = {set: () => {}}
+
+        constructor(options?: {text?: string, style?: Record<string, unknown>}) {
+            super()
+            counters.constructed.containers--
+            counters.constructed.texts++
+            this.text = options?.text ?? ''
+            this.style = {...options?.style}
+        }
+    }
+
     class FakeRectangle {
         constructor(_x: number, _y: number, _width: number, _height: number) {}
     }
@@ -536,7 +571,8 @@ const pixi = vi.hoisted(() => {
             resize: (width: number, height: number) => {
                 this.resizes.push([width, height])
             },
-            generateTexture: () => new FakeTexture(),
+            generateTexture: (options?: {target?: {ops?: unknown[]}}) =>
+                new FakeTexture(options?.target?.ops ?? []),
         }
 
         constructor() {
@@ -584,6 +620,7 @@ const pixi = vi.hoisted(() => {
         Graphics: FakeGraphics,
         Rectangle: FakeRectangle,
         Sprite: FakeSprite,
+        Text: FakeText,
         Texture: FakeTexture,
         applications,
     }
@@ -628,15 +665,25 @@ import {
 //the renderer's own rounding helper, used here to DERIVE the column geometry rather than read it
 //back off the ComposerCache the renderer built - see Geometry
 import {nearestEven} from '$core/utils/Utilities'
-//the CANVAS placement rules (ADR-0004): a row is the Note Id's canonical Song Grid slot, so the
-//oracles below take the *Grid* helpers. computeButtonLayerStatuses, keyed by the Buttons of the
-//keyboard on screen, belongs to the composer KEYBOARD and deliberately does not appear in this file.
+//the CANVAS placement rules (ADR-0004 under ADR-0007): a row is gridRowForNumber's answer for the
+//note's OWN track at its own Basepoint, so the oracles below take the *Grid* helpers.
+//computeButtonLayerStatuses, keyed by the Buttons of the keyboard on screen, belongs to the composer
+//KEYBOARD and deliberately does not appear in this file.
+//
+//Every song here sits at the default Basepoint C, so a note's number equals the Sounding Pitch of
+//the button it is entered from; the helpers below still go through the real conversion rather than
+//assuming that, because "C makes the two axes coincide" is a property of the fixture, not a rule.
 import {
-    songGridSlotForId,
     computeGridRowLayerStatuses,
-    computeGridStrandedRows,
-    noteIdToButton,
+    computeGridStrandedMarks,
+    effectiveTrackPitch,
+    gridRowForNumber,
+    nominalToNumber,
+    numberToButton,
 } from '$core/Songs/noteIds'
+//the note icon's cache key, which is where the OFF-SCALE hint lives: one texture per (layer
+//status, accidental), so the sprite that carries the ♯/♭ is the note's own sprite
+import {noteTextureKey} from '$cmp/pages/Composer/ComposerCache'
 import {
     ComposerRenderer,
     COMPOSER_PLAYHEAD_CONFIG,
@@ -653,7 +700,29 @@ import {COMPOSER_TIMELINE_MINIMAP_CONFIG} from '$cmp/pages/Composer/composerTime
 import {
     TIMELINE_INSET_LEFT,
     TIMELINE_INSET_RIGHT,
+    composerNotesRegionY,
 } from '$cmp/pages/Composer/composerCanvasGeometry'
+//PART NINE's rules, imported for the same reason nearestEven and the insets are: they ARE the axis
+//and the framing, pinned in test/proViewGeometry.test.ts against the spec, so restating them here
+//would be restating a definition rather than checking one. What PART NINE checks is the INPUT
+//machinery that reads them - which cell a pointer resolves to, and what moves the camera.
+import {
+    PRO_ZOOM_MAX,
+    PRO_ZOOM_MIN,
+    editableZone,
+    lockedCameraY,
+    proRowHeight,
+    numberAtY,
+    proStripWidth,
+    proViewAxis,
+    rowForNumber,
+    zoneRowCount,
+    type ProViewAxis,
+} from '$cmp/pages/Composer/proViewGeometry'
+import {songNumberSpan} from '$cmp/pages/Composer/proViewNotes'
+//the ONE long-press timing, shared by the composer keyboard and the Pro View canvas (spec §12), and
+//the wheel's own zoom rate - PART NINE drives a ctrl+wheel and states what one notch comes to
+import {COMPOSER_LONG_PRESS_MS, PRO_ZOOM_WHEEL_RATE} from '$cmp/pages/Composer/composerInput'
 
 /**
  * 20, not the shipped default of 35, purely so the window (n/2 + 2 per side, strictly - so n + 3
@@ -690,7 +759,12 @@ const BODY_WIDTH = 1920
  * geometry() asserts the renderer reports this same width and derives this same column width, so
  * the duplication fails loudly there instead of quietly moving every window in this file.
  */
-const CANVAS_WIDTH = nearestEven(BODY_WIDTH * 0.85 - 45)
+//1920 is a DESKTOP body (> COMPOSER_MOBILE_MAX_WIDTH), so this is the desktop half of
+//composerCanvasSize's formula: the canvas fills the window - `100vw` less `.tool`'s own `4vw`
+//column - rather than the `85vw - 45px` card the layout used before the sidebar became permanent.
+//Restated rather than imported, like every other number in this block, so that changing the
+//formula fails here instead of moving the whole file's window definition with it.
+const CANVAS_WIDTH = nearestEven(BODY_WIDTH * 0.96 - 177.6)
 const COLUMN_WIDTH = nearestEven(CANVAS_WIDTH / COLUMNS_PER_CANVAS)
 const WINDOW_GEOMETRY: ColumnWindowGeometry = {
     width: CANVAS_WIDTH,
@@ -698,9 +772,19 @@ const WINDOW_GEOMETRY: ColumnWindowGeometry = {
     playheadX: CANVAS_WIDTH / 2,
 }
 
-/** Note Id of a button on the game's default instrument. */
+/** Nominal Id of a button on the game's default instrument — a Song-Grid row name, never a stored value. */
 function idOf(button: number): number {
     return INSTRUMENTS_DATA[INSTRUMENTS[0]].notes[button].midi
+}
+
+/** What a track of `instrument` STORES for that grid row at Basepoint C (ADR-0007 §4). */
+function numberOn(instrument: (typeof INSTRUMENTS)[number], nominal: number): number {
+    return nominalToNumber(instrument, 'C', nominal)
+}
+
+/** numberOn for the two-track songs below: track 0 is INSTRUMENTS[0], track 1 is INSTRUMENTS[1]. */
+function numberOf(button: number, track: 0 | 1): number {
+    return numberOn(INSTRUMENTS[track], idOf(button))
 }
 
 /**
@@ -711,8 +795,8 @@ function idOf(button: number): number {
 function makeSong(): ComposedSong {
     const song = new ComposedSong('composer renderer', [INSTRUMENTS[0], INSTRUMENTS[1]])
     for (let column = 0; column < song.columns.length; column++) {
-        song.addNoteAt(column, 0, idOf(column % 7), column % 8 === 0 ? 3 : 1)
-        song.addNoteAt(column, 1, idOf((column % 5) + 7))
+        song.addNoteAt(column, 0, numberOf(column % 7, 0), column % 8 === 0 ? 3 : 1)
+        song.addNoteAt(column, 1, numberOf((column % 5) + 7, 1))
     }
     song.setTempoChangerAt(5, TEMPO_CHANGERS[1])
     song.breakpoints = [0, 42]
@@ -731,8 +815,8 @@ function makeSong(): ComposedSong {
 function makeOtherSong(): ComposedSong {
     const song = new ComposedSong('other song', [INSTRUMENTS[0], INSTRUMENTS[1]])
     for (let column = 0; column < song.columns.length; column++) {
-        song.addNoteAt(column, 0, idOf((column + 3) % 7), 1)
-        song.addNoteAt(column, 1, idOf(((column + 2) % 5) + 7))
+        song.addNoteAt(column, 0, numberOf((column + 3) % 7, 0), 1)
+        song.addNoteAt(column, 1, numberOf(((column + 2) % 5) + 7, 1))
     }
     song.setTempoChangerAt(9, TEMPO_CHANGERS[2])
     song.breakpoints = [0]
@@ -746,15 +830,15 @@ function makeOtherSong(): ComposedSong {
  * long note replaces one of the loop's per-column calls rather than being added after it, because
  * every graph mutation bumps the version and the two songs have to end up equal.
  *
- * idOf(12) is outside both the track-0 (0..6) and track-1 (7..11) id ranges the loop uses, so
+ * Button 12 is outside both the track-0 (0..6) and track-1 (7..11) button ranges the loop uses, so
  * nothing later in the song truncates the span.
  */
 function makeEquallyVersionedLongSpanSong(): ComposedSong {
     const song = new ComposedSong('long span', [INSTRUMENTS[0], INSTRUMENTS[1]])
     for (let column = 0; column < song.columns.length; column++) {
-        song.addNoteAt(column, 0, idOf(column % 7), 1)
-        if (column === 0) song.addNoteAt(0, 1, idOf(12), 90)
-        else song.addNoteAt(column, 1, idOf((column % 5) + 7))
+        song.addNoteAt(column, 0, numberOf(column % 7, 0), 1)
+        if (column === 0) song.addNoteAt(0, 1, numberOf(12, 1), 90)
+        else song.addNoteAt(column, 1, numberOf((column % 5) + 7, 1))
     }
     song.setTempoChangerAt(5, TEMPO_CHANGERS[1])
     song.breakpoints = [0, 42]
@@ -768,24 +852,62 @@ function makeEquallyVersionedLongSpanSong(): ComposedSong {
  * row and dimmed there. Searched for rather than named so this file carries no per-game list; both
  * shipped games have percussion whose table is narrower than the melodic default's.
  */
-function strandingPair(): {instrument: (typeof INSTRUMENTS)[number], id: number, row: number} {
+function strandingPair(): {instrument: (typeof INSTRUMENTS)[number], number: number, row: number} {
     const buttons = INSTRUMENTS_DATA[INSTRUMENTS[0]].notes.length
     for (const instrument of INSTRUMENTS) {
         for (let button = 0; button < buttons; button++) {
-            const id = idOf(button)
-            const row = songGridSlotForId(id)
-            if (row !== -1 && noteIdToButton(instrument, id) === -1) return {instrument, id, row}
+            //the number the DEFAULT track stores for that button; the question is whether the
+            //candidate instrument can voice it, which is what "stranded on its own track" means
+            const number = numberOf(button, 0)
+            const placement = gridRowForNumber(instrument, 'C', number)
+            if (placement.row !== -1 && placement.stranded) {
+                return {instrument, number, row: placement.row}
+            }
         }
     }
-    throw new Error('no instrument in this game strands any of the default instrument note ids')
+    throw new Error('no instrument in this game strands any of the default instrument Note Numbers')
+}
+
+/**
+ * AN OFF-SCALE NUMBER and where it lands (ADR-0007 phase D): a Note Number whose virtual nominal
+ * falls BETWEEN two Song-Grid rows, so gridRowForNumber puts it on the nearest one and signs the
+ * accidental. `sign` picks which way it sits off that row.
+ *
+ * Derived from the grid's own ends rather than from a note table, and game-agnostically so: one
+ * semitone past the lowest canonical id can only be flat of the lowest row, one past the highest can
+ * only be sharp of the highest, whatever ladder the game's grid is. The strandedness is asserted
+ * rather than assumed - a game whose instruments sounded past the grid would break the premise, and
+ * the row is worth nothing if the note is voiced.
+ */
+function offScalePair(sign: -1 | 1): {
+    instrument: (typeof INSTRUMENTS)[number]
+    number: number
+    row: number
+} {
+    const virtual = sign < 0
+        ? Math.min(...CANONICAL_NOTE_IDS) - 1
+        : Math.max(...CANONICAL_NOTE_IDS) + 1
+    for (const instrument of INSTRUMENTS) {
+        const placement = gridRowForNumber(instrument, 'C', virtual)
+        if (placement.row === -1 || !placement.stranded || placement.accidental !== sign) continue
+        return {instrument, number: virtual, row: placement.row}
+    }
+    throw new Error(`no instrument in this game leaves ${virtual} off-scale`)
 }
 
 /** The first drawn column with no note on `row`, so a note added there is the row's only one. */
 function drawnColumnWithoutRow(song: ComposedSong, row: number): number {
     for (let index = 0; index < song.columns.length; index++) {
         if (!isColumnVisible(index, song.selected, WINDOW_GEOMETRY)) continue
-        //by the canvas' own placement rule: the id's canonical row, whatever track it is on
-        const taken = song.columns[index].notes.some(note => songGridSlotForId(note.id) === row)
+        //by the canvas' own placement rule: the note's row on ITS OWN track
+        const taken = song.columns[index].notes.some(note => {
+            const instrument = song.instruments[note.trackIndex]
+            return gridRowForNumber(
+                instrument?.name ?? '',
+                effectiveTrackPitch(instrument, song.pitch),
+                note.id
+            ).row === row
+        })
         if (!taken) return index
     }
     throw new Error(`every drawn column already carries a note on row ${row}`)
@@ -815,11 +937,13 @@ function subGridPair(): {
     const candidates = INSTRUMENTS.map(instrument => ({
         instrument,
         //index INTO CANONICAL_NOTE_IDS is the canonical row, by game.json's positional pairing -
-        //stated here rather than taken from songGridSlotForId, which is what production places by
+        //stated here rather than taken from gridRowForNumber, which is what production places by
         playableId: CANONICAL_NOTE_IDS.find(
-            (id, row) => ![-1, row].includes(noteIdToButton(instrument, id))
+            (id, row) => ![-1, row].includes(numberToButton(instrument, 'C', numberOn(instrument, id)))
         ),
-        strandedId: CANONICAL_NOTE_IDS.find(id => noteIdToButton(instrument, id) === -1),
+        strandedId: CANONICAL_NOTE_IDS.find(
+            id => numberToButton(instrument, 'C', numberOn(instrument, id)) === -1
+        ),
         width: INSTRUMENTS_DATA[instrument].notes.length,
     }))
         .filter(candidate => candidate.playableId !== undefined && candidate.strandedId !== undefined)
@@ -830,7 +954,7 @@ function subGridPair(): {
     return {
         instrument: best.instrument,
         playableId: best.playableId!,
-        ownButton: noteIdToButton(best.instrument, best.playableId!),
+        ownButton: numberToButton(best.instrument, 'C', numberOn(best.instrument, best.playableId!)),
         strandedId: best.strandedId!,
     }
 }
@@ -1371,6 +1495,7 @@ async function mount(context: Context = makeContext()): Promise<Harness> {
         playbackAnchorGeneration: context.props.playbackAnchorGeneration,
         isRecordingAudio: context.props.isRecordingAudio,
         instruments: context.song.instruments,
+        songPitch: context.song.pitch,
         selected: context.song.selected,
         currentLayer: context.props.currentLayer,
         beatMarks: context.props.beatMarks,
@@ -1839,7 +1964,11 @@ function expectedTails(context: Context, index: number, geometry: Geometry, acce
             if (!isCurrentLayer && !instrument?.visible) continue
             //a tail sits on the SAME canonical row as the note sprite it leaves - the instrument
             //above decides only whether the tail is drawn at all, never where
-            const row = songGridSlotForId(note.id)
+            const row = gridRowForNumber(
+                instrument?.name ?? '',
+                effectiveTrackPitch(instrument, song.pitch),
+                note.id
+            ).row
             if (row === -1) continue
             //centred in its Song Grid row, and a stub over the right 45% in the column the note
             //STARTS in so the bar reads as leaving the note icon
@@ -1879,8 +2008,11 @@ function expectedTails(context: Context, index: number, geometry: Geometry, acce
  *  - a breakpoint column shows the marker;
  *  - one note sprite per Song Grid row that computeGridRowLayerStatuses gives a non-zero status, at
  *    that row's y, dimmed to 0.45 when every note contributing to the row is stranded on its own
- *    instrument. A row is the note ID's canonical slot on EVERY track (ADR-0004), so two tracks on
- *    differently-sized instruments carrying one id contribute to one row rather than two;
+ *    instrument, and taking the ♯/♭ VARIANT of its icon texture when those notes are also OFF-SCALE
+ *    (ADR-0007 phase D: the hint is baked into the note's own texture, so it is the sprite's
+ *    identity that carries it and not a second child). A row is the note ID's canonical slot on
+ *    EVERY track (ADR-0004), so two tracks on differently-sized instruments carrying one id
+ *    contribute to one row rather than two;
  *  - and the tails above, in a Graphics that is itself shown and opaque - the per-bar alpha is in
  *    the fill ops, and a transparent Graphics would draw none of them.
  *
@@ -1908,19 +2040,21 @@ function expectedWindow(
         const isSelected = !props.smoothScroll && index === song.selected
         const isToolsSelected = props.selectedColumns.includes(index)
         const toolsOnly = isToolsSelected && !isSelected
-        const stranded = computeGridStrandedRows(column.notes, song.instruments)
+        const stranded = computeGridStrandedMarks(column.notes, song.instruments, song.pitch)
         const notes: PaintedSpriteData[] = []
         for (const [row, status] of computeGridRowLayerStatuses(
             column.notes,
             props.currentLayer,
-            song.instruments
+            song.instruments,
+            song.pitch
         )) {
             if (status === 0) continue
+            const mark = stranded.get(row)
             notes.push({
-                texture: `notes[${status}]`,
+                texture: `notes[${noteTextureKey(status, mark ?? 0)}]`,
                 x: 0,
                 y: (COMPOSER_NOTE_POSITIONS[row] * height) / NOTES_PER_COLUMN,
-                alpha: stranded.has(row) ? 0.45 : 1,
+                alpha: mark === undefined ? 1 : 0.45,
             })
         }
         drawn.push({
@@ -2032,7 +2166,9 @@ function expectedCanvasStyle(): string {
  *    song is the canvas showing": `columnsOnScreen` below, and the `canvasWidth / 2 / columnWidth`
  *    half of the outline's x. Those describe the notes region, and scaling them by the inset too
  *    would make the outline claim a different set of columns than the canvas holds;
- *  - the background covers the rectangular strip in the timeline layer colour;
+ *  - the background covers the whole BAND - the canvas' full width, starting one left inset
+ *    before the strip's own origin - in the timeline layer colour, so the three DOM buttons stand
+ *    on it rather than on gaps in it;
  *  - a tools selection covers every selected cell, including the final one;
  *  - breakpoints are one timeline column wide with a three-pixel floor, at their columns' leading
  *    edges and clamped at the strip's right edge. Their opaque colour is the exact transformed
@@ -2063,8 +2199,11 @@ function expectedTimeline(context: Context, geometry: Geometry): PaintedScene['t
         }
     }
     const content: PaintedTimelineChild[] = [
+        //the BAND, which is the canvas' full width and not the strip's: the minimap and everything
+        //else in this container are inset by the DOM buttons' footprints, and the background runs
+        //under those buttons rather than leaving the clear colour showing in the gaps around them
         expectedGraphicsChild(0, 0, [
-            ['rect', 0, 0, stripWidth, timelineHeight],
+            ['rect', -TIMELINE_INSET_LEFT, 0, canvasWidth, timelineHeight],
             ['fill', {color: ThemeProvider.layer('primary', 0.1).rgb().rgbNumber()}],
         ]),
     ]
@@ -2211,7 +2350,7 @@ function expectedPlayhead(
 ): PaintedTimelineChild {
     const {canvasWidth, columnWidth, height} = geometry
     const centre = canvasWidth / 2
-    const ops = COMPOSER_PLAYHEAD_CONFIG.variant === 'rectangle'
+    const ops = COMPOSER_PLAYHEAD_CONFIG.variant.compressed === 'rectangle'
         ? [
             [
                 'roundRect',
@@ -2356,7 +2495,7 @@ const REPAINTS: RepaintCase[] = [
     // RepaintCase.columnPaints. Everything below them marks the whole song and stays 'window'.
     {
         what: 'a note is added',
-        change: context => void context.song.addNoteAt(41, 0, idOf(3)),
+        change: context => void context.song.addNoteAt(41, 0, numberOf(3, 0)),
         renders: 1,
         //a span of 1 covers only the column that owns the note
         columnPaints: [41],
@@ -2367,7 +2506,7 @@ const REPAINTS: RepaintCase[] = [
         //column 40, not 41: makeSong gives every 8th column a span of 3, and 41 has span 1 - so
         //[41] would read the same under the range rule and under a column-only one, and the row
         //would state nothing about #touchColumns
-        change: context => context.song.removeNoteAt(40, 0, idOf(40 % 7)),
+        change: context => context.song.removeNoteAt(40, 0, numberOf(40 % 7, 0)),
         renders: 1,
         columnPaints: [40, 41, 42],
         timelineRebuilds: 1,
@@ -2376,7 +2515,7 @@ const REPAINTS: RepaintCase[] = [
         what: "a note's span changes",
         //makeSong gives column 40 a span of 3 (every 8th), so this grows it to 4 and the marked
         //range is the UNION of the two - [40, 40 + max(3, 4))
-        change: context => void context.song.setNoteSpan(40, 0, idOf(40 % 7), 4),
+        change: context => void context.song.setNoteSpan(40, 0, numberOf(40 % 7, 0), 4),
         renders: 1,
         columnPaints: [40, 41, 42, 43],
         timelineRebuilds: 1,
@@ -2399,7 +2538,7 @@ const REPAINTS: RepaintCase[] = [
         //matching row.
         what: 'a note is added while selected also moved',
         change: context => {
-            context.song.addNoteAt(41, 0, idOf(3))
+            context.song.addNoteAt(41, 0, numberOf(3, 0))
             context.song.selected += 1
         },
         renders: 1,
@@ -2734,7 +2873,7 @@ function parkedAcross(what: string, change: (harness: Harness) => void): WindowC
             //...and back, on an update that also edits the graph: that is what selects the narrowed
             //repaint rather than the playback fast path
             song.selected = returnTo
-            song.addNoteAt(returnTo, 0, idOf(3))
+            song.addNoteAt(returnTo, 0, numberOf(3, 0))
             harness.push()
         },
     }
@@ -2771,7 +2910,7 @@ const WINDOWS: WindowCase[] = [
         what: 'after an edit arrived in the same update as a moved playhead',
         drive: harness => {
             const edited = harness.context.song.selected + 3
-            harness.context.song.addNoteAt(edited, 0, idOf(edited % 7))
+            harness.context.song.addNoteAt(edited, 0, numberOf(edited % 7, 0))
             harness.context.song.selected += 1
             harness.push()
         },
@@ -2790,14 +2929,14 @@ const WINDOWS: WindowCase[] = [
         //sprites now needs one, and the surplus sprite has to stop being shown
         what: 'after a note is removed from a drawn column',
         drive: harness => {
-            harness.context.song.removeNoteAt(41, 0, idOf(41 % 7))
+            harness.context.song.removeNoteAt(41, 0, numberOf(41 % 7, 0))
             harness.push()
         },
     },
     {
         what: 'after a note is added to a drawn column',
         drive: harness => {
-            harness.context.song.addNoteAt(41, 0, idOf(3))
+            harness.context.song.addNoteAt(41, 0, numberOf(3, 0))
             harness.push()
         },
     },
@@ -2822,7 +2961,7 @@ const WINDOWS: WindowCase[] = [
             //a span on the track about to be hidden: a tail belonging to a track that is neither
             //the current layer nor visible is not drawn at all, and makeSong puts spans only on
             //track 0. Painted DIM first (another track's visible tail), then gone.
-            song.setNoteSpan(38, 1, idOf((38 % 5) + 7), 5)
+            song.setNoteSpan(38, 1, numberOf((38 % 5) + 7, 1), 5)
             harness.push()
             song.setInstrument(1, song.instruments[1].set({visible: false}))
             harness.push()
@@ -2835,18 +2974,34 @@ const WINDOWS: WindowCase[] = [
         what: 'with a row whose only note is stranded on its own instrument',
         drive: harness => {
             const song = harness.context.song
-            const {instrument, id, row} = strandingPair()
+            const {instrument, number, row} = strandingPair()
             song.addInstrument(instrument)
             const column = drawnColumnWithoutRow(song, row)
-            song.addNoteAt(column, 2, id)
+            song.addNoteAt(column, 2, number)
             harness.push()
-            //the scenario is worth nothing if nothing ended up stranded, and two empty sets compare
-            //equal - so the precondition is asserted rather than assumed
-            expect(computeGridStrandedRows(song.columns[column].notes, song.instruments)).toEqual(
-                new Set([row])
-            )
+            //the scenario is worth nothing if nothing ended up stranded, and two empty maps compare
+            //equal - so the precondition is asserted rather than assumed. 0 is "stranded, but on
+            //its own row": this note's number IS a grid id, it simply has no button here
+            expect(computeGridStrandedMarks(song.columns[column].notes, song.instruments, song.pitch))
+                .toEqual(new Map([[row, 0]]))
         },
     },
+    ...([1, -1] as const).map(sign => ({
+        //ADR-0007 phase D: a strand whose number falls BETWEEN two grid rows draws on the nearest
+        //one with a ♯/♭ hint baked into its icon, so it reads as off the scale rather than merely
+        //un-voiced. Both signs, because the two are different textures.
+        what: `with a row whose only note is off-scale ${sign > 0 ? 'above' : 'below'} it`,
+        drive: (harness: Harness) => {
+            const song = harness.context.song
+            const {instrument, number, row} = offScalePair(sign)
+            song.addInstrument(instrument)
+            const column = drawnColumnWithoutRow(song, row)
+            song.addNoteAt(column, 2, number)
+            harness.push()
+            expect(computeGridStrandedMarks(song.columns[column].notes, song.instruments, song.pitch))
+                .toEqual(new Map([[row, sign]]))
+        },
+    })),
     {
         what: 'with the bar groups regrouped',
         drive: harness => {
@@ -2865,17 +3020,17 @@ const WINDOWS: WindowCase[] = [
     {
         what: 'with a span reaching the window from far off-screen',
         drive: harness => {
-            //idOf(12) is a note id makeSong never uses, so nothing truncates the span
-            harness.context.song.addNoteAt(0, 1, idOf(12), 90)
+            //numberOf(12, 1) is a Note Number makeSong never uses, so nothing truncates the span
+            harness.context.song.addNoteAt(0, 1, numberOf(12, 1), 90)
             harness.push()
         },
     },
     {
         what: 'with a span grown after it was first painted',
         drive: harness => {
-            harness.context.song.addNoteAt(24, 1, idOf(12), 1)
+            harness.context.song.addNoteAt(24, 1, numberOf(12, 1), 1)
             harness.push()
-            harness.context.song.setNoteSpan(24, 1, idOf(12), 30)
+            harness.context.song.setNoteSpan(24, 1, numberOf(12, 1), 30)
             harness.push()
         },
     },
@@ -2893,7 +3048,7 @@ const WINDOWS: WindowCase[] = [
         //has to have lost the flag without being repainted, 41 to have gained it.
         what: 'after a note was added in the same update that moved the playhead',
         drive: harness => {
-            harness.context.song.addNoteAt(41, 0, idOf(3))
+            harness.context.song.addNoteAt(41, 0, numberOf(3, 0))
             harness.context.song.selected += 1
             harness.push()
         },
@@ -2915,14 +3070,14 @@ const WINDOWS: WindowCase[] = [
             const tailOpsAt = (index: number) =>
                 harness.paintedScene().notes.columns.find(column => column.index === index)?.tails
                     .ops.length
-            //column 5 is far outside the window (29..51); the span covers 5..44. idOf(12) is a note
+            //column 5 is far outside the window (29..51); the span covers 5..44. numberOf(12, 1) is a note
             //id makeSong never uses, so nothing truncates it, and makeSong's own spans (every 8th
             //column, 3 long) reach 42 at the furthest - so column 44's bars come from this note
             //alone.
-            song.addNoteAt(5, 1, idOf(12), 40)
+            song.addNoteAt(5, 1, numberOf(12, 1), 40)
             harness.push()
             expect(tailOpsAt(44)).toBeGreaterThan(0)
-            song.setNoteSpan(5, 1, idOf(12), 1)
+            song.setNoteSpan(5, 1, numberOf(12, 1), 1)
             harness.push()
             expect(tailOpsAt(44)).toBe(0)
         },
@@ -3009,7 +3164,7 @@ describe('the painted scene is what the drawing rules say it is', () => {
 /**
  * ADR-0004, stated INDEPENDENTLY of the helper the renderer places with.
  *
- * The table above compares the scene against computeGridRowLayerStatuses/computeGridStrandedRows, so
+ * The table above compares the scene against computeGridRowLayerStatuses/computeGridStrandedMarks, so
  * a defect inside either is followed rather than caught - the header says so. This states the rows
  * the other way round, from game.json's two positionally-paired lists: row N of the Song Grid holds
  * Note Id CANONICAL_NOTE_IDS[N] and draws at COMPOSER_NOTE_POSITIONS[N]. A canvas that went back to
@@ -3036,11 +3191,12 @@ describe('the canvas places every note at its Note Id row, on every track', () =
         //own rather than makeSong's, so each column below carries only the notes under test.
         const song = new ComposedSong('canonical placement', [INSTRUMENTS[0], instrument])
         song.selected = SELECTED
-        song.addNoteAt(SELECTED - 2, 0, playableId)
-        song.addNoteAt(SELECTED - 1, 1, playableId)
-        song.addNoteAt(SELECTED, 0, playableId)
-        song.addNoteAt(SELECTED, 1, playableId)
-        song.addNoteAt(SELECTED + 1, 1, strandedId)
+        //each track stores the number ITS instrument enters that grid row at (ADR-0007)
+        song.addNoteAt(SELECTED - 2, 0, numberOn(INSTRUMENTS[0], playableId))
+        song.addNoteAt(SELECTED - 1, 1, numberOn(instrument, playableId))
+        song.addNoteAt(SELECTED, 0, numberOn(INSTRUMENTS[0], playableId))
+        song.addNoteAt(SELECTED, 1, numberOn(instrument, playableId))
+        song.addNoteAt(SELECTED + 1, 1, numberOn(instrument, strandedId))
         context.song = song
         const harness = await mount(context)
         try {
@@ -3077,7 +3233,7 @@ describe('the canvas places every note at its Note Id row, on every track', () =
         const song = new ComposedSong('canonical tails', [INSTRUMENTS[0], instrument])
         song.selected = SELECTED
         //on the sub-grid track, where a tail placed by own button would part company with its head
-        song.addNoteAt(SELECTED, 1, playableId, 3)
+        song.addNoteAt(SELECTED, 1, numberOn(instrument, playableId), 3)
         context.song = song
         const harness = await mount(context)
         try {
@@ -3094,6 +3250,147 @@ describe('the canvas places every note at its Note Id row, on every track', () =
                 const x = index === SELECTED ? geometry.columnWidth * 0.55 : 0
                 expect(ops[0]).toEqual(['rect', x, tailY, geometry.columnWidth - x, tailHeight])
             }
+        } finally {
+            harness.destroy()
+        }
+    })
+})
+
+/**
+ * ADR-0007 PHASE D, the half the scene table cannot state on its own.
+ *
+ * The table compares the painted texture against `noteTextureKey`, so it would follow the production
+ * key straight into a variant that drew nothing at all. These rows say the other two things: that
+ * the three variants are three DIFFERENT PICTURES (the hint is ink on the canvas, not a second name
+ * for the same icon), and that a note which stops being off-scale stops carrying it - the end of the
+ * un-strand flow, on the surface the user watches.
+ */
+describe('an off-scale note draws the accidental hint into its own icon', () => {
+    /** The draw ops behind the plain / sharp / flat variants of one layer status. */
+    function variants(harness: Harness, status: number): {plain: unknown[], sharp: unknown[], flat: unknown[]} {
+        const notes = harness.currentCache().cache.notes as unknown as Record<string, {ops: unknown[]}>
+        const at = (accidental: -1 | 0 | 1) => {
+            const texture = notes[noteTextureKey(status, accidental)]
+            if (!texture) throw new Error(`the cache holds no ${noteTextureKey(status, accidental)} icon`)
+            return texture.ops
+        }
+        return {plain: at(0), sharp: at(1), flat: at(-1)}
+    }
+
+    it('the sharp and the flat variant each draw MORE than the plain icon, and differ from each other', async () => {
+        const harness = await mount()
+        try {
+            //status 1 is the current layer's filled note - the icon nearly every drawn note takes
+            const {plain, sharp, flat} = variants(harness, 1)
+            //the glyph goes ON TOP, so each variant opens with every op the plain icon has
+            expect(sharp.slice(0, plain.length)).toEqual(plain)
+            expect(flat.slice(0, plain.length)).toEqual(plain)
+            expect(sharp.length).toBeGreaterThan(plain.length)
+            expect(flat.length).toBeGreaterThan(plain.length)
+            //...and the two hints are not the same picture, which is what makes the SIGN readable
+            expect(sharp).not.toEqual(flat)
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    it('draws the hint in the theme\'s own readable ink for the layer colour it sits on', async () => {
+        //BOTH THEMES, without mounting two: the canvas takes its colours from the theme, and the
+        //ink here is whatever ThemeProvider says is readable over `composer_main_layer` - so a
+        //light theme and a dark one get opposite glyph colours from this one expression, and
+        //neither can come out as the fill the glyph is drawn over.
+        const harness = await mount()
+        try {
+            const {plain, sharp} = variants(harness, 1)
+            const glyph = sharp.slice(plain.length)
+            const strokes = glyph.filter(op => Array.isArray(op) && op[0] === 'stroke')
+            expect(strokes.length).toBeGreaterThan(0)
+            const ink = (strokes[0] as [string, {color: number}])[1].color
+            expect(ink).not.toBe(ThemeProvider.get('composer_main_layer').rgbNumber())
+            expect(ink).toBe(
+                ThemeProvider
+                    .getTextColorFromBackground(ThemeProvider.get('composer_main_layer'))
+                    .rgbNumber()
+            )
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    it('an off-scale note is one sprite, on the nearest row, dimmed and marked', async () => {
+        const {instrument, number, row} = offScalePair(1)
+        const context = makeContext()
+        const song = new ComposedSong('off-scale', [instrument])
+        song.selected = SELECTED
+        song.addNoteAt(SELECTED, 0, number)
+        context.song = song
+        const harness = await mount(context)
+        try {
+            const geometry = harness.geometry()
+            const notes = harness.paintedScene().notes.columns
+                .find(column => column.index === SELECTED)!.notes
+            //ONE sprite: the hint rides the note's own icon, so an off-scale note costs the canvas
+            //nothing a voiced one does not
+            expect(notes).toEqual([{
+                texture: `notes[${noteTextureKey(1, 1)}]`,
+                x: 0,
+                y: (COMPOSER_NOTE_POSITIONS[row] * geometry.height) / NOTES_PER_COLUMN,
+                alpha: 0.45,
+            }])
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    it.runIf(INSTRUMENTS.some(name =>
+        INSTRUMENTS_DATA[name].notes.some(note => note.pitched && note.sounding !== note.midi)
+    ))('an instrument swap that UN-STRANDS the note takes the hint off it', async () => {
+        //THE UN-STRAND FLOW, END TO END ON THE CANVAS, and the composer smoke pass in miniature:
+        //a tuned instrument's Sounding Pitch stored on an untuned track is off-scale there - drawn
+        //on its nearest row, dimmed, marked. Swapping the track to the instrument that owns that
+        //pitch passes the number through untouched and gives it a button, so the same note becomes
+        //an ordinary voiced one on the row that button's nominal id prints.
+        const tuned = INSTRUMENTS.find(name =>
+            INSTRUMENTS_DATA[name].notes.some(note => note.pitched && note.sounding !== note.midi))!
+        const reflavored = INSTRUMENTS_DATA[tuned].notes.find(note =>
+            note.pitched && note.sounding !== note.midi && !CANONICAL_NOTE_IDS.includes(note.sounding))
+        if (!reflavored) return
+        const host = INSTRUMENTS.find(name => numberToButton(name, 'C', reflavored.sounding) === -1)!
+        const before = gridRowForNumber(host, 'C', reflavored.sounding)
+        expect(before.stranded).toBe(true)
+        expect(before.accidental).not.toBe(0)
+
+        const context = makeContext()
+        const song = new ComposedSong('un-strand by swap', [host])
+        song.selected = SELECTED
+        song.addNoteAt(SELECTED, 0, reflavored.sounding)
+        context.song = song
+        const harness = await mount(context)
+        try {
+            const geometry = harness.geometry()
+            const rowY = (row: number) => (COMPOSER_NOTE_POSITIONS[row] * geometry.height) / NOTES_PER_COLUMN
+            const notesAt = () => harness.paintedScene().notes.columns
+                .find(column => column.index === SELECTED)!.notes
+            expect(notesAt()).toEqual([{
+                texture: `notes[${noteTextureKey(1, before.accidental)}]`,
+                x: 0,
+                y: rowY(before.row),
+                alpha: 0.45,
+            }])
+
+            //the swap, exactly as the layer panel makes it: a fresh entry carrying the new name
+            song.setInstrument(0, song.instruments[0].clone().set({name: tuned}))
+            harness.push()
+
+            //the stored number survived the swap, which is what makes this an un-strand and not a
+            //rewrite - and the sprite is now plain, opaque, and on the tuned button's own row
+            expect(song.columns[SELECTED].notes[0].id).toBe(reflavored.sounding)
+            expect(notesAt()).toEqual([{
+                texture: 'notes[1]',
+                x: 0,
+                y: rowY(CANONICAL_NOTE_IDS.indexOf(reflavored.midi)),
+                alpha: 1,
+            }])
         } finally {
             harness.destroy()
         }
@@ -3120,9 +3417,9 @@ describe('span tails are found by a bounded backward scan, exactly', () => {
             //precisely that bound, so one column tighter drops the final bar of every
             //maximum-length span - the conservative direction, which draws too little rather than
             //too much and therefore looks like nothing at all.
-            //(idOf(12) is a note id makeSong never uses, so nothing truncates the span; 8 becomes
+            //(numberOf(12, 1) is a Note Number makeSong never uses, so nothing truncates the span; 8 becomes
             //the longest span in the song, over makeSong's 3.)
-            harness.context.song.addNoteAt(30, 1, idOf(12), 8)
+            harness.context.song.addNoteAt(30, 1, numberOf(12, 1), 8)
             harness.push()
             //30 + 8 - 1 = 37 is the last column the span covers, and 30 is exactly `37 - 8 + 1`
             expect(columnsWithTails(harness)).toContain(37)
@@ -3156,10 +3453,10 @@ describe('span tails are found by a bounded backward scan, exactly', () => {
     it('shortening a span clears the bars it used to draw', async () => {
         const harness = await mount()
         try {
-            harness.context.song.setNoteSpan(32, 0, idOf(32 % 7), 6)
+            harness.context.song.setNoteSpan(32, 0, numberOf(32 % 7, 0), 6)
             harness.push()
             expect(columnsWithTails(harness)).toContain(36)
-            harness.context.song.setNoteSpan(32, 0, idOf(32 % 7), 1)
+            harness.context.song.setNoteSpan(32, 0, numberOf(32 % 7, 0), 1)
             harness.push()
             expect(columnsWithTails(harness)).not.toContain(36)
         } finally {
@@ -3197,8 +3494,8 @@ describe('the pooled column views', () => {
                     viewsDestroyed: 0,
                 })
             }
-            expect(counters.constructed).toEqual({containers: 0, sprites: 0, graphics: 0})
-            expect(counters.destroyed).toEqual({containers: 0, sprites: 0, graphics: 0})
+            expect(counters.constructed).toEqual({containers: 0, sprites: 0, graphics: 0, texts: 0})
+            expect(counters.destroyed).toEqual({containers: 0, sprites: 0, graphics: 0, texts: 0})
             //...and what it painted over those 25 ticks is still the whole scene, correctly
             expect(harness.paintedScene()).toEqual(expectedScene(harness.context, harness.geometry()))
         } finally {
@@ -3664,10 +3961,11 @@ describe('which surface a pointer on the merged canvas reaches', () => {
     it('the strip is drawn at the inset the buttons occupy', async () => {
         const harness = await mountStoppedComposer()
         try {
-            const {canvasWidth} = harness.geometry()
+            const {canvasWidth, stripWidth} = harness.geometry()
             const {strip, content} = harness.paintedScene().timeline
-            //the background rect is the strip's own extent - expectedTimeline compares it too,
-            //but only against a reference derived the same way, so this states it as a CLAIM
+            //THE BAND IS THE CANVAS' and the STRIP is what the buttons leave. The background rect
+            //starts one left inset BEFORE the container's origin and runs the whole canvas, so the
+            //band has no gaps under the three buttons; everything else here is strip-local.
             const background = content[0]
             expect(background.kind).toBe('graphics')
             const rect = background.ops.find(
@@ -3675,7 +3973,9 @@ describe('which surface a pointer on the merged canvas reaches', () => {
                     Array.isArray(op) && op[0] === 'rect'
             )
             expect(strip.x).toBe(TIMELINE_INSET_LEFT)
-            expect(rect?.[3]).toBe(canvasWidth - TIMELINE_INSET_LEFT - TIMELINE_INSET_RIGHT)
+            expect(rect?.[1]).toBe(-TIMELINE_INSET_LEFT)
+            expect(rect?.[3]).toBe(canvasWidth)
+            expect(stripWidth).toBe(canvasWidth - TIMELINE_INSET_LEFT - TIMELINE_INSET_RIGHT)
             //...AS A LITERAL, not only as the imported constants. Every other assertion in this file
             //is written in terms of TIMELINE_INSET_LEFT/RIGHT, which makes them all invariant under
             //the two being SWAPPED - a swap that would draw the strip from 41.6, underneath both
@@ -3684,7 +3984,7 @@ describe('which surface a pointer on the merged canvas reaches', () => {
             expect(strip.x).toBe(80)
             //toBeCloseTo and not toBe: 41.6 is not representable, so the subtraction lands a few
             //ulps off it. 10 decimals is far tighter than any real drift and far looser than that.
-            expect(canvasWidth - rect![3] - strip.x).toBeCloseTo(41.6, 10)
+            expect(canvasWidth - stripWidth - strip.x).toBeCloseTo(41.6, 10)
             //121.6px = 3 x 2.2rem of button + 5 x 0.2rem, from the controls' two horizontal padding
             //edges and its gaps: three spacers around the left pair, two around the right button.
             expect(TIMELINE_INSET_LEFT + TIMELINE_INSET_RIGHT).toBe(121.6)
@@ -4063,8 +4363,8 @@ describe('a theme edit reaches the pool as one repaint', () => {
             //a span on the CURRENT layer long enough that every drawn column carries an accent-
             //coloured bar, including the one that is about to enter the window - without it the
             //entering column has no tail and there is nothing for a wrong accent to show up on.
-            //(idOf(12) is a note id makeSong never uses, so nothing truncates the span.)
-            harness.context.song.addNoteAt(0, 0, idOf(12), 90)
+            //(numberOf(12, 0) is a Note Number makeSong never uses, so nothing truncates the span.)
+            harness.context.song.addNoteAt(0, 0, numberOf(12, 0), 90)
             harness.push()
             expect(
                 harness.paintedScene().notes.columns.every(column => column.tails.ops.length > 0)
@@ -4373,7 +4673,7 @@ describe('the smooth scroll', () => {
             //AT THE CENTRE, which is what makes it agree with the container offset: the offset puts
             //the start of the scrolled-to column here, so a line drawn anywhere else marks a column
             //the composer is not on while every other value in the scene stays right.
-            const expectedOps = COMPOSER_PLAYHEAD_CONFIG.variant === 'rectangle'
+            const expectedOps = COMPOSER_PLAYHEAD_CONFIG.variant.compressed === 'rectangle'
                 ? [
                     [
                         'roundRect',
@@ -4763,7 +5063,7 @@ describe('the smooth scroll', () => {
             //note entry is not gated on isPlaying, so this is a real state an edit arrives in. It
             //takes the repaint path, which draws at the position the glide has reached - a path
             //that redrew from `selected` would snap the canvas forward under the user's hand.
-            harness.context.song.addNoteAt(SELECTED + 3, 0, idOf(11))
+            harness.context.song.addNoteAt(SELECTED + 3, 0, numberOf(11, 0))
             harness.push()
             expect(harness.scrollPosition()).toBeCloseTo(midColumn, 5)
 
@@ -4866,7 +5166,7 @@ describe('the static timeline minimap', () => {
 
             context.props.isPlaying = true
             harness.push()
-            context.song.addNoteAt(10, 0, idOf(14), 2)
+            context.song.addNoteAt(10, 0, numberOf(14, 0), 2)
             harness.push()
             const rendersAfterEdit = harness.renders()
 
@@ -6366,7 +6666,9 @@ describe('the momentum coast', () => {
             await throwLeft(harness, 3, 40, 20)
             const releasePosition = SELECTED + 1.5
             const to = coastLanding(releasePosition, 2, harness.context.song.columns.length)
-            expect(to).toBe(SELECTED + 9)
+            //2px/ms decaying at 0.0035/ms is 571px of travel, which is 8 columns at the desktop
+            //canvas' 84px column (it was 9 at the 80px one the narrower canvas gave)
+            expect(to).toBe(SELECTED + 8)
             //ENTRY PUBLISHES NOTHING: unlike the ease, whose callers select the target on the way
             //in, the Coast's floors arrive one frame crossing at a time
             const publishedAtRelease = harness.selectColumnCalls.length
@@ -6503,8 +6805,8 @@ describe('the momentum coast', () => {
             expect(harness.frameLoop().started).toBe(false)
 
             //JUST OVER: 0.42px/ms over the same 50ms, and the same shape of gesture coasts.
-            //0.42px/ms is 1.5 columns of travel, so the landing is two columns out where the
-            //settle above went back to zero.
+            //0.42px/ms is 120px, about 1.4 columns of travel, so the landing is two columns out
+            //where the settle above went back to zero.
             const over = (FLICK_MIN_SPEED_PX_PER_MS + 0.02) * 50
             const releasePosition = SELECTED + over / COLUMN_WIDTH
             const to = coastLanding(releasePosition, FLICK_MIN_SPEED_PX_PER_MS + 0.02, columns)
@@ -6542,9 +6844,11 @@ describe('the momentum coast', () => {
             harness.releasePointerOverNotes(start - COLUMN_WIDTH * 5)
             const releasePosition = SELECTED + 5
             const capped = coastLanding(releasePosition, 40, columns)
-            expect(capped).toBe(SELECTED + 16)
+            //the 3px/ms cap decaying at 0.0035/ms is 857px, 10 columns at the desktop canvas'
+            //84px column (it was 11 at the 80px one the narrower canvas gave)
+            expect(capped).toBe(SELECTED + 15)
             //...and the cap is what separates that from the end of the song: uncapped, v/λ is
-            //142 columns of travel and the landing clamps to the last column
+            //136 columns of travel and the landing clamps to the last column
             const uncapped = Math.min(
                 Math.round(releasePosition + 40 / COLUMN_WIDTH / COAST_DECAY_PER_MS),
                 columns - 1
@@ -6943,14 +7247,21 @@ describe('the momentum coast', () => {
 })
 
 describe('Playhead variant config', () => {
-    const originalVariant = COMPOSER_PLAYHEAD_CONFIG.variant
+    const originalVariant = {...COMPOSER_PLAYHEAD_CONFIG.variant}
 
     afterEach(() => {
-        COMPOSER_PLAYHEAD_CONFIG.variant = originalVariant
+        COMPOSER_PLAYHEAD_CONFIG.variant = {...originalVariant}
+    })
+
+    //ONE VARIANT PER VIEW (spec §6): the Compressed View ships the rectangle around the sounding
+    //column and the Pro View the line - see PART NINE for the pro side. These two drive the
+    //compressed harness through both settings, because the drawing itself is shared.
+    it('ships the rectangle in the Compressed View and the line in the Pro View', () => {
+        expect(COMPOSER_PLAYHEAD_CONFIG.variant).toEqual({compressed: 'rectangle', pro: 'line'})
     })
 
     it('draws a rectangle wrapping the whole column when variant is rectangle', async () => {
-        COMPOSER_PLAYHEAD_CONFIG.variant = 'rectangle'
+        COMPOSER_PLAYHEAD_CONFIG.variant = {...originalVariant, compressed: 'rectangle'}
         const harness = await mount()
         try {
             const {canvasWidth, columnWidth, height} = harness.geometry()
@@ -6966,7 +7277,7 @@ describe('Playhead variant config', () => {
     })
 
     it('draws a line with arrows when variant is line', async () => {
-        COMPOSER_PLAYHEAD_CONFIG.variant = 'line'
+        COMPOSER_PLAYHEAD_CONFIG.variant = {...originalVariant, compressed: 'line'}
         const harness = await mount()
         try {
             const {canvasWidth, height} = harness.geometry()
@@ -7037,6 +7348,841 @@ describe('Audio recording does not render notes or timeline and avoids rendering
             expect(restoredScene.notes.columns.length).toBeGreaterThan(0)
             expect(restoredScene.timeline.strip.visible).toBe(true)
             expect(harness.renders()).toBeGreaterThan(initialRenders)
+        } finally {
+            harness.destroy()
+        }
+    })
+})
+
+// ---------------------------------------------------------------------------------------------
+// PART NINE: THE PRO VIEW'S INPUT (spec §7, phase D).
+//
+// The same pointer stream PART SEVEN drives, over a canvas where a tap no longer picks a column: it
+// EDITS the cell under it, a hold opens the duration popover, and - with the View Lock open - a drag
+// pans the frame vertically as well (CONTEXT.md: Pro View, View Lock).
+//
+// WHAT THESE ROWS CAN SEE, and what they cannot. The renderer's job here is MECHANICAL - resolve a
+// column and a Note Number, hand them over - so the two callbacks below are the whole observable
+// surface for a tap, and the CAMERA is observed through them too: what a tap at a fixed screen point
+// resolves to IS where the camera is, which is a stronger reading than a private field would be. What
+// the tap then does to the song is Composer.svelte's and is not reachable from here; the decision it
+// makes is pinned in test/composerInput.test.ts, and the row resolution both sides share is pinned in
+// test/proViewGeometry.test.ts.
+//
+// mount() above cannot serve: it asserts the Compressed View's three-child stage, and a Pro View
+// stage carries five (the zone's framing and the row-label strip join it). The harness below is
+// deliberately small - it reads no scene at all.
+describe('the Pro View pointer', () => {
+    /**
+     * A pro renderer over the same fixture song, with the two Pro View callbacks recorded.
+     *
+     * `takeLongPress` is what Composer.svelte answers when a hold reaches it - true where a popover
+     * would open, false where it would not (an empty cell, or any cell while the song plays) - and
+     * flipping it is how the rows below state that an unconsumed hold still releases as a tap.
+     */
+    async function mountPro(
+        options: {
+            viewLocked?: boolean
+            smoothScroll?: boolean
+            takeLongPress?: boolean
+            keyboardRaised?: boolean
+        } = {}
+    ) {
+        const song = makeSong()
+        const canvasEl = document.createElement('div')
+        document.body.append(canvasEl)
+        let viewLocked = options.viewLocked ?? true
+        let takeLongPress = options.takeLongPress ?? true
+        //the keyboard sheet, which changes ONE thing about this surface: a settled tap puts it down
+        //instead of editing (spec §2). A drag is untouched - that is the point of the rule.
+        let keyboardRaised = options.keyboardRaised ?? false
+        let dismissals = 0
+        let unlocks = 0
+        const taps: {column: number, number: number}[] = []
+        const longPresses: {
+            column: number
+            number: number
+            rect: {x: number, y: number, width: number, height: number}
+        }[] = []
+        const selectColumnCalls: number[] = []
+        let height = 0
+        let timelineHeight = 0
+        const state = (): ComposerRendererState => ({
+            columns: song.columns,
+            structureVersion: song.structureVersion,
+            isPlaying: false,
+            playbackColumnStartMs: performance.now(),
+            playbackAnchorGeneration: 0,
+            isRecordingAudio: false,
+            instruments: song.instruments,
+            songPitch: song.pitch,
+            selected: song.selected,
+            currentLayer: 0,
+            beatMarks: 3,
+            columnsPerCanvas: COLUMNS_PER_CANVAS,
+            proView: true,
+            viewLocked,
+            keyboardRaised,
+            noteNameType: 'Note name',
+            breakpoints: song.breakpoints,
+            selectedColumns: [],
+            smoothScroll: options.smoothScroll ?? false,
+            bpm: BPM,
+        })
+        const appsBefore = pixi.applications.length
+        const renderer = new ComposerRenderer(canvasEl, state(), {
+            selectColumn: index => selectColumnCalls.push(index),
+            toggleBreakpoint: () => {},
+            onGeometryChange: reported => {
+                height = reported.height
+                timelineHeight = reported.timelineHeight
+            },
+            onProCellTap: (column, number) => taps.push({column, number}),
+            onProCellLongPress: (column, number, rect) => {
+                longPresses.push({column, number, rect})
+                return takeLongPress
+            },
+            onKeyboardDismiss: () => {
+                keyboardRaised = false
+                dismissals++
+            },
+            //THE ZOOM'S OWN CALLBACK (spec §7, user revision 2026-08-22): a pinch or a ctrl+wheel is
+            //the user taking the frame, so the padlock follows it. Recorded AND applied, the way the
+            //dismissal above is - Composer.svelte flips the same state this harness holds.
+            onViewUnlock: () => {
+                viewLocked = false
+                unlocks++
+            },
+        })
+        await renderer.init()
+        //the cache debounce, exactly as mount() waits it out - without a cache nothing paints and
+        //applyCameraY has nothing to move
+        await vi.advanceTimersByTimeAsync(180)
+        const [app] = pixi.applications.slice(appsBefore)
+        //the Pro View's stage: columns, the zone's framing, the playhead, the row-label strip, the
+        //mini-timeline. Stated here for the reason mount() states its own three - the LAST child is
+        //what pixi hit-tests first, and the notes container being [0] is what the emits below reach.
+        expect(app.stage.children).toHaveLength(5)
+        const notesColumns = app.stage.children[0]
+
+        //THE VIEW FUNCTION, restated from the same modules the renderer reads it from (see this
+        //part's import note): the axis this song draws on, the row height this region gives the
+        //CURRENT LAYER (the zone's own fit, capped at the game's note size - spec §4's 2026-08-21
+        //revision), and the camera the LOCKED framing puts on that layer's Editable Zone.
+        const zoneOf = (layer = 0) =>
+            editableZone(
+                song.instruments[layer].name,
+                effectiveTrackPitch(song.instruments[layer], song.pitch)
+            )
+        const rowHeight = proRowHeight({
+            notesRegionHeight: height,
+            zoneRowCount: zoneRowCount(zoneOf(0)),
+        })
+        const axis: ProViewAxis = proViewAxis(songNumberSpan(song.columns))
+        const notesTop = composerNotesRegionY(true, timelineHeight)
+        const lockedCamera = (layer = 0) =>
+            lockedCameraY({
+                axis,
+                zone: zoneOf(layer),
+                rowHeight,
+                notesRegionHeight: height,
+            })
+        /** The canvas x of a column's middle - the playhead sits at a QUARTER of the width in this view. */
+        const xOfColumn = (column: number) =>
+            CANVAS_WIDTH * 0.25 + (column - song.selected) * COLUMN_WIDTH + COLUMN_WIDTH / 2
+        /** The canvas y of a Note Number's row centre, at a given camera. */
+        const yOfNumber = (number: number, cameraY: number) =>
+            notesTop + (rowForNumber(axis, number) + 0.5) * rowHeight - cameraY
+        /** The Note Number a canvas y stands for at a given camera - the tap's own oracle. */
+        const numberAt = (y: number, cameraY: number) =>
+            numberAtY({axis, y: y - notesTop, cameraY, rowHeight})
+
+        return {
+            song,
+            taps,
+            longPresses,
+            selectColumnCalls,
+            axis,
+            rowHeight,
+            height,
+            notesTop,
+            lockedCamera,
+            xOfColumn,
+            yOfNumber,
+            numberAt,
+            stripWidth: () => proStripWidth(rowHeight),
+            dismissals: () => dismissals,
+            unlocks: () => unlocks,
+            /** The row height the user's own zoom multiplies the layer's fit to - see proRowHeight. */
+            rowHeightAt: (zoom: number) =>
+                proRowHeight({
+                    notesRegionHeight: height,
+                    zoneRowCount: zoneRowCount(zoneOf(0)),
+                    zoom,
+                }),
+            /**
+             * A ctrl+wheel over the notes canvas - what a browser delivers for a trackpad PINCH, and
+             * the Pro View's zoom (spec §7). `canvasY` is the gesture's focal point: jsdom reports
+             * `offsetY` as `clientY`, which is what the renderer reads.
+             */
+            /** A PLAIN wheel over the notes canvas - the song's own horizontal scroll, in both views. */
+            wheelOverNotes(deltaY: number) {
+                app.canvas.dispatchEvent(
+                    new WheelEvent('wheel', {
+                        deltaY,
+                        deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+                        cancelable: true,
+                    })
+                )
+            },
+            wheelZoom(deltaY: number, canvasY: number) {
+                const event = new WheelEvent('wheel', {
+                    deltaY,
+                    clientY: canvasY,
+                    ctrlKey: true,
+                    cancelable: true,
+                })
+                app.canvas.dispatchEvent(event)
+                //the page must not zoom under the gesture - see handleWheel
+                return event.defaultPrevented
+            },
+            /**
+             * The mini-timeline's persistent viewport outline ops. PART ONE's compressed snapshot
+             * pins the playhead mark inside it at HALF the outline's width; this view stands the
+             * playhead a quarter across (ComposerRenderer.playheadXFraction), and the mark is that
+             * same playhead seen through the strip's linear map, so it must move with it.
+             */
+            timelineViewportOps(): unknown[] {
+                const strip = app.stage.children[app.stage.children.length - 1]
+                const viewport = strip.children.find(
+                    child =>
+                        child.kind === 'graphics' &&
+                        (child as {ops: unknown[]}).ops.some(
+                            op => Array.isArray(op) && op[0] === 'roundRect'
+                        )
+                )
+                return viewport ? (viewport as {ops: unknown[]}).ops : []
+            },
+            setViewLocked(locked: boolean) {
+                viewLocked = locked
+            },
+            setKeyboardRaised(raised: boolean) {
+                keyboardRaised = raised
+            },
+            push() {
+                renderer.update(state())
+            },
+            press(x: number, y: number, pointerId = PRIMARY_POINTER) {
+                notesColumns.emit('pointerdown', {globalX: x, globalY: y, pointerId})
+            },
+            move(x: number, y: number, pointerId = PRIMARY_POINTER) {
+                notesColumns.emit('pointermove', {globalX: x, globalY: y, pointerId})
+            },
+            release(x: number, y: number, pointerId = PRIMARY_POINTER) {
+                notesColumns.emit('pointerup', {globalX: x, globalY: y, pointerId})
+            },
+            /** Press and release on one point with nothing in between - the settled tap. */
+            tap(x: number, y: number) {
+                notesColumns.emit('pointerdown', {globalX: x, globalY: y, pointerId: PRIMARY_POINTER})
+                notesColumns.emit('pointerup', {globalX: x, globalY: y, pointerId: PRIMARY_POINTER})
+            },
+            /** A drag from one point to another, ending in a release on the far one. */
+            drag(x: number, y: number, toX: number, toY: number) {
+                notesColumns.emit('pointerdown', {globalX: x, globalY: y, pointerId: PRIMARY_POINTER})
+                notesColumns.emit('pointermove', {
+                    globalX: toX,
+                    globalY: toY,
+                    pointerId: PRIMARY_POINTER,
+                })
+                notesColumns.emit('pointerup', {globalX: toX, globalY: toY, pointerId: PRIMARY_POINTER})
+            },
+            destroy() {
+                renderer.destroy()
+                canvasEl.remove()
+            },
+        }
+    }
+
+    /** A Note Number the current layer can really voice, taken from the middle of its Editable Zone. */
+    function addableNumber(harness: {song: ComposedSong}): number {
+        const zone = editableZone(
+            harness.song.instruments[0].name,
+            effectiveTrackPitch(harness.song.instruments[0], harness.song.pitch)
+        )
+        return [...zone.numbers].sort((a, b) => a - b)[Math.floor(zone.numbers.size / 2)]
+    }
+
+    /** A throw fast enough to Coast, released on its last sampled point - PART EIGHT's own recipe. */
+    async function throwAndCoast(
+        harness: Awaited<ReturnType<typeof mountPro>>,
+        y: number
+    ): Promise<void> {
+        const start = CANVAS_WIDTH * 0.25
+        harness.press(start, y)
+        for (let step = 1; step <= 3; step++) {
+            await vi.advanceTimersByTimeAsync(20)
+            harness.move(start - 40 * step, y)
+        }
+        harness.release(start - 120, y)
+        await vi.advanceTimersByTimeAsync(64)
+    }
+
+    it('a settled tap reports the cell it landed on, and selects nothing', async () => {
+        const harness = await mountPro()
+        try {
+            const column = SELECTED + 3
+            const number = addableNumber(harness)
+            harness.tap(harness.xOfColumn(column), harness.yOfNumber(number, harness.lockedCamera()))
+            expect(harness.taps).toEqual([{column, number}])
+            //THE WHOLE POINT of spec §2's "never column selection": the cursor stays where it was,
+            //so an edit three columns away neither moves nor sounds the selection
+            expect(harness.selectColumnCalls).toEqual([])
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    it('resolves the row under the pointer, one Note Number per row', async () => {
+        const harness = await mountPro()
+        try {
+            const camera = harness.lockedCamera()
+            const number = addableNumber(harness)
+            for (const offset of [-2, -1, 0, 1, 2]) {
+                harness.tap(harness.xOfColumn(SELECTED), harness.yOfNumber(number + offset, camera))
+            }
+            expect(harness.taps.map(tap => tap.number)).toEqual([
+                number - 2,
+                number - 1,
+                number,
+                number + 1,
+                number + 2,
+            ])
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    it('a tap on the row-label strip band reports nothing', async () => {
+        const harness = await mountPro()
+        try {
+            const y = harness.yOfNumber(addableNumber(harness), harness.lockedCamera())
+            harness.tap(harness.stripWidth() - 1, y)
+            expect(harness.taps).toEqual([])
+            //...and one pixel to its right is an ordinary cell again
+            harness.tap(harness.stripWidth(), y)
+            expect(harness.taps).toHaveLength(1)
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    it('the timeline viewport marks the playhead a quarter across, where this view stands it', async () => {
+        const harness = await mountPro()
+        try {
+            const ops = harness.timelineViewportOps()
+            const roundRect = ops.find(op => Array.isArray(op) && op[0] === 'roundRect') as
+                | unknown[]
+                | undefined
+            const moveTo = ops.find(op => Array.isArray(op) && op[0] === 'moveTo') as
+                | unknown[]
+                | undefined
+            expect(roundRect).toBeDefined()
+            expect(moveTo).toBeDefined()
+            //the outline's own width is roundRect's third argument; the mark stands at a QUARTER of
+            //it in this view (playheadXFraction) - at the compressed middle it would be double this
+            expect(moveTo?.[1]).toBe((roundRect?.[3] as number) * 0.25)
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    it('a press that travelled past the slop is a gesture, not a tap', async () => {
+        const harness = await mountPro()
+        try {
+            const x = harness.xOfColumn(SELECTED)
+            const y = harness.yOfNumber(addableNumber(harness), harness.lockedCamera())
+            //vertically, where the LOCKED frame moves nothing at all - the press still stops being
+            //a tap, because a tap here writes a note
+            harness.drag(x, y, x, y + 20)
+            expect(harness.taps).toEqual([])
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    it('a Catch halts the Coast and edits nothing', async () => {
+        const harness = await mountPro({smoothScroll: true})
+        try {
+            const y = harness.yOfNumber(addableNumber(harness), harness.lockedCamera())
+            await throwAndCoast(harness, y)
+            //the Catch itself: a press on the travelling canvas, released without moving
+            const start = CANVAS_WIDTH * 0.25
+            harness.tap(start, y)
+            expect(harness.taps).toEqual([])
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    it('a hold opens the popover on the cell it was held on, and swallows its own release', async () => {
+        const harness = await mountPro()
+        try {
+            const column = SELECTED + 2
+            const number = addableNumber(harness)
+            const camera = harness.lockedCamera()
+            const x = harness.xOfColumn(column)
+            const y = harness.yOfNumber(number, camera)
+            harness.press(x, y)
+            await vi.advanceTimersByTimeAsync(COMPOSER_LONG_PRESS_MS)
+            expect(harness.longPresses).toHaveLength(1)
+            expect({
+                column: harness.longPresses[0].column,
+                number: harness.longPresses[0].number,
+            }).toEqual({column, number})
+            //THE CELL'S OWN BOX, in screen coordinates - what the popover anchors to when there is
+            //no element to anchor to. jsdom measures the canvas at the origin, so this is the
+            //canvas-space rect itself.
+            const rect = harness.longPresses[0].rect
+            expect({x: rect.x, width: rect.width, height: rect.height}).toEqual({
+                x: x - COLUMN_WIDTH / 2,
+                width: COLUMN_WIDTH,
+                height: harness.rowHeight,
+            })
+            //the row's own top edge - to the float, since both sides are a camera subtracted from a
+            //row multiple and the two spellings of that differ in the last bit
+            expect(rect.y).toBeCloseTo(y - harness.rowHeight / 2, 9)
+            harness.release(x, y)
+            expect(harness.taps).toEqual([])
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    it('a hold nothing took still releases as a tap', async () => {
+        const harness = await mountPro({takeLongPress: false})
+        try {
+            const number = addableNumber(harness)
+            const x = harness.xOfColumn(SELECTED)
+            const y = harness.yOfNumber(number, harness.lockedCamera())
+            harness.press(x, y)
+            await vi.advanceTimersByTimeAsync(COMPOSER_LONG_PRESS_MS)
+            expect(harness.longPresses).toHaveLength(1)
+            harness.release(x, y)
+            expect(harness.taps).toEqual([{column: SELECTED, number}])
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    it('movement past the slop cancels a pending hold', async () => {
+        const harness = await mountPro()
+        try {
+            const x = harness.xOfColumn(SELECTED)
+            const y = harness.yOfNumber(addableNumber(harness), harness.lockedCamera())
+            harness.press(x, y)
+            await vi.advanceTimersByTimeAsync(COMPOSER_LONG_PRESS_MS / 2)
+            harness.move(x + 30, y)
+            await vi.advanceTimersByTimeAsync(COMPOSER_LONG_PRESS_MS)
+            expect(harness.longPresses).toEqual([])
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    it('a Catch arms no hold: the press on a moving canvas is the grab', async () => {
+        const harness = await mountPro({smoothScroll: true})
+        try {
+            const y = harness.yOfNumber(addableNumber(harness), harness.lockedCamera())
+            await throwAndCoast(harness, y)
+            harness.press(CANVAS_WIDTH * 0.25, y)
+            await vi.advanceTimersByTimeAsync(COMPOSER_LONG_PRESS_MS)
+            expect(harness.longPresses).toEqual([])
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    it('locked, a vertical drag moves the frame nowhere', async () => {
+        const harness = await mountPro({viewLocked: true})
+        try {
+            const number = addableNumber(harness)
+            const x = harness.xOfColumn(SELECTED)
+            const y = harness.yOfNumber(number, harness.lockedCamera())
+            harness.drag(x, y, x, y + harness.rowHeight * 4)
+            //the same point still resolves the same row, which is the camera not having moved
+            harness.tap(x, y)
+            expect(harness.taps).toEqual([{column: SELECTED, number}])
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    it('unlocked, a drag pans the frame by exactly what the pointer travelled', async () => {
+        const harness = await mountPro({viewLocked: false})
+        try {
+            const number = addableNumber(harness)
+            const x = harness.xOfColumn(SELECTED)
+            const y = harness.yOfNumber(number, harness.lockedCamera())
+            const travel = harness.rowHeight * 3
+            harness.drag(x, y, x, y + travel)
+            //dragging DOWN brings higher numbers into the same screen point, one per row travelled
+            harness.tap(x, y)
+            expect(harness.taps).toEqual([
+                {column: SELECTED, number: harness.numberAt(y, harness.lockedCamera() - travel)},
+            ])
+            expect(harness.taps[0].number).toBe(number + 3)
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    it('unlocked, the pan stops at the axis rather than running off it', async () => {
+        const harness = await mountPro({viewLocked: false})
+        try {
+            const x = harness.xOfColumn(SELECTED)
+            const y = harness.yOfNumber(addableNumber(harness), harness.lockedCamera())
+            //far more travel than the axis has above the zone: the clamp is what stops it at 0
+            harness.drag(x, y, x, y + harness.rowHeight * 1000)
+            harness.tap(x, harness.notesTop + harness.rowHeight / 2)
+            //camera 0 = the axis' top row at the region's top edge
+            expect(harness.taps).toEqual([{column: SELECTED, number: harness.axis.max}])
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    it('re-locking brings the frame back to the Editable Zone', async () => {
+        const harness = await mountPro({viewLocked: false})
+        try {
+            const number = addableNumber(harness)
+            const x = harness.xOfColumn(SELECTED)
+            const y = harness.yOfNumber(number, harness.lockedCamera())
+            harness.drag(x, y, x, y + harness.rowHeight * 3)
+            harness.setViewLocked(true)
+            harness.push()
+            harness.tap(x, y)
+            expect(harness.taps).toEqual([{column: SELECTED, number}])
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    it('...and eases there while smooth motion is on', async () => {
+        const harness = await mountPro({viewLocked: false, smoothScroll: true})
+        try {
+            const number = addableNumber(harness)
+            const x = harness.xOfColumn(SELECTED)
+            const y = harness.yOfNumber(number, harness.lockedCamera())
+            harness.drag(x, y, x, y + harness.rowHeight * 6)
+            harness.setViewLocked(true)
+            harness.push()
+            //MID-EASE: the frame is on its way back rather than already there
+            await vi.advanceTimersByTimeAsync(32)
+            harness.tap(x, y)
+            expect(harness.taps[0].number).toBeGreaterThan(number)
+            //...and it arrives on the zone within the scroll's own ease duration
+            await vi.advanceTimersByTimeAsync(SCROLL_EASE_MS + 64)
+            harness.tap(x, y)
+            expect(harness.taps[1]).toEqual({column: SELECTED, number})
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    it('a zone change eases an UNLOCKED frame to the new zone, and leaves it unlocked', async () => {
+        const harness = await mountPro({viewLocked: false})
+        try {
+            const number = addableNumber(harness)
+            const x = harness.xOfColumn(SELECTED)
+            const y = harness.yOfNumber(number, harness.lockedCamera())
+            const travel = harness.rowHeight * 3
+            harness.drag(x, y, x, y + travel)
+            //the Basepoint moves the whole Editable Zone (spec §9), which is a zone change the
+            //camera follows in either lock state
+            harness.song.pitch = 'B'
+            harness.push()
+            const zoneCamera = harness.lockedCamera()
+            harness.tap(x, y)
+            expect(harness.taps).toEqual([
+                {column: SELECTED, number: harness.numberAt(y, zoneCamera)},
+            ])
+            //STILL UNLOCKED: the next drag pans exactly as the first one did - UPWARD this time,
+            //which is where the travel is. A Basepoint of B lifts the whole zone to within a row or
+            //two of the axis' top, and the frame now fits that zone exactly (spec §4's 2026-08-21
+            //revision), so a downward pan from there is clamped at 0 within the first row.
+            harness.drag(x, y, x, y - travel)
+            harness.tap(x, y)
+            expect(harness.taps[1].number).toBe(harness.numberAt(y, zoneCamera + travel))
+            expect(harness.taps[1].number).toBe(harness.taps[0].number - 3)
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    it('a release with no press of ours behind it edits nothing', async () => {
+        const harness = await mountPro()
+        try {
+            //a press taken by a DOM element over the canvas (a side chevron, a key of the raised
+            //sheet) still delivers its pointerUP here - pixi hit-tests a page-wide release against
+            //the canvas by coordinate - and it must not write a note (spec §7)
+            harness.release(
+                harness.xOfColumn(SELECTED),
+                harness.yOfNumber(addableNumber(harness), harness.lockedCamera())
+            )
+            expect(harness.taps).toEqual([])
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    // THE KEYBOARD SHEET IS UP, and the canvas under it is no longer covered by a backdrop: it is
+    // bright, it scrolls, and a settled tap on it is what puts the sheet away (spec §2/§8).
+    it('with the sheet up, a settled tap dismisses it and edits nothing', async () => {
+        const harness = await mountPro({keyboardRaised: true})
+        try {
+            harness.tap(
+                harness.xOfColumn(SELECTED),
+                harness.yOfNumber(addableNumber(harness), harness.lockedCamera())
+            )
+            expect(harness.dismissals()).toBe(1)
+            expect(harness.taps).toEqual([])
+            expect(harness.selectColumnCalls).toEqual([])
+            //...and the NEXT tap, with the sheet now down, is an ordinary edit again
+            harness.push()
+            const number = addableNumber(harness)
+            harness.tap(harness.xOfColumn(SELECTED), harness.yOfNumber(number, harness.lockedCamera()))
+            expect(harness.taps).toEqual([{column: SELECTED, number}])
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    it('with the sheet up, a drag still scrolls the song and leaves the sheet alone', async () => {
+        const harness = await mountPro({keyboardRaised: true})
+        try {
+            const y = harness.yOfNumber(addableNumber(harness), harness.lockedCamera())
+            const x = harness.xOfColumn(SELECTED)
+            //two columns to the left, exactly as it would scroll with the sheet down
+            harness.drag(x, y, x - COLUMN_WIDTH * 2, y)
+            expect(harness.selectColumnCalls).toContain(SELECTED + 2)
+            expect(harness.dismissals()).toBe(0)
+            expect(harness.taps).toEqual([])
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    it('with the sheet up, a hold opens no popover - the release dismisses instead', async () => {
+        const harness = await mountPro({keyboardRaised: true})
+        try {
+            const x = harness.xOfColumn(SELECTED)
+            const y = harness.yOfNumber(addableNumber(harness), harness.lockedCamera())
+            harness.press(x, y)
+            await vi.advanceTimersByTimeAsync(COMPOSER_LONG_PRESS_MS + 16)
+            expect(harness.longPresses).toEqual([])
+            harness.release(x, y)
+            expect(harness.dismissals()).toBe(1)
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    // The unlocked pan is a DRAG, so it goes on working with the sheet up as well - the vertical
+    // half of "the canvas scrolls exactly as it does when the sheet is down".
+    it('with the sheet up and the view unlocked, a drag still pans the frame', async () => {
+        const harness = await mountPro({viewLocked: false, keyboardRaised: true})
+        try {
+            const number = addableNumber(harness)
+            const x = harness.xOfColumn(SELECTED)
+            const y = harness.yOfNumber(number, harness.lockedCamera())
+            const travel = harness.rowHeight * 3
+            harness.drag(x, y, x, y + travel)
+            expect(harness.dismissals()).toBe(0)
+            //the same screen point now stands three rows higher up the axis
+            harness.tap(x, y)
+            expect(harness.dismissals()).toBe(1)
+            expect(harness.taps).toEqual([])
+            harness.push()
+            harness.tap(x, y)
+            expect(harness.taps).toEqual([{column: SELECTED, number: number + 3}])
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    // ─────────────────────────────────────────────────────────────────────────────────────────
+    // THE VERTICAL ZOOM (spec §7, user revision 2026-08-22): ctrl+wheel, which is what a browser
+    // delivers for a trackpad pinch, and the two-finger pinch itself.
+    //
+    // READ THROUGH THE SAME TAP ORACLE as everything else in PART NINE: what a tap at a fixed screen
+    // point resolves to IS where the rows and the camera are, which is a stronger reading than a
+    // private field would be. proViewGeometry's own suite pins the arithmetic (the multiplier's
+    // range, the px floor, the focal formula); what these rows pin is that this class wires the
+    // gesture to it - and that the gesture is never also a scroll, a tap or an edit.
+
+    it('a ctrl+wheel zooms the rows about the point under the pointer, and unlocks the view', async () => {
+        const harness = await mountPro()
+        try {
+            const x = harness.xOfColumn(SELECTED)
+            const number = addableNumber(harness)
+            const focalY = harness.yOfNumber(number, harness.lockedCamera())
+            harness.tap(x, focalY)
+            expect(harness.taps.at(-1)).toEqual({column: SELECTED, number})
+            //one big notch IN (a wheel's delta is positive downward), and the page must not zoom
+            expect(harness.wheelZoom(-400, focalY)).toBe(true)
+            const zoomed = harness.rowHeightAt(Math.exp(400 * PRO_ZOOM_WHEEL_RATE))
+            expect(zoomed).toBeGreaterThan(harness.rowHeight * 2)
+            //THE FRAME IS THE USER'S NOW - the padlock follows the gesture
+            expect(harness.unlocks()).toBe(1)
+            harness.push()
+            //...and nothing scrolled: a zoom is not a wheel gesture on the song's own axis
+            expect(harness.selectColumnCalls).toEqual([])
+            //THE FOCAL ROW KEPT ITS SCREEN Y: the same point is still the same row
+            harness.tap(x, focalY)
+            expect(harness.taps.at(-1)).toEqual({column: SELECTED, number})
+            //...and the rows really did grow: a point one OLD row above the focal one has not left
+            //the focal row, while one NEW row above is the next row up
+            harness.tap(x, focalY - harness.rowHeight)
+            expect(harness.taps.at(-1)!.number).toBe(number)
+            harness.tap(x, focalY - zoomed)
+            expect(harness.taps.at(-1)!.number).toBe(number + 1)
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    it('a plain wheel still scrolls the song, in the Pro View as in the Compressed one', async () => {
+        const harness = await mountPro()
+        try {
+            const number = addableNumber(harness)
+            const y = harness.yOfNumber(number, harness.lockedCamera())
+            harness.wheelOverNotes(COLUMN_WIDTH * 4)
+            expect(harness.unlocks()).toBe(0)
+            expect(harness.selectColumnCalls.length).toBeGreaterThan(0)
+            //the rows are untouched: the same point is the same row
+            harness.push()
+            harness.tap(harness.xOfColumn(harness.song.selected), y)
+            expect(harness.taps.at(-1)!.number).toBe(number)
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    it('stops at the range\'s ends, and pins an axis shorter than the region to its top', async () => {
+        const harness = await mountPro()
+        try {
+            const x = harness.xOfColumn(SELECTED)
+            const focalY = harness.yOfNumber(addableNumber(harness), harness.lockedCamera())
+            //far past the ceiling, then far past the floor - the gesture simply stops at each end
+            for (let notch = 0; notch < 12; notch++) harness.wheelZoom(-400, focalY)
+            harness.push()
+            const ceiling = harness.rowHeightAt(PRO_ZOOM_MAX)
+            harness.tap(x, harness.notesTop + ceiling * 0.5)
+            const top = harness.taps.at(-1)!.number
+            harness.tap(x, harness.notesTop + ceiling * 1.5)
+            expect(harness.taps.at(-1)!.number).toBe(top - 1)
+            for (let notch = 0; notch < 24; notch++) harness.wheelZoom(400, focalY)
+            harness.push()
+            //zoomed all the way out the whole axis is shorter than the region, so the existing
+            //camera clamp collapses the travel and the axis sits at the region's top: the first row
+            //on screen is the axis' own highest number
+            const floor = harness.rowHeightAt(PRO_ZOOM_MIN)
+            expect(harness.axis.rowCount * floor).toBeLessThan(harness.height)
+            harness.tap(x, harness.notesTop + floor * 0.5)
+            expect(harness.taps.at(-1)!.number).toBe(harness.axis.max)
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    it('re-locking puts the rows back to the layer\'s own fit', async () => {
+        const harness = await mountPro()
+        try {
+            const x = harness.xOfColumn(SELECTED)
+            const number = addableNumber(harness)
+            const y = harness.yOfNumber(number, harness.lockedCamera())
+            harness.wheelZoom(-400, y)
+            harness.push()
+            //the frame moved: one old row above the focal point is still the focal row
+            harness.tap(x, y - harness.rowHeight)
+            expect(harness.taps.at(-1)!.number).toBe(number)
+            harness.setViewLocked(true)
+            harness.push()
+            //...and the lock gives back exactly the framing it always gave: the fit, centred on the
+            //zone, with the multiplier reset
+            harness.tap(x, y)
+            expect(harness.taps.at(-1)).toEqual({column: SELECTED, number})
+            harness.tap(x, y - harness.rowHeight)
+            expect(harness.taps.at(-1)!.number).toBe(number + 1)
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    it('a second finger is a PINCH: it zooms, and never drags, taps or edits', async () => {
+        const harness = await mountPro()
+        try {
+            const x = harness.xOfColumn(SELECTED)
+            const number = addableNumber(harness)
+            const focalY = harness.yOfNumber(number, harness.lockedCamera())
+            //two fingers, symmetric about the focal row, spread to twice their separation
+            const reach = harness.rowHeight * 2
+            harness.press(x, focalY - reach, PRIMARY_POINTER)
+            harness.press(x, focalY + reach, SECOND_POINTER)
+            harness.move(x, focalY - reach * 2, PRIMARY_POINTER)
+            harness.move(x, focalY + reach * 2, SECOND_POINTER)
+            harness.release(x, focalY + reach * 2, SECOND_POINTER)
+            harness.release(x, focalY - reach * 2, PRIMARY_POINTER)
+            //NEVER AN EDIT, never a column pick, and the padlock followed the gesture
+            expect(harness.taps).toEqual([])
+            expect(harness.selectColumnCalls).toEqual([])
+            expect(harness.unlocks()).toBe(1)
+            harness.push()
+            //...and the rows doubled about the point between the fingers, which never moved
+            const zoomed = harness.rowHeightAt(2)
+            harness.tap(x, focalY)
+            expect(harness.taps.at(-1)).toEqual({column: SELECTED, number})
+            harness.tap(x, focalY - zoomed)
+            expect(harness.taps.at(-1)!.number).toBe(number + 1)
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    it('a pinch with the keyboard sheet up zooms and leaves the sheet where it is', async () => {
+        const harness = await mountPro({keyboardRaised: true})
+        try {
+            const x = harness.xOfColumn(SELECTED)
+            const number = addableNumber(harness)
+            const focalY = harness.yOfNumber(number, harness.lockedCamera())
+            const reach = harness.rowHeight * 2
+            harness.press(x, focalY - reach, PRIMARY_POINTER)
+            harness.press(x, focalY + reach, SECOND_POINTER)
+            harness.move(x, focalY - reach * 2, PRIMARY_POINTER)
+            harness.move(x, focalY + reach * 2, SECOND_POINTER)
+            harness.release(x, focalY - reach * 2, PRIMARY_POINTER)
+            harness.release(x, focalY + reach * 2, SECOND_POINTER)
+            //the sheet is dismissed by a settled TAP, and a pinch is not one
+            expect(harness.dismissals()).toBe(0)
+            expect(harness.taps).toEqual([])
+            expect(harness.unlocks()).toBe(1)
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    it('a hold interrupted by a second finger opens no popover', async () => {
+        const harness = await mountPro()
+        try {
+            const x = harness.xOfColumn(SELECTED)
+            const focalY = harness.yOfNumber(addableNumber(harness), harness.lockedCamera())
+            harness.press(x, focalY, PRIMARY_POINTER)
+            await vi.advanceTimersByTimeAsync(COMPOSER_LONG_PRESS_MS / 2)
+            harness.press(x, focalY + harness.rowHeight * 3, SECOND_POINTER)
+            await vi.advanceTimersByTimeAsync(COMPOSER_LONG_PRESS_MS)
+            expect(harness.longPresses).toEqual([])
+            harness.release(x, focalY, PRIMARY_POINTER)
+            expect(harness.taps).toEqual([])
         } finally {
             harness.destroy()
         }

@@ -15,7 +15,7 @@
   import Analytics from '$core/Analytics';
   import { ApproachingNote, type RecordedNote } from '$core/Songs/SongClasses';
   import type { NoteStatus } from '$core/types';
-  import { resolvePlayerNoteButtons } from '$core/Songs/noteIds';
+  import { effectiveTrackPitch, resolvePlayerNoteButtons } from '$core/Songs/noteIds';
   import type { Instrument, ObservableNote } from '$lib/audio/Instrument.svelte';
   import { RecordedSong, type Chunk } from '$core/Songs/RecordedSong';
   import { MIDIProvider, type MIDIEvent } from '$lib/providers/MIDIProvider';
@@ -296,6 +296,13 @@
     ObservableNote,
     { prevStatus: NoteStatus; pressedAt: number }
   >();
+  //...and the Note Number each of those presses ENTERED at (ADR-0007), remembered rather than
+  //re-derived on the up edge: `data.pitch` can change under a held key (the settings menu, a
+  //MIDI pitch change) and applySetting releases nothing, so a release computed at the new
+  //Basepoint would name a number no voice is held on. Note-keyed like the map above; a second
+  //holder of the same note overwrites it, exactly as its press retriggered the voice.
+  // eslint-disable-next-line svelte/prefer-svelte-reactivity -- bookkeeping only; nothing renders from it
+  const heldNumbers = new Map<ObservableNote, number>();
 
   /**
    * The Button this note occupies on the keyboard AS PUBLISHED — the coordinate this
@@ -325,7 +332,12 @@
 
   function handleRelease(note: ObservableNote) {
     if (!note) return;
-    functions.releaseSound(note.id);
+    //released on the number the PRESS entered at (heldNumbers), which is what both the engine's
+    //held voice and the recording's open note are filed under; `numberAt(data.pitch)` is only
+    //the fallback for a note this surface never registered a press for
+    const pressedNumber = heldNumbers.get(note);
+    heldNumbers.delete(note);
+    functions.releaseSound(pressedNumber ?? note.numberAt(data.pitch));
     //finger lifted: the ring has nothing left to count down, whether or not it ran out
     if (note.data.holdTimerMs !== 0) playerStore.setNoteState(note, { holdTimerMs: 0 });
     const held = heldVisualPresses.get(note);
@@ -376,6 +388,8 @@
       const keyboardNote = keyboard[notes[i].keyboardButton];
       if (keyboardNote) handleClick(keyboardNote, notes[i]);
       else functions.playSound(notes[i].id, notes[i]);
+      //(both branches sound `notes[i]` itself: playSound ignores its first argument whenever a
+      //song note is supplied, so a key with no note on screen is still heard)
       if (chunkPlayedNotes >= (playerControlsStore.currentChunk?.notes.length ?? 0)) {
         chunkPlayedNotes = 1;
         playerControlsStore.incrementChunkPositionAndSetCurrent(start + i + 1);
@@ -465,6 +479,9 @@
     timeouts.forEach((timeout) => clearTimeout(timeout));
     timeouts.clear();
     heldVisualPresses.clear();
+    //releaseAllSounds() below stops every voice these numbers name, and the notes they are keyed
+    //by belong to the layout about to be replaced
+    heldNumbers.clear();
     //the keyboard layout is about to be replaced, so every note object a holder captured is
     //stale; a holder left behind would also swallow the next press of that same key
     heldInputNotes.releaseAll();
@@ -570,9 +587,15 @@
     const ownsCurrentRun = activeRunKey === playerStore.state.key;
     if (ownsCurrentRun && mode === 'practice' && playerStore.eventType === 'practice')
       handlePracticeClick(note);
-    //the engine speaks Note Ids: play THIS note, not whatever the sounding instrument keeps
-    //at the same button
-    functions.playSound(note.id, songNote);
+    //the engine speaks Note Numbers: play what THIS key enters at the player's Basepoint, not
+    //whatever the sounding instrument keeps at the same button. (With a `songNote` the sound is
+    //the song note's own stored number — see Player.playSound — so this argument is the free-play
+    //half alone.)
+    const number = note.numberAt(data.pitch);
+    //a live press is the only kind that is ever released by hand — a song note self-releases on
+    //its own duration — so only it books the number handleRelease will hand back
+    if (!songNote) heldNumbers.set(note, number);
+    functions.playSound(number, songNote);
     if (ownsCurrentRun && mode === 'approaching' && playerStore.eventType === 'approaching') {
       const status = handleApproachClick(note);
       playerStore.setNoteState(note, { status });
@@ -673,7 +696,13 @@
           resolvePlayerNoteButtons(
             lostReference.notes,
             songInstruments,
-            data.songDisplayInstrument.name
+            data.songDisplayInstrument.name,
+            lostReference.pitch,
+            //the Basepoint the keyboard on screen SOUNDS at: `data.pitch` is the player's own
+            //(which loading the song has already set to the song's), plus track 0's override, since
+            //this keyboard follows track 0 (displayInstrument.ts) and Player.svelte sounds that
+            //track through the same override
+            effectiveTrackPitch(songInstruments[0], data.pitch)
           );
 
           lostReference.timestamp = Date.now();

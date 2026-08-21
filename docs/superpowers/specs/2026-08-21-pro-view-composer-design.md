@@ -1,0 +1,473 @@
+# Pro View Composer — Design
+
+Status: IMPLEMENTED 2026-08-21 (phases A–E on new-composer; CONTEXT.md terms landed: Pro
+View, Compressed View, Editable Zone, View Lock). Builds directly on ADR-0007 — this is the
+"future pure view" that ADR reserved: same absolute Note Number axis, a second view
+function beside the Song Grid's.
+
+Sections 6, 7 and 8 carry the notes implementation added to the design; everything else
+below is the spec as it was written, and was built as written — except where a bullet is
+marked USER REVISION, 2026-08-21, which is the first round of feedback on the shipped view
+(the framing rule in §2/§4, the keyboard overlay in §2/§8, the bottom band in §8, and the
+playhead variant and timeline band in §6), or USER REVISION, 2026-08-22, which is the
+second (the VERTICAL ZOOM, which the §2 scope fence used to forbid — §2/§4/§7; the song
+info giving its reserved row back and the page's 3.2px scroll overflow — §8). Each of those
+keeps the text it replaced.
+
+## 1. Goal
+
+A toggleable composer canvas mode (the **Pro View**) that renders the absolute Note Number
+axis directly — one row per semitone, every track's notes at their true numbers, notes
+editable by tapping the canvas — while the **Compressed View** stays byte-identical. The
+song format does not change; a song opens identically in either view.
+
+## 2. Decisions (locked during grilling)
+
+- **Toggle**: a persisted composer setting (`proView`, checkbox, default off), flips live,
+  never stored in the song file. Ships for both games, desktop and mobile.
+- **Axis**: chromatic rows over the game's full addressable span — every instrument's
+  addable numbers at every Basepoint — plus visual padding; widened only when the loaded
+  song holds outlier numbers (nothing is ever off-axis, clamped, or hidden).
+- **Row height fits the current layer's Editable Zone, capped at the game's base note
+  size** (USER REVISION, 2026-08-21 — was: _"Row height fixed, no vertical zoom: the game's
+  base layout (`perColumn`: 21/15 rows) plus padding fits the notes region's height. Note
+  size never changes across layers."_). `perColumn` counts BUTTONS and this view draws a row
+  per SEMITONE, so the two part company for every instrument with a gap in it: genshin's Lyre
+  spans 36 semitones with its 21 buttons, and a region sized for `perColumn + 2` showed two
+  thirds of its zone — the locked frame, whose whole promise is "this is what this layer can
+  play", cut the instrument in half. The rule is now
+  `rowHeight = min(H / (zoneRows + 2), H / (perColumn + 2))`: the zone plus its two framing
+  rows fills the region exactly, capped so a small instrument (a drum kit) keeps today's note
+  size instead of ballooning. The row height is therefore a property of the current LAYER, in
+  both lock states — §4 has the formula and §6 what it costs the texture cache.
+  **AND THE USER'S OWN ZOOM MULTIPLIES IT** (USER REVISION, 2026-08-22 — was: _"Still no
+  vertical zoom: nothing the USER does changes a row's height."_). A trackpad or a touchscreen
+  offers a pinch and users reach for it; the fit above is what a row is WORTH by default, not a
+  ceiling on what it may be. `effectiveRowHeight = fittedRowHeight × zoom`, one multiplier on
+  everything the two terms decided, so a layer switch still re-fits underneath it and re-locking
+  still gives the fit back exactly (§4 for the formula and its clamp, §7 for the gestures).
+- **View Lock** (default locked): frame pinned to the current track's Editable Zone,
+  centered, no vertical scrolling; wheel and drag keep today's exact meanings. Unlocked
+  (button in the right CanvasTool column): drag pans 2D, wheel STAYS horizontal,
+  flick/coast stays horizontal-only. Re-locking eases back to the zone; layer switches
+  ease to the new zone in either mode (unlocked stays unlocked).
+- **Editable Zone**: two horizontal lines at the current layer's min/max addable numbers
+  (instrument + effective Basepoint); overlay dims everything outside; in-zone rows with
+  no button are striped and inert. All notes always visible — other layers' and stranded
+  ones render dimmed under the overlay, never hidden. The zone follows Basepoint changes
+  and instrument swaps immediately.
+- **Tap = edit only**, never column selection or centering: toggles YOUR layer's note on
+  addable cells (other layers never block); tap on your own stranded note deletes it
+  (the canvas is the strand-cleanup surface); inert elsewhere. Long-press on your own
+  note opens the existing duration popover. Canvas edits share the keyboard press code
+  path — same sound preview, same playback-state rules, same undo history. (Amended in
+  implementation, adjudicated — §7 has both: the canvas snapshots undo history where the
+  keyboard's toggle never has, and a covered cell's tap is inert without the keyboard's
+  preview sound.)
+- **Playhead at 1/4 canvas width** (Pro View only; Compressed keeps center).
+- **Layout**: sticky top bar = mini-timeline strip + its breakpoint buttons, nothing else
+  moves up. Left column (play + roster) and right column (canvas tools + the new View
+  Lock button) unchanged. Tempo changers stay at the bottom, always visible, aligned
+  under the right column. Canvas fills the remaining height.
+- **Row-label strip**: sticky vertical strip at the canvas' left inside edge (VSRG-style).
+  Button rows show the current keyboard's label in the user's `noteNameType` wording
+  (exactly what the key shows); no-button rows show a faint absolute pitch name (C♯4).
+- **Keyboard overlay**: keyboard sits below the viewport as a faded sliver that still
+  flashes active notes; tapping it raises it over a plain faded scrim (no blur); the first
+  tap on the canvas dismisses it and is SWALLOWED (never also edits); the recording-audio
+  state replaces the overlay's content. (USER REVISION, 2026-08-21 — was: _"a barely-visible
+  sliver ... over a plain faded backdrop"_, where the backdrop was a full-window div.) THE
+  SCRIM IS THE SHEET'S OWN BAND, not the window: the keyboard's own box plus a head of
+  gradient above it that fades to nothing, so the canvas over the raised sheet stays bright,
+  LIVE and scrollable — a drag scrolls the song exactly as it does with the sheet down
+  (horizontal always, vertical when unlocked), and only a settled TAP dismisses. That tap's
+  swallow is a gesture rule now rather than an element the press could not get past
+  (§7's `dismiss-sheet`), and with it a hold opens no popover while the sheet is up. The
+  sliver is also fatter, and stands on the song-info row (§8). A composer SHORTCUT
+  (`toggle_keyboard`, default `KeyK`, rebindable like every other) raises and lowers it.
+- **Scope fence**: no accidental-true MIDI import, no note dragging/moving, Compressed View
+  untouched (centered playhead, bottom timeline, all behavior). (USER REVISION, 2026-08-22 —
+  was: _"no accidental-true MIDI import, no note dragging/moving, no vertical zoom, Compressed
+  View untouched…"_. The vertical zoom is a shipped feature of this view now — see the framing
+  bullet above and §7; the Compressed View half of the fence is unchanged and gains nothing,
+  not even a ctrl+wheel meaning.)
+
+## 3. Current state being replaced (Pro-View-side only)
+
+`ComposerRenderer` draws `perColumn` Song-Grid rows per column
+(`COMPOSER_NOTE_POSITIONS[row] * height / NOTES_PER_COLUMN`), one fixed-height canvas
+(45vh·scale notes region + timeline strip at the BOTTOM), playhead fixed at the canvas'
+horizontal center with columns moving under it, and pointer input meaning column
+select / drag / flick / coast only. Notes are edited exclusively through
+`ComposerKeyboard` below the canvas; tempo changers render under it. None of this
+changes while `proView` is off.
+
+## 4. View model — the formulas
+
+All in one new pure module `src/lib/components/pages/Composer/proViewGeometry.ts`
+(pixi-free, importable from vitest, same discipline as composerCanvasGeometry.ts):
+
+- **Addressable span**: `lo = min over INSTRUMENTS of min(getSoundingTable(i))`,
+  `hi = max over INSTRUMENTS of max(getSoundingTable(i)) + 11` (Basepoint offsets are
+  0..11 upward). Assigned buttons are already in the sounding tables (their nominal).
+- **Axis**: `axisMin = min(lo, lowest song number) − AXIS_PADDING_ROWS`,
+  `axisMax = max(hi, highest song number) + AXIS_PADDING_ROWS`, `AXIS_PADDING_ROWS = 3`.
+  Recomputed on song load and on structure changes (outliers can be deleted; axis may
+  shrink back — acceptable, it only varies for already-weird files).
+- **Rows**: row index `r(n) = axisMax − n` (row 0 on top, pitch rises upward).
+  `rowHeight = min(notesRegionHeight / (zoneRows + 2), notesRegionHeight / (perColumn + 2))`
+  where `zoneRows = zone.max − zone.min + 1` (the “+2” is the framing padding, one row at
+  each end). USER REVISION, 2026-08-21 — was `notesRegionHeight / (perColumn + 2)` alone,
+  which did not fit a wide instrument's own zone (§2). THREE CONSEQUENCES, all handled:
+  the row height varies per (layer, Basepoint) in BOTH lock states, so the camera offset —
+  a px distance down the axis — is rescaled by the ratio whenever it moves and the framing
+  is re-taken AT ONCE rather than eased (an ease measured in two row heights is an ease
+  from nowhere, the same reason a resize is instant); the note textures are baked at the
+  cell height, so a layer switch regenerates the ComposerCache through the EXISTING resize
+  path (§6), debounced with it and never per frame; and the strip's width and label sizes,
+  which derive from the row height, shrink with it (verified legible at genshin's Lyre,
+  the tightest case either game has).
+  THE USER'S OWN ZOOM MULTIPLIES ALL OF IT (USER REVISION, 2026-08-22 — the formula above
+  was the whole of it):
+  `rowHeight = max(min(fit, 2), clampProZoom(zoom) × fit)` where `fit` is the min() above.
+  `PRO_ZOOM_MIN = 0.5 .. PRO_ZOOM_MAX = 3` is a documented pair — half a fit already shows
+  the WHOLE axis on both shipped games (there is nothing further out to go to) and 3× is a
+  row about a keyboard key's own height, an octave to the window — and
+  `PRO_MIN_ROW_HEIGHT_PX = 2` is a second, different guard: the clamp bounds the multiplier,
+  the floor keeps the RESULT drawable on a window where even the fit is thin. Stated against
+  the fit, so it can only ever stop a zoom-out and never inflate a row above what the region
+  fits. `zoom` is EPHEMERAL renderer state like the camera (no setting, no song field, 1 at
+  every mount), and every surface sized by a row follows because they all ask `proRowHeight`.
+  Two consequences beyond the three above, both handled by rules that already existed: a
+  zoomed-out axis can be SHORTER than the region, where `maxCameraY` collapses the travel to
+  0 and pins the axis to the region's top (the same answer an unlocked pan gets there); and
+  the camera is rescaled about the gesture's FOCAL POINT rather than the region's top edge —
+  `cameraY' = (cameraY + focalY) × (nextRowHeight / rowHeight) − focalY`, clamped through the
+  ordinary travel, so the row under the pointer or the pinch keeps its screen y.
+- **Camera**: `y(n) = r(n) * rowHeight − cameraY`. Locked:
+  `cameraY = (r(zoneMax) + r(zoneMin) + 1) / 2 * rowHeight − notesRegionHeight / 2`,
+  clamped to `[0, axisRows*rowHeight − notesRegionHeight]`. Unlocked: cameraY free within
+  the same clamp. Both lock transitions and layer switches ease cameraY (reuse the
+  existing ease timing).
+- **Editable Zone** for the current layer: `offset = basepointOffset(effectiveTrackPitch
+(instrument, songPitch))`; `zone = {t + offset : t ∈ getSoundingTable(name)}`;
+  lines at `max(zone)` (top) and `min(zone)` (bottom); addable rows are exactly `zone`'s
+  rows; `numberToButton(name, pitch, n)` answers taps (−1 ⇒ inert or strand-delete).
+- **Playhead**: `playheadX = width * 0.25` in Pro View (0.5 in Compressed); the
+  `containerX = playheadX − scrollPosition * columnWidth` formula is otherwise unchanged.
+- **Absolute names**: add `noteNameForMidi(n)` (C♯4-style; octave = `floor(n/12) − 1`) —
+  no such helper exists yet; it lives in noteIds.ts beside `isAccidentalMidi`.
+
+## 5. Settings & state
+
+- `BaseSettings.ts`: add `proView: SettingsCheckbox` (name `composer_pro_view`, category
+  `composer_settings`, `songSetting: false`, `value: false`); bump the composer
+  `settingVersion` (73 → 74; stored settings reset to defaults — house rule).
+- View Lock is EPHEMERAL UI state, not a setting: every composer mount starts locked.
+- Keyboard overlay raised/lowered: ephemeral, starts lowered.
+- i18n: new keys (setting name/tooltip, View Lock labels/tooltips, overlay hints) in
+  `src/lib/i18n/locales/en/index.ts`, mirrored into the 9 `static/locales/*.json` with
+  English text (translation deferred, same as the changelog precedent).
+
+## 6. Renderer changes (ComposerRenderer.ts + ComposerCache.ts)
+
+One renderer, two view functions — no fork. `proView` enters ComposerRendererState as a
+scalar (read in ComposerCanvas.svelte's $effect object, per that file's dependency rule).
+
+- **Note placement**: compressed keeps `gridRowForNumberCached` + COMPOSER_NOTE_POSITIONS;
+  pro places at `y(number)` with per-column vertical culling (only rows inside the camera
+  window get sprites; the column-view pooling stays as is).
+- **Textures**: pro cell size is `(columnWidth, rowHeight_pro)` — the ComposerCache
+  instance is rebuilt on mode flips exactly as it is on resize today; same
+  `noteTextureKey` statuses. AND ON A LAYER SWITCH, since the 2026-08-21 revision made the
+  row height a property of the current layer (§2/§4): the renderer notices the row height
+  moving and calls the resize path itself, so a switch costs one debounced rebuild and
+  nothing per frame — a new path of its own is exactly what this must not be.
+  Own-layer strands reuse the accidental-marked look; the '♯/♭ nearest-row' compression
+  trick is NOT used in pro (a number IS its row) — the accidental texture variants simply
+  mark strandedness there.
+- **New draw layers** (bottom→top): octave striping + no-button row striping (one
+  Graphics, redrawn on camera/zone/theme change) → notes → out-of-zone overlay (two
+  translucent rects) + the two zone lines → playhead → row-label strip (leftmost,
+  screen-fixed x, tracks cameraY; pixi Text pooled per visible row) → timeline strip.
+  The strip's own background repeats the canvas' inert-row shade on its no-button rows
+  and its labels are centered in the band, both ways (user revision, 2026-08-21 — the
+  strip first shipped with a uniform backing and left-set text).
+  AS BUILT the striping is not one canvas-wide Graphics but each COLUMN's own tail
+  Graphics — the only place in the pooled scene that sits between a column's background
+  and its notes, since a column view's children are a fixed prefix plus note sprites drawn
+  in array order. The consequence is accepted rather than worked around: the bands stop
+  where the song's columns stop, so the empty canvas past the last column stays unruled.
+- **A camera move REPAINTS the drawn window** rather than translating the container, and
+  that is not an implementation detail: notes are painted at `y(number) − cameraY` and
+  culled against the window, so a column view that stayed on screen holds sprites at the
+  old offset and none at all for the rows that just entered; translating would also move
+  the notes region's hitarea (`0..height` in container space) away from the pointer. The
+  repaint costs what one note edit costs and only runs while a camera ease is running.
+- **Timeline strip at TOP** in pro: strip y = 0, notes region below it
+  (`composerCanvasGeometry` gains the pro branch; `onGeometryChange` reports a
+  `timelineTop` flag so ComposerCanvas.svelte pins the DOM button row at top:0).
+  **Its BAND is full-bleed** (user revision, 2026-08-21, and it lands in both views): the
+  strip's content is inset by the two DOM buttons' footprints, and drawing the background
+  to the same bounds left the stage's clear colour showing through the gaps around those
+  buttons. The background rect starts one left inset before the strip container's origin
+  and runs the canvas' full width; everything else in that container stays strip-local.
+  The Compressed View gains it in the few px of margin around its own buttons and is
+  otherwise untouched.
+- **Playhead** uses the 0.25 fraction in pro (constant beside COMPOSER_PLAYHEAD_CONFIG).
+  As built it is one constant PAIR, `PLAYHEAD_X_FRACTION = {compressed: 0.5, pro: 0.25}`,
+  so the Compressed View's centre is written down in the same place as the Pro View's
+  quarter rather than staying an unnamed 0.5 the pro branch is compared against.
+  ITS VARIANT IS A PAIR TOO (user revision, 2026-08-21): `COMPOSER_PLAYHEAD_CONFIG.variant`
+  becomes `{compressed: 'rectangle', pro: 'line'}` rather than one setting with a branch at
+  the draw site. The rectangle wraps the sounding COLUMN, which is what the Compressed
+  View's canvas is a readout of; over 38 rows of chromatic axis it reads as a box drawn
+  around some notes rather than as a position, so the Pro View takes the bar with its two
+  arrowheads.
+- **Canvas height** in pro: the notes region fills the viewport height left over by the
+  top strip inside `.top-panel-composer` (body height − composer paddings − strip), via a
+  pro branch in composerCanvasSize/composerCanvasCssSize (the placeholder must not jump,
+  same discipline as today; mobile uses the same vh caveats already documented there).
+
+## 7. Input routing
+
+- **Locked**: the existing pointer/wheel/flick/coast machinery byte-identical, except the
+  CLICK outcome: where compressed's settled tap means selectColumn, pro's tap resolves
+  `(column, row→number)` and dispatches the edit rules below. Wheel horizontal always.
+- **Unlocked**: pointer drags gain dy → cameraY (clamped); dx path unchanged;
+  flick velocity measured horizontally only (release with vertical motion just stops);
+  a Catch still never edits (existing rule).
+- **THE VERTICAL ZOOM** (USER REVISION, 2026-08-22 — this bullet is new; the fence in §2 said
+  "no vertical zoom" and the framing bullet said nothing the user does changes a row's height).
+  Two inputs, one meaning:
+  - **ctrl/meta + wheel on the canvas.** That is what every browser delivers for a TRACKPAD
+    PINCH, so it is the gesture and not a keyboard shortcut for one. `preventDefault` keeps the
+    browser's own page zoom off it — the wheel handler already prevented every wheel over this
+    canvas, so the Compressed View gains nothing here and loses nothing: a ctrl+wheel there is
+    still the horizontal scroll it has always been. A PLAIN wheel keeps its horizontal meaning in
+    both views. The multiplier is `exp(−deltaPx × 0.0025)`, exponential because zoom is a ratio:
+    a mouse notch (~100px) is ~1.28×, about seven notches end to end, while a trackpad's 1-10px
+    deltas move it a few percent each and read as continuous.
+  - **A two-finger pinch on touch.** A second stage pointer WAS a guard case (the composer has
+    one scroll position, so a second finger could only corrupt the first one's drag); it is a
+    gesture now. Starting one marks the first finger `moved`, so a pinch is never a drag, never a
+    tap and never an edit — including with the keyboard sheet up, where pinching is allowed and
+    dismisses nothing (only a settled tap does that, §2). A drag already under way settles at
+    once, and lifting either finger ends the whole gesture: the remaining finger is not handed
+    the drag back.
+  - **The zoom is anchored, and it UNLOCKS the view.** The row under the pointer (or under the
+    pinch's centre) keeps its screen y, §4 has the formula. Zooming is the user taking manual
+    control of the frame, so the padlock follows the gesture — once per gesture, not once per
+    event — and re-locking resets the multiplier to 1 and returns the layer's own fit. A layer
+    switch keeps working while zoomed: the FITTED base changes underneath the multiplier.
+  - **The clamp is `PRO_ZOOM_MIN = 0.5 .. PRO_ZOOM_MAX = 3`**, with a `PRO_MIN_ROW_HEIGHT_PX = 2`
+    floor under the result (§4 says why the two are different guards, and why the degenerate
+    axis-shorter-than-region case needs no new rule).
+  - **It costs one debounced texture rebuild per gesture.** The cell height is baked into the
+    ComposerCache and the only path that re-bakes it is the resize path a layer switch already
+    takes; every zoom event re-arms its 50ms debounce, so a continuous pinch rebuilds nothing
+    until the fingers stop. In between, each note sprite is SCALED to the live row height (a
+    no-op at every resting moment, since the texture IS that height) and the camera repaint that
+    a zoom does costs what one note edit costs.
+  - Wheel-zoom and pinch state are renderer-internal and ephemeral, like the camera: nothing is
+    persisted, nothing reaches the song, and a remount starts at 1×. The strip's labels follow
+    the effective row height and nothing else — the phone-width tiny-label caveat stands.
+- **The drag slop is EITHER-AXIS, and only in pro.** A press that travelled more than
+  DRAG_SLOP_PX in x OR y stops being a tap and cancels the pending long press — recorded
+  even while the frame is locked, where the vertical half moves nothing, because a press
+  that visibly travelled is not a hold in either state. The Compressed View keeps the
+  horizontal-only test it always had: there a stray vertical wander still clicks, and
+  making it not click would have been a regression in the view this feature must not
+  touch. (Same threshold, not a new one — spec §12.)
+- **Tap dispatch** (new renderer callback `onCellTap(column, number)` → Composer.svelte):
+  1. keyboard overlay raised → dismiss, swallow;
+  2. own-layer note at (column, number) → remove (stranded included — this is delete);
+  3. `numberToButton ≥ 0` → toggle add via the shared path;
+  4. otherwise inert.
+- **The shared path**: Composer.svelte extracts the core of `toggleNoteImmediate` into a
+  `toggleNoteInColumn(columnIndex, button)` both the keyboard press and the tap call:
+  same preview sound, same history push, same playback-state behavior. Canvas edits do
+  NOT move `song.selected`.
+- **A cell tap requires a press THIS CANVAS recorded** (as built). pixi hit-tests a
+  page-wide pointerup against the canvas by coordinate, so a release over the canvas that
+  STARTED on a DOM element above it still arrives at the stage handler — the sheet's
+  backdrop div does not swallow releases by covering the canvas. In the Compressed View
+  that release has always selected a column and still does; in the Pro View it would have
+  been an EDIT, so the pro branch also asks that a press was recorded here (found and
+  fixed in phase D).
+- **The undo snapshot is taken at the canvas dispatch site only** (as built).
+  `addToHistory` is the tools panel's compound entry and the composer keyboard has never
+  pushed one for a plain note toggle; moving the push into the shared path would have
+  changed what a keyboard press does. So canvas gestures are undoable, keyboard toggles
+  are unchanged, and an inert tap pushes nothing.
+- **A tap on a cell covered by an own-layer span is inert WITHOUT sound** (as built). The
+  keyboard previews the note on a covered press (it is a performance as well as an edit);
+  a canvas tap is only an edit, so the covered case returns before the preview rather than
+  playing a note it will not write.
+- **Long-press** (same threshold the keyboard uses) on an own-layer note →
+  `onCellLongPress(column, number, screenRect)` → ComposerDurationPopover, which gains a
+  virtual-rect anchor beside its HTMLElement one.
+- **View Lock button**: fifth CanvasTool in the right column (pro only), toggles
+  locked/unlocked, icon swap + tooltip.
+
+## 8. Layout / DOM (Composer.svelte + App.css + ComposerKeyboard.svelte)
+
+`.composer-grid` gains a `composer-grid-pro` modifier class:
+
+- `.top-panel-composer` stretches to the full leftover height; the canvas wrapper fills it.
+- Keyboard: `.composer-keyboard-wrapper` becomes a fixed bottom sheet —
+  lowered = translated down to a faded sliver (still mounted, still flashing active
+  notes; tapping it raises), raised = translateY(0) over its own rgba SCRIM. Transitions
+  are transform/opacity only.
+  **THE SCRIM IS THE SHEET'S `::before`** (user revision, 2026-08-21; it was an
+  `inset: 0` backdrop `<button>`): the band is the keyboard's own box plus
+  `--pro-scrim-head` of gradient above it fading to nothing, which is the only way to get
+  "exactly the sheet's band" without measuring a keyboard whose height depends on the
+  instrument. It is `pointer-events: none`, and so is the raised wrapper itself with its
+  CHILDREN restored to `auto` — a tap beside the keys, or on the head above them, has to
+  reach the canvas, which is what dismisses the sheet (§7). Nothing dismisses by covering
+  any more, and the canvas keeps its own `cursor: pointer` as the affordance (the removed
+  backdrop's `cursor: default` was what hid it).
+  **Recording audio force-raises the sheet** for as long as the recording runs, whatever
+  the user last tapped: the recording UI REPLACES the keyboard's content (§9) and carries
+  the only control that stops the recording, so the sheet is `raised || isRecordingAudio`.
+- Tempo changers: in pro they render in their own always-visible slot aligned under the
+  right CanvasTool column (outside the overlay); compressed keeps them where they are.
+  TWO NOTES FROM BUILDING IT:
+  - they were already SIBLINGS of `.composer-keyboard-wrapper` inside ComposerKeyboard
+    rather than children of it, so lowering the sheet would not have taken them down;
+    the extraction into ComposerTempoChangers still earned its keep, because as a sibling
+    of the KEYBOARD they still disappeared with its error and recording branches, and
+    only a slot outside it can be stacked above the sheet's backdrop.
+  - "aligned under the column" became a GRID ROW OF that column in phase E's mobile pass:
+    floated into the window's corner they were pinned to the window while the tools packed
+    down from the top, and on a landscape phone the two met — the tempo buttons covered the
+    View Lock. As the column's sixth row they cannot overlap at any window height (the
+    tools shrink toward them instead), which also gives the column a definite height it
+    otherwise lacked.
+- **THE BOTTOM BAND** (user revision, 2026-08-21; was: _"The `song-info` overlay must not
+  collide with the sliver (move it up by the sliver's height in pro). It still overlaps the
+  row-label strip's lowest labels at phone widths, which is accepted: moving it left would
+  put it under the mobile hamburger instead."_). Lifting the overlay by the sliver left it
+  standing on the canvas — on the lowest rows of the axis and on the row-label strip, i.e.
+  on the surface this view exists to edit. The window's bottom is now a band of chrome in
+  two rows, and the canvas stops above BOTH:
+  - `--pro-song-info-height` (1.75rem) at the very bottom: `.song-info-pro` is a full-width
+    ROW there (name and time side by side rather than stacked), never over the canvas;
+  - `--pro-sliver-height` above it, and fatter than it shipped (1.5rem → 2.5rem) — a sliver
+    is the only thing saying the keyboard is still there. The sheet's box stands ON the
+    info row (`bottom: var(--pro-song-info-height)`), so what peeks out is the sliver and
+    never a keyboard behind the song's name; the sliver's tap target moves with it.
+    `composerCanvasGeometry` takes both off the canvas' height (PRO_KEYBOARD_SLIVER_PX +
+    PRO_SONG_INFO_PX in PRO_CANVAS_INSET_PX, with the CSS twin and its test following), and
+    the TOOL COLUMN stops being capped at the canvas' height: its row is given the whole grid
+    row (`height: 100%` inline in pro, since an inline `fit-content` is what a stylesheet
+    cannot override), so the tempo changers at its foot reach the window's bottom edge instead
+    of floating above a band of nothing.
+  - **THE BAND IS ONE ROW AGAIN — THE SONG INFO RESERVES NOTHING** (USER REVISION, 2026-08-22 —
+    replaces the two bullets directly above, which were: _"`--pro-song-info-height` (1.75rem) at
+    the very bottom: `.song-info-pro` is a full-width ROW there … The sheet's box stands ON the
+    info row (`bottom: var(--pro-song-info-height)`) … `composerCanvasGeometry` takes both off
+    the canvas' height (PRO_KEYBOARD_SLIVER_PX + PRO_SONG_INFO_PX in PRO_CANVAS_INSET_PX)"_).
+    Twenty-eight pixels of axis, and a sliver stopping 28px short of the window, spent on two
+    lines of read-only text was the wrong trade. `--pro-song-info-height` and `PRO_SONG_INFO_PX`
+    are GONE: the canvas' inset is the grid's own padding plus the sliver, and the sheet, its
+    sliver and its scrim stand at the window's true bottom edge again. `.song-info-pro` is an
+    absolutely-positioned OVERLAY at `bottom: 0` — the row shape (name and time side by side)
+    survives, so it covers one line of canvas rather than two, `.song-info div`'s text-shadow is
+    the contrast treatment it keeps, and it carries no `z-index`, so the sheet (6) and the sliver
+    (7) cover it. Being covered is accepted: nothing is edited through it.
+  - **AND THE PAGE STOPPED SCROLLING** (USER REVISION, 2026-08-22). The composer page overflowed
+    the window by 3.2px in the Pro View — `document.scrollingElement.scrollHeight` = `100vh + 3.2`
+    — on any window where the tool column's six rows want more height than the canvas row has
+    (measured at 1280×800 and at 850×420, both games; a 1600×1000 desktop had room and did not
+    show it). THE CULPRIT was the column's own cap, `max-height: calc(100vh - 0.4rem)`: the
+    composer grid's content box worked out by hand, and the hand-derived number counted the grid's
+    0.2rem padding at each end but NOT its 0.2rem row gap. The grid's `1fr` row took the capped
+    column as its automatic minimum, grew past the window, and grew the shell with it (`.app` is
+    stretched by `align-items`, `.theme-vars-root` is `min-height: 100%`, so both follow their
+    content). Three declarations replace it, and they only work together: `.composer-grid-pro`
+    STATES the height composerCanvasGeometry already assumed it had (`height: 100vh`), the
+    canvas' row cannot be grown by its content (`min-height: 0` on `.top-panel-composer`), and the
+    column is capped at that row (`max-height: 100%`) instead of at a restatement of the window.
+    No `overflow: hidden` anywhere: the row simply cannot exceed the window any more, and the five
+    `minmax(0, 8rem)` tool rows shrink toward the tempo slot exactly as phase E designed.
+- Mobile (`max-width: 1000px` block): same structure; the sliver/backdrop pattern is
+  already a bottom-sheet idiom; verify the canvas vh math against the URL-bar caveats
+  documented in composerCanvasGeometry.
+  **The left canvas chevron is inset by the row-label strip's width** — `.canvas-buttons`
+  is `display: none` on a fine-pointer desktop and appears exactly on the coarse-pointer
+  and narrow layouts, where a 45px column-select button drawn from the canvas' left edge
+  would stand on the labels; it starts at `proStripWidth(rowHeight)` instead.
+  **Portrait is not a Pro View question**: the app covers any portrait viewport with its
+  own `.rotate-screen` overlay (`@media screen and (orientation: portrait)`, App.css), in
+  both views and on every route, so the phone case that matters is landscape.
+
+## 9. Cross-cutting behaviors
+
+- **Basepoint change**: notes rewrite (ADR-0007) AND the zone moves by the same interval,
+  so locked framing follows automatically on the next paint; undo restores both.
+- **Instrument swap**: zone + strip labels recompute from the new instrument; camera
+  eases to the new zone.
+- **Layer switch**: statuses recolor (existing), zone/strip/framing follow.
+- **Recording audio**: overlay content swaps to the recording UI (as the keyboard does
+  today); canvas taps stay live.
+- **Theme**: new draw layers subscribe through the existing theme channel (striping,
+  overlay, lines, strip text all from ThemeProvider colors).
+
+## 10. Verification
+
+- Existing suites green for BOTH games (`npm test`), check + lint — Compressed View
+  regression gate; the ADR-0007 parity fixtures must not change.
+- New vitest units (pure, on proViewGeometry + noteIds additions): axis span per game
+  (bounds, padding, outlier extension/shrink), zone per (instrument, Basepoint)
+  including assigned-button instruments (drums, Ukulele chords) and per-track overrides,
+  camera centering + clamps (locked, small instrument, axis edges), tap resolution
+  (row→number→button; strand-delete; other-layer non-blocking), `noteNameForMidi`,
+  strip label resolution (button wording vs faint absolute).
+- Renderer/DOM smoke via the browser-driving recipe (headless chromium, settings
+  pre-seeded with `proView: true`): screenshots of locked/unlocked, zone move on
+  Basepoint change, layer switch ease, keyboard raised/dismissed, top timeline, both
+  games, light + dark theme; a tap-edit followed by undo asserted through the exported
+  song JSON.
+
+## 11. Phases (each ends green; worktree agents)
+
+- **A — domain**: proViewGeometry.ts + noteIds additions (`noteNameForMidi`) + settings
+  entry/version bump + all pure tests. No UI change; suites green with `proView` unused.
+- **B — geometry & layout**: pro branches in composerCanvasGeometry (full-height canvas,
+  top strip) + Composer.svelte/App.css restructure behind the setting (overlay skeleton,
+  tempo-changer slot, View Lock button placeholder). Compressed untouched with the
+  setting off; smoke screenshots both modes.
+- **C — renderer**: pro view function in ComposerRenderer (rows, camera, culling,
+  striping, zone lines/overlay, 1/4 playhead, row-label strip, top timeline strip),
+  locked framing + eases. Input still view-only (no tap edits yet). Smoke.
+- **D — input**: tap dispatch + shared toggle path extraction, long-press popover anchor,
+  unlocked 2D drag + View Lock behavior, overlay raise/dismiss/swallow. Unit +
+  interaction tests; smoke with edits + undo.
+- **E — polish**: i18n keys + locales mirror, changelog entry, mobile pass, docs sync
+  (spec status flip; CONTEXT.md already carries the terms), final both-game suites +
+  full smoke sweep.
+
+## 12. Risks & mitigations
+
+- **Compressed regression** while threading `proView` through the renderer → every pro
+  branch behind one boolean read at the top of the affected paths; suites + parity
+  fixtures as the gate; phase B/C diffs reviewed against "setting off = no-op".
+- **Pixi Text cost in the strip** (~26 visible labels, re-set on camera move) → pool the
+  Text objects, update only on visible-row-set changes, never per frame.
+- **Gesture ambiguity** (tap vs drag vs long-press on touch) → reuse the existing
+  click-threshold + Catch rules verbatim; long-press uses the keyboard's threshold; no
+  new thresholds invented.
+- **Mobile viewport math** (URL bar vs full-height canvas) → the vh caveats are already
+  documented in composerCanvasGeometry; the pro branch states its formula there and the
+  smoke run covers a mobile-size viewport.
+- **Texture/cache churn on mode flip** → mode flip = one cache rebuild, same as a resize
+  today; no per-frame allocation.
+
+## 13. Out of scope (deferred, stated in ADR-0007 or grilling)
+
+Accidental-true MIDI import + Basepoint inference; note dragging/moving and edge-resize
+(the long-press popover is v1's span editor; edge-grab can layer on later); 2D
+flick/coast; per-song view memory; Compressed View playhead reposition. (Vertical zoom
+left this list on 2026-08-22 — it shipped as a USER REVISION; see §2/§4/§7.)

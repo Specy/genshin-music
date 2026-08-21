@@ -352,9 +352,38 @@ const CASES: PublishCase[] = [
     },
     {
         name: 'setInstrument',
-        label: 'existing layer',
+        //name and Basepoint both unchanged: a pure presentation edit (colour, alias, mute), which
+        //is the roster signal alone. Every OTHER shape of this call rewrites notes - see below
+        label: 'existing layer, same instrument and Basepoint',
         publishes: ['instruments'],
         touches: 'none',
+        run: song => song.setInstrument(1, new InstrumentData({name: INSTRUMENTS[1], icon: 'line'})),
+    },
+    {
+        //ADR-0007: a swap is a NOTE edit (button-preserving rewrite through nominal
+        //correspondence), so it moves the graph as well as the roster
+        name: 'setInstrument',
+        label: 'existing layer, swapped instrument',
+        publishes: ['instruments', 'structure'],
+        touches: 'all',
+        run: song => song.setInstrument(1, new InstrumentData({name: INSTRUMENTS[0]})),
+    },
+    {
+        //...and so is a per-layer Basepoint override, by the interval
+        name: 'setInstrument',
+        label: 'existing layer, Basepoint override',
+        publishes: ['instruments', 'structure'],
+        touches: 'all',
+        run: song => song.setInstrument(1, new InstrumentData({name: INSTRUMENTS[1], pitch: 'D'})),
+    },
+    {
+        //a swap on a layer with no notes moves the roster and nothing else: there is no graph edit
+        //behind it, and a bump with no edit re-runs every consumer for nothing
+        name: 'setInstrument',
+        label: 'swapped instrument on an empty layer',
+        publishes: ['instruments'],
+        touches: 'none',
+        setup: song => song.eraseColumns(song.columns.map((_, i) => i), 1),
         run: song => song.setInstrument(1, new InstrumentData({name: INSTRUMENTS[0]})),
     },
     {
@@ -363,6 +392,37 @@ const CASES: PublishCase[] = [
         publishes: [],
         touches: 'none',
         run: song => song.setInstrument(9, new InstrumentData({name: INSTRUMENTS[0]})),
+    },
+    {
+        //ADR-0007: the song's Basepoint moving is a real edit of every note that follows it
+        name: 'applyBasepointChange',
+        label: 'song scope',
+        publishes: ['structure'],
+        touches: 'all',
+        run: song => song.applyBasepointChange('song', 'C', 'D'),
+    },
+    {
+        name: 'applyBasepointChange',
+        label: 'one track',
+        publishes: ['structure'],
+        touches: 'all',
+        run: song => song.applyBasepointChange(1, 'C', 'D'),
+    },
+    {
+        name: 'applyBasepointChange',
+        label: 'no interval',
+        publishes: [],
+        touches: 'none',
+        run: song => song.applyBasepointChange('song', 'D', 'D'),
+    },
+    {
+        //every track of makeSong() follows the song, so scoping to a track index that owns no
+        //notes leaves the graph untouched - and an untouched graph publishes nothing
+        name: 'applyBasepointChange',
+        label: 'a scope with no notes in it',
+        publishes: [],
+        touches: 'none',
+        run: song => song.applyBasepointChange(5, 'C', 'D'),
     },
     {
         name: 'swapInstruments',
@@ -458,12 +518,16 @@ const CASES: PublishCase[] = [
 /** Same driver, empty expectations: these must not publish or touch anything at all. */
 const READERS: PublishCase[] = [
     {name: 'serialize', publishes: [], touches: 'none', run: song => void song.serialize()},
-    {name: 'toOldFormat', publishes: [], touches: 'none', run: song => void song.toOldFormat()},
+    //`toOldFormat` and `countOldFormatDroppedNotes` had rows here until ADR-0007 phase E retired
+    //the old-format export (kept commented in ComposedSong), along with the three private steps
+    //they owned in INTERNAL below: groupColumnNotesById, legacyColumnsView, nominalOf.
     {name: 'toRecordedSong', publishes: [], touches: 'none', run: song => void song.toRecordedSong()},
     {name: 'toComposedSong', publishes: [], touches: 'none', run: song => void song.toComposedSong()},
     {name: 'toMidi', publishes: [], touches: 'none', run: song => void song.toMidi()},
     {name: 'clone', publishes: [], touches: 'none', run: song => void song.clone()},
     {name: 'copyColumns', publishes: [], touches: 'none', run: song => void song.copyColumns([0, 1], 'all')},
+    //the other half of a copy (the Basepoints its numbers were authored at) — a read of the roster
+    {name: 'trackPitches', publishes: [], touches: 'none', run: song => void song.trackPitches()},
     {
         name: 'toOtherGame',
         //genuinely worth pinning: it normalizes spans and rewrites ids, but only on the clone it
@@ -477,12 +541,6 @@ const READERS: PublishCase[] = [
     },
     {name: 'getSpanCovering', publishes: [], touches: 'none', run: song => void song.getSpanCovering(2, 0, idOf(0))},
     {name: 'maxSpanAt', publishes: [], touches: 'none', run: song => void song.maxSpanAt(0, 1, idOf(4))},
-    {
-        name: 'countOldFormatDroppedNotes',
-        publishes: [],
-        touches: 'none',
-        run: song => void song.countOldFormatDroppedNotes(),
-    },
 ]
 
 /**
@@ -494,8 +552,6 @@ const READERS: PublishCase[] = [
 const INTERNAL: string[] = [
     'adjustSpansForInsertedColumns',
     'adjustSpansForRemovedColumns',
-    'groupColumnNotesById',
-    'legacyColumnsView',
 ]
 
 function caseName(testCase: {name: string, label?: string}): string {
@@ -744,6 +800,21 @@ const VSRG_CASES: VsrgPublishCase[] = [
         run: song => song.setTrack(0, song.tracks[0].set({color: '#123456'})),
     },
     {
+        //ADR-0007: the same call, told what the instrument's identity USED to be, also rewrites the
+        //track's Note Numbers. Still exactly one publish — the rewrite rides the bump setTrack
+        //already does rather than adding a second one
+        name: 'setTrack',
+        label: 'with the previous instrument identity (a swap)',
+        publishes: ['structure'],
+        setup: song => song.toggleNoteInHitObject(song.tracks[0].hitObjects[0], 60),
+        run: song => {
+            const track = song.tracks[0]
+            const previous = {name: track.instrument.name, pitch: track.instrument.pitch}
+            track.instrument.set({name: INSTRUMENTS[1]})
+            song.setTrack(0, track, previous)
+        },
+    },
+    {
         name: 'setTrack',
         label: 'no such track',
         publishes: [],
@@ -850,6 +921,28 @@ const VSRG_CASES: VsrgPublishCase[] = [
         name: 'toggleNoteInHitObject',
         publishes: ['structure'],
         run: song => song.toggleNoteInHitObject(song.tracks[0].hitObjects[0], 60),
+    },
+    {
+        //ADR-0007's vsrg twin: hit-object numbers move with the Basepoint
+        name: 'applyBasepointChange',
+        label: 'song scope',
+        publishes: ['structure'],
+        setup: song => song.toggleNoteInHitObject(song.tracks[0].hitObjects[0], 60),
+        run: song => song.applyBasepointChange('song', 'C', 'D'),
+    },
+    {
+        name: 'applyBasepointChange',
+        label: 'no interval',
+        publishes: [],
+        setup: song => song.toggleNoteInHitObject(song.tracks[0].hitObjects[0], 60),
+        run: song => song.applyBasepointChange('song', 'D', 'D'),
+    },
+    {
+        //makeVsrgSong's hit objects carry no notes, so there is nothing to move and nothing to say
+        name: 'applyBasepointChange',
+        label: 'no notes to move',
+        publishes: [],
+        run: song => song.applyBasepointChange('song', 'C', 'D'),
     },
     {
         name: 'removeHitObjectInTrack',

@@ -1,6 +1,6 @@
 <script lang="ts">
   import Color from 'color';
-  import type { VsrgTrack } from '$core/Songs/VsrgSong.svelte';
+  import type { VsrgTrack, VsrgTrackInstrumentIdentity } from '$core/Songs/VsrgSong.svelte';
   import type { Pitch } from '$lib/games/types';
   import { t, tInstrument } from '$i18n/binding.svelte';
   import Row from '$cmp/layout/Row.svelte';
@@ -23,7 +23,7 @@
     track: VsrgTrack;
     onSave: () => void;
     onDelete: () => void;
-    onChange: (track: VsrgTrack) => void;
+    onChange: (track: VsrgTrack, previousInstrument?: VsrgTrackInstrumentIdentity) => void;
   } = $props();
 
   // QUIRK (load-bearing): every handler below mutates `track` - the song's own VsrgTrack - IN
@@ -33,11 +33,24 @@
   // the reference is unchanged - don't add an equality check here or upstream, and don't make
   // setTrack skip on identity, or every edit made here stops reaching the canvas and the sidebar.
   //
+  // THE COST OF THAT, AND WHY `identity()` EXISTS (ADR-0007): the instrument's name and Basepoint
+  // override are part of what the track's stored Note Numbers MEAN, so changing either is a note
+  // edit - and mutating in place destroys the only record of what they used to be before anything
+  // downstream can read it. The two handlers that touch them therefore capture the old pair FIRST
+  // and hand it down with the track; every other handler here is presentation and passes nothing,
+  // which is what tells setTrack there is nothing to rewrite.
+  //
   // The reads in the template are all `track.x` on the PROP, which is what makes them re-render:
   // the prop expression the parent writes (`track={vsrg.tracks[selectedTrack]}`) is a lazy getter,
   // so reading it here subscribes this component's effects to the song's structure signal. Do not
   // hoist `track` into a $derived or a {@const} on either side - see VsrgTop.svelte's header.
   let isColorPickerOpen = $state(false);
+
+  /** The instrument identity as it stands RIGHT NOW - call before mutating, never after. */
+  const identity = (): VsrgTrackInstrumentIdentity => ({
+    name: track.instrument.name,
+    pitch: track.instrument.pitch,
+  });
 </script>
 
 {#snippet faTrashIcon()}
@@ -79,8 +92,9 @@
         style="width:8rem"
         selected={track.instrument.name}
         onChange={(name) => {
+          const previous = identity();
           track.instrument.set({ name });
-          onChange(track);
+          onChange(track, previous);
         }}
       />
     </Row>
@@ -90,8 +104,9 @@
         style="width:8rem"
         selected={track.instrument.pitch as Pitch}
         onChange={(pitch) => {
+          const previous = identity();
           track.instrument.set({ pitch });
-          onChange(track);
+          onChange(track, previous);
         }}
       >
         <option value="">

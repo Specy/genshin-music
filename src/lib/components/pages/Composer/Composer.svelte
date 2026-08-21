@@ -11,6 +11,7 @@
   import MidiParser from './MidiParser/MidiParser.svelte';
   import ComposerTools from './ComposerTools.svelte';
   import ComposerKeyboard from './ComposerKeyboard.svelte';
+  import ComposerTempoChangers from './ComposerTempoChangers.svelte';
   import ComposerDurationPopover from './ComposerDurationPopover.svelte';
   import ComposerCanvas from './ComposerCanvas.svelte';
   import ComposerMenu from './ComposerMenu.svelte';
@@ -47,6 +48,11 @@
     createShortcutListener,
     type ShortcutListener,
   } from '$stores/KeybindsStore.svelte';
+  import { numberToButton } from '$core/Songs/noteIds';
+  //THE PRO VIEW'S TAP DISPATCH, as a pure decision (spec §7) - what a tap on a cell does, given what
+  //this component looks up about that cell. The lookups and the mutation stay here; the rule does
+  //not, so it is testable without a canvas.
+  import { proCellAction, type ComposerPopoverAnchor, type ScreenRect } from './composerInput';
   import { HeldNoteRegistry, holderToken, midiHolderToken } from '$lib/audio/HeldNoteRegistry';
   import { spanForHeldMs } from '$core/Songs/sustainQuantize';
   import { registerLeaveHandler } from '$stores/navigationGuard.svelte';
@@ -72,10 +78,19 @@
       game.instruments.list[0],
     ])
   );
-  // One-time seed, not reactive: later bpm edits flow through handleSettingChange's
-  // songSetting branch instead, which writes song.bpm directly.
+  // One-time seed, not reactive: later bpm/pitch edits flow through handleSettingChange's
+  // songSetting branch instead, which writes song.bpm/song.pitch directly.
+  //
+  // THE SONG IS THE SINGLE SOURCE OF TRUTH for the Basepoint inside this component, and every
+  // read of it below goes through `song.pitch` for that reason. Since ADR-0007 the Basepoint
+  // decides what a stored number MEANS, so a settings copy that had drifted from the song would
+  // not be a wrong playback rate any more — the keyboard would enter numbers at one Basepoint
+  // while the canvas drew them at another. `settings.pitch` survives as the persisted UI copy,
+  // written together with the song on every edit and re-seeded FROM it on load and undo.
   // svelte-ignore state_referenced_locally
   song.bpm = settings.bpm.value;
+  // svelte-ignore state_referenced_locally
+  song.pitch = settings.pitch.value;
   let layer = $state(0);
   // `$state.raw`, like song.breakpoints/song.instruments: this array is handed to the canvas and
   // the renderer calls `selectedColumns.includes(i)` once per visible column on every draw, so it
@@ -83,8 +98,37 @@
   // rule that comes with it: assign a new array, never push/splice (every write below already
   // does, see selectColumn).
   let selectedColumns: number[] = $state.raw([]);
-  let undoHistory: NoteColumn[][] = $state([]);
-  let copiedColumns: NoteColumn[] = $state([]);
+  /**
+   * One undo step. COMPOUND since ADR-0007, and it has to be: a Basepoint change or an instrument
+   * swap rewrites the notes AND moves the setting that says what they mean, so a columns-only
+   * snapshot would restore the notes into a song still claiming the new Basepoint — every one of
+   * them a semitone (or an instrument) out. The three are captured and restored together or the
+   * edit is not undoable at all.
+   */
+  type ComposerHistoryEntry = {
+    columns: NoteColumn[];
+    pitch: Pitch;
+    instruments: InstrumentData[];
+  };
+  let undoHistory: ComposerHistoryEntry[] = $state([]);
+  /**
+   * The tools panel's clipboard. COMPOUND for the same reason the undo entry above is: the copied
+   * columns hold ABSOLUTE Note Numbers (ADR-0007), which name the buttons they were copied from
+   * only together with the Basepoint each SOURCE track was stated at — so that is captured with
+   * them (`ComposedSong.trackPitches`, indexed by source track) and the paste restates the numbers
+   * in the destination's terms. Without it a copy at Basepoint C pasted into a song at F reproduces
+   * different buttons, which is the one thing a clipboard may not do.
+   *
+   * ONE value rather than two parallel `$state`s: the clipboard deliberately outlives the song it
+   * was copied from (see loadSong), so a copy that installed columns beside the PREVIOUS copy's
+   * Basepoints would silently transpose every paste after it.
+   *
+   * `$state.raw`, like selectedColumns: every write below replaces the whole value, and the
+   * columns are handed to the model rather than read element-by-element. The rule that comes with
+   * it: assign a new object, never mutate this one in place.
+   */
+  type ComposerClipboard = { columns: NoteColumn[]; pitches: Pitch[] };
+  let clipboard: ComposerClipboard = $state.raw({ columns: [], pitches: [] });
   let isToolsVisible = $state(false);
   // One-time seed from the prop; later showMidi changes (callers never send any) are not tracked.
   // svelte-ignore state_referenced_locally
@@ -99,6 +143,43 @@
   let playbackColumnStartMs = $state(0);
   let playbackAnchorGeneration = $state(0);
   let changes = $state(0);
+  /**
+   * CONTEXT.md: Pro View. The persisted setting, ANDed with `!inPreview` once here so every
+   * consumer below - the grid modifier, the canvas' `{#key}`, the keyboard's sheet, the tempo
+   * changers' placement - is asking the same question. /theme's composer preview keeps the
+   * Compressed View: it is a small box inside a scrolling page, and a canvas sized to the WINDOW
+   * would overrun it (`.canvas-wrapper-in-preview` and `composer-grid-in-preview` are the same
+   * exclusion).
+   */
+  const proView = $derived(Boolean(settings.proView.value) && !inPreview);
+  /**
+   * Whether the Pro View's keyboard sheet is up. EPHEMERAL and never persisted (spec §5): every
+   * composer mount starts with it lowered, and it means nothing at all in the Compressed View,
+   * where the keyboard is simply the bottom of the page.
+   */
+  let keyboardRaised = $state(false);
+  /**
+   * ...and what actually decides the sheet's position, which is not quite the same thing: recording
+   * audio REPLACES the keyboard's content with the recording UI (see ComposerKeyboard), and that UI
+   * carries the only control that stops the recording - so the sheet is held up for as long as one
+   * is running, whatever the user last tapped.
+   */
+  const keyboardSheetRaised = $derived(keyboardRaised || isRecordingAudio);
+  /**
+   * THE VIEW LOCK (CONTEXT.md): locked, the canvas stays pinned to the current track's Editable Zone;
+   * unlocked, a stage drag pans the frame vertically too and it stays where the hand left it. The
+   * fifth CanvasTool toggles this, and it reaches the canvas through the props channel like every
+   * other reactive value (ComposerCanvas.svelte's $effect object, per that file's dependency rule) -
+   * the renderer both reads it, for the drag, and diffs it, because re-locking is a COMMAND to ease
+   * back rather than a description of anything. Ephemeral like the sheet above: every mount starts
+   * locked, and nothing about it is persisted or stored in a song.
+   *
+   * THE CANVAS OPENS IT TOO (2026-08-22): a pinch or a ctrl+wheel on the canvas zooms the rows,
+   * which is the user taking the frame - so the renderer reports that through `onViewUnlock` and the
+   * padlock follows the gesture. Closing it again is this button's alone, and closing it is what
+   * puts the zoom back to the current layer's own fit.
+   */
+  let viewLocked = $state(true);
 
   let broadcastChannel: BroadcastChannel | null = null;
   let mounted = false;
@@ -148,6 +229,11 @@
       createReleaseGuard(endAllSustainRecordings)
     );
     settings = loadedSettings;
+    //the persisted settings arrive AFTER the defaults the song was seeded from, so re-seed both
+    //song-level values a fresh song carries (see their declaration) — nothing is loaded yet, so
+    //there are no notes for the Basepoint to move
+    song.bpm = loadedSettings.bpm.value;
+    song.pitch = loadedSettings.pitch.value;
     init(loadedSettings);
     broadcastChannel = window.BroadcastChannel
       ? new BroadcastChannel(APP_NAME + '_composer')
@@ -228,7 +314,7 @@
       //the PHYSICAL key holds the note, not the shortcut name, so a keyboard LAYOUT change
       //mid-hold cannot orphan the release (KeyboardEvent.code is layout-independent). Rebinding
       //the key itself mid-hold still can: the key-up half only fires for keys that are bound.
-      if (startSustainRecording(holderToken('keyboard', code), note.id)) return;
+      if (startSustainRecording(holderToken('keyboard', code), note.numberAt(layerPitch))) return;
       toggleNoteImmediate(note);
     }
   };
@@ -262,6 +348,11 @@
       const nextLayer = layer + 1;
       if (nextLayer < layers.length) changeLayer(nextLayer);
     }
+    //THE KEYBOARD SHEET, and only where there is one: in the Compressed View the keyboard is simply
+    //the bottom of the page and this flag reaches no rule at all (see its declaration). The sheet is
+    //held up for the length of a recording whatever this says, so a press during one is inert by
+    //construction rather than by a guard here.
+    if (name === 'toggle_keyboard' && proView) keyboardRaised = !keyboardRaised;
     if (name === 'toggle_play') {
       if (event.repeat) return;
       if ((event.target as HTMLElement | null)?.tagName === 'BUTTON') {
@@ -320,7 +411,13 @@
         //so resolve the note object here and hand THAT on - never the raw slot number
         const pressed = currentInstrument.notes[keyboardNote.index];
         if (!pressed) return;
-        if (startSustainRecording(midiHolderToken(note, keyboardNote.index), pressed.id)) return;
+        if (
+          startSustainRecording(
+            midiHolderToken(note, keyboardNote.index),
+            pressed.numberAt(layerPitch)
+          )
+        )
+          return;
         toggleNoteImmediate(pressed);
       });
       const shortcut = MIDIProvider.settings.shortcuts.find((e) => e.midi === note);
@@ -358,6 +455,12 @@
   }
 
   function handleSettingChange({ data, key }: SettingUpdate) {
+    //captured BEFORE the write below, because a Basepoint change is a real note edit and needs
+    //both ends of the interval (ADR-0007). Undo has to see the song as it was, so the snapshot
+    //goes in first too.
+    const previousPitch = song.pitch;
+    const pitchChanged = key === 'pitch' && data.value !== previousPitch;
+    if (pitchChanged) addToHistory();
     // @ts-expect-error SettingUpdateKey spans all 4 settings families; narrower here by design
     settings[key] = { ...settings[key], value: data.value };
     if (data.songSetting) {
@@ -373,11 +476,26 @@
     if (key === 'reverb') {
       AudioProvider.setReverb(data.value as boolean);
     }
-    //ADR-0006 resync-on-mutation: bpm re-times every uncommitted boundary and pitch re-voices
-    //every uncommitted note, so both retract and recommit the window. Reverb is a live node the
-    //committed audio already flows through, and per-layer volume (see changeVolume) is a live
-    //gain for the same reason — neither changes what should be committed, so neither resyncs.
-    if (key === 'bpm' || key === 'pitch') resyncPlayback();
+    //ADR-0007: the song's Basepoint is part of every number its notes store, so moving it REWRITES
+    //them — every track that follows the song (a track with its own override keeps its effective
+    //Basepoint, so its notes must not move). The write above already installed the new value; this
+    //is handed both ends explicitly.
+    //
+    //...which makes it a NOTE EDIT, so it rides the note-edit funnel rather than resyncing on its
+    //own: handleAutoSave() is what marks the song dirty, and the dirty count is what the
+    //unsaved-changes prompts (loadSong, createNewSong, prepareToLeave) and the menu's dot read. A
+    //transposed song that still counted as saved was silently discarded by all three.
+    if (pitchChanged) {
+      song.applyBasepointChange('song', previousPitch, data.value as Pitch);
+      handleAutoSave();
+    } else if (key === 'bpm' || key === 'pitch') {
+      //ADR-0006 resync-on-mutation: bpm re-times every uncommitted boundary, so it retracts and
+      //recommits the window (a pitch key that changed nothing lands here too, and recommitting an
+      //unchanged window is the harmless half of the same rule). Reverb is a live node the committed
+      //audio already flows through, and per-layer volume (see changeVolume) is a live gain for the
+      //same reason — neither changes what should be committed, so neither resyncs.
+      resyncPlayback();
+    }
     updateSettings();
   }
 
@@ -414,12 +532,24 @@
     // setInstrument clones and REPLACES the array entry. That fresh identity is load-bearing:
     // InstrumentControls renders a keyed {#each} over the roster, so an in-place field edit would
     // leave the layer panel showing the old name/colour/visibility. Do not "optimise" it away.
+    //
+    // ADR-0007: it is also where the two NOTE rewrites live — an instrument swap (button-preserving
+    // through nominal correspondence) and a per-layer Basepoint override change (the interval). The
+    // snapshot goes in first so undo restores the notes and the roster together.
+    const previous = song.instruments[index];
+    if (previous && (previous.name !== instrument.name || previous.pitch !== instrument.pitch)) {
+      addToHistory();
+    }
     song.setInstrument(index, instrument);
-    //ADR-0006 resync-on-mutation: this is where mute and the per-layer pitch override land (the
-    //instrument popup's onChange funnels here), and both change what committed audio should
-    //contain, synchronously — playSound reads the roster entry just written. A NAME change
-    //resyncs a second time from syncInstruments, once the replacement instrument exists.
-    resyncPlayback();
+    //THE NOTE-EDIT FUNNEL, not a bare resync: everything the popup writes is part of the saved song
+    //(name, Basepoint override, volume, mute, alias, icon, visibility), and a swap or an override
+    //change rewrites the track's notes as well — none of which counted as a change before, so the
+    //save prompts and the menu's dirty dot never saw an edit made entirely from this panel.
+    //It carries the ADR-0006 resync with it: this is where mute and the per-layer pitch override
+    //land, and both change what committed audio should contain, synchronously — playSound reads the
+    //roster entry just written. A NAME change resyncs a second time from syncInstruments, once the
+    //replacement instrument exists.
+    handleAutoSave();
     syncInstruments(song);
   }
 
@@ -480,24 +610,31 @@
   /**
    * Sound one NOTE ID on a track: immediately when `at` is omitted (previews, live entry), or
    * committed at the ABSOLUTE AudioContext time `at` — the engine speaks audio-clock time end
-   * to end, never relative delays (ADR-0006). Every caller already holds an id — song
-   * notes store ids, and the keyboard hands back the note object — so nothing here resolves a
-   * Button any more (ADR-0005 §4: the engine's public API is id-keyed). An id the track's
-   * instrument doesn't offer is STRANDED there and stays silent, which is why the lookup below
-   * is still a guard.
+   * to end, never relative delays (ADR-0006). Every caller already holds a number — song
+   * notes store them, and the keyboard's note answers `numberAt(pitch)` — so nothing here
+   * resolves a Button any more (ADR-0005 §4 / ADR-0007: the engine's public API is
+   * number-keyed). A number the track's instrument cannot voice at its Basepoint is STRANDED
+   * there and stays silent, which is why the lookup below is still a guard.
    */
-  function playSound(layer: number, id: number, at?: number, durationMs?: number, skipMs?: number) {
+  function playSound(
+    layer: number,
+    number: number,
+    at?: number,
+    durationMs?: number,
+    skipMs?: number
+  ) {
     const instrument = layers[layer];
-    if (!instrument || instrument.getNoteById(id) === null) return;
+    if (!instrument) return;
     if (song.instruments[layer].muted) return;
-    const pitch = song.instruments[layer].pitch || settings.pitch.value;
+    const pitch = song.instruments[layer].pitch || song.pitch;
+    if (instrument.getNoteByNumber(number, pitch) === null) return;
     if (durationMs !== undefined && instrument.supportsSustain) {
       //spanned note on a sustaining instrument: hold for its musical length, then release
-      instrument.pressNote(id, pitch, { at, durationMs, skipMs });
+      instrument.pressNote(number, pitch, { at, durationMs, skipMs });
     } else {
       //on sustaining instruments play() IS the tap (minLength + release inside the
       //Instrument) — previews, span-1 columns and non-sustaining one-shots all land here
-      instrument.play(id, pitch, at);
+      instrument.play(number, pitch, at);
     }
   }
 
@@ -508,11 +645,13 @@
    * and a live press is a held voice sounding NOW, never committed into the future, so there is
    * no scheduled start for its release to race.
    */
-  function playHeldSound(layer: number, id: number) {
+  function playHeldSound(layer: number, number: number) {
     const instrument = layers[layer];
-    if (!instrument || instrument.getNoteById(id) === null) return;
+    if (!instrument) return;
     if (song.instruments[layer].muted) return;
-    instrument.pressNote(id, song.instruments[layer].pitch || settings.pitch.value);
+    const pitch = song.instruments[layer].pitch || song.pitch;
+    if (instrument.getNoteByNumber(number, pitch) === null) return;
+    instrument.pressNote(number, pitch);
   }
 
   /** Real length in ms of columns [from, to) at the current bpm, honoring each column's tempo changer (same math and rounding as the transport's grid — it sums exactly what this returns). */
@@ -625,11 +764,17 @@
   }
 
   function changePitch(value: Pitch) {
-    settings.pitch = { ...settings.pitch, value };
-    // MidiParser has its own pitch funnel rather than handleSettingChange. Retract the existing
-    // horizon here too, otherwise it keeps the old pitch until every committed event drains.
-    resyncPlayback();
-    updateSettings();
+    // MidiParser's own pitch funnel. It DELEGATES rather than repeating handleSettingChange's pitch
+    // branch: the two entry points have to leave the song in the same state, and the copy that used
+    // to live here had already drifted — it rewrote the notes and resynced but never counted the
+    // change, so a Basepoint moved from the MIDI panel was a transposition the save prompts never
+    // heard about.
+    //
+    // The guard is load-bearing rather than an optimisation: MidiParser calls this for the side
+    // effects alone (its <PitchSelect> re-emits the value it is showing), and the branch it feeds
+    // takes an undo snapshot and rewrites every note only when the Basepoint really moved.
+    if (value === song.pitch) return;
+    handleSettingChange({ key: 'pitch', data: { ...settings.pitch, value } });
   }
 
   // ── note press state machine (spec 2026-08-03 §2 "Composer duration UX") ─────────
@@ -641,7 +786,12 @@
     startColumn: number;
     trackIndex: number;
     id: number;
-    anchor: HTMLElement;
+    /**
+     * WHAT THE POPOVER IS POSITIONED AGAINST — the long-pressed keyboard BUTTON, or, since the Pro
+     * View's canvas can open the same popover, the screen RECT of the cell that was held (spec §7).
+     * See ComposerPopoverAnchor for why the two are different shapes rather than one nullable element.
+     */
+    anchor: ComposerPopoverAnchor;
     /** Span when the popover opened — the origin the still-held finger's drag is measured from. */
     spanAtOpen: number;
     /** Horizontal travel worth one column, frozen at open time (see handleNoteDrag). */
@@ -802,10 +952,24 @@
     return endAllSustainRecordings;
   });
 
+  /**
+   * The DISPLAYED track's effective Basepoint — the composer keyboard draws the selected
+   * layer's instrument, so this is the Basepoint every press on it enters at and every note's
+   * number is read at. Kept as one derived rather than re-spelled per handler: a keyboard
+   * resolving at one Basepoint while the canvas resolves at another is the whole class of bug
+   * ADR-0007 makes possible.
+   */
+  const layerPitch = $derived(song.instruments[layer]?.pitch || song.pitch);
+
+  /** What pressing this key STORES and SOUNDS at the current Basepoint (ADR-0007 §4). */
+  function numberOfNote(note: ObservableNote): number {
+    return note.numberAt(layerPitch);
+  }
+
   function handleClick(note: ObservableNote, pointerId: number) {
-    //the clicked button's Note Id on the current layer's instrument - the one currency the
-    //song edits below and the audio engine both speak (ADR-0005)
-    const id = note.id;
+    //the clicked button's Note Number on the current layer's instrument - the one currency the
+    //song edits below and the audio engine both speak (ADR-0005/ADR-0007)
+    const id = numberOfNote(note);
     //while playing on a sustaining track the press is a PERFORMANCE, not an edit: it sounds
     //its own held attack, records its duration, and never deletes on release
     if (startSustainRecording(holderToken('pointer', pointerId), id)) return;
@@ -833,30 +997,114 @@
 
   /** Physical-keyboard / MIDI note entry: no pointer gesture exists there, so toggling stays immediate (the pre-popover behavior), occupancy rule included. */
   function toggleNoteImmediate(note: ObservableNote) {
-    const id = note.id;
+    toggleNoteInColumn(song.selected, numberOfNote(note));
+  }
+
+  /**
+   * THE NOTE TOGGLE ITSELF, in ONE column of the current layer — the path every immediate entry
+   * takes, whichever surface asked for it (spec §7): the physical keyboard and MIDI through
+   * `toggleNoteImmediate` above, and a Pro View canvas tap through `handleProCellTap` below.
+   *
+   * ONE FUNCTION AND NOT TWO, because everything about it has to be the same for both: the preview
+   * sound (played BEFORE the occupancy test, so a press on a covered button is still heard, and on
+   * REMOVAL too — the keyboard has always previewed the note it is deleting), the occupancy rule, the
+   * autosave funnel with its ADR-0006 resync and its `changes` count, and the fact that nothing here
+   * touches `song.selected`. A canvas tap edits the column it landed on and moves the cursor nowhere;
+   * the keyboard edits the selected column because that is the column ITS caller passes.
+   *
+   * A NUMBER RATHER THAN A BUTTON, unlike the spec's sketch of it: the removal half must work for a
+   * Stranded Note, whose whole definition is that no button of this instrument voices it (CONTEXT.md:
+   * Stranded Note) — a Button-keyed signature could not name one to delete it. `numberOfNote` is
+   * where a pressed key becomes this number.
+   */
+  function toggleNoteInColumn(columnIndex: number, id: number) {
     playSound(layer, id);
-    if (song.getSpanCovering(song.selected, layer, id)) return;
-    const existing = song.selectedColumn.findNote(layer, id);
+    if (song.getSpanCovering(columnIndex, layer, id)) return;
+    const existing = song.columns[columnIndex]?.findNote(layer, id);
+    if (existing === undefined) return;
     if (existing === null) {
-      song.addNoteAt(song.selected, layer, id);
+      song.addNoteAt(columnIndex, layer, id);
     } else {
-      song.removeNoteAt(song.selected, layer, id);
+      song.removeNoteAt(columnIndex, layer, id);
     }
     handleAutoSave();
+  }
+
+  /**
+   * A SETTLED TAP ON A PRO VIEW CELL (spec §7): the whole of "tap = edit only, never selection".
+   *
+   * The renderer resolved WHERE (a column and a Note Number, the strip's band and every off-canvas
+   * miss already declined there); this looks the cell up against the current layer and lets
+   * `proCellAction` say what that means. Other layers' notes are not looked up at all — they never
+   * block an add and are never the thing removed.
+   *
+   * THE UNDO SNAPSHOT is taken here rather than inside the shared toggle above, and that is a
+   * deliberate asymmetry: `addToHistory` is the tools panel's compound entry (one clone, columns +
+   * Basepoint + roster) and the composer keyboard has never taken one for a plain note toggle. Moving
+   * it into the shared path would change what a keyboard press does; leaving the canvas without one
+   * would make the one gesture that edits a column you cannot see the one gesture you cannot undo. So
+   * the canvas takes one per editing gesture, and only when the gesture really edits — an inert tap
+   * pushes nothing.
+   */
+  function handleProCellTap(columnIndex: number, id: number) {
+    const instrument = song.instruments[layer];
+    const action = proCellAction({
+      hasOwnNote: song.columns[columnIndex]?.findNote(layer, id) != null,
+      covered: song.getSpanCovering(columnIndex, layer, id) !== null,
+      button: numberToButton(instrument?.name ?? '', layerPitch, id),
+    });
+    if (action === 'inert') return;
+    addToHistory();
+    toggleNoteInColumn(columnIndex, id);
+  }
+
+  /**
+   * A PRO VIEW CELL HELD (spec §7): the composer keyboard's own long press, arriving from the canvas
+   * instead of from a key.
+   *
+   * @returns whether the popover opened, which is what tells the renderer to swallow the release —
+   * the canvas' counterpart of ComposerNote's `longPressFired`.
+   *
+   * Every gate is `handleNoteLongPress`'s, restated in this surface's terms rather than reasoned
+   * about again: not while the song plays (holding MEANS recording a sustain then), only on
+   * instruments that can sustain, only over a note of YOUR layer — and a hold over a span's tail
+   * edits the note that owns the tail, which is the same occupancy rule the keyboard applies through
+   * `press.coveringStart`.
+   */
+  function handleProCellLongPress(columnIndex: number, id: number, rect: ScreenRect): boolean {
+    if (isPlaying) return false;
+    if (!layers[layer]?.supportsSustain) return false;
+    const startColumn = song.getSpanCovering(columnIndex, layer, id)?.startColumn ?? columnIndex;
+    const existing = song.columns[startColumn]?.findNote(layer, id);
+    if (!existing) return false;
+    addToHistory();
+    durationPopover = {
+      startColumn,
+      trackIndex: layer,
+      id,
+      anchor: { rect },
+      spanAtOpen: existing.span,
+      //the cell's own width, the way the keyboard's step is the pressed key's — the canvas has no
+      //drag continuation of its own (the finger that opened the popover is over pixi, not over the
+      //button that would report its moves), so this only ever feeds handleNoteDrag's guard
+      dragStepPx: Math.max(20, rect.width / 2),
+    };
+    return true;
   }
 
   function handleNoteRelease(note: ObservableNote, pointerId: number) {
     //a recording press left no press record behind, so this is its only release path
     endSustainRecording(holderToken('pointer', pointerId));
-    const press = notePresses.get(note.id);
+    const id = numberOfNote(note);
+    const press = notePresses.get(id);
     //fires twice per pointer (pointerup then pointerleave): the delete below consumes the
     //record, so the second call misses and does nothing
     if (!press) return;
-    notePresses.delete(note.id);
+    notePresses.delete(id);
     if (press.longPressFired) return;
     if (press.coveringStart !== null) return; //occupancy: covered buttons don't toggle
     if (press.existedAtPress) {
-      song.removeNoteAt(song.selected, layer, note.id);
+      song.removeNoteAt(song.selected, layer, id);
       handleAutoSave();
     }
   }
@@ -870,18 +1118,19 @@
     //durations are only authorable on instruments that can actually sustain — long-press
     //does nothing on the others (the press still completes as a normal tap)
     if (!layers[layer]?.supportsSustain) return;
-    const press = notePresses.get(note.id);
+    const id = numberOfNote(note);
+    const press = notePresses.get(id);
     if (!press) return;
     press.longPressFired = true;
     const startColumn = press.coveringStart ?? song.selected;
-    const existing = song.columns[startColumn]?.findNote(layer, note.id);
+    const existing = song.columns[startColumn]?.findNote(layer, id);
     if (!existing) return;
     addToHistory();
     durationPopover = {
       startColumn,
       trackIndex: layer,
-      id: note.id,
-      anchor,
+      id,
+      anchor: { element: anchor },
       spanAtOpen: existing.span,
       //one column per HALF A KEY of travel: derived from the button that was pressed, so the
       //gesture scales with the keyboard (whose size is viewport-relative) instead of carrying a
@@ -903,7 +1152,7 @@
    */
   function handleNoteDrag(note: ObservableNote, deltaX: number) {
     const popover = durationPopover;
-    if (!popover || popover.id !== note.id) return;
+    if (!popover || popover.id !== numberOfNote(note)) return;
     const span = clamp(
       popover.spanAtOpen + Math.round(deltaX / popover.dragStepPx),
       1,
@@ -953,18 +1202,21 @@
    * Buttons of the current layer's instrument occupied by a span in the selected column
    * (tails, plus span starts so a long note reads as long).
    *
-   * Deliberately BUTTONS, not Note Ids (ADR-0004/0005): the composer keyboard's rows really
-   * are the current instrument's Buttons, and its other per-button side table
+   * Deliberately BUTTONS, not Note Numbers (ADR-0004/0005/0007): the composer keyboard's rows
+   * really are the current instrument's Buttons, and its other per-button side table
    * (`computeButtonLayerStatuses`) keys by the SAME instrument's Buttons — every track's notes
-   * resolved against the keyboard on screen, dropping the ids it cannot play. One coordinate
-   * space for both side tables, addressed through the Button the Shape hands the snippet; the
-   * -1 drop keeps ids this instrument lacks out of it, here and there alike.
+   * resolved against the keyboard on screen at ITS Basepoint, dropping the numbers it cannot
+   * voice. One coordinate space for both side tables, addressed through the Button the Shape
+   * hands the snippet; the -1 drop keeps numbers this instrument lacks out of it, here and
+   * there alike.
    */
   const heldButtons = $derived.by(() => {
     // eslint-disable-next-line svelte/prefer-svelte-reactivity -- rebuilt wholesale by this derived, never mutated after return
     const held = new Set<number>();
     const keyboard = layers[layer];
     if (!keyboard) return held;
+    //the keyboard IS the selected layer's instrument, so its Basepoint is that track's
+    const pitch = song.instruments[layer]?.pitch || song.pitch;
     // eslint-disable-next-line svelte/prefer-svelte-reactivity -- transient local dedupe set
     const seen = new Set<number>();
     for (let start = song.selected - 1; start >= 0; start--) {
@@ -972,14 +1224,14 @@
         if (seen.has(spanNote.id)) continue;
         seen.add(spanNote.id);
         if (start + spanNote.span > song.selected) {
-          const button = keyboard.getButtonFromId(spanNote.id);
+          const button = keyboard.getButtonOfNumber(spanNote.id, pitch);
           if (button !== -1) held.add(button);
         }
       }
     }
     for (const spanNote of song.selectedColumn?.notesOfTrack(layer) ?? []) {
       if (spanNote.span > 1) {
-        const button = keyboard.getButtonFromId(spanNote.id);
+        const button = keyboard.getButtonOfNumber(spanNote.id, pitch);
         if (button !== -1) held.add(button);
       }
     }
@@ -1055,6 +1307,12 @@
       game.instruments.list[0],
       game.instruments.list[0],
     ]);
+    //a fresh song starts at the Basepoint (and tempo) the composer is set to, not at the
+    //constructor's defaults: the settings panel is still showing those values, and since
+    //ADR-0007 a song whose Basepoint disagreed with the panel would draw its notes on
+    //different rows from the ones the keyboard entered them at
+    newSong.bpm = settings.bpm.value;
+    newSong.pitch = settings.pitch.value;
     changes = 0;
     if (!mounted) return;
     const added = (await addSong(newSong)) as ComposedSong;
@@ -1068,8 +1326,8 @@
     // newly-created song displays its three default instruments while still playing the previous
     // song's layer instruments until another roster action happens to synchronize them.
     syncInstruments(added);
-    // Selection and undo entries address the replaced song, while copiedColumns is an
-    // editor-level clipboard: preserving it is what allows copy -> new song -> paste.
+    // Selection and undo entries address the replaced song, while the clipboard is an
+    // editor-level one: preserving it is what allows copy -> new song -> paste.
     selectedColumns = [];
     undoHistory = [];
     Analytics.songEvent({ type: 'create' });
@@ -1134,8 +1392,10 @@
       // clone, undoing after a load installs the old song's columns into the new one - and then
       // autosaves the result.
       undoHistory = [];
-      // copiedColumns is deliberately NOT reset: its NoteColumns were cloned by copyColumns(),
-      // so they are safe to carry across songs and serve as the tools panel's clipboard.
+      // the clipboard is deliberately NOT reset: its NoteColumns were cloned by copyColumns(), so
+      // they are safe to carry across songs and serve as the tools panel's clipboard — and it
+      // carries the Basepoints they were copied at, which is what lets the incoming song restate
+      // them rather than paste another song's numbers verbatim (see its declaration).
       syncInstruments();
     } catch (e) {
       console.error(e);
@@ -1330,7 +1590,7 @@
       abandonNotePresses();
     }
     song.selected = index;
-    if (isToolsVisible && copiedColumns.length === 0) {
+    if (isToolsVisible && clipboard.columns.length === 0) {
       // the clicked column only ever feeds the min/max below, which then replace the array
       // wholesale - so extend the RANGE rather than pushing into the array (see its declaration)
       const min = Math.min(index, ...selectedColumns);
@@ -1388,19 +1648,33 @@
   }
 
   function resetSelection() {
-    copiedColumns = [];
+    clipboard = { columns: [], pitches: [] };
     selectedColumns = [song.selected];
   }
 
   function addToHistory() {
     if (!isToolsVisible) return;
-    undoHistory = [...undoHistory, song.clone().columns];
+    //ONE clone for all three members, so they cannot come from two different moments
+    const snapshot = song.clone();
+    undoHistory = [
+      ...undoHistory,
+      { columns: snapshot.columns, pitch: snapshot.pitch, instruments: snapshot.instruments },
+    ];
   }
 
   function undo() {
     const history = undoHistory.pop();
     if (!history) return;
-    song.restoreColumns(history);
+    song.restoreColumns(history.columns);
+    //restored TOGETHER with the columns (see ComposerHistoryEntry): the notes only mean what the
+    //Basepoint and the roster they were written against say they mean
+    song.pitch = history.pitch;
+    song.instruments = history.instruments.map((instrument) => instrument.clone());
+    //...and the settings panel is a second copy of the song's Basepoint, so it follows or the two
+    //disagree until the next edit
+    settings.pitch = { ...settings.pitch, value: history.pitch };
+    updateSettings();
+    syncInstruments();
     //undo is the one mutation path with NO changes++ (it restores toward the saved state), so
     //it cannot ride the funnel's resync in handleAutoSave — resync explicitly (ADR-0006)
     resyncPlayback(true);
@@ -1411,7 +1685,12 @@
   // mutation. (copyColumns mutates nothing that sounds; its resync is the uniform rule
   // recommitting an unchanged window, and keeping the sites identical beats special-casing one.)
   function copyColumns(targetLayer: number | 'all') {
-    copiedColumns = song.copyColumns(selectedColumns, targetLayer);
+    // the Basepoints go in the same assignment as the columns, and they are the SOURCE song's:
+    // read them now, because by paste time this component may be showing another song entirely
+    clipboard = {
+      columns: song.copyColumns(selectedColumns, targetLayer),
+      pitches: song.trackPitches(),
+    };
     changes++;
     resyncPlayback();
     selectedColumns = [];
@@ -1419,8 +1698,9 @@
 
   function pasteColumns(insert: boolean, targetLayer: number | 'all') {
     addToHistory();
-    if (targetLayer === 'all') song.pasteColumns(copiedColumns, insert);
-    else if (Number.isFinite(targetLayer)) song.pasteLayer(copiedColumns, insert, targetLayer);
+    if (targetLayer === 'all') song.pasteColumns(clipboard.columns, insert, clipboard.pitches);
+    else if (Number.isFinite(targetLayer))
+      song.pasteLayer(clipboard.columns, insert, targetLayer, clipboard.pitches);
     syncInstruments();
     changes++;
     resyncPlayback();
@@ -1491,9 +1771,9 @@
         const parsed = songService.parseSong(songToDownload);
         songToDownload.data.appName = APP_NAME;
         const songName = songToDownload.name;
-        // Legacy Sky export is intentionally disabled. To restore it, use
-        // `parsed.toOldFormat()` for composed/recorded songs here.
-        // const converted = [parsed.toOldFormat()];
+        // Downloads write the current format. The legacy old-format export was retired at
+        // ADR-0007 (it cannot state an absolute Note Number) and its producer is kept,
+        // commented, in ComposedSong/RecordedSong — old-format files still IMPORT fine.
         const converted = [parsed.serialize()];
         fileService.downloadSong(converted, `${songName}.${APP_NAME.toLowerCase()}sheet`);
         logger.success(t('logs:song_downloaded'));
@@ -1610,6 +1890,39 @@
   >
 {/snippet}
 
+<!-- THE VIEW LOCK'S TWO STATES (Pro View only), a closed padlock while the frame is pinned to the
+     current layer's Editable Zone and an open one while it can be panned. Same 448x512 Font Awesome
+     viewBox and the same 16px box as the four tools above it, so the column stays one column. -->
+{#snippet lockedViewIcon()}
+  <svg
+    stroke="currentColor"
+    fill="currentColor"
+    stroke-width="0"
+    viewBox="0 0 448 512"
+    height="16"
+    width="16"
+    xmlns="http://www.w3.org/2000/svg"
+    ><path
+      d="M400 224h-24v-72C376 68.2 307.8 0 224 0S72 68.2 72 152v72H48c-26.5 0-48 21.5-48 48v192c0 26.5 21.5 48 48 48h352c26.5 0 48-21.5 48-48V272c0-26.5-21.5-48-48-48zm-104 0H152v-72c0-39.7 32.3-72 72-72s72 32.3 72 72v72z"
+    /></svg
+  >
+{/snippet}
+
+{#snippet unlockedViewIcon()}
+  <svg
+    stroke="currentColor"
+    fill="currentColor"
+    stroke-width="0"
+    viewBox="0 0 448 512"
+    height="16"
+    width="16"
+    xmlns="http://www.w3.org/2000/svg"
+    ><path
+      d="M400 256H152V152c0-39.7 32.3-72 72-72s72 32.3 72 72v8c0 13.3 10.7 24 24 24h32c13.3 0 24-10.7 24-24v-8C376 68.2 307.8 0 224 0S72 68.2 72 152v104H48c-26.5 0-48 21.5-48 48v160c0 26.5 21.5 48 48 48h352c26.5 0 48-21.5 48-48V304c0-26.5-21.5-48-48-48z"
+    /></svg
+  >
+{/snippet}
+
 {#snippet toolsIcon()}
   <svg
     stroke="currentColor"
@@ -1642,7 +1955,22 @@
     }}
   />
 {/if}
-<div class="composer-grid appear-on-mount">
+<!-- `composer-grid-in-preview` keeps /theme's composer preview on the pre-existing centred layout:
+     App.css's desktop block gives the real page a permanent sidebar column and a canvas that fills
+     the window, neither of which fits a small box inside a scrolling page (same exclusion as
+     `.canvas-wrapper-in-preview` and ComposerMenu's `composer-menu-sidebar`). -->
+<!-- `composer-grid-pro` is the Pro View's whole DOM difference (CONTEXT.md; App.css's own PRO VIEW
+     block): the canvas' row takes the window, the keyboard becomes a bottom sheet over it and the
+     tempo changers get their own slot. `proView` already excludes the preview - see its declaration. -->
+<div
+  class={[
+    'composer-grid',
+    'appear-on-mount',
+    inPreview && 'composer-grid-in-preview',
+    proView && 'composer-grid-pro',
+    proView && keyboardSheetRaised && 'composer-grid-pro-raised',
+  ]}
+>
   <div class="column composer-left-control">
     <AppButton
       class="flex-centered"
@@ -1675,8 +2003,24 @@
     />
   </div>
   <div class="top-panel-composer" style="grid-area:b">
-    <div class="row" style="height:fit-content;width:100%">
-      {#key settings.columnsPerCanvas.value}
+    <!-- THE CANVAS AND THE TOOL COLUMN'S ROW. `fit-content` is as tall as the CANVAS, which is what
+         the Compressed View wants (the keyboard follows underneath) and what held the Pro View's
+         tool column - and with it the tempo changers at its foot - to the canvas' bottom edge,
+         above the sliver and the song-info row with a band of nothing under them. In the Pro View
+         it takes the whole grid row instead, so the column runs to the window's own bottom; the
+         canvas keeps its own height either way (App.css gives `.canvas-wrapper` `align-self:
+         flex-start` there). Inline rather than in App.css because an inline `height` is exactly
+         what a stylesheet rule cannot override. -->
+    <div class="row" style="height:{proView ? '100%' : 'fit-content'};width:100%">
+      <!--
+        BOTH KEYS, AS ONE STRING. A flip of either one changes the canvas' size, every column
+        texture in the ComposerCache and (for `proView`) which end of the canvas the mini-timeline
+        is drawn at, none of which ComposerRenderer re-derives after construction - so it is
+        remounted instead, exactly as `columnsPerCanvas` has always been. A template literal and not
+        an array: an array literal is a fresh identity every time it is evaluated, which is not what
+        `{#key}` compares.
+      -->
+      {#key `${settings.columnsPerCanvas.value}|${proView}`}
         <ComposerCanvas
           columns={song.columns}
           structureVersion={song.structureVersion}
@@ -1685,14 +2029,21 @@
           {playbackAnchorGeneration}
           {isRecordingAudio}
           instruments={song.instruments}
+          songPitch={song.pitch}
           selected={song.selected}
           currentLayer={layer}
           {inPreview}
           {settings}
           breakpoints={song.breakpoints}
           {selectedColumns}
+          {viewLocked}
+          keyboardRaised={keyboardSheetRaised}
           {selectColumn}
           {toggleBreakpoint}
+          onProCellTap={handleProCellTap}
+          onProCellLongPress={handleProCellLongPress}
+          onKeyboardDismiss={() => (keyboardRaised = false)}
+          onViewUnlock={() => (viewLocked = false)}
         />
       {/key}
       <div class="buttons-composer-wrapper-right">
@@ -1724,9 +2075,57 @@
         >
           {@render toolsIcon()}
         </CanvasTool>
+        <!-- THE VIEW LOCK, a fifth tool in this same column and only in the Pro View - there is no
+             frame to lock in the Compressed View, whose canvas shows every row of every column at
+             once. Locked (the default), the canvas stays framed on the current layer's Editable Zone
+             and a drag scrolls horizontally as it always has; unlocked, that drag pans vertically as
+             well and the frame stays where the hand left it, until this button eases it back
+             (CONTEXT.md: View Lock). App.css's `.composer-grid-pro` variant of this column is what
+             keeps five buttons the size four were. -->
+        {#if proView}
+          <CanvasTool
+            onclick={() => (viewLocked = !viewLocked)}
+            tooltip={viewLocked
+              ? t('composer:unlock_view_description')
+              : t('composer:lock_view_description')}
+            ariaLabel={viewLocked ? t('composer:unlock_view') : t('composer:lock_view')}
+          >
+            {@render (viewLocked ? lockedViewIcon : unlockedViewIcon)()}
+          </CanvasTool>
+          <!-- THE TEMPO CHANGERS' PRO SLOT. The same component the keyboard renders in the
+               Compressed View (ComposerTempoChangers), rendered HERE instead: in the Pro View the
+               keyboard is a bottom SHEET that spends most of its life translated off-screen, and
+               these must stay reachable while it is down (spec §8).
+
+               INSIDE THIS COLUMN, as its last row, rather than floated into the corner underneath
+               it. "Aligned under the right CanvasTool column" was a coordinate before the phase E
+               mobile pass and is a grid row now, because a floated slot only LOOKS aligned while
+               the window is tall: the tools pack from the top and the slot is pinned to the
+               bottom, so on a landscape phone (850x420) the two met and the tempo buttons covered
+               the View Lock. As a row of the same grid they cannot overlap at any height - the
+               tools shrink toward it instead (App.css's `repeat(5, ...) 1fr`). -->
+          <ComposerTempoChangers
+            {isPlaying}
+            currentColumn={song.selectedColumn}
+            {handleTempoChanger}
+          />
+        {/if}
       </div>
     </div>
   </div>
+  <!-- THE PRO VIEW'S KEYBOARD OVERLAY, in two pieces:
+
+       1. the KEYBOARD itself, unchanged - the same component, the same props, still mounted while
+          it is down so its active-note flashes keep running. It paints its own SCRIM (App.css's
+          `.composer-keyboard-wrapper::before`), which is why there is no backdrop element here any
+          more: the scrim is the sheet's own band plus a fading head, so the canvas above it stays
+          bright, live and scrollable, and a settled tap on it is what dismisses the sheet (spec §7,
+          composerInput.stageReleaseIntent) - the swallow is that rule rather than an element the
+          press cannot get past.
+       2. the SLIVER's tap target, in front of the lowered sheet so raising it cannot also press a
+          key. It is gone once the sheet is up, where the canvas is what a tap outside means.
+
+       The Compressed View renders neither and the keyboard is simply the bottom of the page. -->
   <ComposerKeyboard
     functions={{
       handleClick,
@@ -1746,10 +2145,20 @@
       keyboard: layers[layer],
       currentColumn: song.selectedColumn,
       heldButtons,
-      pitch: song.instruments[layer]?.pitch || settings.pitch.value,
+      pitch: song.instruments[layer]?.pitch || song.pitch,
       noteNameType: settings.noteNameType.value,
+      proView,
     }}
   />
+  {#if proView}
+    {#if !keyboardSheetRaised}
+      <button
+        class="composer-keyboard-sliver"
+        aria-label={t('composer:show_keyboard')}
+        onclick={() => (keyboardRaised = true)}
+      ></button>
+    {/if}
+  {/if}
   {#if durationPopover && popoverSpan !== null}
     <ComposerDurationPopover
       span={popoverSpan}
@@ -1785,7 +2194,7 @@
   data={{
     isToolsVisible,
     layer,
-    hasCopiedColumns: copiedColumns.length > 0,
+    hasCopiedColumns: clipboard.columns.length > 0,
     selectedColumns,
     undoHistory,
   }}
@@ -1800,7 +2209,12 @@
     undo,
   }}
 />
-<div class="song-info">
+<!-- `song-info-pro` and not a descendant selector: this overlay is a SIBLING of `.composer-grid`, so
+     `.composer-grid-pro .song-info` would never match it. All it changes is the SHAPE - the name and
+     the time side by side across the window's bottom rather than stacked in its corner, so the line
+     it floats over the canvas is one row of the axis instead of two. It reserves nothing and is
+     under the keyboard sheet, which may cover it (App.css, user revision 2026-08-22). -->
+<div class={['song-info', proView && 'song-info-pro']}>
   <div class="text-ellipsis">
     {song.name}
   </div>

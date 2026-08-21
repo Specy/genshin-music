@@ -4,7 +4,8 @@
   import { goto } from '$app/navigation';
   import { resolve } from '$app/paths';
   import { ClickType, clamp, isFocusable } from '$core/utils/Utilities';
-  import { buttonToNoteId } from '$core/Songs/noteIds';
+  import { buttonToNumber, effectiveTrackPitch } from '$core/Songs/noteIds';
+  import type { Pitch } from '$core/legacyConfig';
   import { DEFAULT_VSRG_KEYS_MAP } from '$core/legacyConfig';
   import { t } from '$i18n/binding.svelte';
   import PageMetadata from '$cmp/shell/PageMetadata.svelte';
@@ -18,6 +19,7 @@
     VsrgSong,
     type VsrgHitObject,
     type VsrgTrack,
+    type VsrgTrackInstrumentIdentity,
     type VsrgTrackModifierPatch,
     type VsrgSongKeys,
   } from '$core/Songs/VsrgSong.svelte';
@@ -82,6 +84,9 @@
   let vsrg: VsrgSong = $state(new VsrgSong('Untitled'));
   // svelte-ignore state_referenced_locally
   vsrg.addTrack('DunDun');
+  // One-time seed from the DEFAULT settings - the persisted ones are not readable yet, so onMount
+  // re-seeds the same fields (pitch included, which this placeholder would otherwise keep at the
+  // constructor's 'C'). Later edits flow through handleSettingChange instead.
   // svelte-ignore state_referenced_locally
   vsrg.set({
     bpm: settings.bpm.value,
@@ -182,6 +187,17 @@
     const id = 'vsrg-composer';
     const loadedSettings = settingsService.getVsrgComposerSettings();
     settings = loadedSettings;
+    //the persisted settings arrive AFTER the defaults the placeholder song above was seeded
+    //from, so re-seed every song-level value it carries (Composer.svelte does the same for its
+    //own fresh song). The Basepoint is the one that bites: the audio players adopt the persisted
+    //pitch on the next two lines, so a placeholder left at the constructor's 'C' would store
+    //every note entered in it at C and resolve it at the settings' Basepoint. Nothing is loaded
+    //yet, so there are no hit objects for any of these to move.
+    vsrg.set({
+      bpm: loadedSettings.bpm.value,
+      keys: loadedSettings.keys.value,
+      pitch: loadedSettings.pitch.value,
+    });
     audioPlayer.setBasePitch(loadedSettings.pitch.value);
     audioPlaybackPlayer.setBasePitch(loadedSettings.pitch.value);
     mounted = true;
@@ -334,10 +350,11 @@
   function handleSettingChange({ key, data }: SettingUpdate) {
     // @ts-expect-error SettingUpdateKey spans all 4 settings families; narrower here by design
     settings[key] = { ...settings[key], value: data.value };
-    // QUIRK: only keys/bpm/difficulty are special-cased here - pitch is ALSO marked
-    // songSetting: true in VsrgComposerSettings.data, but changing it never propagates into
-    // vsrg.pitch for an already-open song (only createNewSong seeds vsrg.pitch). Preserved,
-    // not generalized to cover pitch too.
+    // The pitch branch below is NEW with ADR-0007, and it replaces a documented quirk: `pitch` was
+    // already marked songSetting: true, but changing it never reached `vsrg.pitch` for an
+    // already-open song (only createNewSong seeded it), so the setting silently did nothing.
+    // A Basepoint is now part of what every stored Note Number means, so "did nothing" is no
+    // longer an available behaviour: the setting either moves the song or must not exist.
     // All three branches below are now a bare write to a `$state` scalar, which is the whole
     // update: the canvas's $effect reads vsrg.keys and vsrg.bpm itself, and
     // VsrgComposerRenderer.needsSizes() diffs those captured VALUES, so both recalculate. Each of
@@ -365,6 +382,19 @@
     }
     if (key === 'difficulty') {
       vsrg.set({ difficulty: data.value as number });
+    }
+    if (key === 'pitch') {
+      const previousPitch = vsrg.pitch;
+      const next = data.value as Pitch;
+      if (next !== previousPitch) {
+        vsrg.set({ pitch: next });
+        //every track that follows the song moves by the interval; a track with its own override
+        //keeps its effective Basepoint and must not move (ADR-0007)
+        vsrg.applyBasepointChange('song', previousPitch, next);
+        //the audio player resolves stored numbers against this Basepoint, so it follows too
+        audioPlayer.setBasePitch(next);
+        changes++;
+      }
     }
     updateSettings();
   }
@@ -599,19 +629,35 @@
     forgetRemovedHitObjects();
   }
 
-  function onTrackChange(track: VsrgTrack, index: number) {
+  function onTrackChange(
+    track: VsrgTrack,
+    index: number,
+    previousInstrument?: VsrgTrackInstrumentIdentity
+  ) {
     //setTrack, not `vsrg.tracks[index] = track`: the track array is private behind a getter that
     //reads the structure signal, and an element write would publish nothing. VsrgTrackSettings
     //has already mutated this exact object in place, so `track` is usually the object already at
     //`index` - setTrack bumps regardless, which is what rebuilds the canvas's per-colour textures.
-    vsrg.setTrack(index, track);
+    //
+    //`previousInstrument` is present only when the panel changed the instrument's NAME or its
+    //Basepoint override, which since ADR-0007 rewrites the track's Note Numbers - the panel is the
+    //last place the old values still exist, so it hands them down rather than anything here
+    //trying to recover them (see setTrack).
+    vsrg.setTrack(index, track, previousInstrument);
+    if (previousInstrument) changes++;
     syncInstruments();
   }
 
   function onNoteSelect(button: number) {
-    //the picker passes button positions; hit objects store Note Ids of the track's instrument.
-    //Buttons past a short instrument's range were silent pseudo-notes pre-v2 — no id, not stored.
-    const id = buttonToNoteId(vsrg.tracks[selectedTrack]?.instrument.name ?? '', button);
+    //the picker passes button positions; hit objects store the Note NUMBER that button enters at
+    //the track's effective Basepoint (ADR-0007). Buttons past a short instrument's range were
+    //silent pseudo-notes pre-v2 — no number, not stored.
+    const track = vsrg.tracks[selectedTrack];
+    const id = buttonToNumber(
+      track?.instrument.name ?? '',
+      effectiveTrackPitch(track?.instrument, vsrg.pitch),
+      button
+    );
     if (id === null) return;
     //through the song: hitObject.toggleNote() alone rewrites a plain array on a plain object, so
     //neither the canvas nor the mini keyboard's own highlight would see it. This used to reassign
@@ -713,6 +759,11 @@
     settings.bpm = { ...settings.bpm, value: song.bpm };
     settings.keys = { ...settings.keys, value: song.keys };
     settings.pitch = { ...settings.pitch, value: song.pitch };
+    //the loaded song's Basepoint is what its stored Note Numbers were entered at, so the audio
+    //player has to adopt it or every one of them resolves against the wrong keys (ADR-0007). It
+    //used to be seeded from the SETTINGS at mount and never updated, which under the old
+    //play-time-rate meaning was merely the wrong playback speed.
+    audioPlayer.setBasePitch(song.pitch);
     updateSettings();
     changes++;
     vsrg = song;

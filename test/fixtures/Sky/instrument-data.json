@@ -32,7 +32,7 @@
   "fromEmpty": {
     "name": "Piano",
     "volume": 100,
-    "pitch": "C",
+    "pitch": "",
     "visible": true,
     "icon": "circle",
     "alias": "",

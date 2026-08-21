@@ -22,10 +22,16 @@
   let settings: ZenKeyboardSettingsDataType = $state(ZenKeyboardSettings.data);
   let instrument: Instrument = $state(new Instrument());
   let isMetronomePlaying = $state(false);
-  // Note Ids physically held right now (pointer or bound key) — rendered pressed-down.
-  // Keyed by Note Id, the same key the engine's own held-voice registry uses (ADR-0005 §4),
-  // so what looks held and what is still sounding can never disagree.
+  // Nominal Ids physically held right now (pointer or bound key) — rendered pressed-down.
+  // ONE keyboard, ONE coordinate space: this set indexes the keys of the instrument on
+  // screen, so it stays on the nominal axis that ZenKeypad's `note.id` speaks.
   const heldNotes = new SvelteSet<number>();
+  // ...while the ENGINE is keyed by Note Number (ADR-0007), which depends on the Basepoint.
+  // The number pressed is remembered per held key rather than re-derived on release: a
+  // Basepoint change under a held key would otherwise compute a number no voice is held on
+  // and leave that voice sounding forever.
+  // eslint-disable-next-line svelte/prefer-svelte-reactivity -- engine bookkeeping, never rendered
+  const heldNumbers = new Map<number, number>();
 
   onMount(() => {
     setPageVisited('zenKeyboard');
@@ -85,6 +91,7 @@
       //hard-release held voices before the node is disconnected (instrument swap mid-hold)
       currentInstrument.releaseAllNotes(true);
       heldNotes.clear();
+      heldNumbers.clear();
       AudioProvider.disconnect(currentInstrument.endNode);
     };
   });
@@ -96,6 +103,7 @@
     const releaseOnLeave = () => {
       currentInstrument.releaseHeldNotes();
       heldNotes.clear();
+      heldNumbers.clear();
     };
     window.addEventListener('blur', releaseOnLeave);
     document.addEventListener('visibilitychange', releaseOnLeave);
@@ -134,21 +142,29 @@
   }
 
   // Both handlers receive the note itself — from ZenNote's pointer events or from the
-  // keybind listener's getNoteFromCode — and speak Note Ids to the engine and to the
-  // held-set (ADR-0005 §4). Nothing here derives a Button; where the note is drawn is the
-  // Shape's business, and the animation goes straight to the note object.
+  // keybind listener's getNoteFromCode — and ask IT for the Note Number it enters at the
+  // current Basepoint (ADR-0007 §4). Nothing here derives a Button; where the note is drawn
+  // is the Shape's business, and the animation goes straight to the note object.
   function onNoteClick(note: ObservableNote) {
+    const number = note.numberAt(settings.pitch.value);
     //one-shot on non-sustaining instruments (exact old path), held Voice on sustaining ones
-    instrument.pressNote(note.id, settings.pitch.value);
+    instrument.pressNote(number, settings.pitch.value);
     //the pressed-down visual only applies where holding means something
-    if (instrument.supportsSustain) heldNotes.add(note.id);
+    if (instrument.supportsSustain) {
+      heldNotes.add(note.id);
+      heldNumbers.set(note.id, number);
+    }
     zenKeyboardStore.animateNote(note);
+    //deliberately the NOMINAL: this broadcasts to a connected MIDI device the key that was
+    //pressed, which is what it has always sent and what the receiving device is mapped to
     MIDIProvider.broadcastNoteClick(note.id);
   }
 
   function onNoteRelease(note: ObservableNote) {
     heldNotes.delete(note.id);
-    instrument.releaseNote(note.id);
+    const number = heldNumbers.get(note.id);
+    heldNumbers.delete(note.id);
+    instrument.releaseNote(number ?? note.numberAt(settings.pitch.value));
   }
 
   function onVolumeChange(data: SettingVolumeUpdate) {

@@ -45,10 +45,10 @@ recordings that analysis can actually work with.
 ## From recordings to an instrument
 
 1. Prep each note with a small one-off script (see
-   `sky/instruments/sustained_recorder/README.md` for a worked set of
+   `sky/instruments/Cello/README.md` for a worked set of
    parameters): parse WAV → downmix mono → trim leading/trailing silence →
    repitch ±1 semitone for missing scale notes (Catmull-Rom resample) → peak
-   normalize (match existing instruments; `sustained_recorder` sits at
+   normalize (match existing instruments; the house target is
    ~−3.5 dBFS). Keep the full hold — do NOT shorten before analysis.
 2. Find loop regions on the processed PCM:
    `node docs/skills/audio-loop-analysis/scripts/analyze-wav-loops.mjs <dir> <count> <midiCsv>`

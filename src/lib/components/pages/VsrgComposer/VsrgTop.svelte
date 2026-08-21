@@ -2,8 +2,13 @@
   import type { Snippet } from 'svelte';
   import Color from 'color';
   import { game } from '$game';
-  import type { VsrgHitObject, VsrgSong, VsrgTrack } from '$core/Songs/VsrgSong.svelte';
-  import { noteIdToButton } from '$core/Songs/noteIds';
+  import type {
+    VsrgHitObject,
+    VsrgSong,
+    VsrgTrack,
+    VsrgTrackInstrumentIdentity,
+  } from '$core/Songs/VsrgSong.svelte';
+  import { effectiveTrackPitch, numberToButton } from '$core/Songs/noteIds';
   import { ThemeProvider } from '$core/theme/ThemeProvider.svelte';
   import { t, tInstrument } from '$i18n/binding.svelte';
   import Row from '$cmp/layout/Row.svelte';
@@ -36,7 +41,11 @@
     onTrackAdd: () => void;
     onTrackDelete: (index: number) => void;
     onTrackSelect: (index: number) => void;
-    onTrackChange: (track: VsrgTrack, index: number) => void;
+    onTrackChange: (
+      track: VsrgTrack,
+      index: number,
+      previousInstrument?: VsrgTrackInstrumentIdentity
+    ) => void;
     onNoteSelect: (note: number) => void;
     onBreakpointChange: (remove: boolean) => void;
     onBreakpointSelect: (index: -1 | 1) => void;
@@ -86,10 +95,13 @@
    * and an empty array is truthy.
    */
   const selectedNoteButtons = $derived.by(() => {
-    const instrumentName = vsrg.tracks[selectedTrack]?.instrument.name ?? '';
+    const track = vsrg.tracks[selectedTrack];
     if (selectedHitObject === null) return undefined;
+    //the mini keyboard IS this track's instrument, so its keys are resolved at this track's own
+    //effective Basepoint — the same question onNoteSelect answers in the other direction
+    const pitch = effectiveTrackPitch(track?.instrument, vsrg.pitch);
     return selectedHitObject.notes
-      .map((id) => noteIdToButton(instrumentName, id))
+      .map((number) => numberToButton(track?.instrument.name ?? '', pitch, number))
       .filter((button) => button !== -1);
   });
 </script>
@@ -223,7 +235,8 @@
       track={vsrg.tracks[selectedTrack]}
       onSave={() => (isTrackSettingsOpen = false)}
       onDelete={() => onTrackDelete(selectedTrack)}
-      onChange={(track) => onTrackChange(track, selectedTrack)}
+      onChange={(track, previousInstrument) =>
+        onTrackChange(track, selectedTrack, previousInstrument)}
     />
   {/if}
   <Row align="center" class="vsrg-breakpoints-buttons" style="margin-bottom:0.4rem">

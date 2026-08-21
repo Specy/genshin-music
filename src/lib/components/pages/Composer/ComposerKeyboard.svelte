@@ -1,6 +1,5 @@
 <script lang="ts">
   import { game } from '$game';
-  import { ThemeProvider } from '$core/theme/ThemeProvider.svelte';
   import type { NoteNameType, Pitch } from '$lib/games/types';
   import { computeButtonLayerStatuses } from '$core/Songs/noteIds';
   import type { InstrumentData, NoteColumn } from '$core/Songs/SongClasses';
@@ -11,6 +10,7 @@
   import Header from '$cmp/header/Header.svelte';
   import ShapeKeyboard from '$lib/games/shapes/ShapeKeyboard.svelte';
   import ComposerNote from './ComposerNote.svelte';
+  import ComposerTempoChangers from './ComposerTempoChangers.svelte';
 
   let {
     data,
@@ -27,6 +27,13 @@
       isPlaying: boolean;
       noteNameType: NoteNameType;
       heldButtons: Set<number>;
+      /**
+       * CONTEXT.md: Pro View. The keyboard's own markup does not change with it - it is the same
+       * surface, flashing the same active notes, and it stays MOUNTED while lowered so it keeps
+       * doing so. What it decides here is only whether the tempo changers ride along: see the
+       * `{#if}` at the bottom of this file.
+       */
+      proView: boolean;
     };
     functions: {
       handleClick: (note: ObservableNote, pointerId: number) => void;
@@ -42,13 +49,18 @@
   // Keyed by the Buttons of the keyboard actually on screen (`data.keyboard`), which is the
   // number the `button` snippet below hands back — never the note's own track button, which
   // for a sub-grid instrument is a different coordinate space and lit the wrong key.
+  //
+  // `data.pitch` is the DISPLAYED track's effective Basepoint (Composer.svelte resolves the
+  // override there), which is the Basepoint every note's number has to be read at to answer
+  // "which of THIS keyboard's keys sounds it" (ADR-0007).
   const layerStatuses = $derived.by(() => {
     try {
       return computeButtonLayerStatuses(
         data.currentColumn.notes,
         data.currentLayer,
         data.instruments,
-        data.keyboard.name
+        data.keyboard.name,
+        data.pitch
       );
     } catch {
       return null;
@@ -161,22 +173,15 @@
       </button>
     {/if}
   </div>
-  <div class={['tempo-changers-wrapper', data.isPlaying && 'tempo-changers-wrapper-hidden']}>
-    <div class="bottom-right-text">
-      {t('composer:tempo')}
-    </div>
-    {#each game.composer.tempoChangers as tempoChanger (tempoChanger.id)}
-      <button
-        onclick={() => functions.handleTempoChanger(tempoChanger)}
-        style="{tempoChanger.changer === 1
-          ? `background-color:${ThemeProvider.get('primary').toString()};color:${ThemeProvider.getText('primary').toString()}`
-          : `background-color:#${tempoChanger.color.toString(16)}`};outline:{data.currentColumn
-          .tempoChanger === tempoChanger.id
-          ? `3px ${ThemeProvider.get('composer_accent').toString()} solid`
-          : 'unset'};outline-offset:-3px"
-      >
-        {tempoChanger.text}
-      </button>
-    {/each}
-  </div>
+  <!-- COMPRESSED VIEW ONLY, and the condition is where it is rendered FROM rather than a style:
+       in the Pro View this keyboard is a bottom sheet that spends most of its life translated
+       off-screen, so Composer.svelte renders the same component in its own always-visible slot
+       instead (spec §8). Both placements are ComposerTempoChangers - see that file. -->
+  {#if !data.proView}
+    <ComposerTempoChangers
+      isPlaying={data.isPlaying}
+      currentColumn={data.currentColumn}
+      handleTempoChanger={functions.handleTempoChanger}
+    />
+  {/if}
 {/if}

@@ -2,10 +2,11 @@ import { game } from '$game';
 import type { InstrumentData, NoteColumn } from '$core/Songs/SongClasses';
 import {
   computeGridRowLayerStatuses,
-  computeGridStrandedRows,
-  noteIdToButton,
-  songGridSlotForId,
+  computeGridStrandedMarks,
+  effectiveTrackPitch,
+  gridRowForNumberCached,
 } from '$core/Songs/noteIds';
+import type { Pitch } from '$core/legacyConfig';
 
 const NOTES_PER_COLUMN = game.notes.perColumn;
 const COMPOSER_NOTE_POSITIONS = game.notes.composerPositions;
@@ -40,6 +41,8 @@ export interface ComposerTimelineMinimapPalette {
 export interface ComposerTimelineMinimapInput {
   columns: readonly NoteColumn[];
   instruments: InstrumentData[];
+  /** The song's Basepoint — half of what decides a note's row since ADR-0007 (the track's own override is the other half). */
+  songPitch: Pitch;
   currentLayer: number;
   width: number;
   height: number;
@@ -142,14 +145,21 @@ export class ComposerTimelineMinimapBuilder {
       if (isCurrent !== currentLayerPass) continue;
       const instrument = this.input.instruments[note.trackIndex];
       if (!isCurrent && !instrument?.visible) continue;
-      const row = songGridSlotForId(note.id);
+      //one call for BOTH the row and the strandedness, like the canvas: two lookups could
+      //dim a different row from the one the tail is drawn on
+      const placement = gridRowForNumberCached(
+        instrument?.name ?? '',
+        effectiveTrackPitch(instrument, this.input.songPitch),
+        note.id
+      );
+      const row = placement.row;
       if (row === -1) continue;
 
       const start = columnIndex * this.columnWidth + this.columnWidth * 0.45;
       const end = Math.min(this.input.width, (columnIndex + note.span) * this.columnWidth);
       if (end <= start) continue;
       const y = this.noteY(row) + (this.rowHeight - tailHeight) / 2;
-      const stranded = noteIdToButton(instrument?.name ?? '', note.id) === -1;
+      const stranded = placement.stranded;
       this.sink.rect(start, y, end - start, tailHeight, {
         color: isCurrent ? this.input.palette.current : this.input.palette.visible,
         alpha:
@@ -164,9 +174,19 @@ export class ComposerTimelineMinimapBuilder {
     const statuses = computeGridRowLayerStatuses(
       notes,
       this.input.currentLayer,
-      this.input.instruments
+      this.input.instruments,
+      this.input.songPitch
     );
-    const strandedRows = computeGridStrandedRows(notes, this.input.instruments);
+    //ONE lane for every strand, off-scale ones included: the mark's accidental is deliberately
+    //ignored here. A minimap head is ~2px tall - there is no glyph to be read at that size, and a
+    //lane of its own would be a second row for a note the canvas draws on ITS nearest row, which
+    //is exactly the disagreement gridRowForNumber exists to prevent. Off-scale notes dim in the
+    //strip, like every other strand, and the canvas is where the ♯/♭ is legible.
+    const strandedRows = computeGridStrandedMarks(
+      notes,
+      this.input.instruments,
+      this.input.songPitch
+    );
     const width = Math.max(1, this.columnWidth * 0.78);
     const height = Math.max(1, this.rowHeight * 0.62);
     const x = columnIndex * this.columnWidth + (this.columnWidth - width) / 2;

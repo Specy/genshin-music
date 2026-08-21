@@ -1,0 +1,301 @@
+{
+  "serialized": {
+    "name": "Golden recorded",
+    "type": "recorded",
+    "folderId": null,
+    "version": 4,
+    "pitch": "D",
+    "bpm": 180,
+    "reverb": true,
+    "data": {
+      "isComposed": false,
+      "isComposedVersion": false,
+      "appName": "Sky"
+    },
+    "tracks": [
+      {
+        "instrument": {
+          "name": "Piano",
+          "volume": 100,
+          "pitch": "",
+          "visible": true,
+          "icon": "circle",
+          "alias": "",
+          "muted": false,
+          "reverbOverride": null
+        },
+        "notes": [
+          [
+            62,
+            100
+          ],
+          [
+            74,
+            350
+          ],
+          [
+            86,
+            900
+          ]
+        ]
+      },
+      {
+        "instrument": {
+          "name": "GrandPiano",
+          "volume": 100,
+          "pitch": "",
+          "visible": true,
+          "icon": "circle",
+          "alias": "",
+          "muted": false,
+          "reverbOverride": null
+        },
+        "notes": [
+          [
+            67,
+            350
+          ],
+          [
+            74,
+            350
+          ]
+        ]
+      }
+    ],
+    "id": null
+  },
+  "roundtrip": {
+    "name": "Golden recorded",
+    "type": "recorded",
+    "folderId": null,
+    "version": 4,
+    "pitch": "D",
+    "bpm": 180,
+    "reverb": true,
+    "data": {
+      "isComposed": false,
+      "isComposedVersion": false,
+      "appName": "Sky"
+    },
+    "tracks": [
+      {
+        "instrument": {
+          "name": "Piano",
+          "volume": 100,
+          "pitch": "",
+          "visible": true,
+          "icon": "circle",
+          "alias": "",
+          "muted": false,
+          "reverbOverride": null
+        },
+        "notes": [
+          [
+            62,
+            100
+          ],
+          [
+            74,
+            350
+          ],
+          [
+            86,
+            900
+          ]
+        ]
+      },
+      {
+        "instrument": {
+          "name": "GrandPiano",
+          "volume": 100,
+          "pitch": "",
+          "visible": true,
+          "icon": "circle",
+          "alias": "",
+          "muted": false,
+          "reverbOverride": null
+        },
+        "notes": [
+          [
+            67,
+            350
+          ],
+          [
+            74,
+            350
+          ]
+        ]
+      }
+    ],
+    "id": null
+  },
+  "fromV3": {
+    "name": "Golden recorded",
+    "type": "recorded",
+    "folderId": null,
+    "version": 4,
+    "pitch": "D",
+    "bpm": 180,
+    "reverb": true,
+    "data": {
+      "isComposed": false,
+      "isComposedVersion": false,
+      "appName": "Sky"
+    },
+    "tracks": [
+      {
+        "instrument": {
+          "name": "Piano",
+          "volume": 100,
+          "pitch": "",
+          "visible": true,
+          "icon": "circle",
+          "alias": "",
+          "muted": false,
+          "reverbOverride": null
+        },
+        "notes": [
+          [
+            62,
+            100
+          ],
+          [
+            74,
+            350
+          ],
+          [
+            86,
+            900
+          ]
+        ]
+      },
+      {
+        "instrument": {
+          "name": "GrandPiano",
+          "volume": 100,
+          "pitch": "",
+          "visible": true,
+          "icon": "circle",
+          "alias": "",
+          "muted": false,
+          "reverbOverride": null
+        },
+        "notes": [
+          [
+            67,
+            350
+          ],
+          [
+            74,
+            350
+          ]
+        ]
+      }
+    ],
+    "id": null
+  },
+  "fromLegacyV1": {
+    "name": "Legacy v1",
+    "type": "recorded",
+    "folderId": null,
+    "version": 4,
+    "pitch": "C",
+    "bpm": 220,
+    "reverb": false,
+    "data": {
+      "isComposed": false,
+      "isComposedVersion": false,
+      "appName": "Sky"
+    },
+    "tracks": [
+      {
+        "instrument": {
+          "name": "Piano",
+          "volume": 100,
+          "pitch": "",
+          "visible": true,
+          "icon": "circle",
+          "alias": "",
+          "muted": false,
+          "reverbOverride": null
+        },
+        "notes": [
+          [
+            60,
+            100
+          ],
+          [
+            69,
+            400
+          ]
+        ]
+      }
+    ],
+    "id": null
+  },
+  "fromLegacyV2": {
+    "name": "Golden recorded",
+    "type": "recorded",
+    "folderId": null,
+    "version": 4,
+    "pitch": "D",
+    "bpm": 180,
+    "reverb": true,
+    "data": {
+      "isComposed": false,
+      "isComposedVersion": false,
+      "appName": "Sky"
+    },
+    "tracks": [
+      {
+        "instrument": {
+          "name": "Piano",
+          "volume": 100,
+          "pitch": "",
+          "visible": true,
+          "icon": "circle",
+          "alias": "",
+          "muted": false,
+          "reverbOverride": null
+        },
+        "notes": [
+          [
+            62,
+            100
+          ],
+          [
+            74,
+            350
+          ],
+          [
+            86,
+            900
+          ]
+        ]
+      },
+      {
+        "instrument": {
+          "name": "GrandPiano",
+          "volume": 100,
+          "pitch": "",
+          "visible": true,
+          "icon": "circle",
+          "alias": "",
+          "muted": false,
+          "reverbOverride": null
+        },
+        "notes": [
+          [
+            67,
+            350
+          ],
+          [
+            74,
+            350
+          ]
+        ]
+      }
+    ],
+    "id": null
+  }
+}

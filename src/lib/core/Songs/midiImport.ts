@@ -23,25 +23,29 @@
 //    The composer already refuses to author a hold on a non-sustaining layer
 //    (Composer.svelte handleNoteLongPress), so import was the only path producing spans
 //    nothing could play. Capability is read from instrument config, never from the game id.
-import {INSTRUMENTS_DATA, MIDI_MAP_TO_NOTE, TEMPO_CHANGERS} from '$core/legacyConfig'
+import {INSTRUMENTS_DATA, type Pitch, TEMPO_CHANGERS} from '$core/legacyConfig'
 import {MidiNote, NoteColumn, type ColumnNote} from './SongClasses'
-import {getNoteIdTable} from './noteIds'
-
-/** The Note Ids an instrument can actually sound — the set suggestOffset scores against. */
-export function playableIdsOf(instrumentName: string): ReadonlySet<number> {
-    return new Set(getNoteIdTable(instrumentName))
-}
+import {
+    basepointOffset,
+    effectiveTrackPitch,
+    getNoteIdTable,
+    isAccidentalMidi,
+    nominalToNumber,
+    snapMidiToGrid,
+} from './noteIds'
 
 /**
- * Pitch classes the game's map marks as accidental, derived from config rather than assumed
- * to be the black keys — a game whose instruments are not C-major would have a different set.
+ * The NOMINAL ids an instrument can sound — the set suggestOffset scores against.
+ *
+ * Deliberately the nominal axis and not the sounding one: `suggestOffset` chooses a transposition
+ * for the SNAPPING stage, which happens entirely in grid space — with the layer's Basepoint already
+ * taken off, and before it is put back on — so the two must speak the same axis or the suggestion
+ * optimises the wrong thing. The same reason the caller hands `suggestOffset` its notes already
+ * reduced by the Basepoint: the shift it returns is in the file's own space either way, because the
+ * reduction applies equally to both sides of `midi - offset`.
  */
-function accidentalPitchClasses(): ReadonlySet<number> {
-    const classes = new Set<number>()
-    for (const [midi, entry] of MIDI_MAP_TO_NOTE) {
-        if (entry[1]) classes.add(((Number(midi) % 12) + 12) % 12)
-    }
-    return classes
+export function playableIdsOf(instrumentName: string): ReadonlySet<number> {
+    return new Set(getNoteIdTable(instrumentName))
 }
 
 export type OffsetSuggestion = {
@@ -62,9 +66,9 @@ export type OffsetSuggestion = {
  * absolute pitch. Picking the semitone first and the octave second is exact, where a single
  * combined scan trades one against the other arbitrarily.
  *
- * Deliberately scored against the TARGET INSTRUMENT's own ids, not just the game-wide map:
+ * Deliberately scored against the TARGET INSTRUMENT's own ids, not just the game-wide grid:
  * instruments with gapped layouts (Sky's 8-note Bells, its 6-note SFX sets) strand notes that
- * the game map calls perfectly playable, and nothing in the UI reports that today.
+ * the Song Grid calls perfectly playable, and nothing in the UI reports that today.
  *
  * Ties resolve to the smallest shift, and 0 always wins an outright tie — so running this over
  * a file the app itself exported can never transpose it away from where it started.
@@ -73,15 +77,16 @@ export function suggestOffset(
     notes: readonly {midi: number}[],
     playableIds: ReadonlySet<number>
 ): OffsetSuggestion {
-    const accidentals = accidentalPitchClasses()
+    //accidental-ness and the snapped id both come from the Song Grid now (noteIds, ADR-0007
+    //phase E) instead of the retired per-game midi table — same answers, one source
     const score = (offset: number) => {
         let accidental = 0
         let stranded = 0
         for (const note of notes) {
             const shifted = note.midi - offset
-            if (accidentals.has(((shifted % 12) + 12) % 12)) accidental++
-            const mapped = MIDI_MAP_TO_NOTE.get(`${shifted}`)
-            if (!mapped || !playableIds.has(mapped[0])) stranded++
+            if (isAccidentalMidi(shifted)) accidental++
+            const snapped = snapMidiToGrid(shifted)
+            if (snapped.id === -1 || !playableIds.has(snapped.id)) stranded++
         }
         return {accidental, stranded}
     }
@@ -93,7 +98,7 @@ export function suggestOffset(
     for (let semitone = -6; semitone <= 5; semitone++) {
         let count = 0
         for (const note of notes) {
-            if (accidentals.has((((note.midi - semitone) % 12) + 12) % 12)) count++
+            if (isAccidentalMidi(note.midi - semitone)) count++
         }
         //strictly less, and candidates are walked from the outside in ending at +5, so an
         //equal score never displaces a shift already found closer to zero
@@ -130,16 +135,60 @@ export type MidiImportTrack = {
     maxScaling: number
 }
 
+/** One composer LAYER the tracks land on — the identity that decides what a snapped nominal becomes. */
+export type MidiImportLayer = {
+    /** Instrument name; an unknown one resolves like `new Instrument(name)` does (default instrument). */
+    name: string
+    /** The layer's own Basepoint override, `''` when it follows the song's (InstrumentData.pitch). */
+    pitch: Pitch | ''
+    /**
+     * Whether this layer may hold a note. Defaults to what the instrument's own config says
+     * (instrumentSupportsSustain), so the app never has to keep a second copy of that answer;
+     * passed explicitly only by a caller that knows better than the roster does — a test
+     * exercising span layout in a game that ships no sustaining instrument, say.
+     */
+    sustains?: boolean
+}
+
 export type MidiImportOptions = {
     bpm: number
     offset: number
     includeAccidentals: boolean
     /**
-     * Sustain capability per composer layer, in layer order. Supplied by the caller rather
-     * than looked up here so the UI can stay the single owner of the instrument list; use
-     * instrumentSupportsSustain() to build it.
+     * The Basepoint the imported song will carry (MidiParser's pitch selector, seeded from the
+     * file's key signature or our own metadata), per layer through `effectiveTrackPitch`.
+     *
+     * It is read on BOTH sides of the snap, which is what makes import the inverse of export: a
+     * file's midi number is an ABSOLUTE sounding pitch (what `toMidi` writes, and what a DAW means
+     * by it), while the snap speaks the grid's NOMINAL axis — so the layer's Basepoint comes off
+     * before the number is snapped, and `nominalToNumber` carries the snapped nominal back onto the
+     * absolute axis through that layer's own instrument. The SNAPPING itself is unchanged from the
+     * id-storing generation (ADR-0007 keeps import policy white-key, upgradeable later).
+     *
+     * Two consequences, both intended:
+     *  - our own export re-imports to the same notes at ANY Basepoint on an untuned instrument. It
+     *    used to come back lifted twice — and, worse, with distinct notes colliding: at Db the
+     *    exported 65 and 66 both snapped to 65 and both lifted to 66, so one of them was merged
+     *    away (or dropped outright with accidentals off).
+     *  - a foreign file in D major, whose key signature seeds this selector with D, is heard as D
+     *    major: it is transposed into grid space, snapped there, and the Basepoint puts it back.
+     *    The selector used to only relabel the song, so it came back a whole tone sharp.
+     *
+     * On a TUNED instrument (genshin's Vintage-Lyre) the trip stays BEST-EFFORT, and cannot not be:
+     * its buttons sound between the grid's rows, and the snap has only grid rows to land on — a
+     * Db that was exported at 73 snaps to the C row and returns as 72. What ADR-0007 still defers
+     * is auto-Basepoint DETECTION: a file that names no key signature and carries no metadata of
+     * ours is imported at whatever Basepoint the user picked, not at one inferred from its notes.
      */
-    layerSustains: readonly boolean[]
+    pitch: Pitch
+    /**
+     * The composer layers tracks land on, in layer order — what each layer's instrument IS. It
+     * decides what a snapped nominal sounds (a tuned button's own Sounding Pitch), the Basepoint
+     * that instrument is read at, and whether a note's length may become a span. Capability is
+     * read from instrument config, never from a game id, so a game gains sustained imports the
+     * moment it gains a sustaining instrument.
+     */
+    layers: readonly MidiImportLayer[]
 }
 
 export type MidiTrackStats = {
@@ -154,9 +203,10 @@ export type MidiImportResult = {
     accidentals: number
     outOfRange: number
     /**
-     * Notes that mapped fine but were absorbed by another: a re-strike of the same id landing
+     * Notes that mapped fine but were absorbed by another: a re-strike of the same number landing
      * in the same column after quantization. Counted so the importer's totals can never claim
-     * more notes than it actually placed.
+     * more notes than it actually placed. Keyed on the LIFTED number rather than the snapped
+     * nominal, so two grid rows a layer's instrument voices with one button collapse here too.
      */
     merged: number
     /** Parallel to the input tracks. */
@@ -208,7 +258,7 @@ export function importMidiTracks(
     tracks: readonly MidiImportTrack[],
     options: MidiImportOptions
 ): MidiImportResult {
-    const {bpm, offset, includeAccidentals, layerSustains} = options
+    const {bpm, offset, includeAccidentals, layers} = options
     const perTrack: MidiTrackStats[] = tracks.map(() => ({
         accidentals: 0,
         outOfRangeLower: 0,
@@ -231,7 +281,16 @@ export function importMidiTracks(
     const unitsPerBeat = table[0].units
     const unitMs = beatMs / unitsPerBeat
 
-    // ---- 1. map every selected note through the game's midi table -------------------------
+    //Per-layer identity, resolved once. The Basepoint here comes off every incoming number
+    //(step 1) and goes back on every emitted one (step 5): the same value on both sides, or the
+    //round trip through grid space would move the note. A layer the roster has no entry for
+    //(a track pointing past it) falls back to the song's Basepoint and the default instrument.
+    const layerPitches = layers.map(layer => effectiveTrackPitch(layer, options.pitch))
+    const pitchOf = (layer: number) => layerPitches[layer] ?? options.pitch
+    const nameOf = (layer: number) => layers[layer]?.name ?? ''
+    const canHoldOn = layers.map(layer => layer.sustains ?? instrumentSupportsSustain(layer.name))
+
+    // ---- 1. snap every selected note onto the Song Grid ------------------------------------
     const notes: MidiNote[] = []
     let totalNotes = 0
     let accidentals = 0
@@ -243,7 +302,11 @@ export function importMidiTracks(
             const note = MidiNote.fromMidi(
                 track.layer,
                 Math.round(midiNote.time * 1000),
-                midiNote.midi - (track.localOffset ?? offset),
+                //INTO GRID SPACE: the file's number is an absolute sounding pitch and the snap
+                //speaks nominals, so this layer's Basepoint comes off first (see `pitch`). The
+                //range check and the octave folding inside fromMidi then judge the note where
+                //the grid actually is, not where the Basepoint moved it.
+                midiNote.midi - (track.localOffset ?? offset) - basepointOffset(pitchOf(track.layer)),
                 track.maxScaling,
                 Math.round(midiNote.duration * 1000)
             )
@@ -327,7 +390,7 @@ export function importMidiTracks(
         const column = columns[columnIndex]
         if (!column) return
         for (const note of entry.notes) {
-            const canHold = layerSustains[note.layer] === true
+            const canHold = canHoldOn[note.layer] === true
             let span = 1
             if (canHold && note.durationMs > 0) {
                 const endSlot = entry.slot + Math.round(note.durationMs / unitMs)
@@ -336,11 +399,21 @@ export function importMidiTracks(
                 while (end < columnStartSlots.length - 1 && columnStartSlots[end] < endSlot) end++
                 span = Math.max(1, end - columnIndex)
             }
-            column.notes.push({trackIndex: note.layer, id: note.data.id, span} satisfies ColumnNote)
+            //back onto the absolute axis THROUGH THIS LAYER'S INSTRUMENT (see `pitch`): a nominal
+            //the instrument has enters as that button's Sounding Pitch, so a tuned button imports
+            //as a note it can actually voice. The bare `nominal + offset` this used to be stranded
+            //8 of genshin's 21 rows on a Vintage-Lyre layer - silent, and dimmed on the canvas.
+            column.notes.push({
+                trackIndex: note.layer,
+                id: nominalToNumber(nameOf(note.layer), pitchOf(note.layer), note.data.id),
+                span,
+            } satisfies ColumnNote)
         }
     })
 
     // ---- 6. merge duplicates within a column, longest span wins ---------------------------
+    //AFTER the lift, deliberately: what a column may not hold twice is one (layer, NUMBER), and
+    //the lift is what turns a nominal into that number.
     let merged = 0
     for (const column of columns) {
         if (column.notes.length < 2) continue

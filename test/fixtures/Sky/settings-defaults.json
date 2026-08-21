@@ -1,7 +1,7 @@
 {
   "composer": {
     "other": {
-      "settingVersion": "Sky73"
+      "settingVersion": "Sky74"
     },
     "data": {
       "bpm": {
@@ -126,12 +126,20 @@
         "category": "composer_settings",
         "songSetting": false,
         "value": false
+      },
+      "proView": {
+        "name": "composer_pro_view",
+        "tooltip": "composer_pro_view_description",
+        "type": "checkbox",
+        "category": "composer_settings",
+        "songSetting": false,
+        "value": false
       }
     }
   },
   "player": {
     "other": {
-      "settingVersion": "Sky83"
+      "settingVersion": "Sky86"
     },
     "data": {
       "instrument": {
@@ -145,24 +153,30 @@
           "Piano",
           "GrandPiano",
           "Contrabass",
+          "Cello",
+          "Violin",
           "Guitar",
           "LightGuitar",
           "Harp",
           "Horn",
           "Trumpet",
+          "Saxophone",
           "Pipa",
           "WinterPiano",
           "Xylophone",
           "Flute",
+          "TransverseFlute",
           "Panflute",
           "Ocarina",
           "MantaOcarina",
+          "Harmonica",
           "Aurora",
-          "sustained_recorder",
           "Kalimba",
           "ToyUkulele",
           "Drum",
+          "FortuneDrum",
           "Bells",
+          "SmallBell",
           "DunDun",
           "HandPan",
           "SFX_SineSynth",
@@ -214,14 +228,6 @@
         ],
         "value": 220,
         "category": "song_settings"
-      },
-      "syncSongData": {
-        "name": "player_sync_song_data",
-        "tooltip": "player_sync_song_data_description",
-        "type": "checkbox",
-        "songSetting": false,
-        "value": true,
-        "category": "player_settings"
       },
       "metronomeBeats": {
         "name": "player_metronome_beats",
@@ -688,7 +694,7 @@
   },
   "zenKeyboard": {
     "other": {
-      "settingVersion": "Sky28"
+      "settingVersion": "Sky30"
     },
     "data": {
       "instrument": {
@@ -702,24 +708,30 @@
           "Piano",
           "GrandPiano",
           "Contrabass",
+          "Cello",
+          "Violin",
           "Guitar",
           "LightGuitar",
           "Harp",
           "Horn",
           "Trumpet",
+          "Saxophone",
           "Pipa",
           "WinterPiano",
           "Xylophone",
           "Flute",
+          "TransverseFlute",
           "Panflute",
           "Ocarina",
           "MantaOcarina",
+          "Harmonica",
           "Aurora",
-          "sustained_recorder",
           "Kalimba",
           "ToyUkulele",
           "Drum",
+          "FortuneDrum",
           "Bells",
+          "SmallBell",
           "DunDun",
           "HandPan",
           "SFX_SineSynth",

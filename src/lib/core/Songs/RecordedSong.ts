@@ -21,11 +21,11 @@ import {NoteLayer} from "./Layer"
 import type {Midi} from "@tonejs/midi"
 import {Midi as MidiConstructor} from "./midiConstructor"
 import type {InstrumentName} from "$core/types"
-import {type SerializedSong, Song} from "./Song.svelte"
+import {assertKnownSongVersion, type SerializedSong, Song} from "./Song.svelte"
 import type {OldFormat, OldNote} from "$core/types"
 import {isLegacyAppName, LEGACY_NOTE_TABLES, legacyIndexToId} from "./legacyNoteTables"
 import {type ConversionGame, findSimilarInstrument} from "./instrumentSimilarity"
-import {foldIdIntoRange} from "./noteIds"
+import {foldNumberIntoRange, nominalToNumber} from "./noteIds"
 
 /** Legacy (≤v2): flat index+layer notes, top-level instruments. */
 /**
@@ -41,17 +41,27 @@ export type SerializedRecordedSongV2 = SerializedSong & {
     notes: SerializedRecordedNoteV2[]
     instruments: SerializedInstrumentData[]
 }
-/** Current format (v3): per-track Note Id notes. */
-export type SerializedRecordedSong = SerializedSong & {
+/**
+ * Legacy (v3): the SAME per-track tuple shape as v4, with the numbers meaning Nominal Ids
+ * stored pre-Basepoint (ADR-0001). Only `version` tells the two apart.
+ */
+export type SerializedRecordedSongV3 = SerializedSong & {
     type: 'recorded'
     version: 3
     reverb: boolean
     tracks: SerializedRecordedTrack[]
 }
+/** Current format (v4): per-track absolute Note Numbers. */
+export type SerializedRecordedSong = Omit<SerializedRecordedSongV3, 'version'> & {
+    version: 4
+}
 /** Old-format export shape: the legacy V2 wire format plus the pre-versioned extras. */
 export type OldFormatRecorded = SerializedRecordedSongV2 & OldFormat
 
-export type UnknownSerializedRecordedSong = SerializedRecordedSongV2 | SerializedRecordedSong
+export type UnknownSerializedRecordedSong =
+    SerializedRecordedSongV2
+    | SerializedRecordedSongV3
+    | SerializedRecordedSong
 
 export class RecordedSong extends Song<RecordedSong, SerializedRecordedSong> {
     //`instruments` is NOT re-declared here on purpose: it is a `$state` field on Song, and with
@@ -64,7 +74,7 @@ export class RecordedSong extends Song<RecordedSong, SerializedRecordedSong> {
     private lastPlayedNote = -1
 
     constructor(name: string, notes?: RecordedNote[], instruments: InstrumentName[] = []) {
-        super(name, 3, 'recorded', {
+        super(name, 4, 'recorded', {
             isComposed: false,
             isComposedVersion: false,
             appName: APP_NAME
@@ -78,76 +88,110 @@ export class RecordedSong extends Song<RecordedSong, SerializedRecordedSong> {
         return false
     }
 
-    /** How many (time-grouped) notes toOldFormat() would drop — ids without a frozen default-table button. Download UIs surface this before exporting to the legacy ecosystem. */
-    countOldFormatDroppedNotes(): number {
-        const legacyTables = LEGACY_NOTE_TABLES[APP_NAME]
-        const defaultTable = legacyTables.tables[legacyTables.defaultInstrument]
-        const seen = new Set<string>()
-        let dropped = 0
-        this.notes.forEach(note => {
-            if (defaultTable.indexOf(note.id) !== -1) return
-            const key = `${note.time}-${note.id}`
-            if (seen.has(key)) return
-            seen.add(key)
-            dropped++
-        })
-        return dropped
-    }
+    // ─── RETIRED: the old-format EXPORT (ADR-0007 phase E) ───────────────────────────────
+    // Kept COMMENTED for the same reason and on the same terms as ComposedSong's block (see its
+    // header for the full why): the old wire format names a note by its POSITION in a frozen
+    // default-instrument table, which cannot state a Note Number, so exporting one now would
+    // silently re-nominalize and drop notes. IMPORT of these files is untouched — `fromOldFormat`
+    // below still reads every one of them.
+    //
+    // Restoring this needs `noteIds.numberToNominal`, commented out there for the same reason.
+    //
+    // /**
+    //  * The NOMINAL Id a note names on its own track — the axis the legacy/old wire formats and
+    //  * the frozen tables speak, exactly inverting the number the note carries (see
+    //  * ComposedSong.nominalOf, same rule, same reason).
+    //  */
+    // private nominalOf(note: RecordedNote): number {
+    //     const instrument = this.instruments[note.trackIndex]
+    //     return numberToNominal(instrument?.name ?? '', instrument?.pitch || this.pitch, note.id)
+    // }
+    //
+    // /** How many (time-grouped) notes toOldFormat() would drop — nominals without a frozen default-table button. Download UIs surface this before exporting to the legacy ecosystem. */
+    // countOldFormatDroppedNotes(): number {
+    //     const legacyTables = LEGACY_NOTE_TABLES[APP_NAME]
+    //     const defaultTable = legacyTables.tables[legacyTables.defaultInstrument]
+    //     const seen = new Set<string>()
+    //     let dropped = 0
+    //     this.notes.forEach(note => {
+    //         const nominal = this.nominalOf(note)
+    //         if (defaultTable.indexOf(nominal) !== -1) return
+    //         const key = `${note.time}-${nominal}`
+    //         if (seen.has(key)) return
+    //         seen.add(key)
+    //         dropped++
+    //     })
+    //     return dropped
+    // }
+    //
+    // /**
+    //  * Old-format export. Emits the legacy V2 wire shape (version 2, flat [index, time,
+    //  * hexLayer] notes via the frozen default table, top-level instruments) so files keep
+    //  * round-tripping through the well-tested v2 import path and stay byte-compatible with
+    //  * what the pre-v3 exporter produced. Notes whose id has no frozen-default-table
+    //  * button are dropped. Byte-identical across the ADR-0007 flip: `nominalOf` inverts the
+    //  * migration, so the same notes reach the same frozen-table indices.
+    //  */
+    // toOldFormat = () => {
+    //     const legacyTables = LEGACY_NOTE_TABLES[APP_NAME]
+    //     const defaultTable = legacyTables.tables[legacyTables.defaultInstrument]
+    //     //regroup per-track notes into the legacy merged shape: one entry per (time, index)
+    //     //with the track set as a NoteLayer bitmask
+    //     const merged = new Map<string, { index: number, time: number, layer: NoteLayer }>()
+    //     const legacyNotes: { index: number, time: number, layer: NoteLayer }[] = []
+    //     this.notes.forEach(note => {
+    //         const index = defaultTable.indexOf(this.nominalOf(note))
+    //         if (index === -1) return
+    //         const key = `${note.time}-${index}`
+    //         const existing = merged.get(key)
+    //         if (existing) {
+    //             existing.layer.set(note.trackIndex, true)
+    //         } else {
+    //             const layer = new NoteLayer()
+    //             layer.set(note.trackIndex, true)
+    //             const entry = {index, time: note.time, layer}
+    //             merged.set(key, entry)
+    //             legacyNotes.push(entry)
+    //         }
+    //     })
+    //     const song: OldFormatRecorded = {
+    //         name: this.name,
+    //         type: 'recorded',
+    //         folderId: this.folderId,
+    //         instruments: this.instruments.map(instrument => instrument.serialize()),
+    //         //old-format consumers were built against the legacy version
+    //         version: 2,
+    //         pitch: this.pitch,
+    //         bpm: this.bpm,
+    //         reverb: this.reverb,
+    //         data: {...this.data},
+    //         notes: legacyNotes.map(note =>
+    //             [note.index, note.time, note.layer.serializeHex()] satisfies SerializedRecordedNoteV2
+    //         ),
+    //         id: this.id,
+    //         isComposed: false,
+    //         pitchLevel: PITCHES.indexOf(this.pitch),
+    //         bitsPerPage: 16,
+    //         isEncrypted: false,
+    //         songNotes: legacyNotes.map(note => ({
+    //             time: note.time,
+    //             key: "1Key" + note.index
+    //         }))
+    //     }
+    //     return song
+    // }
+
+    /** The newest recorded format this build writes and reads. Above it is a file from a newer app. */
+    static readonly LATEST_VERSION = 4
 
     /**
-     * Old-format export. Emits the legacy V2 wire shape (version 2, flat [index, time,
-     * hexLayer] notes via the frozen default table, top-level instruments) so files keep
-     * round-tripping through the well-tested v2 import path and stay byte-compatible with
-     * what the pre-v3 exporter produced. Notes whose id has no frozen-default-table
-     * button are dropped.
+     * The PER-TRACK versions (v3 Nominal Ids, v4 absolute Note Numbers): the ones deserialize
+     * decodes directly rather than through the frozen legacy tables, and the ones a cross-game
+     * import converts with toOtherGame instead of the legacy index remap. Owned here so that
+     * SongService's dispatch and this deserializer cannot drift apart on a version bump.
      */
-    toOldFormat = () => {
-        const legacyTables = LEGACY_NOTE_TABLES[APP_NAME]
-        const defaultTable = legacyTables.tables[legacyTables.defaultInstrument]
-        //regroup per-track notes into the legacy merged shape: one entry per (time, index)
-        //with the track set as a NoteLayer bitmask
-        const merged = new Map<string, { index: number, time: number, layer: NoteLayer }>()
-        const legacyNotes: { index: number, time: number, layer: NoteLayer }[] = []
-        this.notes.forEach(note => {
-            const index = defaultTable.indexOf(note.id)
-            if (index === -1) return
-            const key = `${note.time}-${index}`
-            const existing = merged.get(key)
-            if (existing) {
-                existing.layer.set(note.trackIndex, true)
-            } else {
-                const layer = new NoteLayer()
-                layer.set(note.trackIndex, true)
-                const entry = {index, time: note.time, layer}
-                merged.set(key, entry)
-                legacyNotes.push(entry)
-            }
-        })
-        const song: OldFormatRecorded = {
-            name: this.name,
-            type: 'recorded',
-            folderId: this.folderId,
-            instruments: this.instruments.map(instrument => instrument.serialize()),
-            //old-format consumers were built against the legacy version
-            version: 2,
-            pitch: this.pitch,
-            bpm: this.bpm,
-            reverb: this.reverb,
-            data: {...this.data},
-            notes: legacyNotes.map(note =>
-                [note.index, note.time, note.layer.serializeHex()] satisfies SerializedRecordedNoteV2
-            ),
-            id: this.id,
-            isComposed: false,
-            pitchLevel: PITCHES.indexOf(this.pitch),
-            bitsPerPage: 16,
-            isEncrypted: false,
-            songNotes: legacyNotes.map(note => ({
-                time: note.time,
-                key: "1Key" + note.index
-            }))
-        }
-        return song
+    static isNewFormat(obj: { version?: number }): obj is SerializedRecordedSongV3 | SerializedRecordedSong {
+        return obj.version === 3 || obj.version === 4
     }
 
     /**
@@ -159,24 +203,36 @@ export class RecordedSong extends Song<RecordedSong, SerializedRecordedSong> {
      */
     static deserialize(obj: UnknownSerializedRecordedSong, importInto?: 'Genshin' | 'Sky'): RecordedSong {
         const {name} = obj
+        //before anything is decoded: an unrecognised HIGHER version would fall through to the
+        //legacy branch below and return a song with no notes at all
+        assertKnownSongVersion('recorded', obj.version, RecordedSong.LATEST_VERSION)
         const version = obj.version || 1
         const song = Song.deserializeTo(new RecordedSong(name || 'Untitled'), obj)
         song.reverb = obj.reverb ?? false
-        if (version === 3) {
+        if (RecordedSong.isNewFormat(obj)) {
+            //v3 stored Nominal Ids pre-Basepoint; v4 stores absolute Note Numbers. Same tuple
+            //shape, so `version` alone decides whether the per-track migration runs (ADR-0007 §9).
+            const migrating = version === 3
             const tracks = 'tracks' in obj && Array.isArray(obj.tracks) ? obj.tracks : []
             song.instruments = tracks.map(track => InstrumentData.deserialize(track.instrument))
             if (song.instruments.length === 0) song.instruments = [new InstrumentData()]
             const notes: RecordedNote[] = []
             tracks.forEach((track, trackIndex) => {
+                //PER TRACK, at its EFFECTIVE Basepoint (own override, else the song's) — what
+                //the file's playback used, so migrated audio is identical
+                const instrument = song.instruments[trackIndex]
+                const toNumber = migrating
+                    ? (id: number) => nominalToNumber(instrument?.name ?? '', instrument?.pitch || song.pitch, id)
+                    : (id: number) => id
                 //defensive: untrusted files — non-finite ids/times would poison sorting,
                 //conversion and MIDI export; bad durations are coerced to one-shot
-                (track.notes ?? []).forEach(note => {
-                    const [id, time, duration] = note
-                    if (!Number.isFinite(id) || !Number.isFinite(time)) return
+                ;(track.notes ?? []).forEach(note => {
+                    const [stored, time, duration] = note
+                    if (!Number.isFinite(stored) || !Number.isFinite(time)) return
                     const safeDuration = typeof duration === 'number' && Number.isFinite(duration) && duration > 0
                         ? duration
                         : 0
-                    notes.push(new RecordedNote(id, time, safeDuration, trackIndex))
+                    notes.push(new RecordedNote(toNumber(stored), time, safeDuration, trackIndex))
                 })
             })
             //stable: equal times keep track order
@@ -215,9 +271,13 @@ export class RecordedSong extends Song<RecordedSong, SerializedRecordedSong> {
             if (index === -1) return
             for (let trackIndex = 0; trackIndex < song.instruments.length; trackIndex++) {
                 if (!note.layer.test(trackIndex)) continue
-                const id = legacyIndexToId(appName, song.instruments[trackIndex].name, index)
+                const instrument = song.instruments[trackIndex]
+                const id = legacyIndexToId(appName, instrument.name, index)
                 if (id === null) continue
-                song.notes.push(new RecordedNote(id, note.time, 0, trackIndex))
+                //frozen-table decode lands on a NOMINAL; ADR-0007's one extra step lifts it
+                //onto the absolute axis at this track's effective Basepoint (spec §9)
+                const number = nominalToNumber(instrument.name, instrument.pitch || song.pitch, id)
+                song.notes.push(new RecordedNote(number, note.time, 0, trackIndex))
             }
         })
         return song
@@ -253,7 +313,7 @@ export class RecordedSong extends Song<RecordedSong, SerializedRecordedSong> {
             name: this.name,
             type: 'recorded',
             folderId: this.folderId,
-            version: 3,
+            version: 4,
             pitch: this.pitch,
             bpm: this.bpm,
             reverb: this.reverb,
@@ -525,9 +585,17 @@ export class RecordedSong extends Song<RecordedSong, SerializedRecordedSong> {
                 track.addNote({
                     time: note.time / 1000,
                     duration: note.duration > 0 ? note.duration / 1000 : tapMs / 1000,
-                    //a Note Id is a nominal midi number, but nothing upstream guarantees it
-                    //fits midi's 0..127 — an out-of-range id used to be written verbatim and
-                    //produced a malformed file
+                    //THE STORED NUMBER, unshifted — which since ADR-0007 makes the export
+                    //transposition-honest for the first time: a song at Basepoint D now says D
+                    //in a DAW instead of writing the untransposed grid nominals it used to.
+                    //Unshifted is also SOUNDING: the number already is the pitch the listener
+                    //hears (the engine resolves it to a button at the track's Basepoint and
+                    //plays that sample at the Basepoint's rate), so subtracting anything here
+                    //would write a file that disagrees with the song. midiImport reads a file's
+                    //numbers back as exactly that, which is what makes the trip an inverse.
+                    //Nothing upstream guarantees the number fits midi's 0..127 (a Basepoint can
+                    //push it past the top), and an out-of-range value used to be written verbatim
+                    //and produce a malformed file.
                     midi: clamp(Math.round(note.toMidi()) || 0, 0, 127),
                 })
             })
@@ -564,9 +632,13 @@ export class RecordedSong extends Song<RecordedSong, SerializedRecordedSong> {
             parsed.forEach(note => {
                 for (let trackIndex = 0; trackIndex < converted.instruments.length; trackIndex++) {
                     if (!note.layer.test(trackIndex)) continue
-                    const id = legacyIndexToId(APP_NAME, converted.instruments[trackIndex].name, note.index)
+                    const instrument = converted.instruments[trackIndex]
+                    const id = legacyIndexToId(APP_NAME, instrument.name, note.index)
                     if (id === null) continue
-                    converted.notes.push(new RecordedNote(id, note.time, 0, trackIndex))
+                    //same one extra step the other legacy chains gained (spec §9): frozen-table
+                    //nominal, then onto the absolute axis at this track's effective Basepoint
+                    const number = nominalToNumber(instrument.name, instrument.pitch || converted.pitch, id)
+                    converted.notes.push(new RecordedNote(number, note.time, 0, trackIndex))
                 }
             })
             if ([true, "true"].includes(song.isComposed)) {
@@ -578,7 +650,7 @@ export class RecordedSong extends Song<RecordedSong, SerializedRecordedSong> {
             return null
         }
     }
-    /** NEW-format cross-game conversion (see ComposedSong.toOtherGame): tracks swap to the target game's most similar instruments (settings kept), ids fold into the mapped instrument's range, fold collisions merge keeping the longest duration. */
+    /** NEW-format cross-game conversion (see ComposedSong.toOtherGame): tracks swap to the target game's most similar instruments (settings kept), Note Numbers fold into the mapped instrument's range in SOUNDING space, fold collisions merge keeping the longest duration. */
     toOtherGame = (target: ConversionGame) => {
         const clone = this.clone()
         if (target !== APP_NAME) throw new Error(`toOtherGame can only convert into the running game (${APP_NAME}), got ${target}`)
@@ -595,7 +667,12 @@ export class RecordedSong extends Song<RecordedSong, SerializedRecordedSong> {
             return swapped
         })
         clone.notes = clone.notes.map(note => {
-            note.id = foldIdIntoRange(clone.instruments[note.trackIndex]?.name ?? INSTRUMENTS[0], note.id)
+            const instrument = clone.instruments[note.trackIndex]
+            note.id = foldNumberIntoRange(
+                instrument?.name ?? INSTRUMENTS[0],
+                instrument?.pitch || clone.pitch,
+                note.id
+            )
             return note
         })
         //fold can collide (e.g. 84 folding onto an existing 72): same-track same-time

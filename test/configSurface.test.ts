@@ -3,9 +3,10 @@ import {game} from '$game'
 import {
     APP_NAME, BASE_LAYER_LIMIT, BASE_THEME_CONFIG, COMPOSER_NOTE_POSITIONS,
     DO_RE_MI_NOTE_SCALE, IMPORT_NOTE_POSITIONS, INSTRUMENTS, INSTRUMENTS_DATA,
-    MIDI_BOUNDS, MIDI_MAP_TO_NOTE, MIDI_PRESETS, NOTE_MAP_TO_MIDI, NOTE_NAME_TYPES,
+    MIDI_BOUNDS, MIDI_PRESETS, NOTE_NAME_TYPES,
     NOTE_SCALE, NOTES_CSS_CLASSES, NOTES_PER_COLUMN, PITCHES, TEMPO_CHANGERS,
 } from './imports'
+import {snapMidiToGrid} from '$core/Songs/noteIds'
 import {expectGolden, readFixture} from './golden'
 
 describe('game config surface', () => {
@@ -39,8 +40,9 @@ describe('game config surface', () => {
             notesCssClasses: NOTES_CSS_CLASSES,
             baseThemeConfig: BASE_THEME_CONFIG,
             noteNameTypes: NOTE_NAME_TYPES,
-            midiMapToNote: Object.fromEntries(MIDI_MAP_TO_NOTE),
-            noteMapToMidi: Object.fromEntries(NOTE_MAP_TO_MIDI),
+            //no midiMapToNote/noteMapToMidi rows: both constants were retired at ADR-0007
+            //phase E (the snap is derived from canonicalNoteIds — see the v1 proof below, which
+            //rebuilds the frozen tables out of the arithmetic and so still checks their values)
             midiBounds: MIDI_BOUNDS,
             midiPresets: MIDI_PRESETS,
             notesPerColumn: NOTES_PER_COLUMN,
@@ -63,11 +65,13 @@ describe('game config surface', () => {
         //    legacy conversion tables in code are untouched
         //  - test_sustain (Sky): the dummy sustaining instrument (2026-08-04,
         //    predates the freeze) deleted 2026-08-05 when `sustained_recorder`
-        //    replaced it — removed from both the list and the data below
+        //    replaced it — removed from both the list and the data below.
+        //    `sustained_recorder` was itself a stress test and is gone too
+        //    (2026-08-21), but it post-dates the freeze so it never appears here
         const frozen = readFixture('config-surface')
         // Deliberate VALUE divergence (2026-08-09, midi round-trip work) — the one place this
         // proof no longer reproduces the frozen surface, because the frozen value was wrong.
-        // Genshin declared midi bounds.upper 84 while the highest key in its own mapToNote is
+        // Genshin declared midi bounds.upper 84 while the highest key in its own mapToNote was
         // 83. A C6 therefore counted as in range, was never octave-folded back, resolved to id
         // -1 anyway, and was tallied under NEITHER out-of-range direction — silently dropped
         // and invisible in the importer's counters. Corrected so the bound agrees with the map
@@ -110,7 +114,19 @@ describe('game config surface', () => {
                         {field: 'sustain', from: undefined, to: {release: 0.3}},
                     ],
                 }
-                : {}
+                // Same exception, same reasoning, for Sky (2026-08-21). The wiki marks six
+                // Instruments with the fermata 𝄐 — their notes can be HELD — and two of them,
+                // the Voice of AURORA and the Electric Guitar, shipped here as tap-only because
+                // the 2026-08-03 set had the game's SHORT samples (Aurora 2.9 s, LightGuitar
+                // 1.9 s). Both now carry the full holds (9–12.5 s and 7.5–10.9 s) and so gained
+                // a LOOPLESS sustain block. Nothing else about them moved: same Note Ids, base
+                // notes, icons and layout, and no fill/clickColor was ever authored for either.
+                // Aurora's samples were also repitched −2 semitones (the rip is in D major, the
+                // app is C) — that changes only the audio, which this surface does not describe.
+                : {
+                    Aurora: [{field: 'sustain', from: undefined, to: {release: 0.4}}],
+                    LightGuitar: [{field: 'sustain', from: undefined, to: {release: 0.35}}],
+                }
         for (const [name, edits] of Object.entries(RECAPTURE_EDITS)) {
             for (const {field, from, to} of edits) {
                 expect(
@@ -121,9 +137,40 @@ describe('game config surface', () => {
             }
         }
 
+        // Deliberate VALUE divergence (2026-08-19, ADR-0007 Phase A). Ukulele and
+        // LingeringEuphonia share the ukulele-21 preset, whose top row is not a scale at all:
+        // those seven buttons strum chords in game (in-game capture 2026-08-19), so they are
+        // Assigned Buttons now and carry their real chord names. The frozen labels were
+        // copy-pasted from the Vintage-Lyre row and named pitches those buttons never sounded;
+        // an Assigned Button's label feeds nothing but the on-screen text, so this moves display
+        // text only. Nominal Ids, icons and Label Sets are untouched, and the two lower rows —
+        // genuinely pitched — still reproduce the frozen surface exactly. Asserted before
+        // patching, like the re-capture edits above: any OTHER label drift still fails.
+        const FROZEN_CHORD_ROW = ['C', 'Db', 'Eb', 'F', 'G', 'Ab', 'G']
+        const CHORD_ROW = ['C', 'Dm', 'Em', 'F', 'G', 'Am', 'G7']
+        const CHORD_ROW_INSTRUMENTS = APP_NAME === 'Genshin' ? ['Ukulele', 'LingeringEuphonia'] : []
+        for (const name of CHORD_ROW_INSTRUMENTS) {
+            const baseNotes: string[] = frozen.instrumentsData[name].baseNotes
+            expect(
+                baseNotes.slice(0, FROZEN_CHORD_ROW.length),
+                `${name}'s top row is not the frozen label row this exception was written against`
+            ).toEqual(FROZEN_CHORD_ROW)
+            baseNotes.splice(0, CHORD_ROW.length, ...CHORD_ROW)
+        }
+
         // Instruments added AFTER the v1 freeze have no old surface to reproduce —
         // they exist only in the v2 fixture.
-        const POST_FREEZE_INSTRUMENTS = new Set(['sustained_recorder', 'NightwindHorn'])
+        const POST_FREEZE_INSTRUMENTS = new Set([
+            'NightwindHorn',
+            //Sky, 2026-08-21: in-game Instruments the app was missing (see games/sky/instruments)
+            'Cello',
+            'Violin',
+            'Saxophone',
+            'Harmonica',
+            'TransverseFlute',
+            'SmallBell',
+            'FortuneDrum',
+        ])
 
         const derivedInstrumentsData = Object.fromEntries(
             Object.entries(INSTRUMENTS_DATA)
@@ -163,6 +210,26 @@ describe('game config surface', () => {
             })
         )
 
+        // The two MIDI tables are the one part of the frozen surface with no constant left to
+        // read: ADR-0007 phase E deleted `midi.mapToNote` from both games and replaced it with
+        // arithmetic over the Song Grid. So they are rebuilt HERE, from that arithmetic, and
+        // compared like every other value — which makes this proof the byte-parity check for the
+        // replacement: one number snapped differently, or one accidental flagged differently,
+        // from what both games shipped for years and this test goes red.
+        // The key range is MIDI_BOUNDS (as corrected above), not a list read out of the frozen
+        // file, so a table entry outside the range the arithmetic accepts would fail too.
+        const midiMapToNote: Record<string, [number, boolean]> = {}
+        for (let midi = MIDI_BOUNDS.lower; midi <= MIDI_BOUNDS.upper; midi++) {
+            const snapped = snapMidiToGrid(midi)
+            midiMapToNote[`${midi}`] = [snapped.id, snapped.isAccidental]
+        }
+        //the same "get only non accidentals" inversion the retired NOTE_MAP_TO_MIDI was built by
+        const noteMapToMidi = Object.fromEntries(
+            Object.entries(midiMapToNote)
+                .filter(([, value]) => value[1] === false)
+                .map(([key, value]) => [value[0], Number(key)])
+        )
+
         const derived = JSON.parse(JSON.stringify({
             appName: APP_NAME,
             instruments: INSTRUMENTS.filter((name) => !POST_FREEZE_INSTRUMENTS.has(name)),
@@ -175,8 +242,8 @@ describe('game config surface', () => {
             notesCssClasses: NOTES_CSS_CLASSES,
             baseThemeConfig: BASE_THEME_CONFIG,
             noteNameTypes: NOTE_NAME_TYPES,
-            midiMapToNote: Object.fromEntries(MIDI_MAP_TO_NOTE),
-            noteMapToMidi: Object.fromEntries(NOTE_MAP_TO_MIDI),
+            midiMapToNote,
+            noteMapToMidi,
             midiBounds: MIDI_BOUNDS,
             midiPresets: MIDI_PRESETS,
             notesPerColumn: NOTES_PER_COLUMN,

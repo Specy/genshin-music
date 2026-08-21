@@ -1,4 +1,4 @@
-import {flushSync, mount, unmount} from 'svelte'
+import {flushSync, mount, unmount, type ComponentProps} from 'svelte'
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest'
 
 const mocks = vi.hoisted(() => {
@@ -49,8 +49,12 @@ describe('Player mode transition ownership', () => {
     let target: HTMLDivElement
     let component: Mounted | null
     let playSound: ReturnType<typeof vi.fn>
+    let releaseSound: ReturnType<typeof vi.fn>
     let releaseAllSounds: ReturnType<typeof vi.fn>
     let onSongFinished: ReturnType<typeof vi.fn>
+    // the props object the component keeps reading from - the harness mutates it where
+    // Player.svelte would republish it (see setHasSong below)
+    let data: ComponentProps<typeof PlayerKeyboard>['data']
 
     beforeEach(() => {
         mocks.pendingDelays.splice(0)
@@ -64,7 +68,7 @@ describe('Player mode transition ownership', () => {
         target = document.createElement('div')
         document.body.append(target)
         const instrument = new Instrument(INSTRUMENTS[0])
-        const data = {
+        data = {
             isLoading: false,
             instrument,
             songDisplayInstrument: instrument,
@@ -80,6 +84,7 @@ describe('Player mode transition ownership', () => {
             hideNotesInPracticeMode: false,
         }
         playSound = vi.fn()
+        releaseSound = vi.fn()
         releaseAllSounds = vi.fn()
         onSongFinished = vi.fn()
         component = mount(PlayerKeyboard, {
@@ -88,7 +93,7 @@ describe('Player mode transition ownership', () => {
                 data,
                 functions: {
                     playSound,
-                    releaseSound: vi.fn(),
+                    releaseSound,
                     releaseAllSounds,
                     restartMetronome: vi.fn(),
                     setHasSong: (hasSong: boolean) => {
@@ -137,6 +142,36 @@ describe('Player mode transition ownership', () => {
         if (index === -1) throw new Error(`No pending ${ms}ms player delay`)
         return mocks.pendingDelays.splice(index, 1)[0]
     }
+
+    // ADR-0007: what a key enters depends on the Basepoint, and the Basepoint can move while the
+    // key is down (the settings menu, a MIDI pitch change) - applySetting releases nothing. The
+    // press-time number is therefore remembered per held note and handed back on the up edge;
+    // re-deriving it left the engine's voice (looping forever on a sustaining instrument) and the
+    // recording's open note both unclosed.
+    it('releases the Note Number the press ENTERED at, not one re-derived at the Basepoint of the key-up', async () => {
+        await vi.waitFor(() =>
+            expect(target.querySelector('.button-hitbox-bigger')).not.toBeNull())
+        const hitbox = target.querySelector<HTMLButtonElement>('.button-hitbox-bigger')!
+        const note = playerStore.keyboard[0]
+        const pressedNumber = note.numberAt('C')
+
+        const press = new Event('pointerdown', {bubbles: true, cancelable: true})
+        Object.defineProperty(press, 'pointerId', {value: 7})
+        hitbox.dispatchEvent(press)
+        flushSync()
+        expect(playSound).toHaveBeenLastCalledWith(pressedNumber, undefined)
+
+        data.pitch = 'D'
+        expect(note.numberAt('D')).not.toBe(pressedNumber)
+
+        const release = new Event('pointerup', {bubbles: true, cancelable: true})
+        Object.defineProperty(release, 'pointerId', {value: 7})
+        hitbox.dispatchEvent(release)
+        flushSync()
+
+        expect(releaseSound).toHaveBeenCalledWith(pressedNumber)
+        expect(releaseSound).not.toHaveBeenCalledWith(note.numberAt('D'))
+    })
 
     it('clears the practice sheet and score as soon as approach preparation starts', async () => {
         const song = await enterPractice()

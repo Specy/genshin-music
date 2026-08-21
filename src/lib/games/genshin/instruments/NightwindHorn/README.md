@@ -19,7 +19,7 @@ top-left to bottom-right, ~12 s hold each with silence between). Per note:
   fade-in, tail kept to −66 dBFS with an 80 ms pad and 100 ms fade-out
 - stereo downmixed to mono (the capture's L−R decorrelation is room/reverb,
   not content; the downmix costs ~2 dB, restored by normalization), DC removed
-- peak-normalised to ~−3.5 dBFS (0.891 × 0.75, the `sustained_recorder` recipe)
+- peak-normalised to ~−3.5 dBFS (0.891 × 0.75, the house recipe)
 - encoded to 128 kbps CBR mono MP3 at the source rate (lamejs), named
   `m<midi>.mp3` by Note Id
 

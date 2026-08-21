@@ -15,16 +15,17 @@ import {
   type Pitch,
   PITCH_TO_INDEX,
 } from '$core/legacyConfig';
+import { baseNoteText } from '$core/sharedConfig';
 import type { InstrumentName, NoteStatus } from '$core/types';
 import { capitalize, getPitchChanger } from '$core/utils/Utilities';
 import type {
-  BaseNote,
   InstrumentSustain,
   NoteImage,
   ShapeDefinition,
   SustainLoopMode,
 } from '$lib/games/types';
 import { shapeSlots } from '$lib/games/shapes/assignment';
+import { basepointOffset, numberToButton } from '$core/Songs/noteIds';
 import { Voice } from '$lib/audio/Voice';
 import { crossfadeLoopRegion, DEFAULT_LOOP_CROSSFADE_S } from '$lib/audio/loopCrossfade';
 import { KeyboardProvider } from '$lib/providers/KeyboardProvider';
@@ -55,11 +56,23 @@ type ScheduledOneShot = {
 /**
  * The audio engine for one instrument.
  *
- * PUBLIC API IS KEYED BY NOTE ID (ADR-0005 §4): `play(id)`, `pressNote(id)`,
- * `releaseNote(id)`, `getNoteById(id)`. A Note Id is what songs, MIDI and every surface
- * already carry, so callers no longer round-trip id -> button -> id, and an id this
- * instrument doesn't offer (a stranded note) is simply silent instead of needing a -1 guard
- * at each call site.
+ * PUBLIC API IS KEYED BY NOTE NUMBER + BASEPOINT (ADR-0005 §4 under ADR-0007's axis):
+ * `play(number, pitch)`, `pressNote(number, pitch)`, `getNoteByNumber(number, pitch)`,
+ * `getButtonOfNumber(number, pitch)`. A Note Number is what songs, the keyboard surfaces and
+ * every recording already carry, so callers never round-trip through a Button, and a number
+ * this instrument cannot voice at this Basepoint (a Stranded Note) is simply silent instead
+ * of needing a -1 guard at each call site.
+ *
+ * The resolution itself is NOT reimplemented here: it is `noteIds.numberToButton`, the same
+ * function the composer canvas, the keyboard and the player resolve through. One rule, one
+ * place — a second copy is exactly how an engine and a surface come to disagree about which
+ * key a stored number means.
+ *
+ * `releaseNote(number)` takes NO Basepoint, deliberately: the number a press ENTERED at is
+ * remembered as an alias of the Button it landed on (see heldVoices/heldNumberAliases), so a
+ * Basepoint change under a held key releases the key that is actually sounding rather than
+ * whichever one the new Basepoint would resolve to. What a surface owes the engine in return
+ * is to release the number it pressed, not one re-derived at key-up.
  *
  * Buttons survive only as PRIVATE STORAGE: the position of a note in the authored note list
  * indexes `notes`, `buffers` and `instrumentData.notes`. Where a button is drawn is neither
@@ -85,21 +98,40 @@ export class Instrument {
   audioContext: AudioContext | null = null;
   /** Sounding sustained voices (pruned opportunistically); engine state, never UI-observed. */
   private activeVoices: Voice[] = [];
-  /** Live (key-still-down) voice per NOTE ID, for release-by-id. */
+  /**
+   * Live (key-still-down) voice per BUTTON — the registry the one-voice-per-key retrigger choke
+   * in pressNote is enforced through, and where the minimum note length is read from the key
+   * that is actually sounding.
+   *
+   * Keyed by BUTTON, not by the Note Number the press entered at, because a number names a
+   * different key at every Basepoint: number-keyed, a re-press of the same key after a Basepoint
+   * change looked up an entry that was filed under the old number, choked nothing, and left two
+   * voices on one button — the first of them sounding forever on a looping instrument.
+   */
   // eslint-disable-next-line svelte/prefer-svelte-reactivity -- engine state, never UI-observed
   private heldVoices = new Map<number, Voice>();
+  /**
+   * PRESS-TIME Note Number -> the Button it was pressed on, which is how `releaseNote(number)`
+   * (Basepoint-less by design) reaches a voice held from before a Basepoint change. Registered
+   * at press, so it stays valid however the Basepoint moves afterwards — what it asks of a
+   * surface is that it release the number it PRESSED, which every keyboard surface remembers
+   * per held key.
+   *
+   * SEMANTICS when two live aliases name one button (two holders on one key, or a re-press at a
+   * new Basepoint while the old holder is still down): every alias resolves to that button's
+   * CURRENT voice, so the first release to arrive ends the sound and drops all of the button's
+   * aliases with it, and the later one finds nothing held and is a no-op. That is exactly what a
+   * number-keyed store did when two holders shared one number, and it is the safe direction: a
+   * stale release can silence a key nobody expects to be silenced, but it can never leak a voice.
+   */
+  // eslint-disable-next-line svelte/prefer-svelte-reactivity -- engine state, never UI-observed
+  private heldNumberAliases = new Map<number, number>();
   /**
    * One-shots committed to a future audio-clock start (ADR-0006) — the retractable set
    * cancelScheduledAfter operates on. An immediately-started one-shot never enters: it
    * is already sounding, so there is nothing left to retract.
    */
   private scheduledOneShots: ScheduledOneShot[] = [];
-  /**
-   * Note Id -> Button (first occurrence, matching the old findIndex). The whole id-keyed
-   * public API resolves through this one map instead of scanning `notes` per call.
-   */
-  // eslint-disable-next-line svelte/prefer-svelte-reactivity -- engine lookup table, never UI-observed
-  private buttonsById = new Map<number, number>();
   /**
    * Button -> the slot the Shape draws it at (ADR-0005 §2), which is also the entry of the
    * Shape's Label Sets that button wears. Identity for every shipped (grid) Shape.
@@ -165,13 +197,12 @@ export class Instrument {
         { keyboard: '' },
         url,
         configNote.baseNote,
-        configNote.midi ?? 0
+        configNote.midi ?? 0,
+        configNote.sounding
       );
       note.instrument = this.name;
       note.noteImage = configNote.icon;
       this.notes.push(note);
-      // first occurrence wins, exactly like the findIndex this replaces
-      if (!this.buttonsById.has(note.midiNote)) this.buttonsById.set(note.midiNote, i);
     }
     // The Shape says where each note sits; its Label Sets are indexed by that SLOT, not by
     // authored order (ADR-0005 §2). Identity for every shipped Shape, so `noteNames.keyboard`
@@ -190,14 +221,14 @@ export class Instrument {
     const index = this.getNoteIndexFromCode(code);
     return index !== -1 ? this.notes[index] : null;
   };
-  /** The note playing a Note Id, null when the id is stranded on this instrument. */
-  getNoteById = (id: number): ObservableNote | null => {
-    const button = this.buttonsById.get(id);
-    return button === undefined ? null : (this.notes[button] ?? null);
+  /** The note voicing a Note Number at this Basepoint, null when the number is stranded here. */
+  getNoteByNumber = (number: number, pitch: Pitch): ObservableNote | null => {
+    const button = this.getButtonOfNumber(number, pitch);
+    return button === -1 ? null : (this.notes[button] ?? null);
   };
-  /** Button playing a Note Id on this instrument, -1 when the id is stranded on it. */
-  getButtonFromId = (id: number) => {
-    return this.buttonsById.get(id) ?? -1;
+  /** Button voicing a Note Number at this Basepoint, -1 when the number is stranded here. */
+  getButtonOfNumber = (number: number, pitch: Pitch) => {
+    return numberToButton(this.name, pitch, number);
   };
   getNoteFromIndex = (index: number) => {
     return this.notes[index] ?? null;
@@ -220,8 +251,15 @@ export class Instrument {
     const slot = this.slotOf(index);
     try {
       if (type === 'Note name') {
-        const baseNote = this.notes[index].baseNote;
-        return NOTE_SCALE[baseNote][PITCH_TO_INDEX.get(pitch) ?? 0];
+        // the label AND whether it may transpose both come from the authored note
+        // (`instrumentData.notes` is button-indexed private storage, like minNoteMs')
+        const note = this.instrumentData.notes[index];
+        return baseNoteText(
+          NOTE_SCALE,
+          note.baseNote,
+          PITCH_TO_INDEX.get(pitch) ?? 0,
+          note.pitched
+        );
       }
       if (type === 'Your Keyboard layout') {
         const key =
@@ -236,8 +274,13 @@ export class Instrument {
         return capitalize(res);
       }
       if (type === 'Do Re Mi') {
-        const baseNote = this.notes[index].baseNote;
-        return DO_RE_MI_NOTE_SCALE[baseNote][PITCH_TO_INDEX.get(pitch) ?? 0];
+        const note = this.instrumentData.notes[index];
+        return baseNoteText(
+          DO_RE_MI_NOTE_SCALE,
+          note.baseNote,
+          PITCH_TO_INDEX.get(pitch) ?? 0,
+          note.pitched
+        );
       }
       if (type === 'ABC') return layout.abc[slot];
       if (type === '1 2 3') return layout.number[slot];
@@ -256,21 +299,23 @@ export class Instrument {
   };
 
   /**
-   * Trigger a Note Id (ADR-0005 §4), immediately or committed at the absolute
-   * AudioContext time `at`. An id this instrument doesn't offer is silent.
+   * Trigger a Note Number at a Basepoint (ADR-0005 §4 / ADR-0007), immediately or committed
+   * at the absolute AudioContext time `at`. A number this instrument cannot voice at this
+   * Basepoint is silent. `pitch` decides BOTH the button and the playback rate, which is what
+   * makes the same stored number sound its own pitch at every Basepoint.
    */
-  play = (id: number, pitch: Pitch, at?: number) => {
+  play = (number: number, pitch: Pitch, at?: number) => {
     // A sustaining instrument has no meaningful whole-file one-shot: plain triggers
     // (composer previews and span-1 columns, recorded taps, VSRG hits, MIDI-setup
     // auditions) become a tap — press + immediate release, so the authored
     // minLength/release define the sound instead of the raw multi-second sample.
     if (this.supportsSustain) {
-      this.pressNote(id, pitch, { at, durationMs: 0 });
+      this.pressNote(number, pitch, { at, durationMs: 0 });
       return;
     }
     if (this.isDeleted || !this.volumeNode || !this.audioContext) return;
-    const button = this.buttonsById.get(id);
-    if (button === undefined) return;
+    const button = this.getButtonOfNumber(number, pitch);
+    if (button === -1) return;
     const now = this.audioContext.currentTime;
     // Lazy retention prune (Metronome's BEAT_RETENTION_S rationale): an entry this far
     // past its start time can no longer be cancelled, so dropping it costs nothing —
@@ -308,28 +353,28 @@ export class Instrument {
   };
 
   /**
-   * Press a Note Id. Non-sustaining instruments take the exact one-shot `play()` path
-   * (returns null). Sustaining instruments start a looped Voice that sounds until
-   * `releaseNote(id)` — or self-releases after `durationMs` (song playback, committed
-   * sample-accurately on the audio timeline: `at` is the absolute AudioContext start
-   * time, and `durationMs` counts from it). `skipMs` resumes mid-note (playback started
+   * Press a Note Number at a Basepoint. Non-sustaining instruments take the exact one-shot
+   * `play()` path (returns null). Sustaining instruments start a looped Voice that sounds
+   * until `releaseNote(number)` — or self-releases after `durationMs` (song playback,
+   * committed sample-accurately on the audio timeline: `at` is the absolute AudioContext
+   * start time, and `durationMs` counts from it). `skipMs` resumes mid-note (playback started
    * inside a spanned note): audio picks up at the position the playhead would have
    * reached, and `durationMs` counts the REMAINING hold.
-   * An id this instrument doesn't offer is silent (returns null).
+   * A number this instrument cannot voice at this Basepoint is silent (returns null).
    */
   pressNote = (
-    id: number,
+    number: number,
     pitch: Pitch,
     options?: { at?: number; durationMs?: number; skipMs?: number }
   ): Voice | null => {
     const sustain = this.sustainConfig;
     if (!sustain) {
-      this.play(id, pitch, options?.at);
+      this.play(number, pitch, options?.at);
       return null;
     }
     if (this.isDeleted || !this.volumeNode || !this.audioContext) return null;
-    const button = this.buttonsById.get(id);
-    if (button === undefined) return null;
+    const button = this.getButtonOfNumber(number, pitch);
+    if (button === -1) return null;
     const buffer = this.buffers[button];
     if (!buffer) return null;
     const now = this.audioContext.currentTime;
@@ -341,9 +386,12 @@ export class Instrument {
     //must not choke what the player is hearing NOW merely because it was scheduled
     //early; scheduled song voices also stay out of heldVoices below.
     if (!scheduledAhead) {
-      const previous = this.heldVoices.get(id);
+      //by BUTTON, so a re-press at another Basepoint still finds what that key is holding.
+      //Its aliases are deliberately left in place: they name the key, and the new voice is
+      //about to become what they resolve to (see heldNumberAliases).
+      const previous = this.heldVoices.get(button);
       if (previous) {
-        this.heldVoices.delete(id);
+        this.heldVoices.delete(button);
         if (!previous.isDisposed) previous.choke();
       }
     }
@@ -383,9 +431,18 @@ export class Instrument {
       const minRemainingMs = Math.max(0, this.minNoteMs(button) - (options.skipMs ?? 0));
       voice.releaseAt(voice.startedAt + Math.max(options.durationMs, minRemainingMs) / 1000);
     } else {
-      this.heldVoices.set(id, voice);
+      this.heldVoices.set(button, voice);
+      this.heldNumberAliases.set(number, button);
     }
     return voice;
+  };
+
+  /** Drop a button's held voice and every press-time number that aliased it. */
+  private forgetHeldButton = (button: number) => {
+    this.heldVoices.delete(button);
+    for (const [number, aliased] of this.heldNumberAliases) {
+      if (aliased === button) this.heldNumberAliases.delete(number);
+    }
   };
 
   /**
@@ -401,14 +458,22 @@ export class Instrument {
     return typeof min === 'number' && Number.isFinite(min) && min > 0 ? min * 1000 : 0;
   };
 
-  /** Release the live voice held on a Note Id (no-op for one-shot instruments and unheld ids). */
-  releaseNote = (id: number) => {
-    const voice = this.heldVoices.get(id);
+  /**
+   * Release the live voice held on a PRESS-TIME Note Number (no-op for one-shot instruments and
+   * for numbers nothing was pressed on). The number is resolved to its button through the
+   * press-time alias, never through the current Basepoint.
+   */
+  releaseNote = (number: number) => {
+    const button = this.heldNumberAliases.get(number);
+    if (button === undefined) return;
+    const voice = this.heldVoices.get(button);
+    // the alias outlives its voice when another holder of the same key released first: drop it
+    // and leave whatever is sounding now alone
+    this.forgetHeldButton(button);
     if (!voice) return;
-    this.heldVoices.delete(id);
     // releaseAt clamps to "now" once the minimum has already elapsed, so held
     // notes released late act exactly on the key-up
-    voice.releaseAt(voice.startedAt + this.minNoteMs(this.getButtonFromId(id)) / 1000);
+    voice.releaseAt(voice.startedAt + this.minNoteMs(button) / 1000);
   };
 
   /**
@@ -417,15 +482,17 @@ export class Instrument {
    * keeps playing in a background tab.
    */
   releaseHeldNotes = () => {
-    this.heldVoices.forEach((voice, id) =>
-      voice.releaseAt(voice.startedAt + this.minNoteMs(this.getButtonFromId(id)) / 1000)
+    this.heldVoices.forEach((voice, button) =>
+      voice.releaseAt(voice.startedAt + this.minNoteMs(button) / 1000)
     );
     this.heldVoices.clear();
+    this.heldNumberAliases.clear();
   };
 
   /** Release everything sounding, live and scheduled — ramped (playback stop) or hard (teardown). */
   releaseAllNotes = (hard = false) => {
     this.heldVoices.clear();
+    this.heldNumberAliases.clear();
     // Clear ownership before stopping: hard stop invokes the per-voice dispose callback,
     // which must not splice the array while this traversal is in progress.
     const voices = this.activeVoices;
@@ -474,8 +541,8 @@ export class Instrument {
     // A voice with a future release scheduled is still sounding and must continue to
     // count toward the cap (and remain available to releaseAllNotes on stop/blur).
     this.activeVoices = this.activeVoices.filter((voice) => !voice.isDisposed);
-    for (const [id, voice] of this.heldVoices) {
-      if (voice.isDisposed) this.heldVoices.delete(id);
+    for (const [button, voice] of this.heldVoices) {
+      if (voice.isDisposed) this.forgetHeldButton(button);
     }
   };
 
@@ -483,8 +550,8 @@ export class Instrument {
   private forgetVoice = (voice: Voice) => {
     const index = this.activeVoices.indexOf(voice);
     if (index !== -1) this.activeVoices.splice(index, 1);
-    for (const [id, held] of this.heldVoices) {
-      if (held === voice) this.heldVoices.delete(id);
+    for (const [button, held] of this.heldVoices) {
+      if (held === voice) this.forgetHeldButton(button);
     }
   };
 
@@ -602,10 +669,17 @@ export class ObservableNote {
   index: number;
   noteImage: NoteImage = DEFAULT_NOTE_ICON;
   midiNote: number;
+  /**
+   * This button's Sounding Pitch (ADR-0007) — its Note Number at Basepoint C. Derived and
+   * validated at registry build; equal to `midiNote` for every button whose instrument is not
+   * tuned away from its nominal grid, and for every Assigned Button by definition.
+   */
+  soundingNote: number;
   instrument: InstrumentName = INSTRUMENTS[0];
   noteNames: NoteName;
   url: string;
-  baseNote: BaseNote = 'C';
+  /** Display label; free text on an Assigned Button (see InstrumentNote.baseNote). */
+  baseNote: string = 'C';
   buffer: ArrayBuffer = new ArrayBuffer(8);
   // Treated as readonly by convention only - always mutated in place via setState()'s
   // Object.assign, never reassigned.
@@ -622,19 +696,30 @@ export class ObservableNote {
     index: number,
     noteNames: NoteName,
     url: string,
-    baseNote: BaseNote,
-    midiNote: number
+    baseNote: string,
+    midiNote: number,
+    soundingNote: number = midiNote
   ) {
     this.index = index;
     this.noteNames = noteNames;
     this.url = url;
     this.baseNote = baseNote;
     this.midiNote = midiNote;
+    this.soundingNote = soundingNote;
   }
 
-  /** Note Id (ADR-0001) — the ShapeNote/engine-facing name of `midiNote`. */
+  /** Nominal Id (ADR-0001) — the ShapeNote/grid-facing name of `midiNote`, never a song identity. */
   get id(): number {
     return this.midiNote;
+  }
+
+  /**
+   * The Note Number pressing this button ENTERS at `pitch` (ADR-0007 §4) — what a keyboard
+   * press hands to the engine, to a recording and to the song. Answered by the note rather
+   * than by the surface so no surface has to reach for `index` (private storage) to get it.
+   */
+  numberAt(pitch: Pitch): number {
+    return this.soundingNote + basepointOffset(pitch);
   }
 
   /** Glyph key — the ShapeNote-facing name of `noteImage`. */
@@ -667,7 +752,8 @@ export class ObservableNote {
       this.noteNames,
       this.url,
       this.baseNote,
-      this.midiNote
+      this.midiNote,
+      this.soundingNote
     );
     obj.buffer = this.buffer;
     obj.noteImage = this.noteImage;

@@ -26,17 +26,11 @@ import type {InstrumentName} from '$core/types'
  *  song is playing (the stop-time restore passes nothing).
  * @param settingsInstrumentName the user's own instrument, which is what the keyboard shows outside
  *  a song.
- * @param syncSongData the player's `syncSongData` setting. With it off the song's instruments are
- *  never loaded, so the SOUND does not switch - and the layout must not switch either. Player.svelte
- *  calls this on every song event whatever the setting says, precisely so that this branch decides
- *  it: with the setting off the keyboard shows the USER's instrument, which is what sounds.
  */
 export function displayInstrumentNameFor(
     songInstrumentNames: readonly InstrumentName[],
-    settingsInstrumentName: InstrumentName,
-    syncSongData: boolean
+    settingsInstrumentName: InstrumentName
 ): InstrumentName {
-    if (!syncSongData) return settingsInstrumentName
     const first = songInstrumentNames[0]
     // A song carrying no instruments, or one naming an instrument this game build does not have, is
     // not a shape to follow. (Instrument's own constructor also falls back to INSTRUMENTS[0], but

@@ -1,5 +1,6 @@
 import {APP_NAME, type Pitch, PITCHES} from "$core/legacyConfig"
 import {InstrumentData, type SerializedInstrumentData, type SongData} from "./SongClasses"
+import {AppError} from "../Errors"
 
 //bad thing i need to do to fix type infer
 export interface SongStorable {
@@ -125,6 +126,28 @@ export abstract class Song<T = any, T2 extends SerializedSong = any, T3 = number
     abstract serialize(): T2
 
     abstract clone(): T
+}
+
+/**
+ * The one case no deserializer can decode: a file written by a NEWER build than this one.
+ *
+ * Every song class dispatches on `version` and treats what it does not recognise as its OLDEST
+ * format, so without this an unknown higher version would be read through the frozen legacy
+ * tables and come back SILENTLY EMPTY - a vsrg v4's hit objects lose every note, a recorded v5
+ * lands in the library with zero notes - instead of being reported. Each class states the
+ * newest version it knows (its LATEST_VERSION) and calls this first; the import path catches per
+ * song (FileService.importUnknownFile) and shows the message beside the file's name.
+ *
+ * Only versions ABOVE what the class knows are rejected. An unknown LOWER one keeps falling to
+ * the legacy path it has always taken - those files predate the version field and there is
+ * nothing newer about them.
+ */
+export function assertKnownSongVersion(type: SongType, version: unknown, latestKnown: number): void {
+    if (typeof version === 'number' && version > latestKnown) {
+        throw new AppError(
+            `This ${type} song is saved in format v${version}, but this version of the app only reads up to v${latestKnown}. Update the app to open it.`
+        )
+    }
 }
 
 

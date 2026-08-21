@@ -115,14 +115,9 @@
         const { eventType, song } = playerStore.state;
         const isSongEvent =
           song !== null && ['play', 'practice', 'approaching'].includes(eventType);
-        // AHEAD OF THE syncSongData GUARD, and deliberately. Everything below this point swaps in
-        // the SONG's pitch, reverb and instruments, which is exactly what the setting turns off -
-        // but the keyboard's SHAPE is not the song's data, it is a question about which instrument
-        // the buttons on screen belong to, and that has an answer either way. With the setting off
-        // the song's instruments are never loaded, so the answer is the user's own instrument;
-        // behind the guard it was never asked at all and the keyboard kept the GAME DEFAULT's grid
-        // while the user's instrument sounded - the reported symptom, in the case where the sound
-        // does not change. displayInstrumentNameFor is handed the setting and makes that choice.
+        // The keyboard's SHAPE - which instrument the buttons on screen belong to - is a separate
+        // question from which instruments SOUND, so it is asked first and on its own:
+        // displayInstrumentNameFor answers it from the song's track names alone.
         //
         // Synchronous, and ahead of loadInstruments below: that call is queued behind
         // `instrumentsTasks` and awaits a sample fetch, but PlayerKeyboard publishes the keyboard
@@ -138,7 +133,11 @@
           // adopts this on its next wake without resetting the still-running free-play phase.
           metronome.bpm = settings.bpm.value;
         }
-        if (!settings.syncSongData.value) return;
+        //A LOADED SONG ALWAYS BRINGS ITS OWN pitch, reverb and instruments: under absolute Note
+        //Numbers (ADR-0007) a song's notes only resolve at the Basepoint they were saved at, so
+        //adopting `song.pitch` is not a convenience the user could switch off - playing at any
+        //other Basepoint silences the song rather than transposing it. The user's own values are
+        //snapshotted below and put back at stop.
         if (isSongEvent) {
           //remember the user's own values before the first song overrides them (a second song
           //replacing the first must not snapshot the previous song's values)
@@ -207,11 +206,7 @@
    * play/practice/restart event for no change on screen.
    */
   function syncDisplayInstrument(songInstrumentNames: InstrumentName[]) {
-    const name = displayInstrumentNameFor(
-      songInstrumentNames,
-      settings.instrument.value,
-      settings.syncSongData.value
-    );
+    const name = displayInstrumentNameFor(songInstrumentNames, settings.instrument.value);
     if (songDisplayInstrument.name === name) return;
     songDisplayInstrument = new Instrument(name);
     // THE SHAPE AND THE BUTTON COUNT, PUBLISHED BY THE SAME WRITE. PlayerKeyboard derives its grid
@@ -356,22 +351,24 @@
   }
 
   /**
-   * The surface→engine entry point, keyed by NOTE ID (ADR-0005 §4): PlayerKeyboard hands
-   * over the id of the note the user pressed (or the song note's own id), never a button —
-   * so an instrument that doesn't offer that id is simply silent instead of sounding
-   * whatever its button of the same number happens to be.
+   * The surface→engine entry point, keyed by NOTE NUMBER (ADR-0005 §4 / ADR-0007):
+   * PlayerKeyboard hands over the number the pressed key ENTERS at the player's Basepoint (or
+   * the song note's own stored number), never a button — so an instrument that cannot voice
+   * that number is simply silent instead of sounding whatever its button of the same index
+   * happens to be.
    */
-  function playSound(id: number, songNote?: RecordedNote) {
+  function playSound(number: number, songNote?: RecordedNote) {
     if (!songNote) {
-      //live playing on the main instrument; the recording stores the pressed Note Id, which
-      //is also what the saved song carries. pressNote = one-shot on non-sustaining
-      //instruments, held Voice on sustaining ones (released by releaseSound on key/pointer up)
-      if (isRecording) handleRecording(id);
-      instruments[0].pressNote(id, settings.pitch.value);
+      //live playing on the main instrument; the recording stores the pressed Note Number, which
+      //is also what the saved song carries (the recording is saved at settings.pitch, the same
+      //Basepoint the press entered at). pressNote = one-shot on non-sustaining instruments, held
+      //Voice on sustaining ones (released by releaseSound on key/pointer up)
+      if (isRecording) handleRecording(number);
+      instruments[0].pressNote(number, settings.pitch.value);
     } else {
       //song playback: the note belongs to exactly one track — play it on that track's
-      //instrument (an id that track lacks is stranded, and silent). Notes with a duration
-      //self-release after it (speed-scaled upstream) when the instrument sustains.
+      //instrument (a number that track cannot voice is stranded, and silent). Notes with a
+      //duration self-release after it (speed-scaled upstream) when the instrument sustains.
       if (isRecording) handleRecording(songNote.id);
       const ins = instruments[songNote.trackIndex];
       const insData = instrumentsData[songNote.trackIndex];
@@ -385,11 +382,11 @@
     }
   }
 
-  function releaseSound(id: number) {
-    //both sides are id-keyed and ignore an id they are not holding: the recording closes the
-    //open note of that id, the engine releases the live voice held on it
-    if (isRecording) recording.releaseNote(id);
-    instruments[0]?.releaseNote(id);
+  function releaseSound(number: number) {
+    //both sides are number-keyed and ignore a number they are not holding: the recording closes
+    //the open note of that number, the engine releases the live voice held on it
+    if (isRecording) recording.releaseNote(number);
+    instruments[0]?.releaseNote(number);
   }
 
   function releaseAllSounds() {
@@ -436,6 +433,23 @@
       if (setting.key === 'reverb') settingsBeforeSong.reverb = setting.data.value as boolean;
     }
     updateSettings();
+    //A PITCH CHANGE MID-SONG INVALIDATES THE QUEUE, the same way a speed change does. The song's
+    //notes are absolute Note Numbers (ADR-0007): the sounding Basepoint is read live off
+    //`settings.pitch` on every note, while each note's key on the keyboard was resolved ONCE at
+    //queue-build - so without this the lit keys and the sounded buttons speak different
+    //Basepoints. Restarting from the current position re-runs resolvePlayerNoteButtons, and the
+    //song-sync effect re-adopts `song.pitch` on the way through: a loaded song cannot be
+    //transposed by moving the player's Basepoint, only silenced. The user's choice is not lost -
+    //it is kept in settingsBeforeSong above and takes effect when the song is stopped.
+    if (setting.key === 'pitch' && isPlayingSong()) restartSong();
+  }
+
+  /** Is a song loaded AND running - i.e. is there a resolved note queue a change could invalidate? */
+  function isPlayingSong() {
+    return (
+      playerStore.song !== null &&
+      ['play', 'practice', 'approaching'].includes(playerStore.eventType)
+    );
   }
 
   async function addSong(song: RecordedSong | ComposedSong) {
@@ -469,9 +483,9 @@
     await songsStore.renameSong(id, newName);
   }
 
-  function handleRecording(id: number) {
+  function handleRecording(number: number) {
     if (isRecording) {
-      recording.addNote(id);
+      recording.addNote(number);
     }
   }
 

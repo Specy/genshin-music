@@ -24,6 +24,8 @@ export const i18n_en = {
     error_importing_file_generic: 'Error importing file',
     error_importing_invalid_format: `Error importing file, invalid format`,
     song_backup_downloaded: 'Song backup downloaded',
+    // Unused since the old-format export was retired (ADR-0007 phase E). Kept, like the export
+    // itself, so the warning does not have to be re-translated in nine locales if it returns.
     old_format_export_dropped_notes:
       '{{count}} note(s) could not be included in the old-format file (they have no position on the default instrument)',
     no_songs_to_backup: 'There are no songs to backup',
@@ -255,6 +257,9 @@ export const i18n_en = {
       composer_sync_tabs: 'Autoplay in all tabs (pc only)',
       composer_sync_tabs_description:
         'Advanced feature, it syncs other browser tabs to all play at the same time',
+      composer_pro_view: 'Pro view',
+      composer_pro_view_description:
+        'Shows every semitone as its own row, with all the notes at their real pitch, and lets you add or remove them by tapping the canvas itself',
       sheet_visualizer_note_names: 'Show note names',
       sheet_visualizer_note_names_description:
         'Writes the name of each note inside it, using the layout selected below',
@@ -279,9 +284,6 @@ export const i18n_en = {
       player_bpm: 'Bpm',
       player_bpm_description:
         'Beats per minute, used by the metronome and will be used when converting the song with the composer',
-      player_sync_song_data: "Auto sync the song's instruments and pitch",
-      player_sync_song_data_description:
-        'Whenever you load a song, the instruments and pitch of that song will be loaded too',
       player_metronome_beats: 'Metronome beats',
       player_metronome_beats_description: 'After how many times a stronger beat is played',
       player_metronome_volume: 'Metronome volume',
@@ -661,6 +663,14 @@ export const i18n_en = {
     previous_breakpoint: 'Previous Breakpoint', //breakpoint is a sort of point to "jump", a sort of bookmark
     next_breakpoint: 'Next Breakpoint',
     tempo: 'Tempo', //this is musical tempo
+    //the Pro View's View Lock (a canvas tool) and its keyboard sheet. The label is what the button
+    //WILL DO when pressed, so it is the opposite of the state it is currently in.
+    lock_view: 'Lock view',
+    lock_view_description: 'Keep the canvas framed on the rows this layer can play',
+    unlock_view: 'Unlock view',
+    unlock_view_description: 'Let the canvas be dragged up and down freely',
+    show_keyboard: 'Show keyboard',
+    hide_keyboard: 'Hide keyboard',
     note_duration: 'Note duration', //in columns, shown in the long-press duration popover
     error_with_this_layer: 'There was an error with this layer',
     recording_audio: 'Recording Audio',
@@ -777,6 +787,7 @@ export const i18n_en = {
       next_layer: 'Next layer',
       next_breakpoint: 'Next breakpoint',
       previous_breakpoint: 'Previous breakpoint',
+      toggle_keyboard: 'Toggle keyboard',
       toggle_record: 'Toggle record',
       stop: 'Stop',
       restart: 'Restart',
@@ -804,6 +815,7 @@ export const i18n_en = {
       next_layer_description: 'Select the next layer',
       next_breakpoint_description: 'Move to the next breakpoint',
       previous_breakpoint_description: 'Move to the previous breakpoint',
+      toggle_keyboard_description: 'Raise or lower the keyboard in the pro view',
       toggle_record_description: 'Toggle keyboard recording',
       stop_description: 'Stop playing / recording / practicing',
       restart_description: 'Restart the song or practice',
@@ -833,25 +845,31 @@ export const i18n_en = {
     NightwindHorn: 'Nightwind Horn',
     Piano: 'Piano',
     Contrabass: 'Contrabass',
+    Cello: 'Cello',
+    Violin: 'Violin',
     Ukulele: 'Ukulele',
     Guitar: 'Guitar',
     LightGuitar: 'Light Guitar',
     Harp: 'Harp',
     Horn: 'Horn',
     Trumpet: 'Trumpet',
+    Saxophone: 'Saxophone',
     Pipa: 'Pipa',
     WinterPiano: 'Winter Piano',
     Xylophone: 'Xylophone',
     Flute: 'Flute',
+    TransverseFlute: 'Transverse Flute', //side-blown flute, as opposed to the end-blown Flute above
     Panflute: 'Panflute',
     Ocarina: 'Ocarina',
     MantaOcarina: 'Manta Ocarina',
+    Harmonica: 'Harmonica',
     Aurora: 'Aurora', //leave as is
-    sustained_recorder: 'Sustained recorder', //real sustained samples (VCSL recorders, CC0): sky pairs alto+soprano, genshin adds tenor for its low octave
     Kalimba: 'Kalimba',
     ToyUkulele: 'Toy Ukulele',
     Drum: 'Drum',
+    FortuneDrum: 'Fortune Drum', //from the Days of Fortune event; the only 4-sound instrument
     Bells: 'Bells',
+    SmallBell: 'Small Bell',
     HandPan: 'HandPan',
     SFX_SineSynth: 'Sine Synth',
     SFX_BassSynth: 'Bass Synth',
@@ -884,7 +902,25 @@ export const i18n_en = {
       'change-6': 'Slight redesigns throughout the app to improve User Experience',
       'change-7':
         'Composer playback now runs on a single clock — sound, visuals and recording stay exactly in sync (the lookahead setting is gone)',
-      'change-8': 'Many other bug fixes and improvements',
+      'change-8':
+        'Songs now store the note each button actually plays, instead of the position of the key you pressed. Your existing songs are upgraded automatically the first time you open them, and they sound exactly as they did before.',
+      'change-9':
+        'Changing the pitch of a song, or of a single layer, now really moves its notes instead of only renaming them. Switching a layer to another instrument keeps its notes on the same keys where the two instruments share them.',
+      'change-10':
+        'Exporting to MIDI now writes the notes you actually hear, pitch included. Before, a song written at a pitch other than C exported as if it were at C.',
+      'change-11':
+        'Because of all this, saved songs carry a new format version (composed 5, recorded 4, VSRG 3). If you use third party tools that read the song JSON, they must check the "version" field: in the new versions each note is a real note number, not a keyboard position, so a tool that ignores the version will read them wrong.',
+      'change-12':
+        'The player now always follows the loaded song\'s pitch and instruments — songs can no longer play silently because your own pitch differed from theirs. Your settings come back when the song stops, so the "sync song data" setting is gone.',
+      'change-13':
+        'The composer has a new "Pro view", which you can turn on in its settings: every semitone gets its own row and every note sits at its real pitch, so you see exactly what the song plays.',
+      'change-14':
+        'In pro view you edit on the canvas itself: tap a cell to add or remove a note, long press one of your notes to choose how long it lasts, and unlock the view to drag the rows up and down freely.',
+      'change-15':
+        'Sky gains seven instruments it was missing: the Cello, Violin, Saxophone, Harmonica, Transverse Flute, Small Bell and Fortune Drum.',
+      'change-16':
+        'The Aurora and the Light Guitar hold their notes now, like they do in game. They shipped with the short samples before, so holding a key did nothing.',
+      'change-17': 'Many other bug fixes and improvements',
     },
     '3-7-0': {
       title: 'New instruments (Genshin)',

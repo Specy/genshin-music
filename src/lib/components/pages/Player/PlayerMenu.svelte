@@ -161,8 +161,9 @@
       return;
     }
     const songName = song.name;
-    // Legacy Sky export is intentionally disabled. To restore it:
-    // const converted = [song.toOldFormat()];
+    // Downloads write the current format. The legacy old-format export was retired at ADR-0007
+    // (it cannot state an absolute Note Number) and its producer is kept, commented, in
+    // ComposedSong/RecordedSong — old-format files still IMPORT fine.
     const converted = [song.serialize()];
     fileService.downloadSong(converted, `${songName}.${APP_NAME.toLowerCase()}sheet`);
     logger.success(t('logs:song_downloaded'));
@@ -201,9 +202,8 @@
   async function downloadAllSongs() {
     try {
       const songs = await songService.getSongs();
-      // Legacy Sky backup conversion is intentionally disabled. To restore it, map composed and
-      // recorded songs through `toOldFormat()` here before downloading them.
-      // const toDownload = songs.map((song) => songService.parseSong(song).toOldFormat());
+      // Backups carry the current format, same as single-song downloads: the legacy old-format
+      // export was retired at ADR-0007 (see ComposedSong's commented block).
       const toDownload = songs.map((song) => songService.parseSong(song).serialize());
       const date = new Date().toISOString().split('T')[0];
       const folders = await _folderService.getFolders();
