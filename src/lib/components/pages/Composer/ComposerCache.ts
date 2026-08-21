@@ -73,6 +73,24 @@ export function noteTextureKey(layerStatus: number, accidental: -1 | 0 | 1): str
   return `${layerStatus}${accidental < 0 ? 'b' : '#'}`;
 }
 
+/**
+ * THE CIRCLE MARK'S RADIUS (layer 3's icon), capped to the content box the other three marks
+ * already share: `[margin / 2, noteWidth - margin / 2]`, which is what the filled rect, the border
+ * rect and the line all span.
+ *
+ * The height rule is the one this icon has always had, and it stays the answer wherever it fits.
+ * The width term bites only where a cell is TALLER THAN IT IS WIDE - routine in the Pro View, whose
+ * rows are the Editable Zone's semitones rather than the game's 21/15 and grow further with the
+ * zoom. There the height rule drew a circle wider than its own column, and the texture frame (the
+ * full column) clipped it flat at the column's very edge, past the margin every other mark keeps.
+ *
+ * The `- 0.5` on both terms is the stroke allowance: the circle is stroked at width 1 centred on
+ * the path, so half that width lies outside the radius.
+ */
+export function noteCircleRadius(noteWidth: number, noteHeight: number, margin: number): number {
+  return Math.min(noteHeight / 3 - 0.5, (noteWidth - margin) / 2 - 0.5);
+}
+
 export type ComposerCacheData = {
   columns: Texture[];
   notes: {
@@ -258,7 +276,7 @@ export class ComposerCache {
     }
     if (layer.test(2)) {
       //layer 3
-      g.circle(noteWidth / 2, noteHeight / 2, noteHeight / 3 - 0.5)
+      g.circle(noteWidth / 2, noteHeight / 2, noteCircleRadius(noteWidth, noteHeight, this.margin))
         .fill(new Color(this.colors.secondLayer).rgb().rgbNumber())
         .stroke({ width: 1, color: new Color(this.colors.secondLayer).rgb().rgbNumber() });
     }
