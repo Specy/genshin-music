@@ -1070,6 +1070,11 @@
    * instruments that can sustain, only over a note of YOUR layer — and a hold over a span's tail
    * edits the note that owns the tail, which is the same occupancy rule the keyboard applies through
    * `press.coveringStart`.
+   *
+   * ONLY over an EXISTING note, and that is a decision re-affirmed rather than an omission (user,
+   * 2026-08-22): an add-and-edit hold on empty cells was considered and rejected — a finger that
+   * pauses before scrolling must not find it has written a note. Placing stays the tap's job; the
+   * hold edits what is already there.
    */
   function handleProCellLongPress(columnIndex: number, id: number, rect: ScreenRect): boolean {
     if (isPlaying) return false;
@@ -1084,9 +1089,10 @@
       id,
       anchor: { rect },
       spanAtOpen: existing.span,
-      //the cell's own width, the way the keyboard's step is the pressed key's — the canvas has no
-      //drag continuation of its own (the finger that opened the popover is over pixi, not over the
-      //button that would report its moves), so this only ever feeds handleNoteDrag's guard
+      //the cell's own width, the way the keyboard's step is the pressed key's — and the finger that
+      //opened the popover KEEPS EDITING (USER REVISION, 2026-08-22): the renderer feeds its
+      //horizontal travel to dragPopoverSpan, the same absolute origin+delta rule the keyboard's
+      //drag-after-hold applies through handleNoteDrag.
       dragStepPx: Math.max(20, rect.width / 2),
     };
     return true;
@@ -1149,10 +1155,15 @@
    *
    * The drag ends with the pointer, but the popover outlives it (spec §2 dismissal rules), so
    * the slider is still there for what the finger could not reach.
+   *
+   * TWO FEEDERS, ONE RULE: the keyboard key's own drag arrives through handleNoteDrag below
+   * (which first checks the moving key IS the popover's note), and the Pro View canvas hold's
+   * drag arrives here directly (USER REVISION, 2026-08-22) — the renderer only reports travel
+   * for the press that opened the popover, so it has no second identity to check.
    */
-  function handleNoteDrag(note: ObservableNote, deltaX: number) {
+  function dragPopoverSpan(deltaX: number) {
     const popover = durationPopover;
-    if (!popover || popover.id !== numberOfNote(note)) return;
+    if (!popover) return;
     const span = clamp(
       popover.spanAtOpen + Math.round(deltaX / popover.dragStepPx),
       1,
@@ -1163,6 +1174,11 @@
     //and re-arm the autosave
     if (span === popoverSpan) return;
     setPopoverSpan(span);
+  }
+
+  function handleNoteDrag(note: ObservableNote, deltaX: number) {
+    if (!durationPopover || durationPopover.id !== numberOfNote(note)) return;
+    dragPopoverSpan(deltaX);
   }
 
   // The SPAN NUMBER, never the note object. Identity trap: with cloning gone the ColumnNote is a
@@ -2042,6 +2058,7 @@
           {toggleBreakpoint}
           onProCellTap={handleProCellTap}
           onProCellLongPress={handleProCellLongPress}
+          onProCellLongPressDrag={dragPopoverSpan}
           onKeyboardDismiss={() => (keyboardRaised = false)}
           onViewUnlock={() => (viewLocked = false)}
         />

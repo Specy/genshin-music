@@ -72,6 +72,8 @@
       number: number,
       rect: { x: number; y: number; width: number; height: number }
     ) => boolean;
+    /** The taken hold's continuing horizontal travel, absolute from the press origin - the span drag. */
+    onProCellLongPressDrag: (deltaX: number) => void;
     /** A settled Pro View tap made while the keyboard sheet is up: lower it, and edit nothing. */
     onKeyboardDismiss: () => void;
     /**
@@ -103,6 +105,7 @@
     toggleBreakpoint,
     onProCellTap,
     onProCellLongPress,
+    onProCellLongPressDrag,
     onKeyboardDismiss,
     onViewUnlock,
   }: ComposerCanvasProps = $props();
@@ -208,6 +211,7 @@
           toggleBreakpoint,
           onProCellTap,
           onProCellLongPress,
+          onProCellLongPressDrag,
           onKeyboardDismiss,
           onViewUnlock,
           onGeometryChange: (geometry) => {
