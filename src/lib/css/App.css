@@ -3143,7 +3143,7 @@ select {
    Same specificity as the rule above, so it wins by sitting after it. */
 .composer-grid-pro-raised .composer-keyboard-wrapper {
   transform: translateY(0);
-  opacity: 1;
+  opacity: 0.8;
   /* THE SHEET TAKES ITS KEYS' PRESSES AND NOTHING ELSE'S. `auto` on the wrapper alone would make
      its whole full-width flex box a hit target, so a tap on the empty air beside the keyboard - or
      on the scrim's head above it - would be swallowed by a box with no control in it instead of
