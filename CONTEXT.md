@@ -72,6 +72,10 @@ A note whose Note Number the track's instrument cannot voice at the current Base
 **Similar Instrument**:
 The target game's curated counterpart for a source game's instrument — the one a track swaps to during cross-game conversion so the song keeps a comparable timbre. Unmapped instruments fall back to the target's default.
 
+**Solo**:
+A per-track flag that narrows playback to the solo set: while any track is Solo, only Solo tracks sound. Solo flags stack, are saved with the song, and never rewrite other tracks' Mute — audibility is derived fresh from the flags wherever the song plays. A track's own Mute still silences it inside the solo set.
+_Avoid_: exclusive solo (soloing one track never un-solos another)
+
 ### Composer Views
 
 **Pro View**:
