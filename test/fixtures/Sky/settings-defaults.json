@@ -1,7 +1,7 @@
 {
   "composer": {
     "other": {
-      "settingVersion": "Sky73"
+      "settingVersion": "Sky74"
     },
     "data": {
       "bpm": {
@@ -122,6 +122,14 @@
       "syncTabs": {
         "name": "composer_sync_tabs",
         "tooltip": "composer_sync_tabs_description",
+        "type": "checkbox",
+        "category": "composer_settings",
+        "songSetting": false,
+        "value": false
+      },
+      "proView": {
+        "name": "composer_pro_view",
+        "tooltip": "composer_pro_view_description",
         "type": "checkbox",
         "category": "composer_settings",
         "songSetting": false,
