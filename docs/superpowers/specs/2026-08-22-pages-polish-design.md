@@ -97,3 +97,50 @@ only shared files are the locale JSONs and `en/index.ts`, in different namespace
 land sequentially with the operator resolving any overlap. Gates as ever: `npm test`
 (genshin then sky), `check`, `check:sky`, `lint`, `format:check`, and screenshots of the
 keybinds page, theme page, blog index, and home menu.
+
+## 7. Revision round (USER REVISION, 2026-08-22, after the first landing)
+
+### 7.1 Theme: one card, import on the header row (revises §2)
+
+"Your Themes" and "Edit colors" merge into a SINGLE card — the saved themes and the color
+keys both act on the currently selected theme, so they share the outline. Inside it: a
+header row with "Your Themes" on the left and the import-theme FilePicker button on the
+SAME row (Row justify between), then the saved-theme grid, then the color-keys section
+below (keep the `theme:edit_colors` header as an inner heading — smaller than the card
+header is fine). "Default themes" and "Preview" are unchanged, and the trailing `{#key}`
+PageMetadata block still ends the template.
+
+### 7.2 Blog: partners content moves INLINE (revises §3)
+
+The partner cards themselves — the four entries and their scoped styles from
+`/partners/+page.svelte` — move into the blog index BELOW the posts grid, as a section
+headed `t('home:partners_name')`. Extract them into a component beside the blog page
+(their `<style>` block travels with them, minus the `.partners-page` padding rule, which
+dies with the page). Then:
+
+- DELETE the `/partners` route — the user wants no dedicated page. Old deep links 404.
+- Remove last round's two `/partners` entry points on the blog index (the accent button in
+  the Posts row and the `indexNavChildren` link) — they would now point at a dead route.
+- Remove the `partners` entry from PagesVersions (nothing calls
+  `setPageVisited('partners')` once the page is gone) and whatever the type removal
+  touches.
+- `home:partners_name` STAYS — it is the inline section's header. The YouTube iframe now
+  loads on the blog index; accepted.
+
+### 7.3 Keybinds: MIDI access waits for a click (new)
+
+Visiting /keybinds prompts for MIDI access unconditionally today. The defect is
+MidiSetup's own `init()`: when the prompt-free `MIDIProvider.init()` yields no access
+(which is exactly the "user never enabled MIDI" case — the provider only requests when its
+persisted `enabled` setting is on), it falls through to `MIDIProvider.requestAccess()` on
+mount. The rule becomes:
+
+- On mount, run ONLY the prompt-free half. If it yields access (MIDI already enabled),
+  everything proceeds exactly as today — no overlay, no extra click.
+- Otherwise, DON'T request: show an overlay covering the MIDI card's content — blurred
+  backdrop (`backdrop-filter`), one big button labeled with the new key
+  `keybinds:enable_midi` ("Click to enable MIDI"). The click runs the requestAccess path
+  and the rest of the wiring the mount used to do (listeners, sources, notes, presets).
+- The `unsupported` branch (no `requestMIDIAccess` in navigator) keeps its current status
+  display; the overlay click may surface it.
+- New i18n key `keybinds:enable_midi` with REAL translations in all 9 static locales.

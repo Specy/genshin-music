@@ -258,3 +258,22 @@ wiring), and E edits it too (toggleTools):
 Gates per landing, as ever: both game suites (`npm test` = genshin then sky), `check`,
 `check:sky`, `lint`, `format:check`, screenshot smoke of the panel and the Pro View
 keyboard, and a reviewed `git diff --stat test/fixtures/` for §3.5's regeneration.
+
+## 8. Panel polish (USER REVISION, 2026-08-22, after the solo landing)
+
+Four adjustments to §3.3's shipped panel, all in InstrumentControls.svelte + App.css:
+
+- `.instrument-settings` gains `gap: 0.2rem` and `padding: 0.2rem`;
+  `.instrument-solo-button` loses its `margin-top: 0.15rem` (the grid gap replaces it).
+  Row heights follow if the spacing changes what fits.
+- The gear and eye buttons render at different heights today (15px vs 16px icons inside
+  `height: fit-content` buttons) — uniform them: same box height for both regardless of
+  icon size.
+- The resting surface becomes `background-color: var(--secondary)` with
+  `color: var(--secondary-text)` — replacing the translucent black. This supersedes §3.3's
+  "inherited text colour has to keep reading over it" rationale: the secondary pair brings
+  its own text colour. The accent active state is unchanged.
+- The layer rows lose their TEXT COLOR TRANSITION: `.app-button`'s base transition carries
+  `color 0.2s`, so selecting a layer fades the row's text into the selected colours.
+  Scope an override to the instrument rows' buttons that drops the `color` term (keep
+  background/filter transitions as they are everywhere else).
