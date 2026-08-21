@@ -38,7 +38,10 @@ song format does not change; a song opens identically in either view.
   addable cells (other layers never block); tap on your own stranded note deletes it
   (the canvas is the strand-cleanup surface); inert elsewhere. Long-press on your own
   note opens the existing duration popover. Canvas edits share the keyboard press code
-  path — same sound preview, same playback-state rules, same undo history.
+  path — same sound preview, same playback-state rules, same undo history. (Amended in
+  implementation, adjudicated — §7 has both: the canvas snapshots undo history where the
+  keyboard's toggle never has, and a covered cell's tap is inert without the keyboard's
+  preview sound.)
 - **Playhead at 1/4 canvas width** (Pro View only; Compressed keeps center).
 - **Layout**: sticky top bar = mini-timeline strip + its breakpoint buttons, nothing else
   moves up. Left column (play + roster) and right column (canvas tools + the new View
