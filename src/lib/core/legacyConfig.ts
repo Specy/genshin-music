@@ -29,7 +29,20 @@
 // derivation of one (`new Map(PITCHES.map(...))` over PITCHES = game.notes.pitches) that has NO
 // `$game` equivalent to read instead - it exists only here, exactly as it existed only in old
 // Config.ts. Either way no game-selection coupling is added beyond what the adapter already has.
-// The carve-out is scoped to exactly these two named files - it is not a license for UI code to
+// PRO VIEW GEOMETRY CARVE-OUT (Pro View phase A, stated in the module's own header; recorded here
+// phase E so this rule is true as written): two more files sit under $cmp/pages/Composer/ and read
+// their game data through this adapter rather than through `$game` -
+// proViewGeometry.ts, which VALUE-imports the GAME-DATA constants INSTRUMENTS_DATA,
+// NOTES_PER_COLUMN and PITCHES, and proViewNotes.ts beside it, whose `Pitch` is type-only today and
+// which is named with it because the two are one module family and the reason is the same one.
+// They live in the Composer folder for locality, but neither is UI: they are pure arithmetic over
+// the instrument tables $core/Songs/noteIds owns and they call straight into it, so a second import
+// path for those same tables would be a second thing to keep in step for zero behavioral difference
+// (INSTRUMENTS_DATA/NOTES_PER_COLUMN ARE game.instruments.data/game.notes.perColumn, aliased).
+// It is also what keeps them importable from plain vitest with no SvelteKit graph, which is how
+// every formula in them is tested. Same shape of exception as the audio/provider tier above, and
+// scoped the same way: to exactly these two named files.
+// The carve-outs are scoped to exactly the four named files - they are not a license for UI code to
 // do the same.
 // The config-surface golden fixture is the acceptance test for these derivations.
 import {game} from '$game'

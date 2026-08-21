@@ -1,9 +1,12 @@
 # Pro View Composer — Design
 
-Status: SPEC (grilled + domain-modeled 2026-08-21; CONTEXT.md terms landed: Pro View,
-Compressed View, Editable Zone, View Lock). Builds directly on ADR-0007 — this is the
+Status: IMPLEMENTED 2026-08-21 (phases A–E on new-composer; CONTEXT.md terms landed: Pro
+View, Compressed View, Editable Zone, View Lock). Builds directly on ADR-0007 — this is the
 "future pure view" that ADR reserved: same absolute Note Number axis, a second view
 function beside the Song Grid's.
+
+Sections 6, 7 and 8 carry the notes implementation added to the design; everything else
+below is the spec as it was written, and was built as written.
 
 ## 1. Goal
 
@@ -117,10 +120,24 @@ scalar (read in ComposerCanvas.svelte's $effect object, per that file's dependen
   Graphics, redrawn on camera/zone/theme change) → notes → out-of-zone overlay (two
   translucent rects) + the two zone lines → playhead → row-label strip (leftmost,
   screen-fixed x, tracks cameraY; pixi Text pooled per visible row) → timeline strip.
+  AS BUILT the striping is not one canvas-wide Graphics but each COLUMN's own tail
+  Graphics — the only place in the pooled scene that sits between a column's background
+  and its notes, since a column view's children are a fixed prefix plus note sprites drawn
+  in array order. The consequence is accepted rather than worked around: the bands stop
+  where the song's columns stop, so the empty canvas past the last column stays unruled.
+- **A camera move REPAINTS the drawn window** rather than translating the container, and
+  that is not an implementation detail: notes are painted at `y(number) − cameraY` and
+  culled against the window, so a column view that stayed on screen holds sprites at the
+  old offset and none at all for the rows that just entered; translating would also move
+  the notes region's hitarea (`0..height` in container space) away from the pointer. The
+  repaint costs what one note edit costs and only runs while a camera ease is running.
 - **Timeline strip at TOP** in pro: strip y = 0, notes region below it
   (`composerCanvasGeometry` gains the pro branch; `onGeometryChange` reports a
   `timelineTop` flag so ComposerCanvas.svelte pins the DOM button row at top:0).
 - **Playhead** uses the 0.25 fraction in pro (constant beside COMPOSER_PLAYHEAD_CONFIG).
+  As built it is one constant PAIR, `PLAYHEAD_X_FRACTION = {compressed: 0.5, pro: 0.25}`,
+  so the Compressed View's centre is written down in the same place as the Pro View's
+  quarter rather than staying an unnamed 0.5 the pro branch is compared against.
 - **Canvas height** in pro: the notes region fills the viewport height left over by the
   top strip inside `.top-panel-composer` (body height − composer paddings − strip), via a
   pro branch in composerCanvasSize/composerCanvasCssSize (the placeholder must not jump,
@@ -134,6 +151,13 @@ scalar (read in ComposerCanvas.svelte's $effect object, per that file's dependen
 - **Unlocked**: pointer drags gain dy → cameraY (clamped); dx path unchanged;
   flick velocity measured horizontally only (release with vertical motion just stops);
   a Catch still never edits (existing rule).
+- **The drag slop is EITHER-AXIS, and only in pro.** A press that travelled more than
+  DRAG_SLOP_PX in x OR y stops being a tap and cancels the pending long press — recorded
+  even while the frame is locked, where the vertical half moves nothing, because a press
+  that visibly travelled is not a hold in either state. The Compressed View keeps the
+  horizontal-only test it always had: there a stray vertical wander still clicks, and
+  making it not click would have been a regression in the view this feature must not
+  touch. (Same threshold, not a new one — spec §12.)
 - **Tap dispatch** (new renderer callback `onCellTap(column, number)` → Composer.svelte):
   1. keyboard overlay raised → dismiss, swallow;
   2. own-layer note at (column, number) → remove (stranded included — this is delete);
@@ -143,6 +167,23 @@ scalar (read in ComposerCanvas.svelte's $effect object, per that file's dependen
   `toggleNoteInColumn(columnIndex, button)` both the keyboard press and the tap call:
   same preview sound, same history push, same playback-state behavior. Canvas edits do
   NOT move `song.selected`.
+  THREE THINGS THE BUILT DISPATCH SETTLED that the sketch above did not:
+  1. **A cell tap requires a press THIS CANVAS recorded.** pixi hit-tests a page-wide
+     pointerup against the canvas by coordinate, so a release over the canvas that STARTED
+     on a DOM element above it still arrives at the stage handler — the sheet's backdrop
+     div does not swallow releases by covering the canvas. In the Compressed View that
+     release has always selected a column and still does; in the Pro View it would have
+     been an EDIT, so the pro branch also asks that a press was recorded here (found and
+     fixed in phase D).
+  2. **The undo snapshot is taken at the canvas dispatch site only.** `addToHistory` is
+     the tools panel's compound entry and the composer keyboard has never pushed one for a
+     plain note toggle; moving the push into the shared path would have changed what a
+     keyboard press does. So canvas gestures are undoable, keyboard toggles are unchanged,
+     and an inert tap pushes nothing.
+  3. **A tap on a cell covered by an own-layer span is inert WITHOUT sound.** The keyboard
+     previews the note on a covered press (it is a performance as well as an edit); a
+     canvas tap is only an edit, so the covered case returns before the preview rather
+     than playing a note it will not write.
 - **Long-press** (same threshold the keyboard uses) on an own-layer note →
   `onCellLongPress(column, number, screenRect)` → ComposerDurationPopover, which gains a
   virtual-rect anchor beside its HTMLElement one.
@@ -158,14 +199,36 @@ scalar (read in ComposerCanvas.svelte's $effect object, per that file's dependen
   lowered = translated down to a faded sliver (still mounted, still flashing active
   notes; tapping it raises), raised = translateY(0) above a plain rgba backdrop div
   (click → dismiss). Transitions are transform/opacity only.
-- Tempo changers: in pro they render in their own always-visible bottom slot aligned
-  under the right CanvasTool column (outside the overlay); compressed keeps them where
-  they are.
+  **Recording audio force-raises the sheet** for as long as the recording runs, whatever
+  the user last tapped: the recording UI REPLACES the keyboard's content (§9) and carries
+  the only control that stops the recording, so the sheet is `raised || isRecordingAudio`.
+- Tempo changers: in pro they render in their own always-visible slot aligned under the
+  right CanvasTool column (outside the overlay); compressed keeps them where they are.
+  TWO NOTES FROM BUILDING IT:
+  - they were already SIBLINGS of `.composer-keyboard-wrapper` inside ComposerKeyboard
+    rather than children of it, so lowering the sheet would not have taken them down;
+    the extraction into ComposerTempoChangers still earned its keep, because as a sibling
+    of the KEYBOARD they still disappeared with its error and recording branches, and
+    only a slot outside it can be stacked above the sheet's backdrop.
+  - "aligned under the column" became a GRID ROW OF that column in phase E's mobile pass:
+    floated into the window's corner they were pinned to the window while the tools packed
+    down from the top, and on a landscape phone the two met — the tempo buttons covered the
+    View Lock. As the column's sixth row they cannot overlap at any window height (the
+    tools shrink toward them instead), which also gives the column a definite height it
+    otherwise lacked.
 - The `song-info` overlay must not collide with the sliver (move it up by the sliver's
-  height in pro).
+  height in pro). It still overlaps the row-label strip's lowest labels at phone widths,
+  which is accepted: moving it left would put it under the mobile hamburger instead.
 - Mobile (`max-width: 1000px` block): same structure; the sliver/backdrop pattern is
   already a bottom-sheet idiom; verify the canvas vh math against the URL-bar caveats
   documented in composerCanvasGeometry.
+  **The left canvas chevron is inset by the row-label strip's width** — `.canvas-buttons`
+  is `display: none` on a fine-pointer desktop and appears exactly on the coarse-pointer
+  and narrow layouts, where a 45px column-select button drawn from the canvas' left edge
+  would stand on the labels; it starts at `proStripWidth(rowHeight)` instead.
+  **Portrait is not a Pro View question**: the app covers any portrait viewport with its
+  own `.rotate-screen` overlay (`@media screen and (orientation: portrait)`, App.css), in
+  both views and on every route, so the phone case that matters is landscape.
 
 ## 9. Cross-cutting behaviors
 
