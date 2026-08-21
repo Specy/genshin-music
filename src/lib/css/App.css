@@ -2431,8 +2431,8 @@ select {
   background-color: var(--primary-layer-15);
 }
 
-/* A tool whose STATE is on — today only the open View Lock (user addition 2026-08-22): the frame
-   is in the user's hands and the button that gives it back says so, in a half-accent tint of the
+/* A tool whose STATE is on — the open View Lock and the open tools panel (user additions
+   2026-08-22): the button that turns the state back off says so, in a half-accent tint of the
    column's own resting surface. Two classes so it also holds through :hover above. */
 .tool.tool-toggled {
   background-color: color-mix(in srgb, var(--accent) 50%, var(--primary-darken-10));

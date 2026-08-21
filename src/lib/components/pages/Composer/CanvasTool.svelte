@@ -8,7 +8,7 @@
     tooltip?: string;
     ariaLabel?: string;
     style?: string;
-    /** A tool whose STATE is on (the open View Lock) — wears App.css's `.tool-toggled` tint. */
+    /** A tool whose STATE is on (the open View Lock, the open tools) — wears App.css's `.tool-toggled` tint. */
     toggled?: boolean;
     children: Snippet;
   }

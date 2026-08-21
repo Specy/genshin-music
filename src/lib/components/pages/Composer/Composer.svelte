@@ -2137,6 +2137,7 @@
         </CanvasTool>
         <CanvasTool
           onclick={toggleTools}
+          toggled={isToolsVisible}
           tooltip={t('composer:open_tools')}
           ariaLabel={t('composer:open_tools')}
         >
