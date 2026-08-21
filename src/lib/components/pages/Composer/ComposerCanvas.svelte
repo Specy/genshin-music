@@ -55,6 +55,13 @@
      * (an unlocked drag pans the camera) and DIFFS it (re-locking eases back to the Editable Zone).
      */
     viewLocked: boolean;
+    /**
+     * CONTEXT.md: Pro View. Whether the keyboard sheet is up, which the renderer needs for the ONE
+     * rule that depends on it: a settled tap on the canvas puts the sheet down instead of editing a
+     * cell (composerInput.stageReleaseIntent). Read HERE in the $effect object like every other
+     * reactive value - a drag is unaffected, so the canvas goes on scrolling with the sheet up.
+     */
+    keyboardRaised: boolean;
     selectColumn: (index: number, ignoreAudio?: boolean, forceAnchor?: boolean) => void;
     toggleBreakpoint: () => void;
     /** A settled Pro View tap, as the cell it landed on - what it EDITS is Composer.svelte's. */
@@ -65,6 +72,8 @@
       number: number,
       rect: { x: number; y: number; width: number; height: number }
     ) => boolean;
+    /** A settled Pro View tap made while the keyboard sheet is up: lower it, and edit nothing. */
+    onKeyboardDismiss: () => void;
   }
 
   let {
@@ -83,10 +92,12 @@
     breakpoints,
     selectedColumns,
     viewLocked,
+    keyboardRaised,
     selectColumn,
     toggleBreakpoint,
     onProCellTap,
     onProCellLongPress,
+    onKeyboardDismiss,
   }: ComposerCanvasProps = $props();
 
   let canvasContainerEl: HTMLDivElement | undefined;
@@ -176,6 +187,7 @@
           breakpoints,
           selectedColumns,
           viewLocked,
+          keyboardRaised,
           bpm: Number(settings.bpm.value),
           smoothScroll: Boolean(settings.smoothScroll.value),
         },
@@ -184,6 +196,7 @@
           toggleBreakpoint,
           onProCellTap,
           onProCellLongPress,
+          onKeyboardDismiss,
           onGeometryChange: (geometry) => {
             width = geometry.width;
             height = geometry.height;
@@ -271,6 +284,10 @@
       // set by the first run that skipped - and this one changes only when the user presses a button
       // that changes nothing else on the state object.
       viewLocked,
+      // ...and the keyboard sheet's position, read here for the same reason and diffed by nothing:
+      // it decides what a settled TAP means (dismiss instead of edit) and no pixel this renderer
+      // draws depends on it.
+      keyboardRaised,
       bpm: Number(settings.bpm.value),
       smoothScroll: Boolean(settings.smoothScroll.value),
     });

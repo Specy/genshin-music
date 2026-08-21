@@ -7362,13 +7362,22 @@ describe('the Pro View pointer', () => {
      * flipping it is how the rows below state that an unconsumed hold still releases as a tap.
      */
     async function mountPro(
-        options: {viewLocked?: boolean, smoothScroll?: boolean, takeLongPress?: boolean} = {}
+        options: {
+            viewLocked?: boolean
+            smoothScroll?: boolean
+            takeLongPress?: boolean
+            keyboardRaised?: boolean
+        } = {}
     ) {
         const song = makeSong()
         const canvasEl = document.createElement('div')
         document.body.append(canvasEl)
         let viewLocked = options.viewLocked ?? true
         let takeLongPress = options.takeLongPress ?? true
+        //the keyboard sheet, which changes ONE thing about this surface: a settled tap puts it down
+        //instead of editing (spec §2). A drag is untouched - that is the point of the rule.
+        let keyboardRaised = options.keyboardRaised ?? false
+        let dismissals = 0
         const taps: {column: number, number: number}[] = []
         const longPresses: {
             column: number
@@ -7393,6 +7402,7 @@ describe('the Pro View pointer', () => {
             columnsPerCanvas: COLUMNS_PER_CANVAS,
             proView: true,
             viewLocked,
+            keyboardRaised,
             noteNameType: 'Note name',
             breakpoints: song.breakpoints,
             selectedColumns: [],
@@ -7411,6 +7421,10 @@ describe('the Pro View pointer', () => {
             onProCellLongPress: (column, number, rect) => {
                 longPresses.push({column, number, rect})
                 return takeLongPress
+            },
+            onKeyboardDismiss: () => {
+                keyboardRaised = false
+                dismissals++
             },
         })
         await renderer.init()
@@ -7464,8 +7478,12 @@ describe('the Pro View pointer', () => {
             yOfNumber,
             numberAt,
             stripWidth: () => proStripWidth(rowHeight),
+            dismissals: () => dismissals,
             setViewLocked(locked: boolean) {
                 viewLocked = locked
+            },
+            setKeyboardRaised(raised: boolean) {
+                keyboardRaised = raised
             },
             push() {
                 renderer.update(state())
@@ -7796,14 +7814,89 @@ describe('the Pro View pointer', () => {
     it('a release with no press of ours behind it edits nothing', async () => {
         const harness = await mountPro()
         try {
-            //the raised keyboard sheet's backdrop swallows the pointerDOWN in the DOM, while pixi
-            //hit-tests a page-wide pointerup against the canvas - so this is the shape of event a
-            //dismissing tap can still deliver here, and it must not write a note (spec §2)
+            //a press taken by a DOM element over the canvas (a side chevron, a key of the raised
+            //sheet) still delivers its pointerUP here - pixi hit-tests a page-wide release against
+            //the canvas by coordinate - and it must not write a note (spec §7)
             harness.release(
                 harness.xOfColumn(SELECTED),
                 harness.yOfNumber(addableNumber(harness), harness.lockedCamera())
             )
             expect(harness.taps).toEqual([])
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    // THE KEYBOARD SHEET IS UP, and the canvas under it is no longer covered by a backdrop: it is
+    // bright, it scrolls, and a settled tap on it is what puts the sheet away (spec §2/§8).
+    it('with the sheet up, a settled tap dismisses it and edits nothing', async () => {
+        const harness = await mountPro({keyboardRaised: true})
+        try {
+            harness.tap(
+                harness.xOfColumn(SELECTED),
+                harness.yOfNumber(addableNumber(harness), harness.lockedCamera())
+            )
+            expect(harness.dismissals()).toBe(1)
+            expect(harness.taps).toEqual([])
+            expect(harness.selectColumnCalls).toEqual([])
+            //...and the NEXT tap, with the sheet now down, is an ordinary edit again
+            harness.push()
+            const number = addableNumber(harness)
+            harness.tap(harness.xOfColumn(SELECTED), harness.yOfNumber(number, harness.lockedCamera()))
+            expect(harness.taps).toEqual([{column: SELECTED, number}])
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    it('with the sheet up, a drag still scrolls the song and leaves the sheet alone', async () => {
+        const harness = await mountPro({keyboardRaised: true})
+        try {
+            const y = harness.yOfNumber(addableNumber(harness), harness.lockedCamera())
+            const x = harness.xOfColumn(SELECTED)
+            //two columns to the left, exactly as it would scroll with the sheet down
+            harness.drag(x, y, x - COLUMN_WIDTH * 2, y)
+            expect(harness.selectColumnCalls).toContain(SELECTED + 2)
+            expect(harness.dismissals()).toBe(0)
+            expect(harness.taps).toEqual([])
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    it('with the sheet up, a hold opens no popover - the release dismisses instead', async () => {
+        const harness = await mountPro({keyboardRaised: true})
+        try {
+            const x = harness.xOfColumn(SELECTED)
+            const y = harness.yOfNumber(addableNumber(harness), harness.lockedCamera())
+            harness.press(x, y)
+            await vi.advanceTimersByTimeAsync(COMPOSER_LONG_PRESS_MS + 16)
+            expect(harness.longPresses).toEqual([])
+            harness.release(x, y)
+            expect(harness.dismissals()).toBe(1)
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    // The unlocked pan is a DRAG, so it goes on working with the sheet up as well - the vertical
+    // half of "the canvas scrolls exactly as it does when the sheet is down".
+    it('with the sheet up and the view unlocked, a drag still pans the frame', async () => {
+        const harness = await mountPro({viewLocked: false, keyboardRaised: true})
+        try {
+            const number = addableNumber(harness)
+            const x = harness.xOfColumn(SELECTED)
+            const y = harness.yOfNumber(number, harness.lockedCamera())
+            const travel = harness.rowHeight * 3
+            harness.drag(x, y, x, y + travel)
+            expect(harness.dismissals()).toBe(0)
+            //the same screen point now stands three rows higher up the axis
+            harness.tap(x, y)
+            expect(harness.dismissals()).toBe(1)
+            expect(harness.taps).toEqual([])
+            harness.push()
+            harness.tap(x, y)
+            expect(harness.taps).toEqual([{column: SELECTED, number: number + 3}])
         } finally {
             harness.destroy()
         }

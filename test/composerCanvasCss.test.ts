@@ -572,7 +572,60 @@ describe('the Pro View canvas: the window it fills and the band it stops above',
         const tempoTag = COMPOSER.indexOf('<ComposerTempoChangers')
         expect(column).toBeGreaterThan(-1)
         expect(tempoTag).toBeGreaterThan(column)
-        expect(tempoTag).toBeLessThan(COMPOSER.indexOf('composer-keyboard-backdrop'))
+        //...and before the sheet itself, which is the stacking order App.css's z-indexes state:
+        //the changers are reachable with the keyboard up, which is the whole reason they left it
+        expect(tempoTag).toBeLessThan(COMPOSER.indexOf('<ComposerKeyboard'))
+    })
+
+    /**
+     * THE RAISED SHEET'S SCRIM, and the one thing it must not be: the window.
+     *
+     * It was an `inset: 0` backdrop div, so raising the keyboard dimmed and disabled the whole Pro
+     * View canvas - the surface being edited. It is the SHEET'S OWN pseudo-element now, so the band
+     * is the keyboard's box whatever instrument is loaded, with `--pro-scrim-head` of gradient above
+     * it fading to nothing; the canvas above that is at full brightness and takes its own pointers,
+     * which is what lets a drag scroll the song while the sheet is up (composerInput's
+     * `dismiss-sheet` is what a settled TAP means instead).
+     */
+    it('scrims the keyboard\'s own band and leaves the canvas alone', () => {
+        const scrim = declarationsOf('.composer-grid-pro .composer-keyboard-wrapper::before')
+        //the sheet's box plus the head above it, and nothing else of the window
+        expect(scrim.get('inset')).toBe('calc(-1 * var(--pro-scrim-head)) 0 0 0')
+        expect(declarationsOf(':root', '--pro-scrim-head').get('--pro-scrim-head')).toBe('5rem')
+        //a gradient that dies out upward, so there is no edge where the scrim stops
+        expect(scrim.get('background')).toContain('linear-gradient(')
+        expect(scrim.get('background')).toContain('rgba(0, 0, 0, 0)')
+        //behind the keys, in front of the canvas - the wrapper's own stacking context
+        expect(scrim.get('z-index')).toBe('-1')
+        //fades in and out with the raise, rather than appearing with it
+        expect(scrim.get('opacity')).toBe('0')
+        expect(scrim.get('transition')).toBe('opacity 0.28s ease')
+        expect(
+            declarationsOf('.composer-grid-pro-raised .composer-keyboard-wrapper::before').get(
+                'opacity'
+            )
+        ).toBe('1')
+        //THE SCRIM IS NOT A HIT TARGET, and neither is the sheet's own empty air: a tap beside the
+        //keyboard has to reach the canvas to dismiss the sheet, so only the wrapper's CHILDREN
+        //(the keys, the side chevrons, the recording UI) take pointers
+        expect(scrim.get('pointer-events')).toBe('none')
+        expect(
+            declarationsOf('.composer-grid-pro-raised .composer-keyboard-wrapper').get(
+                'pointer-events'
+            )
+        ).toBe('none')
+        expect(
+            declarationsOf('.composer-grid-pro-raised .composer-keyboard-wrapper > *').get(
+                'pointer-events'
+            )
+        ).toBe('auto')
+        //...and the canvas says so: while the sheet is up, hovering it shows the dismissing pointer
+        expect(declarationsOf('.composer-grid-pro-raised .canvas-wrapper').get('cursor')).toBe(
+            'pointer'
+        )
+        //there is no backdrop element left to cover anything
+        expect(CSS_WITHOUT_COMMENTS).not.toContain('.composer-keyboard-backdrop')
+        expect(COMPOSER).not.toContain('composer-keyboard-backdrop')
     })
 
     for (const viewport of VIEWPORTS) {

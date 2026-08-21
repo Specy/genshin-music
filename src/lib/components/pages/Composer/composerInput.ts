@@ -60,6 +60,14 @@ export type ComposerPopoverAnchor = { element: HTMLElement } | { rect: ScreenRec
  *    press was ever recorded on the stage (pixi hit-tests a page-wide pointerup against the canvas,
  *    so a release over the canvas that STARTED on a DOM element above it lands here; that has always
  *    picked a column and still does).
+ *  - `dismiss-sheet`: the Pro View's settled tap WHILE THE KEYBOARD SHEET IS UP — it puts the sheet
+ *    down and edits nothing (spec §2's "the first tap on the canvas dismisses it and is SWALLOWED").
+ *    The swallow used to be structural: the sheet's backdrop covered the whole canvas, so the press
+ *    never reached pixi at all. That backdrop is now a scrim over the KEYBOARD'S OWN BAND (App.css),
+ *    which is what lets the canvas above it go on scrolling under the hand while the sheet is up —
+ *    so the swallow has to be a rule, and it is this one. It sits AFTER `settle-drag`, which is the
+ *    whole point: a drag while the sheet is up scrolls exactly as it does while the sheet is down
+ *    and leaves it standing.
  *  - `cell-tap`: the Pro View's settled tap, which is an EDIT (spec §2 "tap = edit only").
  *  - `nothing`: a Pro View press that is neither. Two ways in, and both matter:
  *    `longPressConsumed` — the hold already opened the duration popover, so the release must not also
@@ -70,8 +78,8 @@ export type ComposerPopoverAnchor = { element: HTMLElement } | { rect: ScreenRec
  *    a gesture that missed rather than a tap.
  *
  * `pressed` is what makes the Pro View's edit require a press this canvas actually recorded. The
- * Compressed View asks nothing of it, so the sheet/backdrop case above keeps its old meaning while
- * an edit can only ever come from a press that began on the notes stage.
+ * Compressed View asks nothing of it, so the page-wide-release case above keeps its old meaning
+ * while an edit — or a dismissal — can only ever come from a press that began on the notes stage.
  */
 export function stageReleaseIntent(input: {
   proView: boolean;
@@ -83,11 +91,33 @@ export function stageReleaseIntent(input: {
   moved: boolean;
   /** a long press fired on this press and something took it */
   longPressConsumed: boolean;
-}): 'settle-drag' | 'select-column' | 'cell-tap' | 'nothing' {
+  /** the Pro View's keyboard sheet is up (raised, or held up by a recording) */
+  sheetRaised: boolean;
+}): 'settle-drag' | 'select-column' | 'cell-tap' | 'dismiss-sheet' | 'nothing' {
   if (input.becameDrag) return 'settle-drag';
   if (!input.proView) return 'select-column';
   if (input.longPressConsumed || input.moved || !input.pressed) return 'nothing';
-  return 'cell-tap';
+  return input.sheetRaised ? 'dismiss-sheet' : 'cell-tap';
+}
+
+/**
+ * WHETHER A PRESS ON THE NOTES STAGE STARTS THE LONG-PRESS CLOCK — the press-time half of the rules
+ * above, and the same three facts asked at the other end of the gesture.
+ *
+ * The Compressed View has no long press on the canvas at all. A CATCH arms nothing: that press is
+ * the grab of a moving canvas, so it neither edits nor opens anything (CONTEXT.md: Catch). And with
+ * the SHEET UP the canvas has exactly two meanings — scroll it, or put the sheet away — so a hold
+ * must not open a duration popover over a keyboard the user is still looking at; the release
+ * dismisses instead (`dismiss-sheet` above), which a consumed long press would have suppressed.
+ */
+export function stagePressArmsLongPress(input: {
+  proView: boolean;
+  /** this press entered a drag at once, stopping a Coast (CONTEXT.md: Catch) */
+  catching: boolean;
+  /** the Pro View's keyboard sheet is up */
+  sheetRaised: boolean;
+}): boolean {
+  return input.proView && !input.catching && !input.sheetRaised;
 }
 
 /** The cell a Pro View pointer is over: a song column and a Note Number, both already resolved. */

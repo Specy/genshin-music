@@ -2019,10 +2019,12 @@
           breakpoints={song.breakpoints}
           {selectedColumns}
           {viewLocked}
+          keyboardRaised={keyboardSheetRaised}
           {selectColumn}
           {toggleBreakpoint}
           onProCellTap={handleProCellTap}
           onProCellLongPress={handleProCellLongPress}
+          onKeyboardDismiss={() => (keyboardRaised = false)}
         />
       {/key}
       <div class="buttons-composer-wrapper-right">
@@ -2092,33 +2094,19 @@
       </div>
     </div>
   </div>
-  <!-- THE PRO VIEW'S KEYBOARD OVERLAY, in three pieces and in this order, which is also their
-       stacking order (App.css gives them z-indexes 5/6/7 rather than leaning on it, but the DOM
-       order says the same thing):
+  <!-- THE PRO VIEW'S KEYBOARD OVERLAY, in two pieces:
 
-       1. the BACKDROP, always mounted and opacity-toggled so it can fade both ways. It covers the
-          canvas completely while the sheet is up, which is what makes the dismissing tap SWALLOWED
-          by construction rather than by a rule someone has to remember: the press lands on this
-          button and pixi never hears of it.
-       2. the KEYBOARD itself, unchanged - the same component, the same props, still mounted while
-          it is down so its active-note flashes keep running.
-       3. the SLIVER's tap target, in front of the lowered sheet so raising it cannot also press a
-          key. It is gone once the sheet is up, where the backdrop is what a tap outside means.
+       1. the KEYBOARD itself, unchanged - the same component, the same props, still mounted while
+          it is down so its active-note flashes keep running. It paints its own SCRIM (App.css's
+          `.composer-keyboard-wrapper::before`), which is why there is no backdrop element here any
+          more: the scrim is the sheet's own band plus a fading head, so the canvas above it stays
+          bright, live and scrollable, and a settled tap on it is what dismisses the sheet (spec §7,
+          composerInput.stageReleaseIntent) - the swallow is that rule rather than an element the
+          press cannot get past.
+       2. the SLIVER's tap target, in front of the lowered sheet so raising it cannot also press a
+          key. It is gone once the sheet is up, where the canvas is what a tap outside means.
 
-       The Compressed View renders none of them and the keyboard is simply the bottom of the page. -->
-  {#if proView}
-    <button
-      class={[
-        'composer-keyboard-backdrop',
-        keyboardSheetRaised && 'composer-keyboard-backdrop-visible',
-      ]}
-      aria-label={t('composer:hide_keyboard')}
-      onclick={(e) => {
-        e.stopPropagation();
-        keyboardRaised = false;
-      }}
-    ></button>
-  {/if}
+       The Compressed View renders neither and the keyboard is simply the bottom of the page. -->
   <ComposerKeyboard
     functions={{
       handleClick,

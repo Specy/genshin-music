@@ -1081,6 +1081,11 @@ a {
      test/composerCanvasCss.test.ts reads this declaration back out of this file, the way it does the
      timeline buttons' 2.2rem. */
   --pro-sliver-height: 1.5rem;
+  /* HOW FAR THE RAISED SHEET'S SCRIM REACHES ABOVE THE SHEET, and it is a fade rather than a band:
+     the scrim covers the keyboard's own box (see `.composer-keyboard-wrapper::before`) and this is
+     the head above it the gradient dies out in, so the canvas over the sheet is dimmed by nothing.
+     Beside the sliver because the two together are the whole of the sheet's presence on the canvas. */
+  --pro-scrim-head: 5rem;
 }
 
 .icon {
@@ -3097,33 +3102,59 @@ select {
 .composer-grid-pro-raised .composer-keyboard-wrapper {
   transform: translateY(0);
   opacity: 1;
-  pointer-events: auto;
-}
-
-/* THE BACKDROP the raised sheet sits over: plain rgba and deliberately NO blur (a backdrop-filter
-   over a full-window canvas costs a full-screen readback every frame the canvas repaints).
-
-   ALWAYS MOUNTED, opacity-toggled, so the fade has something to run on in both directions. While it
-   is invisible it is also `pointer-events: none`, so nothing under it is shadowed by a hit target it
-   cannot see. While it IS up it covers the canvas completely, which is what makes the dismissing tap
-   swallowed by construction: the press never reaches pixi at all. */
-.composer-keyboard-backdrop {
-  position: fixed;
-  inset: 0;
-  z-index: 5;
-  border: none;
-  padding: 0;
-  margin: 0;
-  background-color: rgba(0, 0, 0, 0.45);
-  opacity: 0;
+  /* THE SHEET TAKES ITS KEYS' PRESSES AND NOTHING ELSE'S. `auto` on the wrapper alone would make
+     its whole full-width flex box a hit target, so a tap on the empty air beside the keyboard - or
+     on the scrim's head above it - would be swallowed by a box with no control in it instead of
+     reaching the canvas and dismissing the sheet (see `.canvas-wrapper`'s cursor below). The
+     children are the keys, the two side chevrons and the recording UI; the ::before scrim is not
+     one of them and inherits the `none`. */
   pointer-events: none;
-  transition: opacity 0.28s ease;
-  cursor: default;
 }
 
-.composer-keyboard-backdrop-visible {
-  opacity: 1;
+.composer-grid-pro-raised .composer-keyboard-wrapper > * {
   pointer-events: auto;
+}
+
+/* THE SCRIM the raised sheet stands on: plain rgba and deliberately NO blur (a backdrop-filter over
+   a full-window canvas costs a full-screen readback every frame the canvas repaints).
+
+   THE SHEET'S OWN BAND AND NOT THE WINDOW, which is the whole of this rule. It was a fixed
+   `inset: 0` div over everything, and with the Pro View's canvas being the window that meant the
+   surface being edited spent every raise dimmed and unreachable. As the SHEET'S OWN pseudo-element
+   the band is the keyboard's box by construction - whatever instrument is loaded, whatever the
+   recording UI's height is - with `--pro-scrim-head` of gradient above it dying out to nothing, so
+   the canvas over the sheet is at full brightness and takes its own pointers (spec §8).
+
+   `z-index: -1` puts it behind the keys and still inside the wrapper's own stacking context (the
+   rule above gives it `position: fixed` and a z-index), so it is over the canvas and under every
+   key. Opacity-toggled rather than mounted and unmounted, so the fade runs in both directions. */
+.composer-grid-pro .composer-keyboard-wrapper::before {
+  content: '';
+  position: absolute;
+  inset: calc(-1 * var(--pro-scrim-head)) 0 0 0;
+  z-index: -1;
+  background: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 0.5) 0,
+    rgba(0, 0, 0, 0.5) calc(100% - var(--pro-scrim-head)),
+    rgba(0, 0, 0, 0) 100%
+  );
+  opacity: 0;
+  transition: opacity 0.28s ease;
+  pointer-events: none;
+}
+
+.composer-grid-pro-raised .composer-keyboard-wrapper::before {
+  opacity: 1;
+}
+
+/* THE DISMISS ZONE'S CURSOR (spec §8). With the scrim off the canvas, the one thing that says "a
+   tap here puts the keyboard away" is the pointer: the canvas looks exactly as it does with the
+   sheet down, and it is still live (a drag scrolls it). Gated on the raised class, so it is gone
+   the instant the sheet is - and it cannot appear in the Compressed View, where neither class
+   exists. `cursor` is inherited, so the canvas element pixi appends inside gets it too. */
+.composer-grid-pro-raised .canvas-wrapper {
+  cursor: pointer;
 }
 
 /* THE SLIVER'S TAP TARGET: the band of window the lowered sheet peeks into, as its own transparent

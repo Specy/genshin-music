@@ -83,6 +83,7 @@ import {
 import {
   COMPOSER_LONG_PRESS_MS,
   proTapTarget,
+  stagePressArmsLongPress,
   stageReleaseIntent,
   type ProCellTarget,
   type ScreenRect,
@@ -604,6 +605,22 @@ export interface ComposerRendererState {
    */
   viewLocked: boolean;
   /**
+   * WHETHER THE PRO VIEW'S KEYBOARD SHEET IS UP (CONTEXT.md: Pro View; spec §8), which this class
+   * needs for one reason only: a settled tap on the canvas PUTS IT DOWN and edits nothing
+   * (composerInput.stageReleaseIntent's `dismiss-sheet`).
+   *
+   * It used to need nothing at all, because the sheet's backdrop covered the canvas and the press
+   * never reached pixi. The scrim covers the keyboard's own band now - the canvas above it stays
+   * bright and live, which is what lets a DRAG scroll the song while the sheet is up - so the
+   * swallow is a rule this class applies rather than an element that ate the event.
+   *
+   * Composer.svelte's `keyboardRaised || isRecordingAudio`, i.e. the same flag the raised class on
+   * the grid is written from, so the rule and the picture cannot disagree. Ephemeral like the View
+   * Lock, read in ComposerCanvas.svelte's $effect object per that file's dependency rule; nothing
+   * here DIFFS it (it changes no pixel this class draws).
+   */
+  keyboardRaised: boolean;
+  /**
    * ComposerSettings' `noteNameType`: the wording the composer keyboard prints on its keys, and
    * therefore what the Pro View's row-label strip prints on the rows that ARE keys (spec §2 - the
    * strip shows what the key shows, resolved through the same Instrument.getNoteText call).
@@ -693,6 +710,15 @@ export interface ComposerRendererCallbacks {
    * exactly like a hold on a keyboard key that opens no popover: it still completes as a tap.
    */
   onProCellLongPress: (column: number, number: number, rect: ScreenRect) => boolean;
+  /**
+   * A SETTLED TAP ON THE CANVAS WHILE THE KEYBOARD SHEET IS UP: put it down, and edit nothing
+   * (spec §2's dismiss-and-swallow, decided by composerInput.stageReleaseIntent).
+   *
+   * The Pro View only, and never together with onProCellTap - the two are exclusive branches of the
+   * same release, which is what makes "the first tap dismisses" true of a tap anywhere on the
+   * canvas, cell or no cell.
+   */
+  onKeyboardDismiss: () => void;
   onGeometryChange: (geometry: {
     width: number;
     /** the NOTES region's height - the canvas is this plus timelineHeight */
@@ -3640,9 +3666,16 @@ export class ComposerRenderer {
         position: this.snapManualPosition(this.scrollPosition),
       });
     }
-    //THE PRO VIEW'S LONG PRESS starts counting here, and a CATCH arms nothing: that press is the
-    //grab of a moving canvas, so it neither edits nor opens anything (CONTEXT.md: Catch).
-    if (this.state.proView && !catching) {
+    //THE PRO VIEW'S LONG PRESS starts counting here - or does not, which is composerInput's rule
+    //and not this file's: a Catch arms nothing, and neither does a press made while the keyboard
+    //sheet is up, where the release is a dismissal (see stagePressArmsLongPress).
+    if (
+      stagePressArmsLongPress({
+        proView: this.state.proView,
+        catching,
+        sheetRaised: this.state.keyboardRaised,
+      })
+    ) {
       this.proLongPressTimeout = setTimeout(this.fireProLongPress, COMPOSER_LONG_PRESS_MS);
     }
   };
@@ -3824,9 +3857,13 @@ export class ComposerRenderer {
       pressed: pointer !== null,
       moved: pointer?.moved ?? false,
       longPressConsumed: consumed,
+      sheetRaised: this.state.keyboardRaised,
     });
     if (intent === 'settle-drag') return this.settleStageDrag(release);
     if (intent === 'nothing') return;
+    //the sheet goes down and the cell under the finger is never resolved: dismissing IS the whole
+    //of this release (spec §2), so nothing else can also happen on it
+    if (intent === 'dismiss-sheet') return this.callbacks.onKeyboardDismiss();
     if (intent === 'cell-tap') {
       const target = this.proTapTargetAt(e.globalX, e.globalY);
       //the dispatch itself is Composer.svelte's: this class resolved the cell and stops there
