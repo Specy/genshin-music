@@ -8,6 +8,7 @@
   // long-press's own pointerup can't dismiss it: dismissal listens for pointerDOWN
   // outside, and the opening gesture has none left.
   import { t } from '$i18n/binding.svelte';
+  import type { ComposerPopoverAnchor } from './composerInput';
 
   let {
     span,
@@ -18,8 +19,12 @@
   }: {
     span: number;
     maxSpan: number;
-    /** The long-pressed button element — a live reference so the popover follows window resizes. */
-    anchor: HTMLElement;
+    /**
+     * WHAT THIS POPOVER IS POSITIONED AGAINST, in either of two shapes (see ComposerPopoverAnchor):
+     * the long-pressed keyboard BUTTON as a live element, so the popover follows window resizes, or
+     * a bare screen RECT for a Pro View cell, which is painted pixels and has no element to follow.
+     */
+    anchor: ComposerPopoverAnchor;
     onChange: (span: number) => void;
     onClose: () => void;
   } = $props();
@@ -34,9 +39,12 @@
   //extra hold columns beyond the note itself
   const holdAmount = $derived(span - 1);
   const maxHoldAmount = $derived(Math.max(0, maxSpan - 1));
+  //re-measured on every resize for an element anchor, which can reflow; a rect anchor is the
+  //measurement itself and simply passes through (the cell it names cannot be re-measured - it is a
+  //position on a canvas, not a node)
   const anchorRect = $derived.by(() => {
     void resizeTick;
-    return anchor.getBoundingClientRect();
+    return 'element' in anchor ? anchor.element.getBoundingClientRect() : anchor.rect;
   });
   const left = $derived.by(() => {
     void resizeTick;
