@@ -161,6 +161,9 @@ scalar (read in ComposerCanvas.svelte's $effect object, per that file's dependen
   Graphics, redrawn on camera/zone/theme change) → notes → out-of-zone overlay (two
   translucent rects) + the two zone lines → playhead → row-label strip (leftmost,
   screen-fixed x, tracks cameraY; pixi Text pooled per visible row) → timeline strip.
+  The strip's own background repeats the canvas' inert-row shade on its no-button rows
+  and its labels are centered in the band, both ways (user revision, 2026-08-21 — the
+  strip first shipped with a uniform backing and left-set text).
   AS BUILT the striping is not one canvas-wide Graphics but each COLUMN's own tail
   Graphics — the only place in the pooled scene that sits between a column's background
   and its notes, since a column view's children are a fixed prefix plus note sprites drawn
