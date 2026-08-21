@@ -609,6 +609,7 @@
         "use_song_pitch": "曲のピッチを使用",
         "use_song_reverb": "曲のリバーブを使用",
         "note_icon": "ノートアイコン",
+        "solo": "ソロ",
         "volume": "音量",
         "volume_high_warning": "歪みが聞こえる場合は音量を下げてください",
         "move_down": "下に移動",

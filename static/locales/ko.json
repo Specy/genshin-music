@@ -609,6 +609,7 @@
     "use_song_pitch": "곡의 음높이를 사용하기",
     "use_song_reverb": "울림 사용하기",
     "note_icon": "노트 아이콘",
+    "solo": "솔로",
     "volume": "음량",
     "volume_high_warning": "음이 깨져 들린다면, 볼륨을 줄여주세요.",
     "move_down": "아래로 내리기",

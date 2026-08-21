@@ -21,7 +21,12 @@
   import { createShortcutListener } from '$stores/KeybindsStore.svelte';
   import { delay } from '$core/utils/Utilities';
   import Analytics from '$core/Analytics';
-  import { InstrumentData, Recording, type RecordedNote } from '$core/Songs/SongClasses';
+  import {
+    InstrumentData,
+    isTrackAudible,
+    Recording,
+    type RecordedNote,
+  } from '$core/Songs/SongClasses';
   import { RecordedSong } from '$core/Songs/RecordedSong';
   import type { ComposedSong } from '$core/Songs/ComposedSong.svelte';
   import type { InstrumentName } from '$core/types';
@@ -372,7 +377,9 @@
       if (isRecording) handleRecording(songNote.id);
       const ins = instruments[songNote.trackIndex];
       const insData = instrumentsData[songNote.trackIndex];
-      if (!ins || insData?.muted) return;
+      //the same derivation the composer plays through, so a song saved with a solo set sounds
+      //identical here; the roster can lag the instrument list, which isTrackAudible tolerates
+      if (!ins || !isTrackAudible(instrumentsData, songNote.trackIndex)) return;
       const pitch = insData?.pitch || settings.pitch.value;
       if (songNote.duration > 0 && ins.supportsSustain) {
         ins.pressNote(songNote.id, pitch, { durationMs: songNote.duration });

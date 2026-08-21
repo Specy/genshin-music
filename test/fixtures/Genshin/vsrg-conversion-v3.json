@@ -24,6 +24,7 @@
         "icon": "border",
         "alias": "",
         "muted": false,
+        "solo": false,
         "reverbOverride": null
       },
       "hitObjects": [

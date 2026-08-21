@@ -609,6 +609,7 @@
         "use_song_pitch": "使用歌曲音高",
         "use_song_reverb": "使用歌曲迴響",
         "note_icon": "音符圖示",
+        "solo": "獨奏",
         "volume": "音量",
         "volume_high_warning": "如果聽到失真，請降低音量",
         "move_down": "向下移動",

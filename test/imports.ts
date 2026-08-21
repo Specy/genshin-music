@@ -26,7 +26,7 @@ export {
 } from '$core/legacyConfig'
 // Domain models
 export {NoteLayer} from '$core/Songs/Layer'
-export {ApproachingNote, NoteColumn, InstrumentData, MidiNote, RecordedNote, Recording} from '$core/Songs/SongClasses'
+export {ApproachingNote, NoteColumn, InstrumentData, isTrackAudible, MidiNote, RecordedNote, Recording} from '$core/Songs/SongClasses'
 // ColumnNote is plain data, not a class - it MUST stay on its own `export type` line. Left in the
 // value list above it does NOT fail loudly (verified: vitest links the module fine and the name
 // just resolves to undefined), and no other gate would catch it either - tsconfig's `exclude` keeps
