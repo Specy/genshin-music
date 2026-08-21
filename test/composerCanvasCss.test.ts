@@ -582,6 +582,13 @@ describe('the Pro View canvas: the window it fills and the band it stops above',
         //column runs past the canvas' bottom edge and the tempo changers sit against the window's,
         //beside the sliver and the song-info row rather than above a band of nothing.
         expect(tools.get('max-height')).toBe('calc(100vh - 0.4rem)')
+        //...and the row the column stretches in is the GRID's here, not the canvas'. That height is
+        //written inline by Composer.svelte (an inline `height` is the one thing this stylesheet
+        //cannot override), and `fit-content` - the Compressed View's - is the canvas' own height,
+        //which is where the tempo changers used to stop.
+        expect(COMPOSER).toContain(
+            `style="height:{proView ? '100%' : 'fit-content'};width:100%"`
+        )
         //the same six rows below the breakpoint, with the smaller cap that block already had
         expect(mediaBlock(`only screen and (max-width: ${COMPOSER_MOBILE_MAX_WIDTH}px)`)).toContain(
             'grid-template-rows: repeat(5, minmax(0, 4rem)) 1fr;'
@@ -654,10 +661,10 @@ describe('the Pro View canvas: the window it fills and the band it stops above',
                 'pointer-events'
             )
         ).toBe('auto')
-        //...and the canvas says so: while the sheet is up, hovering it shows the dismissing pointer
-        expect(declarationsOf('.composer-grid-pro-raised .canvas-wrapper').get('cursor')).toBe(
-            'pointer'
-        )
+        //...and the canvas says "press me" on its own, in both views - which is why removing the
+        //backdrop is the whole of the dismiss affordance: that div sat between the mouse and this
+        //declaration with a `cursor: default` of its own.
+        expect(declarationsOf('.canvas-relative canvas').get('cursor')).toBe('pointer !important')
         //there is no backdrop element left to cover anything
         expect(CSS_WITHOUT_COMMENTS).not.toContain('.composer-keyboard-backdrop')
         expect(COMPOSER).not.toContain('composer-keyboard-backdrop')
