@@ -214,11 +214,17 @@ describe('Composer tools clipboard lifecycle', () => {
         },
     )
 
-    it('closing and reopening tools preserves copied notes but starts a fresh undo session', () => {
+    it('discards the copied notes when the panel CLOSES, and only then', () => {
+        //user revision 2026-08-22: a copy crosses songs only while the panel stays open, so the
+        //close is where it is dropped. The guard is the half that matters - an unconditional
+        //assignment here would also wipe a clipboard the user is opening the panel to paste from.
         const assigned = assignedIdentifiers('toggleTools')
         expect(assigned).toContain('selectedColumns')
         expect(assigned).toContain('undoHistory')
-        expect(assigned).not.toContain('clipboard')
+        expect(assigned).toContain('clipboard')
+        expect(functionCode('toggleTools')).toContain(
+            'if (wasVisible) clipboard = { columns: [], pitches: [] }'
+        )
     })
 
     it('keeps Clear Selection as the explicit way to leave copy/paste mode', () => {

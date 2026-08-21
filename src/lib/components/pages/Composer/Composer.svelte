@@ -1,3 +1,17 @@
+<script module lang="ts">
+  /**
+   * WHAT THE KEYBOARD IS HANDED WHILE THE LOWERED SHEET IS CLEARED (spec §4, see
+   * `noteStatesCleared`): ONE Set for the life of the module, so every column advance during such a
+   * playback hands the keys the same reference and no key's `held` prop can change. A fresh empty
+   * Set per advance would clear the marks just as well and repaint the whole keyboard doing it,
+   * which is the cost the clear exists to avoid.
+   *
+   * A plain Set and not a SvelteSet, like every other module-level constant here: it is never
+   * written and nothing may observe it change.
+   */
+  const NO_HELD_BUTTONS = new Set<number>();
+</script>
+
 <script lang="ts">
   import { onMount } from 'svelte';
   import { goto } from '$app/navigation';
@@ -165,6 +179,21 @@
    * is running, whatever the user last tapped.
    */
   const keyboardSheetRaised = $derived(keyboardRaised || isRecordingAudio);
+  /**
+   * THE LOWERED SHEET'S PLAYBACK CLEAR (spec §4). While the song plays with the Pro View's keyboard
+   * sheet down, the keys show NOTHING - every one of them unselected, no held marks - and cost
+   * nothing per column: the two derived that paint them (`heldButtons` below and ComposerKeyboard's
+   * `layerStatuses`) return module constants without reading the column at all, so a column advance
+   * stops reaching the keyboard's DOM. Nobody can see that surface, and animating it was the one
+   * per-tick cost the Pro View's sheet had left.
+   *
+   * NOT A FREEZE, and the three exclusions are the whole of the rule: while the song is STOPPED the
+   * lowered sheet is still live, so browsing and editing with it down keep updating exactly as they
+   * always have; raising it mid-playback restores the flashes on the next advance; and
+   * `keyboardSheetRaised` already includes `isRecordingAudio`, so an audio recording - which forces
+   * the sheet up and puts its only stop control there - is outside this by construction.
+   */
+  const noteStatesCleared = $derived(proView && !keyboardSheetRaised && isPlaying);
   /**
    * THE VIEW LOCK (CONTEXT.md): locked, the canvas stays pinned to the current track's Editable Zone;
    * unlocked, a stage drag pans the frame vertically too and it stays where the hand left it. The
@@ -1227,6 +1256,10 @@
    * there alike.
    */
   const heldButtons = $derived.by(() => {
+    //FIRST, and reading nothing but the gate: a column advance under the clear must not re-enter
+    //the scan below at all, and it does not - this derived has no other dependency to invalidate on
+    //once it has returned here (see noteStatesCleared).
+    if (noteStatesCleared) return NO_HELD_BUTTONS;
     // eslint-disable-next-line svelte/prefer-svelte-reactivity -- rebuilt wholesale by this derived, never mutated after return
     const held = new Set<number>();
     const keyboard = layers[layer];
@@ -1658,8 +1691,12 @@
     const wasVisible = isToolsVisible;
     isToolsVisible = !wasVisible;
     selectedColumns = wasVisible ? [] : [song.selected];
-    // Opening/closing the panel starts a fresh selection/undo session, but is not a clipboard
-    // clear. The explicit Clear Selection action below exits copy/paste mode when requested.
+    // CLOSING THE PANEL ENDS THE COPY SESSION (user revision 2026-08-22). A copy still crosses
+    // songs - that is what the clipboard's captured Basepoints are for, and loadSong still keeps it
+    // - but only for as long as the panel stays open; closing discards it, so reopening always
+    // starts clean rather than offering a paste from whatever was copied hours ago. Opening
+    // discards nothing, there being nothing yet to discard.
+    if (wasVisible) clipboard = { columns: [], pitches: [] };
     undoHistory = [];
   }
 
@@ -2132,13 +2169,15 @@
   </div>
   <!-- THE PRO VIEW'S KEYBOARD OVERLAY, in two pieces:
 
-       1. the KEYBOARD itself, unchanged - the same component, the same props, still mounted while
-          it is down so its active-note flashes keep running. It paints its own SCRIM (App.css's
-          `.composer-keyboard-wrapper::before`), which is why there is no backdrop element here any
-          more: the scrim is the sheet's own band plus a fading head, so the canvas above it stays
-          bright, live and scrollable, and a settled tap on it is what dismisses the sheet (spec §7,
-          composerInput.stageReleaseIntent) - the swallow is that rule rather than an element the
-          press cannot get past.
+       1. the KEYBOARD itself, unchanged - the same component, still mounted while it is down. What
+          a lowered sheet SHOWS turns on whether the song is running: stopped it stays live, which
+          is what makes browsing and editing with it down work; playing it shows nothing at all and
+          costs nothing per column (`noteStatesCleared` above, spec §4). It paints its own SCRIM
+          (App.css's `.composer-keyboard-wrapper::before`), which is why there is no backdrop
+          element here any more: the scrim is the sheet's own band plus a fading head, so the canvas
+          above it stays bright, live and scrollable, and a settled tap on it is what dismisses the
+          sheet (spec §7, composerInput.stageReleaseIntent) - the swallow is that rule rather than
+          an element the press cannot get past.
        2. the SLIVER's tap target, in front of the lowered sheet so raising it cannot also press a
           key. It is gone once the sheet is up, where the canvas is what a tap outside means.
 
@@ -2165,6 +2204,7 @@
       pitch: song.instruments[layer]?.pitch || song.pitch,
       noteNameType: settings.noteNameType.value,
       proView,
+      noteStatesCleared,
     }}
   />
   {#if proView}
@@ -2214,6 +2254,7 @@
     hasCopiedColumns: clipboard.columns.length > 0,
     selectedColumns,
     undoHistory,
+    proView,
   }}
   functions={{
     toggleTools,
