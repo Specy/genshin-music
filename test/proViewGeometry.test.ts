@@ -12,17 +12,23 @@
  * on the build that actually ships them.
  *
  * ONE PIXEL CONVENTION runs through the camera rows: the notes region is ALWAYS exactly
- * `perColumn + 2` rows tall (that IS proRowHeight's divisor, and there is no vertical zoom), so
- * every height here is stated as a whole number of rows and ROW is chosen to divide exactly in both
- * games. A test that picked a round pixel height instead would be asserting float noise.
+ * `perColumn + 2` rows tall (that IS proRowHeight's divisor at zoom 1), so every height here is
+ * stated as a whole number of rows and ROW is chosen to divide exactly in both games. A test that
+ * picked a round pixel height instead would be asserting float noise. The USER'S own zoom - a
+ * multiplier on that fit since 2026-08-22 - has its own describe block at the end of the row
+ * section, and every other row here is at zoom 1 by omission.
  */
 import { describe, expect, it } from 'vitest';
 import { INSTRUMENTS, INSTRUMENTS_DATA, InstrumentData, NOTES_PER_COLUMN, PITCHES } from './imports';
 import {
   AXIS_PADDING_ROWS,
+  PRO_MIN_ROW_HEIGHT_PX,
+  PRO_ZOOM_MAX,
+  PRO_ZOOM_MIN,
   ROW_HEIGHT_FRAMING_ROWS,
   addressableSpan,
   clampCameraY,
+  clampProZoom,
   editableZone,
   isAddable,
   lockedCameraY,
@@ -36,6 +42,7 @@ import {
   visibleRowRange,
   yForNumber,
   zoneRowCount,
+  zoomedCameraY,
   type ProViewAxis,
 } from '$cmp/pages/Composer/proViewGeometry';
 import {
@@ -263,6 +270,155 @@ describe('rows', () => {
     expect(zoneRowCount({ min: 60, max: 60 })).toBe(1);
     const zone = editableZone(WIDEST, 'C');
     expect(zoneRowCount(zone)).toBe(zone.max - zone.min + 1);
+  });
+});
+
+/**
+ * THE USER'S VERTICAL ZOOM (spec §4/§7, user revision 2026-08-22): one multiplier on the fitted row
+ * height, clamped to a range, floored at a drawable px, and never anything else.
+ *
+ * The point of every row here is that the FIT is still what it was: the same two terms, the same
+ * layer-follows-instrument behaviour, with a factor applied on the way out — so a zoomed view keeps
+ * its magnification through a layer switch, and re-locking (which the renderer implements by putting
+ * the multiplier back to 1) gives back exactly the framing the lock has always given.
+ */
+describe('the vertical zoom', () => {
+  it('holds a multiplier inside the documented range, at both ends', () => {
+    expect(clampProZoom(1)).toBe(1);
+    expect(clampProZoom(2)).toBe(2);
+    expect(clampProZoom(PRO_ZOOM_MIN)).toBe(PRO_ZOOM_MIN);
+    expect(clampProZoom(PRO_ZOOM_MAX)).toBe(PRO_ZOOM_MAX);
+    //past either end the gesture simply stops
+    expect(clampProZoom(0.001)).toBe(PRO_ZOOM_MIN);
+    expect(clampProZoom(1e6)).toBe(PRO_ZOOM_MAX);
+    expect(clampProZoom(-3)).toBe(PRO_ZOOM_MIN);
+    //hardware can hand a wheel rate or a touch-distance ratio a zero, a NaN or an infinity; none of
+    //them is a zoom, so they answer "no zoom" rather than an end of the range
+    expect(clampProZoom(Number.NaN)).toBe(1);
+    expect(clampProZoom(Number.POSITIVE_INFINITY)).toBe(1);
+  });
+
+  it('multiplies the fit, whichever of the two terms the fit came from', () => {
+    const wide = zoneRowCount(editableZone(WIDEST, 'C'));
+    const narrow = zoneRowCount(editableZone(NARROWEST, 'C'));
+    for (const zoneRowCountValue of [wide, narrow, undefined]) {
+      const fitted = proRowHeight({ notesRegionHeight: REGION, zoneRowCount: zoneRowCountValue });
+      expect(proRowHeight({ notesRegionHeight: REGION, zoneRowCount: zoneRowCountValue, zoom: 1 }))
+        .toBe(fitted);
+      for (const zoom of [PRO_ZOOM_MIN, 0.75, 1.5, PRO_ZOOM_MAX]) {
+        expect(
+          proRowHeight({ notesRegionHeight: REGION, zoneRowCount: zoneRowCountValue, zoom })
+        ).toBeCloseTo(fitted * zoom, 9);
+      }
+    }
+  });
+
+  it('clamps the multiplier inside the row height itself, so no caller can skip the range', () => {
+    const fitted = proRowHeight({ notesRegionHeight: REGION });
+    expect(proRowHeight({ notesRegionHeight: REGION, zoom: 99 })).toBeCloseTo(
+      fitted * PRO_ZOOM_MAX,
+      9
+    );
+    expect(proRowHeight({ notesRegionHeight: REGION, zoom: 0 })).toBeCloseTo(
+      fitted * PRO_ZOOM_MIN,
+      9
+    );
+  });
+
+  it('keeps a zoomed-out row drawable, and never inflates one above the fit', () => {
+    //a landscape phone framing the widest instrument: the fit is already thin, and half of it must
+    //still be a row something can be drawn in
+    const rows = zoneRowCount(editableZone(WIDEST, 'C'));
+    const tiny = (rows + ROW_HEIGHT_FRAMING_ROWS) * 3;
+    const fitted = proRowHeight({ notesRegionHeight: tiny, zoneRowCount: rows });
+    expect(fitted).toBe(3);
+    expect(proRowHeight({ notesRegionHeight: tiny, zoneRowCount: rows, zoom: PRO_ZOOM_MIN })).toBe(
+      PRO_MIN_ROW_HEIGHT_PX
+    );
+    //...and where the FIT is already under the floor (a region measured before layout), zooming out
+    //stops moving rather than making rows taller than the region fits
+    const degenerate = { notesRegionHeight: 1, zoneRowCount: rows };
+    const degenerateFit = proRowHeight(degenerate);
+    expect(degenerateFit).toBeLessThan(PRO_MIN_ROW_HEIGHT_PX);
+    expect(proRowHeight({ ...degenerate, zoom: PRO_ZOOM_MIN })).toBe(degenerateFit);
+    //zooming IN is never floored - it only ever makes rows taller
+    expect(proRowHeight({ ...degenerate, zoom: PRO_ZOOM_MAX })).toBeCloseTo(
+      degenerateFit * PRO_ZOOM_MAX,
+      9
+    );
+  });
+
+  it('rides on the layer\'s own fit, so a switch keeps the magnification', () => {
+    //the two shipped extremes of reach, at one zoom: each keeps ITS fit, times the same factor -
+    //which is what makes "the fitted base changes under the multiplier" true
+    const zoom = 1.75;
+    for (const name of [WIDEST, NARROWEST]) {
+      const rows = zoneRowCount(editableZone(name, 'C'));
+      const fitted = proRowHeight({ notesRegionHeight: REGION, zoneRowCount: rows });
+      expect(proRowHeight({ notesRegionHeight: REGION, zoneRowCount: rows, zoom })).toBeCloseTo(
+        fitted * zoom,
+        9
+      );
+    }
+    //...and the two are still different row heights, so the switch really did re-fit under it
+    const wide = proRowHeight({
+      notesRegionHeight: REGION,
+      zoneRowCount: zoneRowCount(editableZone(WIDEST, 'C')),
+      zoom,
+    });
+    const narrow = proRowHeight({
+      notesRegionHeight: REGION,
+      zoneRowCount: zoneRowCount(editableZone(NARROWEST, 'C')),
+      zoom,
+    });
+    expect(narrow).toBeGreaterThan(wide);
+  });
+
+  it('keeps the focal point\'s row at the same screen y', () => {
+    const geometry = { axis: AXIS, notesRegionHeight: REGION };
+    const cameraY = ROW * 7;
+    //a row a third of the way down the region, which is where a pointer usually is
+    const focalY = REGION / 3;
+    const number = numberAtY({ axis: AXIS, y: focalY, cameraY, rowHeight: ROW })!;
+    const before = yForNumber({ axis: AXIS, number, rowHeight: ROW, cameraY });
+    for (const zoom of [1.25, 2, 0.6]) {
+      const nextRowHeight = ROW * zoom;
+      const next = zoomedCameraY({ ...geometry, cameraY, focalY, rowHeight: ROW, nextRowHeight });
+      //the row under the finger is where it was, to the pixel the scale allows: the focal OFFSET
+      //inside that row scales with the row, so the row's own top moves by at most one scaled row
+      const after = yForNumber({ axis: AXIS, number, rowHeight: nextRowHeight, cameraY: next });
+      expect(Math.abs(after - before)).toBeLessThanOrEqual(Math.abs(nextRowHeight - ROW) + 1e-9);
+      //...and the axis POSITION under the focal point is exactly preserved, which is the formula
+      expect((next + focalY) / nextRowHeight).toBeCloseTo((cameraY + focalY) / ROW, 9);
+    }
+  });
+
+  it('stays inside the travel, and pins an axis shorter than the region to its top', () => {
+    const geometry = { axis: AXIS, notesRegionHeight: REGION };
+    //zoomed in at the very bottom of the axis: the camera cannot go past the travel's end
+    const deep = zoomedCameraY({
+      ...geometry,
+      cameraY: maxCameraY({ axis: AXIS, rowHeight: ROW, notesRegionHeight: REGION }),
+      focalY: REGION,
+      rowHeight: ROW,
+      nextRowHeight: ROW * PRO_ZOOM_MAX,
+    });
+    expect(deep).toBeLessThanOrEqual(
+      maxCameraY({ axis: AXIS, rowHeight: ROW * PRO_ZOOM_MAX, notesRegionHeight: REGION })
+    );
+    expect(deep).toBeGreaterThanOrEqual(0);
+    //...and zoomed far enough out that the whole axis is shorter than the region, the existing
+    //clamp collapses the travel and the axis sits at the region's top - the degenerate case needs
+    //no branch of its own
+    const shortRow = REGION / (AXIS.rowCount * 2);
+    expect(maxCameraY({ axis: AXIS, rowHeight: shortRow, notesRegionHeight: REGION })).toBe(0);
+    expect(
+      zoomedCameraY({ ...geometry, cameraY: ROW * 20, focalY: 10, rowHeight: ROW, nextRowHeight: shortRow })
+    ).toBe(0);
+    //a row height of 0 (a region measured before layout) has no ratio; the camera is only clamped
+    expect(
+      zoomedCameraY({ ...geometry, cameraY: -50, focalY: 10, rowHeight: 0, nextRowHeight: ROW })
+    ).toBe(0);
   });
 });
 

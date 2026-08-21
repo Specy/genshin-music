@@ -61,6 +61,54 @@ const MAX_BASEPOINT_OFFSET = PITCHES.length - 1;
 export const ROW_HEIGHT_FRAMING_ROWS = 2;
 
 /**
+ * THE VERTICAL ZOOM'S RANGE (spec §7, user revision 2026-08-22): what a pinch or a ctrl+wheel may
+ * multiply the FITTED row height by, at its two ends.
+ *
+ * The zoom is a multiplier on the fit rather than a row height of its own, so the frame the lock
+ * gives a layer stays the anchor at 1x and every layer's zoom means the same thing (see
+ * proRowHeight). The bounds are chosen against what the fit already is on both shipped games:
+ *  - 0.5x, the floor, is "twice as much axis as the locked frame" — on genshin's Lyre (36 rows
+ *    over a ~900px region, ~24px a row) that is a 12px row, still a legible note; the axis is 51
+ *    rows there, so half a fit shows the WHOLE axis and there is nothing further out to go to.
+ *  - 3x is where a row is about a keyboard key's own height (~70px) and one octave fills the
+ *    window — past that the view stops being a score and becomes a magnifier, and the horizontal
+ *    axis (which does not zoom) is unchanged under it.
+ * Neither end is a hard limit of anything: they are the range in which this still reads as the
+ * same view, and they are stated as one PAIR so the two are chosen together.
+ */
+export const PRO_ZOOM_MIN = 0.5;
+/** ...and the ceiling — see PRO_ZOOM_MIN, which is chosen with it. */
+export const PRO_ZOOM_MAX = 3;
+
+/**
+ * THE FLOOR UNDER A ZOOMED ROW, in px: a row a zoom-out may not take below.
+ *
+ * PRO_ZOOM_MIN alone bounds the multiplier and not the result, and the result is what has to stay
+ * drawable: on a short window (a 420px landscape phone framing a 36-row instrument, ~11px a row)
+ * half of the fit is a 5px row, and on the degenerate region composerCanvasGeometry floors at 2px it
+ * would be a fraction of a pixel — a row nothing can be seen in, hit-tested at, or labelled on. Two
+ * pixels is the same floor that module puts under the whole region, for the same reason.
+ *
+ * It never INFLATES a row: where the fit itself is already below this (a region measured before
+ * layout), zooming out simply stops moving instead of making rows taller than the fit — see
+ * proRowHeight.
+ */
+export const PRO_MIN_ROW_HEIGHT_PX = 2;
+
+/**
+ * A zoom multiplier held inside the range above — the one place the two ends are applied, so
+ * "clamped" means the same thing to the wheel, to the pinch and to the renderer's own state.
+ *
+ * A non-finite input answers 1 (no zoom) rather than propagating NaN into every row on the axis:
+ * the callers are a wheel delta and a ratio of two touch distances, and both can be handed a zero
+ * or a NaN by hardware.
+ */
+export function clampProZoom(zoom: number): number {
+  if (!Number.isFinite(zoom)) return 1;
+  return Math.min(PRO_ZOOM_MAX, Math.max(PRO_ZOOM_MIN, zoom));
+}
+
+/**
  * HOW MUCH OF THE PRO VIEW'S NOTES REGION THE ROW-LABEL STRIP TAKES, as a fraction of one row's
  * height, and the px bounds it is held between.
  *
@@ -222,6 +270,24 @@ export function numberForRow(axis: ProViewAxis, row: number): number {
  * an instrument swap or a Basepoint change that widens the zone. Callers that cache anything sized
  * by it (the note textures) have to rebuild there, exactly as they do on a resize.
  *
+ * ...AND THE USER'S OWN ZOOM MULTIPLIES ALL OF THAT (spec §7, user revision 2026-08-22):
+ *
+ *     effectiveRowHeight = fittedRowHeight × zoom
+ *
+ * One multiplication and no second formula, which is the whole point of stating it here: the fit
+ * above stays the thing every layer is framed by (a layer switch moves the FITTED base under the
+ * multiplier, so a zoomed view keeps its magnification through the switch), the lock is still the
+ * state that owns the frame (re-locking resets the multiplier to 1 and this returns the fit
+ * exactly), and every surface sized by a row — the textures, the strip's width and labels, the tap
+ * resolution, the camera's own clamps — follows by asking this one function. `zoom` is ephemeral
+ * renderer state, never a setting and never in a song.
+ *
+ * THE RESULT IS FLOORED and the multiplier is clamped, and they are two different guards: clamping
+ * keeps the gesture inside the range the view still reads in (clampProZoom), while the floor keeps a
+ * row DRAWABLE on a window where even the fit is thin (PRO_MIN_ROW_HEIGHT_PX). The floor is stated
+ * against the fit — `min(fitted, PRO_MIN_ROW_HEIGHT_PX)` — so it can only ever stop a zoom-out and
+ * never inflate a row above what the region fits.
+ *
  * `zoneRowCount` omitted (or non-positive) is the cap alone, which is what the module's own callers
  * use before a zone exists. `perColumn` defaults to this build's game constant and is a parameter
  * only so a test can check both shipped layouts from one build — the same reason composerCanvasSize
@@ -232,12 +298,19 @@ export function proRowHeight(input: {
   /** `zoneRowCount(zone)` for the layer being framed — the SEMITONES its band spans, not its buttons. */
   zoneRowCount?: number;
   perColumn?: number;
+  /** The user's ephemeral vertical zoom, 1 (the fit) unless a pinch or a ctrl+wheel moved it. */
+  zoom?: number;
 }): number {
   const perColumn = input.perColumn ?? NOTES_PER_COLUMN;
   const capped = input.notesRegionHeight / (perColumn + ROW_HEIGHT_FRAMING_ROWS);
   const rows = input.zoneRowCount ?? 0;
-  if (!(rows > 0)) return capped;
-  return Math.min(input.notesRegionHeight / (rows + ROW_HEIGHT_FRAMING_ROWS), capped);
+  const fitted =
+    rows > 0
+      ? Math.min(input.notesRegionHeight / (rows + ROW_HEIGHT_FRAMING_ROWS), capped)
+      : capped;
+  const zoom = clampProZoom(input.zoom ?? 1);
+  if (zoom === 1) return fitted;
+  return Math.max(Math.min(fitted, PRO_MIN_ROW_HEIGHT_PX), fitted * zoom);
 }
 
 /**
@@ -318,6 +391,53 @@ export function clampCameraY(input: {
   cameraY: number;
 }): number {
   return Math.min(Math.max(input.cameraY, 0), maxCameraY(input));
+}
+
+/**
+ * THE CAMERA A ZOOM LEAVES BEHIND: the offset that keeps the axis position under the gesture's
+ * FOCAL POINT at the same screen y while the rows change size (spec §7, user revision 2026-08-22).
+ *
+ * A zoom that ignored its focal point would magnify about the region's top edge, and the row the
+ * user is pinching — the note they are looking at — would slide away under their own fingers. So
+ * the axis distance the focal point stands at, `cameraY + focalY`, is rescaled by the row heights'
+ * ratio and the focal offset taken back off:
+ *
+ *     cameraY' = (cameraY + focalY) × (nextRowHeight / rowHeight) − focalY
+ *
+ * `focalY` is in the NOTES REGION's own coordinates (0 at its top edge), the same space `numberAtY`
+ * and `yForNumber` use — the caller converts a canvas or a page y into it, exactly as the tap
+ * resolution does.
+ *
+ * CLAMPED THROUGH THE ORDINARY TRAVEL, which is what makes the degenerate cases fall out rather
+ * than needing their own branch: zoomed far enough out the axis becomes SHORTER than the region,
+ * `maxCameraY` collapses to 0, and the axis is pinned to the region's top instead of drifting — the
+ * same answer an unlocked pan gets there. A zero/negative row height (a region measured before
+ * layout) has no ratio to rescale by, so the camera is only re-clamped.
+ */
+export function zoomedCameraY(input: {
+  axis: ProViewAxis;
+  notesRegionHeight: number;
+  cameraY: number;
+  /** where the gesture is, in the notes region's own coordinates */
+  focalY: number;
+  /** the row height the current cameraY was measured in */
+  rowHeight: number;
+  /** ...and the one it is being restated in */
+  nextRowHeight: number;
+}): number {
+  const clampInput = {
+    axis: input.axis,
+    rowHeight: input.nextRowHeight,
+    notesRegionHeight: input.notesRegionHeight,
+  };
+  if (!(input.rowHeight > 0) || !Number.isFinite(input.focalY)) {
+    return clampCameraY({ ...clampInput, cameraY: input.cameraY });
+  }
+  const ratio = input.nextRowHeight / input.rowHeight;
+  return clampCameraY({
+    ...clampInput,
+    cameraY: (input.cameraY + input.focalY) * ratio - input.focalY,
+  });
 }
 
 /**

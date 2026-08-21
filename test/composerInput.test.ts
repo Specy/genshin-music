@@ -19,10 +19,15 @@ import ts from 'typescript';
 import { describe, expect, it } from 'vitest';
 import {
   COMPOSER_LONG_PRESS_MS,
+  PRO_ZOOM_WHEEL_RATE,
+  pinchSpan,
+  pinchZoomFactor,
   proCellAction,
   proTapTarget,
   stagePressArmsLongPress,
   stageReleaseIntent,
+  wheelIsProZoom,
+  wheelZoomFactor,
 } from '$cmp/pages/Composer/composerInput';
 
 /** The Compressed View's press, in the state a settled tap leaves it: nothing moved, nothing held. */
@@ -205,6 +210,81 @@ describe('what a tap on a Pro View cell does', () => {
 describe('the long-press threshold', () => {
   it('is the composer keyboard\'s 450ms', () => {
     expect(COMPOSER_LONG_PRESS_MS).toBe(450);
+  });
+});
+
+/**
+ * THE ZOOM GESTURES (spec §7, user revision 2026-08-22): which wheel is a zoom, how much one asks
+ * for, and how a two-finger pinch is measured.
+ *
+ * All three are stated as pure arithmetic for the same reason every other rule in this file is: the
+ * renderer that receives the events is behind a dynamic pixi import, so the only thing a test could
+ * otherwise drive is a whole fake stage. What the renderer keeps is where the zoom IS (its own
+ * ephemeral multiplier) and where the gesture is anchored; the RANGE it is held in belongs to
+ * proViewGeometry.clampProZoom, which has its own coverage.
+ */
+describe('what a wheel with a modifier means', () => {
+  it('is a zoom in the Pro View and nothing at all in the Compressed one', () => {
+    expect(wheelIsProZoom({ proView: true, ctrlKey: true, metaKey: false })).toBe(true);
+    //a trackpad pinch arrives as ctrl+wheel; the mac convention for the same intent is meta
+    expect(wheelIsProZoom({ proView: true, ctrlKey: false, metaKey: true })).toBe(true);
+    //THE COMPRESSED VIEW IS UNTOUCHED: there is no vertical axis to zoom there, so the same event
+    //keeps the horizontal meaning it has always had
+    expect(wheelIsProZoom({ proView: false, ctrlKey: true, metaKey: true })).toBe(false);
+  });
+
+  it('leaves a plain wheel horizontal in both views', () => {
+    for (const proView of [false, true]) {
+      expect(wheelIsProZoom({ proView, ctrlKey: false, metaKey: false })).toBe(false);
+    }
+  });
+
+  it('asks for a multiplier that grows upward and shrinks downward, symmetrically', () => {
+    //a wheel's delta is positive DOWNWARD, and down is out
+    expect(wheelZoomFactor(-100)).toBeGreaterThan(1);
+    expect(wheelZoomFactor(100)).toBeLessThan(1);
+    expect(wheelZoomFactor(0)).toBe(1);
+    //exponential, so a notch means the same ratio wherever the zoom is, and a notch back undoes it
+    expect(wheelZoomFactor(100) * wheelZoomFactor(-100)).toBeCloseTo(1, 12);
+    expect(wheelZoomFactor(-50) ** 2).toBeCloseTo(wheelZoomFactor(-100), 12);
+    //a mouse notch is ~100px of delta and lands near the documented ~1.28x
+    expect(wheelZoomFactor(-100)).toBeCloseTo(Math.exp(100 * PRO_ZOOM_WHEEL_RATE), 12);
+    expect(wheelZoomFactor(-100)).toBeGreaterThan(1.2);
+    expect(wheelZoomFactor(-100)).toBeLessThan(1.4);
+    //...while a trackpad's own 1-10px deltas move it by a few percent, which is what makes a pinch
+    //read as continuous rather than as steps
+    expect(wheelZoomFactor(-5)).toBeLessThan(1.02);
+    //hardware cannot poison the product the caller multiplies
+    expect(wheelZoomFactor(Number.NaN)).toBe(1);
+  });
+});
+
+describe('a two-finger pinch, measured', () => {
+  it('is the fingers\' full distance and the point between them', () => {
+    const span = pinchSpan({ x: 0, y: 0 }, { x: 30, y: 40 });
+    //2D, so a pinch held at any angle counts for what it is
+    expect(span.distance).toBe(50);
+    expect(span.centerX).toBe(15);
+    expect(span.centerY).toBe(20);
+    //order does not matter: two fingers have no first and second
+    const swapped = pinchSpan({ x: 30, y: 40 }, { x: 0, y: 0 });
+    expect(swapped).toEqual(span);
+  });
+
+  it('zooms by how much the fingers spread since they were last measured', () => {
+    expect(pinchZoomFactor(100, 200)).toBe(2);
+    expect(pinchZoomFactor(200, 100)).toBe(0.5);
+    expect(pinchZoomFactor(120, 120)).toBe(1);
+    //INCREMENTAL, so the product of a gesture's frames is the gesture: 100 -> 150 -> 300 is 3x
+    expect(pinchZoomFactor(100, 150) * pinchZoomFactor(150, 300)).toBeCloseTo(3, 12);
+  });
+
+  it('answers 1 for a degenerate span rather than an infinity', () => {
+    //two fingers landing on the same point, or a first frame with nothing to compare against
+    expect(pinchZoomFactor(0, 50)).toBe(1);
+    expect(pinchZoomFactor(50, 0)).toBe(1);
+    expect(pinchZoomFactor(Number.NaN, 50)).toBe(1);
+    expect(pinchSpan({ x: 5, y: 5 }, { x: 5, y: 5 }).distance).toBe(0);
   });
 });
 
