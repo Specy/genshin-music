@@ -21,6 +21,7 @@ import {
   COMPOSER_LONG_PRESS_MS,
   proCellAction,
   proTapTarget,
+  stagePressArmsLongPress,
   stageReleaseIntent,
 } from '$cmp/pages/Composer/composerInput';
 
@@ -30,6 +31,9 @@ const settledPress = {
   pressed: true,
   moved: false,
   longPressConsumed: false,
+  //the keyboard sheet is DOWN in every row that does not say otherwise - it is the Pro View's
+  //ordinary state, and the Compressed View has no sheet at all
+  sheetRaised: false,
 };
 
 describe('what a release on the notes stage means', () => {
@@ -77,14 +81,64 @@ describe('what a release on the notes stage means', () => {
   });
 
   // pixi hit-tests a page-wide pointerup against the canvas, so a release over the canvas whose
-  // press landed on a DOM element above it (the raised keyboard sheet's backdrop, a side chevron)
-  // reaches the same handler. In the Pro View that would be an EDIT, so it is refused; the
-  // Compressed View's meaning is unchanged, because there it only ever picked a column.
+  // press landed on a DOM element above it (the raised keyboard sheet, a side chevron) reaches the
+  // same handler. In the Pro View that would be an EDIT, so it is refused; the Compressed View's
+  // meaning is unchanged, because there it only ever picked a column.
   it('a release with no press of ours behind it edits nothing, and still selects', () => {
     expect(stageReleaseIntent({ ...settledPress, proView: true, pressed: false })).toBe('nothing');
     expect(stageReleaseIntent({ ...settledPress, proView: false, pressed: false })).toBe(
       'select-column'
     );
+  });
+
+  // THE SHEET'S DISMISSAL, which used to need no rule at all: the backdrop covered the canvas, so
+  // the press never reached pixi. The scrim covers the KEYBOARD'S band now (App.css), which is what
+  // leaves the canvas above it live - so the swallow is stated here instead.
+  it('a settled tap while the keyboard sheet is up dismisses it instead of editing', () => {
+    expect(stageReleaseIntent({ ...settledPress, proView: true, sheetRaised: true })).toBe(
+      'dismiss-sheet'
+    );
+  });
+
+  // The half the user asked for: with the sheet up the canvas scrolls EXACTLY as it does with the
+  // sheet down. Only a settled tap dismisses, so a drag settles and the sheet stays where it is.
+  it('...while a DRAG made with the sheet up still just settles the scroll', () => {
+    expect(
+      stageReleaseIntent({ ...settledPress, proView: true, sheetRaised: true, becameDrag: true })
+    ).toBe('settle-drag');
+    //...and a press that travelled without ever entering the drag is still a gesture that missed
+    expect(
+      stageReleaseIntent({ ...settledPress, proView: true, sheetRaised: true, moved: true })
+    ).toBe('nothing');
+  });
+
+  it('the sheet means nothing in the Compressed View, which has none', () => {
+    expect(stageReleaseIntent({ ...settledPress, proView: false, sheetRaised: true })).toBe(
+      'select-column'
+    );
+  });
+});
+
+describe('whether a press starts the long-press clock', () => {
+  const press = { proView: true, catching: false, sheetRaised: false };
+
+  it('does in the Pro View, on an ordinary press', () => {
+    expect(stagePressArmsLongPress(press)).toBe(true);
+  });
+
+  it('never in the Compressed View, where the canvas has no long press', () => {
+    expect(stagePressArmsLongPress({ ...press, proView: false })).toBe(false);
+  });
+
+  // A Catch is the grab of a moving canvas: it neither edits nor opens anything (CONTEXT.md: Catch).
+  it('never on a Catch', () => {
+    expect(stagePressArmsLongPress({ ...press, catching: true })).toBe(false);
+  });
+
+  // With the sheet up the canvas means scroll-or-dismiss and nothing else; a popover opened from
+  // under the sheet would also swallow the release that was supposed to put the sheet away.
+  it('never while the keyboard sheet is up', () => {
+    expect(stagePressArmsLongPress({ ...press, sheetRaised: true })).toBe(false);
   });
 });
 
