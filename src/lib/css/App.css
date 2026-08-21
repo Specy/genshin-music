@@ -1094,6 +1094,19 @@ a {
      the head above it the gradient dies out in, so the canvas over the sheet is dimmed by nothing.
      Beside the sliver because the two together are the whole of the sheet's presence on the canvas. */
   --pro-scrim-head: 5rem;
+  /* ...AND HOW FAR IT FADES OUT AT ITS TWO ENDS (user revision). The band is the canvas' own column
+     now rather than the whole window - see `--pro-scrim-inset-start`/`--pro-scrim-inset-end` on
+     `.composer-grid-pro` - and a band that stopped dead at those two edges would draw a vertical
+     line down the page where the layout has none. Each end dies out over this distance instead, the
+     way the head above dies out upward, so the shadow has no edge anywhere a user can find one.
+
+     A PROPORTION OF THE BAND AND NOT A DISTANCE (user revision), which is what makes this read as a
+     pool of shadow under the keys rather than a rectangle with softened corners: the column is over
+     1600px wide on a desktop window and the keyboard standing in it is a third of that, so there is
+     far more horizontal room to fade out in than a rem value would ever use. At 30% each end the
+     solid middle is the keyboard's own span and everything outside it is falloff - and stating it as
+     a percentage is what keeps that true on a phone, where the same band is 400px wide. */
+  --pro-scrim-flank: 30%;
 }
 
 .icon {
@@ -3121,6 +3134,23 @@ select {
      `100vh` and not `dvh`, for the reason composerCanvasGeometry's own height gives: the canvas is
      sized against `100vh` and the two must be the same window. */
   height: 100vh;
+  /* WHERE THE RAISED SHEET'S SCRIM STARTS AND ENDS (user revision), as insets from the keyboard
+     wrapper's own box - which is the composer grid's left edge and the window's right edge (the
+     base `.composer-keyboard-wrapper` rule and the desktop block's `left`/`width` between them).
+
+     THE BAND IS THE CANVAS' COLUMN AND NOT THE PAGE. Full-bleed it ran under the left play/roster
+     column and the right CanvasTool column as well, dimming chrome the sheet does not cover and
+     nothing is reading behind - so these two take that chrome back off each side and the shadow
+     stands under the surface the keyboard writes to, with `--pro-scrim-flank` of fade at each end.
+
+     THE TERMS ARE THIS FILE'S OWN, and they are the ones composerCanvasGeometry's
+     DESKTOP_CANVAS_INSET_PX is built from: `.composer-grid`'s 0.2rem padding and the 6.2rem
+     `.composer-left-control` with the grid's 0.2rem gap after it on the left;
+     `.buttons-composer-wrapper-right`'s 0.2rem margin-left, `.tool`'s own `max(4vw, 3.5rem)` and
+     that padding again on the right. Both are re-stated in the `max-width: 1000px` block, exactly
+     as the two widths they are written from are. */
+  --pro-scrim-inset-start: calc(6.2rem + 0.4rem);
+  --pro-scrim-inset-end: calc(max(4vw, 3.5rem) + 0.4rem);
 }
 
 .composer-grid-pro .canvas-wrapper {
@@ -3238,18 +3268,45 @@ select {
    recording UI's height is - with `--pro-scrim-head` of gradient above it dying out to nothing, so
    the canvas over the sheet is at full brightness and takes its own pointers (spec §8).
 
+   ...AND IT IS THE CANVAS' COLUMN ACROSS (user revision): the two insets take the composer's own
+   side columns off the band - see `--pro-scrim-inset-start`/`--pro-scrim-inset-end` above - so the
+   page-wide gradient is now the zone under the canvas alone, and `--pro-scrim-flank` of fade at
+   each end is what keeps that from being a hard vertical edge on the two chrome columns.
+
    `z-index: -1` puts it behind the keys and still inside the wrapper's own stacking context (the
    rule above gives it `position: fixed` and a z-index), so it is over the canvas and under every
    key. Opacity-toggled rather than mounted and unmounted, so the fade runs in both directions. */
 .composer-grid-pro .composer-keyboard-wrapper::before {
   content: '';
   position: absolute;
-  inset: calc(-1 * var(--pro-scrim-head)) 0 0 0;
+  inset: calc(-1 * var(--pro-scrim-head)) var(--pro-scrim-inset-end) 0 var(--pro-scrim-inset-start);
   z-index: -1;
   background: linear-gradient(
     to top,
     rgba(0, 0, 0, 0.5) 0,
     rgba(0, 0, 0, 0.5) calc(100% - var(--pro-scrim-head)),
+    rgba(0, 0, 0, 0) 100%
+  );
+  /* THE TWO ENDS FADE THE SAME WAY THE HEAD DOES, and it is a MASK rather than a second background
+     layer because backgrounds composite OVER one another and never multiply: a horizontal gradient
+     painted on top of this one would lighten the band's middle instead of thinning its ends. The
+     mask is the horizontal half of the shape, the gradient above is the vertical half, and the two
+     multiply where they meet - so the band's corners are the softest part of it, which is where the
+     chrome columns and the canvas' own top edge both are.
+     Prefixed as well for Safari below 15.4, where the unprefixed property does not exist and the
+     declaration would be dropped - leaving the band with hard ends rather than no scrim at all. */
+  -webkit-mask-image: linear-gradient(
+    to right,
+    rgba(0, 0, 0, 0) 0,
+    rgb(0, 0, 0) var(--pro-scrim-flank),
+    rgb(0, 0, 0) calc(100% - var(--pro-scrim-flank)),
+    rgba(0, 0, 0, 0) 100%
+  );
+  mask-image: linear-gradient(
+    to right,
+    rgba(0, 0, 0, 0) 0,
+    rgb(0, 0, 0) var(--pro-scrim-flank),
+    rgb(0, 0, 0) calc(100% - var(--pro-scrim-flank)),
     rgba(0, 0, 0, 0) 100%
   );
   opacity: 0;
@@ -3492,6 +3549,17 @@ select {
      at exactly the widths where the least room is going spare. */
   .composer-grid-pro .buttons-composer-wrapper-right {
     grid-template-rows: repeat(5, minmax(0, 4rem)) 1fr;
+  }
+
+  /* THE SCRIM'S BAND ON A PHONE (user revision): the same two terms as on the desktop side, with
+     THIS block's widths in them - `.composer-left-control` is 5.4rem here, and `.tool` is
+     `width: 100%`, so the tools column is whatever the canvas leaves of the row rather than a
+     stated width and there is nothing to subtract on that side. The band runs to the grid's own
+     0.2rem padding edge there (plus the column's 0.2rem margin-left), which is as close to the
+     canvas' right edge as this stylesheet can state it, and `--pro-scrim-flank` covers the rest. */
+  .composer-grid-pro {
+    --pro-scrim-inset-start: calc(5.4rem + 0.4rem);
+    --pro-scrim-inset-end: 0.4rem;
   }
 }
 

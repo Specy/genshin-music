@@ -648,15 +648,41 @@ describe('the Pro View canvas: the window it fills and the band it stops above',
      * it fading to nothing; the canvas above that is at full brightness and takes its own pointers,
      * which is what lets a drag scroll the song while the sheet is up (composerInput's
      * `dismiss-sheet` is what a settled TAP means instead).
+     *
+     * ACROSS, it is the CANVAS' COLUMN and not the page (user revision): the two insets below take
+     * the left play/roster column and the right CanvasTool column off the band, and the flank fade
+     * is what keeps the ends it now has from being visible edges.
      */
     it('scrims the keyboard\'s own band and leaves the canvas alone', () => {
         const scrim = declarationsOf('.composer-grid-pro .composer-keyboard-wrapper::before')
         //the sheet's box plus the head above it, and nothing else of the window
-        expect(scrim.get('inset')).toBe('calc(-1 * var(--pro-scrim-head)) 0 0 0')
+        expect(scrim.get('inset')).toBe(
+            'calc(-1 * var(--pro-scrim-head)) var(--pro-scrim-inset-end) 0 var(--pro-scrim-inset-start)'
+        )
         expect(declarationsOf(':root', '--pro-scrim-head').get('--pro-scrim-head')).toBe('5rem')
         //a gradient that dies out upward, so there is no edge where the scrim stops
         expect(scrim.get('background')).toContain('linear-gradient(')
         expect(scrim.get('background')).toContain('rgba(0, 0, 0, 0)')
+        //...and the same at each END, as a mask - the horizontal half of the same shape. Both
+        //spellings, so Safari below 15.4 keeps the fade rather than dropping the declaration.
+        const grid = declarationsOf('.composer-grid-pro', '--pro-scrim-inset-start')
+        //the composer's own side chrome, in the terms composerCanvasGeometry's inset is built from:
+        //`.composer-left-control` + the grid's padding and gap; `.tool` + its margin and that padding
+        expect(grid.get('--pro-scrim-inset-start')).toBe('calc(6.2rem + 0.4rem)')
+        expect(grid.get('--pro-scrim-inset-end')).toBe('calc(max(4vw, 3.5rem) + 0.4rem)')
+        expect(declarationsOf('.composer-left-control').get('width')).toBe('6.2rem')
+        expect(declarationsOf('.tool', 'width').get('width')).toBe('max(4vw, 3.5rem)')
+        //...and the phone's own widths for the phone's own layout, in the block that states them
+        const phone = mediaBlock(`only screen and (max-width: ${COMPOSER_MOBILE_MAX_WIDTH}px)`)
+        expect(phone).toContain('--pro-scrim-inset-start: calc(5.4rem + 0.4rem)')
+        expect(phone).toContain('--pro-scrim-inset-end: 0.4rem')
+        for (const property of ['-webkit-mask-image', 'mask-image']) {
+            expect(scrim.get(property)).toContain('to right')
+            expect(scrim.get(property)).toContain('var(--pro-scrim-flank)')
+            expect(scrim.get(property)).toContain('calc(100% - var(--pro-scrim-flank))')
+        }
+        //a PROPORTION of the band, so the fade scales with the room the column has for it
+        expect(declarationsOf(':root', '--pro-scrim-flank').get('--pro-scrim-flank')).toBe('30%')
         //behind the keys, in front of the canvas - the wrapper's own stacking context
         expect(scrim.get('z-index')).toBe('-1')
         //fades in and out with the raise, rather than appearing with it
