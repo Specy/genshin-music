@@ -33,6 +33,7 @@ import {
   proViewAxis,
   rowForNumber,
   spanOfNumbers,
+  visibleRowRange,
   yForNumber,
   type ProViewAxis,
 } from '$cmp/pages/Composer/proViewGeometry';
@@ -198,6 +199,55 @@ describe('rows', () => {
     expect(proRowHeight(170, 15)).toBe(10);
     //no vertical zoom: the row height is a function of the region alone
     expect(proRowHeight(REGION * 2)).toBe(ROW * 2);
+  });
+});
+
+describe('the visible row window', () => {
+  const geometry = { axis: AXIS, rowHeight: ROW, notesRegionHeight: REGION };
+
+  it('is exactly the rows the region overlaps, with the camera on a row boundary', () => {
+    //REGION_ROWS whole rows and not one more: the row starting exactly at the region's bottom edge
+    //is outside, the same strict test isColumnVisible makes horizontally
+    expect(visibleRowRange({ ...geometry, cameraY: 0 })).toEqual({
+      first: 0,
+      last: REGION_ROWS - 1,
+    });
+    expect(visibleRowRange({ ...geometry, cameraY: ROW * 5 })).toEqual({
+      first: 5,
+      last: 5 + REGION_ROWS - 1,
+    });
+  });
+
+  it('includes both partial rows when the camera sits between two', () => {
+    const { first, last } = visibleRowRange({ ...geometry, cameraY: ROW * 5 + ROW / 2 });
+    expect({ first, last }).toEqual({ first: 5, last: 5 + REGION_ROWS });
+    //...which is one row MORE than the region is tall, because two of them are half shown
+    expect(last - first + 1).toBe(REGION_ROWS + 1);
+  });
+
+  it('is the closed form of the overlap test it states, over the whole axis', () => {
+    for (const cameraY of [0, 1, ROW / 3, ROW * 7, ROW * 7.5, maxCameraY(geometry)]) {
+      const { first, last } = visibleRowRange({ ...geometry, cameraY });
+      for (let row = 0; row < AXIS.rowCount; row++) {
+        const top = row * ROW - cameraY;
+        const overlaps = top + ROW > 0 && top < REGION;
+        expect(row >= first && row <= last).toBe(overlaps);
+      }
+    }
+  });
+
+  it('never reports a row the axis does not have', () => {
+    const top = visibleRowRange({ ...geometry, cameraY: 0 });
+    expect(top.first).toBe(0);
+    const bottom = visibleRowRange({ ...geometry, cameraY: maxCameraY(geometry) });
+    expect(bottom.last).toBe(AXIS.rowCount - 1);
+  });
+
+  it('shows no row at all when the region has not been measured yet', () => {
+    //`last < first` is the empty answer, which is what a region measured before layout produces -
+    //the strip pools nothing and a column culls every note rather than dividing by zero
+    const { first, last } = visibleRowRange({ ...geometry, rowHeight: 0, cameraY: 0 });
+    expect(last).toBeLessThan(first);
   });
 });
 

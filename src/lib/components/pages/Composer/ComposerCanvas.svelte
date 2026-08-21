@@ -147,6 +147,7 @@
           beatMarks: Number(settings.beatMarks.value),
           columnsPerCanvas: Number(settings.columnsPerCanvas.value),
           proView,
+          noteNameType: settings.noteNameType.value,
           breakpoints,
           selectedColumns,
           bpm: Number(settings.bpm.value),
@@ -230,6 +231,11 @@
       // it at construction: a flip arrives as a fresh instance through the parent's `{#key}`, the
       // same way columnsPerCanvas does.
       proView,
+      // The wording the keyboard prints on its keys, which the Pro View's row-label strip prints on
+      // the rows that ARE keys. Read HERE and not inside the renderer for the reason the whole
+      // comment above gives: update() is free to skip work, so a value first read inside it would
+      // be dropped from this effect's dependency set by the first run that skipped.
+      noteNameType: settings.noteNameType.value,
       breakpoints,
       selectedColumns,
       bpm: Number(settings.bpm.value),

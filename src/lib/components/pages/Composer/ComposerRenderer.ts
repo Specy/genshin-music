@@ -36,12 +36,14 @@ import {
   Sprite,
   type FederatedPointerEvent,
   type RendererPreference,
+  type Text,
   type Texture,
 } from 'pixi.js';
+import type { Instrument } from '$lib/audio/Instrument.svelte';
 import { ThemeProvider, subscribeTheme } from '$core/theme/ThemeProvider.svelte';
 import { clamp, colorToRGB, nearestEven } from '$core/utils/Utilities';
 import type { Timer } from '$core/utils/Utilities';
-import { TEMPO_CHANGERS, type Pitch } from '$core/legacyConfig';
+import { TEMPO_CHANGERS, type NoteNameType, type Pitch } from '$core/legacyConfig';
 import type { NoteColumn, ColumnNote, InstrumentData } from '$core/Songs/SongClasses';
 // The canvas is the Song Grid, so it places through the *Grid* helpers (ADR-0004/ADR-0007: a
 // note's row is gridRowForNumber's answer for its OWN track), never computeButtonLayerStatuses,
@@ -53,7 +55,31 @@ import {
   computeGridStrandedMarks,
   effectiveTrackPitch,
   gridRowForNumberCached,
+  numberToButton,
 } from '$core/Songs/noteIds';
+// THE PRO VIEW'S SECOND VIEW FUNCTION (CONTEXT.md: Pro View), in two pixi-free modules beside this
+// one: proViewGeometry owns the axis, the rows and the camera, proViewNotes what a song's notes and
+// the roster decide on them. Every symbol from either is read on a `state.proView` branch and
+// nowhere else - the Compressed View's placement is the *Grid* helpers above, unchanged.
+import {
+  editableZone,
+  isAddable,
+  lockedCameraY,
+  numberForRow,
+  proRowHeight,
+  proViewAxis,
+  rowForNumber,
+  visibleRowRange,
+  yForNumber,
+  type EditableZone,
+  type ProViewAxis,
+} from './proViewGeometry';
+import {
+  computeNumberLayerStatuses,
+  computeNumberStrandedMarks,
+  proRowLabel,
+  songNumberSpan,
+} from './proViewNotes';
 import { ComposerCache, noteTextureKey, type ComposerCacheData } from './ComposerCache';
 import {
   TIMELINE_BAND_PADDING,
@@ -128,6 +154,70 @@ const PLAYHEAD_ARROW_HALF_WIDTH = 6;
 const PLAYHEAD_ARROW_LENGTH = 8;
 
 /**
+ * WHERE THE PLAYHEAD STANDS, as a fraction of the canvas' width — and therefore where every column
+ * is placed, since `containerX = playheadX − scrollPosition * columnWidth` is the whole coordinate
+ * system (see PLAYHEAD_WIDTH's block above).
+ *
+ * The Compressed View keeps the centre it has always had. The Pro View moves it to a QUARTER
+ * (spec §2), because that canvas is the editing surface rather than a readout: with the line at the
+ * middle, half of a full-height canvas shows columns already played, and the notes a user is about
+ * to write are crowded into the right half. A quarter keeps a bar of context behind the playhead and
+ * three ahead of it.
+ *
+ * A CONSTANT PAIR AND NOT A BRANCH INSIDE playheadX(), so the two views' fractions sit side by side
+ * and `width * 0.5` is provably the `width / 2` it replaces (0.5 is a power of two, so the scaling
+ * is exact in both spellings and no compressed pixel moves).
+ */
+const PLAYHEAD_X_FRACTION = { compressed: 0.5, pro: 0.25 } as const;
+
+/**
+ * HOW MUCH OF THE PRO VIEW'S NOTES REGION THE ROW-LABEL STRIP TAKES, as a fraction of one row's
+ * height, and the px bounds it is held between.
+ *
+ * Stated against the ROW rather than as a flat px width because the row height is what the canvas'
+ * own height decides (proRowHeight): a strip sized for a 44px row on a 1080p window would swallow a
+ * quarter of a short one. The bounds are what keeps "C♯4" legible at the bottom end and the strip
+ * from eating the first column at the top.
+ */
+const PRO_STRIP_WIDTH_ROWS = 0.95;
+const PRO_STRIP_MIN_WIDTH = 22;
+const PRO_STRIP_MAX_WIDTH = 46;
+/** The label's own inset from the strip's left edge, in px. */
+const PRO_STRIP_TEXT_PADDING = 4;
+/** A button label's size as a fraction of the row, and the px ceiling it is capped at. */
+const PRO_LABEL_FONT_ROWS = 0.42;
+const PRO_LABEL_FONT_MAX = 15;
+/** An absolute pitch name (a row with no button) prints at this fraction of a button label's size. */
+const PRO_FAINT_LABEL_SCALE = 0.82;
+const PRO_FAINT_LABEL_ALPHA = 0.45;
+/**
+ * The strip's own backing, so a label stays legible over the notes scrolling under it. High rather
+ * than half-transparent for exactly that reason - measured at 0.82 a note icon passing under the
+ * strip still reads as a bright box behind the letter.
+ */
+const PRO_STRIP_BACKGROUND_ALPHA = 0.94;
+
+/**
+ * THE FOUR ALPHAS OF THE EDITABLE ZONE'S DRAWING (CONTEXT.md: Editable Zone; spec §2).
+ *
+ * `OUT_OF_ZONE` is the overlay over everything the current layer cannot reach — it DIMS and never
+ * hides, which is the rule the whole view rests on: another track's note, and a stranded one, stay
+ * on screen under it (that is what makes this canvas the place a strand can be found and, from
+ * phase D, deleted).
+ *
+ * `INERT_ROW` is the DAW black-key pattern, on the rows INSIDE the band that map to no button —
+ * they belong to the zone and accept no note, so they are marked rather than dimmed away.
+ * `OCTAVE_BAND` is the faint alternation that makes octave boundaries readable at a glance; it is
+ * the subtlest of the four on purpose, since it covers half of every screen.
+ */
+const PRO_OUT_OF_ZONE_ALPHA = 0.5;
+const PRO_INERT_ROW_ALPHA = 0.2;
+const PRO_OCTAVE_BAND_ALPHA = 0.07;
+const PRO_ZONE_LINE_ALPHA = 0.9;
+/** The zone's two boundary lines, in px. */
+const PRO_ZONE_LINE_WIDTH = 2;
+
+/**
  * The cap put on the notes Application's Ticker while the song is playing. Stopped-song motion
  * (dragging, wheeling, easing and coasting) leaves pixi's maxFPS at 0, meaning uncapped, so direct
  * canvas interaction can follow the display's refresh rate.
@@ -156,6 +246,28 @@ function composerBreakpointMarkerColor(): ColorInstance {
 }
 
 /**
+ * The Pro View's four theme-derived colours - see ComposerRendererTheme.pro for what each is and why
+ * `shade` flips. One function rather than a repeated literal, because the two theme captures (the
+ * constructor's placeholder and handleThemeChange's real one) must agree.
+ */
+function composerProTheme(): ComposerRendererTheme['pro'] {
+  const primary = ThemeProvider.get('primary');
+  return {
+    //generateCache's own "is this theme already nearly black" test, so a band tints the columns the
+    //same direction their own bar colours were lightened or darkened in
+    shade: primary.luminosity() < 0.05 ? 0xffffff : 0x000000,
+    zoneLine: ThemeProvider.get('composer_main_layer').rgb().rgbNumber(),
+    //a LAYER of the primary rather than the primary itself, the way the mini-timeline's own bar is
+    //(`ThemeProvider.layer('primary', 0.1)`): the canvas clears to primary, so a strip painted in it
+    //would be invisible against the empty canvas beside the first column
+    stripBackground: ThemeProvider.layer('primary', 0.12).rgb().rgbNumber(),
+    //the theme's own readable-text answer for the strip's backing, the way the off-scale hint takes
+    //it for the layer colour it is drawn over
+    stripText: ThemeProvider.getTextColorFromBackground(primary).rgb().rgbNumber(),
+  };
+}
+
+/**
  * How long the canvas takes to reach a column it was asked to ease to WHILE SMOOTH SCROLLING IS ON
  * - see easeTo, whose gate makes every ease an instant settle while it is off.
  *
@@ -164,6 +276,18 @@ function composerBreakpointMarkerColor(): ColorInstance {
  * the same as a drag release.
  */
 const SCROLL_EASE_MS = 140;
+
+/**
+ * HOW LONG THE PRO VIEW'S CAMERA TAKES TO REACH A NEW EDITABLE ZONE — a layer switch, an instrument
+ * swap or a Basepoint change (spec §9), each of which moves the locked framing.
+ *
+ * THE SCROLL'S OWN DURATION AND CURVE, reused rather than chosen again: both eases are the canvas
+ * travelling to somewhere it was told to be, one horizontally and one vertically, and two different
+ * timings would read as two different surfaces. syncProCamera mirrors easeTo's `smoothScroll` GATE as
+ * well - with the setting off the camera arrives at once, exactly as a settle does, since a user who
+ * turned smooth motion off did not turn it off in one axis.
+ */
+const PRO_CAMERA_EASE_MS = SCROLL_EASE_MS;
 
 /** How long after the hardware's last wheel delta the canvas waits before settling to its grid. */
 const WHEEL_SETTLE_IDLE_MS = 100;
@@ -314,6 +438,25 @@ interface ComposerRendererTheme {
     current: number;
     visible: number;
   };
+  /**
+   * THE PRO VIEW'S OWN INK (CONTEXT.md: Pro View), captured with the rest for the reason tailAccent
+   * is: these are read inside draw calls, and a live `ThemeProvider.get(...)` there is an allocation
+   * per painted column and a reactive read besides. Built in both views - four Color reads on a
+   * channel that already does a dozen - so the two theme literals stay one shape.
+   *
+   * `shade` is the tint every band and the out-of-zone overlay is filled with, and it FLIPS with the
+   * theme: black over a light background reads as dimming, and so does white over a nearly-black
+   * one, where black would simply vanish. Same test generateCache uses for its bar colours, so a
+   * theme that makes the columns lighter makes these bands lighter too.
+   */
+  pro: {
+    shade: number;
+    /** The two zone lines, in the CURRENT layer's own note colour - the zone is that layer's reach. */
+    zoneLine: number;
+    /** The row-label strip's backing and the ink of the labels standing on it. */
+    stripBackground: number;
+    stripText: number;
+  };
 }
 
 interface MinimapIdleDeadline {
@@ -434,13 +577,26 @@ export interface ComposerRendererState {
    * canvas' $effect reads it through the one channel every other input uses (see that file's
    * dependency rule), not because update() re-reads it.
    *
-   * WHAT IT DOES IN THIS PHASE, and no more: the mini-timeline strip moves to the TOP of the canvas
-   * and the notes region below it, and the canvas fills the window's leftover height (spec §6, §11
-   * phase B). Note placement, row mapping, the playhead's fraction and every pointer meaning are
-   * still the Compressed View's, so the Song-Grid content is drawn stretched into the taller
-   * region - the accepted intermediate state until the pro view function lands in phase C.
+   * WHAT IT DECIDES, now that phase C's view function has landed: the mini-timeline strip is at the
+   * TOP of the canvas with the notes region below it and the canvas fills the window's leftover
+   * height (phase B); a note draws at its absolute Note Number's own row on the chromatic axis
+   * instead of on its Song-Grid slot, framed by the current layer's Editable Zone and its overlay,
+   * striping and row-label strip; and the playhead stands at a quarter of the width instead of the
+   * middle (spec §6, PLAYHEAD_X_FRACTION). Every pointer MEANING is still the Compressed View's -
+   * tap-to-edit, the long-press popover and the unlocked camera are phase D.
    */
   proView: boolean;
+  /**
+   * ComposerSettings' `noteNameType`: the wording the composer keyboard prints on its keys, and
+   * therefore what the Pro View's row-label strip prints on the rows that ARE keys (spec §2 - the
+   * strip shows what the key shows, resolved through the same Instrument.getNoteText call).
+   *
+   * READ IN ComposerCanvas.svelte's $effect object like every other scalar, per that file's
+   * dependency rule, and DIFFED here: unlike `proView` it can change under a live renderer (the
+   * settings row is one click away) and it changes no column's pixels, so nothing else on the state
+   * would notice it - see syncProStrip's key.
+   */
+  noteNameType: NoteNameType;
   breakpoints: number[];
   selectedColumns: number[];
   /**
@@ -549,6 +705,21 @@ export function isColumnVisible(
   return left + columnWidth > -bleed && left < width + bleed;
 }
 
+/**
+ * WHERE THE PRO VIEW PUTS A NOTE, handed to a column view as one object: the axis its rows are on,
+ * the camera offset that axis is looked at through, and one row's height (spec §4).
+ *
+ * NULL IS THE COMPRESSED VIEW, and that is the whole of the switch a painted column sees - the
+ * Song-Grid path below reads none of these and cannot be reached with them present. All three move
+ * only through ComposerRenderer (the axis with the song's structure, the camera with the current
+ * layer's zone, the row height with the canvas), so a view never has to ask for them.
+ */
+interface ProPaintGeometry {
+  axis: ProViewAxis;
+  cameraY: number;
+  rowHeight: number;
+}
+
 interface ColumnPaintParams {
   index: number;
   notes: ColumnNote[];
@@ -561,6 +732,8 @@ interface ColumnPaintParams {
   isBreakpoint: boolean;
   isSelected: boolean;
   isToolsSelected: boolean;
+  /** CONTEXT.md: Pro View. Null in the Compressed View, whose rows are the Song Grid's. */
+  pro: ProPaintGeometry | null;
 }
 
 /**
@@ -802,6 +975,7 @@ class ColumnView {
     this.paintSelection(cache, params.isSelected, params.isToolsSelected);
     this.breakpointMarker.texture = cache.breakpoints[1];
     this.breakpointMarker.visible = params.isBreakpoint;
+    if (params.pro) return this.paintProNotes(params, params.pro);
     //`row` is the note's CANONICAL Song-Grid slot, not any instrument's button (ADR-0004),
     //resolved for the note's OWN track at its own Basepoint (ADR-0007) — which is what puts a
     //tuned button on the row its label prints and an off-scale strand on its nearest row.
@@ -825,6 +999,54 @@ class ColumnView {
       sprite.texture = texture;
       sprite.y = (COMPOSER_NOTE_POSITIONS[row] * sizes.height) / NOTES_PER_COLUMN;
       //stranded notes (no button on their own instrument at its Basepoint) are visibly dimmed
+      sprite.alpha = mark === undefined ? 1 : 0.45;
+      sprite.visible = true;
+      painted++;
+    }
+    for (let i = painted; i < this.paintedNotes; i++) this.noteSprites[i].visible = false;
+    this.paintedNotes = painted;
+  }
+
+  /**
+   * THE PRO VIEW'S HALF OF paint(): one sprite per Note Number this column holds, at that number's
+   * own row (spec §6). Everything above this line is shared - the placement is the only thing the
+   * two views disagree about.
+   *
+   * NO FOLDING AND NO NEAREST-ROW COMPRESSION. A number IS a row here, so nothing is dropped for
+   * having no Song-Grid slot and nothing is drawn a semitone from where it sounds; what the ♯/♭
+   * texture variants carry instead is WHY a note cannot sound (see proViewNotes'
+   * computeNumberStrandedMarks), which is the same visual language reading as a different sentence.
+   *
+   * VERTICAL CULLING, which the Compressed View has no use for: its 21/15 rows are the region, while
+   * this axis is two to three screens tall, so a column's notes above or below the camera window get
+   * no sprite at all. The window is the paint's own `cameraY`, which is exactly why a camera move
+   * repaints the drawn columns rather than merely translating them - see ComposerRenderer.applyCameraY.
+   */
+  private paintProNotes(params: ColumnPaintParams, pro: ProPaintGeometry): void {
+    const { cache, notes, instruments, currentLayer, songPitch, sizes } = params;
+    const strandedNumbers = computeNumberStrandedMarks(notes, instruments, songPitch);
+    let painted = 0;
+    for (const [number, layerStatus] of computeNumberLayerStatuses(
+      notes,
+      currentLayer,
+      instruments
+    )) {
+      if (layerStatus === 0) continue;
+      const y = yForNumber({
+        axis: pro.axis,
+        number,
+        rowHeight: pro.rowHeight,
+        cameraY: pro.cameraY,
+      });
+      if (y <= -pro.rowHeight || y >= sizes.height) continue;
+      const mark = strandedNumbers.get(number);
+      const texture =
+        cache.notes[noteTextureKey(layerStatus, mark ?? 0)] ?? cache.notes[layerStatus];
+      const sprite = this.noteSpriteAt(painted, texture);
+      sprite.texture = texture;
+      sprite.y = y;
+      //the Compressed View's own dimming, on the Pro View's own definition of stranded: no button on
+      //the note's OWN track's instrument at that track's Basepoint
       sprite.alpha = mark === undefined ? 1 : 0.45;
       sprite.visible = true;
       painted++;
@@ -970,6 +1192,96 @@ export class ComposerRenderer {
    * invisible container's whole subtree at render time.
    */
   private readonly playheadGraphics = new Graphics();
+
+  // ── the Pro View's own scene (CONTEXT.md: Pro View, Editable Zone) ────────────────────────────
+  //
+  // CONSTRUCTED IN BOTH VIEWS AND ATTACHED IN ONE. These are field initialisers like every other
+  // persistent object above, so they exist wherever the class does; init() adds them to the stage
+  // ONLY on the pro branch, which is what keeps the Compressed View's stage the three children
+  // test/composerRenderer.test.ts states (columns, playhead, strip) rather than five. An unattached
+  // Graphics costs an object and no GPU resource at all - nothing is ever drawn into these while the
+  // setting is off.
+  /**
+   * THE ZONE'S FRAMING, in ONE Graphics: the two translucent rects dimming everything the current
+   * layer cannot reach, and the two lines at the band's edges (spec §2/§6). Redrawn only when the
+   * zone or the camera moves - both of which already repaint the notes - so it is off the frame path
+   * except during a camera ease, which is the one thing that moves it by itself.
+   */
+  private readonly proZoneGraphics = new Graphics();
+  /**
+   * THE ROW-LABEL STRIP: a sticky column at the notes region's left inside edge, its own backing
+   * Graphics plus one pooled Text per visible row (spec §2's VSRG-style strip).
+   *
+   * A CONTAINER SO THE TEXTS ARE POOLED RATHER THAN REBUILT. A pixi Text owns a rasterised texture,
+   * so building ~26 of them per camera move is the one thing spec §12 names as this view's cost
+   * risk; the pool is grown on demand, never shrunk, and its labels are re-set only when the visible
+   * row SET, the zone, the labels' inputs or the theme change - see syncProStrip's key.
+   */
+  private readonly proStripContainer = new Container();
+  private readonly proStripBackground = new Graphics();
+  private readonly proStripLabels: Text[] = [];
+  /** How many of proStripLabels are currently shown; the rest are hidden, not destroyed. */
+  private proStripPainted = 0;
+  /**
+   * pixi's Text and the audio tier's Instrument, taken by DYNAMIC IMPORT in init() and only on the
+   * pro branch - null in the Compressed View, where nothing reads them.
+   *
+   * Deferred rather than imported at the top of this file for two reasons, and the first is the
+   * ordinary one: `Instrument.svelte.ts` drags the keybind store and the keyboard provider in with
+   * it, and the Compressed View has no use for either. The second is that this module is imported by
+   * test/composerRenderer.test.ts against a hand-written pixi mock which models no Text at all; a
+   * top-level `Text` binding would make every one of those tests depend on a class the Compressed
+   * View never constructs.
+   */
+  private proTextClass: typeof Text | null = null;
+  private proInstrumentClass: typeof Instrument | null = null;
+  /**
+   * ONE Instrument per name, built lazily for its LABELS alone (`getNoteText`) and never loaded, so
+   * no audio buffer is ever fetched for one. Keyed by name because that is all `getNoteText`'s
+   * answer depends on besides the two arguments it is given.
+   */
+  private readonly proLabelInstruments = new Map<string, Instrument>();
+  /**
+   * THE CAMERA (spec §4): how far down the axis the notes region is looking, in px. Written only
+   * through applyCameraY, which is what keeps every dependent layer in step with it.
+   *
+   * In this phase the view is ALWAYS LOCKED, so this is `lockedCameraY` for the current layer's
+   * Editable Zone at every resting moment - `cameraTarget` is that value and this is where the ease
+   * has got to. The unlocked pan that lets the two disagree for good is phase D.
+   */
+  private cameraY = 0;
+  private cameraTarget = 0;
+  /**
+   * The running camera ease, or null. Its curve and duration are the scroll's (easeOutCubic over
+   * PRO_CAMERA_EASE_MS), read off the wall clock by the same frame - see advanceCameraEase.
+   *
+   * IT IS THE SECOND THING THAT CAN KEEP THE TICKER RUNNING, which is the one place it touches the
+   * Motion rule: the frames run while this is non-null even at scroll rest (stopMotionFrames defers
+   * to it). Null in the Compressed View at every instant, so that rule is unchanged there.
+   */
+  private cameraEase: { from: number; to: number; startMs: number; durationMs: number } | null =
+    null;
+  /**
+   * The Pro View's axis, cached against (columns identity, structure version) - the same pair
+   * maxSpanCache uses and for the same reason: the axis widens for a song's outlier numbers, so it
+   * moves when the graph does and at no other time. See proAxis().
+   */
+  private proAxisCache: {
+    columns: NoteColumn[];
+    structureVersion: number;
+    axis: ProViewAxis;
+  } | null = null;
+  /**
+   * The axis the notes on screen were PLACED on, or null for "nothing pro has been painted". The
+   * axis' counterpart of paintedState, and what makes an axis that moved under a narrowed repaint
+   * force a full one - every note's row is stated against `axis.max`, so a widened axis moves all of
+   * them while no column's own version counter did.
+   */
+  private paintedAxis: ProViewAxis | null = null;
+  /** The current layer's Editable Zone, or null in the Compressed View. Identity-stable per (instrument, Basepoint). */
+  private proZone: EditableZone | null = null;
+  /** Everything the strip's labels are a function of, as one comparable string - see syncProStrip. */
+  private proStripKey = '';
 
   /**
    * The column pool. `columnViews` is what is ON SCREEN, keyed by column index; `freeColumnViews`
@@ -1221,6 +1533,7 @@ export class ComposerRenderer {
         current: ThemeProvider.get('composer_main_layer').rgbNumber(),
         visible: ThemeProvider.get('composer_secondary_layer').rgbNumber(),
       },
+      pro: composerProTheme(),
     };
     this.paintTailAccent = this.theme.tailAccent;
     this.paintBreakpointColor = composerBreakpointMarkerColor().rgb().rgbNumber();
@@ -1254,6 +1567,10 @@ export class ComposerRenderer {
     this.notesColumnsContainer.on('pointerdown', this.handleStageDown);
     this.notesColumnsContainer.on('pointerup', this.handleStageUp);
     this.notesColumnsContainer.on('pointermove', this.handleStageSlide);
+    //BEFORE ANY PRO LAYER IS BUILT: the row-label strip needs pixi's Text and the audio tier's
+    //Instrument, both of which this class takes by dynamic import on the pro branch alone (see
+    //proTextClass). Awaited here so everything below stays synchronous.
+    if (this.state.proView) await this.loadProViewClasses();
     this.notesApp.stage.addChild(this.notesColumnsContainer);
     /**
      * ITS OWN RENDER GROUP, which is what makes scrolling it cheap enough to do every frame.
@@ -1280,9 +1597,20 @@ export class ComposerRenderer {
      * pixels until something asked.
      */
     this.notesColumnsContainer.enableRenderGroup();
+    //THE PRO VIEW'S TWO STAGE LAYERS, in spec §6's draw order: the zone's overlay and lines go OVER
+    //every note (they dim what the current layer cannot reach) and UNDER the playhead, which marks
+    //the column being edited and must stay legible through the dimming.
+    if (this.state.proView) {
+      this.proZoneGraphics.eventMode = 'none';
+      this.notesApp.stage.addChild(this.proZoneGraphics);
+    }
     //a sibling added after the columns, so it renders over them
     this.notesApp.stage.addChild(this.playheadGraphics);
     this.drawPlayhead();
+    //...and the strip ABOVE the playhead, because it is the one thing on this canvas that is not
+    //part of the grid: a line drawn through the row labels would make them unreadable, and the
+    //quarter-width playhead is nowhere near them anyway
+    if (this.state.proView) this.initProStrip();
     //R1's half of the mode gate that update() cannot cover: a renderer can paint a whole scene
     //without ever being handed a state, through subscribeTheme below
     this.playheadGraphics.visible = this.playheadIsVisible(this.state);
@@ -1321,6 +1649,9 @@ export class ComposerRenderer {
     this.initViewportClip();
     this.positionNotesRegion();
     this.positionTimelineStrip();
+    //the locked framing, taken WITHOUT an ease: there is no previous frame for the camera to slide
+    //away from, and the first paint must already show the current layer's zone centred
+    if (this.state.proView) this.syncProCamera(this.state, 'jump');
     //THE LAST child of the stage, which is what makes pixi hit-test the strip before the columns -
     //see the field. Draw order is free here, the two regions never overlapping in y.
     this.notesApp.stage.addChild(this.timelineStrip);
@@ -1435,7 +1766,9 @@ export class ComposerRenderer {
     oldCanvas.removeEventListener('wheel', this.handleWheel);
     oldApp.ticker.remove(this.onMotionFrame, this);
     oldApp.stage.removeChild(this.notesColumnsContainer);
+    oldApp.stage.removeChild(this.proZoneGraphics);
     oldApp.stage.removeChild(this.playheadGraphics);
+    oldApp.stage.removeChild(this.proStripContainer);
     oldApp.stage.removeChild(this.timelineStrip);
 
     this.dropColumnPool();
@@ -1447,7 +1780,11 @@ export class ComposerRenderer {
     this.wheelCanvas = replacement.canvas;
     replacement.renderer.background.color = this.theme.main.background;
     replacement.stage.addChild(this.notesColumnsContainer);
+    //...in init()'s own order, so a renderer that survived a lost context draws the Pro View's
+    //layers in the same order the one that mounted did
+    if (this.state.proView) replacement.stage.addChild(this.proZoneGraphics);
     replacement.stage.addChild(this.playheadGraphics);
+    if (this.state.proView) replacement.stage.addChild(this.proStripContainer);
     replacement.stage.addChild(this.timelineStrip);
     replacement.ticker.remove(replacement.render, replacement);
     replacement.ticker.add(this.onMotionFrame, this);
@@ -1531,6 +1868,432 @@ export class ComposerRenderer {
     //a SIBLING of the columns rather than a child (see playheadIsVisible), so it carries the offset
     //itself instead of inheriting it
     this.playheadGraphics.y = y;
+    //...and so are the Pro View's two layers, which are drawn in the region's own coordinates like
+    //everything else in this class. Written in both views: both are 0 in the Compressed View, where
+    //neither object is on the stage at all.
+    this.proZoneGraphics.y = y;
+    this.proStripContainer.y = y;
+  }
+
+  // ── the Pro View (CONTEXT.md: Pro View, Editable Zone, View Lock) ─────────────────────────────
+  //
+  // EVERY METHOD BELOW IS REACHED FROM A `state.proView` BRANCH and from nowhere else. What they
+  // draw is spec §6's four extra layers - the row bands under the notes, the zone's overlay and
+  // lines over them, the row-label strip above that - plus the camera the whole framing hangs off.
+
+  /**
+   * The two classes the row-label strip needs, resolved once per pro renderer - see proTextClass for
+   * why they are dynamic imports rather than top-level ones.
+   */
+  private async loadProViewClasses(): Promise<void> {
+    const [pixi, instrument] = await Promise.all([
+      import('pixi.js'),
+      import('$lib/audio/Instrument.svelte'),
+    ]);
+    this.proTextClass = pixi.Text;
+    this.proInstrumentClass = instrument.Instrument;
+  }
+
+  /** The strip's own container: its backing first, so every pooled label draws over it. */
+  private initProStrip(): void {
+    this.proStripContainer.eventMode = 'none';
+    this.proStripContainer.addChild(this.proStripBackground);
+    this.notesApp?.stage.addChild(this.proStripContainer);
+  }
+
+  /**
+   * THE AXIS THE PRO VIEW IS DRAWING, cached against (columns identity, structure version) - the
+   * pair maxSpan() uses, for the reason its own declaration gives: the axis is the game's
+   * addressable span WIDENED by the song's own outlier numbers, so it moves when the graph moves and
+   * cannot move without it.
+   *
+   * O(notes) on a structural edit and nothing at all on a playback tick, which is the same trade
+   * maxSpan makes. A song with no notes at all falls back to the addressable span alone.
+   */
+  private proAxis(): ProViewAxis {
+    const { columns, structureVersion } = this.state;
+    const cached = this.proAxisCache;
+    if (cached && cached.columns === columns && cached.structureVersion === structureVersion) {
+      return cached.axis;
+    }
+    const axis = proViewAxis(songNumberSpan(columns));
+    this.proAxisCache = { columns, structureVersion, axis };
+    return axis;
+  }
+
+  /** One row's height: the notes region over `perColumn + 2`, and the Pro View has no other. */
+  private proRowHeightPx(): number {
+    return proRowHeight(this.height);
+  }
+
+  /** What a column view needs to place its notes, or null in the Compressed View. */
+  private proGeometry(): ProPaintGeometry | null {
+    if (!this.state.proView) return null;
+    return { axis: this.proAxis(), cameraY: this.cameraY, rowHeight: this.proRowHeightPx() };
+  }
+
+  /** The current layer's instrument name and effective Basepoint - what the zone and the strip both ask. */
+  private proCurrentTrack(state: ComposerRendererState): { name: string; pitch: Pitch } {
+    const instrument = state.instruments[state.currentLayer];
+    return {
+      name: instrument?.name ?? '',
+      pitch: effectiveTrackPitch(instrument, state.songPitch),
+    };
+  }
+
+  /**
+   * EVERYTHING THE PRO VIEW HAS TO NOTICE IN AN UPDATE, in one call, and what it returns is whether
+   * the scene needs a FULL repaint because of it.
+   *
+   * Three things can invalidate it, and each is a different question from the ones
+   * needsUnconditionalRepaint asks:
+   *  - THE ZONE MOVED (a layer switch, an instrument swap, a Basepoint change - spec §9). Each of
+   *    those already forces a full repaint on its own, so the `true` here is belt to that brace; what
+   *    this branch really does is RETARGET THE CAMERA, which nothing else would.
+   *  - THE AXIS MOVED. A song's outlier number widens it, so deleting or adding one restates every
+   *    row's position while only the edited column's version counter moved - the narrowed repaint
+   *    would leave every other column a row out.
+   *  - THE LABEL WORDING MOVED (`noteNameType`). It changes no column's pixels at all, so nothing
+   *    else on the state object can see it; the strip's own key would catch it on the next paint,
+   *    and this is what makes sure there IS one.
+   */
+  private syncProView(
+    previous: ComposerRendererState | null,
+    state: ComposerRendererState
+  ): boolean {
+    const zoneMoved = this.syncProCamera(state, 'ease');
+    const axis = this.proAxis();
+    const axisMoved =
+      this.paintedAxis === null ||
+      this.paintedAxis.min !== axis.min ||
+      this.paintedAxis.max !== axis.max;
+    const wordingMoved = previous !== null && previous.noteNameType !== state.noteNameType;
+    return zoneMoved || axisMoved || wordingMoved;
+  }
+
+  /**
+   * THE LOCKED FRAMING (spec §4): the camera that centres the current layer's Editable Zone. In this
+   * phase the view is always locked, so this is the only thing that ever writes the camera.
+   *
+   * @returns whether the ZONE itself changed, which is what the caller repaints for.
+   *
+   * `mode` is 'jump' where there is nothing to slide from - the first paint, and every resize or
+   * theme rebuild, both of which restate the row height under the camera - and 'ease' for the zone
+   * changes a user makes. The ease applies the same `smoothScroll` gate easeTo does, so with smooth
+   * motion off even those arrive at once.
+   */
+  private syncProCamera(state: ComposerRendererState, mode: 'jump' | 'ease'): boolean {
+    const { name, pitch } = this.proCurrentTrack(state);
+    //identity-stable per (instrument, Basepoint) - editableZone memoizes on exactly that pair, which
+    //is what lets "same zone as last update?" be a reference comparison
+    const zone = editableZone(name, pitch);
+    const zoneMoved = zone !== this.proZone;
+    this.proZone = zone;
+    const target = lockedCameraY({
+      axis: this.proAxis(),
+      zone,
+      rowHeight: this.proRowHeightPx(),
+      notesRegionHeight: this.height,
+    });
+    if (target === this.cameraTarget && !zoneMoved && mode === 'ease') return false;
+    this.cameraTarget = target;
+    if (mode === 'jump' || !state.smoothScroll || target === this.cameraY) {
+      this.cameraEase = null;
+      this.cameraY = target;
+      return zoneMoved;
+    }
+    this.cameraEase = {
+      from: this.cameraY,
+      to: target,
+      startMs: this.now(),
+      durationMs: PRO_CAMERA_EASE_MS,
+    };
+    //the frames are what move it from here - see the Motion rule at stopMotionFrames
+    this.startMotionFrames();
+    return zoneMoved;
+  }
+
+  /**
+   * ONE FRAME OF THE CAMERA EASE, off the wall clock and with the scroll's own easeOutCubic - see
+   * motionPositionAt for why every position in this class is read from the clock rather than
+   * integrated from a delta.
+   */
+  private advanceCameraEase(nowMs: number): void {
+    const ease = this.cameraEase;
+    if (!ease) return;
+    const elapsed = nowMs - ease.startMs;
+    if (elapsed >= ease.durationMs) {
+      //cleared BEFORE the apply, so the stop below is not declined by the ease it just finished
+      this.cameraEase = null;
+      this.applyCameraY(ease.to);
+      if (this.motion.kind === 'resting') this.stopMotionFrames();
+      return;
+    }
+    const t = ease.durationMs > 0 ? elapsed / ease.durationMs : 1;
+    const eased = 1 - (1 - t) ** 3;
+    this.applyCameraY(ease.from + (ease.to - ease.from) * eased);
+  }
+
+  /**
+   * MOVE THE CAMERA AND BRING THE SCENE WITH IT - applyScrollPosition's vertical counterpart, and it
+   * repaints for a reason that one does not have.
+   *
+   * A COLUMN'S NOTES ARE PAINTED AT `axisY − cameraY` AND CULLED AGAINST THE WINDOW, so a view that
+   * stayed in the window does NOT keep what it painted when the camera moves: its sprites are at the
+   * old offset and the rows that just entered have no sprite at all. Translating the container
+   * instead would fix the first half and not the second - and it would put the notes region's own
+   * hitarea (`0..height` in container space, testStageHitarea) somewhere the pointer is not. So the
+   * drawn window is repainted, which costs what one note edit costs and happens only while a camera
+   * ease is running.
+   */
+  private applyCameraY(cameraY: number): void {
+    this.cameraY = cameraY;
+    if (!this.notesApp || this.contextLost || this.replacingLostRenderer) return;
+    const cacheData = this.cache?.cache;
+    if (!cacheData || this.state.isRecordingAudio) return;
+    const pro = this.proGeometry();
+    const counterLimit = this.counterLimit();
+    const { first, last } = this.visibleColumnRange();
+    this.releaseColumnViewsOutside(first, last);
+    for (let index = first; index <= last; index++) {
+      this.paintColumn(index, cacheData, this.columnSize, counterLimit, pro);
+    }
+    this.syncOverlayColumn(cacheData);
+    this.drawProZone();
+    this.syncProStrip();
+    this.notesApp.render();
+  }
+
+  /**
+   * THE EDITABLE ZONE DRAWN (spec §2): everything outside the current layer's reach dimmed by one
+   * translucent rect above the band and one below it, and the band's two edges marked.
+   *
+   * THE OVERLAY IS BLACK IN EVERY THEME, unlike the row bands beside it (which flip - see
+   * ComposerRendererTheme.pro). Dimming is the point, and it works on a dark theme too: the column
+   * backgrounds are deliberately LIGHTENED away from a near-black primary by generateCache, so there
+   * is something for black to take back. A flipping overlay would light the out-of-zone rows up on
+   * exactly those themes, which reads as highlighting them.
+   *
+   * The lines are the CURRENT LAYER's note colour, because the band is that layer's reach and
+   * nothing else's - the same colour its own notes are painted in.
+   */
+  private drawProZone(): void {
+    const graphics = this.proZoneGraphics;
+    graphics.clear();
+    const zone = this.proZone;
+    if (!zone) return;
+    const axis = this.proAxis();
+    const rowHeight = this.proRowHeightPx();
+    const height = this.height;
+    const top = rowForNumber(axis, zone.max) * rowHeight - this.cameraY;
+    //the +1 is the bottom row's own height: the band ends at the BOTTOM edge of zone.min's row
+    const bottom = (rowForNumber(axis, zone.min) + 1) * rowHeight - this.cameraY;
+    let dimmed = false;
+    if (top > 0) {
+      graphics.rect(0, 0, this.width, Math.min(top, height));
+      dimmed = true;
+    }
+    if (bottom < height) {
+      const from = Math.max(0, bottom);
+      graphics.rect(0, from, this.width, height - from);
+      dimmed = true;
+    }
+    if (dimmed) graphics.fill({ color: 0x000000, alpha: PRO_OUT_OF_ZONE_ALPHA });
+    let lined = false;
+    for (const edge of [top, bottom]) {
+      if (edge < 0 || edge > height) continue;
+      graphics.rect(0, edge - PRO_ZONE_LINE_WIDTH / 2, this.width, PRO_ZONE_LINE_WIDTH);
+      lined = true;
+    }
+    if (lined) {
+      graphics.fill({ color: this.theme.pro.zoneLine, alpha: PRO_ZONE_LINE_ALPHA });
+    }
+  }
+
+  /**
+   * THE ROW BANDS, drawn into the column's OWN tail Graphics and therefore between its background
+   * and its notes - which is the draw order spec §6 asks for and the only place in the pooled scene
+   * that sits between those two (a view's children are a fixed prefix plus note sprites, and pixi
+   * draws them in array order).
+   *
+   * TWO KINDS, both stated per row rather than per note:
+   *  - the OCTAVE ALTERNATION, twelve rows at a time, which is what makes the chromatic axis
+   *    readable at all - without it every row looks like every other and a user cannot tell a
+   *    fifth from a sixth by eye;
+   *  - the INERT ROWS INSIDE THE BAND: numbers between the zone's two lines that map to no button
+   *    (an instrument that skips a semitone, or one whose table has a hole). They are part of the
+   *    zone - framed and lit with it - and accept nothing, which is the DAW black-key pattern.
+   * Out-of-zone rows need neither: the overlay above covers them wholesale.
+   *
+   * PER COLUMN AND NOT ONCE FOR THE CANVAS, which also decides where the bands stop: they are drawn
+   * exactly where the song's columns are, so the empty canvas beyond the last column stays empty
+   * rather than being ruled to the edge.
+   */
+  private paintProRowBands(
+    graphics: Graphics,
+    sizes: { width: number; height: number },
+    pro: ProPaintGeometry
+  ): void {
+    const { axis, rowHeight, cameraY } = pro;
+    const { first, last } = visibleRowRange({
+      axis,
+      rowHeight,
+      cameraY,
+      notesRegionHeight: sizes.height,
+    });
+    const zone = this.proZone;
+    const shade = this.theme.pro.shade;
+    let banded = false;
+    for (let row = first; row <= last; row++) {
+      //12 rows per band, so the boundary between two bands IS an octave boundary
+      if (Math.floor(numberForRow(axis, row) / 12) % 2 !== 0) continue;
+      graphics.rect(0, row * rowHeight - cameraY, sizes.width, rowHeight);
+      banded = true;
+    }
+    if (banded) graphics.fill({ color: shade, alpha: PRO_OCTAVE_BAND_ALPHA });
+    if (!zone) return;
+    let inert = false;
+    for (let row = first; row <= last; row++) {
+      const number = numberForRow(axis, row);
+      if (number < zone.min || number > zone.max || isAddable(zone, number)) continue;
+      graphics.rect(0, row * rowHeight - cameraY, sizes.width, rowHeight);
+      inert = true;
+    }
+    if (inert) graphics.fill({ color: shade, alpha: PRO_INERT_ROW_ALPHA });
+  }
+
+  /**
+   * THE ROW-LABEL STRIP (spec §2): every visible row's label, in the wording the composer keyboard
+   * uses for the key that plays it, and a faint absolute pitch name for the rows that are no key.
+   *
+   * TWO SEPARATE COSTS, and only one of them is paid per camera frame. Setting a pixi Text's string
+   * or style RASTERISES it, so the labels themselves are re-set only when something they depend on
+   * moves - the visible row SET, the instrument, its Basepoint, the wording, the row height or the
+   * theme, all of which are in `proStripKey`. Their POSITIONS are plain numbers and are written
+   * every time, which is what lets the strip track a camera ease without re-rasterising anything.
+   *
+   * THE POOL IS INDEXED BY `row − first`, deliberately, and not by "the labels drawn so far": a row
+   * whose centre has slid off the region's edge is HIDDEN rather than skipped, so the mapping from
+   * pool slot to row does not shift as the camera moves and a stale label cannot end up beside the
+   * wrong row.
+   */
+  private syncProStrip(): void {
+    const TextClass = this.proTextClass;
+    if (!TextClass) return;
+    const axis = this.proAxis();
+    const rowHeight = this.proRowHeightPx();
+    const { first, last } = visibleRowRange({
+      axis,
+      rowHeight,
+      cameraY: this.cameraY,
+      notesRegionHeight: this.height,
+    });
+    const { name, pitch } = this.proCurrentTrack(this.state);
+    const width = Math.min(
+      PRO_STRIP_MAX_WIDTH,
+      Math.max(PRO_STRIP_MIN_WIDTH, rowHeight * PRO_STRIP_WIDTH_ROWS)
+    );
+    const fontSize = Math.min(PRO_LABEL_FONT_MAX, rowHeight * PRO_LABEL_FONT_ROWS);
+    const key = [
+      first,
+      last,
+      name,
+      pitch,
+      this.state.noteNameType,
+      rowHeight,
+      this.theme.pro.stripText,
+      this.theme.pro.stripBackground,
+    ].join('|');
+    const rebuild = key !== this.proStripKey;
+    if (rebuild) {
+      this.proStripKey = key;
+      this.proStripBackground.clear();
+      this.proStripBackground.rect(0, 0, width, this.height);
+      this.proStripBackground.fill({
+        color: this.theme.pro.stripBackground,
+        alpha: PRO_STRIP_BACKGROUND_ALPHA,
+      });
+      //...and an edge, so the strip reads as a strip rather than as a column whose notes went
+      //missing: its backing is a layer of the primary colour, which on most themes is close to what
+      //the empty canvas beside it already is
+      this.proStripBackground.rect(width - 1, 0, 1, this.height);
+      this.proStripBackground.fill({ color: this.theme.pro.shade, alpha: 0.25 });
+    }
+    const noteText = this.proNoteText(name, pitch);
+    for (let row = first; row <= last; row++) {
+      const number = numberForRow(axis, row);
+      const label = this.proStripLabelAt(row - first, TextClass);
+      if (rebuild) {
+        const resolved = proRowLabel(number, numberToButton(name, pitch, number), noteText);
+        label.text = resolved.text;
+        label.style.fontSize = resolved.faint ? fontSize * PRO_FAINT_LABEL_SCALE : fontSize;
+        label.style.fill = this.theme.pro.stripText;
+        label.alpha = resolved.faint ? PRO_FAINT_LABEL_ALPHA : 1;
+      }
+      const centre = (row + 0.5) * rowHeight - this.cameraY;
+      label.x = PRO_STRIP_TEXT_PADDING;
+      label.y = centre;
+      //a row whose LABEL no longer fits inside the region keeps its slot and stops being drawn (see
+      //the pool rule in this method's block). The test is the glyph's own box and not the row's
+      //centre: the strip is drawn last, over everything, so half a letter poking out of the region
+      //would land on the mini-timeline strip above it rather than being clipped by anything
+      label.visible = centre - fontSize / 2 >= 0 && centre + fontSize / 2 <= this.height;
+    }
+    const painted = Math.max(0, last - first + 1);
+    for (let i = painted; i < this.proStripPainted; i++) this.proStripLabels[i].visible = false;
+    this.proStripPainted = painted;
+  }
+
+  /**
+   * Show or hide the zone's framing and the row-label strip together - the columns' own gate, which
+   * both of them exist to frame. Writes in the Compressed View too, where neither object is on the
+   * stage: a `visible` on an unparented Graphics reaches no renderer.
+   */
+  private setProLayersVisible(visible: boolean): void {
+    this.proZoneGraphics.visible = visible;
+    this.proStripContainer.visible = visible;
+  }
+
+  /** One pooled label, grown on demand and never shrunk - the strip holds at most a screen of rows. */
+  private proStripLabelAt(index: number, TextClass: typeof Text): Text {
+    const existing = this.proStripLabels[index];
+    if (existing) return existing;
+    const label = new TextClass({
+      text: '',
+      style: { fontFamily: 'Arial, Helvetica, sans-serif', fontSize: 12, fill: 0xffffff },
+    });
+    //anchored at its own vertical middle, so a label sits on its row's centre line whatever the row
+    //height is, and left-aligned against the strip's padding
+    label.anchor.set(0, 0.5);
+    label.eventMode = 'none';
+    this.proStripLabels.push(label);
+    this.proStripContainer.addChild(label);
+    return label;
+  }
+
+  /**
+   * THE KEYBOARD'S OWN LABEL FUNCTION for one instrument at one Basepoint - `Instrument.getNoteText`,
+   * the very call ComposerKeyboard makes for the key it draws, so the strip cannot spell a keybind
+   * or a note name differently from the key beneath it.
+   *
+   * The Instrument is built for its labels alone and never `load()`ed, so no audio buffer is fetched
+   * for one; instances are cached by name because that is all the labels depend on besides the two
+   * arguments. What this does NOT do is subscribe to anything: a keybind edit under a live composer
+   * moves the labels on the next repaint rather than at once, which is the same channel the note
+   * textures' theme colours are on.
+   */
+  private proNoteText(instrumentName: string, pitch: Pitch): (button: number) => string {
+    const InstrumentClass = this.proInstrumentClass;
+    if (!InstrumentClass) return () => '';
+    let instrument = this.proLabelInstruments.get(instrumentName);
+    if (!instrument) {
+      instrument = new InstrumentClass(
+        instrumentName as ConstructorParameters<typeof Instrument>[0]
+      );
+      this.proLabelInstruments.set(instrumentName, instrument);
+    }
+    const resolved = instrument;
+    return (button: number) => resolved.getNoteText(button, this.state.noteNameType, pitch);
   }
 
   /**
@@ -1604,9 +2367,15 @@ export class ComposerRenderer {
     return canvasX - TIMELINE_INSET_LEFT;
   }
 
-  /** The playhead's x, and with it the anchor of every column position - see PLAYHEAD_COLOR. */
+  /**
+   * The playhead's x, and with it the anchor of every column position - see PLAYHEAD_COLOR. A
+   * QUARTER of the way across in the Pro View and the middle in the Compressed one, which is the
+   * only thing either view changes about the coordinate system (see PLAYHEAD_X_FRACTION).
+   */
   private playheadX(): number {
-    return this.width / 2;
+    return (
+      this.width * (this.state.proView ? PLAYHEAD_X_FRACTION.pro : PLAYHEAD_X_FRACTION.compressed)
+    );
   }
 
   private windowGeometry(): ColumnWindowGeometry {
@@ -1699,6 +2468,11 @@ export class ComposerRenderer {
       //region (over it in the Pro View), and the notes region under the strip's band there
       this.positionNotesRegion();
       this.positionTimelineStrip();
+      //...and the camera is re-taken WITHOUT an ease: the row height is derived from the notes
+      //region, so a resize (or a theme rebuild, which comes through here too) restates the axis
+      //under it, and sliding from a camera measured in the old rows would be a slide from nowhere.
+      //The locked view is at its target anyway, so this moves nothing a user can see.
+      if (this.state.proView) this.syncProCamera(this.state, 'jump');
       const breakpointColor = composerBreakpointMarkerColor();
       this.cache = this.generateCache(
         columnWidth,
@@ -1737,6 +2511,13 @@ export class ComposerRenderer {
     }, 50);
   };
 
+  /**
+   * The textures every column view draws from. The Pro View asks for the SAME set at a different
+   * CELL SIZE - its rows are `proRowHeight`, not the Song Grid's - and for no horizontal rules,
+   * since its axis has none of the game's three note groups (see ComposerCacheProps). Both are
+   * inputs rather than a branch inside the cache: a mode flip remounts this renderer, so a cache
+   * instance already belongs to exactly one view.
+   */
   private generateCache(
     columnWidth: number,
     height: number,
@@ -1756,6 +2537,8 @@ export class ComposerRenderer {
       height,
       margin,
       timelineHeight,
+      noteHeight: this.state.proView ? proRowHeight(height) : undefined,
+      columnLines: this.state.proView ? [] : undefined,
       app: this.notesApp,
       colors: {
         accent: breakpointColor,
@@ -2355,7 +3138,16 @@ export class ComposerRenderer {
     this.notesApp?.ticker.start();
   }
 
+  /**
+   * THE CAMERA'S HALF OF THE TICKER RULE (see the Motion type): the frames run while `motion` is not
+   * `resting` OR while the Pro View's camera is easing to a new Editable Zone. A scroll motion
+   * ending must not stop a camera ease that is still mid-slide, so this defers to it.
+   *
+   * `cameraEase` is null at every instant in the Compressed View - nothing there ever assigns it -
+   * so the rule there is exactly the one the Motion type states.
+   */
   private stopMotionFrames(): void {
+    if (this.cameraEase) return;
     this.notesApp?.ticker.stop();
   }
 
@@ -2435,6 +3227,10 @@ export class ComposerRenderer {
    */
   private onMotionFrame = (): void => {
     const now = this.now();
+    //THE PRO VIEW'S CAMERA FIRST, and it is the one thing here that can run at scroll REST: a layer
+    //switch eases the framing while nothing is scrolling, which is what stopMotionFrames defers to.
+    //A no-op in the Compressed View, where `cameraEase` is never assigned.
+    if (this.cameraEase) this.advanceCameraEase(now);
     const position = this.motionPositionAt(now);
     if (position === null) return;
     if (this.motion.kind === 'easing' && position === this.motion.to)
@@ -2473,11 +3269,12 @@ export class ComposerRenderer {
     const { first, last } = this.visibleColumnRange();
     this.releaseColumnViewsOutside(first, last);
     const counterLimit = this.counterLimit();
+    const pro = this.proGeometry();
     for (let index = first; index <= last; index++) {
       // Columns that were already in the window keep what they painted: their content, their
       // index-derived background and their tails are all unchanged by a window shift.
       if (!this.columnViews.has(index))
-        this.paintColumn(index, cacheData, this.columnSize, counterLimit);
+        this.paintColumn(index, cacheData, this.columnSize, counterLimit, pro);
     }
     this.syncOverlayColumn(cacheData);
     this.syncTimelineViewport();
@@ -3189,6 +3986,7 @@ export class ComposerRenderer {
         current: ThemeProvider.get('composer_main_layer').rgbNumber(),
         visible: ThemeProvider.get('composer_secondary_layer').rgbNumber(),
       },
+      pro: composerProTheme(),
     };
     this.recalculateCacheAndSizes();
     if (this.notesApp) this.notesApp.renderer.background.color = this.theme.main.background;
@@ -3262,6 +4060,10 @@ export class ComposerRenderer {
         this.notesColumnsContainer.visible = false;
         this.timelineStrip.visible = false;
         this.playheadGraphics.visible = false;
+        //...and the Pro View's layers with them: they frame the notes, and a zone overlay left
+        //standing over a blanked canvas is a band of dimmed nothing. draw() turns them back on with
+        //the columns (see the visibleTimeline gate there).
+        this.setProLayersVisible(false);
         this.notesApp?.render();
         this.paintedState = null;
       }
@@ -3277,6 +4079,11 @@ export class ComposerRenderer {
       this.syncTimelineMinimapState(state);
     }
     this.syncScrollSchedule(previousUpdate, state);
+    // THE PRO VIEW'S OWN DIFF, and it is asked BEFORE the early returns below because two of the
+    // three things it does are not repaints: it retargets the camera (which the frames then ease)
+    // and it recomputes the zone every later paint reads. What it RETURNS is the third - whether
+    // what it noticed also needs the whole window repainted. A no-op in the Compressed View.
+    const proInvalidated = state.proView ? this.syncProView(previousUpdate, state) : false;
     if (this.contextLost || this.replacingLostRenderer) {
       this.paintedState = null;
       return;
@@ -3284,7 +4091,7 @@ export class ComposerRenderer {
     if (previous === null) return this.draw();
     const cacheData = this.cache?.cache;
     if (!cacheData) return this.draw();
-    if (this.needsUnconditionalRepaint(previous, state)) return this.draw();
+    if (this.needsUnconditionalRepaint(previous, state) || proInvalidated) return this.draw();
     if (previous.structureVersion !== state.structureVersion) {
       // The overlay may have moved in the same batch - note entry is not gated on isPlaying - and a
       // skipped column that gained or lost it would keep the wrong sprite state, so the narrowed
@@ -3497,7 +4304,10 @@ export class ComposerRenderer {
     index: number,
     cacheData: ComposerCacheData,
     sizes: { width: number; height: number },
-    counterLimit: number
+    counterLimit: number,
+    //hoisted by the caller rather than derived here: every loop that paints columns paints them all
+    //at ONE camera, and building the object per column would allocate one per painted column
+    pro: ProPaintGeometry | null
   ): void {
     const state = this.state;
     const column = state.columns[index];
@@ -3521,8 +4331,9 @@ export class ComposerRenderer {
       //false everywhere while smooth scrolling is on - see the overlayColumn field
       isSelected: index === this.overlayColumn,
       isBreakpoint: state.breakpoints.includes(index),
+      pro,
     });
-    this.paintTails(view.tailGraphics, index, sizes);
+    this.paintTails(view.tailGraphics, index, sizes, pro);
     // Recorded with the pixels, in one place, rather than by whoever asked for the paint.
     view.paintKey = { column, version: column.version };
   }
@@ -3546,6 +4357,13 @@ export class ComposerRenderer {
    *
    * maxSpan() is the one input not in that list: it only bounds how far back a column that IS being
    * painted scans, so it cannot make a SKIPPED column wrong.
+   *
+   * THE PRO VIEW ADDS THREE INPUTS to a column's pixels - the axis, the camera and the Editable
+   * Zone (a note's row, the culling window and the row bands) - and each is held still by the same
+   * kind of argument. The axis is compared against `paintedAxis` in syncProView, which forces the
+   * full path when it moved; the zone forces it there too, and cannot move without `instruments`,
+   * `currentLayer` or `songPitch` moving with it (all three unconditional); and the camera is only
+   * ever written by applyCameraY, which repaints every drawn column itself and never narrows.
    */
   private columnIsAlreadyPainted(index: number, column: NoteColumn): boolean {
     const key = this.columnViews.get(index)?.paintKey;
@@ -3572,11 +4390,15 @@ export class ComposerRenderer {
   private paintTails(
     graphics: Graphics,
     index: number,
-    sizes: { width: number; height: number }
+    sizes: { width: number; height: number },
+    pro: ProPaintGeometry | null
   ): void {
     graphics.clear();
     const { columns, instruments, currentLayer, songPitch } = this.state;
-    const rowHeight = sizes.height / NOTES_PER_COLUMN;
+    //THE ROW BANDS RIDE ON THIS GRAPHICS, first, so they draw under the tails and under the notes -
+    //see paintProRowBands for why this object is where they live
+    if (pro) this.paintProRowBands(graphics, sizes, pro);
+    const rowHeight = pro ? pro.rowHeight : sizes.height / NOTES_PER_COLUMN;
     const tailHeight = Math.max(2, rowHeight * 0.22);
     const accentColor = this.paintTailAccent;
     const first = Math.max(0, index - this.maxSpan() + 1);
@@ -3588,14 +4410,28 @@ export class ComposerRenderer {
         const instrument = instruments[note.trackIndex];
         const isCurrentLayer = note.trackIndex === currentLayer;
         if (!isCurrentLayer && !instrument?.visible) continue;
-        //same canonical placement as the note sprite above - a tail must start under its own head
-        const row = gridRowForNumberCached(
-          instrument?.name ?? '',
-          effectiveTrackPitch(instrument, songPitch),
-          note.id
-        ).row;
-        if (row === -1) continue;
-        const y = COMPOSER_NOTE_POSITIONS[row] * rowHeight + (rowHeight - tailHeight) / 2;
+        let y: number;
+        if (pro) {
+          //the Pro View's own placement, which is the note sprite's: a tail must start under its
+          //own head, so it is culled against the same camera window the head is
+          const top = yForNumber({
+            axis: pro.axis,
+            number: note.id,
+            rowHeight,
+            cameraY: pro.cameraY,
+          });
+          if (top <= -rowHeight || top >= sizes.height) continue;
+          y = top + (rowHeight - tailHeight) / 2;
+        } else {
+          //same canonical placement as the note sprite above - a tail must start under its own head
+          const row = gridRowForNumberCached(
+            instrument?.name ?? '',
+            effectiveTrackPitch(instrument, songPitch),
+            note.id
+          ).row;
+          if (row === -1) continue;
+          y = COMPOSER_NOTE_POSITIONS[row] * rowHeight + (rowHeight - tailHeight) / 2;
+        }
         const x = index === start ? sizes.width * 0.55 : 0;
         graphics.rect(x, y, sizes.width - x, tailHeight).fill({
           color: isCurrentLayer ? accentColor : 0x888888,
@@ -3656,6 +4492,8 @@ export class ComposerRenderer {
     const painted = this.drawNotesStage(cacheData, sizes, this.containerX(), narrowed);
     const visibleTimeline = Boolean(cacheData) && !this.state.isRecordingAudio;
     this.timelineStrip.visible = visibleTimeline;
+    //the same gate for the Pro View's layers: they exist to frame the columns, so they follow them
+    this.setProLayersVisible(visibleTimeline);
     if (visibleTimeline) {
       this.drawTimelineStage(relativeColumnWidth, viewport.width, viewport.x);
     }
@@ -3690,6 +4528,7 @@ export class ComposerRenderer {
     const counterLimit = this.counterLimit();
     const { first, last } = this.visibleColumnRange();
     this.releaseColumnViewsOutside(first, last);
+    const pro = this.proGeometry();
     // Iterates the WINDOW, not the whole song. The pre-pool version walked every column of the
     // song and filtered with isColumnVisible inside the callback - a second O(song) pass per draw,
     // on top of the tail scan.
@@ -3698,13 +4537,23 @@ export class ComposerRenderer {
       // every property it owns unconditionally is what makes a reused view safe (see that class),
       // and a "set it only if it changed" paint would invert exactly that.
       if (narrowed && this.columnIsAlreadyPainted(index, this.state.columns[index])) continue;
-      this.paintColumn(index, cacheData, sizes, counterLimit);
+      this.paintColumn(index, cacheData, sizes, counterLimit, pro);
     }
     // The columns whose selection flag can have moved, in the same call applyScrollPosition uses -
     // needed only on the narrowed path, where a skipped column keeps the flag it last painted, and
     // harmless on the full one, where the loop has just painted every drawn column from the same
     // field and the comparison inside it holds.
     this.syncOverlayColumn(cacheData);
+    if (pro) {
+      // THE PRO VIEW'S OWN LAYERS, painted with the columns rather than beside them: the zone's
+      // overlay/lines and the row-label strip are as much a function of (axis, camera, zone) as a
+      // note's row is, and this is the one place all three are known to be current. `paintedAxis` is
+      // recorded here for the same reason paintedState is recorded by draw() - it is the baseline
+      // the next update's "did the axis move" question is asked against.
+      this.paintedAxis = pro.axis;
+      this.drawProZone();
+      this.syncProStrip();
+    }
     return true;
   }
 
@@ -3821,6 +4670,12 @@ export class ComposerRenderer {
     this.destroyed = true;
     this.contextRecoveryDispose?.();
     this.contextRecoveryDispose = null;
+    //BEFORE stopMotionFrames, which defers to a running camera ease - the whole point of that
+    //deferral is that a scroll settling must not strand the ease, and teardown is neither
+    this.cameraEase = null;
+    //the labels are children of a stage container and go with the Application below; the
+    //label-only Instruments are this class's own and are not
+    this.proLabelInstruments.clear();
     // Before the Application goes: Application.destroy runs TickerPlugin.destroy, which destroys the
     // ticker, and Ticker.destroy begins by stopping it - so this is not what keeps a frame from
     // firing into a torn-down renderer. It is here so that the listener this class added is the
