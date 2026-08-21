@@ -8,10 +8,13 @@
 //
 // `notesApp`, `notesColumnsContainer`, `drawNotesStage` keep their names now that the timeline
 // shares the canvas: "notes" names the REGION the columns occupy, which is what every one of those
-// sites is about, and the strip is stated against it (its y is `height + TIMELINE_BAND_PADDING`;
-// its x and its width are the canvas' less the DOM buttons' footprint - see stripWidth()).
+// sites is about, and the strip is stated against it (its y is composerTimelineStripY's, which is
+// `height + TIMELINE_BAND_PADDING` in the Compressed View and the canvas' TOP in the Pro View; its
+// x and its width are the canvas' less the DOM buttons' footprint - see stripWidth()).
 // `this.height` is that region and not the canvas - see canvasHeight() for the only two places that
-// want the whole thing.
+// want the whole thing. WHICH END OF THE CANVAS EACH REGION IS AT is written exactly twice, in
+// positionNotesRegion and positionTimelineStrip; everything else in this class is stated in the
+// notes region's own coordinates and is unaware of the view.
 //
 // Theme reaches this class via subscribeTheme(cb); ComposerCanvas.svelte separately derives the
 // handful of theme values its own DOM needs via $derived off the same ThemeProvider singleton.
@@ -58,7 +61,9 @@ import {
   TIMELINE_INSET_RIGHT,
   composerCanvasElementHeight,
   composerCanvasSize,
+  composerNotesRegionY,
   composerTimelineHeight,
+  composerTimelineStripY,
 } from './composerCanvasGeometry';
 import {
   COMPOSER_TIMELINE_MINIMAP_CONFIG,
@@ -419,6 +424,23 @@ export interface ComposerRendererState {
    * reads it like every other input, not because update() re-reads it.
    */
   columnsPerCanvas: number;
+  /**
+   * ComposerSettings' `proView` (CONTEXT.md: Pro View / Compressed View), already ANDed with
+   * `!inPreview` by ComposerCanvas.svelte.
+   *
+   * Read like `columnsPerCanvas` is - once, for geometry - because it arrives the same way: a flip
+   * remounts this class through the parent's `{#key}`, since the canvas' size, the ComposerCache's
+   * texture sizes and the whole scene's layout all depend on it. It is on the state object so the
+   * canvas' $effect reads it through the one channel every other input uses (see that file's
+   * dependency rule), not because update() re-reads it.
+   *
+   * WHAT IT DOES IN THIS PHASE, and no more: the mini-timeline strip moves to the TOP of the canvas
+   * and the notes region below it, and the canvas fills the window's leftover height (spec §6, §11
+   * phase B). Note placement, row mapping, the playhead's fraction and every pointer meaning are
+   * still the Compressed View's, so the Song-Grid content is drawn stretched into the taller
+   * region - the accepted intermediate state until the pro view function lands in phase C.
+   */
+  proView: boolean;
   breakpoints: number[];
   selectedColumns: number[];
   /**
@@ -485,6 +507,17 @@ export interface ComposerRendererCallbacks {
     /** Legacy split field, now zero because the former padding is part of timelineHeight. */
     timelinePadding: number;
     timelineHeight: number;
+    /**
+     * The strip's top edge on the canvas, which is the ONE number that says which end of it the
+     * mini-timeline is at: `height + timelinePadding` in the Compressed View, `timelinePadding`
+     * (i.e. 0) in the Pro View, where the strip is at the TOP and the notes region below it.
+     *
+     * Reported rather than re-derived in the template, for the same reason the split already was:
+     * the DOM row of timeline buttons is absolutely positioned over the strip THIS class drew, so a
+     * second statement of where that is could disagree with it silently. Both come from
+     * composerCanvasGeometry.composerTimelineStripY.
+     */
+    timelineTop: number;
     hasCache: boolean;
   }) => void;
 }
@@ -1195,11 +1228,14 @@ export class ComposerRenderer {
 
   // ComposerCanvas.svelte's onMount must await this before ever calling update().
   async init(): Promise<void> {
+    //BEFORE computeCanvasSize, which reads it: the Pro View's notes region is what the window
+    //leaves once the strip's band is taken off it, so the field's 30px placeholder would size the
+    //canvas 6.4px tall in the wrong direction on the very first paint.
+    this.timelineHeight = composerTimelineHeight();
     const { width, height, columnWidth } = this.computeCanvasSize();
     this.width = width;
     this.height = height;
     this.columnSize = { width: columnWidth, height };
-    this.timelineHeight = composerTimelineHeight();
 
     this.notesApp = await this.createNotesApplication(PIXI_RENDERER_PREFERENCE);
     this.canvasContainer.appendChild(this.notesApp.canvas);
@@ -1283,6 +1319,7 @@ export class ComposerRenderer {
     // viewportGraphics is a sibling added after the content container, so it renders on top.
     this.timelineStrip.addChild(this.viewportGraphics);
     this.initViewportClip();
+    this.positionNotesRegion();
     this.positionTimelineStrip();
     //THE LAST child of the stage, which is what makes pixi hit-test the strip before the columns -
     //see the field. Draw order is free here, the two regions never overlapping in y.
@@ -1438,6 +1475,10 @@ export class ComposerRenderer {
       bodyWidth: sizes.width,
       bodyHeight: sizes.height,
       inPreview: Boolean(this.state.inPreview),
+      proView: this.state.proView,
+      //the strip's band comes off the window before the notes region gets what is left, so the two
+      //must be the same number here and in canvasHeight() below
+      timelineHeight: this.timelineHeight,
     });
     const columnWidth = nearestEven(width / this.numberOfColumnsPerCanvas);
     return { width, height, columnWidth };
@@ -1468,8 +1509,28 @@ export class ComposerRenderer {
    */
   private positionTimelineStrip(): void {
     this.timelineStrip.x = TIMELINE_INSET_LEFT;
-    this.timelineStrip.y = this.height + TIMELINE_BAND_PADDING;
+    this.timelineStrip.y = composerTimelineStripY(this.state.proView, this.height);
     this.syncTimelineMinimapSpriteSize();
+  }
+
+  /**
+   * WHERE THE NOTES REGION SITS ON THE CANVAS - 0 in the Compressed View, below the strip in the Pro
+   * View (composerCanvasGeometry.composerNotesRegionY) - written onto the two stage children that
+   * live in canvas coordinates.
+   *
+   * THIS IS WHY NOTHING ELSE IN THE CLASS HAD TO MOVE. Every note's y, every tail, the cache's
+   * texture height, the column hitarea and the playhead are all stated against `this.height` in the
+   * REGION's own space; putting the offset on the container (and on the playhead beside it) is what
+   * keeps them written that way. It also keeps testStageHitarea exact for free: pixi inverts the
+   * container's transform before calling `contains`, so its `0..this.height` y bound goes on meaning
+   * the notes region and a press on the strip still reaches no column.
+   */
+  private positionNotesRegion(): void {
+    const y = composerNotesRegionY(this.state.proView, this.timelineHeight);
+    this.notesColumnsContainer.y = y;
+    //a SIBLING of the columns rather than a child (see playheadIsVisible), so it carries the offset
+    //itself instead of inheriting it
+    this.playheadGraphics.y = y;
   }
 
   /**
@@ -1634,7 +1695,9 @@ export class ComposerRenderer {
       this.height = height;
       this.columnSize = { width: columnWidth, height };
       this.notesApp.renderer.resize(width, this.canvasHeight());
-      //...and the strip sits under the notes region, which has just moved
+      //...and the two regions are placed against that new height: the strip sits under the notes
+      //region (over it in the Pro View), and the notes region under the strip's band there
+      this.positionNotesRegion();
       this.positionTimelineStrip();
       const breakpointColor = composerBreakpointMarkerColor();
       this.cache = this.generateCache(
@@ -3138,6 +3201,7 @@ export class ComposerRenderer {
       height: this.height,
       timelinePadding: TIMELINE_BAND_PADDING,
       timelineHeight: this.timelineHeight,
+      timelineTop: composerTimelineStripY(this.state.proView, this.height),
       hasCache: this.cache !== null,
     });
   }
@@ -3324,13 +3388,13 @@ export class ComposerRenderer {
    *
    * Not compared, and why. `isPlaying` IS read now - syncScrollSchedule and handleWheel both take
    * it - but what it changes is the SCHEDULE rather than any column's appearance, so it stays out
-   * of here; see its field. `bpm` is the same shape of thing. `inPreview`
-   * and `columnsPerCanvas` both decide geometry, and `inPreview` decides a great deal of it (it
-   * scales both canvas dimensions in computeCanvasSize, so it moves every column's x, every note's
-   * y and the size of both canvases) - but neither reaches update() as a CHANGE: Composer.svelte
-   * passes `inPreview` as a static prop, and a changed `columnsPerCanvas` arrives as a fresh
-   * ComposerRenderer instead, because the parent wraps the canvas in
-   * {#key settings.columnsPerCanvas.value}. Theme, canvas size and textures have no props channel
+   * of here; see its field. `bpm` is the same shape of thing. `inPreview`,
+   * `columnsPerCanvas` and `proView` all decide geometry, and `inPreview` decides a great deal of it
+   * (it scales both canvas dimensions in computeCanvasSize, so it moves every column's x, every
+   * note's y and the size of both canvases) - but none of them reaches update() as a CHANGE:
+   * Composer.svelte passes `inPreview` as a static prop, and a changed `columnsPerCanvas` or
+   * `proView` arrives as a fresh ComposerRenderer instead, because the parent wraps the canvas in a
+   * `{#key}` on both. Theme, canvas size and textures have no props channel
    * to compare at all; they reach the scene through recalculateCacheAndSizes, which drops the pool
    * and, with it, the baseline this diffs against.
    */

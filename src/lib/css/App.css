@@ -1071,6 +1071,16 @@ a {
 :root {
   --menu-size: 4rem;
   --panel-size: 40vw;
+  /* THE LOWERED KEYBOARD SHEET'S SLIVER in the composer's Pro View (CONTEXT.md: Pro View): how much
+     of the sheet stays above the window's bottom edge while it is down, and therefore also the band
+     `.song-info`, the tempo changers and the CANVAS ITSELF are held clear of.
+
+     Here rather than on `.composer-grid-pro` because two of those three are not inside that element:
+     `.song-info` is a sibling of the grid, not a descendant. composerCanvasGeometry states the same
+     number as PRO_KEYBOARD_SLIVER_PX (it comes off the Pro View canvas' height) and
+     test/composerCanvasCss.test.ts reads this declaration back out of this file, the way it does the
+     timeline buttons' 2.2rem. */
+  --pro-sliver-height: 1.5rem;
 }
 
 .icon {
@@ -2990,6 +3000,147 @@ select {
   width: 4rem;
 }
 
+/* ==================================================================================
+   THE COMPOSER'S PRO VIEW (CONTEXT.md: Pro View / Compressed View; spec §8).
+
+   ONE MODIFIER CLASS, `composer-grid-pro`, added by Composer.svelte when the `proView` setting is on
+   and never in /theme's preview. Everything below is a descendant of it, so the Compressed View is
+   what this file says everywhere else - with the setting off not one of these rules matches.
+
+   WHAT CHANGES, and it is vertical only: the canvas stops being a 45vh card with the keyboard under
+   it and becomes the window's whole leftover height, so the keyboard has nowhere left to stand and
+   becomes a bottom SHEET over it, and the tempo changers - which must stay reachable while that
+   sheet is down - move out of it into their own slot. The left play/roster column and the right
+   CanvasTool column keep their widths and their contents (the View Lock button is a fifth tool in
+   that column, not a new column).
+
+   THESE RULES SIT AFTER THE BASE COMPOSER RULES ON PURPOSE: `.song-info-pro` is a single-class
+   selector, exactly as specific as the `.song-info` it moves, so source order is what decides it.
+   ================================================================================== */
+.composer-grid-pro {
+  /* THE CANVAS' ROW TAKES THE WHOLE GRID. The base layout leaves both rows `auto`, and since the
+     keyboard (row `c`) is out of flow, `align-content: normal` splits the grid's free space evenly
+     between the two - which would leave the canvas' row visibly short of the window while
+     composerCanvasGeometry had already sized the canvas for all of it. `auto` and not `0` for the
+     second row: the popover and the keyboard are placed against it, and a zero track would still
+     work but says something this layout does not mean. */
+  grid-template-rows: 1fr auto;
+}
+
+.composer-grid-pro .canvas-wrapper {
+  /* THE WRAPPER IS THE CANVAS' OWN SIZE, not the row's. Its `min-height` is already exactly the
+     canvas element's height (composerCanvasCssSize's pro branch), so without this the flex row's
+     default `stretch` would add the sliver band back onto it and `.canvas-relative`'s `flex: 1`
+     would carry the rounded corners that much past the canvas' bottom edge. */
+  align-self: flex-start;
+}
+
+/* THE SEPARATOR BETWEEN THE TWO REGIONS, MOVED TO THE OTHER EDGE. `.timeline-controls::before` is a
+   1px line along the boundary between the scrolling note grid and the denser minimap panel, drawn in
+   the DOM so it also crosses the opaque timeline buttons. That boundary is the row's TOP in the
+   Compressed View and its BOTTOM here, where the strip is above the notes instead of below them -
+   left alone it would draw along the canvas' own top edge and mark nothing. */
+.composer-grid-pro .timeline-controls::before {
+  inset: auto 0 0;
+}
+
+.composer-grid-pro .buttons-composer-wrapper-right {
+  /* FIVE TOOLS NOW (the fifth is View Lock), and capped rather than `1fr`: the row this column is
+     stretched to is the full-height canvas here, so equal fractions would make every tool ~200px
+     tall on a 1080p window. 8rem is what `repeat(4, 1fr)` came out as over the Compressed View's
+     45vh card, so the buttons keep the size they have always had and the column packs from the
+     top. */
+  grid-template-rows: repeat(5, minmax(0, 8rem));
+}
+
+/* THE KEYBOARD AS A BOTTOM SHEET. Lowered is the default and the class is what raises it, so the
+   sheet is down for the first frame after mount rather than sliding up and back.
+
+   IT IS NEVER UNMOUNTED, which is the point of doing this with a transform: the keyboard goes on
+   receiving the same active-note flashes it does in the Compressed View while it is down, and a
+   raise costs no instrument reload. `transform`/`opacity` only, so the whole thing runs off the
+   compositor and never reflows the canvas beside it. */
+.composer-grid-pro .composer-keyboard-wrapper {
+  position: fixed;
+  z-index: 6;
+  /* percentages in `translate` are of the element's OWN height, so this leaves exactly the sliver
+     showing whatever instrument (and therefore whatever keyboard height) is loaded */
+  transform: translateY(calc(100% - var(--pro-sliver-height)));
+  opacity: 0.3;
+  transition:
+    transform 0.28s ease,
+    opacity 0.28s ease;
+  /* the sliver's own tap is taken by `.composer-keyboard-sliver` in front of it, so a key cannot be
+     pressed by whoever meant to raise the sheet */
+  pointer-events: none;
+}
+
+/* RAISED IS A STATE CLASS ON THE GRID, not on the keyboard: the sheet is a property of the composer
+   layout rather than of the keyboard surface, and putting it here keeps ComposerKeyboard - which
+   renders three different wrappers (loading, recording, keys) - out of the question entirely.
+   Same specificity as the rule above, so it wins by sitting after it. */
+.composer-grid-pro-raised .composer-keyboard-wrapper {
+  transform: translateY(0);
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* THE BACKDROP the raised sheet sits over: plain rgba and deliberately NO blur (a backdrop-filter
+   over a full-window canvas costs a full-screen readback every frame the canvas repaints).
+
+   ALWAYS MOUNTED, opacity-toggled, so the fade has something to run on in both directions. While it
+   is invisible it is also `pointer-events: none`, so nothing under it is shadowed by a hit target it
+   cannot see. While it IS up it covers the canvas completely, which is what makes the dismissing tap
+   swallowed by construction: the press never reaches pixi at all. */
+.composer-keyboard-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 5;
+  border: none;
+  padding: 0;
+  margin: 0;
+  background-color: rgba(0, 0, 0, 0.45);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.28s ease;
+  cursor: default;
+}
+
+.composer-keyboard-backdrop-visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* THE SLIVER'S TAP TARGET: the band of window the lowered sheet peeks into, as its own transparent
+   button in front of it. A button and not a click handler on the wrapper because the wrapper is the
+   KEYBOARD - a tap on it would otherwise press whichever key happened to be under the finger. */
+.composer-keyboard-sliver {
+  position: fixed;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: var(--pro-sliver-height);
+  z-index: 7;
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+/* ...and the two things that live in that same band and must not be under it. Both are ABOVE the
+   backdrop (z-index 8): the tempo changers are outside the overlay by design - the whole reason
+   they left the keyboard - and the song's name and time are read-only text that the sheet has no
+   reason to hide. */
+.composer-grid-pro .tempo-changers-wrapper {
+  bottom: calc(var(--pro-sliver-height) + 0.2rem);
+  z-index: 8;
+}
+
+.song-info-pro {
+  bottom: calc(0.5vw + var(--pro-sliver-height));
+  z-index: 8;
+}
+
 @media (hover: none) and (pointer: coarse) {
   .canvas-buttons {
     display: flex;
@@ -3115,6 +3266,19 @@ select {
     width: 1.5vw;
     height: 1.5vw;
   }
+
+  /* THE PRO VIEW ON A PHONE. The bottom-sheet idiom needs nothing here - it is already what a
+     phone expects - so this is the ONE place the desktop numbers do not carry over: the tools
+     column's buttons are `flex: 1; width: 100%` in this block and its five rows would otherwise be
+     a fifth of the window each. The dedicated mobile pass is phase E.
+
+     `--pro-sliver-height` is deliberately NOT re-declared here, tempting as a fatter thumb target
+     is: composerCanvasGeometry takes that band off the canvas' height as a build-time constant, and
+     a viewport-width-dependent value would make the canvas and the sheet overlap by the difference
+     at exactly the widths where the least room is going spare. */
+  .composer-grid-pro .buttons-composer-wrapper-right {
+    grid-template-rows: repeat(5, minmax(0, 4rem));
+  }
 }
 
 /* ==================================================================================
@@ -3175,6 +3339,14 @@ select {
   .composer-grid:not(.composer-grid-in-preview) .composer-keyboard-wrapper {
     left: calc(var(--menu-size) + 0.1rem);
     width: calc(100% - var(--menu-size) - 0.1rem);
+  }
+
+  /* ...and the Pro View's tempo slot takes the right CanvasTool column's own width, so the two are
+     one column of the page rather than two stacked things that nearly line up. `.tool` is `4vw`
+     here and `100%` of a differently-sized column in the mobile block, which is why this is the
+     desktop side only - the base 4rem stands there. */
+  .composer-grid-pro .tempo-changers-wrapper {
+    width: 4vw;
   }
 }
 

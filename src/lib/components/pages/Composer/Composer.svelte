@@ -11,6 +11,7 @@
   import MidiParser from './MidiParser/MidiParser.svelte';
   import ComposerTools from './ComposerTools.svelte';
   import ComposerKeyboard from './ComposerKeyboard.svelte';
+  import ComposerTempoChangers from './ComposerTempoChangers.svelte';
   import ComposerDurationPopover from './ComposerDurationPopover.svelte';
   import ComposerCanvas from './ComposerCanvas.svelte';
   import ComposerMenu from './ComposerMenu.svelte';
@@ -137,6 +138,35 @@
   let playbackColumnStartMs = $state(0);
   let playbackAnchorGeneration = $state(0);
   let changes = $state(0);
+  /**
+   * CONTEXT.md: Pro View. The persisted setting, ANDed with `!inPreview` once here so every
+   * consumer below - the grid modifier, the canvas' `{#key}`, the keyboard's sheet, the tempo
+   * changers' placement - is asking the same question. /theme's composer preview keeps the
+   * Compressed View: it is a small box inside a scrolling page, and a canvas sized to the WINDOW
+   * would overrun it (`.canvas-wrapper-in-preview` and `composer-grid-in-preview` are the same
+   * exclusion).
+   */
+  const proView = $derived(Boolean(settings.proView.value) && !inPreview);
+  /**
+   * Whether the Pro View's keyboard sheet is up. EPHEMERAL and never persisted (spec §5): every
+   * composer mount starts with it lowered, and it means nothing at all in the Compressed View,
+   * where the keyboard is simply the bottom of the page.
+   */
+  let keyboardRaised = $state(false);
+  /**
+   * ...and what actually decides the sheet's position, which is not quite the same thing: recording
+   * audio REPLACES the keyboard's content with the recording UI (see ComposerKeyboard), and that UI
+   * carries the only control that stops the recording - so the sheet is held up for as long as one
+   * is running, whatever the user last tapped.
+   */
+  const keyboardSheetRaised = $derived(keyboardRaised || isRecordingAudio);
+  /**
+   * THE VIEW LOCK (CONTEXT.md), and in this phase it is a VISUAL PLACEHOLDER: the fifth CanvasTool
+   * toggles this and nothing reads it yet. Phase D gives it its meaning (locked = the frame stays
+   * pinned to the current track's Editable Zone; unlocked = drag pans vertically) and with it the
+   * route into ComposerRenderer. Ephemeral like the sheet above: every mount starts locked.
+   */
+  let viewLocked = $state(true);
 
   let broadcastChannel: BroadcastChannel | null = null;
   let mounted = false;
@@ -1749,6 +1779,39 @@
   >
 {/snippet}
 
+<!-- THE VIEW LOCK'S TWO STATES (Pro View only), a closed padlock while the frame is pinned to the
+     current layer's Editable Zone and an open one while it can be panned. Same 448x512 Font Awesome
+     viewBox and the same 16px box as the four tools above it, so the column stays one column. -->
+{#snippet lockedViewIcon()}
+  <svg
+    stroke="currentColor"
+    fill="currentColor"
+    stroke-width="0"
+    viewBox="0 0 448 512"
+    height="16"
+    width="16"
+    xmlns="http://www.w3.org/2000/svg"
+    ><path
+      d="M400 224h-24v-72C376 68.2 307.8 0 224 0S72 68.2 72 152v72H48c-26.5 0-48 21.5-48 48v192c0 26.5 21.5 48 48 48h352c26.5 0 48-21.5 48-48V272c0-26.5-21.5-48-48-48zm-104 0H152v-72c0-39.7 32.3-72 72-72s72 32.3 72 72v72z"
+    /></svg
+  >
+{/snippet}
+
+{#snippet unlockedViewIcon()}
+  <svg
+    stroke="currentColor"
+    fill="currentColor"
+    stroke-width="0"
+    viewBox="0 0 448 512"
+    height="16"
+    width="16"
+    xmlns="http://www.w3.org/2000/svg"
+    ><path
+      d="M400 256H152V152c0-39.7 32.3-72 72-72s72 32.3 72 72v8c0 13.3 10.7 24 24 24h32c13.3 0 24-10.7 24-24v-8C376 68.2 307.8 0 224 0S72 68.2 72 152v104H48c-26.5 0-48 21.5-48 48v160c0 26.5 21.5 48 48 48h352c26.5 0 48-21.5 48-48V304c0-26.5-21.5-48-48-48z"
+    /></svg
+  >
+{/snippet}
+
 {#snippet toolsIcon()}
   <svg
     stroke="currentColor"
@@ -1785,7 +1848,18 @@
      App.css's desktop block gives the real page a permanent sidebar column and a canvas that fills
      the window, neither of which fits a small box inside a scrolling page (same exclusion as
      `.canvas-wrapper-in-preview` and ComposerMenu's `composer-menu-sidebar`). -->
-<div class={['composer-grid', 'appear-on-mount', inPreview && 'composer-grid-in-preview']}>
+<!-- `composer-grid-pro` is the Pro View's whole DOM difference (CONTEXT.md; App.css's own PRO VIEW
+     block): the canvas' row takes the window, the keyboard becomes a bottom sheet over it and the
+     tempo changers get their own slot. `proView` already excludes the preview - see its declaration. -->
+<div
+  class={[
+    'composer-grid',
+    'appear-on-mount',
+    inPreview && 'composer-grid-in-preview',
+    proView && 'composer-grid-pro',
+    proView && keyboardSheetRaised && 'composer-grid-pro-raised',
+  ]}
+>
   <div class="column composer-left-control">
     <AppButton
       class="flex-centered"
@@ -1819,7 +1893,15 @@
   </div>
   <div class="top-panel-composer" style="grid-area:b">
     <div class="row" style="height:fit-content;width:100%">
-      {#key settings.columnsPerCanvas.value}
+      <!--
+        BOTH KEYS, AS ONE STRING. A flip of either one changes the canvas' size, every column
+        texture in the ComposerCache and (for `proView`) which end of the canvas the mini-timeline
+        is drawn at, none of which ComposerRenderer re-derives after construction - so it is
+        remounted instead, exactly as `columnsPerCanvas` has always been. A template literal and not
+        an array: an array literal is a fresh identity every time it is evaluated, which is not what
+        `{#key}` compares.
+      -->
+      {#key `${settings.columnsPerCanvas.value}|${proView}`}
         <ComposerCanvas
           columns={song.columns}
           structureVersion={song.structureVersion}
@@ -1868,9 +1950,52 @@
         >
           {@render toolsIcon()}
         </CanvasTool>
+        <!-- THE VIEW LOCK, a fifth tool in this same column and only in the Pro View - there is no
+             frame to lock in the Compressed View, whose canvas shows every row of every column at
+             once. VISUAL PLACEHOLDER in this phase: it toggles `viewLocked` and nothing reads it
+             yet (spec §11 phase D). App.css's `.composer-grid-pro` variant of this column is what
+             keeps five buttons the size four were. -->
+        {#if proView}
+          <CanvasTool
+            onclick={() => (viewLocked = !viewLocked)}
+            tooltip={viewLocked
+              ? t('composer:unlock_view_description')
+              : t('composer:lock_view_description')}
+            ariaLabel={viewLocked ? t('composer:unlock_view') : t('composer:lock_view')}
+          >
+            {@render (viewLocked ? lockedViewIcon : unlockedViewIcon)()}
+          </CanvasTool>
+        {/if}
       </div>
     </div>
   </div>
+  <!-- THE PRO VIEW'S KEYBOARD OVERLAY, in three pieces and in this order, which is also their
+       stacking order (App.css gives them z-indexes 5/6/7 rather than leaning on it, but the DOM
+       order says the same thing):
+
+       1. the BACKDROP, always mounted and opacity-toggled so it can fade both ways. It covers the
+          canvas completely while the sheet is up, which is what makes the dismissing tap SWALLOWED
+          by construction rather than by a rule someone has to remember: the press lands on this
+          button and pixi never hears of it.
+       2. the KEYBOARD itself, unchanged - the same component, the same props, still mounted while
+          it is down so its active-note flashes keep running.
+       3. the SLIVER's tap target, in front of the lowered sheet so raising it cannot also press a
+          key. It is gone once the sheet is up, where the backdrop is what a tap outside means.
+
+       The Compressed View renders none of them and the keyboard is simply the bottom of the page. -->
+  {#if proView}
+    <button
+      class={[
+        'composer-keyboard-backdrop',
+        keyboardSheetRaised && 'composer-keyboard-backdrop-visible',
+      ]}
+      aria-label={t('composer:hide_keyboard')}
+      onclick={(e) => {
+        e.stopPropagation();
+        keyboardRaised = false;
+      }}
+    ></button>
+  {/if}
   <ComposerKeyboard
     functions={{
       handleClick,
@@ -1892,8 +2017,24 @@
       heldButtons,
       pitch: song.instruments[layer]?.pitch || song.pitch,
       noteNameType: settings.noteNameType.value,
+      proView,
     }}
   />
+  {#if proView}
+    {#if !keyboardSheetRaised}
+      <button
+        class="composer-keyboard-sliver"
+        aria-label={t('composer:show_keyboard')}
+        onclick={() => (keyboardRaised = true)}
+      ></button>
+    {/if}
+    <!-- THE TEMPO CHANGERS' PRO SLOT. Same component the keyboard renders in the Compressed View
+         (ComposerTempoChangers), rendered HERE instead so it is a sibling of the sheet rather than
+         part of it - it has to stay reachable while the sheet is down, which is most of the time.
+         App.css lifts it clear of the sliver and above the backdrop; it keeps the bottom-right
+         corner it has always had, now under the right CanvasTool column. -->
+    <ComposerTempoChangers {isPlaying} currentColumn={song.selectedColumn} {handleTempoChanger} />
+  {/if}
   {#if durationPopover && popoverSpan !== null}
     <ComposerDurationPopover
       span={popoverSpan}
@@ -1944,7 +2085,10 @@
     undo,
   }}
 />
-<div class="song-info">
+<!-- `song-info-pro` and not a descendant selector: this overlay is a SIBLING of `.composer-grid`, so
+     `.composer-grid-pro .song-info` would never match it. All it does is lift the text clear of the
+     lowered keyboard's sliver, which in the Pro View sits exactly where it used to. -->
+<div class={['song-info', proView && 'song-info-pro']}>
   <div class="text-ellipsis">
     {song.name}
   </div>

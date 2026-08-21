@@ -31,6 +31,7 @@ import {nearestEven} from '$core/utils/Utilities'
 import {
     COMPOSER_DESKTOP_MEDIA_QUERY,
     COMPOSER_MOBILE_MAX_WIDTH,
+    PRO_KEYBOARD_SLIVER_PX,
     TIMELINE_BAND_PADDING,
     TIMELINE_BUTTON_MARGIN,
     TIMELINE_BUTTON_SIZE,
@@ -39,6 +40,8 @@ import {
     composerCanvasCssSize,
     composerCanvasElementHeight,
     composerCanvasSize,
+    composerNotesRegionY,
+    composerTimelineStripY,
     isComposerDesktopWidth,
 } from '$cmp/pages/Composer/composerCanvasGeometry'
 
@@ -48,6 +51,9 @@ const COMPOSER_CANVAS = readFileSync(
     'src/lib/components/pages/Composer/ComposerCanvas.svelte',
     'utf8'
 )
+//the fourth link of the chain, and only for the Pro View: the modifier class and the `{#key}` that
+//remounts the renderer on a flip both live in the PARENT, not in the canvas component
+const COMPOSER = readFileSync('src/lib/components/pages/Composer/Composer.svelte', 'utf8')
 
 /**
  * One element's markup, from the attribute that identifies it to the `>` that closes the open tag.
@@ -451,6 +457,246 @@ describe('the composer canvas placeholder and the size the renderer computes', (
     })
 })
 
+/**
+ * THE PRO VIEW'S HALF OF THE SAME COUPLING (CONTEXT.md: Pro View; spec §6/§8).
+ *
+ * Everything the block above states about the Compressed View holds here unchanged - this adds the
+ * second branch rather than replacing anything. What is new is that the Pro View canvas is sized
+ * against the WINDOW rather than as a fraction of it, so the numbers it is the window LESS are the
+ * ones that have to be written down twice: `.composer-grid`'s padding and the band the lowered
+ * keyboard sheet stands in. The sheet's own transform is read back out of App.css here for that
+ * reason - if the sliver ever grows without PRO_KEYBOARD_SLIVER_PX growing with it, the canvas'
+ * bottom rows go under it and nothing else in the suite would notice.
+ */
+describe('the Pro View canvas: the window it fills and the band it stops above', () => {
+    const wrapper = declarationsOf('.canvas-wrapper')
+    const VIEWPORTS = [
+        {width: 2560, height: 1440},
+        {width: 1920, height: 1080},
+        {width: 1280, height: 800},
+        //either side of the composer's desktop breakpoint, where the WIDTH formula changes and the
+        //height's must not
+        {width: 1001, height: 800},
+        {width: 1000, height: 800},
+        {width: 900, height: 700},
+        {width: 400, height: 800},
+        {width: 360, height: 640},
+    ]
+    const TIMELINE_HEIGHTS = [36.4, 31.4]
+    //`.composer-grid`'s 0.2rem padding at both ends plus the sliver, at the 16px root font size
+    //composerCanvasGeometry assumes and states. Restated here rather than imported, so moving the
+    //constant fails instead of moving both sides together.
+    const PRO_INSET = 0.2 * 16 * 2 + 1.5 * 16
+
+    it('App.css still declares the sliver the canvas reserves, and leaves it exactly that', () => {
+        //THE THIRD BRIDGE between this stylesheet and composerCanvasGeometry, after the timeline
+        //buttons' rem values and the desktop chrome's. The property is on `:root` and not on
+        //`.composer-grid-pro` because `.song-info` - one of the three things held clear of the
+        //sliver - is a SIBLING of the composer grid rather than a descendant of it.
+        expect(declarationsOf(':root', '--pro-sliver-height').get('--pro-sliver-height')).toBe(
+            '1.5rem'
+        )
+        expect(PRO_KEYBOARD_SLIVER_PX).toBe(1.5 * 16)
+        //...and the sheet leaves exactly that much of itself on screen. A `100%` in `translateY` is
+        //the element's OWN height, so what peeks above the window's bottom edge is this term and
+        //nothing else, whatever instrument's keyboard is loaded.
+        expect(
+            declarationsOf('.composer-grid-pro .composer-keyboard-wrapper').get('transform')
+        ).toBe('translateY(calc(100% - var(--pro-sliver-height)))')
+        //the sliver's tap target is that same band, or a tap lands on a key instead of raising
+        expect(declarationsOf('.composer-keyboard-sliver').get('height')).toBe(
+            'var(--pro-sliver-height)'
+        )
+        //...and the raised state is a class on the GRID, so ComposerKeyboard's three wrappers
+        //(loading, recording, keys) all get it without knowing anything about a sheet
+        expect(declarationsOf('.composer-grid-pro-raised .composer-keyboard-wrapper').get('transform')).toBe(
+            'translateY(0)'
+        )
+    })
+
+    it('gives the canvas the whole grid row, which is what its height is stated against', () => {
+        //composerCanvasGeometry's pro inset assumes the canvas' row IS the grid's content box. The
+        //base layout leaves both rows `auto` and splits the free space between them (the keyboard's
+        //row is out of flow, so it would take half of it for nothing), which would leave the canvas
+        //taller than the row it sits in.
+        expect(declarationsOf('.composer-grid-pro').get('grid-template-rows')).toBe('1fr auto')
+        //...and the wrapper is the canvas' own size rather than the row's, so `.canvas-relative`'s
+        //rounded corners stop where the canvas does
+        expect(declarationsOf('.composer-grid-pro .canvas-wrapper').get('align-self')).toBe(
+            'flex-start'
+        )
+        //...and the 1px boundary between the two regions is on the strip's OTHER edge here, since
+        //the notes are below it rather than above it. `0 0 auto` is the top edge, `auto 0 0` the
+        //bottom; left alone it would run along the canvas' own top edge and mark nothing.
+        expect(declarationsOf('.timeline-controls::before').get('inset')).toBe('0 0 auto')
+        expect(declarationsOf('.composer-grid-pro .timeline-controls::before').get('inset')).toBe(
+            'auto 0 0'
+        )
+    })
+
+    for (const viewport of VIEWPORTS) {
+        for (const timelineHeight of TIMELINE_HEIGHTS) {
+            const label = `${viewport.width}x${viewport.height}, timeline ${timelineHeight}px`
+
+            it(`agrees with composerCanvasSize at ${label}`, () => {
+                const css = composerCanvasCssSize({
+                    inPreview: false,
+                    proView: true,
+                    rowHeightScale: 1,
+                    timelineHeight,
+                })
+                if (!css) throw new Error('composerCanvasCssSize returned null outside preview')
+                const context: CssContext = {
+                    viewportWidth: viewport.width,
+                    viewportHeight: viewport.height,
+                    vars: {'--composer-canvas-height': css.height},
+                }
+                const js = composerCanvasSize({
+                    bodyWidth: viewport.width,
+                    bodyHeight: viewport.height,
+                    inPreview: false,
+                    proView: true,
+                    timelineHeight,
+                })
+                const band = TIMELINE_BAND_PADDING * 2 + timelineHeight
+                //THE FORMULA ITSELF, restated: the window, less the grid's padding and the sliver
+                //band, less the strip's band - with the floor `max()` reproduces on the CSS side
+                //(unlike nearestEven) so the two agree even where it engages.
+                const expected = Math.max(2, viewport.height - PRO_INSET - band)
+                expect(evaluateCss(css.height, context) - band).toBeCloseTo(expected, 6)
+                expect(js.height).toBe(nearestEven(expected))
+
+                //THE LAYOUT SHIFT, which is what the placeholder is for, exactly as above: the
+                //wrapper is `max(floor, canvas)` before and after the canvas lands, and the pro
+                //height beats the `45vh + 14px` floor on every viewport taller than ~81px.
+                const jsCanvasHeight = composerCanvasElementHeight(js.height, timelineHeight)
+                const placeholderHeight = evaluateCss(wrapper.get('min-height')!, context)
+                expect(placeholderHeight).toBeCloseTo(viewport.height - PRO_INSET, 6)
+                expect(
+                    Math.abs(Math.max(placeholderHeight, jsCanvasHeight) - placeholderHeight)
+                ).toBeLessThanOrEqual(1)
+
+                //THE WIDTH IS THE COMPRESSED VIEW'S, UNTOUCHED. Pro View changes the composer's
+                //vertical layout only - both side columns keep their widths - so the same body
+                //width must give the same canvas width in either view, on both sides of the
+                //desktop breakpoint.
+                const compressed = composerCanvasSize({
+                    bodyWidth: viewport.width,
+                    bodyHeight: viewport.height,
+                    inPreview: false,
+                    timelineHeight,
+                })
+                expect(js.width).toBe(compressed.width)
+                expect(css.mobileWidth).toBe(
+                    composerCanvasCssSize({inPreview: false, timelineHeight})!.mobileWidth
+                )
+                expect(css.desktopWidth).toBe(
+                    composerCanvasCssSize({inPreview: false, timelineHeight})!.desktopWidth
+                )
+
+                //...AND THE GAME'S ROW-HEIGHT SCALE DOES NOT APPLY. It shortens the Compressed
+                //View's 45vh card so sky's rows are a little tighter; here it would only open a gap
+                //under a canvas that is supposed to reach the sliver, and the Pro View derives its
+                //row height from the region instead (proViewGeometry.proRowHeight).
+                expect(
+                    composerCanvasSize({
+                        bodyWidth: viewport.width,
+                        bodyHeight: viewport.height,
+                        inPreview: false,
+                        proView: true,
+                        rowHeightScale: 0.95,
+                        timelineHeight,
+                    }).height
+                ).toBe(js.height)
+                expect(
+                    composerCanvasCssSize({
+                        inPreview: false,
+                        proView: true,
+                        rowHeightScale: 0.95,
+                        timelineHeight,
+                    })!.height
+                ).toBe(css.height)
+            })
+        }
+    }
+
+    it('keeps the theme preview on the Compressed View, canvas and placeholder alike', () => {
+        //A canvas sized to the WINDOW inside /theme's little composer box would overrun the page it
+        //is previewed in, so `proView` is declined there on both sides - and the CSS side returns
+        //null in preview regardless, which is what leaves that route on its old floors.
+        expect(composerCanvasCssSize({inPreview: true, proView: true})).toBeNull()
+        const preview = {bodyWidth: 1920, bodyHeight: 1080, inPreview: true, timelineHeight: 36.4}
+        expect(composerCanvasSize({...preview, proView: true})).toEqual(
+            composerCanvasSize(preview)
+        )
+        //...and ComposerCanvas.svelte is where that AND lives, once, so every consumer downstream -
+        //the placeholder, the renderer's state, the geometry module's own branch - is handed the
+        //same already-excluded flag
+        expect(COMPOSER_CANVAS).toContain(
+            'const proView = $derived(Boolean(settings.proView.value) && !inPreview);'
+        )
+    })
+
+    it('puts the two regions at opposite ends of the same canvas, and tiles it either way', () => {
+        //THE PRO VIEW'S LAYOUT IN FULL: the same canvas height, with the strip and the notes region
+        //swapping places inside it. composerCanvasElementHeight takes no view for exactly that
+        //reason, and these two are what say which end each region is at.
+        const notesHeight = 500
+        for (const timelineHeight of [36.4, 31.4]) {
+            const canvas = composerCanvasElementHeight(notesHeight, timelineHeight)
+            //compressed: notes from 0, strip below them - the formula the DOM button row used to
+            //carry inline (`height + timelinePadding`)
+            expect(composerNotesRegionY(false, timelineHeight)).toBe(0)
+            expect(composerTimelineStripY(false, notesHeight)).toBe(
+                notesHeight + TIMELINE_BAND_PADDING
+            )
+            //pro: strip at the top, notes region under its whole band
+            expect(composerTimelineStripY(true, notesHeight)).toBe(TIMELINE_BAND_PADDING)
+            expect(composerNotesRegionY(true, timelineHeight)).toBe(
+                TIMELINE_BAND_PADDING * 2 + timelineHeight
+            )
+            //...and in BOTH views the two regions tile the canvas exactly, with neither overrunning
+            //it: a strip drawn past the bottom edge is invisible, and a notes region that does it
+            //silently loses its lowest rows
+            for (const proView of [false, true]) {
+                const notesY = composerNotesRegionY(proView, timelineHeight)
+                const stripY = composerTimelineStripY(proView, notesHeight)
+                expect(notesY + notesHeight).toBeLessThanOrEqual(canvas)
+                expect(stripY + timelineHeight).toBeLessThanOrEqual(canvas)
+                //disjoint: one starts where the other's band ends
+                expect(proView ? stripY + timelineHeight <= notesY : notesY + notesHeight <= stripY).toBe(true)
+            }
+        }
+    })
+
+    it('remounts the canvas on a flip, because its size and every texture depend on it', () => {
+        //A `{#key}` on BOTH settings, as one string. ComposerRenderer reads `proView` once, at
+        //construction (like columnsPerCanvas), because a flip changes the canvas' size, the
+        //ComposerCache's texture sizes and which end the strip is drawn at - none of which update()
+        //re-derives. An array literal here would be a fresh identity on every evaluation, which is
+        //not what `{#key}` compares.
+        expect(COMPOSER).toContain('{#key `${settings.columnsPerCanvas.value}|${proView}`}')
+        //...and the modifier class that reshapes the page around it, never in the preview
+        expect(COMPOSER).toContain(`proView && 'composer-grid-pro',`)
+        expect(COMPOSER).toContain(
+            'const proView = $derived(Boolean(settings.proView.value) && !inPreview);'
+        )
+    })
+
+    it('holds the canvas side buttons to the notes region, which has moved down under the strip', () => {
+        //`.canvas-buttons` is `top: 0` in App.css, which is the notes region's top only in the
+        //Compressed View. The inline `top` is the override, and it comes from the same function the
+        //renderer places the region with rather than a second `proView ? ... : 0` in the template.
+        expect(COMPOSER_CANVAS).toContain(
+            'const notesTop = $derived(composerNotesRegionY(proView, timelineHeight));'
+        )
+        expect(declarationsOf('.canvas-buttons').get('top')).toBe('0')
+        const chevrons = [...COMPOSER_CANVAS.matchAll(/style="height:\{height\}px;([^"]*)"/g)]
+        expect(chevrons).toHaveLength(2)
+        for (const chevron of chevrons) expect(chevron[1]).toContain('top:{notesTop}px;')
+    })
+})
+
 describe('the desktop layout the canvas fills, and the chrome it fills around', () => {
     const DESKTOP = mediaBlock(COMPOSER_DESKTOP_MEDIA_QUERY)
 
@@ -591,9 +837,11 @@ describe('the inline styles in ComposerCanvas.svelte that both couplings actuall
         //BOTH widths, or the desktop block's `var(--composer-canvas-width-desktop, 0px)` resolves
         //to its 0px fallback and every desktop viewport silently drops to the `78vw` floor
         expect(tag).toContain('style:--composer-canvas-width-desktop={cssSize?.desktopWidth}')
-        //...and `cssSize` is the geometry module's, not a second formula written in the template
+        //...and `cssSize` is the geometry module's, not a second formula written in the template.
+        //`proView` chooses the HEIGHT expression inside it (the Pro View canvas fills the window);
+        //both widths are still emitted either way, which is what the assertion above covers.
         expect(COMPOSER_CANVAS).toContain(
-            'const cssSize = $derived(composerCanvasCssSize({ inPreview: Boolean(inPreview) }));'
+            'const cssSize = $derived(composerCanvasCssSize({ inPreview: Boolean(inPreview), proView }));'
         )
         //NO BREAKPOINT IN THE TEMPLATE. The component emitting one width from a `matchMedia` read
         //is what caused the 79px jump at hydration: a prerender has no `matchMedia`, so the served
@@ -613,8 +861,10 @@ describe('the inline styles in ComposerCanvas.svelte that both couplings actuall
         expect(styles).toEqual([
             //the overlay itself, held to the CANVAS box rather than to the wrapper: all three
             //numbers come from the renderer's geometry report, which is the only channel that knows
-            //where the strip band starts and how tall it is
-            'top:{height + timelinePadding}px;width:{width}px;height:{timelineHeight}px',
+            //where the strip band starts and how tall it is - `timelineTop` because WHICH END of
+            //the canvas the strip is at is the Pro View's one layout difference here, and the
+            //renderer is the side that placed it (composerTimelineStripY)
+            'top:{timelineTop}px;width:{width}px;height:{timelineHeight}px',
             'background-color:{timelineHex}',
             'margin-left:0;background-color:{timelineHex}',
             'margin-left:auto;background-color:{timelineHex}',
