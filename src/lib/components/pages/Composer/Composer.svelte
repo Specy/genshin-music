@@ -2071,6 +2071,23 @@
           >
             {@render (viewLocked ? lockedViewIcon : unlockedViewIcon)()}
           </CanvasTool>
+          <!-- THE TEMPO CHANGERS' PRO SLOT. The same component the keyboard renders in the
+               Compressed View (ComposerTempoChangers), rendered HERE instead: in the Pro View the
+               keyboard is a bottom SHEET that spends most of its life translated off-screen, and
+               these must stay reachable while it is down (spec §8).
+
+               INSIDE THIS COLUMN, as its last row, rather than floated into the corner underneath
+               it. "Aligned under the right CanvasTool column" was a coordinate before the phase E
+               mobile pass and is a grid row now, because a floated slot only LOOKS aligned while
+               the window is tall: the tools pack from the top and the slot is pinned to the
+               bottom, so on a landscape phone (850x420) the two met and the tempo buttons covered
+               the View Lock. As a row of the same grid they cannot overlap at any height - the
+               tools shrink toward it instead (App.css's `repeat(5, ...) 1fr`). -->
+          <ComposerTempoChangers
+            {isPlaying}
+            currentColumn={song.selectedColumn}
+            {handleTempoChanger}
+          />
         {/if}
       </div>
     </div>
@@ -2134,12 +2151,6 @@
         onclick={() => (keyboardRaised = true)}
       ></button>
     {/if}
-    <!-- THE TEMPO CHANGERS' PRO SLOT. Same component the keyboard renders in the Compressed View
-         (ComposerTempoChangers), rendered HERE instead so it is a sibling of the sheet rather than
-         part of it - it has to stay reachable while the sheet is down, which is most of the time.
-         App.css lifts it clear of the sliver and above the backdrop; it keeps the bottom-right
-         corner it has always had, now under the right CanvasTool column. -->
-    <ComposerTempoChangers {isPlaying} currentColumn={song.selectedColumn} {handleTempoChanger} />
   {/if}
   {#if durationPopover && popoverSpan !== null}
     <ComposerDurationPopover

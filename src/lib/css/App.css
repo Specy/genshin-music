@@ -3045,12 +3045,27 @@ select {
 }
 
 .composer-grid-pro .buttons-composer-wrapper-right {
-  /* FIVE TOOLS NOW (the fifth is View Lock), and capped rather than `1fr`: the row this column is
+  /* FIVE TOOLS AND THE TEMPO SLOT. The tools are capped rather than `1fr`: the row this column is
      stretched to is the full-height canvas here, so equal fractions would make every tool ~200px
      tall on a 1080p window. 8rem is what `repeat(4, 1fr)` came out as over the Compressed View's
      45vh card, so the buttons keep the size they have always had and the column packs from the
-     top. */
-  grid-template-rows: repeat(5, minmax(0, 8rem));
+     top.
+
+     THE SIXTH ROW IS THE TEMPO CHANGERS' (phase E). `1fr` and not `auto` so it also swallows the
+     column's leftover height and holds them against its bottom edge; because a `1fr` row's minimum
+     is still its content, they keep their own height on a short window and the five `minmax(0, …)`
+     tools shrink toward them instead of being covered by them.
+
+     ...WHICH NEEDS THE COLUMN'S HEIGHT TO BE DEFINITE, and that is what `max-height` is for. The
+     flex row this column sits in is `height: fit-content`, so with the tempo slot IN FLOW the
+     column's own content is what sizes that row: without a cap the six rows would simply make the
+     row (and the page) taller than the window instead of the tools shrinking. The cap is the
+     window less the composer's own chrome - `.composer-grid`'s 0.2rem padding at each end and the
+     sliver band - which is the canvas' own height expression (composerCanvasGeometry's
+     PRO_CANVAS_INSET_PX = 0.4rem + PRO_KEYBOARD_SLIVER_PX), so the column ends exactly where the
+     canvas beside it does. */
+  grid-template-rows: repeat(5, minmax(0, 8rem)) 1fr;
+  max-height: calc(100vh - 0.4rem - var(--pro-sliver-height));
 }
 
 /* THE KEYBOARD AS A BOTTOM SHEET. Lowered is the default and the class is what raises it, so the
@@ -3127,15 +3142,43 @@ select {
   cursor: pointer;
 }
 
-/* ...and the two things that live in that same band and must not be under it. Both are ABOVE the
-   backdrop (z-index 8): the tempo changers are outside the overlay by design - the whole reason
-   they left the keyboard - and the song's name and time are read-only text that the sheet has no
-   reason to hide. */
+/* THE TEMPO CHANGERS AS THE TOOL COLUMN'S LAST ROW (phase E's mobile pass; Composer.svelte renders
+   them there in the Pro View). They stop being floated: `position: relative` only so the z-index
+   below still applies, `inset: auto` because the base rule's `right`/`bottom` would otherwise SHIFT
+   a relatively-positioned box instead of anchoring it, and the width is the column's.
+
+   WHY A ROW AND NOT A CORNER: floated, they were pinned to the window's bottom while the five tools
+   packed down from the top, so on a short window (a landscape phone at 850x420) the two met and the
+   tempo buttons covered the View Lock. In the grid they cannot: the `1fr` row takes its own content
+   height first and the tools shrink toward it.
+
+   STILL ABOVE THE BACKDROP (z-index 8), which is the whole reason they left the keyboard: the sheet
+   may be up and the tempo changers are still a tap away. No ancestor between here and the page root
+   makes a stacking context, so the number still counts against the backdrop's 5. */
 .composer-grid-pro .tempo-changers-wrapper {
-  bottom: calc(var(--pro-sliver-height) + 0.2rem);
+  position: relative;
+  inset: auto;
+  width: 100%;
+  align-self: end;
   z-index: 8;
+  /* ...and it never widens the column it now lives in. A grid item's automatic minimum size is its
+     content's, so without this the "Tempo" caption would have made this column ~10px wider than the
+     Compressed View's - which is 10px it does not have below ~610px of window, where the canvas'
+     78vw and the roster column have already spent everything: the column would simply hang off the
+     right edge. Floated, the slot never asked the layout for width at all; a row has to be told. */
+  min-width: 0;
 }
 
+/* PLAYING HIDES THEM WITHOUT MOVING ANYTHING ELSE. The base rule is `display: none`, which was free
+   while the slot was floated and now collapses the grid row it lives in - so every tool above would
+   grow on play and shrink again on stop. Same disappearance, no reflow. */
+.composer-grid-pro .tempo-changers-wrapper-hidden {
+  display: flex;
+  visibility: hidden;
+}
+
+/* ...and the song's name and time, which live in the sliver's band and are read-only text the sheet
+   has no reason to hide: lifted clear of it and above the backdrop (z-index 8) too. */
 .song-info-pro {
   bottom: calc(0.5vw + var(--pro-sliver-height));
   z-index: 8;
@@ -3270,14 +3313,18 @@ select {
   /* THE PRO VIEW ON A PHONE. The bottom-sheet idiom needs nothing here - it is already what a
      phone expects - so this is the ONE place the desktop numbers do not carry over: the tools
      column's buttons are `flex: 1; width: 100%` in this block and its five rows would otherwise be
-     a fifth of the window each. The dedicated mobile pass is phase E.
+     a fifth of the window each. The sixth row is the tempo slot's, exactly as on the desktop side.
+
+     4rem IS A CAP AND NOT A SIZE, which is what makes this survive a landscape phone: at 850x420
+     the column has ~374px for five tools and the tempo slot's ~148, so the tools resolve to ~45px
+     each rather than overflowing into it.
 
      `--pro-sliver-height` is deliberately NOT re-declared here, tempting as a fatter thumb target
      is: composerCanvasGeometry takes that band off the canvas' height as a build-time constant, and
      a viewport-width-dependent value would make the canvas and the sheet overlap by the difference
      at exactly the widths where the least room is going spare. */
   .composer-grid-pro .buttons-composer-wrapper-right {
-    grid-template-rows: repeat(5, minmax(0, 4rem));
+    grid-template-rows: repeat(5, minmax(0, 4rem)) 1fr;
   }
 }
 
@@ -3339,14 +3386,6 @@ select {
   .composer-grid:not(.composer-grid-in-preview) .composer-keyboard-wrapper {
     left: calc(var(--menu-size) + 0.1rem);
     width: calc(100% - var(--menu-size) - 0.1rem);
-  }
-
-  /* ...and the Pro View's tempo slot takes the right CanvasTool column's own width, so the two are
-     one column of the page rather than two stacked things that nearly line up. `.tool` is `4vw`
-     here and `100%` of a differently-sized column in the mobile block, which is why this is the
-     desktop side only - the base 4rem stands there. */
-  .composer-grid-pro .tempo-changers-wrapper {
-    width: 4vw;
   }
 }
 

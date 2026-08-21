@@ -534,6 +534,47 @@ describe('the Pro View canvas: the window it fills and the band it stops above',
         )
     })
 
+    it('keeps the tempo changers a ROW of the tool column, not a corner of the window', () => {
+        //PHASE E's mobile fix, and the one thing here that cannot be seen without layout: floated
+        //into the bottom-right corner (which is what phase B did) the slot was pinned to the window
+        //while the five tools packed down from the top, so on a landscape phone - 850x420, where the
+        //column has ~374px and the tools alone wanted 5x64 - the tempo buttons covered the View
+        //Lock. As the sixth row of the same grid the two cannot overlap at any height.
+        const tools = declarationsOf('.composer-grid-pro .buttons-composer-wrapper-right')
+        expect(tools.get('grid-template-rows')).toBe('repeat(5, minmax(0, 8rem)) 1fr')
+        //...which needs the column's height to be DEFINITE, or the six rows would make the flex row
+        //(`height: fit-content`) taller than the window instead of the tools shrinking. The cap is
+        //the canvas' own height expression, so the column ends exactly where the canvas does.
+        expect(tools.get('max-height')).toBe('calc(100vh - 0.4rem - var(--pro-sliver-height))')
+        expect(0.2 * 16 * 2 + PRO_KEYBOARD_SLIVER_PX).toBe(PRO_INSET)
+        //the same six rows below the breakpoint, with the smaller cap that block already had
+        expect(mediaBlock(`only screen and (max-width: ${COMPOSER_MOBILE_MAX_WIDTH}px)`)).toContain(
+            'grid-template-rows: repeat(5, minmax(0, 4rem)) 1fr;'
+        )
+        const tempo = declarationsOf('.composer-grid-pro .tempo-changers-wrapper')
+        //`relative` only so the z-index still counts against the backdrop's 5 - the changers stay
+        //reachable with the keyboard sheet up, which is the whole reason they left the keyboard
+        expect(tempo.get('position')).toBe('relative')
+        expect(tempo.get('z-index')).toBe('8')
+        //...and the base rule's `right`/`bottom`, which would SHIFT a relatively-positioned box
+        expect(tempo.get('inset')).toBe('auto')
+        expect(tempo.get('align-self')).toBe('end')
+        //never wider than the column: a grid item's automatic minimum is its content's, and the
+        //"Tempo" caption's would push this column off the right edge below ~610px of window
+        expect(tempo.get('min-width')).toBe('0')
+        //playing still hides them, without collapsing the row and resizing every tool above it
+        const hidden = declarationsOf('.composer-grid-pro .tempo-changers-wrapper-hidden')
+        expect(hidden.get('display')).toBe('flex')
+        expect(hidden.get('visibility')).toBe('hidden')
+        //...and the row is real: Composer.svelte renders the component INSIDE that column in the
+        //Pro View (ComposerKeyboard renders the same component in the Compressed View)
+        const column = COMPOSER.indexOf('<div class="buttons-composer-wrapper-right">')
+        const tempoTag = COMPOSER.indexOf('<ComposerTempoChangers')
+        expect(column).toBeGreaterThan(-1)
+        expect(tempoTag).toBeGreaterThan(column)
+        expect(tempoTag).toBeLessThan(COMPOSER.indexOf('composer-keyboard-backdrop'))
+    })
+
     for (const viewport of VIEWPORTS) {
         for (const timelineHeight of TIMELINE_HEIGHTS) {
             const label = `${viewport.width}x${viewport.height}, timeline ${timelineHeight}px`
