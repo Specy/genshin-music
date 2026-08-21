@@ -178,12 +178,16 @@
    */
   let keyboardRaised = $state(false);
   /**
-   * ...and what actually decides the sheet's position, which is not quite the same thing: recording
-   * audio REPLACES the keyboard's content with the recording UI (see ComposerKeyboard), and that UI
-   * carries the only control that stops the recording - so the sheet is held up for as long as one
-   * is running, whatever the user last tapped.
+   * ...and what actually decides the sheet's position, which is not quite the same thing, in two
+   * ways. Recording audio REPLACES the keyboard's content with the recording UI (see
+   * ComposerKeyboard), and that UI carries the only control that stops the recording - so the
+   * sheet is held up for as long as one is running, whatever the user last tapped. And the OPEN
+   * TOOLS PANEL takes the bottom of the window for itself (user addition 2026-08-22), so the
+   * sheet goes down while it is open - but `keyboardRaised` itself is never rewritten, and that
+   * IS the restore: closing the tools gives the sheet back exactly as it stood. Recording
+   * outranks the tools for the same reason it outranks the user's own tap.
    */
-  const keyboardSheetRaised = $derived(keyboardRaised || isRecordingAudio);
+  const keyboardSheetRaised = $derived((keyboardRaised && !isToolsVisible) || isRecordingAudio);
   /**
    * THE LOWERED SHEET'S PLAYBACK CLEAR (spec §4). While the song plays with the Pro View's keyboard
    * sheet down, the keys show NOTHING - every one of them unselected, no held marks - and cost
@@ -386,7 +390,9 @@
     //the bottom of the page and this flag reaches no rule at all (see its declaration). The sheet is
     //held up for the length of a recording whatever this says, so a press during one is inert by
     //construction rather than by a guard here.
-    if (name === 'toggle_keyboard' && proView) keyboardRaised = !keyboardRaised;
+    //...and not while the tools hold the bottom of the window (keyboardSheetRaised): the flip
+    //would change nothing visible now and spring a surprise state on the tools' close instead
+    if (name === 'toggle_keyboard' && proView && !isToolsVisible) keyboardRaised = !keyboardRaised;
     if (name === 'toggle_play') {
       if (event.repeat) return;
       if ((event.target as HTMLElement | null)?.tagName === 'BUTTON') {
@@ -2146,6 +2152,7 @@
         {#if proView}
           <CanvasTool
             onclick={() => (viewLocked = !viewLocked)}
+            toggled={!viewLocked}
             tooltip={viewLocked
               ? t('composer:unlock_view_description')
               : t('composer:lock_view_description')}
@@ -2215,7 +2222,9 @@
     }}
   />
   {#if proView}
-    {#if !keyboardSheetRaised}
+    <!-- ...and not while the tools are open: the sheet is forced down then (keyboardSheetRaised),
+         so this tap could only write a raise the panel refuses to show. -->
+    {#if !keyboardSheetRaised && !isToolsVisible}
       <button
         class="composer-keyboard-sliver"
         aria-label={t('composer:show_keyboard')}

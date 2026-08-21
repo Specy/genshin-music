@@ -8,13 +8,20 @@
     tooltip?: string;
     ariaLabel?: string;
     style?: string;
+    /** A tool whose STATE is on (the open View Lock) — wears App.css's `.tool-toggled` tint. */
+    toggled?: boolean;
     children: Snippet;
   }
 
-  let { onclick, children, tooltip, style, ariaLabel }: CanvasToolProps = $props();
+  let { onclick, children, tooltip, style, ariaLabel, toggled = false }: CanvasToolProps = $props();
 </script>
 
-<button class={['tool', hasTooltip(tooltip)]} {onclick} {style} aria-label={ariaLabel}>
+<button
+  class={['tool', toggled && 'tool-toggled', hasTooltip(tooltip)]}
+  {onclick}
+  {style}
+  aria-label={ariaLabel}
+>
   {@render children()}
   {#if tooltip}
     <Tooltip>
