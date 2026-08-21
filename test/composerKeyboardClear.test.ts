@@ -156,3 +156,25 @@ describe('the gate Composer.svelte states the clear with', () => {
         expect(beforeFirstSongRead).toContain('if (noteStatesCleared) return NO_HELD_BUTTONS;')
     })
 })
+
+describe('the open tools take the bottom of the window from the sheet', () => {
+    const COMPOSER = readFileSync('src/lib/components/pages/Composer/Composer.svelte', 'utf8')
+
+    it('lowers the sheet while the tools are open, without rewriting keyboardRaised', () => {
+        //user addition 2026-08-22: the restore-on-close IS the derivation - `keyboardRaised`
+        //stays whatever the user left it, so closing the tools hands the sheet back exactly as
+        //it stood. A version that wrote keyboardRaised on open would need (and could corrupt) a
+        //memory of its own.
+        expect(COMPOSER).toContain(
+            'const keyboardSheetRaised = $derived((keyboardRaised && !isToolsVisible) || isRecordingAudio);'
+        )
+    })
+
+    it('makes the two raise controls inert while the tools are open, not silently effective', () => {
+        //both write `keyboardRaised = ...` into a sheet the tools refuse to show, so both are
+        //gated instead: a control that visibly does nothing must not spring its stored flip on
+        //the user at the tools' close
+        expect(COMPOSER).toContain("name === 'toggle_keyboard' && proView && !isToolsVisible")
+        expect(COMPOSER).toContain('{#if !keyboardSheetRaised && !isToolsVisible}')
+    })
+})

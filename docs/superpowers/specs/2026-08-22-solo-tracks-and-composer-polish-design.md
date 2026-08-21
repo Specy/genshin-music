@@ -277,3 +277,24 @@ Four adjustments to §3.3's shipped panel, all in InstrumentControls.svelte + Ap
   `color 0.2s`, so selecting a layer fades the row's text into the selected colours.
   Scope an override to the instrument rows' buttons that drops the `color` term (keep
   background/filter transitions as they are everywhere else).
+
+## 9. The open tools take the bottom (USER ADDITION, 2026-08-22, after §8)
+
+In Pro View the floating tools panel and the keyboard sheet compete for the bottom of the
+window, so while the tools are open the sheet goes down — and closing the tools gives the
+sheet back exactly as it stood before they opened. The restore is the derivation itself:
+`keyboardSheetRaised` becomes `(keyboardRaised && !isToolsVisible) || isRecordingAudio`,
+and `keyboardRaised` is never rewritten, so there is no memory to keep or corrupt.
+Recording still outranks the tools (its only stop control lives on the sheet). The two
+raise controls go inert while the tools are open — the KeyK shortcut and the sliver (which
+is hidden) — because a control that visibly does nothing must not spring its stored flip
+on the user at the tools' close. The §4 playback clear composes with this for free: a
+tools-lowered sheet during playback clears its keys like any lowered sheet.
+
+## 10. The open lock wears a tint (USER ADDITION, 2026-08-22, with §9)
+
+While the View Lock is open, its tool button carries
+`background-color: color-mix(in srgb, var(--accent) 50%, var(--primary-darken-10))` — a
+half-accent tint of the tool column's own resting surface, saying the frame is in the
+user's hands. `CanvasTool` gains a `toggled` prop mapping to App.css's `.tool.tool-toggled`
+(two classes so the tint holds through `:hover`); the lock is its only wearer today.
