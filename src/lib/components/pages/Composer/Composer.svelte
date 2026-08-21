@@ -173,6 +173,11 @@
    * the renderer both reads it, for the drag, and diffs it, because re-locking is a COMMAND to ease
    * back rather than a description of anything. Ephemeral like the sheet above: every mount starts
    * locked, and nothing about it is persisted or stored in a song.
+   *
+   * THE CANVAS OPENS IT TOO (2026-08-22): a pinch or a ctrl+wheel on the canvas zooms the rows,
+   * which is the user taking the frame - so the renderer reports that through `onViewUnlock` and the
+   * padlock follows the gesture. Closing it again is this button's alone, and closing it is what
+   * puts the zoom back to the current layer's own fit.
    */
   let viewLocked = $state(true);
 
@@ -2038,6 +2043,7 @@
           onProCellTap={handleProCellTap}
           onProCellLongPress={handleProCellLongPress}
           onKeyboardDismiss={() => (keyboardRaised = false)}
+          onViewUnlock={() => (viewLocked = false)}
         />
       {/key}
       <div class="buttons-composer-wrapper-right">

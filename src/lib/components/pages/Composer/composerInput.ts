@@ -1,7 +1,8 @@
 // WHAT A POINTER GESTURE ON THE COMPOSER MEANS, as pure decisions — no pixi, no DOM, no song.
 //
-// The Compressed View's canvas has one pointer meaning (pick a column) and the Pro View's has three
-// (pan, edit a cell, open a duration popover), decided from the same press with the same thresholds
+// The Compressed View's canvas has one pointer meaning (pick a column) and the Pro View's has four
+// (pan, edit a cell, open a duration popover, and — since 2026-08-22 — zoom the rows with a pinch or
+// a ctrl+wheel), decided from the same press with the same thresholds
 // (CONTEXT.md: Pro View, Compressed View, View Lock; spec §7). Those decisions live HERE rather than
 // inside ComposerRenderer for the reason proViewGeometry's own arithmetic does: the renderer is
 // behind a dynamic pixi import, so its branches are only reachable from a test that mounts a whole
@@ -118,6 +119,96 @@ export function stagePressArmsLongPress(input: {
   sheetRaised: boolean;
 }): boolean {
   return input.proView && !input.catching && !input.sheetRaised;
+}
+
+/**
+ * WHETHER A WHEEL EVENT IS A ZOOM RATHER THAN A SCROLL (spec §7, user revision 2026-08-22).
+ *
+ * `ctrlKey` is not a modifier the user pressed here: a trackpad PINCH is delivered to a page as a
+ * wheel event with `ctrlKey` set, on every browser that supports one, and that synthetic flag is the
+ * only signal a page gets that the gesture was a pinch. `metaKey` beside it is the mac convention
+ * for the same intent from a mouse wheel. A plain wheel keeps the horizontal meaning it has always
+ * had, in both views.
+ *
+ * THE PRO VIEW ONLY. The Compressed View has no vertical axis to zoom — every row of a column is on
+ * screen at once — so a ctrl+wheel there stays what it has always been, and this returns false
+ * before anything else is asked.
+ */
+export function wheelIsProZoom(input: {
+  proView: boolean;
+  ctrlKey: boolean;
+  metaKey: boolean;
+}): boolean {
+  return input.proView && (input.ctrlKey || input.metaKey);
+}
+
+/**
+ * HOW FAST A WHEEL ZOOMS, per pixel of delta: the exponent in the multiplier below.
+ *
+ * EXPONENTIAL and not linear, because zoom is a ratio: one notch has to feel the same at 0.5x as at
+ * 3x, and adding a constant would make the first half of the range crawl and the second half jump.
+ * The rate is set from the two hardware cadences this has to serve at once — a mouse notch is
+ * ~100px of delta and asks for ~1.28x (about seven notches from one end of the range to the other),
+ * while a trackpad pinch arrives as a stream of 1-10px deltas and moves ~1.003-1.03x each, which is
+ * what makes it feel continuous.
+ */
+export const PRO_ZOOM_WHEEL_RATE = 0.0025;
+
+/**
+ * THE MULTIPLIER ONE WHEEL EVENT ASKS FOR — `exp(−delta × rate)`, so up (a negative delta, the
+ * "zoom in" direction on every platform) magnifies and down shrinks.
+ *
+ * It is a multiplier and not a zoom, deliberately: this function knows nothing about where the zoom
+ * IS, so the caller multiplies its own current zoom by it and clamps the product
+ * (proViewGeometry.clampProZoom owns the range). A non-finite delta answers 1 rather than poisoning
+ * that product.
+ */
+export function wheelZoomFactor(deltaPx: number): number {
+  if (!Number.isFinite(deltaPx)) return 1;
+  return Math.exp(-deltaPx * PRO_ZOOM_WHEEL_RATE);
+}
+
+/** Two pointers' positions, as the pinch below measures them — canvas coordinates, like every other pointer here. */
+export interface PinchPoint {
+  x: number;
+  y: number;
+}
+
+/**
+ * A TWO-FINGER PINCH, MEASURED: how far apart the fingers are and where the gesture is centred.
+ *
+ * `distance` is the full 2D distance and not the vertical component alone, which is what makes a
+ * pinch held at any angle work; `centerY` is the focal point the zoom is anchored at (the row under
+ * the middle of the two fingers keeps its screen y — proViewGeometry.zoomedCameraY), and `centerX`
+ * is carried beside it because a focal point is a point, and a caller that ever pans horizontally
+ * with the pinch would need it rather than a second function.
+ */
+export function pinchSpan(
+  a: PinchPoint,
+  b: PinchPoint
+): { distance: number; centerX: number; centerY: number } {
+  return {
+    distance: Math.hypot(b.x - a.x, b.y - a.y),
+    centerX: (a.x + b.x) / 2,
+    centerY: (a.y + b.y) / 2,
+  };
+}
+
+/**
+ * THE MULTIPLIER A PINCH ASKS FOR: how much the fingers' separation has grown since it was last
+ * measured. Fingers twice as far apart mean rows twice as tall.
+ *
+ * Read against the PREVIOUS measurement rather than the gesture's start, so the caller applies it
+ * incrementally: the zoom that comes back is already clamped by the range, and an incremental
+ * measure means reversing a pinch that hit an end starts moving again at once instead of having to
+ * undo the excess it never applied.
+ *
+ * A degenerate span — two fingers landing on the same point, or a zero previous distance — answers
+ * 1: there is no ratio between nothing and something.
+ */
+export function pinchZoomFactor(previousDistance: number, distance: number): number {
+  if (!(previousDistance > 0) || !(distance > 0)) return 1;
+  return distance / previousDistance;
 }
 
 /** The cell a Pro View pointer is over: a song column and a Note Number, both already resolved. */

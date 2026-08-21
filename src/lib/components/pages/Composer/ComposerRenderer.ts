@@ -63,6 +63,7 @@ import {
 // nowhere else - the Compressed View's placement is the *Grid* helpers above, unchanged.
 import {
   clampCameraY,
+  clampProZoom,
   editableZone,
   isAddable,
   lockedCameraY,
@@ -75,6 +76,7 @@ import {
   visibleRowRange,
   yForNumber,
   zoneRowCount,
+  zoomedCameraY,
   type EditableZone,
   type ProViewAxis,
 } from './proViewGeometry';
@@ -83,9 +85,13 @@ import {
 // `state.proView` branch and nowhere else, except COMPOSER_LONG_PRESS_MS' one shared timing.
 import {
   COMPOSER_LONG_PRESS_MS,
+  pinchSpan,
+  pinchZoomFactor,
   proTapTarget,
   stagePressArmsLongPress,
   stageReleaseIntent,
+  wheelIsProZoom,
+  wheelZoomFactor,
   type ProCellTarget,
   type ScreenRect,
 } from './composerInput';
@@ -726,6 +732,15 @@ export interface ComposerRendererCallbacks {
    * canvas, cell or no cell.
    */
   onKeyboardDismiss: () => void;
+  /**
+   * THE USER TOOK THE FRAME: a pinch or a ctrl+wheel zoomed the rows while the View Lock was closed
+   * (spec §7, user revision 2026-08-22), so the padlock has to follow the gesture.
+   *
+   * The Pro View only, and one-way: this class never asks for the lock to CLOSE - that is the
+   * button's, and closing it is what resets the zoom (syncProCamera's 'relock'). Called only on the
+   * transition, so a zoom made while already unlocked says nothing.
+   */
+  onViewUnlock: () => void;
   onGeometryChange: (geometry: {
     width: number;
     /** the NOTES region's height - the canvas is this plus timelineHeight */
@@ -1126,6 +1141,13 @@ class ColumnView {
       const sprite = this.noteSpriteAt(painted, texture);
       sprite.texture = texture;
       sprite.y = y;
+      //...AND THE SPRITE IS SCALED TO THE LIVE ROW, which is a no-op at every resting moment and the
+      //whole of what makes a pinch cheap (spec §7, user revision 2026-08-22). The texture is baked
+      //at the row height by generateCache, so this equals the texture's own height whenever the
+      //cache is current; during a zoom gesture the cache is 50ms behind (one debounced rebuild per
+      //gesture, never per frame - see ComposerRenderer.applyProZoom), and this is what keeps the
+      //notes the size of the rows they are placed on until it lands.
+      sprite.height = pro.rowHeight;
       //the Compressed View's own dimming, on the Pro View's own definition of stranded: no button on
       //the note's OWN track's instrument at that track's Basepoint
       sprite.alpha = mark === undefined ? 1 : 0.45;
@@ -1373,14 +1395,46 @@ export class ComposerRenderer {
    * framing at once instead of easing between two coordinate systems.
    */
   private cameraRowHeight = 0;
+  /**
+   * THE USER'S VERTICAL ZOOM (spec §7, user revision 2026-08-22): the multiplier a pinch or a
+   * ctrl+wheel has put on the FITTED row height, 1 for "the fit itself".
+   *
+   * EPHEMERAL AND RENDERER-INTERNAL, exactly like `cameraY` beside it and for the same reason: it is
+   * where the user has the frame at this instant, not a property of the song or a setting - nothing
+   * persists it, a remount starts at 1, and the Compressed View never touches it. It is not on the
+   * state object either, because no Svelte value decides it; what DOES cross the boundary is the
+   * View Lock, which a zoom opens (onViewUnlock) and which resets this to 1 when it closes again
+   * (syncProCamera's 'relock').
+   */
+  private proZoom = 1;
+  /**
+   * THE PINCH IN PROGRESS, or null. Two fingers on the notes stage, the distance between them as it
+   * was last measured, and nothing else: the zoom itself lives in `proZoom` above, so an interrupted
+   * pinch leaves the view where it got to rather than snapping back.
+   *
+   * A SECOND POINTER USED TO BE A GUARD CASE - handleStageDown ignored it outright, since the
+   * composer has one scroll position and a second finger could only corrupt the first one's drag.
+   * It is a gesture of its own now (beginProPinch), and the guard is what makes the two coexist: the
+   * first finger's press is marked `moved` when the pinch starts, so the release that ends it is
+   * never a tap, never an edit and never a long press.
+   */
+  private proPinch: {
+    a: { id: number; x: number; y: number };
+    b: { id: number; x: number; y: number };
+    distance: number;
+  } | null = null;
   /** Everything the strip's labels are a function of, as one comparable string - see syncProStrip. */
   private proStripKey = '';
   /**
-   * The View Lock as this class last saw it, seeded from the constructor's state - the left-hand
+   * The View Lock this class is OPERATING UNDER, seeded from the constructor's state - the left-hand
    * side of the one transition that is a COMMAND rather than a description (see syncProView).
    *
    * Its own field and not a read of `paintedState`/`previousState`: both are null until an update
    * has been through, and a lock pressed before then would be silently dropped.
+   *
+   * "Operating under" and not merely "last saw", because applyProZoom writes it too: a zoom ASKS
+   * Composer.svelte to open the padlock and the answer is an update away, so this is what keeps a
+   * pinch's many frames from asking many times - and what makes a refused unlock read as a re-lock.
    */
   private proViewLocked: boolean;
 
@@ -2057,19 +2111,95 @@ export class ComposerRenderer {
 
   /**
    * ONE ROW'S HEIGHT: the notes region over the CURRENT LAYER'S zone plus its framing, capped at the
-   * game's own note size (proRowHeight, spec §4's 2026-08-21 revision).
+   * game's own note size and multiplied by the user's own zoom (proRowHeight, spec §4's 2026-08-21
+   * and 2026-08-22 revisions).
    *
    * `this.proZone` and not a fresh `editableZone` lookup, so every surface that asks - the note
    * placement, the zone's own drawing, the strip, the tap resolution, the texture cache - is asking
    * about the same zone the camera was framed on. syncProCamera writes that field before it reads
    * this, and init()'s first framing runs before anything paints; a null zone (the Compressed View,
    * and the instant before that first framing) is the cap alone.
+   *
+   * `this.proZoom` is the other half of the same discipline: the zoom multiplies the fit HERE, in
+   * the one function every one of those surfaces already goes through, so nothing else in this class
+   * has to know a gesture happened.
    */
   private proRowHeightPx(): number {
     return proRowHeight({
       notesRegionHeight: this.height,
       zoneRowCount: this.proZone ? zoneRowCount(this.proZone) : undefined,
+      zoom: this.proZoom,
     });
+  }
+
+  /**
+   * THE VERTICAL ZOOM APPLIED (spec §7, user revision 2026-08-22): a new multiplier, anchored at the
+   * point the gesture is centred on, with the frame handed to the user.
+   *
+   * FIVE THINGS HAPPEN HERE and each is a rule rather than bookkeeping:
+   *  - THE MULTIPLIER IS CLAMPED, once, through proViewGeometry's own range; a gesture that asks for
+   *    more than the range holds simply stops, and a zoom that changes no row height (the range's
+   *    ends, and the px floor under a thin row) returns before anything else.
+   *  - THE FOCAL POINT KEEPS ITS ROW (zoomedCameraY). `focalCanvasY` is a CANVAS y - a wheel's
+   *    `offsetY`, or the midpoint between two fingers - and the notes region starts below the
+   *    mini-timeline strip, which is the same one conversion proTapTargetAt makes.
+   *  - THE CAMERA'S OWN BOOKKEEPING is written HERE rather than left for the next update() to
+   *    notice: `cameraRowHeight` so syncProCamera does not ALSO rescale the offset (it would, top-
+   *    anchored, and undo the anchoring above), and `cameraTarget` so the locked framing the next
+   *    update compares against is the one these rows give - without it the update that arrives with
+   *    the unlock would see a moved target and ease the frame back to the zone.
+   *  - THE TEXTURES FOLLOW ON THE DEBOUNCE, not on this frame. The cell height is baked into the
+   *    ComposerCache, and the ONLY path that re-bakes it is recalculateCacheAndSizes - the same one
+   *    a layer switch and a resize take. Its 50ms debounce is what makes a continuous pinch cheap:
+   *    every gesture frame re-arms it and none of them rebuilds, so the gesture costs one repaint
+   *    per event (applyCameraY, which is what a note edit costs) and one texture rebuild once the
+   *    fingers stop. In between, a note sprite is SCALED to the live row height (ColumnView's pro
+   *    paint sets its height), so the picture is right during the gesture and crisp after it.
+   *  - AND THE VIEW UNLOCKS. Zooming is taking manual control of the frame, so the padlock follows
+   *    the gesture (spec §2); re-locking is what puts the multiplier back to 1.
+   */
+  private applyProZoom(zoom: number, focalCanvasY: number): void {
+    if (!this.state.proView || this.state.isRecordingAudio) return;
+    const next = clampProZoom(zoom);
+    if (next === this.proZoom) return;
+    const rowHeight = this.proRowHeightPx();
+    this.proZoom = next;
+    const nextRowHeight = this.proRowHeightPx();
+    if (nextRowHeight === rowHeight) return;
+    const axis = this.proAxis();
+    this.cameraEase = null;
+    const cameraY = zoomedCameraY({
+      axis,
+      notesRegionHeight: this.height,
+      cameraY: this.cameraY,
+      focalY: focalCanvasY - composerNotesRegionY(this.state.proView, this.timelineHeight),
+      rowHeight,
+      nextRowHeight,
+    });
+    this.cameraRowHeight = nextRowHeight;
+    if (this.proZone) {
+      this.cameraTarget = lockedCameraY({
+        axis,
+        zone: this.proZone,
+        rowHeight: nextRowHeight,
+        notesRegionHeight: this.height,
+      });
+    }
+    this.applyCameraY(cameraY);
+    //the strip's width moves with the row height, and a DOM element over the canvas is held clear of
+    //it (ComposerCanvas.svelte's chevron inset) - the same report a layer switch sends, sent now
+    //rather than 50ms later with the rebuild
+    this.notifyGeometry();
+    this.recalculateCacheAndSizes();
+    //ONCE PER GESTURE, not once per frame of it: `proViewLocked` is the lock this class is
+    //operating under, and asking for it to open is a state change it can see immediately - the
+    //answer arrives one update later, and a pinch delivers many moves before then. If that answer
+    //comes back LOCKED anyway, the next syncProView reads it as a fresh re-lock command and resets
+    //the zoom, which is exactly what a refused unlock should do.
+    if (this.state.viewLocked && this.proViewLocked) {
+      this.proViewLocked = false;
+      this.callbacks.onViewUnlock();
+    }
   }
 
   /** What a column view needs to place its notes, or null in the Compressed View. */
@@ -2166,6 +2296,11 @@ export class ComposerRenderer {
     mode: 'frame' | 'rebuild' | 'ease' | 'relock'
   ): boolean {
     const { name, pitch } = this.proCurrentTrack(state);
+    //RE-LOCKING RESETS THE ZOOM (spec §7, user revision 2026-08-22). The lock owns the frame, and
+    //the frame it owns is the FIT - so closing it puts the multiplier back to 1 here, before the row
+    //height below is taken, and the rest of this method treats the result as exactly what it is: a
+    //row height that moved, which this class already knows how to take at once and re-bake for.
+    if (mode === 'relock') this.proZoom = 1;
     //identity-stable per (instrument, Basepoint) - editableZone memoizes on exactly that pair, which
     //is what lets "same zone as last update?" be a reference comparison
     const zone = editableZone(name, pitch);
@@ -2199,8 +2334,12 @@ export class ComposerRenderer {
     //`zoneMoved` repaint is what puts it on screen.
     if (mode === 'frame' || mode === 'rebuild' || rowHeightMoved) {
       this.cameraEase = null;
+      //A ZOOM HAS ALREADY TAKEN THE FRAME, whatever `viewLocked` says at this instant (spec §7, user
+      //revision 2026-08-22): the gesture asks Composer.svelte to open the padlock and that answer
+      //arrives on a later update, so for the rebuild in between the multiplier is what says whose
+      //frame this is. Re-locking resets it to 1 (above), which is what makes the two agree again.
       this.cameraY =
-        state.viewLocked || mode === 'frame'
+        (state.viewLocked && this.proZoom === 1) || mode === 'frame'
           ? target
           : clampCameraY({
               axis: this.proAxis(),
@@ -3678,10 +3817,24 @@ export class ComposerRenderer {
    *
    * A DRAG OUTRANKS IT: a mouse wheel used with the button held must not replace the pointer's
    * motion and make its eventual release fall through to the sounding click path.
+   *
+   * ...AND CTRL/META + WHEEL IS THE PRO VIEW'S ZOOM (spec §7, user revision 2026-08-22), which is
+   * what a browser delivers for a trackpad PINCH - see composerInput.wheelIsProZoom. The
+   * `preventDefault` above is what stops the browser zooming the whole PAGE on that gesture; it was
+   * already unconditional here (a plain wheel over this canvas has never scrolled the document
+   * either), so the Compressed View is untouched by this branch in both directions: no zoom, and no
+   * page zoom over the canvas that it did not already have.
    */
   private handleWheel = (e: WheelEvent) => {
     e.preventDefault();
     if (this.motion.kind === 'dragging' || e.deltaY === 0) return;
+    if (wheelIsProZoom({ proView: this.state.proView, ctrlKey: e.ctrlKey, metaKey: e.metaKey })) {
+      //`offsetY` is the pointer's y inside the canvas ELEMENT, which is the canvas' own coordinate
+      //space (autoDensity keeps the CSS box the size this class draws in) - the same space a pixi
+      //pointer's `globalY` is in, and no layout read to get it
+      this.applyProZoom(this.proZoom * wheelZoomFactor(this.wheelDeltaPx(e)), e.offsetY);
+      return;
+    }
 
     this.cancelWheelSettle();
     //The notes stage is hidden during capture and recording deliberately owns an idle ticker.
@@ -3746,6 +3899,9 @@ export class ComposerRenderer {
    * has to live where the event does.
    */
   private handleStageDown = (e: FederatedPointerEvent) => {
+    //A SECOND FINGER IS A PINCH, and it is asked FIRST because the guard below is exactly what used
+    //to swallow it (spec §7, user revision 2026-08-22).
+    if (this.beginProPinch(e)) return;
     if (this.stagePointer || this.state.isRecordingAudio) return;
     //A press keeps ordinary click semantics, but the wheel's idle timer must not move the canvas
     //under it later. Begin the same settle now; a move past slop will replace that ease with a drag.
@@ -3785,6 +3941,82 @@ export class ComposerRenderer {
       this.proLongPressTimeout = setTimeout(this.fireProLongPress, COMPOSER_LONG_PRESS_MS);
     }
   };
+
+  /**
+   * A SECOND POINTER ON THE NOTES STAGE BECOMES A PINCH (spec §7, user revision 2026-08-22).
+   *
+   * @returns whether this press was taken as the start of one, in which case handleStageDown does
+   * nothing else with it.
+   *
+   * IT WAS A GUARD CASE, and the guard is still right about what it was guarding: the composer has
+   * ONE scroll position, so a second finger cannot be a second drag - it could only corrupt the
+   * first one's anchor (see stagePointer's `id`). What it can be is the other end of a pinch, which
+   * is a gesture about the frame rather than about the scroll, so it takes the surface over from the
+   * drag instead of competing with it:
+   *  - THE FIRST FINGER STOPS BEING A TAP. `moved` is what composerInput.stageReleaseIntent asks, so
+   *    setting it here is what makes "a pinch is never a drag, a tap or an edit" true at the release
+   *    end as well - and the pending long press goes with it.
+   *  - A DRAG ALREADY UNDER WAY IS SETTLED, at once and with no Flick: the canvas stops where the
+   *    hand had it (a settle rounds to the nearest column, which is what a drag's release does) and
+   *    the pinch starts from a still canvas rather than fighting a Coast.
+   *  - THE SHEET IS NOT DISMISSED and nothing is edited. Pinching with the keyboard up is allowed
+   *    and means only what it says; the dismissal is a settled TAP, which this press can no longer
+   *    become.
+   */
+  private beginProPinch(e: FederatedPointerEvent): boolean {
+    const first = this.stagePointer;
+    if (!this.state.proView || this.state.isRecordingAudio) return false;
+    if (!first || this.proPinch || e.pointerId === first.id) return false;
+    first.moved = true;
+    this.cancelProLongPress();
+    const motion = this.motion;
+    if (motion.kind === 'dragging' && motion.surface === 'stage') this.settleStageDrag();
+    this.proPinch = {
+      a: { id: first.id, x: first.x, y: first.y },
+      b: { id: e.pointerId, x: e.globalX, y: e.globalY },
+      distance: pinchSpan(first, { x: e.globalX, y: e.globalY }).distance,
+    };
+    return true;
+  }
+
+  /**
+   * ONE FRAME OF A PINCH: move whichever finger reported, and zoom by how much the two have spread
+   * since they were last measured, anchored at the point between them.
+   *
+   * INCREMENTAL rather than measured from the gesture's start, which is what makes the clamp feel
+   * right at both ends: a pinch that has reached 3x and reverses starts shrinking on the next frame
+   * instead of first having to give back the spread it was never allowed to apply.
+   */
+  private slideProPinch(e: FederatedPointerEvent): void {
+    const pinch = this.proPinch;
+    if (!pinch) return;
+    const finger =
+      e.pointerId === pinch.a.id ? pinch.a : e.pointerId === pinch.b.id ? pinch.b : null;
+    if (!finger) return;
+    finger.x = e.globalX;
+    finger.y = e.globalY;
+    const span = pinchSpan(pinch.a, pinch.b);
+    const factor = pinchZoomFactor(pinch.distance, span.distance);
+    pinch.distance = span.distance;
+    this.applyProZoom(this.proZoom * factor, span.centerY);
+  }
+
+  /**
+   * THE PINCH IS OVER, whichever finger left first - and the gesture takes the whole press record
+   * with it.
+   *
+   * The remaining finger is NOT handed back the drag: it never pressed with a drag's intent, its
+   * anchor belongs to a canvas that has since been rescaled, and picking a scroll up mid-pinch is
+   * exactly the corruption the second-pointer guard exists to prevent. Clearing `stagePointer` also
+   * makes its own eventual release mean nothing (composerInput.stageReleaseIntent's `pressed`), so
+   * lifting two fingers cannot edit a cell.
+   */
+  private endProPinch(): void {
+    this.proPinch = null;
+    this.stagePointer = null;
+    this.proPressConsumed = false;
+    this.cancelProLongPress();
+  }
 
   /** Drop any pending long press. Every path that ends or invalidates a press calls this. */
   private cancelProLongPress(): void {
@@ -3829,6 +4061,9 @@ export class ComposerRenderer {
    * position is already whole and the floor is the identity.
    */
   private handleStageSlide = (e: FederatedPointerEvent) => {
+    //A PINCH OWNS BOTH FINGERS' MOVES, and it is asked before the id guard below - which would drop
+    //the second finger's stream as "a pointer that is not holding the drag"
+    if (this.proPinch) return this.slideProPinch(e);
     const pointer = this.stagePointer;
     //a move from a pointer that is not the one holding the drag would be measured against an anchor
     //it never pressed at - see stagePointer's `id`
@@ -3942,6 +4177,10 @@ export class ComposerRenderer {
    * (see resetPointerDown).
    */
   private handleStageUp = (e: FederatedPointerEvent) => {
+    //A PINCH ENDS ON THE FIRST FINGER TO LEAVE, whichever it is - asked before the id guard below,
+    //which would drop the second finger's release and leave the pinch running against a hand that
+    //is no longer there
+    if (this.proPinch) return this.endProPinch();
     //a release from a pointer that never owned the press is not this gesture ending - see
     //stagePointer's `id`. It must not settle the drag under the finger still holding it, and it must
     //not take the click path below, which SOUNDS the column it lands on.
@@ -4365,6 +4604,14 @@ export class ComposerRenderer {
     // that started outside the canvas) is let through unchanged - there is nothing of ours for it to
     // settle, and the branches below already return when the motion is not a drag.
     const id = 'pointerId' in e ? (e as PointerEvent).pointerId : null;
+    //...EXCEPT WHILE A PINCH IS RUNNING, where BOTH fingers are this gesture and either one leaving
+    //ends it. The filter below would drop the second finger's release and leave the pinch holding a
+    //pointer the page has forgotten - which the next press would then be measured against.
+    if (this.proPinch) {
+      if (id !== null && id !== this.proPinch.a.id && id !== this.proPinch.b.id) return;
+      this.endProPinch();
+      return;
+    }
     const owner = this.stagePointer?.id ?? this.timelinePointer;
     if (id !== null && owner !== null && id !== owner) return;
     //captured before the nulls for the reason handleStageUp captures: the Flick decision reads

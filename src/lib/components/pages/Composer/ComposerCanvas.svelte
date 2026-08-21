@@ -74,6 +74,12 @@
     ) => boolean;
     /** A settled Pro View tap made while the keyboard sheet is up: lower it, and edit nothing. */
     onKeyboardDismiss: () => void;
+    /**
+     * CONTEXT.md: View Lock. A pinch or a ctrl+wheel zoomed the Pro View's rows while the frame was
+     * locked - the user has taken it, so the padlock opens. One-way: nothing here ever asks for the
+     * lock to close, and closing it is what resets the zoom to the layer's fit.
+     */
+    onViewUnlock: () => void;
   }
 
   let {
@@ -98,6 +104,7 @@
     onProCellTap,
     onProCellLongPress,
     onKeyboardDismiss,
+    onViewUnlock,
   }: ComposerCanvasProps = $props();
 
   let canvasContainerEl: HTMLDivElement | undefined;
@@ -202,6 +209,7 @@
           onProCellTap,
           onProCellLongPress,
           onKeyboardDismiss,
+          onViewUnlock,
           onGeometryChange: (geometry) => {
             width = geometry.width;
             height = geometry.height;

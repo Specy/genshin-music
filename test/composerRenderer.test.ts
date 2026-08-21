@@ -707,6 +707,8 @@ import {
 //would be restating a definition rather than checking one. What PART NINE checks is the INPUT
 //machinery that reads them - which cell a pointer resolves to, and what moves the camera.
 import {
+    PRO_ZOOM_MAX,
+    PRO_ZOOM_MIN,
     editableZone,
     lockedCameraY,
     proRowHeight,
@@ -718,8 +720,9 @@ import {
     type ProViewAxis,
 } from '$cmp/pages/Composer/proViewGeometry'
 import {songNumberSpan} from '$cmp/pages/Composer/proViewNotes'
-//the ONE long-press timing, shared by the composer keyboard and the Pro View canvas (spec §12)
-import {COMPOSER_LONG_PRESS_MS} from '$cmp/pages/Composer/composerInput'
+//the ONE long-press timing, shared by the composer keyboard and the Pro View canvas (spec §12), and
+//the wheel's own zoom rate - PART NINE drives a ctrl+wheel and states what one notch comes to
+import {COMPOSER_LONG_PRESS_MS, PRO_ZOOM_WHEEL_RATE} from '$cmp/pages/Composer/composerInput'
 
 /**
  * 20, not the shipped default of 35, purely so the window (n/2 + 2 per side, strictly - so n + 3
@@ -7394,6 +7397,7 @@ describe('the Pro View pointer', () => {
         //instead of editing (spec §2). A drag is untouched - that is the point of the rule.
         let keyboardRaised = options.keyboardRaised ?? false
         let dismissals = 0
+        let unlocks = 0
         const taps: {column: number, number: number}[] = []
         const longPresses: {
             column: number
@@ -7441,6 +7445,13 @@ describe('the Pro View pointer', () => {
             onKeyboardDismiss: () => {
                 keyboardRaised = false
                 dismissals++
+            },
+            //THE ZOOM'S OWN CALLBACK (spec §7, user revision 2026-08-22): a pinch or a ctrl+wheel is
+            //the user taking the frame, so the padlock follows it. Recorded AND applied, the way the
+            //dismissal above is - Composer.svelte flips the same state this harness holds.
+            onViewUnlock: () => {
+                viewLocked = false
+                unlocks++
             },
         })
         await renderer.init()
@@ -7501,6 +7512,40 @@ describe('the Pro View pointer', () => {
             numberAt,
             stripWidth: () => proStripWidth(rowHeight),
             dismissals: () => dismissals,
+            unlocks: () => unlocks,
+            /** The row height the user's own zoom multiplies the layer's fit to - see proRowHeight. */
+            rowHeightAt: (zoom: number) =>
+                proRowHeight({
+                    notesRegionHeight: height,
+                    zoneRowCount: zoneRowCount(zoneOf(0)),
+                    zoom,
+                }),
+            /**
+             * A ctrl+wheel over the notes canvas - what a browser delivers for a trackpad PINCH, and
+             * the Pro View's zoom (spec §7). `canvasY` is the gesture's focal point: jsdom reports
+             * `offsetY` as `clientY`, which is what the renderer reads.
+             */
+            /** A PLAIN wheel over the notes canvas - the song's own horizontal scroll, in both views. */
+            wheelOverNotes(deltaY: number) {
+                app.canvas.dispatchEvent(
+                    new WheelEvent('wheel', {
+                        deltaY,
+                        deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+                        cancelable: true,
+                    })
+                )
+            },
+            wheelZoom(deltaY: number, canvasY: number) {
+                const event = new WheelEvent('wheel', {
+                    deltaY,
+                    clientY: canvasY,
+                    ctrlKey: true,
+                    cancelable: true,
+                })
+                app.canvas.dispatchEvent(event)
+                //the page must not zoom under the gesture - see handleWheel
+                return event.defaultPrevented
+            },
             setViewLocked(locked: boolean) {
                 viewLocked = locked
             },
@@ -7923,6 +7968,184 @@ describe('the Pro View pointer', () => {
             harness.push()
             harness.tap(x, y)
             expect(harness.taps).toEqual([{column: SELECTED, number: number + 3}])
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    // ─────────────────────────────────────────────────────────────────────────────────────────
+    // THE VERTICAL ZOOM (spec §7, user revision 2026-08-22): ctrl+wheel, which is what a browser
+    // delivers for a trackpad pinch, and the two-finger pinch itself.
+    //
+    // READ THROUGH THE SAME TAP ORACLE as everything else in PART NINE: what a tap at a fixed screen
+    // point resolves to IS where the rows and the camera are, which is a stronger reading than a
+    // private field would be. proViewGeometry's own suite pins the arithmetic (the multiplier's
+    // range, the px floor, the focal formula); what these rows pin is that this class wires the
+    // gesture to it - and that the gesture is never also a scroll, a tap or an edit.
+
+    it('a ctrl+wheel zooms the rows about the point under the pointer, and unlocks the view', async () => {
+        const harness = await mountPro()
+        try {
+            const x = harness.xOfColumn(SELECTED)
+            const number = addableNumber(harness)
+            const focalY = harness.yOfNumber(number, harness.lockedCamera())
+            harness.tap(x, focalY)
+            expect(harness.taps.at(-1)).toEqual({column: SELECTED, number})
+            //one big notch IN (a wheel's delta is positive downward), and the page must not zoom
+            expect(harness.wheelZoom(-400, focalY)).toBe(true)
+            const zoomed = harness.rowHeightAt(Math.exp(400 * PRO_ZOOM_WHEEL_RATE))
+            expect(zoomed).toBeGreaterThan(harness.rowHeight * 2)
+            //THE FRAME IS THE USER'S NOW - the padlock follows the gesture
+            expect(harness.unlocks()).toBe(1)
+            harness.push()
+            //...and nothing scrolled: a zoom is not a wheel gesture on the song's own axis
+            expect(harness.selectColumnCalls).toEqual([])
+            //THE FOCAL ROW KEPT ITS SCREEN Y: the same point is still the same row
+            harness.tap(x, focalY)
+            expect(harness.taps.at(-1)).toEqual({column: SELECTED, number})
+            //...and the rows really did grow: a point one OLD row above the focal one has not left
+            //the focal row, while one NEW row above is the next row up
+            harness.tap(x, focalY - harness.rowHeight)
+            expect(harness.taps.at(-1)!.number).toBe(number)
+            harness.tap(x, focalY - zoomed)
+            expect(harness.taps.at(-1)!.number).toBe(number + 1)
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    it('a plain wheel still scrolls the song, in the Pro View as in the Compressed one', async () => {
+        const harness = await mountPro()
+        try {
+            const number = addableNumber(harness)
+            const y = harness.yOfNumber(number, harness.lockedCamera())
+            harness.wheelOverNotes(COLUMN_WIDTH * 4)
+            expect(harness.unlocks()).toBe(0)
+            expect(harness.selectColumnCalls.length).toBeGreaterThan(0)
+            //the rows are untouched: the same point is the same row
+            harness.push()
+            harness.tap(harness.xOfColumn(harness.song.selected), y)
+            expect(harness.taps.at(-1)!.number).toBe(number)
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    it('stops at the range\'s ends, and pins an axis shorter than the region to its top', async () => {
+        const harness = await mountPro()
+        try {
+            const x = harness.xOfColumn(SELECTED)
+            const focalY = harness.yOfNumber(addableNumber(harness), harness.lockedCamera())
+            //far past the ceiling, then far past the floor - the gesture simply stops at each end
+            for (let notch = 0; notch < 12; notch++) harness.wheelZoom(-400, focalY)
+            harness.push()
+            const ceiling = harness.rowHeightAt(PRO_ZOOM_MAX)
+            harness.tap(x, harness.notesTop + ceiling * 0.5)
+            const top = harness.taps.at(-1)!.number
+            harness.tap(x, harness.notesTop + ceiling * 1.5)
+            expect(harness.taps.at(-1)!.number).toBe(top - 1)
+            for (let notch = 0; notch < 24; notch++) harness.wheelZoom(400, focalY)
+            harness.push()
+            //zoomed all the way out the whole axis is shorter than the region, so the existing
+            //camera clamp collapses the travel and the axis sits at the region's top: the first row
+            //on screen is the axis' own highest number
+            const floor = harness.rowHeightAt(PRO_ZOOM_MIN)
+            expect(harness.axis.rowCount * floor).toBeLessThan(harness.height)
+            harness.tap(x, harness.notesTop + floor * 0.5)
+            expect(harness.taps.at(-1)!.number).toBe(harness.axis.max)
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    it('re-locking puts the rows back to the layer\'s own fit', async () => {
+        const harness = await mountPro()
+        try {
+            const x = harness.xOfColumn(SELECTED)
+            const number = addableNumber(harness)
+            const y = harness.yOfNumber(number, harness.lockedCamera())
+            harness.wheelZoom(-400, y)
+            harness.push()
+            //the frame moved: one old row above the focal point is still the focal row
+            harness.tap(x, y - harness.rowHeight)
+            expect(harness.taps.at(-1)!.number).toBe(number)
+            harness.setViewLocked(true)
+            harness.push()
+            //...and the lock gives back exactly the framing it always gave: the fit, centred on the
+            //zone, with the multiplier reset
+            harness.tap(x, y)
+            expect(harness.taps.at(-1)).toEqual({column: SELECTED, number})
+            harness.tap(x, y - harness.rowHeight)
+            expect(harness.taps.at(-1)!.number).toBe(number + 1)
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    it('a second finger is a PINCH: it zooms, and never drags, taps or edits', async () => {
+        const harness = await mountPro()
+        try {
+            const x = harness.xOfColumn(SELECTED)
+            const number = addableNumber(harness)
+            const focalY = harness.yOfNumber(number, harness.lockedCamera())
+            //two fingers, symmetric about the focal row, spread to twice their separation
+            const reach = harness.rowHeight * 2
+            harness.press(x, focalY - reach, PRIMARY_POINTER)
+            harness.press(x, focalY + reach, SECOND_POINTER)
+            harness.move(x, focalY - reach * 2, PRIMARY_POINTER)
+            harness.move(x, focalY + reach * 2, SECOND_POINTER)
+            harness.release(x, focalY + reach * 2, SECOND_POINTER)
+            harness.release(x, focalY - reach * 2, PRIMARY_POINTER)
+            //NEVER AN EDIT, never a column pick, and the padlock followed the gesture
+            expect(harness.taps).toEqual([])
+            expect(harness.selectColumnCalls).toEqual([])
+            expect(harness.unlocks()).toBe(1)
+            harness.push()
+            //...and the rows doubled about the point between the fingers, which never moved
+            const zoomed = harness.rowHeightAt(2)
+            harness.tap(x, focalY)
+            expect(harness.taps.at(-1)).toEqual({column: SELECTED, number})
+            harness.tap(x, focalY - zoomed)
+            expect(harness.taps.at(-1)!.number).toBe(number + 1)
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    it('a pinch with the keyboard sheet up zooms and leaves the sheet where it is', async () => {
+        const harness = await mountPro({keyboardRaised: true})
+        try {
+            const x = harness.xOfColumn(SELECTED)
+            const number = addableNumber(harness)
+            const focalY = harness.yOfNumber(number, harness.lockedCamera())
+            const reach = harness.rowHeight * 2
+            harness.press(x, focalY - reach, PRIMARY_POINTER)
+            harness.press(x, focalY + reach, SECOND_POINTER)
+            harness.move(x, focalY - reach * 2, PRIMARY_POINTER)
+            harness.move(x, focalY + reach * 2, SECOND_POINTER)
+            harness.release(x, focalY - reach * 2, PRIMARY_POINTER)
+            harness.release(x, focalY + reach * 2, SECOND_POINTER)
+            //the sheet is dismissed by a settled TAP, and a pinch is not one
+            expect(harness.dismissals()).toBe(0)
+            expect(harness.taps).toEqual([])
+            expect(harness.unlocks()).toBe(1)
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    it('a hold interrupted by a second finger opens no popover', async () => {
+        const harness = await mountPro()
+        try {
+            const x = harness.xOfColumn(SELECTED)
+            const focalY = harness.yOfNumber(addableNumber(harness), harness.lockedCamera())
+            harness.press(x, focalY, PRIMARY_POINTER)
+            await vi.advanceTimersByTimeAsync(COMPOSER_LONG_PRESS_MS / 2)
+            harness.press(x, focalY + harness.rowHeight * 3, SECOND_POINTER)
+            await vi.advanceTimersByTimeAsync(COMPOSER_LONG_PRESS_MS)
+            expect(harness.longPresses).toEqual([])
+            harness.release(x, focalY, PRIMARY_POINTER)
+            expect(harness.taps).toEqual([])
         } finally {
             harness.destroy()
         }
