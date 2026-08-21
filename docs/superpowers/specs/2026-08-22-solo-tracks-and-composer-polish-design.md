@@ -297,4 +297,5 @@ While the View Lock is open, its tool button carries
 `background-color: color-mix(in srgb, var(--accent) 50%, var(--primary-darken-10))` — a
 half-accent tint of the tool column's own resting surface, saying the frame is in the
 user's hands. `CanvasTool` gains a `toggled` prop mapping to App.css's `.tool.tool-toggled`
-(two classes so the tint holds through `:hover`); the lock is its only wearer today.
+(two classes so the tint holds through `:hover`); the lock wears it, and so does the open
+tools button (same-day follow-up) — any tool whose state is ON says so the same way.
