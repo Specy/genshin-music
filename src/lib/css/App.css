@@ -2615,8 +2615,11 @@ select {
 
 .tempo-changers-wrapper {
   position: absolute;
-  color: white;
+  color: var(--icon-color);
+  background-color: var(--primary-darken-10);
+  padding: 0.2rem;
   right: 0.2rem;
+  border-radius: 0.3rem;
   bottom: 0.2rem;
   flex-direction: column;
   width: 4rem;
