@@ -6,6 +6,7 @@
   import AppButton from '$cmp/inputs/AppButton.svelte';
   import FilePicker, { type FileElement } from '$cmp/inputs/FilePicker.svelte';
   import Column from '$cmp/layout/Column.svelte';
+  import Row from '$cmp/layout/Row.svelte';
   import Card from '$cmp/layout/Card.svelte';
   import Header from '$cmp/header/Header.svelte';
   import AppBackground from '$cmp/theme/AppBackground.svelte';
@@ -132,10 +133,20 @@
       </div>
     </div>
 
+    <!-- One card for both: the saved themes and the color keys act on the SAME selected theme,
+         so they share an outline. The import picker rides the header row because an import lands
+         in the saved themes right below it. -->
     <Card background="none" border="secondary" gap="0.8rem">
-      <Header type="h2">
-        {t('theme:your_themes')}
-      </Header>
+      <Row justify="between" align="center" gap="1rem" style="flex-wrap:wrap">
+        <Header type="h2">
+          {t('theme:your_themes')}
+        </Header>
+        <FilePicker onPick={handleImport} as="json" onError={logImportError}>
+          <AppButton>
+            {t('theme:import_theme')}
+          </AppButton>
+        </FilePicker>
+      </Row>
       <div class="theme-preview-wrapper" style="margin-top:0">
         {#each themeStore.themes as savedTheme (savedTheme.id)}
           <ThemePreview
@@ -162,19 +173,9 @@
           {t('theme:new_theme')}
         </button>
       </div>
-      <!-- An import lands in the saved themes, so the picker sits with them rather than at the
-           top of the page where it used to live. -->
-      <div>
-        <FilePicker onPick={handleImport} as="json" onError={logImportError}>
-          <AppButton>
-            {t('theme:import_theme')}
-          </AppButton>
-        </FilePicker>
-      </div>
-    </Card>
-
-    <Card background="none" border="secondary" gap="0.8rem">
-      <Header type="h2">
+      <!-- h3 under the card's own h2: the color keys are a section INSIDE "Your Themes", not a
+           sibling card. -->
+      <Header type="h3" margin="0.4rem 0 0 0">
         {t('theme:edit_colors')}
       </Header>
       <div>
