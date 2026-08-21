@@ -7546,6 +7546,23 @@ describe('the Pro View pointer', () => {
                 //the page must not zoom under the gesture - see handleWheel
                 return event.defaultPrevented
             },
+            /**
+             * The mini-timeline's persistent viewport outline ops. PART ONE's compressed snapshot
+             * pins the playhead mark inside it at HALF the outline's width; this view stands the
+             * playhead a quarter across (ComposerRenderer.playheadXFraction), and the mark is that
+             * same playhead seen through the strip's linear map, so it must move with it.
+             */
+            timelineViewportOps(): unknown[] {
+                const strip = app.stage.children[app.stage.children.length - 1]
+                const viewport = strip.children.find(
+                    child =>
+                        child.kind === 'graphics' &&
+                        (child as {ops: unknown[]}).ops.some(
+                            op => Array.isArray(op) && op[0] === 'roundRect'
+                        )
+                )
+                return viewport ? (viewport as {ops: unknown[]}).ops : []
+            },
             setViewLocked(locked: boolean) {
                 viewLocked = locked
             },
@@ -7654,6 +7671,26 @@ describe('the Pro View pointer', () => {
             //...and one pixel to its right is an ordinary cell again
             harness.tap(harness.stripWidth(), y)
             expect(harness.taps).toHaveLength(1)
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    it('the timeline viewport marks the playhead a quarter across, where this view stands it', async () => {
+        const harness = await mountPro()
+        try {
+            const ops = harness.timelineViewportOps()
+            const roundRect = ops.find(op => Array.isArray(op) && op[0] === 'roundRect') as
+                | unknown[]
+                | undefined
+            const moveTo = ops.find(op => Array.isArray(op) && op[0] === 'moveTo') as
+                | unknown[]
+                | undefined
+            expect(roundRect).toBeDefined()
+            expect(moveTo).toBeDefined()
+            //the outline's own width is roundRect's third argument; the mark stands at a QUARTER of
+            //it in this view (playheadXFraction) - at the compressed middle it would be double this
+            expect(moveTo?.[1]).toBe((roundRect?.[3] as number) * 0.25)
         } finally {
             harness.destroy()
         }
