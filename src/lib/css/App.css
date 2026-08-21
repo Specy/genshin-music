@@ -2917,7 +2917,9 @@ select {
 .instrument-button .app-button {
   transition:
     background-color 0.2s,
-    filter 0.2s;
+    filter 0.2s !important;
+  transform: unset !important;
+  filter: unset !important;
 }
 
 .instrument-settings {
@@ -3581,13 +3583,13 @@ select {
   }
 
   .instrument-button-selected {
-    height: 3.5rem;
-    min-height: 3.5rem;
+    height: 4.5rem;
+    min-height: 4.5rem;
   }
 
   .instrument-name-button {
     align-items: flex-end;
-    padding-bottom: 0.4rem;
+    padding-bottom: 0rem;
   }
 
   .new-instrument-button {
