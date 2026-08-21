@@ -447,6 +447,7 @@ export const i18n_en = {
     your_themes: 'Your Themes',
     new_theme: 'New Theme',
     default_themes: 'Default Themes',
+    edit_colors: 'Edit colors',
     preview: 'Preview',
     view_player: 'View player', //shows the player preview
     view_composer: 'View composer',
