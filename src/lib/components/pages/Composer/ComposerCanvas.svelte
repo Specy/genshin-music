@@ -9,6 +9,7 @@
   import type { ComposerSettingsDataType } from '$core/BaseSettings';
   import type { ComposerRenderer } from './ComposerRenderer';
   import { composerCanvasCssSize, composerNotesRegionY } from './composerCanvasGeometry';
+  import { proRowHeight, proStripWidth } from './proViewGeometry';
   import TimelineButton from './TimelineButton.svelte';
 
   // The class names below (canvas-wrapper, canvas-relative, canvas-buttons, timeline-controls,
@@ -48,8 +49,22 @@
     settings: ComposerSettingsDataType;
     breakpoints: number[];
     selectedColumns: number[];
+    /**
+     * CONTEXT.md: View Lock. Ephemeral UI state owned by Composer.svelte (every mount starts locked),
+     * read HERE in the $effect object like every other reactive value - the renderer both READS it
+     * (an unlocked drag pans the camera) and DIFFS it (re-locking eases back to the Editable Zone).
+     */
+    viewLocked: boolean;
     selectColumn: (index: number, ignoreAudio?: boolean, forceAnchor?: boolean) => void;
     toggleBreakpoint: () => void;
+    /** A settled Pro View tap, as the cell it landed on - what it EDITS is Composer.svelte's. */
+    onProCellTap: (column: number, number: number) => void;
+    /** A Pro View cell held past the keyboard's long-press threshold; returns whether anything took it. */
+    onProCellLongPress: (
+      column: number,
+      number: number,
+      rect: { x: number; y: number; width: number; height: number }
+    ) => boolean;
   }
 
   let {
@@ -67,8 +82,11 @@
     settings,
     breakpoints,
     selectedColumns,
+    viewLocked,
     selectColumn,
     toggleBreakpoint,
+    onProCellTap,
+    onProCellLongPress,
   }: ComposerCanvasProps = $props();
 
   let canvasContainerEl: HTMLDivElement | undefined;
@@ -123,6 +141,13 @@
   // below are held to. The same function ComposerRenderer places the region with, given the same
   // two inputs, rather than a second `proView ? ... : 0` written in the template.
   const notesTop = $derived(composerNotesRegionY(proView, timelineHeight));
+  // ...and how far the LEFT side chevron is held clear of the row-label strip, which it would
+  // otherwise stand on top of: the strip is drawn at the notes region's left inside edge, and this
+  // button is a DOM element floating over the canvas, so nothing else keeps the two apart. Same
+  // discipline as `notesTop` above - the strip's own width function, given the row height the
+  // renderer derives from the same reported region height, rather than a second formula here. The
+  // right chevron needs none of this (the strip is at the left edge only).
+  const stripInset = $derived(proView && height > 0 ? proStripWidth(proRowHeight(height)) : 0);
 
   onMount(() => {
     let cancelled = false;
@@ -150,12 +175,15 @@
           noteNameType: settings.noteNameType.value,
           breakpoints,
           selectedColumns,
+          viewLocked,
           bpm: Number(settings.bpm.value),
           smoothScroll: Boolean(settings.smoothScroll.value),
         },
         {
           selectColumn,
           toggleBreakpoint,
+          onProCellTap,
+          onProCellLongPress,
           onGeometryChange: (geometry) => {
             width = geometry.width;
             height = geometry.height;
@@ -238,6 +266,11 @@
       noteNameType: settings.noteNameType.value,
       breakpoints,
       selectedColumns,
+      // The View Lock, read HERE for the reason the whole comment above gives: update() is free to
+      // skip work, so a value first read inside it would be dropped from this effect's dependency
+      // set by the first run that skipped - and this one changes only when the user presses a button
+      // that changes nothing else on the state object.
+      viewLocked,
       bpm: Number(settings.bpm.value),
       smoothScroll: Boolean(settings.smoothScroll.value),
     });
@@ -358,7 +391,7 @@
       <button
         onpointerdown={() => selectColumn(selected - 1)}
         class={['canvas-buttons', !isPlaying && 'canvas-buttons-visible']}
-        style="height:{height}px;top:{notesTop}px;left:0;padding-right:0.5rem;justify-content:flex-start;background:linear-gradient(90deg, rgba({sideButtonsRgb},0.80) 30%, rgba({sideButtonsRgb},0.30) 80%, rgba({sideButtonsRgb},0) 100%)"
+        style="height:{height}px;top:{notesTop}px;left:{stripInset}px;padding-right:0.5rem;justify-content:flex-start;background:linear-gradient(90deg, rgba({sideButtonsRgb},0.80) 30%, rgba({sideButtonsRgb},0.30) 80%, rgba({sideButtonsRgb},0) 100%)"
       >
         {@render chevronLeftIcon()}
       </button>

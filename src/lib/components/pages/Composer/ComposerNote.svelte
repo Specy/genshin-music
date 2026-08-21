@@ -27,6 +27,9 @@
   import GenshinNoteBorder from '$cmp/GenshinNoteBorder.svelte';
   import SvgNote from '$cmp/SvgNote.svelte';
   import { suppressNativeTouch } from '$cmp/suppressNativeTouch';
+  //THE ONE LONG-PRESS TIMING, shared with the Pro View's canvas, which opens the same popover from
+  //the same hold (spec §12: no new thresholds) - see composerInput.
+  import { COMPOSER_LONG_PRESS_MS } from './composerInput';
 
   let {
     data,
@@ -57,7 +60,6 @@
     noteImage: NoteImage;
   } = $props();
 
-  const LONG_PRESS_MS = 450;
   let longPressTimeout: ReturnType<typeof setTimeout> | 0 = 0;
   let buttonElement: HTMLButtonElement | undefined = $state();
   //where the still-unreleased press began, and whether it has already turned into a long
@@ -75,7 +77,7 @@
       if (!buttonElement) return;
       longPressFired = true;
       longPressAction(data, buttonElement);
-    }, LONG_PRESS_MS);
+    }, COMPOSER_LONG_PRESS_MS);
   }
 
   function endPress(pointerId: number) {

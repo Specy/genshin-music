@@ -60,6 +60,33 @@ const MAX_BASEPOINT_OFFSET = PITCHES.length - 1;
  */
 export const ROW_HEIGHT_FRAMING_ROWS = 2;
 
+/**
+ * HOW MUCH OF THE PRO VIEW'S NOTES REGION THE ROW-LABEL STRIP TAKES, as a fraction of one row's
+ * height, and the px bounds it is held between.
+ *
+ * Stated against the ROW rather than as a flat px width because the row height is what the canvas'
+ * own height decides (proRowHeight): a strip sized for a 44px row on a 1080p window would swallow a
+ * quarter of a short one. The bounds are what keeps "C♯4" legible at the bottom end and the strip
+ * from eating the first column at the top.
+ */
+const PRO_STRIP_WIDTH_ROWS = 0.95;
+const PRO_STRIP_MIN_WIDTH = 22;
+const PRO_STRIP_MAX_WIDTH = 46;
+
+/**
+ * THE ROW-LABEL STRIP'S WIDTH IN PX — one statement, read by three surfaces that must agree about it:
+ * the renderer that DRAWS the strip, the tap dispatch that treats a press on it as inert (spec §7),
+ * and ComposerCanvas.svelte, which insets the left side chevron so the button does not stand on top
+ * of the labels (the chevron is a DOM element over the canvas, so nothing else would hold the two
+ * apart).
+ */
+export function proStripWidth(rowHeight: number): number {
+  return Math.min(
+    PRO_STRIP_MAX_WIDTH,
+    Math.max(PRO_STRIP_MIN_WIDTH, rowHeight * PRO_STRIP_WIDTH_ROWS)
+  );
+}
+
 /** A closed range of Note Numbers, ends included. Used for the addressable span, a song's outliers and an Editable Zone alike. */
 export type NumberSpan = { min: number; max: number };
 

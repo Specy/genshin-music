@@ -196,16 +196,18 @@ import type {ComposerCache} from '$cmp/pages/Composer/ComposerCache'
  */
 
 const counters = vi.hoisted(() => ({
-    constructed: {containers: 0, sprites: 0, graphics: 0},
-    destroyed: {containers: 0, sprites: 0, graphics: 0},
+    constructed: {containers: 0, sprites: 0, graphics: 0, texts: 0},
+    destroyed: {containers: 0, sprites: 0, graphics: 0, texts: 0},
     graphicsClears: 0,
     reset() {
         this.constructed.containers = 0
         this.constructed.sprites = 0
         this.constructed.graphics = 0
+        this.constructed.texts = 0
         this.destroyed.containers = 0
         this.destroyed.sprites = 0
         this.destroyed.graphics = 0
+        this.destroyed.texts = 0
         this.graphicsClears = 0
     },
 }))
@@ -407,6 +409,27 @@ const pixi = vi.hoisted(() => {
         }
     }
 
+    /**
+     * pixi's Text, modelled as the thing the Pro View's row-label strip does to it and nothing more:
+     * a container that carries a string, a style object and an anchor. PART NINE never reads a label
+     * (nothing rasterises here, so a Text's whole visible output is its own texture), and the earlier
+     * parts never construct one - what this exists for is to let a PRO renderer mount at all.
+     */
+    class FakeText extends FakeContainer {
+        override readonly kind = 'text' as const
+        text: string
+        style: Record<string, unknown>
+        readonly anchor = {set: () => {}}
+
+        constructor(options?: {text?: string, style?: Record<string, unknown>}) {
+            super()
+            counters.constructed.containers--
+            counters.constructed.texts++
+            this.text = options?.text ?? ''
+            this.style = {...options?.style}
+        }
+    }
+
     class FakeRectangle {
         constructor(_x: number, _y: number, _width: number, _height: number) {}
     }
@@ -597,6 +620,7 @@ const pixi = vi.hoisted(() => {
         Graphics: FakeGraphics,
         Rectangle: FakeRectangle,
         Sprite: FakeSprite,
+        Text: FakeText,
         Texture: FakeTexture,
         applications,
     }
@@ -676,7 +700,25 @@ import {COMPOSER_TIMELINE_MINIMAP_CONFIG} from '$cmp/pages/Composer/composerTime
 import {
     TIMELINE_INSET_LEFT,
     TIMELINE_INSET_RIGHT,
+    composerNotesRegionY,
 } from '$cmp/pages/Composer/composerCanvasGeometry'
+//PART NINE's rules, imported for the same reason nearestEven and the insets are: they ARE the axis
+//and the framing, pinned in test/proViewGeometry.test.ts against the spec, so restating them here
+//would be restating a definition rather than checking one. What PART NINE checks is the INPUT
+//machinery that reads them - which cell a pointer resolves to, and what moves the camera.
+import {
+    editableZone,
+    lockedCameraY,
+    proRowHeight,
+    numberAtY,
+    proStripWidth,
+    proViewAxis,
+    rowForNumber,
+    type ProViewAxis,
+} from '$cmp/pages/Composer/proViewGeometry'
+import {songNumberSpan} from '$cmp/pages/Composer/proViewNotes'
+//the ONE long-press timing, shared by the composer keyboard and the Pro View canvas (spec §12)
+import {COMPOSER_LONG_PRESS_MS} from '$cmp/pages/Composer/composerInput'
 
 /**
  * 20, not the shipped default of 35, purely so the window (n/2 + 2 per side, strictly - so n + 3
@@ -3443,8 +3485,8 @@ describe('the pooled column views', () => {
                     viewsDestroyed: 0,
                 })
             }
-            expect(counters.constructed).toEqual({containers: 0, sprites: 0, graphics: 0})
-            expect(counters.destroyed).toEqual({containers: 0, sprites: 0, graphics: 0})
+            expect(counters.constructed).toEqual({containers: 0, sprites: 0, graphics: 0, texts: 0})
+            expect(counters.destroyed).toEqual({containers: 0, sprites: 0, graphics: 0, texts: 0})
             //...and what it painted over those 25 ticks is still the whole scene, correctly
             expect(harness.paintedScene()).toEqual(expectedScene(harness.context, harness.geometry()))
         } finally {
@@ -7287,6 +7329,481 @@ describe('Audio recording does not render notes or timeline and avoids rendering
             expect(restoredScene.notes.columns.length).toBeGreaterThan(0)
             expect(restoredScene.timeline.strip.visible).toBe(true)
             expect(harness.renders()).toBeGreaterThan(initialRenders)
+        } finally {
+            harness.destroy()
+        }
+    })
+})
+
+// ---------------------------------------------------------------------------------------------
+// PART NINE: THE PRO VIEW'S INPUT (spec §7, phase D).
+//
+// The same pointer stream PART SEVEN drives, over a canvas where a tap no longer picks a column: it
+// EDITS the cell under it, a hold opens the duration popover, and - with the View Lock open - a drag
+// pans the frame vertically as well (CONTEXT.md: Pro View, View Lock).
+//
+// WHAT THESE ROWS CAN SEE, and what they cannot. The renderer's job here is MECHANICAL - resolve a
+// column and a Note Number, hand them over - so the two callbacks below are the whole observable
+// surface for a tap, and the CAMERA is observed through them too: what a tap at a fixed screen point
+// resolves to IS where the camera is, which is a stronger reading than a private field would be. What
+// the tap then does to the song is Composer.svelte's and is not reachable from here; the decision it
+// makes is pinned in test/composerInput.test.ts, and the row resolution both sides share is pinned in
+// test/proViewGeometry.test.ts.
+//
+// mount() above cannot serve: it asserts the Compressed View's three-child stage, and a Pro View
+// stage carries five (the zone's framing and the row-label strip join it). The harness below is
+// deliberately small - it reads no scene at all.
+describe('the Pro View pointer', () => {
+    /**
+     * A pro renderer over the same fixture song, with the two Pro View callbacks recorded.
+     *
+     * `takeLongPress` is what Composer.svelte answers when a hold reaches it - true where a popover
+     * would open, false where it would not (an empty cell, or any cell while the song plays) - and
+     * flipping it is how the rows below state that an unconsumed hold still releases as a tap.
+     */
+    async function mountPro(
+        options: {viewLocked?: boolean, smoothScroll?: boolean, takeLongPress?: boolean} = {}
+    ) {
+        const song = makeSong()
+        const canvasEl = document.createElement('div')
+        document.body.append(canvasEl)
+        let viewLocked = options.viewLocked ?? true
+        let takeLongPress = options.takeLongPress ?? true
+        const taps: {column: number, number: number}[] = []
+        const longPresses: {
+            column: number
+            number: number
+            rect: {x: number, y: number, width: number, height: number}
+        }[] = []
+        const selectColumnCalls: number[] = []
+        let height = 0
+        let timelineHeight = 0
+        const state = (): ComposerRendererState => ({
+            columns: song.columns,
+            structureVersion: song.structureVersion,
+            isPlaying: false,
+            playbackColumnStartMs: performance.now(),
+            playbackAnchorGeneration: 0,
+            isRecordingAudio: false,
+            instruments: song.instruments,
+            songPitch: song.pitch,
+            selected: song.selected,
+            currentLayer: 0,
+            beatMarks: 3,
+            columnsPerCanvas: COLUMNS_PER_CANVAS,
+            proView: true,
+            viewLocked,
+            noteNameType: 'Note name',
+            breakpoints: song.breakpoints,
+            selectedColumns: [],
+            smoothScroll: options.smoothScroll ?? false,
+            bpm: BPM,
+        })
+        const appsBefore = pixi.applications.length
+        const renderer = new ComposerRenderer(canvasEl, state(), {
+            selectColumn: index => selectColumnCalls.push(index),
+            toggleBreakpoint: () => {},
+            onGeometryChange: reported => {
+                height = reported.height
+                timelineHeight = reported.timelineHeight
+            },
+            onProCellTap: (column, number) => taps.push({column, number}),
+            onProCellLongPress: (column, number, rect) => {
+                longPresses.push({column, number, rect})
+                return takeLongPress
+            },
+        })
+        await renderer.init()
+        //the cache debounce, exactly as mount() waits it out - without a cache nothing paints and
+        //applyCameraY has nothing to move
+        await vi.advanceTimersByTimeAsync(180)
+        const [app] = pixi.applications.slice(appsBefore)
+        //the Pro View's stage: columns, the zone's framing, the playhead, the row-label strip, the
+        //mini-timeline. Stated here for the reason mount() states its own three - the LAST child is
+        //what pixi hit-tests first, and the notes container being [0] is what the emits below reach.
+        expect(app.stage.children).toHaveLength(5)
+        const notesColumns = app.stage.children[0]
+
+        //THE VIEW FUNCTION, restated from the same modules the renderer reads it from (see this
+        //part's import note): the axis this song draws on, the row height this region gives it, and
+        //the camera the LOCKED framing puts on the current layer's Editable Zone.
+        const rowHeight = proRowHeight(height)
+        const axis: ProViewAxis = proViewAxis(songNumberSpan(song.columns))
+        const notesTop = composerNotesRegionY(true, timelineHeight)
+        const lockedCamera = (layer = 0) =>
+            lockedCameraY({
+                axis,
+                zone: editableZone(
+                    song.instruments[layer].name,
+                    effectiveTrackPitch(song.instruments[layer], song.pitch)
+                ),
+                rowHeight,
+                notesRegionHeight: height,
+            })
+        /** The canvas x of a column's middle - the playhead sits at a QUARTER of the width in this view. */
+        const xOfColumn = (column: number) =>
+            CANVAS_WIDTH * 0.25 + (column - song.selected) * COLUMN_WIDTH + COLUMN_WIDTH / 2
+        /** The canvas y of a Note Number's row centre, at a given camera. */
+        const yOfNumber = (number: number, cameraY: number) =>
+            notesTop + (rowForNumber(axis, number) + 0.5) * rowHeight - cameraY
+        /** The Note Number a canvas y stands for at a given camera - the tap's own oracle. */
+        const numberAt = (y: number, cameraY: number) =>
+            numberAtY({axis, y: y - notesTop, cameraY, rowHeight})
+
+        return {
+            song,
+            taps,
+            longPresses,
+            selectColumnCalls,
+            axis,
+            rowHeight,
+            height,
+            notesTop,
+            lockedCamera,
+            xOfColumn,
+            yOfNumber,
+            numberAt,
+            stripWidth: () => proStripWidth(rowHeight),
+            setViewLocked(locked: boolean) {
+                viewLocked = locked
+            },
+            push() {
+                renderer.update(state())
+            },
+            press(x: number, y: number, pointerId = PRIMARY_POINTER) {
+                notesColumns.emit('pointerdown', {globalX: x, globalY: y, pointerId})
+            },
+            move(x: number, y: number, pointerId = PRIMARY_POINTER) {
+                notesColumns.emit('pointermove', {globalX: x, globalY: y, pointerId})
+            },
+            release(x: number, y: number, pointerId = PRIMARY_POINTER) {
+                notesColumns.emit('pointerup', {globalX: x, globalY: y, pointerId})
+            },
+            /** Press and release on one point with nothing in between - the settled tap. */
+            tap(x: number, y: number) {
+                notesColumns.emit('pointerdown', {globalX: x, globalY: y, pointerId: PRIMARY_POINTER})
+                notesColumns.emit('pointerup', {globalX: x, globalY: y, pointerId: PRIMARY_POINTER})
+            },
+            /** A drag from one point to another, ending in a release on the far one. */
+            drag(x: number, y: number, toX: number, toY: number) {
+                notesColumns.emit('pointerdown', {globalX: x, globalY: y, pointerId: PRIMARY_POINTER})
+                notesColumns.emit('pointermove', {
+                    globalX: toX,
+                    globalY: toY,
+                    pointerId: PRIMARY_POINTER,
+                })
+                notesColumns.emit('pointerup', {globalX: toX, globalY: toY, pointerId: PRIMARY_POINTER})
+            },
+            destroy() {
+                renderer.destroy()
+                canvasEl.remove()
+            },
+        }
+    }
+
+    /** A Note Number the current layer can really voice, taken from the middle of its Editable Zone. */
+    function addableNumber(harness: {song: ComposedSong}): number {
+        const zone = editableZone(
+            harness.song.instruments[0].name,
+            effectiveTrackPitch(harness.song.instruments[0], harness.song.pitch)
+        )
+        return [...zone.numbers].sort((a, b) => a - b)[Math.floor(zone.numbers.size / 2)]
+    }
+
+    /** A throw fast enough to Coast, released on its last sampled point - PART EIGHT's own recipe. */
+    async function throwAndCoast(
+        harness: Awaited<ReturnType<typeof mountPro>>,
+        y: number
+    ): Promise<void> {
+        const start = CANVAS_WIDTH * 0.25
+        harness.press(start, y)
+        for (let step = 1; step <= 3; step++) {
+            await vi.advanceTimersByTimeAsync(20)
+            harness.move(start - 40 * step, y)
+        }
+        harness.release(start - 120, y)
+        await vi.advanceTimersByTimeAsync(64)
+    }
+
+    it('a settled tap reports the cell it landed on, and selects nothing', async () => {
+        const harness = await mountPro()
+        try {
+            const column = SELECTED + 3
+            const number = addableNumber(harness)
+            harness.tap(harness.xOfColumn(column), harness.yOfNumber(number, harness.lockedCamera()))
+            expect(harness.taps).toEqual([{column, number}])
+            //THE WHOLE POINT of spec §2's "never column selection": the cursor stays where it was,
+            //so an edit three columns away neither moves nor sounds the selection
+            expect(harness.selectColumnCalls).toEqual([])
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    it('resolves the row under the pointer, one Note Number per row', async () => {
+        const harness = await mountPro()
+        try {
+            const camera = harness.lockedCamera()
+            const number = addableNumber(harness)
+            for (const offset of [-2, -1, 0, 1, 2]) {
+                harness.tap(harness.xOfColumn(SELECTED), harness.yOfNumber(number + offset, camera))
+            }
+            expect(harness.taps.map(tap => tap.number)).toEqual([
+                number - 2,
+                number - 1,
+                number,
+                number + 1,
+                number + 2,
+            ])
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    it('a tap on the row-label strip band reports nothing', async () => {
+        const harness = await mountPro()
+        try {
+            const y = harness.yOfNumber(addableNumber(harness), harness.lockedCamera())
+            harness.tap(harness.stripWidth() - 1, y)
+            expect(harness.taps).toEqual([])
+            //...and one pixel to its right is an ordinary cell again
+            harness.tap(harness.stripWidth(), y)
+            expect(harness.taps).toHaveLength(1)
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    it('a press that travelled past the slop is a gesture, not a tap', async () => {
+        const harness = await mountPro()
+        try {
+            const x = harness.xOfColumn(SELECTED)
+            const y = harness.yOfNumber(addableNumber(harness), harness.lockedCamera())
+            //vertically, where the LOCKED frame moves nothing at all - the press still stops being
+            //a tap, because a tap here writes a note
+            harness.drag(x, y, x, y + 20)
+            expect(harness.taps).toEqual([])
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    it('a Catch halts the Coast and edits nothing', async () => {
+        const harness = await mountPro({smoothScroll: true})
+        try {
+            const y = harness.yOfNumber(addableNumber(harness), harness.lockedCamera())
+            await throwAndCoast(harness, y)
+            //the Catch itself: a press on the travelling canvas, released without moving
+            const start = CANVAS_WIDTH * 0.25
+            harness.tap(start, y)
+            expect(harness.taps).toEqual([])
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    it('a hold opens the popover on the cell it was held on, and swallows its own release', async () => {
+        const harness = await mountPro()
+        try {
+            const column = SELECTED + 2
+            const number = addableNumber(harness)
+            const camera = harness.lockedCamera()
+            const x = harness.xOfColumn(column)
+            const y = harness.yOfNumber(number, camera)
+            harness.press(x, y)
+            await vi.advanceTimersByTimeAsync(COMPOSER_LONG_PRESS_MS)
+            expect(harness.longPresses).toHaveLength(1)
+            expect({
+                column: harness.longPresses[0].column,
+                number: harness.longPresses[0].number,
+            }).toEqual({column, number})
+            //THE CELL'S OWN BOX, in screen coordinates - what the popover anchors to when there is
+            //no element to anchor to. jsdom measures the canvas at the origin, so this is the
+            //canvas-space rect itself.
+            const rect = harness.longPresses[0].rect
+            expect({x: rect.x, width: rect.width, height: rect.height}).toEqual({
+                x: x - COLUMN_WIDTH / 2,
+                width: COLUMN_WIDTH,
+                height: harness.rowHeight,
+            })
+            //the row's own top edge - to the float, since both sides are a camera subtracted from a
+            //row multiple and the two spellings of that differ in the last bit
+            expect(rect.y).toBeCloseTo(y - harness.rowHeight / 2, 9)
+            harness.release(x, y)
+            expect(harness.taps).toEqual([])
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    it('a hold nothing took still releases as a tap', async () => {
+        const harness = await mountPro({takeLongPress: false})
+        try {
+            const number = addableNumber(harness)
+            const x = harness.xOfColumn(SELECTED)
+            const y = harness.yOfNumber(number, harness.lockedCamera())
+            harness.press(x, y)
+            await vi.advanceTimersByTimeAsync(COMPOSER_LONG_PRESS_MS)
+            expect(harness.longPresses).toHaveLength(1)
+            harness.release(x, y)
+            expect(harness.taps).toEqual([{column: SELECTED, number}])
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    it('movement past the slop cancels a pending hold', async () => {
+        const harness = await mountPro()
+        try {
+            const x = harness.xOfColumn(SELECTED)
+            const y = harness.yOfNumber(addableNumber(harness), harness.lockedCamera())
+            harness.press(x, y)
+            await vi.advanceTimersByTimeAsync(COMPOSER_LONG_PRESS_MS / 2)
+            harness.move(x + 30, y)
+            await vi.advanceTimersByTimeAsync(COMPOSER_LONG_PRESS_MS)
+            expect(harness.longPresses).toEqual([])
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    it('a Catch arms no hold: the press on a moving canvas is the grab', async () => {
+        const harness = await mountPro({smoothScroll: true})
+        try {
+            const y = harness.yOfNumber(addableNumber(harness), harness.lockedCamera())
+            await throwAndCoast(harness, y)
+            harness.press(CANVAS_WIDTH * 0.25, y)
+            await vi.advanceTimersByTimeAsync(COMPOSER_LONG_PRESS_MS)
+            expect(harness.longPresses).toEqual([])
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    it('locked, a vertical drag moves the frame nowhere', async () => {
+        const harness = await mountPro({viewLocked: true})
+        try {
+            const number = addableNumber(harness)
+            const x = harness.xOfColumn(SELECTED)
+            const y = harness.yOfNumber(number, harness.lockedCamera())
+            harness.drag(x, y, x, y + harness.rowHeight * 4)
+            //the same point still resolves the same row, which is the camera not having moved
+            harness.tap(x, y)
+            expect(harness.taps).toEqual([{column: SELECTED, number}])
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    it('unlocked, a drag pans the frame by exactly what the pointer travelled', async () => {
+        const harness = await mountPro({viewLocked: false})
+        try {
+            const number = addableNumber(harness)
+            const x = harness.xOfColumn(SELECTED)
+            const y = harness.yOfNumber(number, harness.lockedCamera())
+            const travel = harness.rowHeight * 3
+            harness.drag(x, y, x, y + travel)
+            //dragging DOWN brings higher numbers into the same screen point, one per row travelled
+            harness.tap(x, y)
+            expect(harness.taps).toEqual([
+                {column: SELECTED, number: harness.numberAt(y, harness.lockedCamera() - travel)},
+            ])
+            expect(harness.taps[0].number).toBe(number + 3)
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    it('unlocked, the pan stops at the axis rather than running off it', async () => {
+        const harness = await mountPro({viewLocked: false})
+        try {
+            const x = harness.xOfColumn(SELECTED)
+            const y = harness.yOfNumber(addableNumber(harness), harness.lockedCamera())
+            //far more travel than the axis has above the zone: the clamp is what stops it at 0
+            harness.drag(x, y, x, y + harness.rowHeight * 1000)
+            harness.tap(x, harness.notesTop + harness.rowHeight / 2)
+            //camera 0 = the axis' top row at the region's top edge
+            expect(harness.taps).toEqual([{column: SELECTED, number: harness.axis.max}])
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    it('re-locking brings the frame back to the Editable Zone', async () => {
+        const harness = await mountPro({viewLocked: false})
+        try {
+            const number = addableNumber(harness)
+            const x = harness.xOfColumn(SELECTED)
+            const y = harness.yOfNumber(number, harness.lockedCamera())
+            harness.drag(x, y, x, y + harness.rowHeight * 3)
+            harness.setViewLocked(true)
+            harness.push()
+            harness.tap(x, y)
+            expect(harness.taps).toEqual([{column: SELECTED, number}])
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    it('...and eases there while smooth motion is on', async () => {
+        const harness = await mountPro({viewLocked: false, smoothScroll: true})
+        try {
+            const number = addableNumber(harness)
+            const x = harness.xOfColumn(SELECTED)
+            const y = harness.yOfNumber(number, harness.lockedCamera())
+            harness.drag(x, y, x, y + harness.rowHeight * 6)
+            harness.setViewLocked(true)
+            harness.push()
+            //MID-EASE: the frame is on its way back rather than already there
+            await vi.advanceTimersByTimeAsync(32)
+            harness.tap(x, y)
+            expect(harness.taps[0].number).toBeGreaterThan(number)
+            //...and it arrives on the zone within the scroll's own ease duration
+            await vi.advanceTimersByTimeAsync(SCROLL_EASE_MS + 64)
+            harness.tap(x, y)
+            expect(harness.taps[1]).toEqual({column: SELECTED, number})
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    it('a zone change eases an UNLOCKED frame to the new zone, and leaves it unlocked', async () => {
+        const harness = await mountPro({viewLocked: false})
+        try {
+            const number = addableNumber(harness)
+            const x = harness.xOfColumn(SELECTED)
+            const y = harness.yOfNumber(number, harness.lockedCamera())
+            const travel = harness.rowHeight * 3
+            harness.drag(x, y, x, y + travel)
+            //the Basepoint moves the whole Editable Zone (spec §9), which is a zone change the
+            //camera follows in either lock state
+            harness.song.pitch = 'B'
+            harness.push()
+            const zoneCamera = harness.lockedCamera()
+            harness.tap(x, y)
+            expect(harness.taps).toEqual([
+                {column: SELECTED, number: harness.numberAt(y, zoneCamera)},
+            ])
+            //STILL UNLOCKED: the next drag pans exactly as the first one did
+            harness.drag(x, y, x, y + travel)
+            harness.tap(x, y)
+            expect(harness.taps[1].number).toBe(harness.numberAt(y, zoneCamera - travel))
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    it('a release with no press of ours behind it edits nothing', async () => {
+        const harness = await mountPro()
+        try {
+            //the raised keyboard sheet's backdrop swallows the pointerDOWN in the DOM, while pixi
+            //hit-tests a page-wide pointerup against the canvas - so this is the shape of event a
+            //dismissing tap can still deliver here, and it must not write a note (spec §2)
+            harness.release(
+                harness.xOfColumn(SELECTED),
+                harness.yOfNumber(addableNumber(harness), harness.lockedCamera())
+            )
+            expect(harness.taps).toEqual([])
         } finally {
             harness.destroy()
         }

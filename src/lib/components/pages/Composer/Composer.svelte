@@ -48,6 +48,11 @@
     createShortcutListener,
     type ShortcutListener,
   } from '$stores/KeybindsStore.svelte';
+  import { numberToButton } from '$core/Songs/noteIds';
+  //THE PRO VIEW'S TAP DISPATCH, as a pure decision (spec §7) - what a tap on a cell does, given what
+  //this component looks up about that cell. The lookups and the mutation stay here; the rule does
+  //not, so it is testable without a canvas.
+  import { proCellAction, type ComposerPopoverAnchor, type ScreenRect } from './composerInput';
   import { HeldNoteRegistry, holderToken, midiHolderToken } from '$lib/audio/HeldNoteRegistry';
   import { spanForHeldMs } from '$core/Songs/sustainQuantize';
   import { registerLeaveHandler } from '$stores/navigationGuard.svelte';
@@ -161,10 +166,13 @@
    */
   const keyboardSheetRaised = $derived(keyboardRaised || isRecordingAudio);
   /**
-   * THE VIEW LOCK (CONTEXT.md), and in this phase it is a VISUAL PLACEHOLDER: the fifth CanvasTool
-   * toggles this and nothing reads it yet. Phase D gives it its meaning (locked = the frame stays
-   * pinned to the current track's Editable Zone; unlocked = drag pans vertically) and with it the
-   * route into ComposerRenderer. Ephemeral like the sheet above: every mount starts locked.
+   * THE VIEW LOCK (CONTEXT.md): locked, the canvas stays pinned to the current track's Editable Zone;
+   * unlocked, a stage drag pans the frame vertically too and it stays where the hand left it. The
+   * fifth CanvasTool toggles this, and it reaches the canvas through the props channel like every
+   * other reactive value (ComposerCanvas.svelte's $effect object, per that file's dependency rule) -
+   * the renderer both reads it, for the drag, and diffs it, because re-locking is a COMMAND to ease
+   * back rather than a description of anything. Ephemeral like the sheet above: every mount starts
+   * locked, and nothing about it is persisted or stored in a song.
    */
   let viewLocked = $state(true);
 
@@ -393,7 +401,12 @@
         //so resolve the note object here and hand THAT on - never the raw slot number
         const pressed = currentInstrument.notes[keyboardNote.index];
         if (!pressed) return;
-        if (startSustainRecording(midiHolderToken(note, keyboardNote.index), pressed.numberAt(layerPitch)))
+        if (
+          startSustainRecording(
+            midiHolderToken(note, keyboardNote.index),
+            pressed.numberAt(layerPitch)
+          )
+        )
           return;
         toggleNoteImmediate(pressed);
       });
@@ -763,7 +776,12 @@
     startColumn: number;
     trackIndex: number;
     id: number;
-    anchor: HTMLElement;
+    /**
+     * WHAT THE POPOVER IS POSITIONED AGAINST — the long-pressed keyboard BUTTON, or, since the Pro
+     * View's canvas can open the same popover, the screen RECT of the cell that was held (spec §7).
+     * See ComposerPopoverAnchor for why the two are different shapes rather than one nullable element.
+     */
+    anchor: ComposerPopoverAnchor;
     /** Span when the popover opened — the origin the still-held finger's drag is measured from. */
     spanAtOpen: number;
     /** Horizontal travel worth one column, frozen at open time (see handleNoteDrag). */
@@ -969,16 +987,99 @@
 
   /** Physical-keyboard / MIDI note entry: no pointer gesture exists there, so toggling stays immediate (the pre-popover behavior), occupancy rule included. */
   function toggleNoteImmediate(note: ObservableNote) {
-    const id = numberOfNote(note);
+    toggleNoteInColumn(song.selected, numberOfNote(note));
+  }
+
+  /**
+   * THE NOTE TOGGLE ITSELF, in ONE column of the current layer — the path every immediate entry
+   * takes, whichever surface asked for it (spec §7): the physical keyboard and MIDI through
+   * `toggleNoteImmediate` above, and a Pro View canvas tap through `handleProCellTap` below.
+   *
+   * ONE FUNCTION AND NOT TWO, because everything about it has to be the same for both: the preview
+   * sound (played BEFORE the occupancy test, so a press on a covered button is still heard, and on
+   * REMOVAL too — the keyboard has always previewed the note it is deleting), the occupancy rule, the
+   * autosave funnel with its ADR-0006 resync and its `changes` count, and the fact that nothing here
+   * touches `song.selected`. A canvas tap edits the column it landed on and moves the cursor nowhere;
+   * the keyboard edits the selected column because that is the column ITS caller passes.
+   *
+   * A NUMBER RATHER THAN A BUTTON, unlike the spec's sketch of it: the removal half must work for a
+   * Stranded Note, whose whole definition is that no button of this instrument voices it (CONTEXT.md:
+   * Stranded Note) — a Button-keyed signature could not name one to delete it. `numberOfNote` is
+   * where a pressed key becomes this number.
+   */
+  function toggleNoteInColumn(columnIndex: number, id: number) {
     playSound(layer, id);
-    if (song.getSpanCovering(song.selected, layer, id)) return;
-    const existing = song.selectedColumn.findNote(layer, id);
+    if (song.getSpanCovering(columnIndex, layer, id)) return;
+    const existing = song.columns[columnIndex]?.findNote(layer, id);
+    if (existing === undefined) return;
     if (existing === null) {
-      song.addNoteAt(song.selected, layer, id);
+      song.addNoteAt(columnIndex, layer, id);
     } else {
-      song.removeNoteAt(song.selected, layer, id);
+      song.removeNoteAt(columnIndex, layer, id);
     }
     handleAutoSave();
+  }
+
+  /**
+   * A SETTLED TAP ON A PRO VIEW CELL (spec §7): the whole of "tap = edit only, never selection".
+   *
+   * The renderer resolved WHERE (a column and a Note Number, the strip's band and every off-canvas
+   * miss already declined there); this looks the cell up against the current layer and lets
+   * `proCellAction` say what that means. Other layers' notes are not looked up at all — they never
+   * block an add and are never the thing removed.
+   *
+   * THE UNDO SNAPSHOT is taken here rather than inside the shared toggle above, and that is a
+   * deliberate asymmetry: `addToHistory` is the tools panel's compound entry (one clone, columns +
+   * Basepoint + roster) and the composer keyboard has never taken one for a plain note toggle. Moving
+   * it into the shared path would change what a keyboard press does; leaving the canvas without one
+   * would make the one gesture that edits a column you cannot see the one gesture you cannot undo. So
+   * the canvas takes one per editing gesture, and only when the gesture really edits — an inert tap
+   * pushes nothing.
+   */
+  function handleProCellTap(columnIndex: number, id: number) {
+    const instrument = song.instruments[layer];
+    const action = proCellAction({
+      hasOwnNote: song.columns[columnIndex]?.findNote(layer, id) != null,
+      covered: song.getSpanCovering(columnIndex, layer, id) !== null,
+      button: numberToButton(instrument?.name ?? '', layerPitch, id),
+    });
+    if (action === 'inert') return;
+    addToHistory();
+    toggleNoteInColumn(columnIndex, id);
+  }
+
+  /**
+   * A PRO VIEW CELL HELD (spec §7): the composer keyboard's own long press, arriving from the canvas
+   * instead of from a key.
+   *
+   * @returns whether the popover opened, which is what tells the renderer to swallow the release —
+   * the canvas' counterpart of ComposerNote's `longPressFired`.
+   *
+   * Every gate is `handleNoteLongPress`'s, restated in this surface's terms rather than reasoned
+   * about again: not while the song plays (holding MEANS recording a sustain then), only on
+   * instruments that can sustain, only over a note of YOUR layer — and a hold over a span's tail
+   * edits the note that owns the tail, which is the same occupancy rule the keyboard applies through
+   * `press.coveringStart`.
+   */
+  function handleProCellLongPress(columnIndex: number, id: number, rect: ScreenRect): boolean {
+    if (isPlaying) return false;
+    if (!layers[layer]?.supportsSustain) return false;
+    const startColumn = song.getSpanCovering(columnIndex, layer, id)?.startColumn ?? columnIndex;
+    const existing = song.columns[startColumn]?.findNote(layer, id);
+    if (!existing) return false;
+    addToHistory();
+    durationPopover = {
+      startColumn,
+      trackIndex: layer,
+      id,
+      anchor: { rect },
+      spanAtOpen: existing.span,
+      //the cell's own width, the way the keyboard's step is the pressed key's — the canvas has no
+      //drag continuation of its own (the finger that opened the popover is over pixi, not over the
+      //button that would report its moves), so this only ever feeds handleNoteDrag's guard
+      dragStepPx: Math.max(20, rect.width / 2),
+    };
+    return true;
   }
 
   function handleNoteRelease(note: ObservableNote, pointerId: number) {
@@ -1019,7 +1120,7 @@
       startColumn,
       trackIndex: layer,
       id,
-      anchor,
+      anchor: { element: anchor },
       spanAtOpen: existing.span,
       //one column per HALF A KEY of travel: derived from the button that was pressed, so the
       //gesture scales with the keyboard (whose size is viewport-relative) instead of carrying a
@@ -1917,8 +2018,11 @@
           {settings}
           breakpoints={song.breakpoints}
           {selectedColumns}
+          {viewLocked}
           {selectColumn}
           {toggleBreakpoint}
+          onProCellTap={handleProCellTap}
+          onProCellLongPress={handleProCellLongPress}
         />
       {/key}
       <div class="buttons-composer-wrapper-right">
@@ -1952,8 +2056,10 @@
         </CanvasTool>
         <!-- THE VIEW LOCK, a fifth tool in this same column and only in the Pro View - there is no
              frame to lock in the Compressed View, whose canvas shows every row of every column at
-             once. VISUAL PLACEHOLDER in this phase: it toggles `viewLocked` and nothing reads it
-             yet (spec §11 phase D). App.css's `.composer-grid-pro` variant of this column is what
+             once. Locked (the default), the canvas stays framed on the current layer's Editable Zone
+             and a drag scrolls horizontally as it always has; unlocked, that drag pans vertically as
+             well and the frame stays where the hand left it, until this button eases it back
+             (CONTEXT.md: View Lock). App.css's `.composer-grid-pro` variant of this column is what
              keeps five buttons the size four were. -->
         {#if proView}
           <CanvasTool

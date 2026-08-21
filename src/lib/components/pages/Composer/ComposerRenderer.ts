@@ -62,11 +62,14 @@ import {
 // the roster decide on them. Every symbol from either is read on a `state.proView` branch and
 // nowhere else - the Compressed View's placement is the *Grid* helpers above, unchanged.
 import {
+  clampCameraY,
   editableZone,
   isAddable,
   lockedCameraY,
+  numberAtY,
   numberForRow,
   proRowHeight,
+  proStripWidth,
   proViewAxis,
   rowForNumber,
   visibleRowRange,
@@ -74,6 +77,16 @@ import {
   type EditableZone,
   type ProViewAxis,
 } from './proViewGeometry';
+// ...and the Pro View's INPUT rules, in the same pixi-free shape (spec §7): what a release on the
+// notes stage means, which cell a pointer is on, and what a tap on that cell does. Read on a
+// `state.proView` branch and nowhere else, except COMPOSER_LONG_PRESS_MS' one shared timing.
+import {
+  COMPOSER_LONG_PRESS_MS,
+  proTapTarget,
+  stageReleaseIntent,
+  type ProCellTarget,
+  type ScreenRect,
+} from './composerInput';
 import {
   computeNumberLayerStatuses,
   computeNumberStrandedMarks,
@@ -170,18 +183,6 @@ const PLAYHEAD_ARROW_LENGTH = 8;
  */
 const PLAYHEAD_X_FRACTION = { compressed: 0.5, pro: 0.25 } as const;
 
-/**
- * HOW MUCH OF THE PRO VIEW'S NOTES REGION THE ROW-LABEL STRIP TAKES, as a fraction of one row's
- * height, and the px bounds it is held between.
- *
- * Stated against the ROW rather than as a flat px width because the row height is what the canvas'
- * own height decides (proRowHeight): a strip sized for a 44px row on a 1080p window would swallow a
- * quarter of a short one. The bounds are what keeps "C♯4" legible at the bottom end and the strip
- * from eating the first column at the top.
- */
-const PRO_STRIP_WIDTH_ROWS = 0.95;
-const PRO_STRIP_MIN_WIDTH = 22;
-const PRO_STRIP_MAX_WIDTH = 46;
 /** The label's own inset from the strip's left edge, in px. */
 const PRO_STRIP_TEXT_PADDING = 4;
 /** A button label's size as a fraction of the row, and the px ceiling it is capped at. */
@@ -577,15 +578,31 @@ export interface ComposerRendererState {
    * canvas' $effect reads it through the one channel every other input uses (see that file's
    * dependency rule), not because update() re-reads it.
    *
-   * WHAT IT DECIDES, now that phase C's view function has landed: the mini-timeline strip is at the
-   * TOP of the canvas with the notes region below it and the canvas fills the window's leftover
-   * height (phase B); a note draws at its absolute Note Number's own row on the chromatic axis
-   * instead of on its Song-Grid slot, framed by the current layer's Editable Zone and its overlay,
-   * striping and row-label strip; and the playhead stands at a quarter of the width instead of the
-   * middle (spec §6, PLAYHEAD_X_FRACTION). Every pointer MEANING is still the Compressed View's -
-   * tap-to-edit, the long-press popover and the unlocked camera are phase D.
+   * WHAT IT DECIDES, now that phases C and D have landed: the mini-timeline strip is at the TOP of
+   * the canvas with the notes region below it and the canvas fills the window's leftover height
+   * (phase B); a note draws at its absolute Note Number's own row on the chromatic axis instead of
+   * on its Song-Grid slot, framed by the current layer's Editable Zone and its overlay, striping and
+   * row-label strip; the playhead stands at a quarter of the width instead of the middle (spec §6,
+   * PLAYHEAD_X_FRACTION); and a settled tap on the stage EDITS the cell under it instead of
+   * selecting its column, while a hold opens the duration popover (spec §7 - see handleStageUp).
    */
   proView: boolean;
+  /**
+   * THE VIEW LOCK (CONTEXT.md: View Lock; spec §2), in the Pro View only - `true` is the default and
+   * the Compressed View leaves it meaningless (there is no frame to lock: every row of a column is on
+   * screen at once).
+   *
+   * LOCKED, the frame is pinned to the current layer's Editable Zone and nothing but a zone change
+   * moves it. UNLOCKED, a stage drag pans the camera as well (dy through clampCameraY, dx unchanged),
+   * and the frame stays where the hand left it - see handleStageSlide and syncProCamera.
+   *
+   * EPHEMERAL UI STATE and not a setting: Composer.svelte owns it (every mount starts locked) and it
+   * arrives through the props channel like every other reactive value, read in ComposerCanvas.svelte's
+   * $effect object per that file's dependency rule. It is DIFFED here rather than only read, because
+   * the false->true transition is itself a command: re-locking eases the camera back to the zone
+   * (syncProView), which nothing else on the state object could ask for.
+   */
+  viewLocked: boolean;
   /**
    * ComposerSettings' `noteNameType`: the wording the composer keyboard prints on its keys, and
    * therefore what the Pro View's row-label strip prints on the rows that ARE keys (spec §2 - the
@@ -656,6 +673,26 @@ export interface ComposerRendererCallbacks {
   /** `forceAnchor` marks a gesture's release, even when it lands on its last published floor. */
   selectColumn: (index: number, ignoreAudio?: boolean, forceAnchor?: boolean) => void;
   toggleBreakpoint: () => void;
+  /**
+   * A SETTLED TAP ON A PRO VIEW CELL (spec §7): the column the pointer was over and the Note Number
+   * its row stands for, both already resolved here - and nothing else. What the tap DOES with them
+   * (add / remove / nothing) is Composer.svelte's, because it is a question about the song, the
+   * current layer and its Basepoint; this class knows only where the finger was.
+   *
+   * NEVER CALLED IN THE COMPRESSED VIEW, where the same release selects a column instead.
+   */
+  onProCellTap: (column: number, number: number) => void;
+  /**
+   * A PRO VIEW CELL HELD past the composer keyboard's own long-press threshold without the pointer
+   * leaving the slop (spec §7): the cell, plus where it is ON SCREEN so the duration popover can
+   * anchor to a rectangle that has no element.
+   *
+   * @returns whether anything TOOK the long press. `true` consumes the gesture - the release that
+   * follows edits nothing - and `false` leaves it an ordinary press, which is what makes a hold on an
+   * empty cell (or on any cell while the song plays, where holding means recording a sustain) behave
+   * exactly like a hold on a keyboard key that opens no popover: it still completes as a tap.
+   */
+  onProCellLongPress: (column: number, number: number, rect: ScreenRect) => boolean;
   onGeometryChange: (geometry: {
     width: number;
     /** the NOTES region's height - the canvas is this plus timelineHeight */
@@ -1245,9 +1282,10 @@ export class ComposerRenderer {
    * THE CAMERA (spec §4): how far down the axis the notes region is looking, in px. Written only
    * through applyCameraY, which is what keeps every dependent layer in step with it.
    *
-   * In this phase the view is ALWAYS LOCKED, so this is `lockedCameraY` for the current layer's
-   * Editable Zone at every resting moment - `cameraTarget` is that value and this is where the ease
-   * has got to. The unlocked pan that lets the two disagree for good is phase D.
+   * LOCKED, this is `lockedCameraY` for the current layer's Editable Zone at every resting moment -
+   * `cameraTarget` is that value and this is where the ease has got to. UNLOCKED, the two disagree
+   * for as long as the user's pan says they do: `cameraTarget` goes on tracking the zone (it is what
+   * re-locking eases back to) while this is wherever the hand left the frame.
    */
   private cameraY = 0;
   private cameraTarget = 0;
@@ -1282,6 +1320,14 @@ export class ComposerRenderer {
   private proZone: EditableZone | null = null;
   /** Everything the strip's labels are a function of, as one comparable string - see syncProStrip. */
   private proStripKey = '';
+  /**
+   * The View Lock as this class last saw it, seeded from the constructor's state - the left-hand
+   * side of the one transition that is a COMMAND rather than a description (see syncProView).
+   *
+   * Its own field and not a read of `paintedState`/`previousState`: both are null until an update
+   * has been through, and a lock pressed before then would be silently dropped.
+   */
+  private proViewLocked: boolean;
 
   /**
    * The column pool. `columnViews` is what is ON SCREEN, keyed by column index; `freeColumnViews`
@@ -1469,9 +1515,40 @@ export class ComposerRenderer {
   private stagePointer: {
     id: number;
     x: number;
+    /**
+     * THE PRESS'S y, and the camera it was taken against - the vertical pair of (`x`,
+     * `anchorPosition`), used by the unlocked Pro View's pan and by nothing else. `y` is the PRESS
+     * (never re-taken, exactly as `x` is not), while `anchorCameraY` is re-taken at the instant the
+     * drag starts, for the reason `anchorPosition` is: whatever was moving the camera in between - a
+     * zone ease - must not be given back on the first drag frame.
+     */
+    y: number;
     anchorPosition: number;
+    anchorCameraY: number;
+    /**
+     * Whether this press has travelled past DRAG_SLOP_PX in EITHER axis. The Pro View's whole
+     * tap-vs-gesture question (a tap there EDITS, so a press that visibly moved must not be one), and
+     * what cancels a pending long press. Written on the pro path only - the Compressed View's
+     * click-vs-drag test is the horizontal one in handleStageSlide, untouched.
+     */
+    moved: boolean;
     samples: Array<{ x: number; t: number }>;
   } | null = null;
+  /**
+   * The pending Pro View long press, or 0 for none: armed at a press on the notes stage, cancelled by
+   * movement past the slop and by every path that ends a press, fired once by the clock.
+   *
+   * A TIMER AND NOT A HELD-DURATION TEST, because nothing else wakes this class while a finger rests
+   * still on the canvas - the frames are stopped at scroll rest, and the popover has to open under a
+   * motionless finger.
+   */
+  private proLongPressTimeout: Timer = 0;
+  /**
+   * Whether the long press that fired on the CURRENT press was taken (see onProCellLongPress). It is
+   * the canvas' copy of the composer keyboard's `longPressFired`, and it exists for the same reason:
+   * the release of a press that opened the popover must not also toggle the note it was opened on.
+   */
+  private proPressConsumed = false;
   /**
    * The pointerId scrubbing the mini-timeline, or null for "no pointer is down on the strip".
    *
@@ -1497,6 +1574,7 @@ export class ComposerRenderer {
     private readonly callbacks: ComposerRendererCallbacks
   ) {
     this.state = initialState;
+    this.proViewLocked = initialState.viewLocked;
     this.timelineMinimapWasPlaying = initialState.isPlaying;
     this.scrollPosition = initialState.selected;
     // Seeded here as well as in update() because a renderer can paint a whole scene without ever
@@ -1650,8 +1728,9 @@ export class ComposerRenderer {
     this.positionNotesRegion();
     this.positionTimelineStrip();
     //the locked framing, taken WITHOUT an ease: there is no previous frame for the camera to slide
-    //away from, and the first paint must already show the current layer's zone centred
-    if (this.state.proView) this.syncProCamera(this.state, 'jump');
+    //away from, and the first paint must already show the current layer's zone centred - whatever
+    //the View Lock says, since a camera that has never been anywhere is holding no pan to preserve
+    if (this.state.proView) this.syncProCamera(this.state, 'frame');
     //THE LAST child of the stage, which is what makes pixi hit-test the strip before the columns -
     //see the field. Draw order is free here, the two regions never overlapping in y.
     this.notesApp.stage.addChild(this.timelineStrip);
@@ -1956,12 +2035,22 @@ export class ComposerRenderer {
    *  - THE LABEL WORDING MOVED (`noteNameType`). It changes no column's pixels at all, so nothing
    *    else on the state object can see it; the strip's own key would catch it on the next paint,
    *    and this is what makes sure there IS one.
+   *
+   * ...and one thing that invalidates NOTHING and still has to be noticed here: RE-LOCKING. The
+   * View Lock going false->true is a command rather than a description (spec §2: "re-locking eases
+   * back to the zone"), and it is the one camera move whose target may be exactly the target the
+   * last update already had - so it is passed down as its own mode instead of being inferred.
    */
   private syncProView(
     previous: ComposerRendererState | null,
     state: ComposerRendererState
   ): boolean {
-    const zoneMoved = this.syncProCamera(state, 'ease');
+    //the View Lock CLOSING, diffed against this class's own copy rather than against `previous` -
+    //that one is null until the second update(), and a re-lock is a command that must be obeyed
+    //whenever it arrives
+    const relocked = !this.proViewLocked && state.viewLocked;
+    this.proViewLocked = state.viewLocked;
+    const zoneMoved = this.syncProCamera(state, relocked ? 'relock' : 'ease');
     const axis = this.proAxis();
     const axisMoved =
       this.paintedAxis === null ||
@@ -1972,17 +2061,34 @@ export class ComposerRenderer {
   }
 
   /**
-   * THE LOCKED FRAMING (spec §4): the camera that centres the current layer's Editable Zone. In this
-   * phase the view is always locked, so this is the only thing that ever writes the camera.
+   * THE LOCKED FRAMING (spec §4): the camera that centres the current layer's Editable Zone, and the
+   * three occasions the camera is moved TO it.
    *
    * @returns whether the ZONE itself changed, which is what the caller repaints for.
    *
-   * `mode` is 'jump' where there is nothing to slide from - the first paint, and every resize or
-   * theme rebuild, both of which restate the row height under the camera - and 'ease' for the zone
-   * changes a user makes. The ease applies the same `smoothScroll` gate easeTo does, so with smooth
-   * motion off even those arrive at once.
+   * `mode` is:
+   *  - 'frame' for the FIRST framing, where there is neither anything to slide from nor a pan to
+   *    preserve: the camera has never been anywhere, so it goes to the zone whatever the lock says;
+   *  - 'rebuild' for a resize or a theme rebuild, which restate the row height under the camera -
+   *    instant for the same reason, but an UNLOCKED frame is the user's, so it is re-clamped to the
+   *    new travel rather than hauled back to the zone;
+   *  - 'ease' for an ordinary update, which moves the camera only if the framing it is aimed at
+   *    MOVED (a layer switch, an instrument swap, a Basepoint change - spec §9). That test is what
+   *    lets an unlocked pan survive every update that changed nothing about the zone, while a zone
+   *    change still eases to the new one WITHOUT re-locking (spec §2);
+   *  - 'relock' for the View Lock closing, which eases even when the target is exactly where it was:
+   *    that is the whole point of the button.
+   * The ease applies the same `smoothScroll` gate easeTo does, so with smooth motion off even those
+   * arrive at once.
+   *
+   * WHAT THE LOCK CHANGES HERE is only the 'rebuild' (see above). Every other path is the same in
+   * both states - including the zone-change ease, which follows a new zone without re-locking
+   * (spec §2).
    */
-  private syncProCamera(state: ComposerRendererState, mode: 'jump' | 'ease'): boolean {
+  private syncProCamera(
+    state: ComposerRendererState,
+    mode: 'frame' | 'rebuild' | 'ease' | 'relock'
+  ): boolean {
     const { name, pitch } = this.proCurrentTrack(state);
     //identity-stable per (instrument, Basepoint) - editableZone memoizes on exactly that pair, which
     //is what lets "same zone as last update?" be a reference comparison
@@ -1995,11 +2101,30 @@ export class ComposerRenderer {
       rowHeight: this.proRowHeightPx(),
       notesRegionHeight: this.height,
     });
-    if (target === this.cameraTarget && !zoneMoved && mode === 'ease') return false;
+    const targetMoved = target !== this.cameraTarget;
     this.cameraTarget = target;
-    if (mode === 'jump' || !state.smoothScroll || target === this.cameraY) {
+    if (mode === 'frame' || mode === 'rebuild') {
       this.cameraEase = null;
-      this.cameraY = target;
+      this.cameraY =
+        state.viewLocked || mode === 'frame'
+          ? target
+          : clampCameraY({
+              axis: this.proAxis(),
+              rowHeight: this.proRowHeightPx(),
+              notesRegionHeight: this.height,
+              cameraY: this.cameraY,
+            });
+      return zoneMoved;
+    }
+    if (mode === 'ease' && !targetMoved && !zoneMoved) return false;
+    if (!state.smoothScroll || target === this.cameraY) {
+      this.cameraEase = null;
+      //applyCameraY rather than a bare assignment, unlike the two instant modes above: a re-lock can
+      //move the camera on an update that invalidates nothing else (same zone, same axis, same
+      //wording), so this is the only thing that would repaint the notes at their new offset. Guarded
+      //on the value really moving, so an arrive-at-once that arrives at where it already is costs no
+      //repaint at all.
+      if (target !== this.cameraY) this.applyCameraY(target);
       return zoneMoved;
     }
     this.cameraEase = {
@@ -2189,10 +2314,9 @@ export class ComposerRenderer {
       notesRegionHeight: this.height,
     });
     const { name, pitch } = this.proCurrentTrack(this.state);
-    const width = Math.min(
-      PRO_STRIP_MAX_WIDTH,
-      Math.max(PRO_STRIP_MIN_WIDTH, rowHeight * PRO_STRIP_WIDTH_ROWS)
-    );
+    //the strip's own width, from the statement the tap dispatch and the side chevron's inset also
+    //read - see proViewGeometry.proStripWidth
+    const width = proStripWidth(rowHeight);
     const fontSize = Math.min(PRO_LABEL_FONT_MAX, rowHeight * PRO_LABEL_FONT_ROWS);
     const key = [
       first,
@@ -2471,8 +2595,9 @@ export class ComposerRenderer {
       //...and the camera is re-taken WITHOUT an ease: the row height is derived from the notes
       //region, so a resize (or a theme rebuild, which comes through here too) restates the axis
       //under it, and sliding from a camera measured in the old rows would be a slide from nowhere.
-      //The locked view is at its target anyway, so this moves nothing a user can see.
-      if (this.state.proView) this.syncProCamera(this.state, 'jump');
+      //The locked view is at its target anyway, so this moves nothing a user can see; an unlocked
+      //one keeps the pan it is holding, re-clamped to the travel the new row height gives the axis.
+      if (this.state.proView) this.syncProCamera(this.state, 'rebuild');
       const breakpointColor = composerBreakpointMarkerColor();
       this.cache = this.generateCache(
         columnWidth,
@@ -3499,17 +3624,54 @@ export class ComposerRenderer {
     this.stagePointer = {
       id: e.pointerId,
       x: e.globalX,
+      y: e.globalY,
       anchorPosition: this.scrollPosition,
+      anchorCameraY: this.cameraY,
+      moved: false,
       samples: [{ x: e.globalX, t: this.now() }],
     };
+    this.proPressConsumed = false;
     //the Catch - see the doc block
-    if (this.motion.kind === 'coasting') {
+    const catching = this.motion.kind === 'coasting';
+    if (catching) {
       this.enterMotion({
         kind: 'dragging',
         surface: 'stage',
         position: this.snapManualPosition(this.scrollPosition),
       });
     }
+    //THE PRO VIEW'S LONG PRESS starts counting here, and a CATCH arms nothing: that press is the
+    //grab of a moving canvas, so it neither edits nor opens anything (CONTEXT.md: Catch).
+    if (this.state.proView && !catching) {
+      this.proLongPressTimeout = setTimeout(this.fireProLongPress, COMPOSER_LONG_PRESS_MS);
+    }
+  };
+
+  /** Drop any pending long press. Every path that ends or invalidates a press calls this. */
+  private cancelProLongPress(): void {
+    if (!this.proLongPressTimeout) return;
+    clearTimeout(this.proLongPressTimeout);
+    this.proLongPressTimeout = 0;
+  }
+
+  /**
+   * THE HOLD CAME GOOD: resolve the cell still under the motionless pointer and offer it to
+   * Composer.svelte, which answers whether it took it (see onProCellLongPress).
+   *
+   * Resolved NOW rather than at the press, from the press point and the LIVE scroll position: the
+   * pointer cannot have moved (movement past the slop cancelled this), but the canvas under it can
+   * have - a settle ease started before the press is still arriving - and the cell the user is
+   * looking at is the one under the finger at this instant.
+   */
+  private fireProLongPress = (): void => {
+    this.proLongPressTimeout = 0;
+    const pointer = this.stagePointer;
+    if (!pointer || !this.state.proView || this.state.isRecordingAudio) return;
+    const target = this.proTapTargetAt(pointer.x, pointer.y);
+    if (!target) return;
+    const rect = this.proCellScreenRect(target);
+    if (!rect) return;
+    this.proPressConsumed = this.callbacks.onProCellLongPress(target.column, target.number, rect);
   };
 
   /**
@@ -3541,8 +3703,26 @@ export class ComposerRenderer {
     while (pointer.samples[0].t < sampleMs - FLICK_WINDOW_MS) pointer.samples.shift();
     const motion = this.motion;
     const dragging = motion.kind === 'dragging' && motion.surface === 'stage';
+    // THE PRO VIEW'S GESTURE GATE, on the same slop and in EITHER axis: past it the press stops
+    // being a tap (a tap EDITS there) and the pending long press is off. Recorded even while the
+    // frame is locked, where the vertical half moves nothing - a press that visibly travelled is not
+    // a hold in either state. The Compressed View writes nothing here and keeps the horizontal-only
+    // test below, so a vertical wander still releases as the click it always did.
+    if (
+      this.state.proView &&
+      !pointer.moved &&
+      (Math.abs(e.globalX - pointer.x) > DRAG_SLOP_PX ||
+        Math.abs(e.globalY - pointer.y) > DRAG_SLOP_PX)
+    ) {
+      pointer.moved = true;
+      this.cancelProLongPress();
+    }
     if (!dragging) {
-      if (Math.abs(e.globalX - pointer.x) <= DRAG_SLOP_PX) return;
+      //UNLOCKED, either axis starts the drag: a straight-down pan has no horizontal component at all
+      //and must still take the canvas with it. Locked (and compressed), the test is the horizontal
+      //one it has always been.
+      if (this.proPanning() ? !pointer.moved : Math.abs(e.globalX - pointer.x) <= DRAG_SLOP_PX)
+        return;
       // THE ANCHOR IS TAKEN HERE, at the instant the drag actually starts, and not at the press.
       // The press is not the grab - the slop test above is - and whatever was already moving the
       // canvas keeps writing the position in between: a glide, or a wheel settle. Anchoring on the
@@ -3552,6 +3732,13 @@ export class ComposerRenderer {
       // (A Catch never gets here: its press already entered the drag, so `dragging` above is true
       // and the press's anchor stands - which is right, the canvas froze at exactly that value.)
       pointer.anchorPosition = this.scrollPosition;
+      //...and the CAMERA's anchor beside it, on the axis the unlocked Pro View just gained. A zone
+      //ease still running is the vertical counterpart of the glide above: the hand grabs what is on
+      //screen, so the ease is dropped here rather than fought for the length of the drag.
+      if (this.proPanning()) {
+        pointer.anchorCameraY = this.cameraY;
+        this.cameraEase = null;
+      }
     }
     const lastColumn = this.state.columns.length - 1;
     const raw = pointer.anchorPosition + (pointer.x - e.globalX) / this.columnSize.width;
@@ -3566,6 +3753,20 @@ export class ComposerRenderer {
     const position = this.snapManualPosition(clamped);
     if (dragging) motion.position = position;
     else this.enterMotion({ kind: 'dragging', surface: 'stage', position });
+    // THE VERTICAL HALF OF AN UNLOCKED DRAG (spec §7), and it is applied HERE rather than written
+    // into the motion for the frame to pick up: a camera move repaints the drawn window (see
+    // applyCameraY) instead of translating a container, so there is nothing for a frame to
+    // interpolate - and the browser already coalesces pointermoves to about one per frame. Clamped
+    // to the axis' own travel, which is what stops the pan at either end.
+    if (this.proPanning()) {
+      const target = clampCameraY({
+        axis: this.proAxis(),
+        rowHeight: this.proRowHeightPx(),
+        notesRegionHeight: this.height,
+        cameraY: pointer.anchorCameraY - (e.globalY - pointer.y),
+      });
+      if (target !== this.cameraY) this.applyCameraY(target);
+    }
     // With smooth scrolling off the position is already integral, so this floor is the identity.
     // What it does NOT do on its own is keep the mark and the canvas together: this call reaches
     // Svelte and comes back as an update, while the position written above reaches the screen on
@@ -3606,13 +3807,32 @@ export class ComposerRenderer {
     //stagePointer's `id`. It must not settle the drag under the finger still holding it, and it must
     //not take the click path below, which SOUNDS the column it lands on.
     if (this.stagePointer && e.pointerId !== this.stagePointer.id) return;
-    const release = this.stagePointer
-      ? { samples: this.stagePointer.samples, atMs: this.now(), mayCoast: true }
+    const pointer = this.stagePointer;
+    const release = pointer
+      ? { samples: pointer.samples, atMs: this.now(), mayCoast: true }
       : undefined;
     this.stagePointer = null;
+    this.cancelProLongPress();
+    const consumed = this.proPressConsumed;
+    this.proPressConsumed = false;
     const motion = this.motion;
-    if (motion.kind === 'dragging' && motion.surface === 'stage')
-      return this.settleStageDrag(release);
+    //WHAT THIS RELEASE MEANS, in one pure decision shared by both views - see stageReleaseIntent for
+    //each outcome and for why the Compressed View asks nothing of the two Pro View flags.
+    const intent = stageReleaseIntent({
+      proView: this.state.proView,
+      becameDrag: motion.kind === 'dragging' && motion.surface === 'stage',
+      pressed: pointer !== null,
+      moved: pointer?.moved ?? false,
+      longPressConsumed: consumed,
+    });
+    if (intent === 'settle-drag') return this.settleStageDrag(release);
+    if (intent === 'nothing') return;
+    if (intent === 'cell-tap') {
+      const target = this.proTapTargetAt(e.globalX, e.globalY);
+      //the dispatch itself is Composer.svelte's: this class resolved the cell and stops there
+      if (target) this.callbacks.onProCellTap(target.column, target.number);
+      return;
+    }
     // The column the pointer is actually OVER, inverted through the live scroll position rather
     // than derived from `selected` and a fixed slot. The two agree whenever the scroll is at
     // rest; during a glide the canvas sits a fraction of a column past `selected`'s start, and
@@ -3621,6 +3841,65 @@ export class ComposerRenderer {
     if (clicked === this.state.selected) return;
     this.callbacks.selectColumn(clamp(clicked, 0, this.state.columns.length - 1));
   };
+
+  /** Whether a stage drag pans the camera as well: the Pro View, unlocked, and nothing else. */
+  private proPanning(): boolean {
+    return this.state.proView && !this.state.viewLocked;
+  }
+
+  /**
+   * THE PRO VIEW'S HIT TEST, from a pointer's CANVAS coordinates to a (column, Note Number) cell -
+   * the two existing halves, joined by proTapTarget's rules about what counts as a miss.
+   *
+   * The x half is the Compressed View's own inverse of the container offset (columnAtCanvasX,
+   * floored: the playhead marks the START of the column it stands in). The y half is the axis'
+   * (numberAtY), taken in the NOTES REGION's own space - `globalY` is canvas space and the region
+   * starts below the mini-timeline strip in this view, which is the one conversion this class makes
+   * outside positionNotesRegion.
+   */
+  private proTapTargetAt(canvasX: number, canvasY: number): ProCellTarget | null {
+    const rowHeight = this.proRowHeightPx();
+    return proTapTarget({
+      x: canvasX,
+      stripWidth: proStripWidth(rowHeight),
+      column: Math.floor(this.columnAtCanvasX(canvasX)),
+      number: numberAtY({
+        axis: this.proAxis(),
+        y: canvasY - composerNotesRegionY(this.state.proView, this.timelineHeight),
+        cameraY: this.cameraY,
+        rowHeight,
+      }),
+      columnCount: this.state.columns.length,
+    });
+  }
+
+  /**
+   * WHERE A CELL IS ON SCREEN, in viewport coordinates - what the duration popover anchors to when
+   * there is no element to anchor to (spec §7).
+   *
+   * Read off the canvas ELEMENT's own rect and not off the window, so it is right inside whatever
+   * layout the composer is in; `autoDensity` keeps the canvas' CSS box the same px this class draws
+   * in, so the two coordinate systems differ by the element's origin alone. Taken at the instant the
+   * long press fires and never updated: the popover measures a keyboard key live (it can reflow),
+   * while a cell is painted pixels - if the canvas scrolls out from under it, the popover is stale
+   * rather than wrong, and the next thing that moves the selection dismisses it.
+   */
+  private proCellScreenRect(target: ProCellTarget): ScreenRect | null {
+    const canvas = this.notesApp?.canvas;
+    if (!canvas) return null;
+    const rowHeight = this.proRowHeightPx();
+    const bounds = canvas.getBoundingClientRect();
+    return {
+      x: bounds.left + this.containerX() + target.column * this.columnSize.width,
+      y:
+        bounds.top +
+        composerNotesRegionY(this.state.proView, this.timelineHeight) +
+        rowForNumber(this.proAxis(), target.number) * rowHeight -
+        this.cameraY,
+      width: this.columnSize.width,
+      height: rowHeight,
+    };
+  }
 
   /**
    * Where a stage drag comes to rest - and where a FLICK becomes a COAST.
@@ -3956,6 +4235,9 @@ export class ComposerRenderer {
       : undefined;
     this.stagePointer = null;
     this.timelinePointer = null;
+    //a gesture nothing else ended must not leave a hold counting down onto a canvas no finger is on
+    this.cancelProLongPress();
+    this.proPressConsumed = false;
     const motion = this.motion;
     if (motion.kind !== 'dragging') return;
     if (motion.surface === 'stage') this.settleStageDrag(stageRelease);
@@ -4673,6 +4955,8 @@ export class ComposerRenderer {
     //BEFORE stopMotionFrames, which defers to a running camera ease - the whole point of that
     //deferral is that a scroll settling must not strand the ease, and teardown is neither
     this.cameraEase = null;
+    //a hold counting down into a destroyed renderer would resolve a cell on a canvas that is gone
+    this.cancelProLongPress();
     //the labels are children of a stage container and go with the Application below; the
     //label-only Instruments are this class's own and are not
     this.proLabelInstruments.clear();
