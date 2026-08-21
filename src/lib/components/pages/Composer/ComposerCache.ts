@@ -14,6 +14,29 @@ interface ComposerCacheProps {
   height: number;
   margin: number;
   timelineHeight: number;
+  /**
+   * ONE CELL'S HEIGHT, and with it the size of every note icon this cache bakes. Defaults to the
+   * Compressed View's `height / perColumn` — the Song Grid's own row — and is passed explicitly by
+   * the Pro View, whose rows are `proViewGeometry.proRowHeight` (the region over `perColumn + 2`)
+   * because its axis is chromatic and framed rather than the game's 21/15-row layout.
+   *
+   * AN INPUT RATHER THAN A `proView` BRANCH INSIDE THE DRAWING: a cache instance is per view by
+   * construction (a mode flip remounts the whole renderer through Composer.svelte's `{#key}`, the
+   * same way a `columnsPerCanvas` change does), so the two views differ in what they ASK this class
+   * for and not in what it does with the answer.
+   */
+  noteHeight?: number;
+  /**
+   * THE HORIZONTAL RULES ON A COLUMN'S BACKGROUND, as y offsets in px. Defaults to the Song Grid's
+   * two group separators (at a third and two thirds of the column), which is what the Compressed
+   * View has always drawn.
+   *
+   * The Pro View passes an EMPTY LIST: those two rules divide the grid's 21/15 rows into the game's
+   * three note groups, and its axis has no such groups — the rows there are semitones, and what
+   * makes them readable (octave bands, the inert rows inside the Editable Zone) is drawn per frame
+   * over the background instead, because it moves with the camera and the zone.
+   */
+  columnLines?: number[];
   app: Application;
   colors: {
     accent: ColorInstance;
@@ -66,6 +89,8 @@ export class ComposerCache {
   margin: number;
   noteWidth: number;
   noteHeight: number;
+  /** The background's horizontal rules, in px from the column's top - see ComposerCacheProps. */
+  columnLines: number[];
   app: Application | null;
   colors: {
     accent: ColorInstance;
@@ -75,7 +100,16 @@ export class ComposerCache {
     bars: { color: number }[];
   };
 
-  constructor({ width, height, margin = 4, timelineHeight = 30, app, colors }: ComposerCacheProps) {
+  constructor({
+    width,
+    height,
+    margin = 4,
+    timelineHeight = 30,
+    noteHeight,
+    columnLines,
+    app,
+    colors,
+  }: ComposerCacheProps) {
     this.cache = {
       columns: [],
       notes: {},
@@ -89,7 +123,11 @@ export class ComposerCache {
     this.timelineHeight = timelineHeight;
     this.margin = margin;
     this.noteWidth = this.width;
-    this.noteHeight = this.height / NOTES_PER_COLUMN;
+    this.noteHeight = noteHeight ?? this.height / NOTES_PER_COLUMN;
+    //the Compressed View's own two rules, computed from the SONG GRID's row (not from noteHeight
+    //above, which the Pro View replaces) so the default is the expression this class has always used
+    this.columnLines =
+      columnLines ?? [1, 2].map((i) => (this.height / NOTES_PER_COLUMN) * horizontalLineBreak * i);
     this.colors = colors;
     this.app = app;
     this.generate();
@@ -306,13 +344,8 @@ export class ComposerCache {
     g.moveTo(this.width, 0)
       .lineTo(this.width, this.height)
       .stroke({ width: borderWidth, color: 0x333333 });
-    const linesMid: Array<[number, number, number, number]> = [];
-    for (let i = 1; i < 3; i++) {
-      const y = this.noteHeight * horizontalLineBreak * i;
-      linesMid.push([0, y, this.width, y]);
-    }
-    for (const [x1, y1, x2, y2] of linesMid) {
-      g.moveTo(x1, y1).lineTo(x2, y2);
+    for (const y of this.columnLines) {
+      g.moveTo(0, y).lineTo(this.width, y);
     }
     g.stroke({ width: 1, color: 0x333333 });
     if (!this.app) return;
