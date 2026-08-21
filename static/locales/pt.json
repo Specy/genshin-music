@@ -444,6 +444,7 @@
     "midi_access_unsupported": "MIDI não é suportado neste navegador",
     "midi_access_pending": "Aguardando acesso MIDI...",
     "midi_access_granted": "MIDI disponível!",
+    "enable_midi": "Clique para ativar o MIDI",
     "shortcuts": {
       "toggle_play": "Alternar reprodução",
       "next_column": "Próxima coluna",

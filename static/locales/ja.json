@@ -444,6 +444,7 @@
         "midi_access_unsupported": "このブラウザはMIDIをサポートしていません。",
         "midi_access_pending": "MIDIアクセス待機中...",
         "midi_access_granted": "MIDIが利用可能です！",
+        "enable_midi": "クリックしてMIDIを有効にする",
         "shortcuts": {
             "toggle_play": "再生/停止を切り替え",
             "next_column": "次の列",
