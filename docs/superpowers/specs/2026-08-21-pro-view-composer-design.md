@@ -9,7 +9,10 @@ Sections 6, 7 and 8 carry the notes implementation added to the design; everythi
 below is the spec as it was written, and was built as written — except where a bullet is
 marked USER REVISION, 2026-08-21, which is the first round of feedback on the shipped view
 (the framing rule in §2/§4, the keyboard overlay in §2/§8, the bottom band in §8, and the
-playhead variant and timeline band in §6). Each of those keeps the text it replaced.
+playhead variant and timeline band in §6), or USER REVISION, 2026-08-22, which is the
+second (the VERTICAL ZOOM, which the §2 scope fence used to forbid — §2/§4/§7; the song
+info giving its reserved row back and the page's 3.2px scroll overflow — §8). Each of those
+keeps the text it replaced.
 
 ## 1. Goal
 
@@ -36,8 +39,13 @@ song format does not change; a song opens identically in either view.
   `rowHeight = min(H / (zoneRows + 2), H / (perColumn + 2))`: the zone plus its two framing
   rows fills the region exactly, capped so a small instrument (a drum kit) keeps today's note
   size instead of ballooning. The row height is therefore a property of the current LAYER, in
-  both lock states — §4 has the formula and §6 what it costs the texture cache. Still no
-  vertical zoom: nothing the USER does changes a row's height.
+  both lock states — §4 has the formula and §6 what it costs the texture cache.
+  **AND THE USER'S OWN ZOOM MULTIPLIES IT** (USER REVISION, 2026-08-22 — was: _"Still no
+  vertical zoom: nothing the USER does changes a row's height."_). A trackpad or a touchscreen
+  offers a pinch and users reach for it; the fit above is what a row is WORTH by default, not a
+  ceiling on what it may be. `effectiveRowHeight = fittedRowHeight × zoom`, one multiplier on
+  everything the two terms decided, so a layer switch still re-fits underneath it and re-locking
+  still gives the fit back exactly (§4 for the formula and its clamp, §7 for the gestures).
 - **View Lock** (default locked): frame pinned to the current track's Editable Zone,
   centered, no vertical scrolling; wheel and drag keep today's exact meanings. Unlocked
   (button in the right CanvasTool column): drag pans 2D, wheel STAYS horizontal,
@@ -77,8 +85,12 @@ song format does not change; a song opens identically in either view.
   (§7's `dismiss-sheet`), and with it a hold opens no popover while the sheet is up. The
   sliver is also fatter, and stands on the song-info row (§8). A composer SHORTCUT
   (`toggle_keyboard`, default `KeyK`, rebindable like every other) raises and lowers it.
-- **Scope fence**: no accidental-true MIDI import, no note dragging/moving, no vertical
-  zoom, Compressed View untouched (centered playhead, bottom timeline, all behavior).
+- **Scope fence**: no accidental-true MIDI import, no note dragging/moving, Compressed View
+  untouched (centered playhead, bottom timeline, all behavior). (USER REVISION, 2026-08-22 —
+  was: _"no accidental-true MIDI import, no note dragging/moving, no vertical zoom, Compressed
+  View untouched…"_. The vertical zoom is a shipped feature of this view now — see the framing
+  bullet above and §7; the Compressed View half of the fence is unchanged and gains nothing,
+  not even a ctrl+wheel meaning.)
 
 ## 3. Current state being replaced (Pro-View-side only)
 
@@ -115,6 +127,23 @@ All in one new pure module `src/lib/components/pages/Composer/proViewGeometry.ts
   path (§6), debounced with it and never per frame; and the strip's width and label sizes,
   which derive from the row height, shrink with it (verified legible at genshin's Lyre,
   the tightest case either game has).
+  THE USER'S OWN ZOOM MULTIPLIES ALL OF IT (USER REVISION, 2026-08-22 — the formula above
+  was the whole of it):
+  `rowHeight = max(min(fit, 2), clampProZoom(zoom) × fit)` where `fit` is the min() above.
+  `PRO_ZOOM_MIN = 0.5 .. PRO_ZOOM_MAX = 3` is a documented pair — half a fit already shows
+  the WHOLE axis on both shipped games (there is nothing further out to go to) and 3× is a
+  row about a keyboard key's own height, an octave to the window — and
+  `PRO_MIN_ROW_HEIGHT_PX = 2` is a second, different guard: the clamp bounds the multiplier,
+  the floor keeps the RESULT drawable on a window where even the fit is thin. Stated against
+  the fit, so it can only ever stop a zoom-out and never inflate a row above what the region
+  fits. `zoom` is EPHEMERAL renderer state like the camera (no setting, no song field, 1 at
+  every mount), and every surface sized by a row follows because they all ask `proRowHeight`.
+  Two consequences beyond the three above, both handled by rules that already existed: a
+  zoomed-out axis can be SHORTER than the region, where `maxCameraY` collapses the travel to
+  0 and pins the axis to the region's top (the same answer an unlocked pan gets there); and
+  the camera is rescaled about the gesture's FOCAL POINT rather than the region's top edge —
+  `cameraY' = (cameraY + focalY) × (nextRowHeight / rowHeight) − focalY`, clamped through the
+  ordinary travel, so the row under the pointer or the pinch keeps its screen y.
 - **Camera**: `y(n) = r(n) * rowHeight − cameraY`. Locked:
   `cameraY = (r(zoneMax) + r(zoneMin) + 1) / 2 * rowHeight − notesRegionHeight / 2`,
   clamped to `[0, axisRows*rowHeight − notesRegionHeight]`. Unlocked: cameraY free within
@@ -208,6 +237,41 @@ scalar (read in ComposerCanvas.svelte's $effect object, per that file's dependen
 - **Unlocked**: pointer drags gain dy → cameraY (clamped); dx path unchanged;
   flick velocity measured horizontally only (release with vertical motion just stops);
   a Catch still never edits (existing rule).
+- **THE VERTICAL ZOOM** (USER REVISION, 2026-08-22 — this bullet is new; the fence in §2 said
+  "no vertical zoom" and the framing bullet said nothing the user does changes a row's height).
+  Two inputs, one meaning:
+  - **ctrl/meta + wheel on the canvas.** That is what every browser delivers for a TRACKPAD
+    PINCH, so it is the gesture and not a keyboard shortcut for one. `preventDefault` keeps the
+    browser's own page zoom off it — the wheel handler already prevented every wheel over this
+    canvas, so the Compressed View gains nothing here and loses nothing: a ctrl+wheel there is
+    still the horizontal scroll it has always been. A PLAIN wheel keeps its horizontal meaning in
+    both views. The multiplier is `exp(−deltaPx × 0.0025)`, exponential because zoom is a ratio:
+    a mouse notch (~100px) is ~1.28×, about seven notches end to end, while a trackpad's 1-10px
+    deltas move it a few percent each and read as continuous.
+  - **A two-finger pinch on touch.** A second stage pointer WAS a guard case (the composer has
+    one scroll position, so a second finger could only corrupt the first one's drag); it is a
+    gesture now. Starting one marks the first finger `moved`, so a pinch is never a drag, never a
+    tap and never an edit — including with the keyboard sheet up, where pinching is allowed and
+    dismisses nothing (only a settled tap does that, §2). A drag already under way settles at
+    once, and lifting either finger ends the whole gesture: the remaining finger is not handed
+    the drag back.
+  - **The zoom is anchored, and it UNLOCKS the view.** The row under the pointer (or under the
+    pinch's centre) keeps its screen y, §4 has the formula. Zooming is the user taking manual
+    control of the frame, so the padlock follows the gesture — once per gesture, not once per
+    event — and re-locking resets the multiplier to 1 and returns the layer's own fit. A layer
+    switch keeps working while zoomed: the FITTED base changes underneath the multiplier.
+  - **The clamp is `PRO_ZOOM_MIN = 0.5 .. PRO_ZOOM_MAX = 3`**, with a `PRO_MIN_ROW_HEIGHT_PX = 2`
+    floor under the result (§4 says why the two are different guards, and why the degenerate
+    axis-shorter-than-region case needs no new rule).
+  - **It costs one debounced texture rebuild per gesture.** The cell height is baked into the
+    ComposerCache and the only path that re-bakes it is the resize path a layer switch already
+    takes; every zoom event re-arms its 50ms debounce, so a continuous pinch rebuilds nothing
+    until the fingers stop. In between, each note sprite is SCALED to the live row height (a
+    no-op at every resting moment, since the texture IS that height) and the camera repaint that
+    a zoom does costs what one note edit costs.
+  - Wheel-zoom and pinch state are renderer-internal and ephemeral, like the camera: nothing is
+    persisted, nothing reaches the song, and a remount starts at 1×. The strip's labels follow
+    the effective row height and nothing else — the phone-width tiny-label caveat stands.
 - **The drag slop is EITHER-AXIS, and only in pro.** A press that travelled more than
   DRAG_SLOP_PX in x OR y stops being a tap and cancels the pending long press — recorded
   even while the frame is locked, where the vertical half moves nothing, because a press
@@ -300,6 +364,34 @@ scalar (read in ComposerCanvas.svelte's $effect object, per that file's dependen
     row (`height: 100%` inline in pro, since an inline `fit-content` is what a stylesheet
     cannot override), so the tempo changers at its foot reach the window's bottom edge instead
     of floating above a band of nothing.
+  - **THE BAND IS ONE ROW AGAIN — THE SONG INFO RESERVES NOTHING** (USER REVISION, 2026-08-22 —
+    replaces the two bullets directly above, which were: _"`--pro-song-info-height` (1.75rem) at
+    the very bottom: `.song-info-pro` is a full-width ROW there … The sheet's box stands ON the
+    info row (`bottom: var(--pro-song-info-height)`) … `composerCanvasGeometry` takes both off
+    the canvas' height (PRO_KEYBOARD_SLIVER_PX + PRO_SONG_INFO_PX in PRO_CANVAS_INSET_PX)"_).
+    Twenty-eight pixels of axis, and a sliver stopping 28px short of the window, spent on two
+    lines of read-only text was the wrong trade. `--pro-song-info-height` and `PRO_SONG_INFO_PX`
+    are GONE: the canvas' inset is the grid's own padding plus the sliver, and the sheet, its
+    sliver and its scrim stand at the window's true bottom edge again. `.song-info-pro` is an
+    absolutely-positioned OVERLAY at `bottom: 0` — the row shape (name and time side by side)
+    survives, so it covers one line of canvas rather than two, `.song-info div`'s text-shadow is
+    the contrast treatment it keeps, and it carries no `z-index`, so the sheet (6) and the sliver
+    (7) cover it. Being covered is accepted: nothing is edited through it.
+  - **AND THE PAGE STOPPED SCROLLING** (USER REVISION, 2026-08-22). The composer page overflowed
+    the window by 3.2px in the Pro View — `document.scrollingElement.scrollHeight` = `100vh + 3.2`
+    — on any window where the tool column's six rows want more height than the canvas row has
+    (measured at 1280×800 and at 850×420, both games; a 1600×1000 desktop had room and did not
+    show it). THE CULPRIT was the column's own cap, `max-height: calc(100vh - 0.4rem)`: the
+    composer grid's content box worked out by hand, and the hand-derived number counted the grid's
+    0.2rem padding at each end but NOT its 0.2rem row gap. The grid's `1fr` row took the capped
+    column as its automatic minimum, grew past the window, and grew the shell with it (`.app` is
+    stretched by `align-items`, `.theme-vars-root` is `min-height: 100%`, so both follow their
+    content). Three declarations replace it, and they only work together: `.composer-grid-pro`
+    STATES the height composerCanvasGeometry already assumed it had (`height: 100vh`), the
+    canvas' row cannot be grown by its content (`min-height: 0` on `.top-panel-composer`), and the
+    column is capped at that row (`max-height: 100%`) instead of at a restatement of the window.
+    No `overflow: hidden` anywhere: the row simply cannot exceed the window any more, and the five
+    `minmax(0, 8rem)` tool rows shrink toward the tempo slot exactly as phase E designed.
 - Mobile (`max-width: 1000px` block): same structure; the sliver/backdrop pattern is
   already a bottom-sheet idiom; verify the canvas vh math against the URL-bar caveats
   documented in composerCanvasGeometry.
