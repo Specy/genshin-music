@@ -2162,7 +2162,9 @@ function expectedCanvasStyle(): string {
  *    song is the canvas showing": `columnsOnScreen` below, and the `canvasWidth / 2 / columnWidth`
  *    half of the outline's x. Those describe the notes region, and scaling them by the inset too
  *    would make the outline claim a different set of columns than the canvas holds;
- *  - the background covers the rectangular strip in the timeline layer colour;
+ *  - the background covers the whole BAND - the canvas' full width, starting one left inset
+ *    before the strip's own origin - in the timeline layer colour, so the three DOM buttons stand
+ *    on it rather than on gaps in it;
  *  - a tools selection covers every selected cell, including the final one;
  *  - breakpoints are one timeline column wide with a three-pixel floor, at their columns' leading
  *    edges and clamped at the strip's right edge. Their opaque colour is the exact transformed
@@ -2193,8 +2195,11 @@ function expectedTimeline(context: Context, geometry: Geometry): PaintedScene['t
         }
     }
     const content: PaintedTimelineChild[] = [
+        //the BAND, which is the canvas' full width and not the strip's: the minimap and everything
+        //else in this container are inset by the DOM buttons' footprints, and the background runs
+        //under those buttons rather than leaving the clear colour showing in the gaps around them
         expectedGraphicsChild(0, 0, [
-            ['rect', 0, 0, stripWidth, timelineHeight],
+            ['rect', -TIMELINE_INSET_LEFT, 0, canvasWidth, timelineHeight],
             ['fill', {color: ThemeProvider.layer('primary', 0.1).rgb().rgbNumber()}],
         ]),
     ]
@@ -2341,7 +2346,7 @@ function expectedPlayhead(
 ): PaintedTimelineChild {
     const {canvasWidth, columnWidth, height} = geometry
     const centre = canvasWidth / 2
-    const ops = COMPOSER_PLAYHEAD_CONFIG.variant === 'rectangle'
+    const ops = COMPOSER_PLAYHEAD_CONFIG.variant.compressed === 'rectangle'
         ? [
             [
                 'roundRect',
@@ -3952,10 +3957,11 @@ describe('which surface a pointer on the merged canvas reaches', () => {
     it('the strip is drawn at the inset the buttons occupy', async () => {
         const harness = await mountStoppedComposer()
         try {
-            const {canvasWidth} = harness.geometry()
+            const {canvasWidth, stripWidth} = harness.geometry()
             const {strip, content} = harness.paintedScene().timeline
-            //the background rect is the strip's own extent - expectedTimeline compares it too,
-            //but only against a reference derived the same way, so this states it as a CLAIM
+            //THE BAND IS THE CANVAS' and the STRIP is what the buttons leave. The background rect
+            //starts one left inset BEFORE the container's origin and runs the whole canvas, so the
+            //band has no gaps under the three buttons; everything else here is strip-local.
             const background = content[0]
             expect(background.kind).toBe('graphics')
             const rect = background.ops.find(
@@ -3963,7 +3969,9 @@ describe('which surface a pointer on the merged canvas reaches', () => {
                     Array.isArray(op) && op[0] === 'rect'
             )
             expect(strip.x).toBe(TIMELINE_INSET_LEFT)
-            expect(rect?.[3]).toBe(canvasWidth - TIMELINE_INSET_LEFT - TIMELINE_INSET_RIGHT)
+            expect(rect?.[1]).toBe(-TIMELINE_INSET_LEFT)
+            expect(rect?.[3]).toBe(canvasWidth)
+            expect(stripWidth).toBe(canvasWidth - TIMELINE_INSET_LEFT - TIMELINE_INSET_RIGHT)
             //...AS A LITERAL, not only as the imported constants. Every other assertion in this file
             //is written in terms of TIMELINE_INSET_LEFT/RIGHT, which makes them all invariant under
             //the two being SWAPPED - a swap that would draw the strip from 41.6, underneath both
@@ -3972,7 +3980,7 @@ describe('which surface a pointer on the merged canvas reaches', () => {
             expect(strip.x).toBe(80)
             //toBeCloseTo and not toBe: 41.6 is not representable, so the subtraction lands a few
             //ulps off it. 10 decimals is far tighter than any real drift and far looser than that.
-            expect(canvasWidth - rect![3] - strip.x).toBeCloseTo(41.6, 10)
+            expect(canvasWidth - stripWidth - strip.x).toBeCloseTo(41.6, 10)
             //121.6px = 3 x 2.2rem of button + 5 x 0.2rem, from the controls' two horizontal padding
             //edges and its gaps: three spacers around the left pair, two around the right button.
             expect(TIMELINE_INSET_LEFT + TIMELINE_INSET_RIGHT).toBe(121.6)
@@ -4661,7 +4669,7 @@ describe('the smooth scroll', () => {
             //AT THE CENTRE, which is what makes it agree with the container offset: the offset puts
             //the start of the scrolled-to column here, so a line drawn anywhere else marks a column
             //the composer is not on while every other value in the scene stays right.
-            const expectedOps = COMPOSER_PLAYHEAD_CONFIG.variant === 'rectangle'
+            const expectedOps = COMPOSER_PLAYHEAD_CONFIG.variant.compressed === 'rectangle'
                 ? [
                     [
                         'roundRect',
@@ -7235,14 +7243,21 @@ describe('the momentum coast', () => {
 })
 
 describe('Playhead variant config', () => {
-    const originalVariant = COMPOSER_PLAYHEAD_CONFIG.variant
+    const originalVariant = {...COMPOSER_PLAYHEAD_CONFIG.variant}
 
     afterEach(() => {
-        COMPOSER_PLAYHEAD_CONFIG.variant = originalVariant
+        COMPOSER_PLAYHEAD_CONFIG.variant = {...originalVariant}
+    })
+
+    //ONE VARIANT PER VIEW (spec §6): the Compressed View ships the rectangle around the sounding
+    //column and the Pro View the line - see PART NINE for the pro side. These two drive the
+    //compressed harness through both settings, because the drawing itself is shared.
+    it('ships the rectangle in the Compressed View and the line in the Pro View', () => {
+        expect(COMPOSER_PLAYHEAD_CONFIG.variant).toEqual({compressed: 'rectangle', pro: 'line'})
     })
 
     it('draws a rectangle wrapping the whole column when variant is rectangle', async () => {
-        COMPOSER_PLAYHEAD_CONFIG.variant = 'rectangle'
+        COMPOSER_PLAYHEAD_CONFIG.variant = {...originalVariant, compressed: 'rectangle'}
         const harness = await mount()
         try {
             const {canvasWidth, columnWidth, height} = harness.geometry()
@@ -7258,7 +7273,7 @@ describe('Playhead variant config', () => {
     })
 
     it('draws a line with arrows when variant is line', async () => {
-        COMPOSER_PLAYHEAD_CONFIG.variant = 'line'
+        COMPOSER_PLAYHEAD_CONFIG.variant = {...originalVariant, compressed: 'line'}
         const harness = await mount()
         try {
             const {canvasWidth, height} = harness.geometry()

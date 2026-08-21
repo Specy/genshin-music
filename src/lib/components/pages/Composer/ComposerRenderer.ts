@@ -115,17 +115,25 @@ import { observeWebGLContext, pixiResolution } from '$cmp/pixiContextRecovery';
 export type ComposerPlayheadVariant = 'line' | 'rectangle';
 
 export interface ComposerPlayheadConfig {
-  variant: ComposerPlayheadVariant;
+  /** One variant per view - see the constant below. */
+  variant: Record<'compressed' | 'pro', ComposerPlayheadVariant>;
   borderRadius?: number;
 }
 
 /**
  * Source-level configuration for the composer playhead variant.
- * 'line' (default) draws a vertical bar with arrowheads at the centre.
- * 'rectangle' wraps the currently playing column from the centre to the column's right edge.
+ * 'line' draws a vertical bar with arrowheads at the canvas' top and bottom.
+ * 'rectangle' wraps the currently playing column from the playhead to the column's right edge.
+ *
+ * A VARIANT PER VIEW, stated the way PLAYHEAD_X_FRACTION states the two views' positions: the
+ * Compressed View's canvas is a readout of whole columns and the rectangle around the sounding one
+ * is what marks it, while the Pro View's is an editing surface a bar deep - a rectangle one column
+ * wide over 38 rows of chromatic axis reads as a box drawn around some notes rather than as a
+ * position. Both are here rather than one being a branch at the draw site, so changing either is
+ * changing this line and nothing else.
  */
 export const COMPOSER_PLAYHEAD_CONFIG: ComposerPlayheadConfig = {
-  variant: 'rectangle',
+  variant: { compressed: 'rectangle', pro: 'line' },
   borderRadius: 4,
 };
 
@@ -184,8 +192,6 @@ const PLAYHEAD_ARROW_LENGTH = 8;
  */
 const PLAYHEAD_X_FRACTION = { compressed: 0.5, pro: 0.25 } as const;
 
-/** The label's own inset from the strip's left edge, in px. */
-const PRO_STRIP_TEXT_PADDING = 4;
 /** A button label's size as a fraction of the row, and the px ceiling it is capped at. */
 const PRO_LABEL_FONT_ROWS = 0.42;
 const PRO_LABEL_FONT_MAX = 15;
@@ -2355,20 +2361,43 @@ export class ComposerRenderer {
       this.theme.pro.stripBackground,
     ].join('|');
     const rebuild = key !== this.proStripKey;
-    if (rebuild) {
-      this.proStripKey = key;
-      this.proStripBackground.clear();
-      this.proStripBackground.rect(0, 0, width, this.height);
-      this.proStripBackground.fill({
-        color: this.theme.pro.stripBackground,
-        alpha: PRO_STRIP_BACKGROUND_ALPHA,
-      });
-      //...and an edge, so the strip reads as a strip rather than as a column whose notes went
-      //missing: its backing is a layer of the primary colour, which on most themes is close to what
-      //the empty canvas beside it already is
-      this.proStripBackground.rect(width - 1, 0, 1, this.height);
-      this.proStripBackground.fill({ color: this.theme.pro.shade, alpha: 0.25 });
+    if (rebuild) this.proStripKey = key;
+    //THE BACKING IS REDRAWN EVERY TIME and the LABELS are not, which is the split this method
+    //exists to make: setting a pixi Text's string or style rasterises it, while these are rects the
+    //GPU re-uploads for nothing. They have to be redrawn per camera move, because half of what they
+    //draw is per ROW (see below) and rows slide continuously under a camera ease.
+    this.proStripBackground.clear();
+    this.proStripBackground.rect(0, 0, width, this.height);
+    this.proStripBackground.fill({
+      color: this.theme.pro.stripBackground,
+      alpha: PRO_STRIP_BACKGROUND_ALPHA,
+    });
+    //THE STRIP IS STRIPED LIKE THE CANVAS IS. A row that maps to no button is inert on the grid and
+    //marked there (paintProRowBands' DAW black-key pattern); left uniform here, the strip was the
+    //one place on the canvas where a key row and a row you cannot play looked alike - only the
+    //label's own faintness told them apart, at 10px. Same colour and same alpha as the grid's inert
+    //rows, so the two halves of a row read as one band.
+    //
+    //`isAddable` and not `numberToButton`: it is the zone's own Set, so this is a lookup per
+    //visible row rather than a table walk, and it answers for the rows OUTSIDE the zone too - which
+    //map to no button either, and which the canvas beside them dims wholesale.
+    const zone = this.proZone;
+    let striped = false;
+    if (zone) {
+      for (let row = first; row <= last; row++) {
+        if (isAddable(zone, numberForRow(axis, row))) continue;
+        this.proStripBackground.rect(0, row * rowHeight - this.cameraY, width, rowHeight);
+        striped = true;
+      }
     }
+    if (striped) {
+      this.proStripBackground.fill({ color: this.theme.pro.shade, alpha: PRO_INERT_ROW_ALPHA });
+    }
+    //...and an edge, so the strip reads as a strip rather than as a column whose notes went
+    //missing: its backing is a layer of the primary colour, which on most themes is close to what
+    //the empty canvas beside it already is
+    this.proStripBackground.rect(width - 1, 0, 1, this.height);
+    this.proStripBackground.fill({ color: this.theme.pro.shade, alpha: 0.25 });
     const noteText = this.proNoteText(name, pitch);
     for (let row = first; row <= last; row++) {
       const number = numberForRow(axis, row);
@@ -2381,7 +2410,13 @@ export class ComposerRenderer {
         label.alpha = resolved.faint ? PRO_FAINT_LABEL_ALPHA : 1;
       }
       const centre = (row + 0.5) * rowHeight - this.cameraY;
-      label.x = PRO_STRIP_TEXT_PADDING;
+      //CENTRED IN THE STRIP, both ways (the anchor below is what makes this the label's middle and
+      //not its left edge). A left-aligned label sat against the strip's padding, so a one-character
+      //key label ("Q") and a four-character pitch name ("C♯4") started at the same x and ended
+      //nowhere near each other - a ragged right edge down a column of rows that are otherwise
+      //identical. The strip's width is what the labels are measured against, so centring is the
+      //only alignment that does not depend on which wording the user picked.
+      label.x = width / 2;
       label.y = centre;
       //a row whose LABEL no longer fits inside the region keeps its slot and stops being drawn (see
       //the pool rule in this method's block). The test is the glyph's own box and not the row's
@@ -2412,9 +2447,9 @@ export class ComposerRenderer {
       text: '',
       style: { fontFamily: 'Arial, Helvetica, sans-serif', fontSize: 12, fill: 0xffffff },
     });
-    //anchored at its own vertical middle, so a label sits on its row's centre line whatever the row
-    //height is, and left-aligned against the strip's padding
-    label.anchor.set(0, 0.5);
+    //anchored at its own middle in BOTH axes, so a label sits on its row's centre line whatever the
+    //row height is and on the strip's own centre line whatever the wording is (see syncProStrip)
+    label.anchor.set(0.5, 0.5);
     label.eventMode = 'none';
     this.proStripLabels.push(label);
     this.proStripContainer.addChild(label);
@@ -2561,7 +2596,9 @@ export class ComposerRenderer {
     const centre = this.playheadX();
     const bottom = this.height;
     this.playheadGraphics.clear();
-    if (COMPOSER_PLAYHEAD_CONFIG.variant === 'rectangle') {
+    //the view's own variant, read from the pair the way playheadX() reads its fraction
+    const variant = COMPOSER_PLAYHEAD_CONFIG.variant[this.state.proView ? 'pro' : 'compressed'];
+    if (variant === 'rectangle') {
       const strokeWidth = PLAYHEAD_WIDTH;
       const halfStroke = strokeWidth / 2;
       const radius = COMPOSER_PLAYHEAD_CONFIG.borderRadius ?? 4;
@@ -4933,7 +4970,15 @@ export class ComposerRenderer {
     // recalculateCacheAndSizes' 50ms debounce after every mount - draw() runs before then, from the
     // first update() - and the band showed the Application's clear colour instead.
     const background = new Graphics();
-    background.rect(0, 0, this.stripWidth(), this.timelineHeight);
+    // THE WHOLE BAND AND NOT JUST THE STRIP. Everything else in this container is written in
+    // strip-local coordinates - `0..stripWidth()`, inside the two DOM button footprints - but the
+    // BAND is the canvas' full width, and drawing the background only where the minimap goes left
+    // the two ends showing the stage's clear colour through the gaps around those buttons. Stated
+    // as the inset in negative x rather than by moving the container, so every other coordinate in
+    // this method (and the hitarea, and the viewport clip) keeps meaning what it meant. Both views:
+    // the buttons are opaque and the same colour as the band, so the Compressed View gains this in
+    // the few px of margin around them and nowhere else.
+    background.rect(-TIMELINE_INSET_LEFT, 0, this.width, this.timelineHeight);
     background.fill({ color: this.theme.timeline.hexNumber });
     this.timelineBackground = background;
     if (this.timelineMinimapSprite) background.addChild(this.timelineMinimapSprite);
