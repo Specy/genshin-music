@@ -84,7 +84,7 @@ All in one new pure module `src/lib/components/pages/Composer/proViewGeometry.ts
   the same clamp. Both lock transitions and layer switches ease cameraY (reuse the
   existing ease timing).
 - **Editable Zone** for the current layer: `offset = basepointOffset(effectiveTrackPitch
-  (instrument, songPitch))`; `zone = {t + offset : t ∈ getSoundingTable(name)}`;
+(instrument, songPitch))`; `zone = {t + offset : t ∈ getSoundingTable(name)}`;
   lines at `max(zone)` (top) and `min(zone)` (bottom); addable rows are exactly `zone`'s
   rows; `numberToButton(name, pitch, n)` answers taps (−1 ⇒ inert or strand-delete).
 - **Playhead**: `playheadX = width * 0.25` in Pro View (0.5 in Compressed); the
@@ -163,27 +163,26 @@ scalar (read in ComposerCanvas.svelte's $effect object, per that file's dependen
   2. own-layer note at (column, number) → remove (stranded included — this is delete);
   3. `numberToButton ≥ 0` → toggle add via the shared path;
   4. otherwise inert.
-  Composer.svelte extracts the core of `toggleNoteImmediate` into a
+- **The shared path**: Composer.svelte extracts the core of `toggleNoteImmediate` into a
   `toggleNoteInColumn(columnIndex, button)` both the keyboard press and the tap call:
   same preview sound, same history push, same playback-state behavior. Canvas edits do
   NOT move `song.selected`.
-  THREE THINGS THE BUILT DISPATCH SETTLED that the sketch above did not:
-  1. **A cell tap requires a press THIS CANVAS recorded.** pixi hit-tests a page-wide
-     pointerup against the canvas by coordinate, so a release over the canvas that STARTED
-     on a DOM element above it still arrives at the stage handler — the sheet's backdrop
-     div does not swallow releases by covering the canvas. In the Compressed View that
-     release has always selected a column and still does; in the Pro View it would have
-     been an EDIT, so the pro branch also asks that a press was recorded here (found and
-     fixed in phase D).
-  2. **The undo snapshot is taken at the canvas dispatch site only.** `addToHistory` is
-     the tools panel's compound entry and the composer keyboard has never pushed one for a
-     plain note toggle; moving the push into the shared path would have changed what a
-     keyboard press does. So canvas gestures are undoable, keyboard toggles are unchanged,
-     and an inert tap pushes nothing.
-  3. **A tap on a cell covered by an own-layer span is inert WITHOUT sound.** The keyboard
-     previews the note on a covered press (it is a performance as well as an edit); a
-     canvas tap is only an edit, so the covered case returns before the preview rather
-     than playing a note it will not write.
+- **A cell tap requires a press THIS CANVAS recorded** (as built). pixi hit-tests a
+  page-wide pointerup against the canvas by coordinate, so a release over the canvas that
+  STARTED on a DOM element above it still arrives at the stage handler — the sheet's
+  backdrop div does not swallow releases by covering the canvas. In the Compressed View
+  that release has always selected a column and still does; in the Pro View it would have
+  been an EDIT, so the pro branch also asks that a press was recorded here (found and
+  fixed in phase D).
+- **The undo snapshot is taken at the canvas dispatch site only** (as built).
+  `addToHistory` is the tools panel's compound entry and the composer keyboard has never
+  pushed one for a plain note toggle; moving the push into the shared path would have
+  changed what a keyboard press does. So canvas gestures are undoable, keyboard toggles
+  are unchanged, and an inert tap pushes nothing.
+- **A tap on a cell covered by an own-layer span is inert WITHOUT sound** (as built). The
+  keyboard previews the note on a covered press (it is a performance as well as an edit);
+  a canvas tap is only an edit, so the covered case returns before the preview rather than
+  playing a note it will not write.
 - **Long-press** (same threshold the keyboard uses) on an own-layer note →
   `onCellLongPress(column, number, screenRect)` → ComposerDurationPopover, which gains a
   virtual-rect anchor beside its HTMLElement one.
