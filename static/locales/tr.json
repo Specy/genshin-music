@@ -609,6 +609,7 @@
         "use_song_pitch": "Şarkı akordunu kullan",
         "use_song_reverb": "Şarkı yankısını kullan",
         "note_icon": "Nota simgesi",
+        "solo": "Solo",
         "volume": "Ses seviyesi",
         "volume_high_warning": "Eğer sesde bozulma duyarsan ses seviyesini kıs",
         "move_down": "Aşağı kaydır",

@@ -609,6 +609,7 @@
         "use_song_pitch": "Use song pitch",
         "use_song_reverb": "Use song reverb",
         "note_icon": "Note icon",
+        "solo": "Соло",
         "volume": "Volume",
         "volume_high_warning": "If you hear distortion, reduce the volume",
         "move_down": "Move down",

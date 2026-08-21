@@ -43,7 +43,12 @@
   import { VsrgSong } from '$core/Songs/VsrgSong.svelte';
   import { Song, type SerializedSong } from '$core/Songs/Song.svelte';
   import { NoteLayer } from '$core/Songs/Layer';
-  import type { ColumnNote, InstrumentData, NoteColumn } from '$core/Songs/SongClasses';
+  import {
+    isTrackAudible,
+    type ColumnNote,
+    type InstrumentData,
+    type NoteColumn,
+  } from '$core/Songs/SongClasses';
   import type { SettingUpdate, SettingVolumeUpdate } from '$core/types/SettingsPropriety';
   import type { ComposerSettingsDataType } from '$core/BaseSettings';
   import { MIDIProvider, type MIDIEvent } from '$lib/providers/MIDIProvider';
@@ -654,7 +659,9 @@
   ) {
     const instrument = layers[layer];
     if (!instrument) return;
-    if (song.instruments[layer].muted) return;
+    //one gate for both callers, so a live preview on a layer outside the solo set is as silent as
+    //one on a muted layer - the rule belongs to the track, not to the path the sound came from
+    if (!isTrackAudible(song.instruments, layer)) return;
     const pitch = song.instruments[layer].pitch || song.pitch;
     if (instrument.getNoteByNumber(number, pitch) === null) return;
     if (durationMs !== undefined && instrument.supportsSustain) {
@@ -677,7 +684,7 @@
   function playHeldSound(layer: number, number: number) {
     const instrument = layers[layer];
     if (!instrument) return;
-    if (song.instruments[layer].muted) return;
+    if (!isTrackAudible(song.instruments, layer)) return;
     const pitch = song.instruments[layer].pitch || song.pitch;
     if (instrument.getNoteByNumber(number, pitch) === null) return;
     instrument.pressNote(number, pitch);

@@ -2798,11 +2798,26 @@ select {
   background-color: rgba(var(--composer-secondary-layer-rgb), 0.2);
 }
 
-.instrument-button-selected {
+/* An unselected row that carries the solo bar, and only that row: the selected one below is
+   taller anyway because it always shows the bar. Declared first so the selected height wins
+   when a row is both. */
+.instrument-button-with-solo {
   height: 4.2rem;
   min-height: 4.2rem;
+}
+
+.instrument-button-selected {
+  height: 5.4rem;
+  min-height: 5.4rem;
   background-color: var(--composer-main-layer);
   color: var(--composer-main-layer-text);
+}
+
+/* The dim cue for a track outside the solo set — the selected row included, since it is just as
+   silent as the rest and the panel stays honest about that. Opacity on the whole row, so the
+   mute/hidden icons dim WITH it rather than disappearing. */
+.instrument-button-outside-solo {
+  opacity: 0.55;
 }
 
 .instrument-button-selected .app-button {
@@ -2816,11 +2831,23 @@ select {
   grid-template-columns: 1fr 1fr;
 }
 
+/* One resting surface for the gear, the eye and the solo bar alike — a translucent black rather
+   than a theme colour because the row underneath is either the composer layer colour (selected)
+   or the panel's own, and each row's inherited text colour has to keep reading over it.
+   `.app-button.active` then paints all three the accent pair when their state is on. */
 .instrument-settings .app-button {
   padding: 0.1rem;
-  background-color: transparent;
+  background-color: rgba(0, 0, 0, 0.16);
   min-width: unset;
   flex: 1;
+}
+
+/* The bar is a row of its own under the gear|eye pair, and the only child on an unselected
+   soloed row — 1 / -1 spans the grid in both cases. */
+.instrument-solo-button {
+  grid-column: 1 / -1;
+  margin-top: 0.15rem;
+  font-size: 0.75rem;
 }
 
 .floating-instrument-settings {

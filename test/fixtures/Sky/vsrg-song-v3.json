@@ -25,6 +25,7 @@
           "icon": "circle",
           "alias": "lead",
           "muted": false,
+          "solo": false,
           "reverbOverride": null
         },
         "hitObjects": [
@@ -82,6 +83,7 @@
           "icon": "circle",
           "alias": "lead",
           "muted": false,
+          "solo": false,
           "reverbOverride": null
         },
         "hitObjects": [
@@ -139,6 +141,7 @@
           "icon": "circle",
           "alias": "lead",
           "muted": false,
+          "solo": false,
           "reverbOverride": null
         },
         "hitObjects": [
@@ -196,6 +199,7 @@
           "icon": "circle",
           "alias": "lead",
           "muted": false,
+          "solo": false,
           "reverbOverride": null
         },
         "hitObjects": [
