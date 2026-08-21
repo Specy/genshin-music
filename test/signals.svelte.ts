@@ -72,6 +72,22 @@ export function flushEffects(): Promise<void> {
 }
 
 /**
+ * A deep `$state` object to hand `mount()` as its props, so a test can MUTATE one of them and watch
+ * what the component does about it. Remounting with the other value proves nothing about a CHANGE -
+ * it compares two independent first paints, which is exactly what a component that repaints
+ * everything and one that repaints nothing both pass.
+ *
+ * Svelte proxies plain objects and arrays only, so the class instances inside such a props object
+ * (an Instrument, a NoteColumn, a Set) go through untouched and stay the very objects the test
+ * built.
+ */
+export function reactiveProps<T extends object>(props: T): T {
+    //via a variable, not `return $state(props)`: a rune may only initialize a declaration
+    let reactive = $state(props)
+    return reactive
+}
+
+/**
  * A deep `$state` array - i.e. a Svelte Proxy. Exists so test/serializePlain.test.ts can prove
  * assertNoReactiveProxies() actually fires on the thing it exists to catch; a guard nobody has
  * seen fail is indistinguishable from one that never fires.

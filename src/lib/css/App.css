@@ -2410,8 +2410,15 @@ select {
   margin: 0;
 }
 
+/* The floor is what keeps this column usable on a laptop: 4vw is under 3.5rem on every viewport
+   narrower than 1400px, which is where the icons start running out of room. THE CANVAS IS THIS
+   COLUMN'S COMPLEMENT, so the floor belongs to both sides or the canvas slides under the column
+   exactly where it engages - composerCanvasGeometry states the same max()
+   (DESKTOP_TOOL_COLUMN_MIN_REM), and test/composerCanvasCss.test.ts reads this declaration to hold
+   the two together. Below the composer's mobile breakpoint the media block's `width: 100%` rules
+   instead, and the desktop formula is already scoped away from there. */
 .tool {
-  width: 4vw;
+  width: max(4vw, 3.5rem);
 }
 
 .tool-icon {
@@ -2585,6 +2592,18 @@ select {
   opacity: 1;
   --backdrop-amount: 3px;
   animation: delayBackdrop calc(0.4s * 1.2) forwards;
+}
+
+/* PRO VIEW ONLY: there the canvas this panel floats over is the whole window rather than a card in
+   the middle of the page, so the rows it covers are the ones being edited - the panel lets a little
+   of them through instead of hiding them outright, and eases off the backdrop blur to match.
+   A MODIFIER ON THE PANEL ITSELF and not `.composer-grid-pro .tools-visible`: ComposerTools is a
+   SIBLING of `.composer-grid` (as `.song-info-pro` is), so no descendant selector can reach it -
+   ComposerTools.svelte takes `proView` as a prop for exactly this. After `.tools-visible`, whose
+   values it overrides at equal specificity. */
+.tools-visible-pro {
+  opacity: 0.8;
+  --backdrop-amount: 2px;
 }
 
 .tempo-changers-wrapper {

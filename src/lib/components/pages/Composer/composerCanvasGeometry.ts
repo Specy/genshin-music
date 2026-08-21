@@ -116,14 +116,34 @@ export function isComposerDesktopWidth(bodyWidth: number): boolean {
  *   `.composer-left-control`      6.2rem
  *   `.composer-grid` gap          0.2rem, between the left control and the canvas
  *   `.buttons-composer-wrapper-right` margin-left 0.2rem
- * ...and the ONE non-fixed thing, `.tool`'s `width: 4vw`, is the vw term: the canvas gets what is
- * left of the viewport, `100vw - 4vw`.
+ * ...and the ONE non-fixed thing, `.tool`'s `width: max(4vw, 3.5rem)`: the canvas gets what is left
+ * of the viewport, `100vw - max(4vw, 3.5rem)`.
+ *
+ * IT IS A max() AND NOT A PLAIN `96vw` (user addition 2026-08-22) because 4vw falls under 3.5rem on
+ * every viewport narrower than 1400px - which is most laptops - and the tool column has to stay
+ * wide enough for its icons. The canvas is the column's complement, so the floor belongs to both
+ * sides or the canvas slides under the column exactly where it engages.
  *
  * test/composerCanvasCss.test.ts reads all six declarations out of the stylesheet, so this list
  * cannot drift away from what the browser actually lays out.
  */
 const DESKTOP_TOOL_COLUMN_VW = 4;
-const DESKTOP_CANVAS_WIDTH_VW = 100 - DESKTOP_TOOL_COLUMN_VW;
+/** ...and the floor under it, `.tool`'s own `3.5rem` in src/lib/css/App.css. */
+const DESKTOP_TOOL_COLUMN_MIN_REM = 3.5;
+
+/**
+ * The tool column's width at a given viewport width, which is the term the canvas is the window
+ * less. `max()`, unlike nearestEven, IS reproducible in CSS - so the string form below states the
+ * same choice rather than approximating it, and the two agree on both sides of the 1400px viewport
+ * where the floor takes over.
+ */
+function desktopToolColumnWidth(bodyWidth: number): number {
+  return Math.max(
+    bodyWidth * (DESKTOP_TOOL_COLUMN_VW / 100),
+    DESKTOP_TOOL_COLUMN_MIN_REM * ROOT_FONT_SIZE
+  );
+}
+
 /**
  * THE GAP BETWEEN THE PINNED SIDEBAR AND THE COMPOSER, on top of `--menu-size`: `.composer-grid`'s
  * desktop `margin-left` is `calc(var(--menu-size) + 0.1rem)` and this is that `0.1rem`. It comes
@@ -316,7 +336,7 @@ export function composerCanvasSize(input: {
   const proView = Boolean(input.proView) && !input.inPreview;
   let width = nearestEven(
     fillsWindow
-      ? input.bodyWidth * (DESKTOP_CANVAS_WIDTH_VW / 100) - DESKTOP_CANVAS_INSET_PX
+      ? input.bodyWidth - desktopToolColumnWidth(input.bodyWidth) - DESKTOP_CANVAS_INSET_PX
       : input.bodyWidth * (CANVAS_WIDTH_VW / 100) - CANVAS_WIDTH_INSET_PX
   );
   let height: number;
@@ -416,7 +436,11 @@ export function composerCanvasCssSize(input: {
   const band = composerCanvasElementHeight(0, timelineHeight);
   return {
     mobileWidth: `calc(${CANVAS_WIDTH_VW}vw - ${CANVAS_WIDTH_INSET_PX}px)`,
-    desktopWidth: `calc(${DESKTOP_CANVAS_WIDTH_VW}vw - ${DESKTOP_CANVAS_INSET_PX}px)`,
+    //`3.5rem` and not the 56px it comes to at ROOT_FONT_SIZE: this term IS `.tool`'s own
+    //declaration restated, so the placeholder follows the column a browser actually lays out. The
+    //fixed inset beside it cannot do the same - it is a sum of six declarations, printed rounded -
+    //which is exactly the drift ROOT_FONT_SIZE above already states and accepts.
+    desktopWidth: `calc(100vw - max(${DESKTOP_TOOL_COLUMN_VW}vw, ${DESKTOP_TOOL_COLUMN_MIN_REM}rem) - ${DESKTOP_CANVAS_INSET_PX}px)`,
     //THE PRO HEIGHT IS proNotesRegionHeight + band, with `max` and `-` swapped so the whole thing
     //is one CSS expression: `max(F, 100vh - I - B) + B` is `max(F + B, 100vh - I)`. The floor is
     //reproduced here (unlike nearestEven) because `max()` is supported everywhere `calc()` is.

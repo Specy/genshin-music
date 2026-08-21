@@ -137,9 +137,17 @@ type CssToken =
     | {type: '(' | ')' | ',' | '+' | '-' | '*' | '/'}
 
 /**
+ * THE ROOT FONT SIZE `rem` IS EVALUATED AT HERE, which is composerCanvasGeometry's own assumed one
+ * - see the comment on its ROOT_FONT_SIZE for why 16 holds and what it costs when a user's browser
+ * says otherwise. Restated rather than imported, like every other formula in this file.
+ */
+const ROOT_FONT_SIZE = 16
+
+/**
  * A DELIBERATELY TINY CSS VALUE GRAMMAR: `calc()`, `max()`, `min()`, `var()`, `+ - * /`, and the
- * units px / vw / vh / unitless. Anything else throws, so a change to the SHAPE of the declarations
- * this file reads fails the parse instead of quietly evaluating to something plausible.
+ * units px / rem / vw / vh / unitless. Anything else throws, so a change to the SHAPE of the
+ * declarations this file reads fails the parse instead of quietly evaluating to something
+ * plausible.
  *
  * `-` and `+` are always binary operators and never signs, which is what CSS `calc()` itself
  * requires (they must be surrounded by whitespace); no expression here has a negative literal.
@@ -193,6 +201,7 @@ function tokenize(source: string): CssToken[] {
  */
 function toPx(token: {value: number, unit: string}, context: CssContext): number {
     if (token.unit === '' || token.unit === 'px') return token.value
+    if (token.unit === 'rem') return token.value * ROOT_FONT_SIZE
     if (token.unit === 'vw') return context.viewportWidth * (token.value / 100)
     if (token.unit === 'vh') return context.viewportHeight * (token.value / 100)
     throw new Error(`unsupported unit \`${token.unit}\``)
@@ -369,10 +378,15 @@ describe('the composer canvas placeholder and the size the renderer computes', (
                     //THE FORMULA ITSELF, restated here rather than imported, so that changing 0.85
                     //or 0.45 in composerCanvasGeometry fails instead of moving both sides together.
                     //Above the breakpoint the canvas FILLS THE WINDOW - `100vw` less the `.tool`
-                    //column's own `4vw` and the 177.6px of fixed chrome the dedicated test below
-                    //reads out of App.css - instead of being a `85vw` card centred in it.
+                    //column's own `max(4vw, 3.5rem)` and the 177.6px of fixed chrome the dedicated
+                    //test below reads out of App.css - instead of being a `85vw` card centred in it.
+                    //The floor is not decoration in these rows: it is the larger term at 1280 and
+                    //1001, and the vw one at 1440 and above, so both branches are exercised here.
+                    const toolColumn = Math.max(viewport.width * 0.04, 3.5 * 16)
                     expect(evaluateCss(context.vars['--composer-canvas-width'], context)).toBeCloseTo(
-                        isDesktop ? viewport.width * 0.96 - 177.6 : viewport.width * 0.85 - 45,
+                        isDesktop
+                            ? viewport.width - toolColumn - 177.6
+                            : viewport.width * 0.85 - 45,
                         6
                     )
                     expect(
@@ -892,10 +906,12 @@ describe('the desktop layout the canvas fills, and the chrome it fills around', 
             '.buttons-composer-wrapper,\n.buttons-composer-wrapper-right'
         )
         expect(rightButtons.get('margin-left')).toBe('0.2rem')
-        //...and the ONE non-fixed term, which is why the desktop width is 96vw and not 100vw.
+        //...and the ONE non-fixed term, which is why the desktop width is the window less a max()
+        //rather than a plain `96vw`: 4vw is under the 3.5rem floor on every viewport narrower than
+        //1400px, and the canvas is this column's complement on both sides of that.
         //`mustDeclare` skips the `.tool-slim, .tool` rule that shares this selector and carries
         //only the shape/colour the two buttons have in common.
-        expect(declarationsOf('.tool', 'width').get('width')).toBe('4vw')
+        expect(declarationsOf('.tool', 'width').get('width')).toBe('max(4vw, 3.5rem)')
         //...and the gap between the sidebar and the composer, the one term of the sum that is not a
         //pre-existing width but a deliberate piece of spacing (asserted in full above)
         expect(DESKTOP).toContain('+ 0.1rem)')
