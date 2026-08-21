@@ -148,8 +148,8 @@ const DESKTOP_CANVAS_INSET_PX =
   ) / 1000;
 
 /**
- * THE LOWERED KEYBOARD SHEET'S SLIVER, in px: `.composer-grid-pro`'s `--pro-sliver-height: 1.5rem`
- * in src/lib/css/App.css, read back by test/composerCanvasCss.test.ts the way the timeline buttons'
+ * THE LOWERED KEYBOARD SHEET'S SLIVER, in px: `:root`'s `--pro-sliver-height: 2.5rem` in
+ * src/lib/css/App.css, read back by test/composerCanvasCss.test.ts the way the timeline buttons'
  * rem values are.
  *
  * It is a CANVAS constant and not merely a keyboard one because the Pro View canvas stops ABOVE it.
@@ -157,16 +157,32 @@ const DESKTOP_CANVAS_INSET_PX =
  * run to the window's bottom would keep its lowest rows permanently under the sliver - and those
  * rows are real, addressable Note Numbers there, not the empty tail the Compressed View's 45vh card
  * has below it.
+ *
+ * 2.5rem and not the 1.5rem it shipped as: a sliver is the ONLY thing saying the keyboard is still
+ * there and where to tap for it, and at 24px a three-row keyboard showed a sixteenth of its top row.
  */
-export const PRO_KEYBOARD_SLIVER_PX = 1.5 * ROOT_FONT_SIZE;
+export const PRO_KEYBOARD_SLIVER_PX = 2.5 * ROOT_FONT_SIZE;
+
+/**
+ * THE SONG-INFO ROW at the very bottom of the Pro View's window: `:root`'s
+ * `--pro-song-info-height: 1.75rem`, and the second half of the band the canvas stops above.
+ *
+ * `.song-info` is an overlay floating over the page's bottom-left corner everywhere else in the
+ * app. In this view that corner is the CANVAS - the name and the time stood on the lowest rows of
+ * the axis and on the row-label strip - so here it becomes a row of its own with the sheet standing
+ * on top of it (App.css's `.song-info-pro`), and the canvas gives up the height.
+ */
+export const PRO_SONG_INFO_PX = 1.75 * ROOT_FONT_SIZE;
 
 /**
  * WHAT THE PRO VIEW'S CANVAS ELEMENT IS THE VIEWPORT LESS, in px - the vertical counterpart of
  * DESKTOP_CANVAS_INSET_PX:
  *   `.composer-grid` padding      0.2rem at the top and 0.2rem at the bottom
  *   the sliver band               PRO_KEYBOARD_SLIVER_PX
+ *   the song-info row             PRO_SONG_INFO_PX
  * ...so the canvas starts 3.2px below the window's top edge and stops 3.2px above the sliver, with
- * that trailing 3.2px being the grid's own bottom padding rather than a gap invented here.
+ * that trailing 3.2px being the grid's own bottom padding rather than a gap invented here, and the
+ * sliver in turn standing on the song-info row at the window's own edge.
  *
  * IT ASSUMES `.composer-grid` IS THE WINDOW'S HEIGHT, which it is on the composer route: `.app` is
  * an `align-items: stretch` flex row inside the full-height shell, so the grid's border box is
@@ -180,7 +196,8 @@ export const PRO_KEYBOARD_SLIVER_PX = 1.5 * ROOT_FONT_SIZE;
 const PRO_CANVAS_INSET_PX =
   Math.round(
     (0.2 * ROOT_FONT_SIZE * 2 + //.composer-grid padding, top and bottom
-      PRO_KEYBOARD_SLIVER_PX) * //the band the lowered keyboard sheet stands in
+      PRO_KEYBOARD_SLIVER_PX + //the band the lowered keyboard sheet peeks into
+      PRO_SONG_INFO_PX) * //...which itself stands on the song's name and time
       1000
   ) / 1000;
 /**
