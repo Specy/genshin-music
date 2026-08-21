@@ -118,7 +118,13 @@ headed `t('home:partners_name')`. Extract them into a component beside the blog 
 (their `<style>` block travels with them, minus the `.partners-page` padding rule, which
 dies with the page). Then:
 
-- DELETE the `/partners` route — the user wants no dedicated page. Old deep links 404.
+- DELETE the `/partners` route — the user wants no dedicated page. ~~Old deep links 404.~~
+  USER REVISION, 2026-08-22 (same day, after landing): old deep links REDIRECT to `/blog`
+  instead — a reborn `/partners/+page.ts` whose load redirects (301), which the full
+  prerender turns into a meta-refresh page since no runtime server exists. And the inline
+  cards trade the old page's centered flex for THE POSTS GRID'S OWN column statement, so
+  the two sections share columns and a left edge (media goes fluid at the old 18.8×10.5
+  proportions).
 - Remove last round's two `/partners` entry points on the blog index (the accent button in
   the Posts row and the `indexNavChildren` link) — they would now point at a dead route.
 - Remove the `partners` entry from PagesVersions (nothing calls
