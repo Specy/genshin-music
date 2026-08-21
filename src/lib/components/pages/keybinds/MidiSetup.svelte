@@ -17,6 +17,7 @@
   import { asyncConfirm, asyncPrompt } from '$stores/AsyncPromptStore.svelte';
   import Row from '$cmp/layout/Row.svelte';
   import Column from '$cmp/layout/Column.svelte';
+  import Header from '$cmp/header/Header.svelte';
   import Separator from '$cmp/Separator.svelte';
   import { t } from '$i18n/binding.svelte';
 
@@ -379,9 +380,10 @@
     {/snippet}
   </ShapeKeyboard>
   <div class="midi-shortcuts-wrapper">
-    <h1>
+    <!-- h3, not h1: this sits inside the keybinds page's MIDI card, under that card's own h2. -->
+    <Header type="h3" margin="1rem 0 0.5rem">
       {t('keybinds:midi_shortcuts')}
-    </h1>
+    </Header>
     <div class="midi-shortcuts">
       {#each shortcuts as shortcut (shortcut.type)}
         <MidiShortcut

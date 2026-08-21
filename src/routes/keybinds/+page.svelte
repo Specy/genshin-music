@@ -10,6 +10,9 @@
   import { Instrument, type ObservableNote } from '$lib/audio/Instrument.svelte';
   import { logger } from '$stores/LoggerStore.svelte';
   import ShapeKeyboard from '$lib/games/shapes/ShapeKeyboard.svelte';
+  import Column from '$cmp/layout/Column.svelte';
+  import Card from '$cmp/layout/Card.svelte';
+  import Header from '$cmp/header/Header.svelte';
   import ShortcutEditor from '$cmp/pages/keybinds/ShortcutEditor.svelte';
   import VsrgKey from '$cmp/pages/keybinds/VsrgKey.svelte';
   import MidiSetup from '$cmp/pages/keybinds/MidiSetup.svelte';
@@ -86,103 +89,118 @@
     text={t('home:keybinds_or_midi_name')}
     description="Change the app keyboard keybinds and MIDI input keys"
   />
-  <h1>
-    {t('keybinds:midi_keybinds')}
-  </h1>
-  <MidiSetup />
-  {#if !globalConfigStore.state.IS_MOBILE}
-    <h1>
-      {t('keybinds:keyboard_keybinds')}
-    </h1>
-    <div>
-      {t('keybinds:keyboard_keybinds_description')}
-    </div>
-    <div class="flex-centered">
-      <!-- The Shape places the instrument's notes and hands each one back (ADR-0005 §1/§3);
-           `note.noteNames.keyboard` is that note's default label, resolved by the engine
-           through the Shape's own assignment, so the key shown on a button is always the key
-           that button's rebind writes to. -->
-      <ShapeKeyboard
-        shape={baseInstrument.shape}
-        notes={baseInstrument.notes}
-        class="keyboard"
-        style="margin:1rem 0"
-      >
-        {#snippet button(note)}
-          {@const key = keyBinds.getKeyOfShortcut('keyboard', note.noteNames.keyboard)}
-          <BaseNote
-            data={{ status: selectedNote === note ? 'clicked' : '' }}
-            noteImage={note.icon}
-            noteText={key ? (KeyboardProvider.getTextOfCode(key as KeyboardCode) ?? key) : '???'}
-            handleClick={() => {
-              selectedNote = selectedNote === note ? null : note;
-              selectedVsrg = { type: '', index: -1 };
-            }}
-          />
-        {/snippet}
-      </ShapeKeyboard>
-    </div>
+  <Column gap="1rem" style="padding-bottom:1rem">
+    <Card background="none" border="secondary" gap="0.8rem">
+      <Header type="h2">
+        {t('keybinds:midi_keybinds')}
+      </Header>
+      <MidiSetup />
+    </Card>
+    {#if !globalConfigStore.state.IS_MOBILE}
+      <Card background="none" border="secondary" gap="0.8rem">
+        <Header type="h2">
+          {t('keybinds:keyboard_keybinds')}
+        </Header>
+        <div>
+          {t('keybinds:keyboard_keybinds_description')}
+        </div>
+        <div class="flex-centered">
+          <!-- The Shape places the instrument's notes and hands each one back (ADR-0005 §1/§3);
+               `note.noteNames.keyboard` is that note's default label, resolved by the engine
+               through the Shape's own assignment, so the key shown on a button is always the key
+               that button's rebind writes to. -->
+          <ShapeKeyboard
+            shape={baseInstrument.shape}
+            notes={baseInstrument.notes}
+            class="keyboard"
+            style="margin:1rem 0"
+          >
+            {#snippet button(note)}
+              {@const key = keyBinds.getKeyOfShortcut('keyboard', note.noteNames.keyboard)}
+              <BaseNote
+                data={{ status: selectedNote === note ? 'clicked' : '' }}
+                noteImage={note.icon}
+                noteText={key
+                  ? (KeyboardProvider.getTextOfCode(key as KeyboardCode) ?? key)
+                  : '???'}
+                handleClick={() => {
+                  selectedNote = selectedNote === note ? null : note;
+                  selectedVsrg = { type: '', index: -1 };
+                }}
+              />
+            {/snippet}
+          </ShapeKeyboard>
+        </div>
+      </Card>
 
-    <h1>
-      {t('keybinds:composer_shortcuts')}
-    </h1>
-    <div class="column">
-      <ShortcutEditor
-        map={composerShortcuts}
-        onChangeShortcut={(oldKey, newKey) => {
-          if (oldKey === newKey) return;
-          const existing = keyBinds.setShortcut('composer', oldKey, newKey);
-          if (existing) logger.warn(shortcutInUseMessage(existing));
-        }}
-      />
-    </div>
-    <h1>
-      {t('keybinds:player_shortcuts')}
-    </h1>
-    <div class="column">
-      <ShortcutEditor
-        map={playerShortcuts}
-        onChangeShortcut={(oldKey, newKey) => {
-          if (oldKey === newKey) return;
-          const existing = keyBinds.setShortcut('player', oldKey, newKey);
-          if (existing) logger.warn(shortcutInUseMessage(existing));
-        }}
-      />
-    </div>
-    <h1>
-      {t('keybinds:vsrg_composer_shortcuts')}
-    </h1>
-    <div class="column">
-      <ShortcutEditor
-        map={vsrgComposerShortcuts}
-        onChangeShortcut={(oldKey, newKey) => {
-          if (oldKey === newKey) return;
-          const existing = keyBinds.setShortcut('vsrg_composer', oldKey, newKey);
-          if (existing) logger.warn(shortcutInUseMessage(existing));
-        }}
-      />
-    </div>
-    <h1>
-      {t('keybinds:vsrg_player_shortcuts')}
-    </h1>
-    <div class="column">
-      <ShortcutEditor
-        map={vsrgPlayerShortcuts}
-        onChangeShortcut={(oldKey, newKey) => {
-          if (oldKey === newKey) return;
-          const existing = keyBinds.setShortcut('vsrg_player', oldKey, newKey);
-          if (existing) logger.warn(shortcutInUseMessage(existing));
-        }}
-      />
-    </div>
-    <h1>
-      {t('keybinds:vsrg_keybinds')}
-    </h1>
-    <div class="column" style="margin-left:1rem">
-      {@render vsrgKeyGroup('k4', keyBinds.getVsrgKeybinds(4))}
-      {@render vsrgKeyGroup('k6', keyBinds.getVsrgKeybinds(6))}
-    </div>
-  {/if}
+      <Card background="none" border="secondary" gap="0.8rem">
+        <Header type="h2">
+          {t('keybinds:composer_shortcuts')}
+        </Header>
+        <ShortcutEditor
+          map={composerShortcuts}
+          onChangeShortcut={(oldKey, newKey) => {
+            if (oldKey === newKey) return;
+            const existing = keyBinds.setShortcut('composer', oldKey, newKey);
+            if (existing) logger.warn(shortcutInUseMessage(existing));
+          }}
+        />
+      </Card>
+
+      <Card background="none" border="secondary" gap="0.8rem">
+        <Header type="h2">
+          {t('keybinds:player_shortcuts')}
+        </Header>
+        <ShortcutEditor
+          map={playerShortcuts}
+          onChangeShortcut={(oldKey, newKey) => {
+            if (oldKey === newKey) return;
+            const existing = keyBinds.setShortcut('player', oldKey, newKey);
+            if (existing) logger.warn(shortcutInUseMessage(existing));
+          }}
+        />
+      </Card>
+
+      <!-- One card, three h3 sections: the vsrg composer's shortcuts, the vsrg player's, and the
+           lane keybinds both read, are three views of the same feature. `menu:vsrg` is the
+           catalog's only standalone "VSRG" string - borrowed rather than adding a fourth key
+           whose value would be that same word. -->
+      <Card background="none" border="secondary" gap="0.8rem">
+        <Header type="h2">
+          {t('menu:vsrg')}
+        </Header>
+        <Header type="h3">
+          {t('keybinds:vsrg_composer_shortcuts')}
+        </Header>
+        <ShortcutEditor
+          map={vsrgComposerShortcuts}
+          onChangeShortcut={(oldKey, newKey) => {
+            if (oldKey === newKey) return;
+            const existing = keyBinds.setShortcut('vsrg_composer', oldKey, newKey);
+            if (existing) logger.warn(shortcutInUseMessage(existing));
+          }}
+        />
+        <Header type="h3">
+          {t('keybinds:vsrg_player_shortcuts')}
+        </Header>
+        <ShortcutEditor
+          map={vsrgPlayerShortcuts}
+          onChangeShortcut={(oldKey, newKey) => {
+            if (oldKey === newKey) return;
+            const existing = keyBinds.setShortcut('vsrg_player', oldKey, newKey);
+            if (existing) logger.warn(shortcutInUseMessage(existing));
+          }}
+        />
+        <Header type="h3">
+          {t('keybinds:vsrg_keybinds')}
+        </Header>
+        <div class="column" style="margin-left:1rem;gap:0.5rem">
+          {@render vsrgKeyGroup('k4', keyBinds.getVsrgKeybinds(4))}
+          {@render vsrgKeyGroup('k6', keyBinds.getVsrgKeybinds(6))}
+        </div>
+      </Card>
+    {/if}
+  </Column>
 </DefaultPage>
 
 {#snippet vsrgKeyGroup(type: 'k4' | 'k6', keys: string[])}
@@ -195,9 +213,9 @@
          template position with nothing between it and the {#each keys as key, i (i)} that indexes
          it. One snippet + two call sites, since Svelte has no equivalent of iterating over named
          local variables the way [k4, k6].map(...) does. -->
-  <h2>
+  <Header type="h4">
     {keys.length} keys
-  </h2>
+  </Header>
   <div class="row">
     {#each keys as key, i (i)}
       <VsrgKey
