@@ -71,6 +71,7 @@ inputs keep the height rule, and the returned diameter never exceeds `noteWidth 
   Mute wins on its own track ("Solo selects the set; the track's own Mute still silences it
   inside that set"). Stacking falls out of the rule — soloing one track never un-solos
   another (CONTEXT.md: _avoid_ exclusive solo).
+
 - One pure helper owns the rule for every caller —
   `isTrackAudible(instruments: readonly InstrumentData[], index: number): boolean` in
   SongClasses.ts beside InstrumentData. **Missing-roster-entry rule**: a track with no
@@ -78,9 +79,9 @@ inputs keep the height rule, and the returned diameter never exceeds `noteWidth 
   `insData?.muted`) and is silent when a solo set exists (it is not in the set):
 
   ```ts
-  const data = instruments[index]
-  if (data?.muted) return false
-  return !instruments.some(i => i.solo) || !!data?.solo
+  const data = instruments[index];
+  if (data?.muted) return false;
+  return !instruments.some((i) => i.solo) || !!data?.solo;
   ```
 
 ### 3.2 Playback seams
@@ -117,8 +118,8 @@ takes **no undo snapshot** (only name/Basepoint changes do; solo behaves like mu
   - **unselected row**: shown ONLY while that track's solo is on — the always-visible
     remove control, under the name, no gear/eye beside it;
   - unselected row without solo: nothing, as today.
-  Rows showing the bar need more height (selected today: 4.2rem; plain: 3rem — implementer
-  picks exact values against screenshots; `scrollIntoViewOnSelect` must still work).
+    Rows showing the bar need more height (selected today: 4.2rem; plain: 3rem — implementer
+    picks exact values against screenshots; `scrollIntoViewOnSelect` must still work).
 - **Shared button language** (USER REVISION during grilling — "add a background to the
   visible and settings buttons so that they share the same UI. also for when they are
   selected, show an accent color"): `.instrument-settings .app-button` drops its
