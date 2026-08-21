@@ -32,7 +32,6 @@ import {
     COMPOSER_DESKTOP_MEDIA_QUERY,
     COMPOSER_MOBILE_MAX_WIDTH,
     PRO_KEYBOARD_SLIVER_PX,
-    PRO_SONG_INFO_PX,
     TIMELINE_BAND_PADDING,
     TIMELINE_BUTTON_MARGIN,
     TIMELINE_BUTTON_SIZE,
@@ -484,37 +483,36 @@ describe('the Pro View canvas: the window it fills and the band it stops above',
         {width: 360, height: 640},
     ]
     const TIMELINE_HEIGHTS = [36.4, 31.4]
-    //`.composer-grid`'s 0.2rem padding at both ends plus the BOTTOM BAND - the sliver and the
-    //song-info row under it - at the 16px root font size composerCanvasGeometry assumes and states.
-    //Restated here rather than imported, so moving a constant fails instead of moving both sides
-    //together.
-    const PRO_INSET = 0.2 * 16 * 2 + 2.5 * 16 + 1.75 * 16
+    //`.composer-grid`'s 0.2rem padding at both ends plus the BOTTOM BAND, which is the sliver and
+    //nothing else (user revision 2026-08-22 - the song info reserves no row any more), at the 16px
+    //root font size composerCanvasGeometry assumes and states. Restated here rather than imported,
+    //so moving a constant fails instead of moving both sides together.
+    const PRO_INSET = 0.2 * 16 * 2 + 2.5 * 16
 
     it('App.css still declares the bottom band the canvas reserves, and leaves it exactly that', () => {
         //THE THIRD BRIDGE between this stylesheet and composerCanvasGeometry, after the timeline
-        //buttons' rem values and the desktop chrome's. The properties are on `:root` and not on
-        //`.composer-grid-pro` because `.song-info` - one of the things held clear of the sliver -
-        //is a SIBLING of the composer grid rather than a descendant of it.
+        //buttons' rem values and the desktop chrome's. The property is on `:root` and not on
+        //`.composer-grid-pro` because `.song-info` - which sits under this same band - is a SIBLING
+        //of the composer grid rather than a descendant of it.
         expect(declarationsOf(':root', '--pro-sliver-height').get('--pro-sliver-height')).toBe(
             '2.5rem'
         )
         expect(PRO_KEYBOARD_SLIVER_PX).toBe(2.5 * 16)
-        expect(declarationsOf(':root', '--pro-song-info-height').get('--pro-song-info-height')).toBe(
-            '1.75rem'
-        )
-        expect(PRO_SONG_INFO_PX).toBe(1.75 * 16)
         //...and the sheet leaves exactly that much of itself on screen. A `100%` in `translateY` is
         //the element's OWN height, so what peeks above the sheet's own box is this term and nothing
-        //else, whatever instrument's keyboard is loaded - and that box stands ON the song-info row
-        //rather than on the window's edge, so the sliver is never behind the song's name.
+        //else, whatever instrument's keyboard is loaded - and that box is at the window's own bottom
+        //edge, so the sliver is the last 2.5rem of the window rather than 2.5rem above a text row.
         const sheet = declarationsOf('.composer-grid-pro .composer-keyboard-wrapper')
         expect(sheet.get('transform')).toBe('translateY(calc(100% - var(--pro-sliver-height)))')
-        expect(sheet.get('bottom')).toBe('var(--pro-song-info-height)')
+        //the pro rule overrides no `bottom` at all now: the base `.composer-keyboard-wrapper` is
+        //already `bottom: 0`, which is where the sheet belongs again
+        expect(sheet.get('bottom')).toBeUndefined()
+        expect(declarationsOf('.composer-keyboard-wrapper').get('bottom')).toBe('0')
         //the sliver's tap target is that same band, in the same place, or a tap lands on a key
-        //instead of raising - or on the song's name instead of the keyboard
+        //instead of raising - or on the window's edge instead of the keyboard
         const sliver = declarationsOf('.composer-keyboard-sliver')
         expect(sliver.get('height')).toBe('var(--pro-sliver-height)')
-        expect(sliver.get('bottom')).toBe('var(--pro-song-info-height)')
+        expect(sliver.get('bottom')).toBe('0')
         //...and the raised state is a class on the GRID, so ComposerKeyboard's three wrappers
         //(loading, recording, keys) all get it without knowing anything about a sheet
         expect(declarationsOf('.composer-grid-pro-raised .composer-keyboard-wrapper').get('transform')).toBe(
@@ -523,29 +521,32 @@ describe('the Pro View canvas: the window it fills and the band it stops above',
     })
 
     /**
-     * THE BOTTOM BAND (spec §8): the song's name and time at the very bottom of the window, the
-     * sliver above them, the canvas above that, and the tool column running past all of it.
+     * THE SONG INFO AS AN OVERLAY AT THE WINDOW'S BOTTOM (spec §8, user revision 2026-08-22).
      *
-     * The band is what the canvas gave up its height for, so the one thing that must hold is that
-     * nothing in it overlaps anything else: the info row is the window's own bottom edge, the sheet
-     * stands on that row, and PRO_INSET (which the canvas is the window less) is exactly the two of
-     * them plus the grid's padding.
+     * It had a row of its own for one round, with the canvas stopping above it and the sheet
+     * standing on it. What this pins now is that it reserves NOTHING: no height, no z-index of its
+     * own, so the canvas runs under it to the sliver and the sheet covers it when raised, while the
+     * one thing kept from that round - the side-by-side row shape - stays.
      */
-    it('puts the song info at the window\'s bottom, in a row of its own', () => {
+    it('puts the song info at the window\'s bottom as an overlay that reserves nothing', () => {
         const info = declarationsOf('.song-info-pro')
         expect(info.get('bottom')).toBe('0')
-        expect(info.get('height')).toBe('var(--pro-song-info-height)')
-        //a ROW and not the base rule's column, which is what makes 1.75rem enough for both halves
+        //no reserved height, which is the revision: the canvas' inset is the sliver alone
+        expect(info.get('height')).toBeUndefined()
+        //...and no z-index, so the sheet (6) and its sliver (7) cover it rather than the other way
+        //round - being covered is fine for text nothing is edited through
+        expect(info.get('z-index')).toBeUndefined()
+        //a ROW and not the base rule's column, so it covers one line of canvas rather than two
         expect(info.get('flex-direction')).toBe('row')
         expect(info.get('align-items')).toBe('center')
         //the full width, clear of the sidebar by padding rather than by the base rule's `left`
         expect(info.get('left')).toBe('0')
         expect(info.get('width')).toBe('100%')
         expect(info.get('padding-left')).toBe('calc(4rem + 0.5vw)')
-        //above the sheet, which stands on this row rather than over it
-        expect(info.get('z-index')).toBe('8')
-        //the two bands tile the inset exactly, with the grid's own padding as the only other term
-        expect(0.2 * 16 * 2 + PRO_KEYBOARD_SLIVER_PX + PRO_SONG_INFO_PX).toBe(PRO_INSET)
+        //...and the text keeps the contrast the base rule gives it everywhere else
+        expect(declarationsOf('.song-info div').get('text-shadow')).toBe('rgb(51 51 51) 0px 1px 5px')
+        //the one band plus the grid's own padding IS the inset, with nothing else in it
+        expect(0.2 * 16 * 2 + PRO_KEYBOARD_SLIVER_PX).toBe(PRO_INSET)
     })
 
     it('gives the canvas the whole grid row, which is what its height is stated against', () => {
@@ -580,7 +581,7 @@ describe('the Pro View canvas: the window it fills and the band it stops above',
         //(`height: fit-content`) taller than the window instead of the tools shrinking. The cap is
         //the GRID's own content box - the window less its 0.2rem padding at each end - so the
         //column runs past the canvas' bottom edge and the tempo changers sit against the window's,
-        //beside the sliver and the song-info row rather than above a band of nothing.
+        //beside the sliver rather than above a band of nothing.
         expect(tools.get('max-height')).toBe('calc(100vh - 0.4rem)')
         //...and the row the column stretches in is the GRID's here, not the canvas'. That height is
         //written inline by Composer.svelte (an inline `height` is the one thing this stylesheet

@@ -2204,8 +2204,10 @@
   }}
 />
 <!-- `song-info-pro` and not a descendant selector: this overlay is a SIBLING of `.composer-grid`, so
-     `.composer-grid-pro .song-info` would never match it. All it does is lift the text clear of the
-     lowered keyboard's sliver, which in the Pro View sits exactly where it used to. -->
+     `.composer-grid-pro .song-info` would never match it. All it changes is the SHAPE - the name and
+     the time side by side across the window's bottom rather than stacked in its corner, so the line
+     it floats over the canvas is one row of the axis instead of two. It reserves nothing and is
+     under the keyboard sheet, which may cover it (App.css, user revision 2026-08-22). -->
 <div class={['song-info', proView && 'song-info-pro']}>
   <div class="text-ellipsis">
     {song.name}
