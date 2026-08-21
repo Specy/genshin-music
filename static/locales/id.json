@@ -444,6 +444,7 @@
         "midi_access_unsupported": "MIDI tidak didukung di browser ini",
         "midi_access_pending": "Menunggu akses MIDI...",
         "midi_access_granted": "MIDI tersedia!",
+        "enable_midi": "Klik untuk mengaktifkan MIDI",
         "shortcuts": {
             "toggle_play": "Alihkan putar",
             "next_column": "Kolom berikutnya",

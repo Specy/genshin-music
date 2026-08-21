@@ -444,6 +444,7 @@
         "midi_access_unsupported": "該瀏覽器不支援 MIDI。",
         "midi_access_pending": "等待 MIDI 訪問中...",
         "midi_access_granted": "MIDI可用！",
+        "enable_midi": "點擊以啟用 MIDI",
         "shortcuts": {
             "toggle_play": "切換播放/停止",
             "next_column": "下一列",

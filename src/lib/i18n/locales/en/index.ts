@@ -534,6 +534,7 @@ export const i18n_en = {
     midi_access_unsupported: 'MIDI is not supported in this browser',
     midi_access_pending: 'Waiting for MIDI access...',
     midi_access_granted: 'MIDI available!',
+    enable_midi: 'Click to enable MIDI',
     shortcuts: {
       toggle_play: 'Toggle play',
       next_column: 'Next column',

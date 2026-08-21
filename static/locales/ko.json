@@ -444,6 +444,7 @@
     "midi_access_unsupported": "이 브라우저에서는 MIDI가 지원되지 않습니다",
     "midi_access_pending": "MIDI 의 접근 허가를 기다리는 중...",
     "midi_access_granted": "MIDI가 연결되었습니다!",
+    "enable_midi": "클릭하여 MIDI 활성화하기",
     "shortcuts": {
       "toggle_play": "재생/일지정지 토글",
       "next_column": "다음 열",

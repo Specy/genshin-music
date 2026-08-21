@@ -444,6 +444,7 @@
         "midi_access_unsupported": "Bu tarayıcıda MIDI desteği yok",
         "midi_access_pending": "MIDI erişim izni için bekleniyor...",
         "midi_access_granted": "MIDI algılandı!",
+        "enable_midi": "MIDI'yi etkinleştirmek için tıkla",
         "shortcuts": {
             "toggle_play": "Oynatmayı durdur/devam ettir",
             "next_column": "Sonraki sütun",
