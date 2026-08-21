@@ -8,6 +8,8 @@
   import PlayerKeyboard from './PlayerKeyboard.svelte';
   import PlayerSongControls from './PlayerSongControls.svelte';
   import AppButton from '$cmp/inputs/AppButton.svelte';
+  //the record dot, which is what a filled circle means on a button that captures audio
+  import IconRecord from '~icons/fa6-solid/circle';
   import { playerStore } from '$stores/PlayerStore.svelte';
   import { playerControlsStore } from '$stores/PlayerControlsStore.svelte';
   import { Instrument } from '$lib/audio/Instrument.svelte';
@@ -588,6 +590,14 @@
   <div class="upper-right">
     {#if !hasSong}
       <AppButton toggled={isRecording} onclick={() => toggleRecord()} style="margin-top:0.8rem">
+        {#snippet icon()}
+          <!-- SIZED BY ITS OWN FONT-SIZE and not by width/height: the icon keeps the `1.2em` box
+               unplugin-icons emits (its `scale: 1.2`) and that `em` resolves against this
+               declaration, so the dot comes out ~15px instead of ~20px. A filled circle reads
+               bigger than an outline glyph in the same box, which is why this one alone is scaled
+               down while the plus and the compact disc beside it keep the default. -->
+          <IconRecord style="font-size:0.8rem" />
+        {/snippet}
         {isRecording ? t('common:stop') : t('common:record')}
       </AppButton>
     {/if}

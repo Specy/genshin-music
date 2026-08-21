@@ -152,5 +152,29 @@
     border-radius: 0.2rem;
     cursor: pointer;
     font-size: 0.7rem;
+    /* the RELEASE of the press below - a state rule's transition only runs on the way INTO it */
+    transition: transform 0.12s;
+  }
+
+  /* THE PRESS, the same brightness and scale App.css gives `.app-button` and the composer's tools
+     (its own comment carries the reasoning). Repeated here rather than reached from there because
+     these two buttons are this component's alone: they are the only `-`/`+` in the app, and their
+     whole appearance is declared in this block.
+
+     IT MATTERS MOST HERE. Increment and decrement are the buttons a user presses repeatedly and
+     often without looking at the number - so a press that shows nothing is a press they cannot
+     count. */
+  .settings-input-button:not(:disabled):active {
+    filter: brightness(0.9);
+    transform: scale(0.98);
+    transition:
+      filter 0.06s,
+      transform 0.06s;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .settings-input-button:not(:disabled):active {
+      transform: none;
+    }
   }
 </style>

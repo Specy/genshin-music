@@ -32,6 +32,7 @@
   import AppButton from '$cmp/inputs/AppButton.svelte';
   import FilePicker, { type FileElement } from '$cmp/inputs/FilePicker.svelte';
   import IconUpload from '~icons/fa6-solid/upload';
+  import IconPlus from '~icons/fa6-solid/plus';
   import HelpTooltip from '$cmp/utility/HelpTooltip.svelte';
   import DonateButton from '$cmp/DonateButton.svelte';
 
@@ -349,6 +350,9 @@
             {t('composer:create_from_midi_or_audio')}
           </AppButton>
           <AppButton onclick={functions.createNewSong}>
+            {#snippet icon()}
+              <IconPlus />
+            {/snippet}
             {t('composer:create_new_song')}
           </AppButton>
         </div>

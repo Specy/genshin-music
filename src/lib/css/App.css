@@ -140,10 +140,15 @@ input[type='number'] {
   height: fit-content;
   cursor: pointer;
   min-width: 5rem;
+  /* `transform` is here for the RELEASE of the press below - a state rule's transition only runs on
+     the way into it, so without this the button would snap back out of `scale(0.97)` the instant
+     the finger left. 0.12s and not the 0.2s beside it: the settle reads as the button coming back,
+     not as an animation of its own. */
   transition:
     background-color 0.2s,
     color 0.2s,
-    filter 0.2s;
+    filter 0.2s,
+    transform 0.12s;
 }
 
 /* Only applied when AppButton is given an `icon` snippet: the icon sits closer
@@ -171,6 +176,55 @@ input[type='number'] {
 
 .app-button:hover {
   filter: brightness(1.1);
+}
+
+/* THE PRESS, which is the one state these buttons never had (user addition), and ONE rule for all
+   of them: AppButton everywhere, the composer's right-hand CanvasTool column, and the tool panel's
+   own grid. `:hover` says "this is a control" and a toggled class says "its state is ON" - neither
+   says "your click landed", and on touch there is no hover at all: the reset at the top of this
+   file clears `-webkit-tap-highlight-color`, so a tap on a phone used to leave the button looking
+   untouched until whatever it does finished. This is the whole of that feedback, everywhere.
+
+   STATED ONCE AND NOT ONCE PER AREA, which is why composer selectors appear this far up the file:
+   a press is one idiom, and three copies of it are three things to keep in step. `.tool:hover` and
+   `.tools-button:hover` further down carry a breadcrumb back here.
+
+   FILTER AND TRANSFORM, AND DELIBERATELY NOT A BACKGROUND, for two reasons that both matter here:
+   AppButton paints its own `background-color` INLINE when given a `cssVar` (the theme page's
+   colour buttons), which no stylesheet rule can override, and every toggled state in this family
+   (`.app-button.active`, `.tool-toggled`, `.tools-button-highlighted`) wins its colours with
+   `!important` - so a pressed toggled button would go on looking exactly like an unpressed one.
+   Brightness and scale ride on top of whatever those painted.
+
+   `:not(:disabled)` because a disabled button takes no click: it already says so with `opacity`
+   and `not-allowed`, and a button that shrinks under the finger while doing nothing says the
+   opposite. */
+.app-button:not(:disabled):active,
+.tool:not(:disabled):active,
+.tool-slim:not(:disabled):active,
+.tools-button:not(:disabled):active {
+  filter: brightness(0.9);
+  transform: scale(0.98);
+  /* THE PRESS LANDS NOW AND THE RELEASE EASES BACK on the base rule's own 0.2s: a quick tap is
+     shorter than that fade, so on the way IN the feedback would arrive after the finger had gone.
+     The other two are restated rather than dropped because this replaces the whole shorthand, and
+     a button that toggles ON under the finger still has to crossfade its colours. */
+  transition:
+    background-color 0.2s,
+    color 0.2s,
+    filter 0.06s,
+    transform 0.06s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* the press is information, like the hold-release ring further down - so it keeps the brightness
+     drop and gives up only the movement, which is the decorative half of it */
+  .app-button:not(:disabled):active,
+  .tool:not(:disabled):active,
+  .tool-slim:not(:disabled):active,
+  .tools-button:not(:disabled):active {
+    transform: none;
+  }
 }
 
 .app-button.active {
@@ -2418,7 +2472,12 @@ select {
   border-radius: 0.3rem;
   color: var(--icon-color);
   background-color: var(--primary-darken-10);
-  transition: background-color 0.2s;
+  /* `transform` is the RELEASE of the press (`.tool:not(:disabled):active`, up beside
+     `.app-button`'s own states): a state rule's transition only runs on the way INTO it, so without
+     this the button snaps back out of the press the instant the finger leaves. */
+  transition:
+    background-color 0.2s,
+    transform 0.12s;
   cursor: pointer;
   margin: 0;
 }
@@ -2439,6 +2498,8 @@ select {
   height: 100%;
 }
 
+/* ...and the PRESSED one is the shared rule beside `.app-button`'s states, near the top of this
+   file - these buttons wear the same brightness and scale every other one does. */
 .tool:hover,
 .tool-slim:hover {
   background-color: var(--primary-layer-15);
@@ -2527,6 +2588,8 @@ select {
   font-size: 0.9rem;
   padding: 0.55rem 0.8rem;
   gap: 0.4rem;
+  /* the RELEASE of the press below, for the reason `.tool`'s own transition states it */
+  transition: transform 0.12s;
 }
 
 .tools-row {
@@ -2536,6 +2599,7 @@ select {
   align-items: center;
 }
 
+/* ...and PRESSED is the shared rule beside `.app-button`'s states, near the top of this file. */
 .tools-button:hover {
   filter: brightness(1.1);
 }
@@ -3346,24 +3410,26 @@ select {
 }
 
 /* THE TEMPO CHANGERS AS THE TOOL COLUMN'S LAST ROW (phase E's mobile pass; Composer.svelte renders
-   them there in the Pro View). They stop being floated: `position: relative` only so the z-index
-   below still applies, `inset: auto` because the base rule's `right`/`bottom` would otherwise SHIFT
-   a relatively-positioned box instead of anchoring it, and the width is the column's.
+   them there in the Pro View). They stop being floated: `position: relative` in place of the base
+   rule's `absolute`, which is what puts them IN the column's flow as a row of it, `inset: auto`
+   because that rule's `right`/`bottom` would otherwise SHIFT a relatively-positioned box instead of
+   anchoring it, and the width is the column's.
 
    WHY A ROW AND NOT A CORNER: floated, they were pinned to the window's bottom while the five tools
    packed down from the top, so on a short window (a landscape phone at 850x420) the two met and the
    tempo buttons covered the View Lock. In the grid they cannot: the `1fr` row takes its own content
    height first and the tools shrink toward it.
 
-   STILL ABOVE THE BACKDROP (z-index 8), which is the whole reason they left the keyboard: the sheet
-   may be up and the tempo changers are still a tap away. No ancestor between here and the page root
-   makes a stacking context, so the number still counts against the backdrop's 5. */
+   AND NO z-index OF THEIR OWN ANY MORE (user revision). They carried an 8 to stand above the
+   full-window backdrop the raised sheet used to lay over the page; that element is gone - the sheet
+   paints its own scrim, which is the keyboard's band inside the canvas' column, behind the keys and
+   taking no pointers - so there is nothing left here to out-stack. The row paints in flow, where a
+   column of buttons beside the canvas belongs. */
 .composer-grid-pro .tempo-changers-wrapper {
   position: relative;
   inset: auto;
   width: 100%;
   align-self: end;
-  z-index: 8;
   /* ...and it never widens the column it now lives in. A grid item's automatic minimum size is its
      content's, so without this the "Tempo" caption would have made this column ~10px wider than the
      Compressed View's - which is 10px it does not have below ~610px of window, where the canvas'

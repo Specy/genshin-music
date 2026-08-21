@@ -614,10 +614,14 @@ describe('the Pro View canvas: the window it fills and the band it stops above',
             'grid-template-rows: repeat(5, minmax(0, 4rem)) 1fr;'
         )
         const tempo = declarationsOf('.composer-grid-pro .tempo-changers-wrapper')
-        //`relative` only so the z-index still counts against the backdrop's 5 - the changers stay
-        //reachable with the keyboard sheet up, which is the whole reason they left the keyboard
+        //`relative` in place of the base rule's `absolute`, which is what puts them IN the column
+        //as a row of it rather than floating them into the window's corner
         expect(tempo.get('position')).toBe('relative')
-        expect(tempo.get('z-index')).toBe('8')
+        //...and NO z-index (user revision): the 8 was there to clear the full-window backdrop the
+        //raised sheet used to lay over the page, and that element is gone - the sheet's own scrim
+        //is the keyboard's band, behind the keys and taking no pointers, so nothing here needs to
+        //out-stack anything
+        expect(tempo.get('z-index')).toBeUndefined()
         //...and the base rule's `right`/`bottom`, which would SHIFT a relatively-positioned box
         expect(tempo.get('inset')).toBe('auto')
         expect(tempo.get('align-self')).toBe('end')

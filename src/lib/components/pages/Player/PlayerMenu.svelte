@@ -40,6 +40,10 @@
   import AppButton from '$cmp/inputs/AppButton.svelte';
   import FilePicker, { type FileElement } from '$cmp/inputs/FilePicker.svelte';
   import IconUpload from '~icons/fa6-solid/upload';
+  //the composer's own icon, and the same one the Home menu's composer card wears
+  //(Home.svelte's `faCompactDiscIcon`) - this button goes to the same place, so it says so
+  //with the same glyph
+  import IconCompactDisc from '~icons/fa6-solid/compact-disc';
   import HelpTooltip from '$cmp/utility/HelpTooltip.svelte';
   import Tooltip from '$cmp/utility/Tooltip.svelte';
   import { hasTooltip } from '$cmp/utility/tooltip';
@@ -476,6 +480,9 @@
           </HelpTooltip>
           <AppLink href="/composer" style="margin-left:auto">
             <AppButton>
+              {#snippet icon()}
+                <IconCompactDisc />
+              {/snippet}
               {t('menu:compose_song')}
             </AppButton>
           </AppLink>
