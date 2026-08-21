@@ -23,6 +23,8 @@ export const CHANGELOG: Update[] = [
             'MIDI export now writes the notes you actually hear, pitch included',
             'Saved songs use a new format version — third party tools that read the song JSON must check the "version" field',
             'The player always follows the loaded song\'s pitch and instruments, and returns to your own settings when the song stops (the "sync song data" setting is gone)',
+            'New "Pro view" in the composer settings: every semitone is its own row and every note sits at its real pitch',
+            'In pro view you add and remove notes by tapping the canvas itself, long press one of your notes for its duration, and can unlock the view to drag the rows up and down',
             'Other bug fixes and improvements',
         ]
     },

@@ -904,7 +904,11 @@ export const i18n_en = {
         'Because of all this, saved songs carry a new format version (composed 5, recorded 4, VSRG 3). If you use third party tools that read the song JSON, they must check the "version" field: in the new versions each note is a real note number, not a keyboard position, so a tool that ignores the version will read them wrong.',
       'change-12':
         'The player now always follows the loaded song\'s pitch and instruments — songs can no longer play silently because your own pitch differed from theirs. Your settings come back when the song stops, so the "sync song data" setting is gone.',
-      'change-13': 'Many other bug fixes and improvements',
+      'change-13':
+        'The composer has a new "Pro view", which you can turn on in its settings: every semitone gets its own row and every note sits at its real pitch, so you see exactly what the song plays.',
+      'change-14':
+        'In pro view you edit on the canvas itself: tap a cell to add or remove a note, long press one of your notes to choose how long it lasts, and unlock the view to drag the rows up and down freely.',
+      'change-15': 'Many other bug fixes and improvements',
     },
     '3-7-0': {
       title: 'New instruments (Genshin)',

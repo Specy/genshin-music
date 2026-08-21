@@ -220,6 +220,8 @@
             "composer_smooth_scroll_description": "Çalma sırasında besteleyici, bir sonraki sütuna atlamak yerine tempo değiştiricileri takip ederek her sütunun içinden sürekli olarak kayar",
             "composer_sync_tabs": "Tüm sekmelerde otomatik oynatma (yalnızca bilgisayar)",
             "composer_sync_tabs_description": "Gelişmiş özellik: diğer tarayıcı sekmelerini aynı anda çalacak şekilde senkronize eder.",
+            "composer_pro_view": "Pro view",
+            "composer_pro_view_description": "Shows every semitone as its own row, with all the notes at their real pitch, and lets you add or remove them by tapping the canvas itself",
             "player_instrument": "Enstrüman",
             "player_instrument_description": "Oynatıcının ana (ilk) enstrümanı, kaydettiğiniz şarkıya da kaydedilecektir",
             "player_pitch": "Akort",
@@ -544,6 +546,12 @@
         "previous_breakpoint": "Önceki yer imi",
         "next_breakpoint": "Sonraki yer imi",
         "tempo": "Tempo",
+        "lock_view": "Lock view",
+        "lock_view_description": "Keep the canvas framed on the rows this layer can play",
+        "unlock_view": "Unlock view",
+        "unlock_view_description": "Let the canvas be dragged up and down freely",
+        "show_keyboard": "Show keyboard",
+        "hide_keyboard": "Hide keyboard",
         "note_duration": "Nota süresi",
         "error_with_this_layer": "Bu katmanla ilgili bir sorun oluştu",
         "recording_audio": "Ses kaydediliyor",
@@ -750,7 +758,9 @@
             "change-5": "Besteleyicide, bir sütunda kullanılan katmanlar vurgulanır",
             "change-6": "Kullanıcı deneyimini iyileştirmek için uygulama genelinde küçük tasarım değişiklikleri yapıldı",
             "change-7": "Besteleyici oynatması artık tek bir saat üzerinden çalışıyor; ses, görseller ve kayıt tamamen senkron kalıyor (lookahead ayarı kaldırıldı)",
-            "change-12": "Diğer birçok hata düzeltmesi ve iyileştirme"
+            "change-13": "The composer has a new \"Pro view\", which you can turn on in its settings: every semitone gets its own row and every note sits at its real pitch, so you see exactly what the song plays.",
+            "change-14": "In pro view you edit on the canvas itself: tap a cell to add or remove a note, long press one of your notes to choose how long it lasts, and unlock the view to drag the rows up and down freely.",
+            "change-15": "Diğer birçok hata düzeltmesi ve iyileştirme"
         },
         "3-7-0": {
             "title": "Yeni enstrümanlar (Genshin)",

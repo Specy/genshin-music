@@ -221,6 +221,8 @@
             "composer_smooth_scroll_description": "播放時，畫面會跟隨節奏變換器連續平滑地捲過每一列，而不是直接跳到下一列",
             "composer_sync_tabs": "在所有分頁中自動播放（僅限電腦）",
             "composer_sync_tabs_description": "進階功能，它同步其他瀏覽器分頁以同時播放。",
+            "composer_pro_view": "Pro view",
+            "composer_pro_view_description": "Shows every semitone as its own row, with all the notes at their real pitch, and lets you add or remove them by tapping the canvas itself",
             "player_instrument": "樂器",
             "player_instrument_description": "演奏器的主要（第一個）樂器，也將儲存在您錄製的歌曲中。",
             "player_pitch": "音高",
@@ -544,6 +546,12 @@
         "previous_breakpoint": "上一個斷點",
         "next_breakpoint": "下一個斷點",
         "tempo": "時值",
+        "lock_view": "Lock view",
+        "lock_view_description": "Keep the canvas framed on the rows this layer can play",
+        "unlock_view": "Unlock view",
+        "unlock_view_description": "Let the canvas be dragged up and down freely",
+        "show_keyboard": "Show keyboard",
+        "hide_keyboard": "Hide keyboard",
         "note_duration": "音符時長",
         "error_with_this_layer": "該層發生錯誤",
         "recording_audio": "錄製音訊",
@@ -751,7 +759,9 @@
             "change-5": "作曲器會高亮顯示欄位中使用的圖層",
             "change-6": "在應用程式各處進行了小幅重新設計，以改善使用者體驗",
             "change-7": "作曲器播放現在由單一時鐘運作，聲音、視覺效果和錄音始終完全同步（已移除預讀設定）",
-            "change-12": "許多其他問題修復與最佳化"
+            "change-13": "The composer has a new \"Pro view\", which you can turn on in its settings: every semitone gets its own row and every note sits at its real pitch, so you see exactly what the song plays.",
+            "change-14": "In pro view you edit on the canvas itself: tap a cell to add or remove a note, long press one of your notes to choose how long it lasts, and unlock the view to drag the rows up and down freely.",
+            "change-15": "許多其他問題修復與最佳化"
         },
         "3-7-0": {
             "title": "原神新樂器",
