@@ -718,11 +718,22 @@ export interface ComposerRendererCallbacks {
    * anchor to a rectangle that has no element.
    *
    * @returns whether anything TOOK the long press. `true` consumes the gesture - the release that
-   * follows edits nothing - and `false` leaves it an ordinary press, which is what makes a hold on an
-   * empty cell (or on any cell while the song plays, where holding means recording a sustain) behave
-   * exactly like a hold on a keyboard key that opens no popover: it still completes as a tap.
+   * follows edits nothing, and every further move of the still-held pointer feeds
+   * onProCellLongPressDrag below (user revision, 2026-08-22) - and `false` leaves it an ordinary
+   * press, which is what makes a hold on an empty cell (deliberately untaken: a finger pausing
+   * before a scroll must not write a note - user, 2026-08-22) or on any cell while the song plays
+   * (where holding means recording a sustain) behave exactly like a hold on a keyboard key that
+   * opens no popover: it still completes as a tap.
    */
   onProCellLongPress: (column: number, number: number, rect: ScreenRect) => boolean;
+  /**
+   * THE CONSUMED HOLD'S OWN DRAG (spec §7, user revision 2026-08-22): the duration popover is open
+   * under the still-held finger, and this is that finger's horizontal travel FROM THE PRESS ORIGIN,
+   * absolute and re-reported on every move - the same origin+delta rule the keyboard's
+   * drag-after-hold applies, so a wander back restores the span it started at. Fired only while the
+   * long press was taken; the press can no longer pan, tap, or edit anything else.
+   */
+  onProCellLongPressDrag: (deltaX: number) => void;
   /**
    * A SETTLED TAP ON THE CANVAS WHILE THE KEYBOARD SHEET IS UP: put it down, and edit nothing
    * (spec §2's dismiss-and-swallow, decided by composerInput.stageReleaseIntent).
@@ -4078,6 +4089,16 @@ export class ComposerRenderer {
     //a move from a pointer that is not the one holding the drag would be measured against an anchor
     //it never pressed at - see stagePointer's `id`
     if (!pointer || e.pointerId !== pointer.id) return;
+    //A CONSUMED HOLD OWNS THE REST OF ITS PRESS (spec §7, user revision 2026-08-22): the duration
+    //popover is open under this finger, and horizontal travel from the press origin IS the span
+    //edit - the keyboard's own drag-after-hold, arriving from the canvas. Before the Flick memory
+    //and before every gesture gate, because none of them may see these moves: the press can no
+    //longer become a pan or a drag, and its release is already 'nothing'
+    //(stageReleaseIntent's longPressConsumed), so no motion state is left half-entered.
+    if (this.proPressConsumed) {
+      this.callbacks.onProCellLongPressDrag(e.globalX - pointer.x);
+      return;
+    }
     // THE FLICK'S MEMORY, fed before anything can return: the pre-slop moves belong in it too -
     // the first DRAG_SLOP_PX of a throw carries part of its speed, and a short sharp flick spends
     // most of its samples there. Pruned at every push, so the array is bounded by the window

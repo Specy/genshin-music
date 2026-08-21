@@ -7404,6 +7404,8 @@ describe('the Pro View pointer', () => {
             number: number
             rect: {x: number, y: number, width: number, height: number}
         }[] = []
+        //the taken hold's span drag: every report is ABSOLUTE travel from the press origin
+        const longPressDrags: number[] = []
         const selectColumnCalls: number[] = []
         let height = 0
         let timelineHeight = 0
@@ -7442,6 +7444,7 @@ describe('the Pro View pointer', () => {
                 longPresses.push({column, number, rect})
                 return takeLongPress
             },
+            onProCellLongPressDrag: deltaX => longPressDrags.push(deltaX),
             onKeyboardDismiss: () => {
                 keyboardRaised = false
                 dismissals++
@@ -7501,6 +7504,7 @@ describe('the Pro View pointer', () => {
             song,
             taps,
             longPresses,
+            longPressDrags,
             selectColumnCalls,
             axis,
             rowHeight,
@@ -7752,6 +7756,53 @@ describe('the Pro View pointer', () => {
             //row multiple and the two spellings of that differ in the last bit
             expect(rect.y).toBeCloseTo(y - harness.rowHeight / 2, 9)
             harness.release(x, y)
+            expect(harness.taps).toEqual([])
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    it('a taken hold keeps its finger: travel feeds the span drag, and nothing pans', async () => {
+        const harness = await mountPro()
+        try {
+            const column = SELECTED + 1
+            const number = addableNumber(harness)
+            const x = harness.xOfColumn(column)
+            const y = harness.yOfNumber(number, harness.lockedCamera())
+            harness.press(x, y)
+            await vi.advanceTimersByTimeAsync(COMPOSER_LONG_PRESS_MS)
+            expect(harness.longPresses).toHaveLength(1)
+            //ABSOLUTE travel from the press origin, re-reported per move - dragPopoverSpan's own
+            //origin+delta contract, so a wander back restores the span it started at. The second
+            //move wanders vertically too, and only its x is reported.
+            harness.move(x + COLUMN_WIDTH, y)
+            harness.move(x + COLUMN_WIDTH * 3, y + 40)
+            harness.move(x - COLUMN_WIDTH, y)
+            expect(harness.longPressDrags).toEqual([COLUMN_WIDTH, COLUMN_WIDTH * 3, -COLUMN_WIDTH])
+            //...and none of that travel became a pan or a drag: the hold owns the rest of its press
+            expect(harness.selectColumnCalls).toEqual([])
+            harness.release(x - COLUMN_WIDTH, y)
+            expect(harness.taps).toEqual([])
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    it('an untaken hold keeps its old meaning: travel pans, and feeds no span drag', async () => {
+        const harness = await mountPro({takeLongPress: false})
+        try {
+            const number = addableNumber(harness)
+            const x = harness.xOfColumn(SELECTED)
+            const y = harness.yOfNumber(number, harness.lockedCamera())
+            harness.press(x, y)
+            await vi.advanceTimersByTimeAsync(COMPOSER_LONG_PRESS_MS)
+            expect(harness.longPresses).toHaveLength(1)
+            //past the slop and across two columns: the ordinary stage drag, exactly as before the
+            //span-drag existed - the revision touches only the CONSUMED hold
+            harness.move(x - COLUMN_WIDTH * 2, y)
+            expect(harness.longPressDrags).toEqual([])
+            expect(harness.selectColumnCalls.length).toBeGreaterThan(0)
+            harness.release(x - COLUMN_WIDTH * 2, y)
             expect(harness.taps).toEqual([])
         } finally {
             harness.destroy()

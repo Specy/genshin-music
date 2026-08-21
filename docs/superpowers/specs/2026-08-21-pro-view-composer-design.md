@@ -59,7 +59,9 @@ song format does not change; a song opens identically in either view.
 - **Tap = edit only**, never column selection or centering: toggles YOUR layer's note on
   addable cells (other layers never block); tap on your own stranded note deletes it
   (the canvas is the strand-cleanup surface); inert elsewhere. Long-press on your own
-  note opens the existing duration popover. Canvas edits share the keyboard press code
+  note opens the existing duration popover — and since the 2026-08-22 revision the finger
+  that opened it keeps editing: horizontal travel sets the span, the keyboard's own
+  drag-after-hold (§7). Canvas edits share the keyboard press code
   path — same sound preview, same playback-state rules, same undo history. (Amended in
   implementation, adjudicated — §7 has both: the canvas snapshots undo history where the
   keyboard's toggle never has, and a covered cell's tap is inert without the keyboard's
@@ -306,7 +308,16 @@ scalar (read in ComposerCanvas.svelte's $effect object, per that file's dependen
   playing a note it will not write.
 - **Long-press** (same threshold the keyboard uses) on an own-layer note →
   `onCellLongPress(column, number, screenRect)` → ComposerDurationPopover, which gains a
-  virtual-rect anchor beside its HTMLElement one.
+  virtual-rect anchor beside its HTMLElement one. **The taken hold keeps its finger**
+  (USER REVISION, 2026-08-22): every further move of the still-held pointer feeds
+  `onProCellLongPressDrag` with the ABSOLUTE horizontal travel from the press origin, and
+  Composer.svelte applies the keyboard drag's own origin+delta rule to the open popover's
+  span — phase D's "no drag continuation after a canvas long press" note is superseded.
+  While the hold is consumed the press can no longer pan, drag, tap, or edit anything
+  else, and its release stays swallowed. **Still only over an EXISTING note** — an
+  add-and-edit hold on empty cells was proposed and then rejected by the user in the same
+  revision (a finger pausing before a scroll must not write a note); placing stays the
+  tap's job.
 - **View Lock button**: fifth CanvasTool in the right column (pro only), toggles
   locked/unlocked, icon swap + tooltip.
 
