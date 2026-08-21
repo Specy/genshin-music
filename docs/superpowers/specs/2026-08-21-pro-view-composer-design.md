@@ -468,5 +468,6 @@ scalar (read in ComposerCanvas.svelte's $effect object, per that file's dependen
 ## 13. Out of scope (deferred, stated in ADR-0007 or grilling)
 
 Accidental-true MIDI import + Basepoint inference; note dragging/moving and edge-resize
-(the long-press popover is v1's span editor; edge-grab can layer on later); vertical
-zoom; 2D flick/coast; per-song view memory; Compressed View playhead reposition.
+(the long-press popover is v1's span editor; edge-grab can layer on later); 2D
+flick/coast; per-song view memory; Compressed View playhead reposition. (Vertical zoom
+left this list on 2026-08-22 — it shipped as a USER REVISION; see §2/§4/§7.)

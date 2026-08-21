@@ -87,7 +87,7 @@ The band of Note Numbers the current track can voice at its effective Basepoint,
 _Avoid_: range (overloaded: MIDI bounds, octave ranges), reach, instrument span
 
 **View Lock**:
-The Pro View's vertical framing toggle. Locked (the default) pins the frame to the current track's Editable Zone, centered, with no vertical scrolling; unlocked frees panning over the whole axis. Re-locking returns the frame to the zone. Horizontal scrolling is never its business.
+The Pro View's vertical framing toggle. Locked (the default) pins the frame to the current track's Editable Zone, centered, with no vertical scrolling; unlocked frees panning over the whole axis, and zooming — which is taking the frame into your own hands — unlocks by itself. Re-locking returns the frame to the zone, zoom reset included. Horizontal scrolling is never its business.
 _Avoid_: scroll lock (horizontal scrolling is unaffected)
 
 ### Composer Canvas Gestures
