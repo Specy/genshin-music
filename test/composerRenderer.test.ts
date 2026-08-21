@@ -714,6 +714,7 @@ import {
     proStripWidth,
     proViewAxis,
     rowForNumber,
+    zoneRowCount,
     type ProViewAxis,
 } from '$cmp/pages/Composer/proViewGeometry'
 import {songNumberSpan} from '$cmp/pages/Composer/proViewNotes'
@@ -7454,18 +7455,24 @@ describe('the Pro View pointer', () => {
         const notesColumns = app.stage.children[0]
 
         //THE VIEW FUNCTION, restated from the same modules the renderer reads it from (see this
-        //part's import note): the axis this song draws on, the row height this region gives it, and
-        //the camera the LOCKED framing puts on the current layer's Editable Zone.
-        const rowHeight = proRowHeight(height)
+        //part's import note): the axis this song draws on, the row height this region gives the
+        //CURRENT LAYER (the zone's own fit, capped at the game's note size - spec §4's 2026-08-21
+        //revision), and the camera the LOCKED framing puts on that layer's Editable Zone.
+        const zoneOf = (layer = 0) =>
+            editableZone(
+                song.instruments[layer].name,
+                effectiveTrackPitch(song.instruments[layer], song.pitch)
+            )
+        const rowHeight = proRowHeight({
+            notesRegionHeight: height,
+            zoneRowCount: zoneRowCount(zoneOf(0)),
+        })
         const axis: ProViewAxis = proViewAxis(songNumberSpan(song.columns))
         const notesTop = composerNotesRegionY(true, timelineHeight)
         const lockedCamera = (layer = 0) =>
             lockedCameraY({
                 axis,
-                zone: editableZone(
-                    song.instruments[layer].name,
-                    effectiveTrackPitch(song.instruments[layer], song.pitch)
-                ),
+                zone: zoneOf(layer),
                 rowHeight,
                 notesRegionHeight: height,
             })
@@ -7817,10 +7824,14 @@ describe('the Pro View pointer', () => {
             expect(harness.taps).toEqual([
                 {column: SELECTED, number: harness.numberAt(y, zoneCamera)},
             ])
-            //STILL UNLOCKED: the next drag pans exactly as the first one did
-            harness.drag(x, y, x, y + travel)
+            //STILL UNLOCKED: the next drag pans exactly as the first one did - UPWARD this time,
+            //which is where the travel is. A Basepoint of B lifts the whole zone to within a row or
+            //two of the axis' top, and the frame now fits that zone exactly (spec §4's 2026-08-21
+            //revision), so a downward pan from there is clamped at 0 within the first row.
+            harness.drag(x, y, x, y - travel)
             harness.tap(x, y)
-            expect(harness.taps[1].number).toBe(harness.numberAt(y, zoneCamera - travel))
+            expect(harness.taps[1].number).toBe(harness.numberAt(y, zoneCamera + travel))
+            expect(harness.taps[1].number).toBe(harness.taps[0].number - 3)
         } finally {
             harness.destroy()
         }

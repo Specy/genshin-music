@@ -17,8 +17,11 @@ interface ComposerCacheProps {
   /**
    * ONE CELL'S HEIGHT, and with it the size of every note icon this cache bakes. Defaults to the
    * Compressed View's `height / perColumn` — the Song Grid's own row — and is passed explicitly by
-   * the Pro View, whose rows are `proViewGeometry.proRowHeight` (the region over `perColumn + 2`)
-   * because its axis is chromatic and framed rather than the game's 21/15-row layout.
+   * the Pro View, whose rows are `proViewGeometry.proRowHeight` (the region over the current layer's
+   * Editable Zone plus its framing, capped at the game's own note size) because its axis is
+   * chromatic and framed rather than the game's 21/15-row layout. That height therefore moves with
+   * the LAYER there, and the renderer rebuilds this cache when it does — the same rebuild a resize
+   * takes.
    *
    * AN INPUT RATHER THAN A `proView` BRANCH INSIDE THE DRAWING: a cache instance is per view by
    * construction (a mode flip remounts the whole renderer through Composer.svelte's `{#key}`, the

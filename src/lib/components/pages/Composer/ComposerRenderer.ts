@@ -74,6 +74,7 @@ import {
   rowForNumber,
   visibleRowRange,
   yForNumber,
+  zoneRowCount,
   type EditableZone,
   type ProViewAxis,
 } from './proViewGeometry';
@@ -743,6 +744,17 @@ export interface ComposerRendererCallbacks {
      * composerCanvasGeometry.composerTimelineStripY.
      */
     timelineTop: number;
+    /**
+     * ONE ROW'S HEIGHT in the Pro View, 0 in the Compressed one - reported for the same reason the
+     * strip's own top is: a DOM element over the canvas is positioned against it, and a second
+     * statement of it could disagree.
+     *
+     * It is a property of the CURRENT LAYER now (proRowHeight fits the layer's Editable Zone,
+     * capped at the game's note size), so ComposerCanvas.svelte cannot derive it from the reported
+     * region height alone any more - the left side chevron is inset by `proStripWidth(rowHeight)`
+     * so it does not stand on the row labels, and that inset moves with the instrument.
+     */
+    rowHeight: number;
     hasCache: boolean;
   }) => void;
 }
@@ -1350,6 +1362,17 @@ export class ComposerRenderer {
   private paintedAxis: ProViewAxis | null = null;
   /** The current layer's Editable Zone, or null in the Compressed View. Identity-stable per (instrument, Basepoint). */
   private proZone: EditableZone | null = null;
+  /**
+   * THE ROW HEIGHT THE CAMERA IS MEASURED IN, or 0 before the first framing.
+   *
+   * The Pro View's row height is a property of the CURRENT LAYER now (proRowHeight fits the whole
+   * Editable Zone, capped at the game's own note size), so a layer switch, an instrument swap or a
+   * Basepoint change that widens the zone re-scales the axis under the camera. `cameraY` is a
+   * distance down that axis in px, so it means something different on either side of that change -
+   * this is what lets syncProCamera notice, rescale the offset it is holding, and take the new
+   * framing at once instead of easing between two coordinate systems.
+   */
+  private cameraRowHeight = 0;
   /** Everything the strip's labels are a function of, as one comparable string - see syncProStrip. */
   private proStripKey = '';
   /**
@@ -2032,9 +2055,21 @@ export class ComposerRenderer {
     return axis;
   }
 
-  /** One row's height: the notes region over `perColumn + 2`, and the Pro View has no other. */
+  /**
+   * ONE ROW'S HEIGHT: the notes region over the CURRENT LAYER'S zone plus its framing, capped at the
+   * game's own note size (proRowHeight, spec §4's 2026-08-21 revision).
+   *
+   * `this.proZone` and not a fresh `editableZone` lookup, so every surface that asks - the note
+   * placement, the zone's own drawing, the strip, the tap resolution, the texture cache - is asking
+   * about the same zone the camera was framed on. syncProCamera writes that field before it reads
+   * this, and init()'s first framing runs before anything paints; a null zone (the Compressed View,
+   * and the instant before that first framing) is the cap alone.
+   */
   private proRowHeightPx(): number {
-    return proRowHeight(this.height);
+    return proRowHeight({
+      notesRegionHeight: this.height,
+      zoneRowCount: this.proZone ? zoneRowCount(this.proZone) : undefined,
+    });
   }
 
   /** What a column view needs to place its notes, or null in the Compressed View. */
@@ -2116,6 +2151,15 @@ export class ComposerRenderer {
    * WHAT THE LOCK CHANGES HERE is only the 'rebuild' (see above). Every other path is the same in
    * both states - including the zone-change ease, which follows a new zone without re-locking
    * (spec §2).
+   *
+   * ...AND ONE THING NEITHER THE LOCK NOR THE MODE DECIDES: A ROW HEIGHT THAT MOVED. The zone is
+   * what proRowHeight sizes a row by (spec §4's 2026-08-21 revision), so a switch from a 36-row
+   * instrument to a 12-row one re-scales the whole axis - and `cameraY`, a px distance down that
+   * axis, stops meaning what it meant. The offset is rescaled by the ratio (which holds the same
+   * axis position at the top of the region) and the framing is taken AT ONCE whatever the mode
+   * asked for: an ease from a camera measured in the old rows is an ease from nowhere, the same
+   * reason 'rebuild' is instant. The note textures are baked at the old cell height too, so the
+   * cache is regenerated through the resize path rather than a new one of its own.
    */
   private syncProCamera(
     state: ComposerRendererState,
@@ -2127,6 +2171,19 @@ export class ComposerRenderer {
     const zone = editableZone(name, pitch);
     const zoneMoved = zone !== this.proZone;
     this.proZone = zone;
+    //BEFORE the target below, which divides by it: the field above is what proRowHeightPx reads
+    const rowHeight = this.proRowHeightPx();
+    const rowHeightMoved = this.cameraRowHeight > 0 && rowHeight !== this.cameraRowHeight;
+    if (rowHeightMoved) {
+      this.cameraY *= rowHeight / this.cameraRowHeight;
+      this.cameraEase = null;
+      //the same rebuild a resize takes, debounced with it: it re-bakes every note texture at the
+      //new cell height, drops the column pool and repaints. Not called on the two instant modes -
+      //'rebuild' IS that path (calling it from inside itself would re-arm its own debounce), and
+      //'frame' runs in init() before the first cache exists.
+      if (mode === 'ease' || mode === 'relock') this.recalculateCacheAndSizes();
+    }
+    this.cameraRowHeight = rowHeight;
     const target = lockedCameraY({
       axis: this.proAxis(),
       zone,
@@ -2135,7 +2192,12 @@ export class ComposerRenderer {
     });
     const targetMoved = target !== this.cameraTarget;
     this.cameraTarget = target;
-    if (mode === 'frame' || mode === 'rebuild') {
+    //A RESCALED AXIS JOINS THE TWO INSTANT MODES, for their own reason: there is no sliding between
+    //two row heights. The unlocked branch keeps the user's pan - rescaled just above, re-clamped
+    //here to the travel the new rows give the axis - and the locked one lands on the new framing.
+    //Nothing is painted from here: a row height only moves when the ZONE does, so the caller's
+    //`zoneMoved` repaint is what puts it on screen.
+    if (mode === 'frame' || mode === 'rebuild' || rowHeightMoved) {
       this.cameraEase = null;
       this.cameraY =
         state.viewLocked || mode === 'frame'
@@ -2705,6 +2767,13 @@ export class ComposerRenderer {
    * since its axis has none of the game's three note groups (see ComposerCacheProps). Both are
    * inputs rather than a branch inside the cache: a mode flip remounts this renderer, so a cache
    * instance already belongs to exactly one view.
+   *
+   * THE PRO CELL HEIGHT MOVES WITH THE LAYER, not only with the window: proRowHeight fits the
+   * current Editable Zone (spec §4's 2026-08-21 revision), so a switch between instruments of
+   * different reach lands here through the same debounced rebuild a resize takes - the only path
+   * that re-bakes these textures. `proRowHeightPx()` and not the `height` parameter alone, so the
+   * cell is the row the scene is being painted at; the caller writes `this.height` first, and
+   * syncProCamera has already refreshed the zone under it.
    */
   private generateCache(
     columnWidth: number,
@@ -2725,7 +2794,7 @@ export class ComposerRenderer {
       height,
       margin,
       timelineHeight,
-      noteHeight: this.state.proView ? proRowHeight(height) : undefined,
+      noteHeight: this.state.proView ? this.proRowHeightPx() : undefined,
       columnLines: this.state.proView ? [] : undefined,
       app: this.notesApp,
       colors: {
@@ -4356,6 +4425,7 @@ export class ComposerRenderer {
       timelinePadding: TIMELINE_BAND_PADDING,
       timelineHeight: this.timelineHeight,
       timelineTop: composerTimelineStripY(this.state.proView, this.height),
+      rowHeight: this.state.proView ? this.proRowHeightPx() : 0,
       hasCache: this.cache !== null,
     });
   }

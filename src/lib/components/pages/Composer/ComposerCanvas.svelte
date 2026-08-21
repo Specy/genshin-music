@@ -9,7 +9,7 @@
   import type { ComposerSettingsDataType } from '$core/BaseSettings';
   import type { ComposerRenderer } from './ComposerRenderer';
   import { composerCanvasCssSize, composerNotesRegionY } from './composerCanvasGeometry';
-  import { proRowHeight, proStripWidth } from './proViewGeometry';
+  import { proStripWidth } from './proViewGeometry';
   import TimelineButton from './TimelineButton.svelte';
 
   // The class names below (canvas-wrapper, canvas-relative, canvas-buttons, timeline-controls,
@@ -117,6 +117,11 @@
   // at top:0 instead of under the notes region. Reported rather than derived from `height` for the
   // reason the whole report exists - one statement of the split, on the side that drew it.
   let timelineTop = $state(0);
+  // ...and ONE ROW'S HEIGHT in the Pro View, which is the other number this template cannot derive:
+  // it is a property of the current layer there (the row height fits that layer's Editable Zone,
+  // capped at the game's note size), so it moves with an instrument swap and not only with the
+  // canvas. 0 in the Compressed View, where nothing reads it.
+  let rowHeight = $state(0);
   let hasCache = $state(false);
 
   const isBreakpointSelected = $derived(breakpoints.includes(selected));
@@ -156,9 +161,9 @@
   // otherwise stand on top of: the strip is drawn at the notes region's left inside edge, and this
   // button is a DOM element floating over the canvas, so nothing else keeps the two apart. Same
   // discipline as `notesTop` above - the strip's own width function, given the row height the
-  // renderer derives from the same reported region height, rather than a second formula here. The
-  // right chevron needs none of this (the strip is at the left edge only).
-  const stripInset = $derived(proView && height > 0 ? proStripWidth(proRowHeight(height)) : 0);
+  // RENDERER reported, rather than a second formula here. The right chevron needs none of this
+  // (the strip is at the left edge only).
+  const stripInset = $derived(proView && rowHeight > 0 ? proStripWidth(rowHeight) : 0);
 
   onMount(() => {
     let cancelled = false;
@@ -202,6 +207,7 @@
             height = geometry.height;
             timelineHeight = geometry.timelineHeight;
             timelineTop = geometry.timelineTop;
+            rowHeight = geometry.rowHeight;
             hasCache = geometry.hasCache;
           },
         }
