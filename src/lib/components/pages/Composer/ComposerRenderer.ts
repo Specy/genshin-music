@@ -2754,14 +2754,24 @@ export class ComposerRenderer {
   }
 
   /**
+   * WHERE THE PLAYHEAD STANDS AS A FRACTION of a width - the one statement of the per-view anchor,
+   * because two things must agree on it exactly: the playhead's own x on the canvas (playheadX
+   * below) and the mark inside the timeline's viewport rectangle, which is that same playhead seen
+   * through the timeline's linear canvas->strip map and therefore sits at the same fraction of the
+   * viewport's width. Written once so the mark cannot stay at the middle when a view moves the
+   * playhead - which is exactly the bug this refactor removed.
+   */
+  private playheadXFraction(): number {
+    return this.state.proView ? PLAYHEAD_X_FRACTION.pro : PLAYHEAD_X_FRACTION.compressed;
+  }
+
+  /**
    * The playhead's x, and with it the anchor of every column position - see PLAYHEAD_COLOR. A
    * QUARTER of the way across in the Pro View and the middle in the Compressed one, which is the
    * only thing either view changes about the coordinate system (see PLAYHEAD_X_FRACTION).
    */
   private playheadX(): number {
-    return (
-      this.width * (this.state.proView ? PLAYHEAD_X_FRACTION.pro : PLAYHEAD_X_FRACTION.compressed)
-    );
+    return this.width * this.playheadXFraction();
   }
 
   private windowGeometry(): ColumnWindowGeometry {
@@ -5337,9 +5347,12 @@ export class ComposerRenderer {
 
     this.viewportGraphics.clear();
     this.viewportGraphics.roundRect(0, 0, timelineWidth, this.timelineHeight - 3, 6);
-    const midX = timelineWidth / 2;
-    this.viewportGraphics.moveTo(midX, 0);
-    this.viewportGraphics.lineTo(midX, this.timelineHeight - 3);
+    //the playhead's mark inside the visible window: the viewport rectangle IS the canvas through
+    //the strip's linear map, so the mark stands at the same per-view fraction the playhead does
+    //(playheadXFraction - the middle in the Compressed View, a quarter across in the Pro View)
+    const playheadMarkX = timelineWidth * this.playheadXFraction();
+    this.viewportGraphics.moveTo(playheadMarkX, 0);
+    this.viewportGraphics.lineTo(playheadMarkX, this.timelineHeight - 3);
     this.viewportGraphics.stroke({ width: 3, color: this.theme.timeline.border, alpha: 0.8 });
     this.viewportGraphics.x = timelinePosition;
     this.viewportGraphics.y = 1.5;
