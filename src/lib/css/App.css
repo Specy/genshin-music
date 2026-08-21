@@ -2802,13 +2802,13 @@ select {
    taller anyway because it always shows the bar. Declared first so the selected height wins
    when a row is both. */
 .instrument-button-with-solo {
-  height: 4.2rem;
-  min-height: 4.2rem;
+  height: 4.6rem;
+  min-height: 4.6rem;
 }
 
 .instrument-button-selected {
-  height: 5.4rem;
-  min-height: 5.4rem;
+  height: 6rem;
+  min-height: 6rem;
   background-color: var(--composer-main-layer);
   color: var(--composer-main-layer-text);
 }
@@ -2824,20 +2824,36 @@ select {
   color: var(--composer-main-layer-text);
 }
 
+/* Selecting a layer must not FADE the row's text from one colour into the other — .app-button's
+   base transition carries a `color` term, so the same declaration is repeated here without it.
+   Background and filter keep transitioning, as they do on every other button. */
+.instrument-button .app-button {
+  transition:
+    background-color 0.2s,
+    filter 0.2s;
+}
+
 .instrument-settings {
   font-size: 0.8rem;
   display: grid;
   width: 100%;
   grid-template-columns: 1fr 1fr;
+  gap: 0.2rem;
+  padding: 0.2rem;
 }
 
-/* One resting surface for the gear, the eye and the solo bar alike — a translucent black rather
-   than a theme colour because the row underneath is either the composer layer colour (selected)
-   or the panel's own, and each row's inherited text colour has to keep reading over it.
-   `.app-button.active` then paints all three the accent pair when their state is on. */
+/* One resting surface for the gear, the eye and the solo bar alike, in the secondary pair —
+   which carries its own text colour, so nothing here depends on what the row underneath
+   inherits. DECLARED AFTER `.instrument-button-selected .app-button`: equal specificity, so
+   source order is what keeps the secondary text colour on the selected row too.
+   `.app-button.active` then paints all three the accent pair when their state is on.
+   The fixed height is what makes the gear and the eye the same box despite their 15px/16px
+   icons — `height: fit-content` sized each to its own glyph. */
 .instrument-settings .app-button {
   padding: 0.1rem;
-  background-color: rgba(0, 0, 0, 0.16);
+  height: 1.2rem;
+  background-color: var(--secondary);
+  color: var(--secondary-text);
   min-width: unset;
   flex: 1;
 }
@@ -2846,7 +2862,6 @@ select {
    soloed row — 1 / -1 spans the grid in both cases. */
 .instrument-solo-button {
   grid-column: 1 / -1;
-  margin-top: 0.15rem;
   font-size: 0.75rem;
 }
 
