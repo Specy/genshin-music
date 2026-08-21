@@ -1,6 +1,6 @@
 ---
 name: audio-loop-analysis
-description: Analyze MP3/WAV instrument samples and author click-resistant sustain loop points. Use for sustained_recorder or any future sampled instrument when loops click, pump, buzz, sound phase-discontinuous, or need per-note start/end metadata derived with the browser's Web Audio decoder.
+description: Analyze MP3/WAV instrument samples and author click-resistant sustain loop points. Use for any sampled instrument when loops click, pump, buzz, sound phase-discontinuous, or need per-note start/end metadata derived with the browser's Web Audio decoder.
 ---
 
 # Audio Loop Analysis
@@ -22,8 +22,8 @@ node docs/skills/audio-loop-analysis/scripts/analyze-wav-loops.mjs path/to/worki
 
 Candidates print best-first per file (the dir holds `0.wav … N-1.wav`; run it on
 the pre-encode PCM when the shipped files are MP3). Audition winners with the
-browser tool before authoring. See `sky/instruments/sustained_recorder/` (VCSL
-samples, CC0) for a fully worked instrument produced this way.
+browser tool before authoring. See `sky/instruments/Cello/` (in-game
+samples) for a fully worked looping instrument produced this way.
 
 ## Run the analysis (browser)
 
@@ -37,7 +37,7 @@ samples, CC0) for a fully worked instrument produced this way.
 3. Open the following URL in a browser and wait until the document title becomes `DONE`:
 
    ```text
-   http://127.0.0.1:4173/docs/skills/audio-loop-analysis/scripts/analyze-audio-loops.html?root=/src/lib/games/sky/instruments/sustained_recorder&count=15&midi=60,62,64,65,67,69,71,72,74,76,77,79,81,83,84
+   http://127.0.0.1:4173/docs/skills/audio-loop-analysis/scripts/analyze-audio-loops.html?root=/src/lib/games/sky/instruments/Cello&count=15&midi=60,62,64,65,67,69,71,72,74,76,77,79,81,83,84
    ```
 
 4. Read machine-readable results from `#output` or `window.analysisResults`. Use the generated buttons to audition candidates.

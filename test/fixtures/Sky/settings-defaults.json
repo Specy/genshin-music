@@ -139,7 +139,7 @@
   },
   "player": {
     "other": {
-      "settingVersion": "Sky84"
+      "settingVersion": "Sky86"
     },
     "data": {
       "instrument": {
@@ -153,24 +153,30 @@
           "Piano",
           "GrandPiano",
           "Contrabass",
+          "Cello",
+          "Violin",
           "Guitar",
           "LightGuitar",
           "Harp",
           "Horn",
           "Trumpet",
+          "Saxophone",
           "Pipa",
           "WinterPiano",
           "Xylophone",
           "Flute",
+          "TransverseFlute",
           "Panflute",
           "Ocarina",
           "MantaOcarina",
+          "Harmonica",
           "Aurora",
-          "sustained_recorder",
           "Kalimba",
           "ToyUkulele",
           "Drum",
+          "FortuneDrum",
           "Bells",
+          "SmallBell",
           "DunDun",
           "HandPan",
           "SFX_SineSynth",
@@ -688,7 +694,7 @@
   },
   "zenKeyboard": {
     "other": {
-      "settingVersion": "Sky28"
+      "settingVersion": "Sky30"
     },
     "data": {
       "instrument": {
@@ -702,24 +708,30 @@
           "Piano",
           "GrandPiano",
           "Contrabass",
+          "Cello",
+          "Violin",
           "Guitar",
           "LightGuitar",
           "Harp",
           "Horn",
           "Trumpet",
+          "Saxophone",
           "Pipa",
           "WinterPiano",
           "Xylophone",
           "Flute",
+          "TransverseFlute",
           "Panflute",
           "Ocarina",
           "MantaOcarina",
+          "Harmonica",
           "Aurora",
-          "sustained_recorder",
           "Kalimba",
           "ToyUkulele",
           "Drum",
+          "FortuneDrum",
           "Bells",
+          "SmallBell",
           "DunDun",
           "HandPan",
           "SFX_SineSynth",

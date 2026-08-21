@@ -3,5 +3,9 @@
   "family": "guitar",
   "midiName": "electric guitar (clean)",
   "shape": "sky-3x5",
+  "sustain": {
+    "release": 0.35,
+    "minLength": 0.1
+  },
   "notes": "standard-15"
 }

@@ -88,7 +88,7 @@ Each note (inline or in a preset) is:
 - `file` — optional; defaults to `<index>.mp3`.
 - `loop` — optional per-note sustain loop, overriding `sustain.loop`. Only
   meaningful when the instrument has `sustain` (see
-  `sky/instruments/sustained_recorder/` for a fully worked example).
+  `sky/instruments/Cello/` for a fully worked example).
 - `minLength` — optional per-note override of `sustain.minLength` (below).
 
 **Sustain**: presence of the `sustain` object makes the instrument hold notes

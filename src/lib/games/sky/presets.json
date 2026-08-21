@@ -167,5 +167,73 @@
       "baseNote": "C",
       "icon": "dmcr"
     }
+  ],
+  "bells-8": [
+    {
+      "midi": 60,
+      "baseNote": "C",
+      "icon": "cr"
+    },
+    {
+      "midi": 62,
+      "baseNote": "D",
+      "icon": "dm"
+    },
+    {
+      "midi": 67,
+      "baseNote": "G",
+      "icon": "cr"
+    },
+    {
+      "midi": 69,
+      "baseNote": "A",
+      "icon": "dm"
+    },
+    {
+      "midi": 72,
+      "baseNote": "C",
+      "icon": "cr"
+    },
+    {
+      "midi": 74,
+      "baseNote": "D",
+      "icon": "dm"
+    },
+    {
+      "midi": 79,
+      "baseNote": "G",
+      "icon": "cr"
+    },
+    {
+      "midi": 81,
+      "baseNote": "A",
+      "icon": "dm"
+    }
+  ],
+  "drums-4": [
+    {
+      "midi": 60,
+      "baseNote": "C",
+      "pitched": false,
+      "icon": "cr"
+    },
+    {
+      "midi": 62,
+      "baseNote": "D",
+      "pitched": false,
+      "icon": "dm"
+    },
+    {
+      "midi": 64,
+      "baseNote": "E",
+      "pitched": false,
+      "icon": "cr"
+    },
+    {
+      "midi": 65,
+      "baseNote": "F",
+      "pitched": false,
+      "icon": "dm"
+    }
   ]
 }

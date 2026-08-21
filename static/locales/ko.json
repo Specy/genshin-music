@@ -711,26 +711,32 @@
     "DunDun": "뚝딱뚝딱",
     "Piano": "피아노",
     "Contrabass": "콘트라베이스",
+    "Cello": "첼로",
+    "Violin": "바이올린",
     "Ukulele": "우크렐레",
     "Guitar": "기타",
     "LightGuitar": "전자기타",
     "Harp": "하프",
     "Horn": "밤바람 호른",
     "Trumpet": "나팔",
+    "Saxophone": "색소폰",
     "Pipa": "비파",
     "WinterPiano": "겨울 피아노",
     "Xylophone": "색소폰",
     "Flute": "플루트",
+    "TransverseFlute": "가로 피리",
     "Panflute": "팬플루트",
     "Ocarina": "오카리나",
     "MantaOcarina": "가오리 모양 오카리나",
+    "Harmonica": "하모니카",
     "Aurora": "Aurora",
-    "sustained_recorder": "지속음 리코더",
     "NightwindHorn": "Nightwind Horn",
     "Kalimba": "칼림바",
     "ToyUkulele": "장난감 우크렐레",
     "Drum": "드럼",
+    "FortuneDrum": "복 북",
     "Bells": "종",
+    "SmallBell": "작은 종",
     "HandPan": "핸드팬",
     "SFX_SineSynth": "사인 신스",
     "SFX_BassSynth": "베이스 신스",
@@ -748,7 +754,7 @@
     "LingeringEuphonia": "여음",
     "LeapingSpiritPiano": "리듬 건반",
     "HarmonicKey": "화음 건반",
-    "Harmonic Key":"화음 건반"
+    "Harmonic Key": "화음 건반"
   },
   "versions": {
     "4-0-0": {
@@ -762,7 +768,9 @@
       "change-7": "작곡 모드 재생은 이제 하나의 시계로 작동하여 소리, 시각 효과, 녹음이 항상 정확히 동기화됩니다(룩어헤드 설정은 제거되었습니다).",
       "change-13": "The composer has a new \"Pro view\", which you can turn on in its settings: every semitone gets its own row and every note sits at its real pitch, so you see exactly what the song plays.",
       "change-14": "In pro view you edit on the canvas itself: tap a cell to add or remove a note, long press one of your notes to choose how long it lasts, and unlock the view to drag the rows up and down freely.",
-      "change-15": "그 외 많은 버그 수정과 개선이 있습니다."
+      "change-15": "Sky에 없던 악기 일곱 개를 추가했습니다: 첼로, 바이올린, 색소폰, 하모니카, 가로 피리, 작은 종, 복 북.",
+      "change-16": "오로라와 라이트 기타가 게임에서처럼 음을 길게 유지합니다. 이전에는 짧은 샘플이라 길게 눌러도 아무 일도 없었습니다.",
+      "change-17": "그 외 많은 버그 수정과 개선이 있습니다."
     },
     "3-7-0": {
       "title": "새로운 악기 추가 (원신)",

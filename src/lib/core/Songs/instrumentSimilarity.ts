@@ -42,14 +42,19 @@ export const SIMILAR_INSTRUMENTS = {
         'Kalimba': {Genshin: 'LingeringEuphonia'},
         'Xylophone': {Genshin: 'HarmonicKey'},
         'Bells': {Genshin: 'HarmonicKey'},
+        'SmallBell': {Genshin: 'HarmonicKey'},
         'HandPan': {Genshin: 'DunDun'},
         'Drum': {Genshin: 'DjemDjemDrum'},
+        'FortuneDrum': {Genshin: 'DjemDjemDrum'},
         'DunDun': {Genshin: 'DunDun'},
         'Horn': {Genshin: 'NightwindHorn'},
         'Trumpet': {Genshin: 'NightwindHorn'},
+        'Saxophone': {Genshin: 'NightwindHorn'},
+        'Harmonica': {Genshin: 'NightwindHorn'},
         //other winds/voice/SFX have no Genshin counterpart yet — omitted entries fall
-        //back to the target default (Flute, Panflute, Ocarina, MantaOcarina,
-        //Contrabass, SFX_*)
+        //back to the target default (Flute, TransverseFlute, Panflute, Ocarina,
+        //MantaOcarina, SFX_*). The bowed strings join them: Genshin has no bowed
+        //instrument, so Cello/Violin fall back the same way Contrabass already does.
     },
 } satisfies Record<ConversionGame, Record<string, SimilarByTarget>>
 

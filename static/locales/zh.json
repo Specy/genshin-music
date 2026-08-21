@@ -702,13 +702,13 @@
             "vsrg_add_hit_object": "添加打击乐对象（同步到注册的按键绑定）"
         }
     },
-    "composer_note_name_type":{
+    "composer_note_name_type": {
         "Note_name": "音名",
         "Keyboard_layout": "键盘布局",
         "Your_Keyboard_layout": "你键盘的布局",
         "Do_Re_Mi": "哆 来 咪",
         "ABC": "ABC",
-        "No_Text" : "无文本"
+        "No_Text": "无文本"
     },
     "instruments": {
         "Lyre": "风物之诗琴",
@@ -725,25 +725,31 @@
         "Grand Piano": "大钢琴",
         "GrandPiano": "大钢琴",
         "Contrabass": "屁琴",
+        "Cello": "大提琴",
+        "Violin": "小提琴",
         "Guitar": "吉他",
         "LightGuitar": "电吉他",
         "Harp": "竖琴",
         "Horn": "圆号",
         "Trumpet": "小号",
+        "Saxophone": "萨克斯",
         "Pipa": "琵琶",
         "WinterPiano": "高音钢琴",
         "Xylophone": "钢片琴",
         "Flute": "长笛",
+        "TransverseFlute": "横笛",
         "Panflute": "排箫",
         "Ocarina": "陶笛",
         "MantaOcarina": "鲲笛",
+        "Harmonica": "口琴",
         "Aurora": "Aurora",
-        "sustained_recorder": "延音竖笛",
         "NightwindHorn": "Nightwind Horn",
         "Kalimba": "拇指琴",
         "ToyUkulele": "玩具尤克里里",
         "Drum": "鼓组",
+        "FortuneDrum": "福鼓",
         "Bells": "铃铛",
+        "SmallBell": "小铃铛",
         "HandPan": "手碟",
         "SFX_SineSynth": "合成正弦波",
         "SFX_BassSynth": "合成贝斯",
@@ -770,7 +776,9 @@
             "change-7": "作曲器播放现在由单一时钟驱动，声音、视觉效果和录音始终完全同步（已移除前瞻设置）",
             "change-13": "The composer has a new \"Pro view\", which you can turn on in its settings: every semitone gets its own row and every note sits at its real pitch, so you see exactly what the song plays.",
             "change-14": "In pro view you edit on the canvas itself: tap a cell to add or remove a note, long press one of your notes to choose how long it lasts, and unlock the view to drag the rows up and down freely.",
-            "change-15": "修复其他问题并优化"
+            "change-15": "Sky 新增了七件此前缺失的乐器：大提琴、小提琴、萨克斯、口琴、横笛、小铃铛和福鼓。",
+            "change-16": "极光和光之吉他现在可以像游戏中一样延音了。此前它们用的是短音频，长按并没有效果。",
+            "change-17": "修复其他问题并优化"
         },
         "3-7-0": {
             "title": "新乐器(原神)",

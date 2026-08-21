@@ -25,6 +25,8 @@ export const CHANGELOG: Update[] = [
             'The player always follows the loaded song\'s pitch and instruments, and returns to your own settings when the song stops (the "sync song data" setting is gone)',
             'New "Pro view" in the composer settings: every semitone is its own row and every note sits at its real pitch',
             'In pro view you add and remove notes by tapping the canvas itself, long press one of your notes for its duration, and can unlock the view to drag the rows up and down',
+            'Added seven instruments to Sky: Cello, Violin, Saxophone, Harmonica, Transverse Flute, Small Bell and Fortune Drum',
+            'The Aurora and the Light Guitar now hold when you hold the note, using the game\'s full-length samples instead of the short ones',
             'Other bug fixes and improvements',
         ]
     },
