@@ -164,25 +164,20 @@ const DESKTOP_CANVAS_INSET_PX =
 export const PRO_KEYBOARD_SLIVER_PX = 2.5 * ROOT_FONT_SIZE;
 
 /**
- * THE SONG-INFO ROW at the very bottom of the Pro View's window: `:root`'s
- * `--pro-song-info-height: 1.75rem`, and the second half of the band the canvas stops above.
- *
- * `.song-info` is an overlay floating over the page's bottom-left corner everywhere else in the
- * app. In this view that corner is the CANVAS - the name and the time stood on the lowest rows of
- * the axis and on the row-label strip - so here it becomes a row of its own with the sheet standing
- * on top of it (App.css's `.song-info-pro`), and the canvas gives up the height.
- */
-export const PRO_SONG_INFO_PX = 1.75 * ROOT_FONT_SIZE;
-
-/**
  * WHAT THE PRO VIEW'S CANVAS ELEMENT IS THE VIEWPORT LESS, in px - the vertical counterpart of
  * DESKTOP_CANVAS_INSET_PX:
  *   `.composer-grid` padding      0.2rem at the top and 0.2rem at the bottom
  *   the sliver band               PRO_KEYBOARD_SLIVER_PX
- *   the song-info row             PRO_SONG_INFO_PX
  * ...so the canvas starts 3.2px below the window's top edge and stops 3.2px above the sliver, with
  * that trailing 3.2px being the grid's own bottom padding rather than a gap invented here, and the
- * sliver in turn standing on the song-info row at the window's own edge.
+ * sliver standing at the window's own bottom edge.
+ *
+ * THE SONG-INFO ROW IS NOT A TERM OF THIS (user revision 2026-08-22). It was for one round -
+ * `--pro-song-info-height: 1.75rem` under the sliver, with the canvas stopping above both - and the
+ * canvas has that 28px of axis back: `.song-info` is an OVERLAY at the window's bottom again
+ * (App.css's `.song-info-pro`), floating over the lowest rows the way it floats over every other
+ * page, covered by the keyboard sheet when that is up. Read-only text reserving a row of the one
+ * surface this view exists to edit was the wrong trade.
  *
  * IT ASSUMES `.composer-grid` IS THE WINDOW'S HEIGHT, which it is on the composer route: `.app` is
  * an `align-items: stretch` flex row inside the full-height shell, so the grid's border box is
@@ -196,8 +191,7 @@ export const PRO_SONG_INFO_PX = 1.75 * ROOT_FONT_SIZE;
 const PRO_CANVAS_INSET_PX =
   Math.round(
     (0.2 * ROOT_FONT_SIZE * 2 + //.composer-grid padding, top and bottom
-      PRO_KEYBOARD_SLIVER_PX + //the band the lowered keyboard sheet peeks into
-      PRO_SONG_INFO_PX) * //...which itself stands on the song's name and time
+      PRO_KEYBOARD_SLIVER_PX) * //the band the lowered keyboard sheet peeks into
       1000
   ) / 1000;
 /**
