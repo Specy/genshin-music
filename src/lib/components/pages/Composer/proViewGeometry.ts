@@ -50,13 +50,13 @@ export const AXIS_PADDING_ROWS = 3;
 const MAX_BASEPOINT_OFFSET = PITCHES.length - 1;
 
 /**
- * THE FRAMING ROWS THE NOTES REGION IS TALLER THAN THE GAME'S OWN LAYOUT, in rows (spec §4:
- * `rowHeight = notesRegionHeight / (perColumn + 2)`).
+ * THE FRAMING ROWS THE NOTES REGION IS TALLER THAN WHAT IT IS FRAMING, in rows (spec §4, as revised
+ * 2026-08-21): one empty row above and one below, so nothing the region frames is ever drawn flush
+ * against its edge.
  *
- * The Pro View keeps the game's base note size instead of inventing one: a column's `perColumn`
- * rows (21 genshin / 15 sky) still fill the region, and the two extra rows are the framing the
- * region gains so a locked Editable Zone is never drawn edge-to-edge. Because the divisor is fixed,
- * so is the row height — there is no vertical zoom, and a note is the same size in every layer.
+ * It is the `+ 2` of BOTH terms of proRowHeight below — the zone's own fit and the cap the game's
+ * base layout puts on it — because it means the same thing in each: the frame is the band plus a
+ * row of air at each end.
  */
 export const ROW_HEIGHT_FRAMING_ROWS = 2;
 
@@ -199,16 +199,56 @@ export function numberForRow(axis: ProViewAxis, row: number): number {
 }
 
 /**
- * ONE ROW'S HEIGHT IN PX, and the Pro View has no other (spec §4: no vertical zoom).
+ * ONE ROW'S HEIGHT IN PX: THE WHOLE EDITABLE ZONE FITS, CAPPED AT THE GAME'S OWN NOTE SIZE (spec §4,
+ * user revision 2026-08-21).
  *
- * `perColumn` defaults to this build's game constant and is a parameter only so a test can check
- * both shipped layouts from one build — the same reason composerCanvasSize takes `rowHeightScale`.
+ *     rowHeight = min(H / (zoneRows + 2), H / (perColumn + 2))
+ *
+ * The first term is the point of the revision. The Pro View draws a row per SEMITONE while
+ * `perColumn` counts BUTTONS, and the two are only the same number for an instrument with no gaps:
+ * genshin's Lyre spans 36 semitones with its 21 buttons, so a region sized for 21 + 2 rows showed
+ * two thirds of it and the locked frame — whose whole promise is "this is what this layer can
+ * play" — cut the instrument in half. Sized by the zone, the zone plus its two framing rows fills
+ * the region exactly, whatever the instrument and whatever Basepoint it is at.
+ *
+ * The second term is a CAP and not an alternative: without it a small instrument would balloon its
+ * notes (a genshin drum kit's 8 buttons over 12 semitones would draw 14-row notes, ~70px each on a
+ * 1080p window), which is a different view of the same song rather than the same view framed. So a
+ * narrow zone keeps the note size the game's base layout gives it and simply leaves air around
+ * itself; a wide one shrinks until it fits.
+ *
+ * THE ROW HEIGHT IS THEREFORE A PROPERTY OF THE CURRENT LAYER, in both lock states — an unlocked
+ * frame is a pan over the same axis, not a different scale of it — so it moves on a layer switch,
+ * an instrument swap or a Basepoint change that widens the zone. Callers that cache anything sized
+ * by it (the note textures) have to rebuild there, exactly as they do on a resize.
+ *
+ * `zoneRowCount` omitted (or non-positive) is the cap alone, which is what the module's own callers
+ * use before a zone exists. `perColumn` defaults to this build's game constant and is a parameter
+ * only so a test can check both shipped layouts from one build — the same reason composerCanvasSize
+ * takes `rowHeightScale`.
  */
-export function proRowHeight(
-  notesRegionHeight: number,
-  perColumn: number = NOTES_PER_COLUMN
-): number {
-  return notesRegionHeight / (perColumn + ROW_HEIGHT_FRAMING_ROWS);
+export function proRowHeight(input: {
+  notesRegionHeight: number;
+  /** `zoneRowCount(zone)` for the layer being framed — the SEMITONES its band spans, not its buttons. */
+  zoneRowCount?: number;
+  perColumn?: number;
+}): number {
+  const perColumn = input.perColumn ?? NOTES_PER_COLUMN;
+  const capped = input.notesRegionHeight / (perColumn + ROW_HEIGHT_FRAMING_ROWS);
+  const rows = input.zoneRowCount ?? 0;
+  if (!(rows > 0)) return capped;
+  return Math.min(input.notesRegionHeight / (rows + ROW_HEIGHT_FRAMING_ROWS), capped);
+}
+
+/**
+ * HOW MANY ROWS A SPAN OCCUPIES, ends included — what proRowHeight sizes itself by, and the one
+ * place the off-by-one lives.
+ *
+ * A zone from 48 to 83 is 36 rows and not 35: `min` and `max` are both real rows with a note on
+ * them, and a frame a row short would cut the top of the instrument off.
+ */
+export function zoneRowCount(span: NumberSpan): number {
+  return span.max - span.min + 1;
 }
 
 /** Where a Note Number's row sits on screen: its row's top edge, in the notes region's own coordinates. */
@@ -255,8 +295,9 @@ export function visibleRowRange(input: {
  * THE CAMERA'S TRAVEL: 0 (axis top flush with the region's top) to the offset that puts the axis'
  * bottom row flush with the region's bottom.
  *
- * DEGENERATE CASE: the region shows exactly `perColumn + 2` rows (that IS the row height's divisor)
- * while both shipped games' axes are twice that or more, so there is normally travel to clamp. An
+ * DEGENERATE CASE: the region shows exactly what proRowHeight sized it to — the current layer's zone
+ * plus two framing rows, or `perColumn + 2` where the cap bites — while both shipped games' axes are
+ * twice either of those or more, so there is normally travel to clamp. An
  * axis SHORTER than the region — a game with one narrow instrument, or any caller measuring a taller
  * region than the axis is long — would give a negative upper bound, so the travel collapses to 0 and
  * the axis is pinned to the region's top rather than allowed to drift up out of view.

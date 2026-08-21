@@ -217,7 +217,7 @@ const PRO_CANVAS_INSET_PX =
 const PRO_CANVAS_HEIGHT_VH = 100;
 /**
  * The floor under the Pro View's notes region, in px. It is a DIVISOR - proViewGeometry.proRowHeight
- * divides it by `perColumn + 2` - and pixi cannot resize to a negative height at all, so a viewport
+ * divides it by the framed row count - and pixi cannot resize to a negative height at all, so a viewport
  * shorter than the chrome above resolves to a degenerate but finite region instead of poisoning
  * every row. Unlike nearestEven this IS reproduced in CSS (`max()`, unlike `round()`, is supported
  * everywhere this app runs), so the two forms agree even in that unreachable corner.
@@ -329,8 +329,8 @@ export function composerCanvasSize(input: {
   if (proView) {
     //ONE rounding and no `scale`: the region is what the window leaves, so shrinking it by the
     //game's row-height factor would only open a gap under the canvas - and the Pro View's own row
-    //height (proViewGeometry.proRowHeight) divides this region by `perColumn + 2` rather than
-    //deriving a note size from the game's Song-Grid layout at all.
+    //height (proViewGeometry.proRowHeight) divides this region by the rows it is framing rather
+    //than deriving a note size from the game's Song-Grid layout at all.
     height = nearestEven(
       proNotesRegionHeight(input.bodyHeight, input.timelineHeight ?? composerTimelineHeight())
     );

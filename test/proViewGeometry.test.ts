@@ -35,6 +35,7 @@ import {
   spanOfNumbers,
   visibleRowRange,
   yForNumber,
+  zoneRowCount,
   type ProViewAxis,
 } from '$cmp/pages/Composer/proViewGeometry';
 import {
@@ -190,15 +191,78 @@ describe('rows', () => {
     expect(rowForNumber(AXIS, 60) - rowForNumber(AXIS, 61)).toBe(1);
   });
 
-  it('fits perColumn + 2 rows in the notes region, in both shipped layouts', () => {
-    expect(proRowHeight(REGION)).toBe(ROW);
-    expect(proRowHeight(REGION) * REGION_ROWS).toBe(REGION);
+  it('caps a row at the game\'s own note size: perColumn + 2 rows fill the region', () => {
+    expect(proRowHeight({ notesRegionHeight: REGION })).toBe(ROW);
+    expect(proRowHeight({ notesRegionHeight: REGION }) * REGION_ROWS).toBe(REGION);
     //the two shipped `perColumn` values, from one build - same trick as composerCanvasSize's
     //`rowHeightScale` parameter
-    expect(proRowHeight(230, 21)).toBe(10);
-    expect(proRowHeight(170, 15)).toBe(10);
-    //no vertical zoom: the row height is a function of the region alone
-    expect(proRowHeight(REGION * 2)).toBe(ROW * 2);
+    expect(proRowHeight({ notesRegionHeight: 230, perColumn: 21 })).toBe(10);
+    expect(proRowHeight({ notesRegionHeight: 170, perColumn: 15 })).toBe(10);
+    //the cap scales with the region and with nothing else
+    expect(proRowHeight({ notesRegionHeight: REGION * 2 })).toBe(ROW * 2);
+  });
+
+  /**
+   * THE FRAMING FITS THE WHOLE INSTRUMENT (spec §4, user revision 2026-08-21).
+   *
+   * `perColumn` counts BUTTONS and the Pro View draws a row per SEMITONE, so the two part company
+   * for every instrument with a gap in it: the widest one in either shipped game spans far more
+   * semitones than the game's layout has buttons, and a region sized for `perColumn + 2` showed
+   * two thirds of its Editable Zone with the locked frame cutting the rest off.
+   *
+   * Stated over the ROSTER rather than over named instruments, like everything else in this file:
+   * whichever instrument reaches furthest in this build is the one that has to fit.
+   */
+  it('shrinks a row until the whole Editable Zone plus its framing fits the region', () => {
+    const zone = editableZone(WIDEST, 'C');
+    const rows = zoneRowCount(zone);
+    const rowHeight = proRowHeight({ notesRegionHeight: REGION, zoneRowCount: rows });
+    //the zone and its two framing rows tile the region exactly
+    expect(rowHeight * (rows + ROW_HEIGHT_FRAMING_ROWS)).toBeCloseTo(REGION, 9);
+    //...which is what makes the whole band visible: the zone itself is shorter than the region
+    expect(rowHeight * rows).toBeLessThan(REGION);
+    //genshin's widest instrument spans more semitones than the game has buttons per column, so
+    //this is a REAL shrink there; on a game where it does not, the cap below is what answers
+    if (rows > NOTES_PER_COLUMN) {
+      expect(rowHeight).toBeLessThan(proRowHeight({ notesRegionHeight: REGION }));
+    }
+  });
+
+  it('...but never grows one: a narrow instrument keeps the game\'s note size', () => {
+    const rows = zoneRowCount(editableZone(NARROWEST, 'C'));
+    expect(rows).toBeLessThan(REGION_ROWS);
+    //the cap, exactly - the drum kit's 8 buttons over a dozen semitones would otherwise draw
+    //notes twice the size of every other instrument's, which is a different view and not a frame
+    expect(proRowHeight({ notesRegionHeight: REGION, zoneRowCount: rows })).toBe(ROW);
+  });
+
+  it('is the smaller of the two terms, whichever that is, in both shipped layouts', () => {
+    //BOTH GAMES FROM ONE BUILD, the way the cap row above checks both `perColumn` values: 21/15
+    //buttons, against a zone wider than the layout and a zone narrower than it.
+    for (const perColumn of [21, 15]) {
+      const cap = proRowHeight({ notesRegionHeight: 460, perColumn });
+      //a 36-row zone (genshin's Lyre) fits at 460 / 38, well under either cap
+      expect(proRowHeight({ notesRegionHeight: 460, perColumn, zoneRowCount: 36 })).toBe(460 / 38);
+      //a 6-row one would want 460 / 8 and gets the cap instead
+      expect(proRowHeight({ notesRegionHeight: 460, perColumn, zoneRowCount: 6 })).toBe(cap);
+      //...and exactly `perColumn` rows of zone is the crossover: the two terms are the same number
+      expect(proRowHeight({ notesRegionHeight: 460, perColumn, zoneRowCount: perColumn })).toBe(cap);
+    }
+  });
+
+  it('is the cap alone when no zone is given - the state before the first framing', () => {
+    expect(proRowHeight({ notesRegionHeight: REGION, zoneRowCount: undefined })).toBe(ROW);
+    //a degenerate count cannot poison the row height either
+    expect(proRowHeight({ notesRegionHeight: REGION, zoneRowCount: 0 })).toBe(ROW);
+    expect(proRowHeight({ notesRegionHeight: REGION, zoneRowCount: -4 })).toBe(ROW);
+  });
+
+  it('counts a zone\'s rows with both ends included', () => {
+    expect(zoneRowCount({ min: 48, max: 83 })).toBe(36);
+    //one number is one row, not none
+    expect(zoneRowCount({ min: 60, max: 60 })).toBe(1);
+    const zone = editableZone(WIDEST, 'C');
+    expect(zoneRowCount(zone)).toBe(zone.max - zone.min + 1);
   });
 });
 
