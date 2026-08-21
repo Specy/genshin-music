@@ -1071,16 +1071,24 @@ a {
 :root {
   --menu-size: 4rem;
   --panel-size: 40vw;
-  /* THE LOWERED KEYBOARD SHEET'S SLIVER in the composer's Pro View (CONTEXT.md: Pro View): how much
-     of the sheet stays above the window's bottom edge while it is down, and therefore also the band
-     `.song-info`, the tempo changers and the CANVAS ITSELF are held clear of.
+  /* THE PRO VIEW'S BOTTOM BAND, in two rows (CONTEXT.md: Pro View) - everything the window has
+     below the canvas, and therefore what composerCanvasGeometry takes off the canvas' height:
 
-     Here rather than on `.composer-grid-pro` because two of those three are not inside that element:
-     `.song-info` is a sibling of the grid, not a descendant. composerCanvasGeometry states the same
-     number as PRO_KEYBOARD_SLIVER_PX (it comes off the Pro View canvas' height) and
-     test/composerCanvasCss.test.ts reads this declaration back out of this file, the way it does the
-     timeline buttons' 2.2rem. */
-  --pro-sliver-height: 1.5rem;
+       `--pro-song-info-height`  the very bottom of the window, where the song's name and time
+                                 stand in a row of their own. They used to float over the canvas,
+                                 which in this view is the editing surface: at the bottom left they
+                                 sat on the lowest rows of the axis and on the row-label strip.
+       `--pro-sliver-height`     directly above it: how much of the lowered keyboard sheet stays on
+                                 screen. Bigger than it was (1.5rem), because a sliver is the only
+                                 thing telling a user the keyboard is still there and where to tap
+                                 for it.
+
+     Here rather than on `.composer-grid-pro` because `.song-info` is a SIBLING of the composer grid
+     rather than a descendant of it. composerCanvasGeometry states the same two numbers
+     (PRO_KEYBOARD_SLIVER_PX, PRO_SONG_INFO_PX) and test/composerCanvasCss.test.ts reads these
+     declarations back out of this file, the way it does the timeline buttons' 2.2rem. */
+  --pro-sliver-height: 2.5rem;
+  --pro-song-info-height: 1.75rem;
   /* HOW FAR THE RAISED SHEET'S SCRIM REACHES ABOVE THE SHEET, and it is a fade rather than a band:
      the scrim covers the keyboard's own box (see `.composer-keyboard-wrapper::before`) and this is
      the head above it the gradient dies out in, so the canvas over the sheet is dimmed by nothing.
@@ -3064,13 +3072,15 @@ select {
      ...WHICH NEEDS THE COLUMN'S HEIGHT TO BE DEFINITE, and that is what `max-height` is for. The
      flex row this column sits in is `height: fit-content`, so with the tempo slot IN FLOW the
      column's own content is what sizes that row: without a cap the six rows would simply make the
-     row (and the page) taller than the window instead of the tools shrinking. The cap is the
-     window less the composer's own chrome - `.composer-grid`'s 0.2rem padding at each end and the
-     sliver band - which is the canvas' own height expression (composerCanvasGeometry's
-     PRO_CANVAS_INSET_PX = 0.4rem + PRO_KEYBOARD_SLIVER_PX), so the column ends exactly where the
-     canvas beside it does. */
+     row (and the page) taller than the window instead of the tools shrinking.
+
+     THE CAP IS THE WHOLE GRID, not the canvas beside it. It used to stop where the canvas stops
+     (the sliver band came off it too), which left the tempo changers floating in the middle of the
+     window's bottom edge with a band of nothing under them; now the column runs the full content
+     box - the window less `.composer-grid`'s own 0.2rem padding at each end - so the changers sit
+     against the bottom while the canvas ends higher, above the sliver and the song-info row. */
   grid-template-rows: repeat(5, minmax(0, 8rem)) 1fr;
-  max-height: calc(100vh - 0.4rem - var(--pro-sliver-height));
+  max-height: calc(100vh - 0.4rem);
 }
 
 /* THE KEYBOARD AS A BOTTOM SHEET. Lowered is the default and the class is what raises it, so the
@@ -3083,6 +3093,11 @@ select {
 .composer-grid-pro .composer-keyboard-wrapper {
   position: fixed;
   z-index: 6;
+  /* THE SHEET STANDS ON THE SONG-INFO ROW, not on the window's edge. `100%` in the translate below
+     is the element's own height, so it puts the sheet's TOP exactly at its box's bottom - and with
+     that bottom raised by the info row, the sliver peeks above that row instead of through it
+     (the song's name has no backing of its own, and a keyboard behind it is not a backing). */
+  bottom: var(--pro-song-info-height);
   /* percentages in `translate` are of the element's OWN height, so this leaves exactly the sliver
      showing whatever instrument (and therefore whatever keyboard height) is loaded */
   transform: translateY(calc(100% - var(--pro-sliver-height)));
@@ -3163,7 +3178,10 @@ select {
 .composer-keyboard-sliver {
   position: fixed;
   left: 0;
-  bottom: 0;
+  /* the band the sheet really peeks into, which is above the song-info row it stands on - see
+     `.composer-grid-pro .composer-keyboard-wrapper`. A target at the window's edge would be a
+     target on the song's name. */
+  bottom: var(--pro-song-info-height);
   width: 100%;
   height: var(--pro-sliver-height);
   z-index: 7;
@@ -3208,10 +3226,27 @@ select {
   visibility: hidden;
 }
 
-/* ...and the song's name and time, which live in the sliver's band and are read-only text the sheet
-   has no reason to hide: lifted clear of it and above the backdrop (z-index 8) too. */
+/* THE SONG'S NAME AND TIME, AS THE WINDOW'S BOTTOM ROW. Everywhere else in the app this is an
+   overlay floating over the bottom-left corner, and in the Pro View that corner is the canvas: the
+   text stood on the lowest rows of the axis and on the row-label strip, over the one surface this
+   view exists to edit. Here it is a band of its own instead - the canvas stops above it
+   (composerCanvasGeometry's PRO_SONG_INFO_PX) and nothing overlaps it.
+
+   A ROW AND NOT A COLUMN, which is what makes 1.75rem enough for both halves: the name and the
+   time sit side by side rather than stacked. `left`/`width` replace the base rule's corner offset
+   so the band is the window's full width, with the text kept clear of the sidebar by the padding.
+
+   Above the sheet (z-index 8), like the tempo changers: the keyboard stands ON this row rather
+   than over it, and read-only text has no reason to be dimmed with the canvas anyway. */
 .song-info-pro {
-  bottom: calc(0.5vw + var(--pro-sliver-height));
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: var(--pro-song-info-height);
+  padding-left: calc(4rem + 0.5vw);
+  flex-direction: row;
+  align-items: center;
+  gap: 0.6rem;
   z-index: 8;
 }
 
