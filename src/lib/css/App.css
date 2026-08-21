@@ -3038,6 +3038,18 @@ select {
      second row: the popover and the keyboard are placed against it, and a zero track would still
      work but says something this layout does not mean. */
   grid-template-rows: 1fr auto;
+  /* THE GRID IS THE WINDOW, STATED (user revision 2026-08-22, the page-scroll fix). It was only
+     ASSUMED to be: composerCanvasGeometry's PRO_CANVAS_INSET_PX is written against "`.composer-grid`
+     is `100vh`", which held while nothing inside wanted more - `.app` is an `align-items: stretch`
+     flex row, so the grid was stretched to the window rather than fixed at it, and a child taller
+     than the window simply grew the whole shell (`.theme-vars-root` is `min-height: 100%`, auto
+     height) and scrolled the page by the difference. The composer's own tool column was that child
+     on any window where its six rows want more than the canvas row has (a 1280x800 desktop, an
+     850x420 landscape phone). With a DEFINITE height the `1fr` row is the leftover space rather
+     than the content's, which is what the two rules below can then cap against.
+     `100vh` and not `dvh`, for the reason composerCanvasGeometry's own height gives: the canvas is
+     sized against `100vh` and the two must be the same window. */
+  height: 100vh;
 }
 
 .composer-grid-pro .canvas-wrapper {
@@ -3069,18 +3081,33 @@ select {
      is still its content, they keep their own height on a short window and the five `minmax(0, …)`
      tools shrink toward them instead of being covered by them.
 
-     ...WHICH NEEDS THE COLUMN'S HEIGHT TO BE DEFINITE, and that is what `max-height` is for. The
-     flex row this column sits in is `height: fit-content`, so with the tempo slot IN FLOW the
-     column's own content is what sizes that row: without a cap the six rows would simply make the
-     row (and the page) taller than the window instead of the tools shrinking.
+     ...WHICH NEEDS THE COLUMN'S HEIGHT TO BE DEFINITE, and that is what the cap is for. With the
+     tempo slot IN FLOW the column's own content would otherwise size the flex row it sits in, and
+     the six rows would make that row - and the page - taller than the window instead of the tools
+     shrinking.
 
-     THE CAP IS THE WHOLE GRID, not the canvas beside it. It used to stop where the canvas stops
-     (the sliver band came off it too), which left the tempo changers floating in the middle of the
-     window's bottom edge with a band of nothing under them; now the column runs the full content
-     box - the window less `.composer-grid`'s own 0.2rem padding at each end - so the changers sit
-     against the bottom while the canvas ends higher, above the sliver. */
+     THE CAP IS ITS OWN ROW AND NOT A RESTATEMENT OF THE WINDOW (user revision 2026-08-22, the
+     page-scroll fix). It was `calc(100vh - 0.4rem)`, the grid's content box worked out by hand -
+     and that hand-derived number left out the grid's own 0.2rem ROW GAP, so on any window where the
+     column's content is taller than the canvas row (a 1280x800 desktop, a 850x420 landscape phone)
+     the `1fr` row took this cap as its automatic minimum and grew 3.2px PAST the window: body
+     scrollHeight came out at 100vh + 3.2 and the composer page scrolled by a hair. `100%` is the
+     same intent stated against the thing that actually decides it - the row this column stretches
+     in - and the `min-height: 0` on that row's grid item below is what makes the row a plain `1fr`
+     rather than something the content can grow. The tempo changers still sit at the window's bottom
+     and the canvas still ends higher, above the sliver. */
   grid-template-rows: repeat(5, minmax(0, 8rem)) 1fr;
-  max-height: calc(100vh - 0.4rem);
+  max-height: 100%;
+}
+
+/* THE CANVAS' ROW IS THE GRID'S LEFTOVER HEIGHT, FULL STOP - the other half of the scroll fix
+   above. A grid item's automatic minimum size is its content's, so the tool column beside the
+   canvas could make the `1fr` row taller than the free space the grid had for it, and a grid taller
+   than the window is a window that scrolls. Zero here says the row is what `1fr` resolved to and
+   the column shrinks its five capped tool rows to fit (that is what `minmax(0, 8rem)` is for),
+   which is the behaviour phase E designed and this is what makes it true at every window height. */
+.composer-grid-pro .top-panel-composer {
+  min-height: 0;
 }
 
 /* THE KEYBOARD AS A BOTTOM SHEET. Lowered is the default and the class is what raises it, so the

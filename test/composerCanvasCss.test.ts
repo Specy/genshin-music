@@ -577,12 +577,17 @@ describe('the Pro View canvas: the window it fills and the band it stops above',
         //Lock. As the sixth row of the same grid the two cannot overlap at any height.
         const tools = declarationsOf('.composer-grid-pro .buttons-composer-wrapper-right')
         expect(tools.get('grid-template-rows')).toBe('repeat(5, minmax(0, 8rem)) 1fr')
-        //...which needs the column's height to be DEFINITE, or the six rows would make the flex row
-        //(`height: fit-content`) taller than the window instead of the tools shrinking. The cap is
-        //the GRID's own content box - the window less its 0.2rem padding at each end - so the
-        //column runs past the canvas' bottom edge and the tempo changers sit against the window's,
-        //beside the sliver rather than above a band of nothing.
-        expect(tools.get('max-height')).toBe('calc(100vh - 0.4rem)')
+        //...which needs the column's height to be DEFINITE, or the six rows would make the row it
+        //sits in taller than the window instead of the tools shrinking. THE CAP IS ITS OWN ROW
+        //(user revision 2026-08-22): it was `calc(100vh - 0.4rem)`, the grid's content box worked
+        //out by hand, and that hand-derived number left out the grid's own 0.2rem ROW GAP - so on
+        //any window where the column's content is taller than the canvas row the `1fr` row took the
+        //cap as its automatic minimum and the page scrolled by 3.2px. The three declarations below
+        //are the whole fix, and they only work together: a definite grid, a row nothing can grow,
+        //and a column capped at that row.
+        expect(tools.get('max-height')).toBe('100%')
+        expect(declarationsOf('.composer-grid-pro').get('height')).toBe('100vh')
+        expect(declarationsOf('.composer-grid-pro .top-panel-composer').get('min-height')).toBe('0')
         //...and the row the column stretches in is the GRID's here, not the canvas'. That height is
         //written inline by Composer.svelte (an inline `height` is the one thing this stylesheet
         //cannot override), and `fit-content` - the Compressed View's - is the canvas' own height,
