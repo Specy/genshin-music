@@ -1998,7 +1998,15 @@
     />
   </div>
   <div class="top-panel-composer" style="grid-area:b">
-    <div class="row" style="height:fit-content;width:100%">
+    <!-- THE CANVAS AND THE TOOL COLUMN'S ROW. `fit-content` is as tall as the CANVAS, which is what
+         the Compressed View wants (the keyboard follows underneath) and what held the Pro View's
+         tool column - and with it the tempo changers at its foot - to the canvas' bottom edge,
+         above the sliver and the song-info row with a band of nothing under them. In the Pro View
+         it takes the whole grid row instead, so the column runs to the window's own bottom; the
+         canvas keeps its own height either way (App.css gives `.canvas-wrapper` `align-self:
+         flex-start` there). Inline rather than in App.css because an inline `height` is exactly
+         what a stylesheet rule cannot override. -->
+    <div class="row" style="height:{proView ? '100%' : 'fit-content'};width:100%">
       <!--
         BOTH KEYS, AS ONE STRING. A flip of either one changes the canvas' size, every column
         texture in the ComposerCache and (for `proView`) which end of the canvas the mini-timeline

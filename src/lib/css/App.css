@@ -3163,14 +3163,12 @@ select {
   opacity: 1;
 }
 
-/* THE DISMISS ZONE'S CURSOR (spec §8). With the scrim off the canvas, the one thing that says "a
-   tap here puts the keyboard away" is the pointer: the canvas looks exactly as it does with the
-   sheet down, and it is still live (a drag scrolls it). Gated on the raised class, so it is gone
-   the instant the sheet is - and it cannot appear in the Compressed View, where neither class
-   exists. `cursor` is inherited, so the canvas element pixi appends inside gets it too. */
-.composer-grid-pro-raised .canvas-wrapper {
-  cursor: pointer;
-}
+/* THE DISMISS ZONE'S CURSOR needs no rule of its own, and that is worth writing down rather than
+   leaving as a hole: `.canvas-relative canvas` above is already `cursor: pointer !important` in
+   both views, so the canvas has always said "this is a surface you press". What hid it was the
+   backdrop - a full-window div with `cursor: default` between the mouse and the canvas - so
+   removing it is what makes the affordance visible while the sheet is up, and the pointer is gone
+   with the same gesture that puts the sheet down. */
 
 /* THE SLIVER'S TAP TARGET: the band of window the lowered sheet peeks into, as its own transparent
    button in front of it. A button and not a click handler on the wrapper because the wrapper is the
