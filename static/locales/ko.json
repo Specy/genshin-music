@@ -220,6 +220,8 @@
       "composer_smooth_scroll_description": "재생하는 동안 화면이 다음 열로 바로 건너뛰지 않고, 템포 조절기를 따라 각 열을 부드럽게 지나갑니다",
       "composer_sync_tabs": "모든 탭에서 자동 재생 (컴퓨터 전용)",
       "composer_sync_tabs_description": "고급 기능으로, 다른 탭이 동시에 연주하도록 합니다",
+      "composer_pro_view": "Pro view",
+      "composer_pro_view_description": "Shows every semitone as its own row, with all the notes at their real pitch, and lets you add or remove them by tapping the canvas itself",
       "player_instrument": "악기",
       "player_instrument_description": "플레이어의 기본(처음) 악기. 곡을 녹음할 때도 저장이 됩니다",
       "player_pitch": "음높이",
@@ -544,6 +546,12 @@
     "previous_breakpoint": "이전 제어점으로 이동하기",
     "next_breakpoint": "다음 제어점으로 이동하기",
     "tempo": "템포",
+    "lock_view": "Lock view",
+    "lock_view_description": "Keep the canvas framed on the rows this layer can play",
+    "unlock_view": "Unlock view",
+    "unlock_view_description": "Let the canvas be dragged up and down freely",
+    "show_keyboard": "Show keyboard",
+    "hide_keyboard": "Hide keyboard",
     "note_duration": "노트 길이",
     "error_with_this_layer": "이 레이어에 에러가 발생했습니다",
     "recording_audio": "오디오를 녹음하는중",
@@ -750,7 +758,9 @@
       "change-5": "작곡 모드에서 열에 사용된 레이어가 강조 표시됩니다.",
       "change-6": "사용자 경험을 개선하기 위해 앱 전반의 디자인을 조금씩 다듬었습니다.",
       "change-7": "작곡 모드 재생은 이제 하나의 시계로 작동하여 소리, 시각 효과, 녹음이 항상 정확히 동기화됩니다(룩어헤드 설정은 제거되었습니다).",
-      "change-12": "그 외 많은 버그 수정과 개선이 있습니다."
+      "change-13": "The composer has a new \"Pro view\", which you can turn on in its settings: every semitone gets its own row and every note sits at its real pitch, so you see exactly what the song plays.",
+      "change-14": "In pro view you edit on the canvas itself: tap a cell to add or remove a note, long press one of your notes to choose how long it lasts, and unlock the view to drag the rows up and down freely.",
+      "change-15": "그 외 많은 버그 수정과 개선이 있습니다."
     },
     "3-7-0": {
       "title": "새로운 악기 추가 (원신)",

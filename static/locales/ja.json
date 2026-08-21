@@ -221,6 +221,8 @@
             "composer_smooth_scroll_description": "再生中、キャンバスが次の列へジャンプするのではなく、テンポ変換ツールに合わせて各列を滑らかに移動していきます",
             "composer_sync_tabs": "すべてのタブで自動再生（PCのみ）",
             "composer_sync_tabs_description": "他のブラウザタブを同期して同時に再生する高度な機能です。",
+            "composer_pro_view": "Pro view",
+            "composer_pro_view_description": "Shows every semitone as its own row, with all the notes at their real pitch, and lets you add or remove them by tapping the canvas itself",
             "player_instrument": "楽器",
             "player_instrument_description": "プレイヤーの主要（最初の）楽器。録音した曲にも保存されます。",
             "player_pitch": "ピッチ",
@@ -544,6 +546,12 @@
         "previous_breakpoint": "前のブレークポイント",
         "next_breakpoint": "次のブレークポイント",
         "tempo": "テンポ",
+        "lock_view": "Lock view",
+        "lock_view_description": "Keep the canvas framed on the rows this layer can play",
+        "unlock_view": "Unlock view",
+        "unlock_view_description": "Let the canvas be dragged up and down freely",
+        "show_keyboard": "Show keyboard",
+        "hide_keyboard": "Hide keyboard",
         "note_duration": "ノートの長さ",
         "error_with_this_layer": "このレイヤーでエラーが発生しました",
         "recording_audio": "オーディオ録音中",
@@ -751,7 +759,9 @@
             "change-5": "コンポーザーで、列内で使用されているレイヤーがハイライト表示されるようになりました",
             "change-6": "ユーザー体験を向上させるため、アプリ全体のデザインを少し見直しました",
             "change-7": "コンポーザーの再生は単一のクロックで動作するようになり、音声、映像、録音が常に完全に同期するようになりました（先読み設定は削除されました）",
-            "change-12": "その他多数の問題を修正し改善しました"
+            "change-13": "The composer has a new \"Pro view\", which you can turn on in its settings: every semitone gets its own row and every note sits at its real pitch, so you see exactly what the song plays.",
+            "change-14": "In pro view you edit on the canvas itself: tap a cell to add or remove a note, long press one of your notes to choose how long it lasts, and unlock the view to drag the rows up and down freely.",
+            "change-15": "その他多数の問題を修正し改善しました"
         },
         "3-7-0": {
             "title": "新しい楽器と翻訳",

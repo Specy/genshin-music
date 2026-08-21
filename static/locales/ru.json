@@ -220,6 +220,8 @@
             "composer_smooth_scroll_description": "Во время воспроизведения холст плавно движется по колонкам, а не перескакивает к следующей, учитывая изменения темпа",
             "composer_sync_tabs": "Autoplay in all tabs (pc only)",
             "composer_sync_tabs_description": "Advanced feature, it syncs other browser tabs to all play at the same time",
+            "composer_pro_view": "Pro view",
+            "composer_pro_view_description": "Shows every semitone as its own row, with all the notes at their real pitch, and lets you add or remove them by tapping the canvas itself",
             "player_instrument": "Инструмент",
             "player_instrument_description": "Основной музыкальный инструмент, который так же будет использован при записи мелодии",
             "player_pitch": "Высота",
@@ -544,6 +546,12 @@
         "previous_breakpoint": "Previous Breakpoint",
         "next_breakpoint": "Next Breakpoint",
         "tempo": "Tempo",
+        "lock_view": "Lock view",
+        "lock_view_description": "Keep the canvas framed on the rows this layer can play",
+        "unlock_view": "Unlock view",
+        "unlock_view_description": "Let the canvas be dragged up and down freely",
+        "show_keyboard": "Show keyboard",
+        "hide_keyboard": "Hide keyboard",
         "note_duration": "Длительность ноты",
         "error_with_this_layer": "There was an error with this layer",
         "recording_audio": "Recording Audio",
@@ -749,7 +757,9 @@
             "change-5": "В секвенсоре подсвечиваются слои, используемые в колонке",
             "change-6": "Небольшие изменения оформления по всему приложению для удобства пользования",
             "change-7": "Воспроизведение секвенсора теперь работает по единому таймеру — звук, визуальные эффекты и запись остаются полностью синхронизированными (настройка упреждения удалена)",
-            "change-12": "Множество других исправлений ошибок и улучшений"
+            "change-13": "The composer has a new \"Pro view\", which you can turn on in its settings: every semitone gets its own row and every note sits at its real pitch, so you see exactly what the song plays.",
+            "change-14": "In pro view you edit on the canvas itself: tap a cell to add or remove a note, long press one of your notes to choose how long it lasts, and unlock the view to drag the rows up and down freely.",
+            "change-15": "Множество других исправлений ошибок и улучшений"
         },
         "3-7-0": {
             "title": "Новые инструменты (Genshin)",
