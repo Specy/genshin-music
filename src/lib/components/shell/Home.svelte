@@ -9,7 +9,7 @@
   import { asyncConfirm } from '$stores/AsyncPromptStore.svelte';
   import { hasVisitedPage } from '$stores/PageVisitStore.svelte';
   import { KeyboardProvider } from '$lib/providers/KeyboardProvider';
-  import { clearClientCache, isTWA } from '$core/utils/Utilities';
+  import { isTWA } from '$core/utils/Utilities';
   import { appPathname } from '$lib/utils/appPathname';
   import { APP_NAME } from '$core/legacyConfig';
   import { IS_BETA } from '$lib/env';
@@ -39,21 +39,6 @@
   const homeClass = $derived(homeStore.state.isInPosition ? 'home' : 'home home-visible');
   const backgroundColor = $derived(ThemeProvider.get('background').fade(0.1).toString());
   const cardBackground = $derived(ThemeProvider.layer('primary', 0.15, 0.2).fade(0.15).toString());
-
-  async function clearCache() {
-    if (!(await asyncConfirm(t('home:cache_reload_warning')))) return;
-    clearClientCache()
-      .then(() => {
-        logger.success(t('home:cache_cleared'));
-        setTimeout(() => {
-          window.location.href = base || '/';
-        }, 1000);
-      })
-      .catch((e) => {
-        console.error(e);
-        logger.error(t('home:error_clearing_cache'));
-      });
-  }
 
   function closeWelcomeScreen() {
     localStorage.setItem(APP_NAME + '_Visited', JSON.stringify(true));
@@ -502,13 +487,6 @@
         t('home:keybinds_or_midi_name')
       )}
 
-      {@render pageRedirect(
-        'partners',
-        '/partners',
-        currentPage === '/partners',
-        t('home:partners_name')
-      )}
-
       {@render pageRedirect('backup', '/backup', currentPage === '/backup', t('home:backup_name'))}
       {@render pageRedirect(
         'changelog',
@@ -520,9 +498,6 @@
       <a href="https://specy.app" target="_blank" onclick={handleSpecyClick}>
         {t('home:other_apps_name')}
       </a>
-      <AppButton onclick={clearCache}>
-        {t('home:clear_cache_name')}
-      </AppButton>
       {#if pwaStore.state.installEvent}
         <AppButton onclick={pwaStore.install} cssVar="accent">
           {@render faDownloadIcon()}

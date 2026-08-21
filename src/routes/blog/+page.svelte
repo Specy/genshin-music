@@ -37,12 +37,14 @@
   import Row from '$cmp/layout/Row.svelte';
   import Grid from '$cmp/layout/Grid.svelte';
   import AppLink from '$cmp/AppLink.svelte';
+  import AppButton from '$cmp/inputs/AppButton.svelte';
   import PromotionCard from '$cmp/PromotionCard.svelte';
   import ComboBox, { comboBoxItem, comboBoxTitle } from '$cmp/inputs/ComboBox.svelte';
   import { blogNavbar, hasVisitedBlogPost } from '$cmp/blog/BaseBlogPost.svelte';
   import { blogAuthorRenderer, blogTagsRenderer } from '$cmp/blog/BlogMetadataRenderers.svelte';
   import { game } from '$game';
   import { setPageVisited } from '$stores/PageVisitStore.svelte';
+  import { t } from '$i18n/binding.svelte';
 
   // Distinct from BaseBlogPost.svelte's own per-post visited map: this call is the page-level
   // visit tracker only.
@@ -72,6 +74,7 @@
   <AppLink href="/">Home</AppLink>
   <AppLink href="/">Player</AppLink>
   <AppLink href="/composer">Composer</AppLink>
+  <AppLink href="/partners">{t('home:partners_name')}</AppLink>
 {/snippet}
 
 {#snippet selectTagsLabel()}Select tags{/snippet}
@@ -131,21 +134,30 @@
     </Header>
     <PromotionCard alwaysVisible />
     <Column gap="1rem">
-      <Row justify="between" align="center">
+      <Row justify="between" align="center" gap="1rem" style="flex-wrap:wrap">
         <Header>Posts</Header>
-        <ComboBox
-          items={selectedTags}
-          onChange={(newItems) => (selectedTags = newItems)}
-          style="z-index:3"
-        >
-          {#snippet title()}
-            {@render comboBoxTitle(selectTagsLabel)}
-          {/snippet}
-          {#snippet children(item, onClick)}
-            {#snippet tagLabel()}{item.item}{/snippet}
-            {@render comboBoxItem(item.selected, onClick, tagLabel)}
-          {/snippet}
-        </ComboBox>
+        <Row align="center" gap="0.5rem">
+          <!-- The partners page has no home-menu entry any more, and the .blog-nav row above is
+               portrait-only, so this is the sole desktop way in. -->
+          <AppLink href="/partners">
+            <AppButton cssVar="accent">
+              {t('home:partners_name')}
+            </AppButton>
+          </AppLink>
+          <ComboBox
+            items={selectedTags}
+            onChange={(newItems) => (selectedTags = newItems)}
+            style="z-index:3"
+          >
+            {#snippet title()}
+              {@render comboBoxTitle(selectTagsLabel)}
+            {/snippet}
+            {#snippet children(item, onClick)}
+              {#snippet tagLabel()}{item.item}{/snippet}
+              {@render comboBoxItem(item.selected, onClick, tagLabel)}
+            {/snippet}
+          </ComboBox>
+        </Row>
       </Row>
 
       <!-- auto-fit rather than a scripted 1fr/2fr swap: it collapses to one column exactly when
