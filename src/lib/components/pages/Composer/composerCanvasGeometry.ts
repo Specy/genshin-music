@@ -147,6 +147,66 @@ const DESKTOP_CANVAS_INSET_PX =
       1000
   ) / 1000;
 
+/**
+ * THE LOWERED KEYBOARD SHEET'S SLIVER, in px: `.composer-grid-pro`'s `--pro-sliver-height: 1.5rem`
+ * in src/lib/css/App.css, read back by test/composerCanvasCss.test.ts the way the timeline buttons'
+ * rem values are.
+ *
+ * It is a CANVAS constant and not merely a keyboard one because the Pro View canvas stops ABOVE it.
+ * The sheet is fixed to the viewport's bottom edge in Pro View (CONTEXT.md: Pro View), so a canvas
+ * run to the window's bottom would keep its lowest rows permanently under the sliver - and those
+ * rows are real, addressable Note Numbers there, not the empty tail the Compressed View's 45vh card
+ * has below it.
+ */
+export const PRO_KEYBOARD_SLIVER_PX = 1.5 * ROOT_FONT_SIZE;
+
+/**
+ * WHAT THE PRO VIEW'S CANVAS ELEMENT IS THE VIEWPORT LESS, in px - the vertical counterpart of
+ * DESKTOP_CANVAS_INSET_PX:
+ *   `.composer-grid` padding      0.2rem at the top and 0.2rem at the bottom
+ *   the sliver band               PRO_KEYBOARD_SLIVER_PX
+ * ...so the canvas starts 3.2px below the window's top edge and stops 3.2px above the sliver, with
+ * that trailing 3.2px being the grid's own bottom padding rather than a gap invented here.
+ *
+ * IT ASSUMES `.composer-grid` IS THE WINDOW'S HEIGHT, which it is on the composer route: `.app` is
+ * an `align-items: stretch` flex row inside the full-height shell, so the grid's border box is
+ * exactly `100vh` and its content box starts at that padding. `.composer-grid-pro` additionally
+ * pins `grid-template-rows: 1fr auto` so the canvas' row is that whole content box rather than the
+ * two auto rows the base layout splits it between - without that the canvas would be sized for a
+ * row the stylesheet had made shorter. test/composerCanvasCss.test.ts reads both declarations.
+ *
+ * ROUNDED for the same reason DESKTOP_CANVAS_INSET_PX is: the number is printed into a CSS string.
+ */
+const PRO_CANVAS_INSET_PX =
+  Math.round(
+    (0.2 * ROOT_FONT_SIZE * 2 + //.composer-grid padding, top and bottom
+      PRO_KEYBOARD_SLIVER_PX) * //the band the lowered keyboard sheet stands in
+      1000
+  ) / 1000;
+/**
+ * The Pro View canvas' height as the CSS unit the placeholder is written in - `100vh` - so that the
+ * pro branches of composerCanvasSize and composerCanvasCssSize stay two renderings of ONE formula,
+ * exactly as CANVAS_HEIGHT_VH does for the Compressed View.
+ *
+ * `vh` AND NOT `dvh`, with the same consequence the module header states for the compressed branch
+ * and one extra one that only bites here: the JS side measures `document.body`, whose height is the
+ * initial containing block's and therefore the UA's LARGE viewport height, so `vh` is the only unit
+ * that agrees with it. Where a mobile URL bar is showing, the visible viewport is shorter than that
+ * and the canvas' last rows sit under the bar - which is what the rest of the composer already
+ * does (`.composer-left-control` is `calc(100vh - 5rem)`), so the Pro View is not a new exception.
+ * `dvh` would make the two forms disagree by the bar's 25-45px and reinstate the load-time jump the
+ * placeholder exists to prevent.
+ */
+const PRO_CANVAS_HEIGHT_VH = 100;
+/**
+ * The floor under the Pro View's notes region, in px. It is a DIVISOR - proViewGeometry.proRowHeight
+ * divides it by `perColumn + 2` - and pixi cannot resize to a negative height at all, so a viewport
+ * shorter than the chrome above resolves to a degenerate but finite region instead of poisoning
+ * every row. Unlike nearestEven this IS reproduced in CSS (`max()`, unlike `round()`, is supported
+ * everywhere this app runs), so the two forms agree even in that unreachable corner.
+ */
+const PRO_MIN_NOTES_HEIGHT_PX = 2;
+
 /** Below this body width the theme preview shrinks the canvas less aggressively - see below. */
 const PREVIEW_NARROW_BODY = 900;
 const PREVIEW_WIDTH_FACTOR_NARROW = 0.8;
@@ -176,29 +236,91 @@ export function composerCanvasElementHeight(notesHeight: number, timelineHeight:
 }
 
 /**
+ * WHICH END OF THE CANVAS THE STRIP IS AT, and it is the whole of the Pro View's layout difference:
+ * the Compressed View puts the mini-timeline BELOW the notes region, the Pro View at the TOP
+ * (spec §6). The sum composerCanvasElementHeight states is the same either way - the two regions
+ * swap places inside it rather than one of them changing size - which is why that function takes no
+ * view and these two do.
+ *
+ * `composerTimelineStripY` is the strip's own top edge (one TIMELINE_BAND_PADDING inside its band),
+ * which is both where ComposerRenderer puts `timelineStrip` and where ComposerCanvas.svelte pins
+ * the DOM row of timeline buttons - the renderer reports it so those two cannot disagree.
+ */
+export function composerNotesRegionY(proView: boolean, timelineHeight: number): number {
+  return proView ? TIMELINE_BAND_PADDING * 2 + timelineHeight : 0;
+}
+
+/** Where the mini-timeline strip is drawn - see composerNotesRegionY. */
+export function composerTimelineStripY(proView: boolean, notesHeight: number): number {
+  return TIMELINE_BAND_PADDING + (proView ? 0 : notesHeight);
+}
+
+/**
+ * THE PRO VIEW'S NOTES REGION: everything the window has left once the composer's own chrome and
+ * the mini-timeline's band are taken off it (spec §6).
+ *
+ * Stated once here because composerCanvasSize and composerCanvasCssSize below are two renderings of
+ * it - the CSS one adds the band back and emits `max(band + floor, 100vh - inset)`, which is this
+ * function with `max` and `-` in the other order.
+ */
+function proNotesRegionHeight(bodyHeight: number, timelineHeight: number): number {
+  return Math.max(
+    PRO_MIN_NOTES_HEIGHT_PX,
+    bodyHeight * (PRO_CANVAS_HEIGHT_VH / 100) -
+      PRO_CANVAS_INSET_PX -
+      //the band, as one term, so the split between the two regions is stated in one place
+      composerCanvasElementHeight(0, timelineHeight)
+  );
+}
+
+/**
  * The NOTES REGION's size, from the body's measured rect. Pure: the caller does the DOM read, which
  * is what keeps this module importable from a prerendered component.
  *
  * `rowHeightScale` defaults to this build's game constant (1 for genshin, 0.95 for sky) and is a
  * parameter only so that test/composerCanvasCss.test.ts can cross-check the CSS form against BOTH
- * shipped values from a single build.
+ * shipped values from a single build. `timelineHeight` defaults to composerTimelineHeight() and is
+ * a parameter for the same reason - it is only read on the pro branch, where the notes region is
+ * what the strip's band leaves rather than a fraction of the window.
+ *
+ * THE WIDTH IS THE SAME IN BOTH VIEWS. Pro View changes the composer's vertical layout only: the
+ * left play/roster column and the right CanvasTool column are untouched (spec §2), so every term of
+ * the width above stands.
  */
 export function composerCanvasSize(input: {
   bodyWidth: number;
   bodyHeight: number;
   inPreview: boolean;
+  /** CONTEXT.md: Pro View. The canvas fills the window's leftover height instead of a 45vh card. */
+  proView?: boolean;
   rowHeightScale?: number;
+  timelineHeight?: number;
 }): { width: number; height: number } {
   const scale = input.rowHeightScale ?? game.notes.composerRowHeightScale;
   //the desktop layout is the composer page's, not the theme preview's - see composerCanvasCssSize
   const fillsWindow = !input.inPreview && isComposerDesktopWidth(input.bodyWidth);
+  //...and so is the Pro View: /theme's preview is a small box inside a scrolling page, where a
+  //canvas sized to the WINDOW would overrun it entirely. The two gates are separate reads of the
+  //same flag rather than one, because the preview's own shrink below applies to both views.
+  const proView = Boolean(input.proView) && !input.inPreview;
   let width = nearestEven(
     fillsWindow
       ? input.bodyWidth * (DESKTOP_CANVAS_WIDTH_VW / 100) - DESKTOP_CANVAS_INSET_PX
       : input.bodyWidth * (CANVAS_WIDTH_VW / 100) - CANVAS_WIDTH_INSET_PX
   );
-  let height = nearestEven(input.bodyHeight * (CANVAS_HEIGHT_VH / 100));
-  height = nearestEven(height * scale);
+  let height: number;
+  if (proView) {
+    //ONE rounding and no `scale`: the region is what the window leaves, so shrinking it by the
+    //game's row-height factor would only open a gap under the canvas - and the Pro View's own row
+    //height (proViewGeometry.proRowHeight) divides this region by `perColumn + 2` rather than
+    //deriving a note size from the game's Song-Grid layout at all.
+    height = nearestEven(
+      proNotesRegionHeight(input.bodyHeight, input.timelineHeight ?? composerTimelineHeight())
+    );
+  } else {
+    height = nearestEven(input.bodyHeight * (CANVAS_HEIGHT_VH / 100));
+    height = nearestEven(height * scale);
+  }
   if (input.inPreview) {
     const narrow = input.bodyWidth < PREVIEW_NARROW_BODY;
     width = nearestEven(width * (narrow ? PREVIEW_WIDTH_FACTOR_NARROW : PREVIEW_WIDTH_FACTOR_WIDE));
@@ -260,6 +382,19 @@ export function composerCanvasSize(input: {
  */
 export function composerCanvasCssSize(input: {
   inPreview: boolean;
+  /**
+   * CONTEXT.md: Pro View. Chooses the height expression, and nothing else - both widths are emitted
+   * either way, because which of THEM applies is still a media query's decision and not this one.
+   *
+   * THE ONE THING THE PRO PLACEHOLDER CANNOT DO that the compressed one does: be right before the
+   * settings exist. `proView` is a persisted composer SETTING, read from storage in Composer.svelte's
+   * onMount, so the prerendered HTML and the first paint necessarily carry the Compressed View's
+   * height and the page reflows once - together with `.composer-grid-pro` itself and with the
+   * keyboard becoming a sheet - when the stored settings land. That is one reflow at hydration for
+   * a user who has the setting on, not a jump when the CANVAS lands hundreds of ms later, which is
+   * what this function is for and what it still prevents in both views.
+   */
+  proView?: boolean;
   rowHeightScale?: number;
   timelineHeight?: number;
 }): { mobileWidth: string; desktopWidth: string; height: string } | null {
@@ -271,6 +406,11 @@ export function composerCanvasCssSize(input: {
   return {
     mobileWidth: `calc(${CANVAS_WIDTH_VW}vw - ${CANVAS_WIDTH_INSET_PX}px)`,
     desktopWidth: `calc(${DESKTOP_CANVAS_WIDTH_VW}vw - ${DESKTOP_CANVAS_INSET_PX}px)`,
-    height: `calc(${CANVAS_HEIGHT_VH}vh * ${scale} + ${band}px)`,
+    //THE PRO HEIGHT IS proNotesRegionHeight + band, with `max` and `-` swapped so the whole thing
+    //is one CSS expression: `max(F, 100vh - I - B) + B` is `max(F + B, 100vh - I)`. The floor is
+    //reproduced here (unlike nearestEven) because `max()` is supported everywhere `calc()` is.
+    height: input.proView
+      ? `max(${PRO_MIN_NOTES_HEIGHT_PX + band}px, calc(${PRO_CANVAS_HEIGHT_VH}vh - ${PRO_CANVAS_INSET_PX}px))`
+      : `calc(${CANVAS_HEIGHT_VH}vh * ${scale} + ${band}px)`,
   };
 }

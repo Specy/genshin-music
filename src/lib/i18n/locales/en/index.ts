@@ -663,6 +663,14 @@ export const i18n_en = {
     previous_breakpoint: 'Previous Breakpoint', //breakpoint is a sort of point to "jump", a sort of bookmark
     next_breakpoint: 'Next Breakpoint',
     tempo: 'Tempo', //this is musical tempo
+    //the Pro View's View Lock (a canvas tool) and its keyboard sheet. The label is what the button
+    //WILL DO when pressed, so it is the opposite of the state it is currently in.
+    lock_view: 'Lock view',
+    lock_view_description: 'Keep the canvas framed on the rows this layer can play',
+    unlock_view: 'Unlock view',
+    unlock_view_description: 'Let the canvas be dragged up and down freely',
+    show_keyboard: 'Show keyboard',
+    hide_keyboard: 'Hide keyboard',
     note_duration: 'Note duration', //in columns, shown in the long-press duration popover
     error_with_this_layer: 'There was an error with this layer',
     recording_audio: 'Recording Audio',

@@ -8,7 +8,7 @@
   import type { Pitch } from '$core/legacyConfig';
   import type { ComposerSettingsDataType } from '$core/BaseSettings';
   import type { ComposerRenderer } from './ComposerRenderer';
-  import { composerCanvasCssSize } from './composerCanvasGeometry';
+  import { composerCanvasCssSize, composerNotesRegionY } from './composerCanvasGeometry';
   import TimelineButton from './TimelineButton.svelte';
 
   // The class names below (canvas-wrapper, canvas-relative, canvas-buttons, timeline-controls,
@@ -82,8 +82,12 @@
   // `isMobile() ? 25 : 30` here, which could disagree with it silently.
   let width = $state(0);
   let height = $state(0);
-  let timelinePadding = $state(0);
   let timelineHeight = $state(0);
+  // WHERE THE STRIP IS, which is the Pro View's one layout difference here: the canvas draws the
+  // mini-timeline at its TOP there and the notes region below it, so the DOM row of buttons lands
+  // at top:0 instead of under the notes region. Reported rather than derived from `height` for the
+  // reason the whole report exists - one statement of the split, on the side that drew it.
+  let timelineTop = $state(0);
   let hasCache = $state(false);
 
   const isBreakpointSelected = $derived(breakpoints.includes(selected));
@@ -109,7 +113,16 @@
   // `--composer-canvas-width` - see composerCanvasCssSize. Choosing here instead (from a
   // `matchMedia` read) put the desktop breakpoint somewhere no browser could evaluate before
   // hydration, and the composer opened 79px narrow for the ~800ms until it ran.
-  const cssSize = $derived(composerCanvasCssSize({ inPreview: Boolean(inPreview) }));
+  // CONTEXT.md: Pro View. ANDed with `!inPreview` HERE, once, so everything downstream - the CSS
+  // placeholder, the renderer's state, composerCanvasSize's own branch - is handed a flag that is
+  // already false in /theme's composer preview, where a canvas sized to the WINDOW would overrun
+  // the little box it lives in.
+  const proView = $derived(Boolean(settings.proView.value) && !inPreview);
+  const cssSize = $derived(composerCanvasCssSize({ inPreview: Boolean(inPreview), proView }));
+  // ...and where the notes region starts inside the canvas box, which is what the two side chevrons
+  // below are held to. The same function ComposerRenderer places the region with, given the same
+  // two inputs, rather than a second `proView ? ... : 0` written in the template.
+  const notesTop = $derived(composerNotesRegionY(proView, timelineHeight));
 
   onMount(() => {
     let cancelled = false;
@@ -133,6 +146,7 @@
           inPreview,
           beatMarks: Number(settings.beatMarks.value),
           columnsPerCanvas: Number(settings.columnsPerCanvas.value),
+          proView,
           breakpoints,
           selectedColumns,
           bpm: Number(settings.bpm.value),
@@ -144,8 +158,8 @@
           onGeometryChange: (geometry) => {
             width = geometry.width;
             height = geometry.height;
-            timelinePadding = geometry.timelinePadding;
             timelineHeight = geometry.timelineHeight;
+            timelineTop = geometry.timelineTop;
             hasCache = geometry.hasCache;
           },
         }
@@ -212,6 +226,10 @@
       inPreview,
       beatMarks: Number(settings.beatMarks.value),
       columnsPerCanvas: Number(settings.columnsPerCanvas.value),
+      // Read here like every other scalar, per the rule above, even though the renderer only takes
+      // it at construction: a flip arrives as a fresh instance through the parent's `{#key}`, the
+      // same way columnsPerCanvas does.
+      proView,
       breakpoints,
       selectedColumns,
       bpm: Number(settings.bpm.value),
@@ -321,7 +339,9 @@
     <!--
       `height` is the NOTES region, and the inline height is what holds these chevrons to it:
       `.canvas-buttons`' own `height: 100%` is 100% of `.canvas-relative`, which since the merge
-      holds the mini-timeline strip as well, so it would run them down over the strip.
+      holds the mini-timeline strip as well, so it would run them down over the strip. The inline
+      `top` is the other half of the same job in the Pro View, where the strip is at the canvas' TOP
+      and the region these stand on therefore starts below it rather than at 0.
 
       Gated on the first geometry report for the same reason the timeline controls below are: that
       report only exists once the dynamic pixi import and Application.init() have resolved, and a
@@ -332,14 +352,14 @@
       <button
         onpointerdown={() => selectColumn(selected - 1)}
         class={['canvas-buttons', !isPlaying && 'canvas-buttons-visible']}
-        style="height:{height}px;left:0;padding-right:0.5rem;justify-content:flex-start;background:linear-gradient(90deg, rgba({sideButtonsRgb},0.80) 30%, rgba({sideButtonsRgb},0.30) 80%, rgba({sideButtonsRgb},0) 100%)"
+        style="height:{height}px;top:{notesTop}px;left:0;padding-right:0.5rem;justify-content:flex-start;background:linear-gradient(90deg, rgba({sideButtonsRgb},0.80) 30%, rgba({sideButtonsRgb},0.30) 80%, rgba({sideButtonsRgb},0) 100%)"
       >
         {@render chevronLeftIcon()}
       </button>
       <button
         onpointerdown={() => selectColumn(selected + 1)}
         class={['canvas-buttons', !isPlaying && 'canvas-buttons-visible']}
-        style="height:{height}px;right:0;padding-left:0.5rem;justify-content:flex-end;background:linear-gradient(270deg, rgba({sideButtonsRgb},0.80) 30%, rgba({sideButtonsRgb},0.30) 80%, rgba({sideButtonsRgb},0) 100%)"
+        style="height:{height}px;top:{notesTop}px;right:0;padding-left:0.5rem;justify-content:flex-end;background:linear-gradient(270deg, rgba({sideButtonsRgb},0.80) 30%, rgba({sideButtonsRgb},0.30) 80%, rgba({sideButtonsRgb},0) 100%)"
       >
         {@render chevronRightIcon()}
       </button>
@@ -360,7 +380,8 @@
     its BORDER box is [W-38.4, W-3.2]. The 41.6px it is held clear by is 0.2rem of clearance before
     it, the 2.2rem button, and its own trailing 0.2rem margin.
 
-    Pinned to the CANVAS box - `top` at the reported notes height (timelinePadding is now zero),
+    Pinned to the CANVAS box - `top` at the strip's own reported y (below the notes region in the
+    Compressed View, 0 in the Pro View, where the canvas draws the strip at its TOP),
     `width` from the reported canvas width - and not to the wrapper. On a tall viewport `.canvas-wrapper`'s
     min-height gives `.canvas-relative` a sliver of slack under the canvas, so anchoring vertically
     to the wrapper would put the row below the strip. Horizontally it is a DELIBERATE divergence:
@@ -385,7 +406,7 @@
   {#if width > 0}
     <div
       class="timeline-controls"
-      style="top:{height + timelinePadding}px;width:{width}px;height:{timelineHeight}px"
+      style="top:{timelineTop}px;width:{width}px;height:{timelineHeight}px"
     >
       <TimelineButton
         onclick={() => renderer?.handleBreakpoints(-1)}
