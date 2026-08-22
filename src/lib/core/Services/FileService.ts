@@ -1,10 +1,7 @@
 import {ComposedSong, type OldFormatComposed, type UnknownSerializedComposedSong} from "../Songs/ComposedSong.svelte"
 import {type OldFormatRecorded, RecordedSong, type UnknownSerializedRecordedSong} from "../Songs/RecordedSong"
 import {FileDownloader} from "../utils/Utilities"
-// restored P4a Task 2 (audio engine): AudioRecorder.ts (src/lib/audio/AudioRecorder.ts) is the
-// real consumer the P3 Task 7 deferral comment on downloadBlobAsWav below was waiting for -
-// audiobuffer-to-wav is now installed (^1.0.0, matching the old package.json version exactly).
-import toWav from 'audiobuffer-to-wav'
+import {audioBufferToMp3Blob, audioBufferToWavBlob} from "$lib/audio/audioBufferEncoders"
 import {songsStore} from "$stores/SongsStore.svelte"
 import {type SerializedSong, Song} from "../Songs/Song.svelte"
 // type-only: @tonejs/midi's CJS build (`main` field) is a minified webpack bundle whose named
@@ -300,13 +297,21 @@ export class FileService {
         FileDownloader.download(JSON.stringify(file), `${fileName}.json`)
     }
 
+    // The decode stays: this entry point is fed by the player's live MediaRecorder capture, whose
+    // container is whatever the browser chose to record in, so there is no AudioBuffer to encode
+    // from until it has been decoded. Callers that already hold one use the two below instead.
     async downloadBlobAsWav(urlBlob: Blob, fileName: string) {
+        return this.downloadAudioBufferAsWav(await blobToAudio(urlBlob), fileName)
+    }
+
+    async downloadAudioBufferAsWav(buffer: AudioBuffer, fileName: string) {
         fileName = fileName.replace(".wav", "")
-        const wav = toWav(await blobToAudio(urlBlob))
-        const blob = new Blob([new DataView(wav)], {
-            type: 'audio/wav'
-        })
-        FileDownloader.download(blob, fileName + ".wav")
+        FileDownloader.download(await audioBufferToWavBlob(buffer), fileName + ".wav")
+    }
+
+    async downloadAudioBufferAsMp3(buffer: AudioBuffer, fileName: string) {
+        fileName = fileName.replace(".mp3", "")
+        FileDownloader.download(await audioBufferToMp3Blob(buffer), fileName + ".mp3")
     }
 
     downloadBlob(urlBlob: Blob, fileName: string) {

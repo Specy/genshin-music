@@ -539,8 +539,6 @@
         "confirm_layer_remove": "\"{{layer_name}}\" isimli katmanı kaldırmak istediğine emin misin? BU KATMANDAKİ TÜM NOTALAR SİLİNECEK!",
         "cant_add_more_than_n_layers": "{{max_layers}} sayısından fazla katman ekleyemezsin!",
         "ask_song_name_for_composed_song_version": "Bestelenmiş versiyon için şarkı adı yaz, yazmak istemiyorsan iptale bas",
-        "start_recording_audio": "Ses kaydını başlat",
-        "stop_recording_audio": "Ses kaydını durdur",
         "create_new_song": "Yeni şarkı oluştur",
         "create_from_midi_or_audio": "Ses/MIDI den oluştur",
         "previous_breakpoint": "Önceki yer imi",
@@ -554,7 +552,6 @@
         "hide_keyboard": "Hide keyboard",
         "note_duration": "Nota süresi",
         "error_with_this_layer": "Bu katmanla ilgili bir sorun oluştu",
-        "recording_audio": "Ses kaydediliyor",
         "tools": {
             "move_notes_up": "Notaları yukarı taşı",
             "move_notes_up_description": "Notaları bir üst konuma taşı",

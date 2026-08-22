@@ -38,7 +38,6 @@
     playbackColumnStartMs: number;
     /** Bumped for play/manual re-anchors; stable across ordinary transport advances. */
     playbackAnchorGeneration: number;
-    isRecordingAudio: boolean;
     // The roster is its own prop, not reached through a `song` prop - see ComposerRendererState's
     // note. The $effect below has to READ it for an instrument edit to repaint the canvas.
     instruments: InstrumentData[];
@@ -122,7 +121,6 @@
     isPlaying,
     playbackColumnStartMs,
     playbackAnchorGeneration,
-    isRecordingAudio,
     instruments,
     songPitch,
     selected,
@@ -214,7 +212,12 @@
           isPlaying,
           playbackColumnStartMs,
           playbackAnchorGeneration,
-          isRecordingAudio,
+          // The renderer still carries an `isRecordingAudio` state - it hides the notes stage and
+          // rests the loop while one runs - but the composer's live audio recorder that drove it
+          // was retired in favour of the offline export, which renders a song without touching
+          // this canvas at all. Constant here rather than deleted from the renderer, so retiring
+          // the recorder did not also rewrite its whole idle/repaint decision table.
+          isRecordingAudio: false,
           instruments,
           songPitch,
           selected,
@@ -320,7 +323,8 @@
       isPlaying,
       playbackColumnStartMs,
       playbackAnchorGeneration,
-      isRecordingAudio,
+      // see the construction call above for why this is a constant
+      isRecordingAudio: false,
       instruments,
       songPitch,
       selected,

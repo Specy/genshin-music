@@ -29,6 +29,7 @@
       toggleMenu: (override?: boolean) => void;
       loadSong: (song: SerializedSong) => void;
       downloadSong: (song: SerializedSong, as: 'midi' | 'song') => void;
+      exportSongAudio: (song: SerializedSong) => void;
     };
   } = $props();
 
@@ -98,6 +99,12 @@
     const song = await songService.getOneSerializedFromStorable(data);
     if (!song) return logger.error(t('logs:could_not_find_song'));
     functions.downloadSong(song, 'midi');
+  }
+
+  async function exportSongAudio() {
+    const song = await songService.getOneSerializedFromStorable(data);
+    if (!song) return logger.error(t('logs:could_not_find_song'));
+    functions.exportSongAudio(song);
   }
 
   async function cloneSong() {
@@ -271,6 +278,10 @@
           <FloatingDropdownRow onclick={downloadMidi}>
             {@render faDownloadIcon('14')}
             <FloatingDropdownText text={t('common:download_midi')} />
+          </FloatingDropdownRow>
+          <FloatingDropdownRow onclick={exportSongAudio}>
+            {@render faDownloadIcon('14')}
+            <FloatingDropdownText text={t('menu:export_as_audio')} />
           </FloatingDropdownRow>
         {/if}
         <FloatingDropdownRow onclick={cloneSong}>

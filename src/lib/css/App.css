@@ -2285,10 +2285,6 @@ a {
   }
 }
 
-.record-btn {
-  width: fit-content;
-}
-
 @media only screen and (max-width: 920px) {
   /* this query's own `.keyboard { margin-bottom: 1vh }` sub-rule is already pulled forward
        above (P4a Task 3, alongside .keyboard/.keyboard-5 themselves) - omitted here to avoid

@@ -28,6 +28,10 @@
     type RecordedNote,
   } from '$core/Songs/SongClasses';
   import { RecordedSong } from '$core/Songs/RecordedSong';
+  import { VsrgSong } from '$core/Songs/VsrgSong.svelte';
+  import { songService } from '$core/Services/SongService';
+  import { exportSongAudio as exportAudio } from '$lib/audio/exportSongAudio';
+  import type { SongStorable } from '$core/Songs/Song.svelte';
   import type { ComposedSong } from '$core/Songs/ComposedSong.svelte';
   import type { InstrumentName } from '$core/types';
   import { displayInstrumentNameFor } from '$core/Songs/displayInstrument';
@@ -554,6 +558,18 @@
     updateSettings();
   }
 
+  /**
+   * Offline audio export of a song in the list. The player has no dirty state of its own — what
+   * a row points at IS the song — so this never asks about saving first, unlike the composer's.
+   */
+  async function exportSongAudio(storable: SongStorable) {
+    const parsed = await songService.fromStorableSong(storable);
+    // A VSRG song has no notes an instrument renders; PlayerSongRow does not offer this on one
+    // (its `data.type === 'vsrg'` branch replaces the whole row), so narrow rather than assert.
+    if (parsed instanceof VsrgSong) return;
+    await exportAudio(parsed, parsed.name);
+  }
+
   async function toggleRecordAudio(override?: boolean | null) {
     if (!mounted) return;
     if (typeof override !== 'boolean') override = null;
@@ -580,7 +596,14 @@
   description="Learn how to play songs, play them by hand and record them. Use the approaching circles mode or the guided tutorial to learn sections of a song at your own pace. Share your sheets or import existing ones."
 />
 <PlayerMenu
-  functions={{ addSong, removeSong, handleSettingChange, changeVolume, renameSong }}
+  functions={{
+    addSong,
+    removeSong,
+    handleSettingChange,
+    changeVolume,
+    renameSong,
+    exportSongAudio,
+  }}
   data={{ settings }}
   {inPreview}
 />

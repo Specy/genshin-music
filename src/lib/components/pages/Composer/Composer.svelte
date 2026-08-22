@@ -34,7 +34,7 @@
   import InstrumentControls from './InstrumentControls.svelte';
   import { Instrument, type ObservableNote } from '$lib/audio/Instrument.svelte';
   import { ComposerTransport, TRANSPORT_START_MARGIN_S } from '$lib/audio/ComposerTransport';
-  import AudioRecorder from '$lib/audio/AudioRecorder';
+  import { exportSongAudio as exportAudio } from '$lib/audio/exportSongAudio';
   import Analytics from '$core/Analytics';
   import { homeStore } from '$stores/HomeStore.svelte';
   import { logger } from '$stores/LoggerStore.svelte';
@@ -85,7 +85,7 @@
   } from '$lib/audio/HeldNoteRegistry';
   import { spanForHeldMs } from '$core/Songs/sustainQuantize';
   import { registerLeaveHandler } from '$stores/navigationGuard.svelte';
-  import { calculateSongLength, clamp, delay, formatMs } from '$core/utils/Utilities';
+  import { calculateSongLength, clamp, formatMs } from '$core/utils/Utilities';
 
   let {
     songId = null,
@@ -162,7 +162,6 @@
   // One-time seed from the prop; later showMidi changes (callers never send any) are not tracked.
   // svelte-ignore state_referenced_locally
   let isMidiVisible = $state(showMidi || false);
-  let isRecordingAudio = $state(false);
   let isPlaying = $state(false);
   // A context resume can be pending before playback has an audio-clock anchor. Keep that state
   // separate from isPlaying: the canvas must not move until audio has an exact start time, while
@@ -188,16 +187,12 @@
    */
   let keyboardRaised = $state(false);
   /**
-   * ...and what actually decides the sheet's position, which is not quite the same thing, in two
-   * ways. Recording audio REPLACES the keyboard's content with the recording UI (see
-   * ComposerKeyboard), and that UI carries the only control that stops the recording - so the
-   * sheet is held up for as long as one is running, whatever the user last tapped. And the OPEN
-   * TOOLS PANEL takes the bottom of the window for itself (user addition 2026-08-22), so the
+   * ...and what actually decides the sheet's position, which is not quite the same thing: the
+   * OPEN TOOLS PANEL takes the bottom of the window for itself (user addition 2026-08-22), so the
    * sheet goes down while it is open - but `keyboardRaised` itself is never rewritten, and that
-   * IS the restore: closing the tools gives the sheet back exactly as it stood. Recording
-   * outranks the tools for the same reason it outranks the user's own tap.
+   * IS the restore: closing the tools gives the sheet back exactly as it stood.
    */
-  const keyboardSheetRaised = $derived((keyboardRaised && !isToolsVisible) || isRecordingAudio);
+  const keyboardSheetRaised = $derived(keyboardRaised && !isToolsVisible);
   /**
    * THE LOWERED SHEET'S PLAYBACK CLEAR (spec §4). While the song plays with the Pro View's keyboard
    * sheet down, the keys show NOTHING - every one of them unselected, no held marks - and cost
@@ -206,11 +201,9 @@
    * stops reaching the keyboard's DOM. Nobody can see that surface, and animating it was the one
    * per-tick cost the Pro View's sheet had left.
    *
-   * NOT A FREEZE, and the three exclusions are the whole of the rule: while the song is STOPPED the
+   * NOT A FREEZE, and the two exclusions are the whole of the rule: while the song is STOPPED the
    * lowered sheet is still live, so browsing and editing with it down keep updating exactly as they
-   * always have; raising it mid-playback restores the flashes on the next advance; and
-   * `keyboardSheetRaised` already includes `isRecordingAudio`, so an audio recording - which forces
-   * the sheet up and puts its only stop control there - is outside this by construction.
+   * always have; and raising it mid-playback restores the flashes on the next advance.
    */
   const noteStatesCleared = $derived(proView && !keyboardSheetRaised && isPlaying);
   /**
@@ -321,8 +314,8 @@
       playbackStartGeneration++;
       //not the full stop path (the instruments were just disposed — there is nothing left to
       //cancel or release), but the transport's pending worker-timer wake survives unmount on
-      //its own, and an awaiting startRecordingAudio needs the play-run promise settled so its
-      //!mounted bail can run
+      //its own, and anything awaiting the play-run promise needs it settled so its !mounted
+      //bail can run
       transport.stop();
       playbackEnded?.resolve();
       playbackEnded = null;
@@ -333,7 +326,6 @@
       KeyboardProvider.unregisterById('composer_keyboard');
       MIDIProvider.removeListener(handleMidi);
       MIDIProvider.removeInputsListener(handleMidiInputsChange);
-      if (AudioProvider.isRecording) AudioProvider.stopRecording();
       if (window.location.hostname !== 'localhost') {
         window.removeEventListener('beforeunload', handleUnload);
       }
@@ -794,48 +786,6 @@
     settings[obj.key] = { ...settings[obj.key], volume: obj.value };
     layers[layerIndex].changeVolume(obj.value);
     updateSettings();
-  }
-
-  async function startRecordingAudio(override?: boolean) {
-    if (!mounted) return;
-    if (!override) {
-      isRecordingAudio = false;
-      // A stop during the 300 ms export pre-roll wins before playback has started. The initiating
-      // call now observes the cancelled flag and returns, so this branch must also settle the
-      // recorder it already connected instead of leaving it capturing indefinitely.
-      if (AudioProvider.isRecording) void AudioProvider.stopRecording();
-      return togglePlay(false);
-    }
-    // resume() must be requested directly from the export gesture. Waiting through the 300 ms
-    // recorder lead-in first loses user activation in browsers that suspend contexts created at
-    // app mount, leaving the transport clock frozen forever.
-    isRecordingAudio = true;
-    try {
-      await AudioProvider.ensureRunning();
-    } catch (error) {
-      isRecordingAudio = false;
-      console.error('Unable to start the audio context for composer export', error);
-      return;
-    }
-    if (!mounted || !isRecordingAudio) return;
-    AudioProvider.startRecording();
-    await delay(300);
-    if (!mounted || !isRecordingAudio) return;
-    await togglePlay(true); //wait till song finishes
-    //committed audio ENDS at the song's audio-true end (onFinished fires only once the last
-    //column has fully elapsed), so all that is left to drain is the reverb/release tail
-    await delay(1000);
-    if (!mounted || !isRecordingAudio) return;
-    isRecordingAudio = false;
-    const recording = await AudioProvider.stopRecording();
-    if (!recording) return;
-    const fileName = await asyncPrompt(t('question:ask_song_name_cancellable'));
-    try {
-      if (fileName) await AudioRecorder.downloadBlob(recording.data, fileName + '.wav');
-    } catch (e) {
-      console.error(e);
-      logger.error(t('logs:error_downloading_audio'));
-    }
   }
 
   /**
@@ -1830,9 +1780,9 @@
 
   /**
    * The promise the play-run in progress returned, with its resolver. CONTRACT: `await
-   * togglePlay(true)` resolves when playback ENDS — startRecordingAudio depends on that ("wait
-   * till song finishes"). Playback itself lives in the transport's worker-timer wakes, so
-   * nothing here can await it; the contract is kept explicitly: PLAY creates the deferred, and
+   * togglePlay(true)` resolves when playback ENDS. Playback itself lives in the transport's
+   * worker-timer wakes, so nothing here can await it; the contract is kept explicitly: PLAY
+   * creates the deferred, and
    * the stop path — reached by manual stop and by the transport's onFinished alike — resolves
    * it. Every other caller ignores the promise.
    */
@@ -1892,12 +1842,9 @@
     if (!mounted || startGeneration !== playbackStartGeneration || !playbackStarting)
       return promise;
 
-    //the audio-export offset lives in the anchor margin: the whole run — the resumed spans
-    //below and every committed column — starts that much later, decided in exactly one place.
-    const margin = TRANSPORT_START_MARGIN_S + (isRecordingAudio ? 0.5 : 0);
     //no selectColumn here: the anchor column is already selected, and its notes sound through
     //commitColumn like every other column's — the transport commits it at the anchor time.
-    if (!anchorPlayback(song.selected, margin)) {
+    if (!anchorPlayback(song.selected, TRANSPORT_START_MARGIN_S)) {
       //anchor refused (empty song / selection out of range — the transport's contract is to
       //stay STOPPED and fire nothing): nothing sounded and nothing will, so settle this run.
       return togglePlay(false);
@@ -2216,6 +2163,54 @@
       logger.error(t('logs:error_downloading_song'));
     }
   }
+
+  /**
+   * Offline audio export of one song row. The save-before-export question applies ONLY to the
+   * song open here, and only while it is dirty — any other row already IS what is stored. Its
+   * shape is prepareToLeave's: autosave saves silently, otherwise the answer decides which
+   * version goes out, and a cancel abandons the export rather than picking one.
+   */
+  async function exportSongAudio(songToExport: SerializedSong) {
+    if (songToExport.id === song.id && changes > 0) {
+      if (song.id === null || song.name === 'Untitled') {
+        //never stored, so there is no saved version to fall back on and nothing updateSong could
+        //write without stopping to ask for a name mid-export: what is on screen is what goes out
+        logger.warn(t('logs:exporting_unsaved_song'));
+        return exportAudio(song, song.name);
+      }
+      if (settings.autosave.value) {
+        await updateSong(song);
+        return exportAudio(song, song.name);
+      }
+      const shouldSave = await asyncConfirm(
+        t('question:unsaved_song_save', { song_name: song.name }),
+        true
+      );
+      if (shouldSave === null) return;
+      if (shouldSave) {
+        await updateSong(song);
+        return exportAudio(song, song.name);
+      }
+    }
+    //any other row, a clean open song, or a "no" above: `songToExport` is the version the caller
+    //looked up before the question was asked, so a "no" exports what was last saved
+    try {
+      const parsed = songService.parseSong(songToExport);
+      if (parsed instanceof VsrgSong) throw new Error("Can't render a Vsrg song to audio");
+      await exportAudio(parsed, parsed.name);
+    } catch (e) {
+      console.error(e);
+      logger.error(t('logs:error_exporting_song_audio'));
+    }
+  }
+
+  async function exportCurrentSongAudio() {
+    //the menu's entry is the open song's own row, so it hands the STORED copy over and the flow
+    //above answers it identically to the song list — including which version a "no" exports. A
+    //song that has never been stored falls through to that flow's unsaved branch on its own.
+    const stored = song.id === null ? null : await songService.getSongById(song.id);
+    return exportSongAudio(stored ?? song.serialize());
+  }
 </script>
 
 {#snippet playIcon()}
@@ -2451,7 +2446,6 @@
           {isPlaying}
           {playbackColumnStartMs}
           {playbackAnchorGeneration}
-          {isRecordingAudio}
           instruments={song.instruments}
           songPitch={song.pitch}
           selected={song.selected}
@@ -2565,14 +2559,12 @@
       handleNoteDrag,
       handleNoteLongPress,
       registerNoteElement,
-      startRecordingAudio,
       selectColumnFromDirection,
       handleTempoChanger,
     }}
     data={{
       isPlaying,
       settings,
-      isRecordingAudio,
       currentLayer: layer,
       instruments: song.instruments,
       keyboard: layers[layer],
@@ -2608,7 +2600,6 @@
 </div>
 <ComposerMenu
   data={{
-    isRecordingAudio,
     settings,
     hasChanges: changes > 0,
     currentSongId: song.id,
@@ -2617,13 +2608,14 @@
     loadSong,
     renameSong,
     downloadSong,
+    exportSongAudio,
+    exportCurrentSongAudio,
     createNewSong,
     changePage,
     updateThisSong,
     handleSettingChange,
     changeVolume,
     changeMidiVisibility,
-    startRecordingAudio,
   }}
   {inPreview}
 />

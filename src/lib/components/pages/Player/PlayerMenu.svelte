@@ -20,7 +20,7 @@
   import { ThemeProvider } from '$core/theme/ThemeProvider.svelte';
   import { ComposedSong } from '$core/Songs/ComposedSong.svelte';
   import { RecordedSong } from '$core/Songs/RecordedSong';
-  import type { SerializedSong, SongType } from '$core/Songs/Song.svelte';
+  import type { SerializedSong, SongStorable, SongType } from '$core/Songs/Song.svelte';
   import type { SettingUpdate, SettingVolumeUpdate } from '$core/types/SettingsPropriety';
   import type { PlayerSettingsDataType } from '$core/BaseSettings';
   import { isAudioFormat, isMidiFormat, isVideoFormat } from '$core/utils/Utilities';
@@ -59,6 +59,7 @@
     renameSong: (newName: string, id: string) => void;
     handleSettingChange: (override: SettingUpdate) => void;
     changeVolume: (override: SettingVolumeUpdate) => void;
+    exportSongAudio: (song: SongStorable) => void;
   };
 
   let {
@@ -501,6 +502,7 @@
               toggleMenu,
               downloadSong,
               renameSong: functions.renameSong,
+              exportSongAudio: functions.exportSongAudio,
             },
           }}
         >

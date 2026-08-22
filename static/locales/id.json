@@ -539,8 +539,6 @@
         "confirm_layer_remove": "Apakah Anda yakin ingin menghapus \"{{layer_name}}\"? SEMUA NOTE PADA LAPISAN INI AKAN DIHAPUS",
         "cant_add_more_than_n_layers": "Anda tidak dapat menambahkan lebih dari {{max_layers}} lapisan!",
         "ask_song_name_for_composed_song_version": "Tulis nama lagu untuk versi yang dikomposisikan, tekan batal untuk mengabaikan",
-        "start_recording_audio": "Mulai merekam audio",
-        "stop_recording_audio": "Berhenti merekam audio",
         "create_new_song": "Buat lagu baru",
         "create_from_midi_or_audio": "Buat dari MIDI/Audio",
         "previous_breakpoint": "Breakpoint Sebelumnnya",
@@ -554,7 +552,6 @@
         "hide_keyboard": "Hide keyboard",
         "note_duration": "Durasi note",
         "error_with_this_layer": "Ada kesalahan dengan lapisan ini",
-        "recording_audio": "Merekam Audio",
         "tools": {
             "move_notes_up": "Pindahkan note ke atas",
             "move_notes_up_description": "Dorong note ke atas 1 posisi",

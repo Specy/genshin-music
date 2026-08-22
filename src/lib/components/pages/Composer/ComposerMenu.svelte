@@ -44,7 +44,6 @@
     data: {
       settings: ComposerSettingsDataType;
       hasChanges: boolean;
-      isRecordingAudio: boolean;
       // the id of the song open in the composer (null while it is unsaved), so its row in the
       // song list can show it is the one being edited
       currentSongId: string | null;
@@ -53,13 +52,14 @@
       loadSong: (song: SerializedSong) => void;
       renameSong: (newName: string, id: string) => void;
       downloadSong: (song: SerializedSong, as: 'song' | 'midi') => void;
+      exportSongAudio: (song: SerializedSong) => void;
+      exportCurrentSongAudio: () => void;
       createNewSong: () => void;
       changePage: (page: string) => void;
       updateThisSong: () => void;
       handleSettingChange: (data: SettingUpdate) => void;
       changeVolume: (data: SettingVolumeUpdate) => void;
       changeMidiVisibility: (visible: boolean) => void;
-      startRecordingAudio: (override?: boolean) => void;
     };
     inPreview?: boolean;
   } = $props();
@@ -373,6 +373,7 @@
               removeSong,
               toggleMenu,
               downloadSong: functions.downloadSong,
+              exportSongAudio: functions.exportSongAudio,
               renameSong: functions.renameSong,
             },
           }}
@@ -389,20 +390,18 @@
           {/snippet}
         </SongMenu>
         <div class="songs-buttons-wrapper" style="margin-top:auto">
+          <!-- Closing the panel is still worth doing (the format dialog would otherwise open over
+               an open menu), but not behind a timer any more: the old recorder waited 300 ms so
+               the panel had finished sliding away before it started capturing the performance,
+               and an offline render has nothing to be disturbed by. -->
           <AppButton
-            style="margin-top:0.5rem"
-            class="record-btn"
+            style="margin-top:0.5rem;width:fit-content"
             onclick={() => {
               isOpen = false;
-              setTimeout(() => {
-                functions.startRecordingAudio(!data.isRecordingAudio);
-              }, 300);
+              functions.exportCurrentSongAudio();
             }}
-            toggled={data.isRecordingAudio}
           >
-            {data.isRecordingAudio
-              ? t('composer:stop_recording_audio')
-              : t('composer:start_recording_audio')}
+            {t('composer:export_audio')}
           </AppButton>
         </div>
       </MenuPanel>

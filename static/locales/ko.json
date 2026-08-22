@@ -539,8 +539,6 @@
     "confirm_layer_remove": "정말로 레이어: \"{{layer_name}}\"을 삭제하고 싶으십니까? 이 레이어의 모든 노트가 삭제될 것입니다",
     "cant_add_more_than_n_layers": "{{max_layers}}개보다 더 많은 레이어을 만들 수 없습니다!",
     "ask_song_name_for_composed_song_version": "편곡본의 이름을 입력하세요. 취소를 눌러 건너뛰세요",
-    "start_recording_audio": "오디오 녹음 시작하기",
-    "stop_recording_audio": "오디오 녹음 멈추기",
     "create_new_song": "새로운 곡 만들기",
     "create_from_midi_or_audio": "MIDI/오디오로 만들기",
     "previous_breakpoint": "이전 제어점으로 이동하기",
@@ -554,7 +552,6 @@
     "hide_keyboard": "Hide keyboard",
     "note_duration": "노트 길이",
     "error_with_this_layer": "이 레이어에 에러가 발생했습니다",
-    "recording_audio": "오디오를 녹음하는중",
     "tools": {
       "move_notes_up": "노트를 올리기",
       "move_notes_up_description": "노트를 한칸 위로 움직입니다",

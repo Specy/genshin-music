@@ -18,6 +18,12 @@ export const i18n_en = {
     error_downloading_audio:
       'There was an error downloading the audio, maybe the song is too long?',
     song_downloaded: 'Song downloaded',
+    rendering_song_audio: 'Rendering audio... {{percentage}}%',
+    encoding_song_audio: 'Encoding audio file...',
+    song_audio_exported: 'Audio exported',
+    error_exporting_song_audio: 'There was an error exporting the audio',
+    exporting_unsaved_song:
+      'This song has never been saved, the audio will be exported from what is currently open',
     error_downloading_song: 'Error downloading song',
     error_downloading_songs: 'Error downloading songs',
     error_importing_file: `Error importing file "{{file_name}}}"`,
@@ -62,6 +68,7 @@ export const i18n_en = {
     enter_song_name: "Write the song's name",
     enter_folder_name: "Write the folder's name",
     ask_song_name_cancellable: 'Write the song name, press cancel to ignore',
+    pick_audio_export_format: 'Which audio format do you want to export?',
   },
   confirm: {
     delete_song: `Are you sure you want to delete the song "{{song_name}}"?`,
@@ -189,6 +196,11 @@ export const i18n_en = {
     play_song: 'Play song',
     invalid_song: 'Invalid song',
     download_song: 'Download song {{song_name}}',
+    export_as_audio: 'Export as audio',
+    audio_format_wav: 'WAV',
+    audio_format_wav_description: 'Lossless, large file',
+    audio_format_mp3: 'MP3',
+    audio_format_mp3_description: 'Smaller file, 320 kbps',
     delete_song: 'Delete song {{song_name}}',
     change_app_theme: 'Change app theme',
     download_all_songs_backup: 'Download all songs (backup)',
@@ -656,8 +668,7 @@ export const i18n_en = {
     cant_add_more_than_n_layers: `You can't add more than {{max_layers}} layers!`,
     ask_song_name_for_composed_song_version:
       'Write the song name for the composed version, press cancel to ignore',
-    start_recording_audio: 'Start recording audio',
-    stop_recording_audio: 'Stop recording audio',
+    export_audio: 'Export audio',
     create_new_song: 'Create new song',
     create_from_midi_or_audio: 'Create from MIDI/Audio',
     previous_breakpoint: 'Previous Breakpoint', //breakpoint is a sort of point to "jump", a sort of bookmark
@@ -673,7 +684,6 @@ export const i18n_en = {
     hide_keyboard: 'Hide keyboard',
     note_duration: 'Note duration', //in columns, shown in the long-press duration popover
     error_with_this_layer: 'There was an error with this layer',
-    recording_audio: 'Recording Audio',
     tools: {
       move_notes_up: 'Move notes up',
       move_notes_up_description: 'Push notes up by 1 position',

@@ -55,7 +55,6 @@ describe('the Pro View keyboard while the lowered sheet is cleared', () => {
             data: {
                 keyboard: new Instrument(INSTRUMENT),
                 instruments: song.instruments,
-                isRecordingAudio: false,
                 currentLayer: 0,
                 currentColumn: song.columns[0],
                 pitch: 'C',
@@ -73,7 +72,6 @@ describe('the Pro View keyboard while the lowered sheet is cleared', () => {
                 handleNoteRelease: () => {},
                 handleNoteLongPress: () => {},
                 handleNoteDrag: () => {},
-                startRecordingAudio: () => {},
                 selectColumnFromDirection: () => {},
                 handleTempoChanger: () => {},
             },
@@ -166,7 +164,7 @@ describe('the open tools take the bottom of the window from the sheet', () => {
         //it stood. A version that wrote keyboardRaised on open would need (and could corrupt) a
         //memory of its own.
         expect(COMPOSER).toContain(
-            'const keyboardSheetRaised = $derived((keyboardRaised && !isToolsVisible) || isRecordingAudio);'
+            'const keyboardSheetRaised = $derived(keyboardRaised && !isToolsVisible);'
         )
     })
 

@@ -6,16 +6,17 @@
   import { t } from '$i18n/binding.svelte';
   import DecoratedCard from '../layout/DecoratedCard.svelte';
 
-  // One file renders both dialogs (confirm + free-text prompt) directly
-  // against asyncPromptStore's state, rather than splitting into
-  // sub-components - Svelte can't export two named components per file.
+  // One file renders all three dialogs (confirm + free-text prompt + option
+  // select) directly against asyncPromptStore's state, rather than splitting
+  // into sub-components - a Svelte file can only export the one component it
+  // is, so three named components would mean three files over one store.
   //
   // Uses its own <svelte:window onkeydown> (below) rather than routing
   // through KeyboardProvider.register(...) like other global shortcuts -
-  // simpler than standing up two more register/unregister pairs in a
-  // component that already runs its own overlay-click and blur effects.
+  // simpler than standing up more register/unregister pairs in a component
+  // that already runs its own overlay-click and blur effects.
   //
-  // `ignore_click_outside` (below, on both dialogs) is read by other
+  // `ignore_click_outside` (below, on every dialog) is read by other
   // components' `use:clickOutside` actions (see clickOutside.ts's
   // hasFocusable) - it's what lets a click landing inside this dialog NOT
   // count as an "outside" click for whatever else is open.
@@ -28,6 +29,7 @@
 
   const promptState = asyncPromptStore.promptState;
   const confirmState = asyncPromptStore.confirmState;
+  const selectState = asyncPromptStore.selectState;
 
   // ---- Confirm dialog ----
   let confirmIsMounted = $state(false);
@@ -57,6 +59,37 @@
     if (!confirmState.deferred) return;
     if (e.key === 'Escape' && confirmState.cancellable) asyncPromptStore.answerConfirm(null);
     if (e.key === 'Enter') asyncPromptStore.answerConfirm(true);
+  }
+
+  // ---- Select dialog ----
+  let selectIsMounted = $state(false);
+  $effect(() => {
+    if (selectState.deferred) {
+      selectIsMounted = true;
+      return;
+    }
+    // demount after animation ended
+    const timeout = setTimeout(() => {
+      selectIsMounted = false;
+    }, 300);
+    return () => clearTimeout(timeout);
+  });
+  $effect(() => {
+    if (!selectState.deferred) return;
+    const activeEl = document.activeElement as HTMLElement | null;
+    activeEl?.blur();
+  });
+
+  function handleSelectOverlayClick(e: MouseEvent) {
+    if (e.target !== e.currentTarget || !selectState.cancellable) return;
+    asyncPromptStore.answerSelect(null);
+  }
+
+  function handleSelectKeydown(e: KeyboardEvent) {
+    if (!selectState.deferred) return;
+    // No Enter default here, unlike the confirm dialog: with one button per option there is no
+    // "the affirmative one" to pick, and guessing would answer a question the user did not.
+    if (e.key === 'Escape' && selectState.cancellable) asyncPromptStore.answerSelect(null);
   }
 
   // ---- Prompt dialog ----
@@ -118,13 +151,14 @@
     if (document.activeElement?.tagName === 'INPUT') return;
     handleConfirmKeydown(e);
     handlePromptKeydown(e);
+    handleSelectKeydown(e);
   }
 </script>
 
 <svelte:window onkeydown={handleWindowKeydown} />
 
 <!--
-    The two overlay divs below are click-to-cancel backdrops, not independent controls: their
+    The overlay divs below are click-to-cancel backdrops, not independent controls: their
     only interactive purpose is dismissing the dialog on an outside click, and that action is
     already fully keyboard-reachable via the window Escape handler above plus the explicit
     No/Cancel buttons inside. Giving a full-viewport backdrop its own role="button"/tabindex (the
@@ -226,3 +260,74 @@
     </div>
   </DecoratedCard>
 </div>
+
+<!-- Same backdrop pattern/reasoning as the confirm overlay above. -->
+<!-- svelte-ignore a11y_click_events_have_key_events -->
+<!-- svelte-ignore a11y_no_static_element_interactions -->
+<div
+  style={!selectIsMounted ? 'display:none' : ''}
+  onclick={handleSelectOverlayClick}
+  class={[
+    'prompt-overlay',
+    'ignore_click_outside',
+    !selectState.deferred && 'prompt-overlay-hidden',
+  ]}
+>
+  <DecoratedCard
+    class={[
+      'floating-prompt',
+      'ignore_click_outside',
+      !selectState.deferred && 'floating-prompt-hidden',
+    ]}
+    isRelative={false}
+    size="1.1rem"
+  >
+    <div style="white-space:pre-wrap">{selectState.question}</div>
+    <div class="prompt-select-options">
+      {#each selectState.options as option (option.value)}
+        <button
+          class="prompt-button prompt-select-option"
+          disabled={option.disabled}
+          style="background-color:{color};color:white"
+          onclick={() => asyncPromptStore.answerSelect(option.value)}
+        >
+          <span>{option.text}</span>
+          {#if option.description}
+            <span class="prompt-select-description">{option.description}</span>
+          {/if}
+        </button>
+      {/each}
+    </div>
+  </DecoratedCard>
+</div>
+
+<style>
+  .prompt-select-options {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    margin-top: 0.6rem;
+  }
+
+  /* Beats .prompt-button's own padding on specificity (Svelte's scoping class adds to it), which
+     is what lets an option keep that button's look while laying its two lines out itself. */
+  .prompt-select-option {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.15rem;
+    padding: 0.5rem 0.7rem;
+    text-align: left;
+    width: 100%;
+  }
+
+  .prompt-select-option:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+
+  .prompt-select-description {
+    font-size: 0.8rem;
+    opacity: 0.8;
+  }
+</style>

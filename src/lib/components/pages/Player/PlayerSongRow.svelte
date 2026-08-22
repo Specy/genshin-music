@@ -38,6 +38,7 @@
       renameSong: (newName: string, id: string) => void;
       toggleMenu: (override?: boolean) => void;
       downloadSong: (song: RecordedOrComposed | Midi) => void;
+      exportSongAudio: (song: SongStorable) => void;
     };
   } = $props();
 
@@ -304,6 +305,10 @@
         <FloatingDropdownRow onclick={downloadMidi}>
           {@render faDownloadIcon()}
           <FloatingDropdownText text={t('common:download_midi')} />
+        </FloatingDropdownRow>
+        <FloatingDropdownRow onclick={() => functions.exportSongAudio(data)}>
+          {@render faDownloadIcon()}
+          <FloatingDropdownText text={t('menu:export_as_audio')} />
         </FloatingDropdownRow>
         <FloatingDropdownRow onclick={() => functions.removeSong(data.name, data.id!)}>
           {@render faTrashIcon()}

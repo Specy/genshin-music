@@ -539,8 +539,6 @@
         "confirm_layer_remove": "您确定要删除“{{layer_name}}”吗？该层的所有音符都将被删除。",
         "cant_add_more_than_n_layers": "您不能添加超过 {{max_layers}} 层！",
         "ask_song_name_for_composed_song_version": "填写创作版本的歌曲名称，按取消忽略",
-        "start_recording_audio": "开始录制音频",
-        "stop_recording_audio": "停止录制音频",
         "create_new_song": "创作新歌",
         "create_from_midi_or_audio": "从 MIDI/音频创建",
         "previous_breakpoint": "上一个断点",
@@ -554,7 +552,6 @@
         "hide_keyboard": "Hide keyboard",
         "note_duration": "音符时长",
         "error_with_this_layer": "该层出现错误",
-        "recording_audio": "录制音频",
         "tools": {
             "move_notes_up": "向上移动音符",
             "move_notes_up_description": "将音符向上推 1 个位置",

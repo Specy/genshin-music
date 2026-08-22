@@ -66,4 +66,44 @@ describe('async prompts', () => {
         asyncPromptStore.answerConfirm(true)
         expect(await second).toBe(true)
     })
+    it('asyncSelect resolves via answer and cancels prior select', async () => {
+        const {asyncSelect, asyncPromptStore} = await import('../src/lib/stores/AsyncPromptStore.svelte')
+        const first = asyncSelect('first?', [{value: 'wav', text: 'WAV'}])
+        const second = asyncSelect('second?', [
+            {value: 'wav', text: 'WAV'},
+            {value: 'mp3', text: 'MP3', description: 'smaller', disabled: true},
+        ])
+        expect(await first).toBe(null)          // superseded
+        expect(asyncPromptStore.selectState.question).toBe('second?')
+        expect(asyncPromptStore.selectState.options).toHaveLength(2)
+        asyncPromptStore.answerSelect('mp3')
+        expect(await second).toBe('mp3')
+    })
+    it('asyncSelect answers null for anything that is not one of its own options', async () => {
+        //the store's own narrowing: an answer is looked up among the options that call supplied,
+        //so a value from nowhere is a cancel rather than a value handed back untyped
+        const {asyncSelect, asyncPromptStore} = await import('../src/lib/stores/AsyncPromptStore.svelte')
+        const pending = asyncSelect('pick?', [{value: 'wav', text: 'WAV'}])
+        asyncPromptStore.answerSelect('flac')
+        expect(await pending).toBe(null)
+    })
+    it('resolves an object-valued option that the dialog read back out of the store', async () => {
+        //$state deep-proxies what it holds, so the option the dialog clicks is NOT the caller's
+        //own object - a lookup against the captured array would miss it and answer a cancel
+        const {asyncSelect, asyncPromptStore} = await import('../src/lib/stores/AsyncPromptStore.svelte')
+        const wav = {extension: 'wav'}
+        const pending = asyncSelect('pick?', [{value: wav, text: 'WAV'}])
+        asyncPromptStore.answerSelect(asyncPromptStore.selectState.options[0].value)
+        expect(await pending).toBe(wav)
+    })
+    it('clearAll cancels a pending select alongside the other two', async () => {
+        const {asyncConfirm, asyncPrompt, asyncSelect, asyncPromptStore} = await import('../src/lib/stores/AsyncPromptStore.svelte')
+        const confirm = asyncConfirm('confirm?')
+        const prompt = asyncPrompt('prompt?')
+        const select = asyncSelect('select?', [{value: 'wav', text: 'WAV'}])
+        asyncPromptStore.clearAll()
+        expect(await confirm).toBe(null)
+        expect(await prompt).toBe(null)
+        expect(await select).toBe(null)
+    })
 })

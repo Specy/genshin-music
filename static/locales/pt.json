@@ -539,8 +539,6 @@
     "confirm_layer_remove": "Tem certeza de que deseja remover \"{{layer_name}}\"? TODAS AS NOTAS DESTA CAMADA SERÃO EXCLUÍDAS",
     "cant_add_more_than_n_layers": "Você não pode adicionar mais de {{max_layers}} camadas!",
     "ask_song_name_for_composed_song_version": "Digite o nome da música para a versão composta, pressione cancelar para ignorar",
-    "start_recording_audio": "Iniciar gravação de áudio",
-    "stop_recording_audio": "Parar gravação de áudio",
     "create_new_song": "Criar nova música",
     "create_from_midi_or_audio": "Criar a partir de MIDI/Áudio",
     "previous_breakpoint": "Ponto de interrupção anterior",
@@ -554,7 +552,6 @@
     "hide_keyboard": "Hide keyboard",
     "note_duration": "Duração da nota",
     "error_with_this_layer": "Houve um erro com esta camada",
-    "recording_audio": "Gravando Áudio",
     "tools": {
       "move_notes_up": "Mover notas para cima",
       "move_notes_up_description": "Empurra as notas para cima por 1 posição",

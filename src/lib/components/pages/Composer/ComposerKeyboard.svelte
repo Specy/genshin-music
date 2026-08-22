@@ -22,8 +22,6 @@
   import type { ComposerSettingsDataType } from '$core/BaseSettings';
   import type { Instrument, ObservableNote } from '$lib/audio/Instrument.svelte';
   import { t } from '$i18n/binding.svelte';
-  import AppButton from '$cmp/inputs/AppButton.svelte';
-  import Header from '$cmp/header/Header.svelte';
   import ShapeKeyboard from '$lib/games/shapes/ShapeKeyboard.svelte';
   import ComposerNote from './ComposerNote.svelte';
   import ComposerTempoChangers from './ComposerTempoChangers.svelte';
@@ -35,7 +33,6 @@
     data: {
       keyboard: Instrument;
       instruments: InstrumentData[];
-      isRecordingAudio: boolean;
       currentLayer: number;
       currentColumn: NoteColumn;
       pitch: Pitch;
@@ -72,7 +69,6 @@
        * Composer.svelte's physicalKeyAnchor).
        */
       registerNoteElement: (note: ObservableNote, element: HTMLElement | null) => void;
-      startRecordingAudio: (override?: boolean) => void;
       selectColumnFromDirection: (direction: number) => void;
       handleTempoChanger: (tempoChanger: (typeof game.composer.tempoChangers)[number]) => void;
     };
@@ -138,16 +134,6 @@
 {#if data.keyboard === undefined}
   <div class="composer-keyboard-wrapper" style="margin-bottom:4rem">
     <h1>{t('composer:error_with_this_layer')}</h1>
-  </div>
-{:else if data.isRecordingAudio}
-  <div
-    class="composer-keyboard-wrapper"
-    style="margin-bottom:4rem;flex-direction:column;align-items:center"
-  >
-    <Header>{t('composer:recording_audio')}...</Header>
-    <AppButton onclick={() => functions.startRecordingAudio(false)} toggled>
-      {t('composer:stop_recording_audio')}
-    </AppButton>
   </div>
 {:else}
   <div class="composer-keyboard-wrapper">

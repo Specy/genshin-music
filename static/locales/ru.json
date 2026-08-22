@@ -539,8 +539,6 @@
         "confirm_layer_remove": "Are you sure you want to remove \"{{layer_name}}\"? ALL NOTES OF THIS LAYER WILL BE DELETED",
         "cant_add_more_than_n_layers": "You can't add more than {{max_layers}} layers!",
         "ask_song_name_for_composed_song_version": "Write the song name for the composed version, press cancel to ignore",
-        "start_recording_audio": "Start recording audio",
-        "stop_recording_audio": "Stop recording audio",
         "create_new_song": "Create new song",
         "create_from_midi_or_audio": "Create from MIDI/Audio",
         "previous_breakpoint": "Previous Breakpoint",
@@ -554,7 +552,6 @@
         "hide_keyboard": "Hide keyboard",
         "note_duration": "Длительность ноты",
         "error_with_this_layer": "There was an error with this layer",
-        "recording_audio": "Recording Audio",
         "tools": {
             "move_notes_up": "Move notes up",
             "move_notes_up_description": "Push notes up by 1 position",
