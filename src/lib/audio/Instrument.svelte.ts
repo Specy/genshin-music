@@ -95,7 +95,14 @@ export class Instrument {
   buffers: AudioBuffer[] = [];
   isDeleted: boolean = false;
   isLoaded: boolean = false;
-  audioContext: AudioContext | null = null;
+  /**
+   * BaseAudioContext, not AudioContext: everything this class asks of it (createGain,
+   * createBufferSource, createBuffer, currentTime, decodeAudioData) is on the base
+   * interface, and an offline render needs the very same engine driving an
+   * OfflineAudioContext — one code path, so what an export contains is what playback
+   * builds. Nothing here reaches for a live-only member (resume/suspend/close).
+   */
+  audioContext: BaseAudioContext | null = null;
   /** Sounding sustained voices (pruned opportunistically); engine state, never UI-observed. */
   private activeVoices: Voice[] = [];
   /**
@@ -569,7 +576,7 @@ export class Instrument {
       }
     }
   };
-  load = async (audioContext: AudioContext) => {
+  load = async (audioContext: BaseAudioContext) => {
     this.audioContext = audioContext;
     this.volumeNode = audioContext.createGain();
     this.volumeNode.gain.value = 0.8;
@@ -613,7 +620,7 @@ export class Instrument {
   };
 }
 
-export function fetchAudioBuffer(url: string, audioContext: AudioContext): Promise<AudioBuffer> {
+export function fetchAudioBuffer(url: string, audioContext: BaseAudioContext): Promise<AudioBuffer> {
   //dont change any of this, safari bug
   return new Promise((res, rej) => {
     fetch(url)
