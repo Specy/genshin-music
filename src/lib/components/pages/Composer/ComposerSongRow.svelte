@@ -51,7 +51,7 @@
     //parked on an invisible menu item. currentTarget is the role-button for both its click and the
     //explicit Enter/Space keyboard activation below.
     if (event.currentTarget instanceof HTMLElement) event.currentTarget.blur();
-    logger.showPill(t('logs:loading_song'));
+    logger.showPill(t('logs:loading_song'), { spinner: true });
     const song = await songService.getOneSerializedFromStorable(data);
     logger.hidePill();
     if (!song) return logger.error(t('logs:could_not_find_song'));

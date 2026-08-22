@@ -129,7 +129,7 @@
     const frames: number[][] = [];
     const onsets: number[][] = [];
     const model = `${base}/assets/audio-midi-model.json`;
-    logger.showPill(`${t('composer:midi_parser.detecting_notes')}...`);
+    logger.showPill(`${t('composer:midi_parser.detecting_notes')}...`, { spinner: true });
     const { BasicPitch, noteFramesToTime, outputToNotesPoly } = await basicPitchLoader();
     const basicPitch = new BasicPitch(model);
     const mono = audio.getChannelData(0);
@@ -141,11 +141,12 @@
       },
       (progress) => {
         logger.showPill(
-          `${t('composer:midi_parser.detecting_notes')}: ${Math.floor(progress * 100)}%...`
+          `${t('composer:midi_parser.detecting_notes')}: ${Math.floor(progress * 100)}%...`,
+          { spinner: true }
         );
       }
     );
-    logger.showPill(t('composer:midi_parser.converting_audio_to_midi'));
+    logger.showPill(t('composer:midi_parser.converting_audio_to_midi'), { spinner: true });
     await delay(300);
     const notes = noteFramesToTime(
       outputToNotesPoly(

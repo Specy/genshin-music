@@ -86,7 +86,8 @@
       logger.showPill(
         i18n.t('zen_keyboard:loading_instrument', {
           instrument: i18n.t('instruments.' + settings.instrument.value),
-        })
+        }),
+        { spinner: true }
       );
       await currentInstrument.load(AudioProvider.getAudioContext());
       logger.hidePill();

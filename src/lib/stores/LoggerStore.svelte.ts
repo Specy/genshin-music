@@ -14,11 +14,18 @@ export type ToastState = {
   id: number;
   type: LoggerStatus;
 };
-export type PillState = { visible: boolean; text: string };
+export type PillAction = { text: string; onClick: () => void };
+export type PillState = {
+  visible: boolean;
+  text: string;
+  spinner: boolean;
+  actions: PillAction[];
+};
+export type ShowPillOptions = { spinner?: boolean; actions?: PillAction[] };
 
 class LoggerStore {
   toasts: ToastState[] = $state([]);
-  pillState: PillState = $state({ visible: false, text: '' });
+  pillState: PillState = $state({ visible: false, text: '', spinner: false, actions: [] });
   private lastId = 0;
 
   log = (text: string, timeout: number = 4500, type: LoggerStatus = LoggerStatus.SUCCESS) => {
@@ -68,13 +75,20 @@ class LoggerStore {
   setPillState = (state: Partial<PillState>) => {
     Object.assign(this.pillState, state);
   };
-  showPill = (text?: string) => {
+  showPill = (text?: string, options?: ShowPillOptions) => {
     this.setPillState({
       text,
       visible: true,
+      // Spinner and actions are reset to their defaults when the options omit them: the store is
+      // a singleton and pills are shown from many unrelated call sites, so a stale Cancel button
+      // from one caller must never survive onto the next caller's pill.
+      spinner: options?.spinner ?? false,
+      actions: options?.actions ?? [],
     });
   };
   hidePill = () => {
+    // Visibility only: the pill fades out, so its contents have to stay put until the transition
+    // ends. Clearing them here would blank the pill mid-fade; showPill resets them on the way in.
     this.setPillState({ visible: false });
   };
 }

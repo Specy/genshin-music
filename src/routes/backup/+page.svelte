@@ -42,7 +42,7 @@
   });
 
   async function validateSongs(): Promise<SerializedSong[] | null> {
-    logger.showPill(`${t('backup:validating_songs')}...`);
+    logger.showPill(`${t('backup:validating_songs')}...`, { spinner: true });
     const songs = await songService.getSongs();
     const errors: SerializedSong[] = [];
     for (const song of songs) {
@@ -67,7 +67,7 @@
   }
 
   async function validateFolders(): Promise<SerializedFolder[] | null> {
-    logger.showPill(`${t('backup:validating_folders')}...`);
+    logger.showPill(`${t('backup:validating_folders')}...`, { spinner: true });
     const folderErrors: SerializedFolder[] = [];
     const folders = await _folderService.getFolders();
     for (const folder of folders) {
@@ -88,7 +88,7 @@
   }
 
   async function validateThemes(): Promise<SerializedTheme[] | null> {
-    logger.showPill(`${t('backup:validating_themes')}...`);
+    logger.showPill(`${t('backup:validating_themes')}...`, { spinner: true });
     const themes = await _themeService.getThemes();
     const errors: SerializedTheme[] = [];
     for (const theme of themes) {
@@ -151,7 +151,7 @@
       fileService.downloadFiles(files, fileName);
     } else {
       try {
-        logger.showPill(`${t('backup:zipping_files')}...`);
+        logger.showPill(`${t('backup:zipping_files')}...`, { spinner: true });
         // Typed Uint8Array (matches fflate's own FlateCallback `data` param) rather than
         // `any`, which is banned. `as const` on each fileEntries tuple below is required:
         // without it each entry widens to (string | Uint8Array)[], which

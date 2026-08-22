@@ -308,7 +308,7 @@
     });
     //the pill only when something actually loads — same-name syncs are silent
     const needsLoad = toLoad.some((ins, i) => instruments[i]?.name !== ins.name);
-    if (needsLoad) logger.showPill(t('logs:loading_instruments'));
+    if (needsLoad) logger.showPill(t('logs:loading_instruments'), { spinner: true });
     const promises = toLoad.map(async (ins, i) => {
       if (instruments[i] === undefined) {
         //If it doesn't have a layer, create one

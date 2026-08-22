@@ -20,9 +20,17 @@ describe('LoggerStore', () => {
     })
     it('pill shows and hides', () => {
         logger.showPill('working')
-        expect(logger.pillState).toEqual({visible: true, text: 'working'})
+        expect(logger.pillState).toEqual({visible: true, text: 'working', spinner: false, actions: []})
         logger.hidePill()
         expect(logger.pillState.visible).toBe(false)
+    })
+    it('showPill resets spinner and actions the options omit', () => {
+        logger.showPill('rendering', {spinner: true, actions: [{text: 'Cancel', onClick: () => {}}]})
+        expect(logger.pillState.spinner).toBe(true)
+        expect(logger.pillState.actions.length).toBe(1)
+        logger.showPill('loading')
+        expect(logger.pillState.spinner).toBe(false)
+        expect(logger.pillState.actions).toEqual([])
     })
 })
 

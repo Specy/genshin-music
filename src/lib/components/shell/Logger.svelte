@@ -81,5 +81,13 @@
   {/each}
 </div>
 <div class={['flex-centered', 'pill', logger.pillState.visible && 'pill-visible']}>
-  {logger.pillState.text}
+  {#if logger.pillState.spinner}
+    <!-- Decorative only - the pill's text already says what is loading, so a screen reader
+         announcing the spinner as well would just repeat it. -->
+    <div class="pill-spinner" aria-hidden="true"></div>
+  {/if}
+  <span>{logger.pillState.text}</span>
+  {#each logger.pillState.actions as action (action)}
+    <button class="pill-button" type="button" onclick={action.onClick}>{action.text}</button>
+  {/each}
 </div>

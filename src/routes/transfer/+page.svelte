@@ -30,7 +30,7 @@
     frame.src = selectedDomain;
     frame.style.display = 'none';
     document.body.appendChild(frame);
-    logger.showPill(t('transfer:connecting_please_wait'));
+    logger.showPill(t('transfer:connecting_please_wait'), { spinner: true });
     try {
       await new Promise<void>((res, rej) => {
         frame.onload = () => res();

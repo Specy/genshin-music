@@ -54,7 +54,7 @@
   }
 
   async function defaultOnChange(lang: AppLanguage) {
-    logger.showPill(t('logs:changing_language'));
+    logger.showPill(t('logs:changing_language'), { spinner: true });
     const success = await setI18nLanguage(i18n, lang);
     logger.hidePill();
     if (!success) {

@@ -20,7 +20,7 @@
   );
 
   async function handleClick() {
-    logger.showPill(t('logs:loading_song'));
+    logger.showPill(t('logs:loading_song'), { spinner: true });
     const song = await songService.getOneSerializedFromStorable(data);
     if (!song) return logger.error(t('logs:could_not_load_song'));
     onClick(song);

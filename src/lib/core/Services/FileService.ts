@@ -126,7 +126,7 @@ class UnknownFileResult {
 }
 export class FileService {
     async importAndLog(files: UnknownFile) {
-        logger.showPill(i18n.t("logs:importing_files"))
+        logger.showPill(i18n.t("logs:importing_files"), {spinner: true})
         const result = await fileService.importUnknownFile(files).catch(e => {
             logger.hidePill()
             logger.error(i18n.t("logs:error_importing_files"))
