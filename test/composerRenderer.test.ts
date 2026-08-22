@@ -7406,6 +7406,8 @@ describe('the Pro View pointer', () => {
         }[] = []
         //the taken hold's span drag: every report is ABSOLUTE travel from the press origin
         const longPressDrags: number[] = []
+        //...and how many times a taken hold has ENDED (CONTEXT.md: Duration Hold)
+        let longPressEnds = 0
         const selectColumnCalls: number[] = []
         let height = 0
         let timelineHeight = 0
@@ -7445,6 +7447,12 @@ describe('the Pro View pointer', () => {
                 return takeLongPress
             },
             onProCellLongPressDrag: deltaX => longPressDrags.push(deltaX),
+            //CONTEXT.md: Duration Hold - the finger that opened the popover came up. Counted rather
+            //than acted on: what Composer.svelte does with it (stop letting the selection move the
+            //span, dismiss on the next column change) is not this class's business.
+            onProCellLongPressEnd: () => {
+                longPressEnds++
+            },
             onKeyboardDismiss: () => {
                 keyboardRaised = false
                 dismissals++
@@ -7515,6 +7523,7 @@ describe('the Pro View pointer', () => {
             yOfNumber,
             numberAt,
             stripWidth: () => proStripWidth(rowHeight),
+            longPressEnds: () => longPressEnds,
             dismissals: () => dismissals,
             unlocks: () => unlocks,
             /** The row height the user's own zoom multiplies the layer's fit to - see proRowHeight. */
@@ -8219,6 +8228,63 @@ describe('the Pro View pointer', () => {
             expect(harness.unlocks()).toBe(1)
         } finally {
             harness.destroy()
+        }
+    })
+
+    //CONTEXT.md: Duration Hold. While one is running the second finger is a SCROLL and not a pinch,
+    //because the columns it crosses are what grow the span past what one finger can reach.
+    it('a second finger during a taken hold scrolls the song instead of pinching', async () => {
+        const harness = await mountPro()
+        try {
+            const x = harness.xOfColumn(SELECTED)
+            const y = harness.yOfNumber(addableNumber(harness), harness.lockedCamera())
+            harness.press(x, y)
+            await vi.advanceTimersByTimeAsync(COMPOSER_LONG_PRESS_MS)
+            expect(harness.longPresses).toHaveLength(1)
+            //the second finger lands beside the first and drags LEFT by three columns, which is the
+            //song moving three columns forward under the hold
+            const secondX = x + COLUMN_WIDTH * 2
+            harness.press(secondX, y, SECOND_POINTER)
+            harness.move(secondX - COLUMN_WIDTH * 3, y, SECOND_POINTER)
+            expect(harness.selectColumnCalls).toEqual([SELECTED + 3])
+            //...and it zoomed nothing: a pinch here would have taken the frame and opened the padlock
+            expect(harness.unlocks()).toBe(0)
+            //the hold's own finger never moved, so it reported no travel of its own
+            expect(harness.longPressDrags).toEqual([])
+            //the second finger leaving settles the canvas and leaves the hold standing
+            harness.release(secondX - COLUMN_WIDTH * 3, y, SECOND_POINTER)
+            expect(harness.longPressEnds()).toBe(0)
+            harness.release(x, y)
+            expect(harness.longPressEnds()).toBe(1)
+            expect(harness.taps).toEqual([])
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    it('only a TAKEN hold reports an end, and only once', async () => {
+        const taken = await mountPro()
+        try {
+            const x = taken.xOfColumn(SELECTED)
+            const y = taken.yOfNumber(addableNumber(taken), taken.lockedCamera())
+            taken.press(x, y)
+            await vi.advanceTimersByTimeAsync(COMPOSER_LONG_PRESS_MS)
+            taken.release(x, y)
+            //the window-level backstop fires for the same release and must not report a second end
+            expect(taken.longPressEnds()).toBe(1)
+        } finally {
+            taken.destroy()
+        }
+        const untaken = await mountPro({takeLongPress: false})
+        try {
+            const x = untaken.xOfColumn(SELECTED)
+            const y = untaken.yOfNumber(addableNumber(untaken), untaken.lockedCamera())
+            untaken.press(x, y)
+            await vi.advanceTimersByTimeAsync(COMPOSER_LONG_PRESS_MS)
+            untaken.release(x, y)
+            expect(untaken.longPressEnds()).toBe(0)
+        } finally {
+            untaken.destroy()
         }
     })
 

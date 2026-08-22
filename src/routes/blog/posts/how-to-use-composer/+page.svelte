@@ -6,7 +6,11 @@
   import BlogImage from '$cmp/blog/BlogImage.svelte';
   import AppLink from '$cmp/AppLink.svelte';
   import Header from '$cmp/header/Header.svelte';
-  import { shortcutsTable } from '$cmp/pages/ShortcutsTable.svelte';
+  import {
+    COMPOSER_WHEEL_SHORTCUTS,
+    fixedShortcutsTable,
+    shortcutsTable,
+  } from '$cmp/pages/ShortcutsTable.svelte';
   import { globalConfigStore } from '$stores/GlobalConfigStore.svelte';
   import { keyBinds } from '$stores/KeybindsStore.svelte';
   import { composerTutorialMetadata } from '$cmp/blog/posts/how-to-use-composer';
@@ -225,5 +229,6 @@
       >
     </p>
     {@render shortcutsTable(composerShortcuts, 'margin-top:1rem')}
+    {@render fixedShortcutsTable(COMPOSER_WHEEL_SHORTCUTS, 'margin-top:0.4rem')}
   {/if}
 </BaseBlogPost>

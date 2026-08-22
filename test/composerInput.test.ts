@@ -26,6 +26,7 @@ import {
   proTapTarget,
   stagePressArmsLongPress,
   stageReleaseIntent,
+  wheelIsProVerticalScroll,
   wheelIsProZoom,
   wheelZoomFactor,
 } from '$cmp/pages/Composer/composerInput';
@@ -206,10 +207,11 @@ describe('what a tap on a Pro View cell does', () => {
 });
 
 // The keyboard's own threshold, and the canvas' - spec §12 forbids a second one, and a drift here
-// would make a key and a cell feel like different surfaces holding the same popover.
+// would make a key and a cell feel like different surfaces holding the same popover. 400ms since
+// the 2026-08-22 pass (it was 450): the same number for a key, a cell and a physical note key.
 describe('the long-press threshold', () => {
-  it('is the composer keyboard\'s 450ms', () => {
-    expect(COMPOSER_LONG_PRESS_MS).toBe(450);
+  it('is the composer keyboard\'s 400ms', () => {
+    expect(COMPOSER_LONG_PRESS_MS).toBe(400);
   });
 });
 
@@ -237,6 +239,27 @@ describe('what a wheel with a modifier means', () => {
     for (const proView of [false, true]) {
       expect(wheelIsProZoom({ proView, ctrlKey: false, metaKey: false })).toBe(false);
     }
+  });
+
+  it('reads shift+wheel as the Pro View vertical scroll, with zoom outranking it (user, 2026-08-22)', () => {
+    expect(
+      wheelIsProVerticalScroll({ proView: true, shiftKey: true, ctrlKey: false, metaKey: false })
+    ).toBe(true);
+    //ctrl/meta outrank shift: a ctrl+shift+wheel is still the zoom's, on either convention
+    expect(
+      wheelIsProVerticalScroll({ proView: true, shiftKey: true, ctrlKey: true, metaKey: false })
+    ).toBe(false);
+    expect(
+      wheelIsProVerticalScroll({ proView: true, shiftKey: true, ctrlKey: false, metaKey: true })
+    ).toBe(false);
+    //no shift, no claim - the plain wheel keeps the horizontal axis
+    expect(
+      wheelIsProVerticalScroll({ proView: true, shiftKey: false, ctrlKey: false, metaKey: false })
+    ).toBe(false);
+    //the Compressed View has no vertical axis, the same reason the zoom refuses it
+    expect(
+      wheelIsProVerticalScroll({ proView: false, shiftKey: true, ctrlKey: false, metaKey: false })
+    ).toBe(false);
   });
 
   it('asks for a multiplier that grows upward and shrinks downward, symmetrically', () => {
@@ -315,8 +338,18 @@ function functionCode(functionName: string): string {
     (statement): statement is ts.FunctionDeclaration =>
       ts.isFunctionDeclaration(statement) && statement.name?.text === functionName
   );
-  if (!declaration) throw new Error(`Composer.svelte has no ${functionName} function`);
-  return declaration
+  //...or the arrow-function CONST of the same name, which is how the two keyboard listeners are
+  //written (they are typed as ShortcutListener rather than declared)
+  const variable = source.statements.find(
+    (statement): statement is ts.VariableStatement =>
+      ts.isVariableStatement(statement) &&
+      statement.declarationList.declarations.some(
+        (entry) => ts.isIdentifier(entry.name) && entry.name.text === functionName
+      )
+  );
+  const node = declaration ?? variable;
+  if (!node) throw new Error(`Composer.svelte has no ${functionName} function`);
+  return node
     .getText()
     .replace(/\/\*[\s\S]*?\*\//g, '')
     .replace(/\/\/.*$/gm, '');
@@ -369,5 +402,85 @@ describe('the Pro View tap edits through the keyboard\'s own path', () => {
     expect(code).toContain('supportsSustain');
     expect(code).toContain('addToHistory()');
     expect(code).toContain('return true');
+  });
+});
+
+/**
+ * THE FOUR SURFACES RUN ONE PRESS MACHINE (user decisions 2026-08-22): a finger on a key, a Pro View
+ * cell, a physical note key and an incoming MIDI note. Same policy assertions as the block above and
+ * for the same reason - the machine is Composer.svelte's, stateful (two registries and a clock), and
+ * this project has no component harness that could mount that file's audio/canvas/service graph.
+ *
+ * What is pinned here is the thing a second copy would silently break: the ORDER of the three
+ * branches every down edge takes (record a sustain -> toggle immediately while playing -> otherwise
+ * begin a press), and that the hold path is the shared one rather than a parallel clock.
+ */
+describe('every input surface runs the one note-press machine', () => {
+  it('the physical key defers its removal to the key-up, and playing is untouched', () => {
+    const down = functionCode('handleKeyboardShortcut');
+    //the sustain recording is still asked FIRST, so a hold while playing is a performance
+    expect(down.indexOf('startSustainRecording')).toBeLessThan(down.indexOf('toggleNoteImmediate'));
+    //...then the playing song's immediate toggle, and only a STOPPED one reaches the press machine
+    expect(down.indexOf('toggleNoteImmediate')).toBeLessThan(down.indexOf('beginNoteHold'));
+    expect(down).toContain("beginNoteHold(holderToken('keyboard', code), note)");
+    expect(functionCode('handleKeyboardRelease')).toContain("endNoteHold(holderToken('keyboard'");
+  });
+
+  it('MIDI is a third feeder of that machine and not a toggle of its own', () => {
+    const code = functionCode('handleMidi');
+    //THE UP EDGE, routed through isNoteRelease - which is what catches the velocity-0 note-ON every
+    //controller is allowed to send instead of a note-off
+    expect(code).toContain('isNoteRelease(eventType, velocity)');
+    expect(code.indexOf('endNoteHold(holder)')).toBeLessThan(code.indexOf('isDown(eventType)'));
+    //THE DOWN EDGE, in the same three-branch order the physical key takes
+    expect(code.indexOf('startSustainRecording')).toBeLessThan(code.indexOf('toggleNoteImmediate'));
+    expect(code).toContain('if (isPlaying) return toggleNoteImmediate(pressed)');
+    expect(code.indexOf('toggleNoteImmediate')).toBeLessThan(code.indexOf('beginNoteHold'));
+    //ONE HOLDER PER MIDI NOTE AND PRESET SLOT, which is what lets a device hold several notes at
+    //once - and it is the same token on both edges, or a hold would never end
+    expect(code).toContain('midiHolderToken(note, keyboardNote.index)');
+  });
+
+  it('a hold is the shared clock, the shared press and the shared popover', () => {
+    const begin = functionCode('beginNoteHold');
+    //a duplicate down edge (an OS auto-repeat, a controller re-sending a note-on) arms nothing
+    expect(begin.indexOf('noteHolds.has(holder)')).toBeLessThan(begin.indexOf('beginNotePress'));
+    expect(begin).toContain('beginNotePress(id)');
+    expect(begin).toContain('COMPOSER_LONG_PRESS_MS');
+    expect(begin).toContain('openDurationPopover(id,');
+    const end = functionCode('endNoteHold');
+    expect(end).toContain('clearTimeout(hold.longPress)');
+    expect(end).toContain('endNotePress(hold.id)');
+  });
+
+  it('the keyless surfaces open the popover through the keyboard\'s own gates', () => {
+    const code = functionCode('openDurationPopover');
+    expect(code).toContain('if (isPlaying) return');
+    expect(code).toContain('supportsSustain');
+    //a hold over a span's TAIL edits the note that owns the tail, not the column under the key
+    expect(code).toContain('press.coveringStart ?? song.selected');
+    expect(code).toContain('addToHistory()');
+    //...and it opens as a Duration Hold: the press is still down by definition (CONTEXT.md)
+    expect(code).toContain('holdActive: true');
+  });
+
+  it('an interrupted hold abandons rather than releases', () => {
+    const code = functionCode('abandonNoteHolds');
+    //a blur or a vanished MIDI device is not a short press, so it must not delete the note the
+    //down edge added - what it ends is the clock and the Duration Hold
+    expect(code).not.toContain('endNotePress');
+    expect(code).toContain('clearTimeout(hold.longPress)');
+    expect(code).toContain('holdActive = false');
+  });
+
+  it('a held note key steps aside from the composer shortcut combos', () => {
+    //the wiring only - the mechanism itself is KeybindsStore's and is driven for real in
+    //test/keyboardProvider.test.ts
+    expect(instanceScript).toContain('transparentCodes: heldNoteKeyCodes');
+    const code = functionCode('heldNoteKeyCodes');
+    //BOTH registries, because a key holds a note in two ways: stopped it is a press, playing it is
+    //a sustain being recorded
+    expect(code).toContain('noteHolds.keys()');
+    expect(code).toContain("entriesOfSource('keyboard')");
   });
 });

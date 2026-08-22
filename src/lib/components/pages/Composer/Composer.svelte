@@ -71,8 +71,18 @@
   //THE PRO VIEW'S TAP DISPATCH, as a pure decision (spec §7) - what a tap on a cell does, given what
   //this component looks up about that cell. The lookups and the mutation stay here; the rule does
   //not, so it is testable without a canvas.
-  import { proCellAction, type ComposerPopoverAnchor, type ScreenRect } from './composerInput';
-  import { HeldNoteRegistry, holderToken, midiHolderToken } from '$lib/audio/HeldNoteRegistry';
+  import {
+    COMPOSER_LONG_PRESS_MS,
+    proCellAction,
+    type ComposerPopoverAnchor,
+    type ScreenRect,
+  } from './composerInput';
+  import {
+    HeldNoteRegistry,
+    holderToken,
+    midiHolderToken,
+    type HeldSource,
+  } from '$lib/audio/HeldNoteRegistry';
   import { spanForHeldMs } from '$core/Songs/sustainQuantize';
   import { registerLeaveHandler } from '$stores/navigationGuard.svelte';
   import { calculateSongLength, clamp, delay, formatMs } from '$core/utils/Utilities';
@@ -252,7 +262,12 @@
     const shortcutListener = createShortcutListener(
       'composer',
       'composer_shortcuts',
-      handleShortcut
+      handleShortcut,
+      //A HELD NOTE KEY IS TRANSPARENT TO THESE COMBOS (user revision 2026-08-22). This surface's
+      //note keys ARE the letter row that carries a/d/q/e, so without this every shortcut is dead
+      //for as long as a note is held - and a Duration Hold is exactly "a note held while you step
+      //the columns" (CONTEXT.md). See heldNoteKeyCodes and KeybindsStore's KeyComboOptions.
+      { transparentCodes: heldNoteKeyCodes }
     );
     const shortcutKeyboardListener = createKeyboardListener(
       'composer_shortcuts_keyboard',
@@ -264,7 +279,12 @@
     cleanup.push(
       shortcutKeyboardListener,
       shortcutListener,
-      createReleaseGuard(endAllSustainRecordings)
+      createReleaseGuard(() => {
+        endAllSustainRecordings();
+        //...and the stopped song's own held keys, whose clock and Duration Hold are the same kind
+        //of thing a missing key-up would strand (see abandonNoteHolds)
+        abandonNoteHolds();
+      })
     );
     settings = loadedSettings;
     //the persisted settings arrive AFTER the defaults the song was seeded from, so re-seed both
@@ -290,6 +310,9 @@
     return () => {
       mounted = false;
       endAllSustainRecordings();
+      //a hold clock left counting into an unmounted composer would open a popover on a song nobody
+      //is looking at any more
+      abandonNoteHolds();
       AudioProvider.clear();
       layers.forEach((instrument) => instrument.dispose());
       broadcastChannel?.close?.();
@@ -353,22 +376,182 @@
       //mid-hold cannot orphan the release (KeyboardEvent.code is layout-independent). Rebinding
       //the key itself mid-hold still can: the key-up half only fires for keys that are bound.
       if (startSustainRecording(holderToken('keyboard', code), note.numberAt(layerPitch))) return;
-      toggleNoteImmediate(note);
+      //WHILE PLAYING NOTHING CHANGED (user decision 2026-08-22): a key that records no sustain -
+      //a non-sustaining instrument, a covered button - is still an immediate toggle, because
+      //playing is performing and a performance has no long press to wait for.
+      if (isPlaying) return toggleNoteImmediate(note);
+      beginNoteHold(holderToken('keyboard', code), note);
     }
   };
 
   /**
-   * Key-up half of hold-to-sustain. Deliberately NOT gated on `isPlaying || shiftKey` the way
-   * the down half is: that gate can flip while a key is down (playback ends under a held key),
-   * and releasing a holder that holds nothing is a no-op anyway.
+   * Key-up half of hold-to-sustain, and of the stopped-song press machine below. Deliberately NOT
+   * gated on `isPlaying || shiftKey` the way the down half is: that gate can flip while a key is
+   * down (playback ends under a held key, shift is let go before the note is), and both halves
+   * below no-op for a key that is holding nothing.
    */
   const handleKeyboardRelease: ShortcutListener<'keyboard'> = ({ code }) => {
     endSustainRecording(holderToken('keyboard', code));
+    endNoteHold(holderToken('keyboard', code));
   };
+
+  // ── the KEYLESS surfaces' own press machine, WHILE STOPPED (user decisions 2026-08-22) ─────────
+  // A physical note key and an incoming MIDI note run the pointer's machine exactly
+  // (beginNotePress/endNotePress/openDurationPopover), so all three surfaces are one gesture with
+  // three input devices: a missing note is added at the DOWN edge, removing an existing one waits
+  // for the UP edge (short press = remove), and holding for COMPOSER_LONG_PRESS_MS opens the
+  // duration popover - after which the key is a Duration Hold like any other, and every column the
+  // selection moves through grows the span (CONTEXT.md: Duration Hold).
+  //
+  // MIDI JOINED IN THE SAME PASS (superseding "MIDI stays an instant toggle"): the zen keyboard now
+  // broadcasts real note-down/up over the wire (MIDIProvider.broadcastNoteDown/Up), so genuine hold
+  // LENGTHS arrive from a controller and a note-on is no longer a click that happens to have an end.
+  //
+  // "HOLD" HERE IS THE PRESS THAT IS STILL DOWN and not the VSRG mechanic (CONTEXT.md warns off the
+  // word for that reason) - it is what MAY become a Duration Hold, and does once the clock fires.
+  //
+  // KEYED BY HOLDER TOKEN, the same currency the sustain registry uses (HeldNoteRegistry): `k:KeyD`
+  // for a physical key - the PHYSICAL key, so a layout change mid-hold cannot orphan the release -
+  // and `m:60:0` for one MIDI note on one preset slot, which is what lets a device hold several
+  // notes at once and two slots on one note be two independent holds. Several holders can resolve to
+  // the same Note Number, which the id-keyed notePresses map then collapses into the one press it
+  // always was.
+  // eslint-disable-next-line svelte/prefer-svelte-reactivity -- input-gesture bookkeeping, never read from the template
+  const noteHolds = new Map<string, { id: number; longPress: ReturnType<typeof setTimeout> }>();
+
+  function beginNoteHold(holder: string, note: ObservableNote) {
+    //DUPLICATE-DOWN GUARD - an OS auto-repeat stream (belt to createKeyboardListener's own
+    //`event.repeat` brace) or a controller re-sending a note-on it never released: either would
+    //re-arm the clock below and never let it fire. The same rule HeldNoteRegistry.press applies.
+    if (noteHolds.has(holder)) return;
+    const id = numberOfNote(note);
+    beginNotePress(id);
+    noteHolds.set(holder, {
+      id,
+      //THE SAME CLOCK the on-screen key runs (ComposerNote.startLongPress) and the canvas runs
+      //(ComposerRenderer.proLongPressTimeout) - spec §12's one threshold, third and fourth surface.
+      //The anchor is resolved when it FIRES rather than now, because where that note is on screen
+      //(which key, and whether the Pro View's keyboard sheet is even up) can change meanwhile.
+      //
+      //THE RECORD OUTLIVES ITS OWN TIMER: the key is still down when this fires, and it is that
+      //record which makes the release below end both the press and the Duration Hold. Clearing an
+      //already-fired timeout is a no-op, so the release needs no branch for the two cases.
+      longPress: setTimeout(
+        () => openDurationPopover(id, keylessNoteAnchor(note, id)),
+        COMPOSER_LONG_PRESS_MS
+      ),
+    });
+  }
+
+  function endNoteHold(holder: string) {
+    const hold = noteHolds.get(holder);
+    if (!hold) return;
+    noteHolds.delete(holder);
+    clearTimeout(hold.longPress);
+    endNotePress(hold.id);
+  }
+
+  /**
+   * An UP edge that will never arrive: alt-tab, the tab going hidden, iOS bfcache, or - for the
+   * `'midi'` source - the device itself vanishing mid-hold, which owes us no note-off. The same
+   * guards the sustain recordings take, and this ABANDONS rather than releases: an interrupted
+   * gesture is not a short press, so it must not delete the note the down edge added. What it does
+   * end is the hold clock and any Duration Hold those holders were running, neither of which may
+   * outlive a hand (or a cable) that is no longer there.
+   */
+  function abandonNoteHolds(source?: HeldSource) {
+    //`holderToken(source, '')` is that source's own prefix - the tokens' one spelling, rather than a
+    //second copy of 'm:' here (see HeldNoteRegistry)
+    const prefix = source ? holderToken(source, '') : '';
+    for (const [holder, hold] of noteHolds) {
+      if (!holder.startsWith(prefix)) continue;
+      clearTimeout(hold.longPress);
+      if (durationPopover?.id === hold.id) durationPopover.holdActive = false;
+      noteHolds.delete(holder);
+    }
+  }
+
+  /**
+   * WHICH PHYSICAL KEYS ARE CURRENTLY HOLDING A NOTE, and therefore step aside when a composer
+   * shortcut combo is matched (KeybindsStore's KeyComboOptions, user revision 2026-08-22).
+   *
+   * BOTH REGISTRIES, because a key holds a note in two different ways depending on the transport:
+   * stopped it is a press in `noteHolds` above, playing it is a sustain being recorded. The
+   * annoyance it fixes is the same in both - a held letter key used to poison every combo, so
+   * `a`/`d` could not step a column while one was down, which is the very thing a Duration Hold
+   * wants (CONTEXT.md).
+   *
+   * Only the `'keyboard'` source: a MIDI or pointer holder is not a key code and could only ever
+   * make a combo transparent by accident.
+   */
+  function heldNoteKeyCodes(): ReadonlySet<string> {
+    const prefix = holderToken('keyboard', '');
+    // eslint-disable-next-line svelte/prefer-svelte-reactivity -- transient local set, rebuilt per keydown
+    const codes = new Set<string>();
+    for (const holder of noteHolds.keys()) {
+      if (holder.startsWith(prefix)) codes.add(holder.slice(prefix.length));
+    }
+    for (const { holder } of sustainRecordings.entriesOfSource('keyboard')) {
+      codes.add(holder.slice(prefix.length));
+    }
+    return codes;
+  }
+
+  /**
+   * WHAT A POPOVER OPENED FROM A KEY WITH NO ELEMENT OF ITS OWN IS ANCHORED TO - a physical note key
+   * or an incoming MIDI note - in the order the user's eye would look for it:
+   *  1. THE ON-SCREEN KEY for that note, when it is actually on screen - the same live element a
+   *     pointer hold anchors to (ComposerPopoverAnchor), so the popover stands over the key the
+   *     letter on the keycap names. Only when it is VISIBLE: in the Pro View the keyboard is a
+   *     bottom sheet that spends most of its life translated off the bottom of the window, and a
+   *     popover anchored to it would be placed off-screen too.
+   *  2. THE CELL on the Pro View canvas, which is where that note IS when the sheet is down - the
+   *     canvas' own rect, the same one a hold on the cell would have produced.
+   *  3. FAILING BOTH, the middle of the window. Neither a key nor a MIDI note has a position of its
+   *     own to fall back to, and a popover the user cannot see is worse than one that is merely not
+   *     pointing at anything.
+   */
+  function keylessNoteAnchor(note: ObservableNote, id: number): ComposerPopoverAnchor {
+    const element = noteElements.get(note);
+    if (element) {
+      const rect = element.getBoundingClientRect();
+      const onScreen = rect.width > 0 && rect.top >= 0 && rect.top <= window.innerHeight;
+      if (onScreen) return { element };
+    }
+    const startColumn =
+      song.getSpanCovering(song.selected, layer, id)?.startColumn ?? song.selected;
+    const cell = canvasMeasures?.proCellRect(startColumn, id) ?? null;
+    if (cell) return { rect: cell };
+    return {
+      rect: { x: window.innerWidth / 2, y: window.innerHeight * 0.7, width: 0, height: 0 },
+    };
+  }
+
+  /**
+   * The on-screen keyboard's key elements, published by ComposerNote as it mounts and withdrawn as
+   * it goes. It exists for one caller - physicalKeyAnchor above - and it is a registry rather than a
+   * DOM query because the keys are drawn by the game's Shape (ShapeKeyboard), which owns their
+   * markup and their order; a `querySelector` into it would be this file's second, silent opinion
+   * about a structure it does not own.
+   *
+   * Keyed by the NOTE OBJECT, which is the one identity that survives everything that can move
+   * underneath it: the Basepoint changes what number a key sounds and an instrument swap replaces
+   * the whole list, and in both cases these are the very objects the keyboard was built from.
+   */
+  // eslint-disable-next-line svelte/prefer-svelte-reactivity -- a DOM-node side table, never read from the template
+  const noteElements = new Map<ObservableNote, HTMLElement>();
+
+  function registerNoteElement(note: ObservableNote, element: HTMLElement | null) {
+    if (element) noteElements.set(note, element);
+    else noteElements.delete(note);
+  }
 
   /** A MIDI device appearing or vanishing mid-hold owes us no note-off — release only ITS notes. */
   function handleMidiInputsChange() {
     for (const { holder } of sustainRecordings.entriesOfSource('midi')) endSustainRecording(holder);
+    //...and, while stopped, its press gestures - a clock counting down for a controller that is no
+    //longer on the wire, and any Duration Hold it was running (see abandonNoteHolds)
+    abandonNoteHolds('midi');
   }
 
   const handleShortcut: ShortcutListener<'composer'> = ({ shortcut, event }) => {
@@ -439,7 +622,13 @@
     //the keybinds page, which unmounts this surface.)
     if (MIDIProvider.isNoteRelease(eventType, velocity)) {
       MIDIProvider.getNotesOfMIDIevent(note).forEach((keyboardNote) => {
-        endSustainRecording(midiHolderToken(note, keyboardNote.index));
+        const holder = midiHolderToken(note, keyboardNote.index);
+        endSustainRecording(holder);
+        //...and the stopped song's UP EDGE (user revision 2026-08-22): the short press that removes
+        //a note it found, and the end of a Duration Hold. One of the two registries is always empty
+        //here - a press is either recording or editing - so both are told and each ignores a holder
+        //it never had.
+        endNoteHold(holder);
       });
       return;
     }
@@ -451,14 +640,16 @@
         //so resolve the note object here and hand THAT on - never the raw slot number
         const pressed = currentInstrument.notes[keyboardNote.index];
         if (!pressed) return;
-        if (
-          startSustainRecording(
-            midiHolderToken(note, keyboardNote.index),
-            pressed.numberAt(layerPitch)
-          )
-        )
-          return;
-        toggleNoteImmediate(pressed);
+        const holder = midiHolderToken(note, keyboardNote.index);
+        if (startSustainRecording(holder, pressed.numberAt(layerPitch))) return;
+        //WHILE PLAYING NOTHING CHANGED: a note-on that records no sustain (a non-sustaining
+        //instrument, a covered button) is still an immediate toggle, because playing is performing.
+        if (isPlaying) return toggleNoteImmediate(pressed);
+        //STOPPED, a MIDI key is a PRESS like any other (user revision 2026-08-22): it adds the note
+        //it finds missing now and defers the removal to the note-off above, so a hold in between can
+        //open the duration popover. The zen keyboard broadcasting real note-down/up over the wire is
+        //what makes a MIDI note's LENGTH mean something to reach for.
+        beginNoteHold(holder, pressed);
       });
       const shortcut = MIDIProvider.settings.shortcuts.find((e) => e.midi === note);
       if (!shortcut) return;
@@ -819,11 +1010,29 @@
     handleSettingChange({ key: 'pitch', data: { ...settings.pitch, value } });
   }
 
+  /**
+   * WHAT THE CANVAS CAN BE ASKED, once its renderer exists (see ComposerCanvas' onCanvasMeasures):
+   * one visible column's width, and where a Pro View cell is on screen. Both are read at the instant
+   * a duration popover opens and never held onto.
+   *
+   * A plain `let` and not `$state`: nothing reactive reads it - the two callers are event handlers -
+   * and the value is a pair of closures over a renderer instance, which is exactly the kind of thing
+   * a deep proxy has no business wrapping. Null before the dynamic pixi import resolves, in the
+   * /theme preview, and after the canvas is torn down; every caller has a fallback for that.
+   */
+  let canvasMeasures: {
+    columnWidth: () => number;
+    proCellRect: (column: number, number: number) => ScreenRect | null;
+  } | null = null;
+
   // ── note press state machine (spec 2026-08-03 §2 "Composer duration UX") ─────────
   // pointerdown creates a missing note immediately (the common tap feel); removal of an
   // existing note is deferred to the short-press RELEASE so a long-press can open the
   // duration popover without deleting the note first. Buttons covered by an earlier
   // note's span obey the occupancy rule: no new note, long-press edits the covering one.
+  // Since 2026-08-22 a PHYSICAL note key runs the same machine while the song is stopped
+  // (handleKeyNoteDown), and a held press that opened the popover is a Duration Hold
+  // (CONTEXT.md) for as long as it lasts - see `holdActive` below.
   let durationPopover: {
     startColumn: number;
     trackIndex: number;
@@ -836,8 +1045,34 @@
     anchor: ComposerPopoverAnchor;
     /** Span when the popover opened — the origin the still-held finger's drag is measured from. */
     spanAtOpen: number;
-    /** Horizontal travel worth one column, frozen at open time (see handleNoteDrag). */
+    /** Horizontal travel worth one column, frozen at open time (see holdDragStepPx). */
     dragStepPx: number;
+    /**
+     * The column selected when the popover opened — the SECOND origin of a Duration Hold
+     * (CONTEXT.md), beside `spanAtOpen`. While the opening press is held, every column the selection
+     * moves through is a column of span, from whatever moved it: a canvas scroll (either finger), a
+     * wheel, the `<` `>` buttons, a shortcut, a Coast. Frozen here so the contribution stays
+     * ABSOLUTE (`song.selected − selectedAtOpen`) rather than accumulated, exactly as the drag's is —
+     * scrolling three columns out and three back leaves the span it started at.
+     */
+    selectedAtOpen: number;
+    /**
+     * WHETHER THE PRESS THAT OPENED THIS IS STILL DOWN (CONTEXT.md: Duration Hold). It is the whole
+     * difference between the two lives of this popover: while it is true a column change EDITS the
+     * span and dismisses nothing, and once it is false a column change dismisses as it always did,
+     * leaving the slider, the steppers and the box for what the hand could not reach.
+     *
+     * A layer change dismisses in BOTH states — the note this popover names belongs to a track, and
+     * a hold cannot follow it to another one.
+     */
+    holdActive: boolean;
+    /**
+     * The opening press's last reported horizontal travel, in px from where it began — 0 for a hold
+     * with no pointer at all (a physical note key). Kept because the two contributions above are
+     * ADDITIVE and either one can move on its own: when the selection moves under a still finger,
+     * the span has to be recomputed from the travel that finger had already reported.
+     */
+    dragDeltaX: number;
   } | null = $state(null);
   // One press record PER BUTTON, not one for the whole keyboard: on touch two notes can be
   // held at once, and only the ADD half of the gesture runs at pointerdown - removal and
@@ -858,8 +1093,9 @@
    * Drop every in-flight press. A record is only meaningful against the column and layer it
    * was taken in - its deferred removal targets `song.selected` and `layer` as they are at
    * RELEASE - so when either moves under a held finger the press is abandoned rather than
-   * applied to whatever is now selected. Same dismissal points as durationPopover, and the
-   * reason a stale record can never be consumed in a context it was not taken in.
+   * applied to whatever is now selected. Same dismissal points as durationPopover - including its
+   * one exception, a running Duration Hold, which keeps both (see selectColumn) - and the reason a
+   * stale record can never be consumed in a context it was not taken in.
    */
   function abandonNotePresses() {
     notePresses.clear();
@@ -1015,6 +1251,19 @@
     //while playing on a sustaining track the press is a PERFORMANCE, not an edit: it sounds
     //its own held attack, records its duration, and never deletes on release
     if (startSustainRecording(holderToken('pointer', pointerId), id)) return;
+    beginNotePress(id);
+  }
+
+  /**
+   * THE PRESS HALF of the state machine, in Note Numbers and knowing nothing about what pressed:
+   * a pointer on a key (handleClick above) and a PHYSICAL note key (handleKeyNoteDown) are the same
+   * gesture on the same surface, and the 2026-08-22 decision to give the physical key a long press
+   * of its own is only true if it takes this path rather than a parallel one.
+   *
+   * The note is SOUNDED and, when it is missing, ADDED here - the common tap feel. Removal is the
+   * release's, so a hold can open the duration popover without deleting the note first.
+   */
+  function beginNotePress(id: number) {
     playSound(layer, id);
     const covering = song.getSpanCovering(song.selected, layer, id);
     if (covering) {
@@ -1037,7 +1286,36 @@
     });
   }
 
-  /** Physical-keyboard / MIDI note entry: no pointer gesture exists there, so toggling stays immediate (the pre-popover behavior), occupancy rule included. */
+  /**
+   * THE RELEASE HALF, and the other end of every rule beginNotePress deferred: a short press on a
+   * note that already existed REMOVES it, a covered button toggles nothing, and a press whose hold
+   * opened the popover edits nothing at all on the way up.
+   *
+   * It is also where a Duration Hold ENDS for the two surfaces that own a press record (a keyboard
+   * key and a physical note key) - the canvas has none and reports its own release through
+   * handleProCellLongPressEnd. Cleared BEFORE the record is looked up, because it must happen even
+   * when there is no record left to consume.
+   */
+  function endNotePress(id: number) {
+    if (durationPopover?.id === id) durationPopover.holdActive = false;
+    const press = notePresses.get(id);
+    //a pointer fires twice per gesture (pointerup then pointerleave): the delete below consumes the
+    //record, so the second call misses and does nothing
+    if (!press) return;
+    notePresses.delete(id);
+    if (press.longPressFired) return;
+    if (press.coveringStart !== null) return; //occupancy: covered buttons don't toggle
+    if (press.existedAtPress) {
+      song.removeNoteAt(song.selected, layer, id);
+      handleAutoSave();
+    }
+  }
+
+  /**
+   * MIDI note entry, and the physical keyboard's WHILE PLAYING: toggling stays immediate there (the
+   * pre-popover behavior), occupancy rule included. A physical key on a STOPPED song goes through
+   * the press machine instead (handleKeyNoteDown) - see it for why MIDI does not.
+   */
   function toggleNoteImmediate(note: ObservableNote) {
     toggleNoteInColumn(song.selected, numberOfNote(note));
   }
@@ -1131,42 +1409,58 @@
       id,
       anchor: { rect },
       spanAtOpen: existing.span,
-      //the cell's own width, the way the keyboard's step is the pressed key's — and the finger that
+      //ONE WHOLE CELL of travel per column, which on this surface is the cell the finger is on (see
+      //holdDragStepPx: the keyboard now measures in the same canvas columns) — and the finger that
       //opened the popover KEEPS EDITING (USER REVISION, 2026-08-22): the renderer feeds its
       //horizontal travel to dragPopoverSpan, the same absolute origin+delta rule the keyboard's
       //drag-after-hold applies through handleNoteDrag.
-      dragStepPx: Math.max(20, rect.width / 2),
+      dragStepPx: holdDragStepPx({ rect }),
+      selectedAtOpen: song.selected,
+      //the finger is still down, and stays the Duration Hold's until the renderer reports its
+      //release through handleProCellLongPressEnd (CONTEXT.md: Duration Hold)
+      holdActive: true,
+      dragDeltaX: 0,
     };
     return true;
+  }
+
+  /**
+   * CONTEXT.md: Duration Hold — the canvas' finger came up. The popover outlives it; what ends is
+   * only the hold's own two rules (a column change edits instead of dismissing, and the selection
+   * moves the span).
+   *
+   * The canvas keeps no press record — its hold is not an entry gesture, it never added a note — so
+   * unlike the keyboard's release this is all there is to do.
+   */
+  function handleProCellLongPressEnd() {
+    if (durationPopover) durationPopover.holdActive = false;
   }
 
   function handleNoteRelease(note: ObservableNote, pointerId: number) {
     //a recording press left no press record behind, so this is its only release path
     endSustainRecording(holderToken('pointer', pointerId));
-    const id = numberOfNote(note);
-    const press = notePresses.get(id);
-    //fires twice per pointer (pointerup then pointerleave): the delete below consumes the
-    //record, so the second call misses and does nothing
-    if (!press) return;
-    notePresses.delete(id);
-    if (press.longPressFired) return;
-    if (press.coveringStart !== null) return; //occupancy: covered buttons don't toggle
-    if (press.existedAtPress) {
-      song.removeNoteAt(song.selected, layer, id);
-      handleAutoSave();
-    }
+    endNotePress(numberOfNote(note));
   }
 
   function handleNoteLongPress(note: ObservableNote, anchor: HTMLElement) {
-    //while the song plays, holding a key MEANS recording a sustain - never "hand-edit this
-    //note's duration". Gated on isPlaying rather than on "is this note recording" so it holds
-    //at every tempo and for the holds that record nothing (covered buttons, already-spanned
-    //notes); a popover opened mid-playback was useless anyway, since the next tick dismisses it.
+    openDurationPopover(numberOfNote(note), { element: anchor });
+  }
+
+  /**
+   * THE HOLD CAME GOOD ON A KEY — a pointer's, or a physical note key's (user decision 2026-08-22),
+   * which is why this takes a Note Number and an anchor rather than a button and an element.
+   *
+   * Every gate is a rule rather than a guard. While the song plays, holding a key MEANS recording a
+   * sustain — never "hand-edit this note's duration"; gated on isPlaying rather than on "is this
+   * note recording" so it holds at every tempo and for the holds that record nothing (covered
+   * buttons, already-spanned notes), and a popover opened mid-playback was useless anyway, since the
+   * next tick dismisses it. Durations are only authorable on instruments that can actually sustain.
+   * And a hold over a span's TAIL edits the note that owns the tail (`press.coveringStart`), which
+   * is the occupancy rule the tap half already obeys.
+   */
+  function openDurationPopover(id: number, anchor: ComposerPopoverAnchor) {
     if (isPlaying) return;
-    //durations are only authorable on instruments that can actually sustain — long-press
-    //does nothing on the others (the press still completes as a normal tap)
     if (!layers[layer]?.supportsSustain) return;
-    const id = numberOfNote(note);
     const press = notePresses.get(id);
     if (!press) return;
     press.longPressFired = true;
@@ -1178,36 +1472,76 @@
       startColumn,
       trackIndex: layer,
       id,
-      anchor: { element: anchor },
+      anchor,
       spanAtOpen: existing.span,
-      //one column per HALF A KEY of travel: derived from the button that was pressed, so the
-      //gesture scales with the keyboard (whose size is viewport-relative) instead of carrying a
-      //device-specific pixel constant. Measured once — the anchor cannot resize mid-gesture, and
-      //this would otherwise be a layout read on every pointermove. The floor keeps the step
-      //usable if the rect comes back degenerate (0 on a hidden/unlaid-out button).
-      dragStepPx: Math.max(20, anchor.getBoundingClientRect().width / 2),
+      dragStepPx: holdDragStepPx(anchor),
+      selectedAtOpen: song.selected,
+      //the key is still down by definition — this fires from its own hold clock
+      holdActive: true,
+      dragDeltaX: 0,
     };
   }
 
   /**
-   * Duration drag: the long press opens the popover, and the finger that opened it keeps
-   * editing — horizontal travel from the press origin sets the span, right to lengthen, left
-   * to shorten. ABSOLUTE (origin + delta), never accumulated, so a wander back to where it
-   * started restores the span it started at, and the clamps are the slider's own.
+   * ONE COLUMN OF SPAN PER ONE VISIBLE COLUMN OF TRAVEL (CONTEXT.md: Duration Hold; user revision
+   * 2026-08-22), whichever surface the hold began on — the canvas' own column width, taken at open
+   * time.
    *
-   * The drag ends with the pointer, but the popover outlives it (spec §2 dismissal rules), so
-   * the slider is still there for what the finger could not reach.
+   * It used to be half the pressed KEY's width on the keyboard and half the CELL's on the canvas,
+   * which made the same gesture mean two different things on one screen and, on the keyboard, a
+   * distance with no relation to the columns the span is counted in. The canvas is where the span
+   * can be SEEN growing, so its columns are the unit both surfaces measure in: drag a key one
+   * column's width and the tail on the canvas grows by exactly the column under your eye.
    *
-   * TWO FEEDERS, ONE RULE: the keyboard key's own drag arrives through handleNoteDrag below
-   * (which first checks the moving key IS the popover's note), and the Pro View canvas hold's
-   * drag arrives here directly (USER REVISION, 2026-08-22) — the renderer only reports travel
-   * for the press that opened the popover, so it has no second identity to check.
+   * Measured once and frozen: the canvas cannot resize mid-gesture, and this would otherwise be a
+   * layout read on every pointermove. The floor keeps the step usable if the measurement comes back
+   * degenerate (no canvas yet, or a hidden/unlaid-out button behind the fallback below).
+   */
+  function holdDragStepPx(anchor: ComposerPopoverAnchor): number {
+    const columnWidth = canvasMeasures?.columnWidth() ?? 0;
+    if (columnWidth > 0) return Math.max(8, columnWidth);
+    //no canvas to ask (the renderer's dynamic import has not resolved, or this is the /theme
+    //preview): the anchor's own width is the nearest thing to a column on screen — and for a Pro
+    //View cell it IS one, that rect being exactly one column wide
+    const fallback =
+      'element' in anchor ? anchor.element.getBoundingClientRect().width : anchor.rect.width;
+    return Math.max(8, fallback);
+  }
+
+  /**
+   * THE DURATION HOLD'S ONE WRITE PATH (CONTEXT.md: Duration Hold): the span the hold asks for,
+   * from the two things that can have moved since it opened, and nothing else.
+   *
+   *     span = spanAtOpen + travel/step + (selected − selectedAtOpen)
+   *
+   * BOTH TERMS ARE ABSOLUTE and they ADD. Travel is measured from the press origin (right to
+   * lengthen, left to shorten) and the selection from the column the popover opened on, so a wander
+   * back — of the finger, of the canvas, or of both — restores the span it started at, and neither
+   * feeder has to know what the other has done. The clamps are the slider's own.
+   *
+   * THE SELECTION TERM IS WHAT MAKES A HOLD REACH PAST THE SCREEN. A finger can only travel so far,
+   * and a span can be a bar long: scrolling the canvas under the held key — with the other hand, the
+   * wheel, the `<` `>` buttons or a shortcut — grows it a column at a time, which is the gesture the
+   * glossary entry describes. It applies only while the opening press is HELD; selectColumn stops
+   * calling this the moment it is let go.
+   *
+   * The drag ends with the pointer, but the popover outlives it (spec §2 dismissal rules), so the
+   * slider, the steppers and the box are still there for what the hand could not reach.
+   *
+   * THREE FEEDERS, ONE RULE: the keyboard key's own drag arrives through handleNoteDrag below
+   * (which first checks the moving key IS the popover's note), the Pro View canvas hold's drag
+   * arrives here directly (USER REVISION, 2026-08-22) — the renderer only reports travel for the
+   * press that opened the popover, so it has no second identity to check — and a selection that
+   * moved under the hold re-enters through reapplyDurationHold with the travel already reported.
    */
   function dragPopoverSpan(deltaX: number) {
     const popover = durationPopover;
     if (!popover) return;
+    popover.dragDeltaX = deltaX;
     const span = clamp(
-      popover.spanAtOpen + Math.round(deltaX / popover.dragStepPx),
+      popover.spanAtOpen +
+        Math.round(deltaX / popover.dragStepPx) +
+        (song.selected - popover.selectedAtOpen),
       1,
       popoverMaxSpan
     );
@@ -1216,6 +1550,17 @@
     //and re-arm the autosave
     if (span === popoverSpan) return;
     setPopoverSpan(span);
+  }
+
+  /**
+   * The selection moved under a still-held hold: re-ask for the span with the travel the opening
+   * press had already reported. Same write path, same no-op skip — the only new thing in the sum is
+   * `song.selected`, which the caller has already written.
+   */
+  function reapplyDurationHold() {
+    const popover = durationPopover;
+    if (!popover?.holdActive) return;
+    dragPopoverSpan(popover.dragDeltaX);
   }
 
   function handleNoteDrag(note: ObservableNote, deltaX: number) {
@@ -1644,14 +1989,28 @@
   ) {
     if (index < 0 || index > song.columns.length - 1) return;
     const jumped = index !== song.selected;
+    //A RUNNING DURATION HOLD OWNS THE COLUMN CHANGE (CONTEXT.md: Duration Hold, user revision
+    //2026-08-22): the press that opened the popover is still down, and a column crossed under it is
+    //a column of SPAN rather than a dismissal. Both halves are suppressed for exactly as long as
+    //that press lasts - the popover stays, and so does the press record it was opened from, whose
+    //deferred edit is a no-op anyway once its hold has fired (see endNotePress). A LAYER change
+    //still dismisses and still abandons, in either state: see changeLayer.
+    //
+    //...AND NOT WHILE THE SONG PLAYS. A hold can only be opened while stopped (openDurationPopover's
+    //first gate), but playback can START under one - and then the column advances are the
+    //TRANSPORT's rather than the hand's, so a hold left running would grow the span by one column
+    //per tick for as long as the key stayed down. Playing dismisses, exactly as it always did.
+    const holding = durationPopover?.holdActive === true && !isPlaying;
     //moving to another column dismisses the duration popover (spec §2 dismissal rules) and
     //abandons any held press, whose deferred edit was aimed at the column being left - this
     //is also every playback tick, so a note held while the song plays stays as pressed
-    if (jumped) {
+    if (jumped && !holding) {
       if (durationPopover !== null) durationPopover = null;
       abandonNotePresses();
     }
     song.selected = index;
+    //...AFTER the write, which is the whole input the re-ask adds (see reapplyDurationHold)
+    if (jumped && holding) reapplyDurationHold();
     if (isToolsVisible && clipboard.columns.length === 0) {
       // the clicked column only ever feeds the min/max below, which then replace the array
       // wholesale - so extend the RANGE rather than pushing into the array (see its declaration)
@@ -2109,8 +2468,11 @@
           onProCellTap={handleProCellTap}
           onProCellLongPress={handleProCellLongPress}
           onProCellLongPressDrag={dragPopoverSpan}
+          onProCellLongPressEnd={handleProCellLongPressEnd}
+          onCanvasMeasures={(measures) => (canvasMeasures = measures)}
           onKeyboardDismiss={() => (keyboardRaised = false)}
           onViewUnlock={() => (viewLocked = false)}
+          {heldNoteKeyCodes}
         />
       {/key}
       <div class="buttons-composer-wrapper-right">
@@ -2203,6 +2565,7 @@
       handleNoteRelease,
       handleNoteDrag,
       handleNoteLongPress,
+      registerNoteElement,
       startRecordingAudio,
       selectColumnFromDirection,
       handleTempoChanger,
@@ -2238,6 +2601,7 @@
       span={popoverSpan}
       maxSpan={popoverMaxSpan}
       anchor={durationPopover.anchor}
+      holdActive={durationPopover.holdActive}
       onChange={setPopoverSpan}
       onClose={closeDurationPopover}
     />

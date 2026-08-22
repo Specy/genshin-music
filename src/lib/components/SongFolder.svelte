@@ -52,27 +52,26 @@
   let expanded = $derived(defaultOpen);
   let isRenaming = $state(false);
   let folderName = $derived(data.name);
-  let ref: HTMLDivElement | undefined = $state();
   let height = $state(0);
 
-  // Tracks `data.songs`/`expanded` (real reactive values) to remeasure
-  // height; `children` is deliberately not tracked - Svelte snippet props
-  // have no per-render identity to key a remeasure off of, and the two
-  // tracked triggers already cover every case that needs one.
-  $effect(() => {
-    void data.songs;
-    void expanded;
-    const current = ref;
-    if (!current) return;
-    const bounds = current.getBoundingClientRect();
-    height = bounds.height + 100;
-    const timeout = setTimeout(() => {
-      if (!ref) return;
-      const reflowBounds = ref.getBoundingClientRect();
-      height = reflowBounds.height + 100;
-    }, 200);
-    return () => clearTimeout(timeout);
-  });
+  // A ResizeObserver and NOT a remeasure keyed on `data.songs`/`expanded`:
+  // the song menu panel is `display:none` while closed (App.css
+  // `.menu-panel`), so a song added while it was closed measured 0 and the
+  // folder never remeasured when the menu opened again - the songs then
+  // overflowed the folder. The observer fires on the display:none -> visible
+  // transition (0 -> real size), which is exactly the case data-keyed
+  // remeasuring misses, and covers content growth (new songs, a rename
+  // wrapping to two lines) too. It also fires once on observe(), so the
+  // initial measure is covered. Attachments are client-only, so there is
+  // nothing to guard for SSR.
+  function measureContentHeight(node: HTMLElement) {
+    const observer = new ResizeObserver(() => {
+      // +100 of slack so the max-height animation never clips the content
+      height = node.getBoundingClientRect().height + 100;
+    });
+    observer.observe(node);
+    return () => observer.disconnect();
+  }
 
   const wrapperStyle = $derived(`background-color:${backgroundColor};color:${color}`);
 
@@ -236,7 +235,7 @@
   </div>
 
   <Column class="folder-overflow" style="max-height:{expanded ? height + 'px' : '0'}">
-    <div class="column folder-overflow-expandible" bind:this={ref}>
+    <div class="column folder-overflow-expandible" {@attach measureContentHeight}>
       {@render children?.()}
     </div>
   </Column>

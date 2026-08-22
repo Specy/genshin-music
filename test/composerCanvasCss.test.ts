@@ -544,7 +544,11 @@ describe('the Pro View canvas: the window it fills and the band it stops above',
      */
     it('puts the song info at the window\'s bottom as an overlay that reserves nothing', () => {
         const info = declarationsOf('.song-info-pro')
-        expect(info.get('bottom')).toBe('0')
+        //OFF THE EDGE BY A HAIR (the user's own 2026-08-22 placement): flush against the window's
+        //corner the text read as falling out of it, so it stands 0.6rem up and 0.4rem in. Both are
+        //pure inset - they reserve nothing and shift nothing, which is what the rest of this test
+        //is about; the mobile block below takes the horizontal one back where every rem counts.
+        expect(info.get('bottom')).toBe('0.6rem')
         //no reserved height, which is the revision: the canvas' inset is the sliver alone
         expect(info.get('height')).toBeUndefined()
         //...and no z-index, so the sheet (6) and its sliver (7) cover it rather than the other way
@@ -553,8 +557,14 @@ describe('the Pro View canvas: the window it fills and the band it stops above',
         //a ROW and not the base rule's column, so it covers one line of canvas rather than two
         expect(info.get('flex-direction')).toBe('row')
         expect(info.get('align-items')).toBe('center')
-        //the full width, clear of the sidebar by padding rather than by the base rule's `left`
-        expect(info.get('left')).toBe('0')
+        //the full width, clear of the sidebar by padding rather than by the base rule's
+        //`left: calc(4rem + 0.5vw)`
+        expect(info.get('left')).toBe('0.4rem')
+        //...and flush again on a phone, where the padding alone is all the clearance there is room
+        //for (user's 2026-08-22 placement, same round as the two insets above)
+        expect(mediaBlock(`only screen and (max-width: ${COMPOSER_MOBILE_MAX_WIDTH}px)`)).toMatch(
+            /\.song-info-pro \{\s*left: 0;/
+        )
         expect(info.get('width')).toBe('100%')
         expect(info.get('padding-left')).toBe('calc(4rem + 0.5vw)')
         //...and the text keeps the contrast the base rule gives it everywhere else
@@ -971,7 +981,11 @@ describe("the timeline buttons' declared size and the inset the strip is drawn a
         //inside `TIMELINE_INSET_LEFT..width - TIMELINE_INSET_RIGHT`, which is where these
         //declarations put the three buttons; edit either side alone and they overlap.
         expect(button.get('width')).toBe('2.2rem')
-        expect(controls.get('padding')).toBe('0.2rem')
+        //THE HORIZONTAL TERMS ARE THE COUPLED ONES. The bottom grew to 0.25rem (user request
+        //2026-08-22, to centre the icons against the 1px `::before` boundary line) and the insets
+        //are unaffected by it, so the shorthand is pinned here as a whole rather than dropped: the
+        //left/right terms are still 0.2rem, and a change to either of THEM has to fail.
+        expect(controls.get('padding')).toBe('0.2rem 0.2rem 0.25rem')
         expect(controls.get('gap')).toBe('0.2rem')
         //...at the 16px root font size composerCanvasGeometry assumes and states
         expect(TIMELINE_BUTTON_SIZE).toBe(2.2 * 16)
@@ -992,7 +1006,7 @@ describe("the timeline buttons' declared size and the inset the strip is drawn a
         expect(36.4 - 30).toBeCloseTo(TIMELINE_BUTTON_MARGIN * 2, 6)
     })
 
-    it('draws a dark full-width separator above the canvas and its opaque buttons', () => {
+    it('draws a dark full-width separator above the canvas and over the buttons', () => {
         expect(separator.get('inset')).toBe('0 0 auto')
         expect(separator.get('height')).toBe('1px')
         expect(separator.get('z-index')).toBe('1')
@@ -1053,26 +1067,34 @@ describe('the inline styles in ComposerCanvas.svelte that both couplings actuall
             //the canvas the strip is at is the Pro View's one layout difference here, and the
             //renderer is the side that placed it (composerTimelineStripY)
             'top:{timelineTop}px;width:{width}px;height:{timelineHeight}px',
-            'background-color:{timelineHex}',
-            'margin-left:0;background-color:{timelineHex}',
-            'margin-left:auto;background-color:{timelineHex}',
+            //...and then only the two margins. THREE ENTRIES AND NOT FOUR (user revision
+            //2026-08-22): the colour these three used to carry inline is a plain declaration in
+            //App.css now - see the test below - which leaves the FIRST button with no inline style
+            //at all, so its absence here is the assertion that nothing crept back onto it.
+            'margin-left:0',
+            'margin-left:auto',
         ])
     })
 
-    it('backs the buttons with the alpha-STRIPPED theme layer, not the CSS custom property', () => {
-        //`--primary-layer-10` is the same colour with the theme's alpha still on it - ThemeVars
-        //emits it through `.toString()`, and `ThemeProvider.layer` is lighten/darken, both of which
-        //preserve alpha. These buttons must be opaque: the strip they used to sit on has been inset
-        //out from under them, so behind them is the canvas element (itself composited at
-        //`max(primary.alpha, 0.8)`) and through it the page - on "Sky Music" (alpha 0.72) the
-        //alpha-preserving form would leak 5.6% of the backdrop through each icon, on "Eons of times"
-        //(0.85) 2.2%. `.hex()` drops it, which is what these buttons carried before the two canvases
-        //were merged and what ComposerRenderer fills the strip with (`.rgb().rgbNumber()`).
-        expect(COMPOSER_CANVAS).toContain(
-            `const timelineHex = $derived(ThemeProvider.layer('primary', 0.1).hex());`
-        )
-        //...and App.css must not put one back, which would win for any button whose inline style is
-        //ever dropped and would do it in the alpha-preserving form
-        expect(declarationsOf('.timeline-button').get('background-color')).toBeUndefined()
+    it('backs the buttons from the stylesheet, alpha and all, not from an inline hex', () => {
+        //THE 2026-08-22 USER REVISION, and it REVERSES what this test used to state, so both halves
+        //are written down here.
+        //
+        //WHAT IT WAS: an inline `background-color` per button, from
+        //`ThemeProvider.layer('primary', 0.1).hex()`, chosen over App.css's `--primary-layer-10`
+        //because `.hex()` DROPS the theme's alpha where ThemeVars emits that property through
+        //`.toString()`, which keeps it. The reasoning was that these buttons must be OPAQUE: the
+        //strip they used to sit on has been inset out from under them, so behind them is the canvas
+        //element (itself composited at `max(primary.alpha, 0.8)`) and through it the page - on "Sky
+        //Music" (alpha 0.72) the alpha-preserving form leaks 5.6% of the backdrop through each icon,
+        //on "Eons of times" (0.85) 2.2%.
+        //
+        //WHAT IT IS: `var(--primary)`, in the stylesheet, like every other control on the page. The
+        //leak above is real and is ACCEPTED - on a translucent theme these three buttons are
+        //translucent - in exchange for their colour living in one place, with no JS to keep in step
+        //and nothing for a refactor to drop off a template.
+        expect(declarationsOf('.timeline-button').get('background-color')).toBe('var(--primary)')
+        //...and no inline hex left anywhere in the component to win over it
+        expect(COMPOSER_CANVAS).not.toContain('timelineHex')
     })
 })

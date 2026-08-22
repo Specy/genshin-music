@@ -14,6 +14,7 @@
   import Card from '$cmp/layout/Card.svelte';
   import Header from '$cmp/header/Header.svelte';
   import ShortcutEditor from '$cmp/pages/keybinds/ShortcutEditor.svelte';
+  import { COMPOSER_WHEEL_SHORTCUTS, fixedShortcutsTable } from '$cmp/pages/ShortcutsTable.svelte';
   import VsrgKey from '$cmp/pages/keybinds/VsrgKey.svelte';
   import MidiSetup from '$cmp/pages/keybinds/MidiSetup.svelte';
   import { globalConfigStore } from '$stores/GlobalConfigStore.svelte';
@@ -145,6 +146,9 @@
             if (existing) logger.warn(shortcutInUseMessage(existing));
           }}
         />
+        <!-- Wheel gestures listed with the shortcuts they live beside, but not through the
+             editor: they are not key combos and cannot be rebound (see COMPOSER_WHEEL_SHORTCUTS). -->
+        {@render fixedShortcutsTable(COMPOSER_WHEEL_SHORTCUTS)}
       </Card>
 
       <Card background="none" border="secondary" gap="0.8rem">

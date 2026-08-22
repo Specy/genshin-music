@@ -95,7 +95,7 @@
     padding: 0.5rem;
     gap: 0.2rem;
     display: flex;
-    max-width: 8rem;
+    max-width: 6rem;
     padding-right: 1.2rem;
     border-radius: 0.4rem;
     min-width: unset;
@@ -105,5 +105,6 @@
     -webkit-appearance: none;
     border: none;
     color: var(--primary-text);
+    font-size: 0.8rem;
   }
 </style>

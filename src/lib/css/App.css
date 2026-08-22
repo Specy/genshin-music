@@ -1204,7 +1204,9 @@ a {
 }
 
 .home-padded {
-  padding: 1rem 25vw;
+    padding: 0.6rem;
+    max-width: 48rem;
+    margin: 0 auto;
 }
 
 @keyframes home-appear {
@@ -1261,7 +1263,7 @@ a {
   border-radius: 0.5rem;
   position: relative;
   transition: all 0.15s ease-out;
-  max-width: 20rem;
+
   cursor: pointer;
 }
 
@@ -1556,7 +1558,7 @@ a {
 
   /* Home.css's own mobile block */
   .home-padded {
-    padding: 0.6rem 8vw;
+    padding: 0.6rem 4vw;
   }
 
   .home-dont-show-again,
@@ -2529,13 +2531,21 @@ select {
   position: absolute;
   left: 0;
   pointer-events: none;
-  padding: 0.2rem;
+  /* THE LEFT AND RIGHT TERMS ARE LOAD-BEARING and must stay 0.2rem: composerCanvasGeometry's
+     TIMELINE_INSET_LEFT/RIGHT are `padding + button + gap + ...` worked out by hand from these very
+     numbers, and that is the band the pixi strip is drawn inside — widen either end here alone and
+     the strip runs under the buttons. The BOTTOM is free, and is 0.25rem (user request 2026-08-22)
+     because the row is not centred on what it looks centred against: `::before` puts a 1px boundary
+     line on ONE edge of this box, so equal padding leaves the icons visually low against it. */
+  padding: 0.2rem 0.2rem 0.25rem;
   gap: 0.2rem;
 }
 
 /* One continuous boundary between the scrolling note grid and the denser minimap panel. This DOM
-   overlay spans the full canvas, including the opaque timeline buttons that would cover a line
-   drawn only by pixi underneath them. */
+   overlay spans the full canvas, including the timeline buttons, which is the whole reason it is
+   drawn here and not by pixi: those three buttons stand ON TOP of the canvas, so a line drawn
+   underneath them would run behind them and break for their width. `z-index: 1` is what puts it
+   over them in turn. */
 .timeline-controls::before {
   content: '';
   position: absolute;
@@ -2546,10 +2556,18 @@ select {
   background-color: var(--primary-darken-10);
 }
 
+/* THE BUTTONS' OWN SURFACE, in the stylesheet (user revision 2026-08-22). It used to be an inline
+   `background-color` written by ComposerCanvas.svelte from `ThemeProvider.layer('primary', 0.1)`
+   with `.hex()` — deliberately alpha-STRIPPED, because these buttons no longer sit on the pixi
+   strip (it is inset out from under them) and a DOM background composites straight onto the page,
+   so a translucent theme would show the composer's backdrop through the icons. That is now accepted
+   in exchange for the buttons simply following the theme variable like every other control: on
+   "Sky Music" (primary alpha 0.72) they are translucent. Nothing depends on their opacity. */
 .timeline-button {
   height: 100%;
   padding: 0;
   width: 2.2rem;
+  background-color: var(--primary);
   flex-shrink: 0;
   pointer-events: auto;
   border: none;
@@ -2871,6 +2889,13 @@ select {
   background: var(--secondary);
 }
 
+/* NOTHING IN A LAYER ROW ANIMATES (user decision 2026-08-22). `.instrument-button-used` — the
+   highlight saying "this layer plays in the column under the cursor" — is toggled on every row on
+   every column change, which during playback is many times a second: a transition would leave each
+   row mid-fade between two states that have already moved on, and would put a compositing job on
+   the main thread per row per column for a cue that is only readable when it changes INSTANTLY.
+   Stated explicitly rather than left to the default, because these rows are `.app-button`s in the
+   markup and that base rule DOES carry a transition — see the rule at the end of this block. */
 .instrument-button {
   height: 3rem;
   min-height: 3rem;
@@ -2879,6 +2904,7 @@ select {
   border-radius: 0.3rem;
   border-bottom: solid 2px var(--secondary);
   border-radius: 0;
+  transition: none;
 }
 
 .instrument-button-used {
@@ -2911,13 +2937,16 @@ select {
   color: var(--composer-main-layer-text);
 }
 
-/* Selecting a layer must not FADE the row's text from one colour into the other — .app-button's
-   base transition carries a `color` term, so the same declaration is repeated here without it.
-   Background and filter keep transitioning, as they do on every other button. */
+/* THE SAME "NOTHING FADES" RULE, one level down: the name button and the settings buttons inside a
+   row are `.app-button`s in their own right and inherit none of the row's `transition: none`, they
+   carry the base rule's own. Playback toggles `.instrument-button-used` on this row on every column,
+   so anything in it that fades is either mid-fade against a state that has already changed again or
+   a per-column paint for no visible gain — and the two terms this rule used to keep alive bought
+   nothing anyway: the name button's own background is transparent, so its `background-color` never
+   visibly fired, and `filter` is unset below. `!important` like the two `unset`s beside it, so this
+   holds against a state rule of .app-button's own however specific it is. */
 .instrument-button .app-button {
-  transition:
-    background-color 0.2s,
-    filter 0.2s !important;
+  transition: none !important;
   transform: unset !important;
   filter: unset !important;
 }
@@ -3467,13 +3496,13 @@ select {
    keyboard covers the song's name rather than printing it over the keys. Being covered is fine for
    text nothing is edited through - it is the canvas underneath that has to stay reachable. */
 .song-info-pro {
-  bottom: 0;
-  left: 0;
   width: 100%;
   padding-left: calc(4rem + 0.5vw);
   flex-direction: row;
   align-items: center;
   gap: 0.6rem;
+  bottom: 0.6rem;
+  left: 0.4rem;
 }
 
 @media (hover: none) and (pointer: coarse) {
@@ -3538,6 +3567,10 @@ select {
 
   .song-info {
     font-size: 0.9rem;
+  }
+
+  .song-info-pro {
+    left: 0;
   }
 
   .tool {

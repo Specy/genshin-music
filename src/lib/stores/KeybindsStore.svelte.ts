@@ -270,6 +270,29 @@ export type ShortcutOptions = {
   repeat?: boolean;
 };
 
+/**
+ * WHICH HELD KEYS A COMBO DOES NOT SEE (user revision 2026-08-22).
+ *
+ * `createKeyComboComposer` matches the WHOLE set of keys currently down, which is what makes
+ * `ShiftLeft+KeyS` a shortcut and `KeyS` alone a different one. The cost of that rule is that any
+ * key held for a reason of its own poisons every combo for as long as it is down — and the composer
+ * holds keys for a reason of its own all the time: its note keys ARE the letter row, and holding one
+ * is a gesture (a sustain being performed, or a Duration Hold editing a span — CONTEXT.md). While
+ * one was down, `a`/`d` could not step a column, which is exactly what a Duration Hold asks for.
+ *
+ * A key named here is TRANSPARENT: it stays in the set for its own listener (the note keeps
+ * sounding) and is simply not part of what a combo is matched against, so `KeyF` held plus `KeyD`
+ * pressed matches `KeyD`. Nothing else changes — a key that is not currently holding a note is in
+ * the combo exactly as before, so `ShiftLeft+KeyD` is still note entry and not `next_column`.
+ *
+ * A FUNCTION, called per keydown: the set changes with every press and release of a note, and a
+ * snapshot handed in at registration would be stale by the first gesture. Only surfaces that hold
+ * keys pass one; every other listener leaves it out and matches on the full set, unchanged.
+ */
+export type KeyComboOptions = {
+  transparentCodes?: () => ReadonlySet<string>;
+};
+
 export type ShortcutListener<T extends ShortcutPage> = (
   keybind: ShortcutPressEvent<MapValues<Shortcuts[T]>>
 ) => void;
@@ -277,15 +300,20 @@ export type ShortcutListener<T extends ShortcutPage> = (
 export function createShortcutListener<T extends KeysOf<Shortcuts>>(
   page: T,
   id: string,
-  callback: ShortcutListener<T>
+  callback: ShortcutListener<T>,
+  options?: KeyComboOptions
 ): ShortcutDisposer {
-  return createKeyComboComposer(id, ({ code, event, keyCombo }) => {
-    const shortcut = keyBinds.getShortcut(page, keyCombo);
-    if (shortcut !== undefined) {
-      if (!(shortcut as Shortcut<string>).holdable && event.repeat) return;
-      callback({ code, event, shortcut, isRepeat: event.repeat });
-    }
-  });
+  return createKeyComboComposer(
+    id,
+    ({ code, event, keyCombo }) => {
+      const shortcut = keyBinds.getShortcut(page, keyCombo);
+      if (shortcut !== undefined) {
+        if (!(shortcut as Shortcut<string>).holdable && event.repeat) return;
+        callback({ code, event, shortcut, isRepeat: event.repeat });
+      }
+    },
+    options
+  );
 }
 
 export function createKeyboardListener(
@@ -355,12 +383,37 @@ export function createReleaseGuard(onRelease: () => void): ShortcutDisposer {
 
 type KeyComboListener = (data: { keyCombo: string[]; event: KeyboardEvent; code: string }) => void;
 
-export function createKeyComboComposer(id: string, callback: KeyComboListener): ShortcutDisposer {
+export function createKeyComboComposer(
+  id: string,
+  callback: KeyComboListener,
+  options?: KeyComboOptions
+): ShortcutDisposer {
   const currentKeybinds: string[] = [];
+  /**
+   * The set the combo is MATCHED against, which is the set of keys down minus whatever the caller
+   * declares transparent (see KeyComboOptions).
+   *
+   * Two things it deliberately does not do. It does not remove a transparent key from
+   * `currentKeybinds`, which stays the record of what is physically down and is what the key-up
+   * below splices from - a key that stops holding a note mid-press must come back into the combos
+   * without a second keydown. And with nothing transparent it hands back THE ARRAY ITSELF, exactly
+   * as this always did, so a caller that captures a combo (the keybinds page) sees no new copy.
+   *
+   * And it never drops THE KEY BEING PRESSED RIGHT NOW, whatever the caller says about it: only a
+   * key held from BEFORE this press steps aside. That is the rule in one line - `d` alone is
+   * next_column as it always was, and `d` pressed while `f` is held is next_column too - and stating
+   * it here rather than leaning on "the note listener has not registered it yet" keeps it true
+   * however the two listeners happen to be ordered.
+   */
+  function matchableCombo(pressed: string): string[] {
+    const transparent = options?.transparentCodes?.();
+    if (!transparent?.size) return currentKeybinds;
+    return currentKeybinds.filter((code) => code === pressed || !transparent.has(code));
+  }
   KeyboardProvider.listen(
     ({ code, event }) => {
       if (!currentKeybinds.includes(code)) currentKeybinds.push(code);
-      callback({ keyCombo: currentKeybinds, event, code });
+      callback({ keyCombo: matchableCombo(code), event, code });
     },
     { type: 'keydown', id: id + '_down' }
   );

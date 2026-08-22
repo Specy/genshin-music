@@ -28,7 +28,7 @@
  * not import a .svelte component, and ComposerNote must not import the renderer) rather than
  * exported from either of them.
  */
-export const COMPOSER_LONG_PRESS_MS = 450;
+export const COMPOSER_LONG_PRESS_MS = 400;
 
 /** A rectangle in SCREEN (viewport) coordinates — what the duration popover anchors itself to. */
 export interface ScreenRect {
@@ -166,6 +166,29 @@ export const PRO_ZOOM_WHEEL_RATE = 0.0025;
 export function wheelZoomFactor(deltaPx: number): number {
   if (!Number.isFinite(deltaPx)) return 1;
   return Math.exp(-deltaPx * PRO_ZOOM_WHEEL_RATE);
+}
+
+/**
+ * WHETHER A WHEEL EVENT IS THE PRO VIEW'S VERTICAL SCROLL (user, 2026-08-22): shift held, and not
+ * a zoom — ctrl/meta outrank shift, so a ctrl+shift+wheel still zooms and this never claims it.
+ *
+ * SHIFT is the browser's own "scroll the other axis" modifier, and that is exactly the meaning
+ * borrowed here: the canvas' plain wheel already owns the horizontal axis, so the shifted one
+ * scrolls the axis it does not. Browsers commit to that convention hard enough that most deliver a
+ * shifted wheel's travel on `deltaX` with `deltaY` ZERO — the caller must read whichever axis
+ * carries it (ComposerRenderer.shiftedWheelDeltaPx) rather than assuming `deltaY`.
+ *
+ * THE PRO VIEW ONLY, for the zoom's own reason: the Compressed View has no vertical axis, and a
+ * shifted wheel there keeps doing what it always did (nothing — the swapped delta lands on the
+ * deltaY===0 return).
+ */
+export function wheelIsProVerticalScroll(input: {
+  proView: boolean;
+  shiftKey: boolean;
+  ctrlKey: boolean;
+  metaKey: boolean;
+}): boolean {
+  return input.proView && input.shiftKey && !input.ctrlKey && !input.metaKey;
 }
 
 /** Two pointers' positions, as the pinch below measures them — canvas coordinates, like every other pointer here. */

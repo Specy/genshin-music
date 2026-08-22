@@ -834,6 +834,9 @@ export const i18n_en = {
       set_hold_hand_description: 'Set the click to create a hold note',
       set_delete_hand_description: 'Set the click to delete a note',
       vsrg_add_hit_object: 'Add hit object (syncs to the registered keybinds)',
+      //the composer's fixed wheel gestures (not rebindable - see COMPOSER_WHEEL_SHORTCUTS)
+      pro_vertical_scroll_description: 'Scroll the pro view vertically',
+      pro_zoom_description: 'Zoom the pro view rows (a trackpad pinch works too)',
     },
   },
   instruments: {

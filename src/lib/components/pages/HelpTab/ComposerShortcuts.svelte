@@ -2,7 +2,11 @@
   import Header from '$cmp/header/Header.svelte';
   import AppLink from '$cmp/AppLink.svelte';
   import AppButton from '$cmp/inputs/AppButton.svelte';
-  import { shortcutsTable } from '$cmp/pages/ShortcutsTable.svelte';
+  import {
+    COMPOSER_WHEEL_SHORTCUTS,
+    fixedShortcutsTable,
+    shortcutsTable,
+  } from '$cmp/pages/ShortcutsTable.svelte';
   import { keyBinds } from '$stores/KeybindsStore.svelte';
   import { globalConfigStore } from '$stores/GlobalConfigStore.svelte';
   import { t } from '$i18n/binding.svelte';
@@ -16,4 +20,5 @@
     <AppButton>{t('tutorials:help.change_keybinds')}</AppButton>
   </AppLink>
   {@render shortcutsTable(composerShortcuts, 'margin-top:1rem')}
+  {@render fixedShortcutsTable(COMPOSER_WHEEL_SHORTCUTS, 'margin-top:0.4rem')}
 {/if}

@@ -108,6 +108,10 @@ _Avoid_: momentum/inertia scrolling (say Coast for the glide itself)
 A press on the notes stage while a Coast is running. The press itself is the grab: it halts the Coast where it is and owns the scroll from that instant. Released without movement it is a stop, never a click — it selects-and-sounds nothing.
 _Avoid_: tap-to-stop "click" (a Catch never takes the click path)
 
+**Duration Hold**:
+The press that opened the duration popover — on a keyboard key, a Pro View cell, a physical note key, or a held MIDI note — for as long as it stays down. While it lasts, sustain length is edited by whole-column increments from the span it opened at: one column per visible column-width of pointer travel, and one column per column the selection moves underneath it, from any source (canvas scroll, wheel, the < > buttons, shortcuts). Column changes never dismiss the popover while it lasts, and neither does a press outside it — a second finger scrolling the canvas IS such a press, and it is part of the gesture. A layer change still dismisses, and so does playback starting: the transport moves the selection on its own, and a hold it drove would grow the span one column per tick. The Hold ends with the release — the popover outlives it.
+_Avoid_: drag-to-resize (suggests grabbing the tail and snapping it to a position — a Duration Hold only ever increments), snap-to-column
+
 ### Composer Playback
 
 **Transport**:

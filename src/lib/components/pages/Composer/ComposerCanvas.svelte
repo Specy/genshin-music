@@ -8,6 +8,9 @@
   import type { Pitch } from '$core/legacyConfig';
   import type { ComposerSettingsDataType } from '$core/BaseSettings';
   import type { ComposerRenderer } from './ComposerRenderer';
+  //a pure-rules module with no pixi in it (see its header), so unlike the renderer it is imported
+  //statically - `import type` here besides, which is erased outright
+  import type { ScreenRect } from './composerInput';
   import { composerCanvasCssSize, composerNotesRegionY } from './composerCanvasGeometry';
   import { proStripWidth } from './proViewGeometry';
   import TimelineButton from './TimelineButton.svelte';
@@ -74,6 +77,28 @@
     ) => boolean;
     /** The taken hold's continuing horizontal travel, absolute from the press origin - the span drag. */
     onProCellLongPressDrag: (deltaX: number) => void;
+    /** CONTEXT.md: Duration Hold. The finger that opened the popover came up - the popover stays, its hold does not. */
+    onProCellLongPressEnd: () => void;
+    /**
+     * THE CANVAS' OWN MEASUREMENTS, handed up once the renderer exists and withdrawn (null) when it
+     * goes: two questions Composer.svelte cannot answer from props, both about a canvas that is
+     * behind a dynamic pixi import.
+     *
+     * A pair of live getters rather than reported values, because both are read at ONE instant (a
+     * duration popover opening) and would otherwise need a copy in this component and a second in
+     * the parent, kept current for a read that happens seconds later at most:
+     *  - `columnWidth` is what a Duration Hold measures its drag in (CONTEXT.md: Duration Hold), the
+     *    same visible column width on either surface;
+     *  - `proCellRect` is where a cell IS on screen, which is the anchor a popover opened from a
+     *    PHYSICAL note key falls back to when the on-screen keyboard is off-screen. Null in the
+     *    Compressed View, which draws no such cell.
+     */
+    onCanvasMeasures: (
+      measures: {
+        columnWidth: () => number;
+        proCellRect: (column: number, number: number) => ScreenRect | null;
+      } | null
+    ) => void;
     /** A settled Pro View tap made while the keyboard sheet is up: lower it, and edit nothing. */
     onKeyboardDismiss: () => void;
     /**
@@ -82,6 +107,13 @@
      * lock to close, and closing it is what resets the zoom to the layer's fit.
      */
     onViewUnlock: () => void;
+    /**
+     * CONTEXT.md: Duration Hold. The codes of note keys currently held, which this canvas' own
+     * shortcut listener below treats as transparent for the same reason Composer.svelte's does: a
+     * held note key must not block the breakpoint shortcuts mid-hold. The same live getter the
+     * parent passes to its own listener - one definition of "held" for every composer listener.
+     */
+    heldNoteKeyCodes: () => ReadonlySet<string>;
   }
 
   let {
@@ -106,8 +138,11 @@
     onProCellTap,
     onProCellLongPress,
     onProCellLongPressDrag,
+    onProCellLongPressEnd,
+    onCanvasMeasures,
     onKeyboardDismiss,
     onViewUnlock,
+    heldNoteKeyCodes,
   }: ComposerCanvasProps = $props();
 
   let canvasContainerEl: HTMLDivElement | undefined;
@@ -139,16 +174,6 @@
   // duplicated rather than shared.
   const sideButtonsRgb = $derived(colorToRGB(ThemeProvider.get('primary').darken(0.08)).join(','));
   const backgroundHex = $derived(ThemeProvider.get('primary').hexa());
-  // THE THREE TIMELINE BUTTONS' BACKGROUND, and it is `.hex()` rather than App.css's
-  // `var(--primary-layer-10)` for one reason: `.hex()` DROPS the theme's alpha where ThemeVars
-  // emits that property through `.toString()`, which keeps it. The two shipped translucent themes
-  // ("Sky Music" rgba(23,23,23,0.72), "Eons of times" #453427d9) would otherwise give the buttons
-  // an alpha they never had - and unlike the canvas behind them, a DOM background composites
-  // straight onto the page, so a composer background image would show through the icons. This is
-  // verbatim what these buttons carried before the two canvases were merged, and it is the same
-  // alpha-stripped colour ComposerRenderer fills the strip with (`.rgb().rgbNumber()`).
-  // test/composerCanvasCss.test.ts reads this expression out of this file.
-  const timelineHex = $derived(ThemeProvider.layer('primary', 0.1).hex());
   // THE CANVAS' SIZE AS CSS, so `.canvas-wrapper` is already the right size while the dynamic pixi
   // import and Application.init() are still running - see composerCanvasCssSize for the whole
   // rationale and for what it does and does not reproduce. Null in preview, and a null style
@@ -212,6 +237,7 @@
           onProCellTap,
           onProCellLongPress,
           onProCellLongPressDrag,
+          onProCellLongPressEnd,
           onKeyboardDismiss,
           onViewUnlock,
           onGeometryChange: (geometry) => {
@@ -230,15 +256,31 @@
         return;
       }
       renderer = instance;
-      disposeShortcuts = createShortcutListener('composer', 'composer_canvas', ({ shortcut }) => {
-        const { name } = shortcut;
-        if (name === 'next_breakpoint') renderer?.handleBreakpoints(1);
-        if (name === 'previous_breakpoint') renderer?.handleBreakpoints(-1);
+      //...and the two measurements only this instance can answer (see onCanvasMeasures). Handed over
+      //AFTER init(), which is what gives the canvas its size, and withdrawn in the teardown below -
+      //a getter closed over a destroyed renderer would answer from a canvas that is gone.
+      onCanvasMeasures({
+        columnWidth: () => instance.visibleColumnWidth(),
+        proCellRect: (column, number) => instance.proCellScreenRectAt(column, number),
       });
+      disposeShortcuts = createShortcutListener(
+        'composer',
+        'composer_canvas',
+        ({ shortcut }) => {
+          const { name } = shortcut;
+          if (name === 'next_breakpoint') renderer?.handleBreakpoints(1);
+          if (name === 'previous_breakpoint') renderer?.handleBreakpoints(-1);
+        },
+        //held note keys step aside here exactly as they do for the parent's listener (CONTEXT.md:
+        //Duration Hold) - without this, the breakpoint shortcuts were the one composer surface a
+        //hold still blocked
+        { transparentCodes: heldNoteKeyCodes }
+      );
     })();
     return () => {
       cancelled = true;
       disposeShortcuts?.();
+      onCanvasMeasures(null);
       renderer?.destroy();
       renderer = null;
     };
@@ -485,7 +527,6 @@
       <TimelineButton
         onclick={() => renderer?.handleBreakpoints(-1)}
         tooltip={t('composer:previous_breakpoint')}
-        style="background-color:{timelineHex}"
         ariaLabel={t('composer:previous_breakpoint')}
       >
         {@render faStepBackwardIcon()}
@@ -493,7 +534,7 @@
       <TimelineButton
         onclick={() => renderer?.handleBreakpoints(1)}
         tooltip={t('composer:next_breakpoint')}
-        style="margin-left:0;background-color:{timelineHex}"
+        style="margin-left:0"
         ariaLabel={t('composer:next_breakpoint')}
       >
         {@render faStepForwardIcon()}
@@ -503,7 +544,7 @@
            gap between it and the two above exactly the strip's span - see the comment above -->
       <TimelineButton
         onclick={toggleBreakpoint}
-        style="margin-left:auto;background-color:{timelineHex}"
+        style="margin-left:auto"
         tooltip={isBreakpointSelected
           ? t('composer:remove_breakpoint')
           : t('composer:add_breakpoint')}

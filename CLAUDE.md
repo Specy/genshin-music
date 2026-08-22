@@ -1,3 +1,7 @@
+## Subagent model policy
+
+NEVER use the `fable` model for subagents/delegated agent work. Use `opus` instead. The only exception is when the user explicitly asks for fable in that specific request.
+
 You are able to use the Svelte MCP server, where you have access to comprehensive Svelte 5 and SvelteKit documentation. Here's how to use the available tools effectively:
 
 ## Available Svelte MCP Tools:

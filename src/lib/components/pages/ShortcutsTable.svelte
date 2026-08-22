@@ -8,7 +8,19 @@
   //
   // shortcuts is a SvelteMap living in the keybinds store's own $state (KeybindsStore.svelte.ts);
   // reading it here in the each-block below already auto-tracks edits, no subscription needed.
-  export { keyBadge, shortcutsTable };
+  export { fixedShortcutsTable, keyBadge, shortcutsTable };
+
+  /**
+   * The composer's WHEEL gestures (user, 2026-08-22), documented beside the rebindable shortcuts
+   * wherever those are listed — the Home help tab, the /keybinds page and the how-to-use-composer
+   * post — but NOT in the KeybindsStore: a wheel gesture is not a key combo, so it cannot be
+   * rebound and the shortcut editor must not offer to. Rendered through fixedShortcutsTable below.
+   * The description values are `shortcuts:props.*` keys, the same catalog the store's own rows use.
+   */
+  export const COMPOSER_WHEEL_SHORTCUTS: readonly { keys: string; description: string }[] = [
+    { keys: 'Shift + Wheel', description: 'pro_vertical_scroll_description' },
+    { keys: 'Ctrl/⌘ + Wheel', description: 'pro_zoom_description' },
+  ];
 </script>
 
 {#snippet keyBadge(text: string)}
@@ -31,6 +43,28 @@
             {#if shortcut.holdable}
               <span style="font-size:0.8rem"> ({t('shortcuts:holdable')})</span>
             {/if}
+          </td>
+        </tr>
+      {/each}
+    </tbody>
+  </table>
+{/snippet}
+
+<!-- The fixed rows' sibling of shortcutsTable: same table, same badge, but entries that are not
+     in the store and cannot be rebound (see COMPOSER_WHEEL_SHORTCUTS above). -->
+{#snippet fixedShortcutsTable(
+  entries: readonly { keys: string; description: string }[],
+  style: string = ''
+)}
+  <table class="keys-table" {style}>
+    <tbody>
+      {#each entries as entry (entry.keys)}
+        <tr>
+          <td>
+            {@render keyBadge(entry.keys)}
+          </td>
+          <td>
+            {t(`shortcuts:props.${entry.description}`)}
           </td>
         </tr>
       {/each}

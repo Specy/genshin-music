@@ -35,6 +35,16 @@ import type { RecordedNote } from '$core/Songs/SongClasses';
 import type { VsrgSongRenderState } from './vsrgSongRenderState';
 import { VsrgCanvasCache } from './VsrgComposerCache';
 
+/**
+ * Height in px of the bottom strip drawKeys() prints the key numbers into in VERTICAL mode. Its
+ * counterpart in horizontal mode is a 60px-WIDE left strip, which is a separate look and is left
+ * alone. Dropped from 60 to 40 (user, 2026-08-22) to hand the difference to the tracks; every site
+ * that places the band, its separator line, its per-key hit areas or its numbers derives from here.
+ */
+const VERTICAL_KEYS_BAND_PX = 40;
+/** The band's numbers print at this fraction of its height, leaving ~30% of it as headroom. */
+const VERTICAL_KEYS_BAND_FONT_RATIO = 0.7;
+
 export type VsrgCanvasSizes = {
   el: DOMRect;
   rawWidth: number;
@@ -650,15 +660,15 @@ export class VsrgComposerRenderer {
       background.stroke({ width: 2, color: colors.secondary[1] });
     } else {
       background
-        .rect(0, sizes.height - 60, sizes.width, 60)
+        .rect(0, sizes.height - VERTICAL_KEYS_BAND_PX, sizes.width, VERTICAL_KEYS_BAND_PX)
         .fill({ color: colors.background_plain[1] });
       for (let i = 0; i < keys.length - 1; i++) {
         background.moveTo(keyWidth * (i + 1), 0);
         background.lineTo(keyWidth * (i + 1), sizes.height);
       }
       background.stroke({ width: 2, color: colors.lineColor_10[1] });
-      background.moveTo(0, sizes.height - 60);
-      background.lineTo(sizes.width, sizes.height - 60);
+      background.moveTo(0, sizes.height - VERTICAL_KEYS_BAND_PX);
+      background.lineTo(sizes.width, sizes.height - VERTICAL_KEYS_BAND_PX);
       background.stroke({ width: 2, color: colors.secondary[1] });
     }
     this.keysContainer.addChild(background);
@@ -685,12 +695,21 @@ export class VsrgComposerRenderer {
     this.keysContainer.addChild(playbar);
 
     const textStyle = this.getTextStyle();
+    // getTextStyle() picks a size for a full key row; the vertical band is only
+    // VERTICAL_KEYS_BAND_PX tall, so cap the glyphs to it (the no-Bonobo fallback of 30px would
+    // otherwise fill 40px edge to edge). Harmless when the size already fits.
+    if (!isHorizontal) {
+      textStyle.fontSize = Math.min(
+        textStyle.fontSize,
+        Math.round(VERTICAL_KEYS_BAND_PX * VERTICAL_KEYS_BAND_FONT_RATIO)
+      );
+    }
     keys.forEach((_key, index) => {
       const hitArea = new Rectangle(
         isHorizontal ? 0 : keyWidth * index,
-        isHorizontal ? keyHeight * index : sizes.height - 60,
+        isHorizontal ? keyHeight * index : sizes.height - VERTICAL_KEYS_BAND_PX,
         isHorizontal ? 60 : sizes.width,
-        isHorizontal ? keyHeight : 60
+        isHorizontal ? keyHeight : VERTICAL_KEYS_BAND_PX
       );
       const keyContainer = new Container();
       keyContainer.hitArea = hitArea;
@@ -704,7 +723,9 @@ export class VsrgComposerRenderer {
           style: textStyle,
           anchor: 0.5,
           x: isHorizontal ? 30 : keyWidth * index + keyWidth / 2,
-          y: isHorizontal ? keyHeight * index + keyHeight / 2 : sizes.height - 30,
+          y: isHorizontal
+            ? keyHeight * index + keyHeight / 2
+            : sizes.height - VERTICAL_KEYS_BAND_PX / 2,
         })
       );
       this.keysContainer.addChild(keyContainer);

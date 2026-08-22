@@ -1,12 +1,16 @@
 <script lang="ts">
   // Duration popover (spec 2026-08-03 §2 "Composer duration UX"): opened by long-pressing
-  // a composer keyboard button. The slider edits the EXTRA hold length in columns
-  // (0 = plain note, i.e. span - 1): visual range 0–20, and the `>` stepper keeps going
+  // a composer keyboard button, a Pro View cell, or a physical note key. Its four controls
+  // (slider, two steppers, and the typable number since 2026-08-22) all edit the EXTRA hold
+  // length in columns (0 = plain note, i.e. span - 1) through the one clamping setHoldAmount:
+  // the slider's visual range is 0–20, and the `>` stepper and the box both keep going
   // past 20 — both steppers stay enabled and simply clamp against how far the hold can
   // still grow (next same-id note / song end, via maxSpan). Dismissed by outside click,
-  // the X button, or a column/layer change (the owner handles those two). The opening
-  // long-press's own pointerup can't dismiss it: dismissal listens for pointerDOWN
-  // outside, and the opening gesture has none left.
+  // the X button, or a layer change / a column change once the opening press has been let go
+  // (the owner handles those two, and it is the owner that knows a Duration Hold is still
+  // running - while one is, the column it moves through EDITS the span instead of dismissing
+  // this; CONTEXT.md: Duration Hold). The opening long-press's own pointerup can't dismiss it:
+  // dismissal listens for pointerDOWN outside, and the opening gesture has none left.
   import { t } from '$i18n/binding.svelte';
   import type { ComposerPopoverAnchor } from './composerInput';
 
@@ -14,6 +18,7 @@
     span,
     maxSpan,
     anchor,
+    holdActive,
     onChange,
     onClose,
   }: {
@@ -25,6 +30,14 @@
      * a bare screen RECT for a Pro View cell, which is painted pixels and has no element to follow.
      */
     anchor: ComposerPopoverAnchor;
+    /**
+     * CONTEXT.md: Duration Hold — whether the press that opened this popover is STILL DOWN. While it
+     * is, an outside press does not dismiss: the second finger landing on the canvas to scroll it is
+     * the hold's own gesture continuing (it grows the span by the columns it crosses), and a
+     * pointerdown that closed the popover would end the hold with it. The owner clears this at the
+     * release, after which the outside-press dismissal is exactly what it always was.
+     */
+    holdActive: boolean;
     onChange: (span: number) => void;
     onClose: () => void;
   } = $props();
@@ -63,6 +76,7 @@
   }
 
   function handleOutsidePointerDown(e: PointerEvent) {
+    if (holdActive) return;
     if (popoverElement && e.target instanceof Node && !popoverElement.contains(e.target)) onClose();
   }
 </script>
@@ -144,9 +158,29 @@
   >
     {@render chevronRightIcon()}
   </button>
-  <div class="duration-popover-value">
-    {holdAmount}
-  </div>
+  <!-- THE NUMBER IS AN INPUT (user revision, 2026-08-22), and it holds the SAME 0-based currency
+       everything else in this popover speaks - extra hold columns, i.e. span - 1 - so typing 8 and
+       dragging the slider to 8 are the same edit. It applies LIVE, through the same clamping
+       setHoldAmount the slider and the steppers go through, which is what lets a value past the
+       slider's own 20 be typed rather than stepped to.
+
+       `value=` with an `oninput` handler and NOT `bind:value`: `holdAmount` is a $derived of the
+       song's own span, so a two-way binding would try to write back into a read-only value - and
+       this way the box follows a span changed from OUTSIDE it (a Duration Hold's drag, the
+       steppers) for free. An empty or half-typed box (`-`, or a cleared field) parses to NaN and
+       simply does not apply: the note keeps the span it has until a real number arrives. -->
+  <input
+    type="number"
+    class="duration-popover-value"
+    min="0"
+    max={maxHoldAmount}
+    value={holdAmount}
+    aria-label={t('composer:note_duration')}
+    oninput={(e) => {
+      const amount = parseInt(e.currentTarget.value);
+      if (Number.isFinite(amount)) setHoldAmount(amount);
+    }}
+  />
   <button class="duration-popover-step" onclick={onClose} aria-label={t('common:close')}>
     {@render timesIcon()}
   </button>
@@ -181,9 +215,28 @@
     flex-shrink: 0;
   }
 
+  //the typable number. Sized in rem rather than by `size`, which a number input ignores, and the
+  //spinner chrome is dropped in both engines: the two steppers beside it ARE the spinner, at a
+  //size a finger can hit, and the browser's own arrows would sit inside a 3rem box next to them.
   .duration-popover-value {
-    min-width: 1.6rem;
+    width: 3rem;
+    flex-shrink: 0;
+    padding: 0.15rem 0.2rem;
+    border: none;
+    border-radius: 0.3rem;
+    background-color: var(--primary);
+    color: var(--primary-text);
+    font-family: inherit;
+    font-size: 1rem;
     text-align: center;
     font-weight: bold;
+    appearance: textfield;
+    -moz-appearance: textfield;
+
+    &::-webkit-outer-spin-button,
+    &::-webkit-inner-spin-button {
+      appearance: none;
+      margin: 0;
+    }
   }
 </style>

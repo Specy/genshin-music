@@ -32,6 +32,13 @@
   // and leave that voice sounding forever.
   // eslint-disable-next-line svelte/prefer-svelte-reactivity -- engine bookkeeping, never rendered
   const heldNumbers = new Map<number, number>();
+  // Nominal Ids a MIDI note-ON has been broadcast for and not yet the note-OFF. Its own set
+  // rather than `heldNotes` because that one only tracks sustaining instruments (the pressed-down
+  // visual), while a connected device must get the OFF for every ON — and because ZenNote fires
+  // release on pointerleave too, so a finger sliding across keys releases notes it never pressed;
+  // the delete() test below is what keeps those from broadcasting stray note-offs.
+  // eslint-disable-next-line svelte/prefer-svelte-reactivity -- MIDI bookkeeping, never rendered
+  const midiSentIds = new Set<number>();
 
   onMount(() => {
     setPageVisited('zenKeyboard');
@@ -92,6 +99,10 @@
       currentInstrument.releaseAllNotes(true);
       heldNotes.clear();
       heldNumbers.clear();
+      //the keypad remounts under the still-held finger, so the old note's pointerup may never
+      //reach onNoteRelease — send the note-offs now, like the voices above
+      for (const id of midiSentIds) MIDIProvider.broadcastNoteUp(id);
+      midiSentIds.clear();
       AudioProvider.disconnect(currentInstrument.endNode);
     };
   });
@@ -104,6 +115,10 @@
       currentInstrument.releaseHeldNotes();
       heldNotes.clear();
       heldNumbers.clear();
+      //flush the wire too: a tab switch mid-press means no pointerup ever fires, and a
+      //connected device would hold the broadcast notes forever without their note-offs
+      for (const id of midiSentIds) MIDIProvider.broadcastNoteUp(id);
+      midiSentIds.clear();
     };
     window.addEventListener('blur', releaseOnLeave);
     document.addEventListener('visibilitychange', releaseOnLeave);
@@ -156,8 +171,11 @@
     }
     zenKeyboardStore.animateNote(note);
     //deliberately the NOMINAL: this broadcasts to a connected MIDI device the key that was
-    //pressed, which is what it has always sent and what the receiving device is mapped to
-    MIDIProvider.broadcastNoteClick(note.id);
+    //pressed, which is what it has always sent and what the receiving device is mapped to.
+    //A real note-DOWN, with the note-UP sent from the release below rather than a fixed timer,
+    //so a receiver (e.g. the composer recording sustains) sees how long the key was truly held.
+    MIDIProvider.broadcastNoteDown(note.id);
+    midiSentIds.add(note.id);
   }
 
   function onNoteRelease(note: ObservableNote) {
@@ -165,6 +183,8 @@
     const number = heldNumbers.get(note.id);
     heldNumbers.delete(note.id);
     instrument.releaseNote(number ?? note.numberAt(settings.pitch.value));
+    //only for notes this page actually sent the ON for — see midiSentIds
+    if (midiSentIds.delete(note.id)) MIDIProvider.broadcastNoteUp(note.id);
   }
 
   function onVolumeChange(data: SettingVolumeUpdate) {

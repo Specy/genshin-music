@@ -90,6 +90,7 @@ import {
   proTapTarget,
   stagePressArmsLongPress,
   stageReleaseIntent,
+  wheelIsProVerticalScroll,
   wheelIsProZoom,
   wheelZoomFactor,
   type ProCellTarget,
@@ -199,8 +200,12 @@ const PLAYHEAD_ARROW_LENGTH = 8;
  */
 const PLAYHEAD_X_FRACTION = { compressed: 0.5, pro: 0.25 } as const;
 
-/** A button label's size as a fraction of the row, and the px ceiling it is capped at. */
-const PRO_LABEL_FONT_ROWS = 0.42;
+/**
+ * A button label's size as a fraction of the row, and the px ceiling it is capped at. 0.65 since
+ * the 2026-08-22 legibility pass (it was 0.42): the strip's letters are read at a glance while the
+ * eye is on the notes beside them, and the cap is what keeps a tall row from printing a giant one.
+ */
+const PRO_LABEL_FONT_ROWS = 0.65;
 const PRO_LABEL_FONT_MAX = 15;
 /** An absolute pitch name (a row with no button) prints at this fraction of a button label's size. */
 const PRO_FAINT_LABEL_SCALE = 0.82;
@@ -218,14 +223,24 @@ const PRO_STRIP_BACKGROUND_ALPHA = 0.94;
  * `OUT_OF_ZONE` is the overlay over everything the current layer cannot reach — it DIMS and never
  * hides, which is the rule the whole view rests on: another track's note, and a stranded one, stay
  * on screen under it (that is what makes this canvas the place a strand can be found and, from
- * phase D, deleted).
+ * phase D, deleted). It is lighter than it was (0.35, was 0.5) and, while the song plays, it may be
+ * dropped altogether — see the flag under it.
  *
  * `INERT_ROW` is the DAW black-key pattern, on the rows INSIDE the band that map to no button —
  * they belong to the zone and accept no note, so they are marked rather than dimmed away.
  * `OCTAVE_BAND` is the faint alternation that makes octave boundaries readable at a glance; it is
  * the subtlest of the four on purpose, since it covers half of every screen.
  */
-const PRO_OUT_OF_ZONE_ALPHA = 0.5;
+const PRO_OUT_OF_ZONE_ALPHA = 0.35;
+/**
+ * WHETHER THE DIM IS DROPPED WHILE THE SONG PLAYS, leaving the zone's two EDGE LINES to say where
+ * the band is (user experiment, 2026-08-22).
+ *
+ * A code-only flag with no setting behind it: playback is a readout rather than an edit, and the
+ * question this answers - "is a dimmed out-of-zone band worth the contrast it costs while the notes
+ * are moving?" - is one to look at rather than to argue. Toggle it HERE.
+ */
+const PRO_HIDE_OUT_OF_ZONE_OVERLAY_WHILE_PLAYING = true;
 const PRO_INERT_ROW_ALPHA = 0.2;
 const PRO_OCTAVE_BAND_ALPHA = 0.07;
 const PRO_ZONE_LINE_ALPHA = 0.9;
@@ -734,6 +749,16 @@ export interface ComposerRendererCallbacks {
    * long press was taken; the press can no longer pan, tap, or edit anything else.
    */
   onProCellLongPressDrag: (deltaX: number) => void;
+  /**
+   * THE TAKEN HOLD'S FINGER CAME UP (CONTEXT.md: Duration Hold): the Duration Hold this canvas
+   * opened is over. The popover OUTLIVES it - this says nothing about dismissing it - but the rules
+   * that hold only while a finger is down end here: a column change dismisses again, and the
+   * selection can no longer move the span.
+   *
+   * Fired exactly once per taken hold, by whatever ends the press (the release, a cancel, a blur,
+   * the renderer being destroyed), and never for a hold nothing took.
+   */
+  onProCellLongPressEnd: () => void;
   /**
    * A SETTLED TAP ON THE CANVAS WHILE THE KEYBOARD SHEET IS UP: put it down, and edit nothing
    * (spec §2's dismiss-and-swallow, decided by composerInput.stageReleaseIntent).
@@ -1667,8 +1692,26 @@ export class ComposerRenderer {
    * Whether the long press that fired on the CURRENT press was taken (see onProCellLongPress). It is
    * the canvas' copy of the composer keyboard's `longPressFired`, and it exists for the same reason:
    * the release of a press that opened the popover must not also toggle the note it was opened on.
+   *
+   * It is also the whole of "a Duration Hold is running on this canvas" (CONTEXT.md: Duration Hold),
+   * which is what the second finger below and endProHold's notification are gated on.
    */
   private proPressConsumed = false;
+  /**
+   * THE SECOND FINGER WHILE A DURATION HOLD IS RUNNING: it SCROLLS the song (user revision,
+   * 2026-08-22), where with no hold running it would start a pinch.
+   *
+   * That is not a special case bolted on: a Duration Hold edits the span by whole columns, from the
+   * pointer's travel AND from the selection moving underneath it - so the second finger is how a
+   * hold reaches a length the first finger cannot travel to, and zooming the rows mid-hold is not
+   * something a hand asks for. The pinch is untouched whenever no hold is running.
+   *
+   * A record of its own rather than the stage's, because the stage's belongs to the finger holding
+   * the popover open and must keep the origin its travel is measured from. It carries only what a
+   * scroll needs - the pointer, its press x, and the position the canvas was at - so it can neither
+   * tap, edit, nor Flick: this gesture's release settles, and that is all.
+   */
+  private proHoldScroll: { id: number; x: number; anchorPosition: number } | null = null;
   /**
    * The pointerId scrubbing the mini-timeline, or null for "no pointer is down on the strip".
    *
@@ -2213,6 +2256,36 @@ export class ComposerRenderer {
     }
   }
 
+  /**
+   * SHIFT+WHEEL IS THE PRO VIEW'S VERTICAL SCROLL (user, 2026-08-22) — the unlocked drag's
+   * vertical half restated for the wheel: the same clampCameraY travel, applied directly per
+   * event with nothing for a frame to interpolate (the drag's own reasoning, in handleStageSlide).
+   * A running camera ease is cancelled first for the same reason a Catch stops a Coast: the hand
+   * took the frame.
+   *
+   * AND IT TAKES THE FRAME the way the zoom does: scrolling away from the Editable Zone is manual
+   * control of the camera, so the padlock follows the gesture — same once-per-gesture ask, same
+   * refused-unlock outcome (the next relock command eases the frame home). The one-update window
+   * applyProZoom describes is narrower here: a pan does not change the row height, so nothing
+   * rebuilds in between, and an ordinary 'ease' sync leaves an untouched camera alone.
+   */
+  private panProCameraBy(deltaPx: number): void {
+    if (!this.state.proView || this.state.isRecordingAudio) return;
+    if (!Number.isFinite(deltaPx) || deltaPx === 0) return;
+    this.cameraEase = null;
+    const target = clampCameraY({
+      axis: this.proAxis(),
+      rowHeight: this.proRowHeightPx(),
+      notesRegionHeight: this.height,
+      cameraY: this.cameraY + deltaPx,
+    });
+    if (target !== this.cameraY) this.applyCameraY(target);
+    if (this.state.viewLocked && this.proViewLocked) {
+      this.proViewLocked = false;
+      this.callbacks.onViewUnlock();
+    }
+  }
+
   /** What a column view needs to place its notes, or null in the Compressed View. */
   private proGeometry(): ProPaintGeometry | null {
     if (!this.state.proView) return null;
@@ -2243,6 +2316,11 @@ export class ComposerRenderer {
    *  - THE LABEL WORDING MOVED (`noteNameType`). It changes no column's pixels at all, so nothing
    *    else on the state object can see it; the strip's own key would catch it on the next paint,
    *    and this is what makes sure there IS one.
+   *  - PLAY/PAUSE FLIPPED, and only while PRO_HIDE_OUT_OF_ZONE_OVERLAY_WHILE_PLAYING is on, because
+   *    that flag is what makes the zone's overlay a function of `isPlaying` at all. `isPlaying` is
+   *    deliberately not in needsUnconditionalRepaint (it changes the SCHEDULE, not a column's
+   *    appearance - see it), and drawProZone runs only from draw() and applyCameraY, so without this
+   *    the dim would stay up for the whole of a playback that started on a still canvas.
    *
    * ...and one thing that invalidates NOTHING and still has to be noticed here: RE-LOCKING. The
    * View Lock going false->true is a command rather than a description (spec §2: "re-locking eases
@@ -2265,7 +2343,11 @@ export class ComposerRenderer {
       this.paintedAxis.min !== axis.min ||
       this.paintedAxis.max !== axis.max;
     const wordingMoved = previous !== null && previous.noteNameType !== state.noteNameType;
-    return zoneMoved || axisMoved || wordingMoved;
+    const overlayMoved =
+      PRO_HIDE_OUT_OF_ZONE_OVERLAY_WHILE_PLAYING &&
+      previous !== null &&
+      previous.isPlaying !== state.isPlaying;
+    return zoneMoved || axisMoved || wordingMoved || overlayMoved;
   }
 
   /**
@@ -2445,6 +2527,11 @@ export class ComposerRenderer {
    *
    * The lines are the CURRENT LAYER's note colour, because the band is that layer's reach and
    * nothing else's - the same colour its own notes are painted in.
+   *
+   * WHILE THE SONG PLAYS the two dim rects may be skipped and the LINES drawn anyway (see
+   * PRO_HIDE_OUT_OF_ZONE_OVERLAY_WHILE_PLAYING): the band still reads, and the notes outside it are
+   * at full contrast for the one activity that is about watching them. The transition is repainted
+   * by syncProView, which invalidates on an isPlaying flip for exactly this.
    */
   private drawProZone(): void {
     const graphics = this.proZoneGraphics;
@@ -2457,12 +2544,13 @@ export class ComposerRenderer {
     const top = rowForNumber(axis, zone.max) * rowHeight - this.cameraY;
     //the +1 is the bottom row's own height: the band ends at the BOTTOM edge of zone.min's row
     const bottom = (rowForNumber(axis, zone.min) + 1) * rowHeight - this.cameraY;
+    const dimming = !(PRO_HIDE_OUT_OF_ZONE_OVERLAY_WHILE_PLAYING && this.state.isPlaying);
     let dimmed = false;
-    if (top > 0) {
+    if (dimming && top > 0) {
       graphics.rect(0, 0, this.width, Math.min(top, height));
       dimmed = true;
     }
-    if (bottom < height) {
+    if (dimming && bottom < height) {
       const from = Math.max(0, bottom);
       graphics.rect(0, from, this.width, height - from);
       dimmed = true;
@@ -3808,6 +3896,20 @@ export class ComposerRenderer {
     return e.deltaY;
   }
 
+  /**
+   * A SHIFTED wheel's delta, in px. Not wheelDeltaPx: browsers move a shift+wheel's travel onto
+   * `deltaX` and zero out `deltaY` (shift is their own "scroll the other axis" convention — see
+   * composerInput.wheelIsProVerticalScroll), while some keep `deltaY`, so this reads whichever
+   * axis carries it. Page-mode deltas scale by the HEIGHT here, because the axis being scrolled is
+   * the vertical one.
+   */
+  private shiftedWheelDeltaPx(e: WheelEvent): number {
+    const delta = e.deltaY !== 0 ? e.deltaY : e.deltaX;
+    if (e.deltaMode === WheelEvent.DOM_DELTA_LINE) return delta * WHEEL_LINE_PX;
+    if (e.deltaMode === WheelEvent.DOM_DELTA_PAGE) return delta * this.height;
+    return delta;
+  }
+
   private cancelWheelSettle(): void {
     if (!this.wheelSettleTimeout) return;
     clearTimeout(this.wheelSettleTimeout);
@@ -3845,10 +3947,31 @@ export class ComposerRenderer {
    * already unconditional here (a plain wheel over this canvas has never scrolled the document
    * either), so the Compressed View is untouched by this branch in both directions: no zoom, and no
    * page zoom over the canvas that it did not already have.
+   *
+   * ...AND SHIFT + WHEEL IS ITS VERTICAL SCROLL (user, 2026-08-22) — see the branch's own comment
+   * and panProCameraBy for the frame-taking rule it shares with the zoom.
    */
   private handleWheel = (e: WheelEvent) => {
     e.preventDefault();
-    if (this.motion.kind === 'dragging' || e.deltaY === 0) return;
+    if (this.motion.kind === 'dragging') return;
+    //...AND SHIFT + WHEEL SCROLLS IT VERTICALLY (user, 2026-08-22). Decided BEFORE the deltaY===0
+    //return below, which would otherwise eat the gesture whole: browsers deliver a shifted wheel's
+    //travel on deltaX with deltaY zero (see wheelIsProVerticalScroll). Zoom still outranks it —
+    //the decision itself refuses ctrl/meta — and in the Compressed View it answers false, where
+    //the swapped delta then lands on that same return: a shifted wheel there stays the no-op it
+    //has always been.
+    if (
+      wheelIsProVerticalScroll({
+        proView: this.state.proView,
+        shiftKey: e.shiftKey,
+        ctrlKey: e.ctrlKey,
+        metaKey: e.metaKey,
+      })
+    ) {
+      this.panProCameraBy(this.shiftedWheelDeltaPx(e));
+      return;
+    }
+    if (e.deltaY === 0) return;
     if (wheelIsProZoom({ proView: this.state.proView, ctrlKey: e.ctrlKey, metaKey: e.metaKey })) {
       //`offsetY` is the pointer's y inside the canvas ELEMENT, which is the canvas' own coordinate
       //space (autoDensity keeps the CSS box the size this class draws in) - the same space a pixi
@@ -3920,6 +4043,10 @@ export class ComposerRenderer {
    * has to live where the event does.
    */
   private handleStageDown = (e: FederatedPointerEvent) => {
+    //...UNLESS A DURATION HOLD IS RUNNING, where the second finger SCROLLS instead of pinching
+    //(CONTEXT.md: Duration Hold; user revision 2026-08-22). Asked before the pinch, which would
+    //otherwise take the same press.
+    if (this.beginProHoldScroll(e)) return;
     //A SECOND FINGER IS A PINCH, and it is asked FIRST because the guard below is exactly what used
     //to swallow it (spec §7, user revision 2026-08-22).
     if (this.beginProPinch(e)) return;
@@ -3988,6 +4115,11 @@ export class ComposerRenderer {
     const first = this.stagePointer;
     if (!this.state.proView || this.state.isRecordingAudio) return false;
     if (!first || this.proPinch || e.pointerId === first.id) return false;
+    //NEVER WHILE A DURATION HOLD IS RUNNING (CONTEXT.md: Duration Hold). The second finger was taken
+    //by beginProHoldScroll before this was asked; this is the THIRD, and it must not be able to
+    //start a pinch against the finger holding the popover open - which would settle that hold's
+    //press into a gesture it can no longer be.
+    if (this.proPressConsumed || this.proHoldScroll) return false;
     first.moved = true;
     this.cancelProLongPress();
     const motion = this.motion;
@@ -4035,8 +4167,73 @@ export class ComposerRenderer {
   private endProPinch(): void {
     this.proPinch = null;
     this.stagePointer = null;
-    this.proPressConsumed = false;
+    //a no-op in practice - a pinch cannot begin while a hold is running, the second finger scrolls
+    //instead (beginProHoldScroll) - and stated through the one exit so the flag has a single owner
+    this.endProHold();
     this.cancelProLongPress();
+  }
+
+  /**
+   * A SECOND FINGER LANDING DURING A DURATION HOLD TAKES THE SCROLL (see proHoldScroll).
+   *
+   * @returns whether this press was taken as one, in which case handleStageDown does nothing else
+   * with it - the hold's own finger keeps the stage record, its origin, and the popover.
+   */
+  private beginProHoldScroll(e: FederatedPointerEvent): boolean {
+    const first = this.stagePointer;
+    if (!this.state.proView || this.state.isRecordingAudio) return false;
+    if (!this.proPressConsumed || !first || this.proHoldScroll) return false;
+    if (e.pointerId === first.id) return false;
+    this.proHoldScroll = { id: e.pointerId, x: e.globalX, anchorPosition: this.scrollPosition };
+    return true;
+  }
+
+  /**
+   * ONE FRAME OF THAT SCROLL: handleStageSlide's own arithmetic, over this finger's record.
+   *
+   * The same offset-from-the-anchor rule, the same re-anchor at either end of the song, the same
+   * quantiser, and the same "publish the FLOOR, once per column crossed" - which is the point of the
+   * whole gesture: every crossing reaches Composer.svelte as a selectColumn, and a running Duration
+   * Hold turns each one into a column of span (CONTEXT.md: Duration Hold).
+   *
+   * What it deliberately does NOT do is record Flick samples or touch `moved`: this finger's release
+   * settles the canvas and can never Coast, tap or edit.
+   */
+  private slideProHoldScroll(e: FederatedPointerEvent): void {
+    const scroll = this.proHoldScroll;
+    if (!scroll) return;
+    const lastColumn = this.state.columns.length - 1;
+    const raw = scroll.anchorPosition + (scroll.x - e.globalX) / this.columnSize.width;
+    const clamped = clamp(raw, 0, lastColumn);
+    if (clamped !== raw) {
+      scroll.x = e.globalX;
+      scroll.anchorPosition = clamped;
+    }
+    const position = this.snapManualPosition(clamped);
+    const motion = this.motion;
+    if (motion.kind === 'dragging' && motion.surface === 'stage') motion.position = position;
+    else this.enterMotion({ kind: 'dragging', surface: 'stage', position });
+    const column = Math.floor(position);
+    if (column !== this.state.selected) this.callbacks.selectColumn(column, true);
+  }
+
+  /** That finger left: the canvas settles where it got to, exactly as a one-finger drag's release does. */
+  private endProHoldScroll(): void {
+    if (!this.proHoldScroll) return;
+    this.proHoldScroll = null;
+    //no release record, so no Flick: a scroll made with the other hand still on a popover is not a throw
+    this.settleStageDrag();
+  }
+
+  /**
+   * THE DURATION HOLD IS OVER (CONTEXT.md: Duration Hold), told once to whoever took it. Every path
+   * that ends the press this canvas consumed goes through here rather than clearing the flag itself,
+   * which is what makes "exactly once per taken hold" true of a release, a cancel and a blur alike.
+   */
+  private endProHold(): void {
+    if (!this.proPressConsumed) return;
+    this.proPressConsumed = false;
+    this.callbacks.onProCellLongPressEnd();
   }
 
   /** Drop any pending long press. Every path that ends or invalidates a press calls this. */
@@ -4085,6 +4282,11 @@ export class ComposerRenderer {
     //A PINCH OWNS BOTH FINGERS' MOVES, and it is asked before the id guard below - which would drop
     //the second finger's stream as "a pointer that is not holding the drag"
     if (this.proPinch) return this.slideProPinch(e);
+    //...and so does a DURATION HOLD'S SECOND FINGER, for the same reason: the id guard below knows
+    //only about the finger holding the popover open (see proHoldScroll)
+    if (this.proHoldScroll && e.pointerId === this.proHoldScroll.id) {
+      return this.slideProHoldScroll(e);
+    }
     const pointer = this.stagePointer;
     //a move from a pointer that is not the one holding the drag would be measured against an anchor
     //it never pressed at - see stagePointer's `id`
@@ -4212,6 +4414,20 @@ export class ComposerRenderer {
     //which would drop the second finger's release and leave the pinch running against a hand that
     //is no longer there
     if (this.proPinch) return this.endProPinch();
+    //A DURATION HOLD'S SECOND FINGER LEAVING ends its scroll and NOTHING ELSE: the hold, its press
+    //record and the popover are the other finger's, and they stay (CONTEXT.md: Duration Hold)
+    if (this.proHoldScroll && e.pointerId === this.proHoldScroll.id) {
+      return this.endProHoldScroll();
+    }
+    //...and the HOLD'S OWN finger leaving while that scroll is still running ends the hold and
+    //nothing else: the canvas goes on following the finger that is still down, so settling here
+    //would round the scroll out from under it.
+    if (this.proHoldScroll && this.stagePointer && e.pointerId === this.stagePointer.id) {
+      this.stagePointer = null;
+      this.cancelProLongPress();
+      this.endProHold();
+      return;
+    }
     //a release from a pointer that never owned the press is not this gesture ending - see
     //stagePointer's `id`. It must not settle the drag under the finger still holding it, and it must
     //not take the click path below, which SOUNDS the column it lands on.
@@ -4223,7 +4439,7 @@ export class ComposerRenderer {
     this.stagePointer = null;
     this.cancelProLongPress();
     const consumed = this.proPressConsumed;
-    this.proPressConsumed = false;
+    this.endProHold();
     const motion = this.motion;
     //WHAT THIS RELEASE MEANS, in one pure decision shared by both views - see stageReleaseIntent for
     //each outcome and for why the Compressed View asks nothing of the two Pro View flags.
@@ -4312,6 +4528,31 @@ export class ComposerRenderer {
       width: this.columnSize.width,
       height: rowHeight,
     };
+  }
+
+  /**
+   * ONE VISIBLE COLUMN'S WIDTH IN PX, for the surfaces OUTSIDE this canvas that have to measure a
+   * gesture in columns (CONTEXT.md: Duration Hold - "one column per visible column-width of pointer
+   * travel"). The composer keyboard's own hold is dragged in the canvas' columns rather than in
+   * fractions of the key that was pressed, so Composer.svelte asks for this at the instant a hold
+   * opens; it is `nearestEven(width / columnsPerCanvas)` and moves only with a resize or a
+   * columnsPerCanvas change, so it is read fresh per hold rather than pushed on a channel.
+   */
+  visibleColumnWidth(): number {
+    return this.columnSize.width;
+  }
+
+  /**
+   * WHERE A CELL IS ON SCREEN, asked by (column, Note Number) instead of by a resolved tap - the
+   * anchor for a duration popover opened from a PHYSICAL note key, which has no pointer and no
+   * on-screen key to measure when the Pro View's keyboard sheet is down.
+   *
+   * The Pro View only: the Compressed View's rows are the Song Grid's and this class draws no cell
+   * for a Note Number there, so a caller gets null and falls back to its own anchor.
+   */
+  proCellScreenRectAt(column: number, number: number): ScreenRect | null {
+    if (!this.state.proView) return null;
+    return this.proCellScreenRect({ column, number });
   }
 
   /**
@@ -4643,6 +4884,22 @@ export class ComposerRenderer {
       this.endProPinch();
       return;
     }
+    //...and the same kind of exception WHILE A DURATION HOLD'S SECOND FINGER IS SCROLLING, where
+    //two fingers are down and the owner test below would answer for neither of them:
+    // - THAT finger's release ends its scroll, and only it;
+    // - ANY OTHER named pointer's release is the hold's own finger leaving (handleStageUp has
+    //   usually ended it already, and both calls here are idempotent), which must NOT settle the
+    //   drag the remaining finger is still driving - the general teardown below would.
+    //A `blur` names nobody, falls through, and ends everything, which is what it means.
+    if (this.proHoldScroll && id !== null) {
+      if (id === this.proHoldScroll.id) this.endProHoldScroll();
+      else {
+        this.stagePointer = null;
+        this.cancelProLongPress();
+        this.endProHold();
+      }
+      return;
+    }
     const owner = this.stagePointer?.id ?? this.timelinePointer;
     if (id !== null && owner !== null && id !== owner) return;
     //captured before the nulls for the reason handleStageUp captures: the Flick decision reads
@@ -4658,7 +4915,10 @@ export class ComposerRenderer {
     this.timelinePointer = null;
     //a gesture nothing else ended must not leave a hold counting down onto a canvas no finger is on
     this.cancelProLongPress();
-    this.proPressConsumed = false;
+    //...nor a Duration Hold running against a hand the page has forgotten. The scroll record goes
+    //with it, unsettled: the branch below settles the drag itself, once, for whichever finger had it
+    this.proHoldScroll = null;
+    this.endProHold();
     const motion = this.motion;
     if (motion.kind !== 'dragging') return;
     if (motion.surface === 'stage') this.settleStageDrag(stageRelease);
@@ -5390,6 +5650,10 @@ export class ComposerRenderer {
     this.cameraEase = null;
     //a hold counting down into a destroyed renderer would resolve a cell on a canvas that is gone
     this.cancelProLongPress();
+    //...and a Duration Hold this canvas opened cannot outlive the canvas: nothing would ever report
+    //its release, so the popover would keep treating a finger that is gone as still down
+    this.proHoldScroll = null;
+    this.endProHold();
     //the labels are children of a stage container and go with the Application below; the
     //label-only Instruments are this class's own and are not
     this.proLabelInstruments.clear();

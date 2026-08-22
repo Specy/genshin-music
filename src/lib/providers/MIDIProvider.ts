@@ -164,11 +164,18 @@ export class MIDIListener {
       output.send(event);
     });
   };
-  broadcastNoteClick = (note: number, duration = 500) => {
+  /**
+   * The two halves of a REAL key gesture, for surfaces that know when the finger lands and when it
+   * lifts (the zen keyboard driving another app over wired MIDI). They replaced a single
+   * fire-and-forget "click" that sent note-on and a note-off on a fixed 500ms timer — a receiver
+   * using this app as a controller never saw how long the key was actually held, which is exactly
+   * what a sustain-recording composer on the other end needs to see (user, 2026-08-22).
+   */
+  broadcastNoteDown = (note: number) => {
     this.broadcastEvent([0x90, note, 127]);
-    setTimeout(() => {
-      this.broadcastEvent([0x80, note, 0]);
-    }, duration);
+  };
+  broadcastNoteUp = (note: number) => {
+    this.broadcastEvent([0x80, note, 0]);
   };
   handleEvent = (e: WebMidi.MIDIMessageEvent) => {
     const { data } = e;

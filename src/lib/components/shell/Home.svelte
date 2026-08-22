@@ -64,12 +64,6 @@
     homeStore.setState({ canShow: override });
   }
 
-  function handleDontShowKeydown(e: KeyboardEvent) {
-    if (e.key !== 'Enter' && e.key !== ' ') return;
-    e.preventDefault();
-    setDontShowHome(!homeStore.state.canShow);
-  }
-
   async function handleSpecyClick(e: MouseEvent) {
     e.preventDefault();
     const confirmed = await asyncConfirm(t('home:about_to_leave_warning', { to: 'specy.app' }));
@@ -101,7 +95,7 @@
       appScale = storedFontScale;
     }
 
-    breakpoint = window.innerWidth > 900;
+    breakpoint = window.innerWidth > 1000;
     KeyboardProvider.register(
       'Escape',
       () => {
@@ -292,6 +286,21 @@
   >
 {/snippet}
 
+{#snippet faCheckIcon()}
+  <svg
+    stroke="currentColor"
+    fill="currentColor"
+    stroke-width="0"
+    viewBox="0 0 512 512"
+    height="0.7em"
+    width="0.7em"
+    xmlns="http://www.w3.org/2000/svg"
+    ><path
+      d="M173.898 439.404l-166.4-166.4c-9.997-9.997-9.997-26.206 0-36.204l36.203-36.204c9.997-9.998 26.207-9.998 36.204 0L192 312.69 432.095 72.596c9.997-9.997 26.207-9.997 36.204 0l36.203 36.204c9.997 9.997 9.997 26.206 0 36.204l-294.4 294.401c-9.998 9.997-26.207 9.997-36.204-.001z"
+    /></svg
+  >
+{/snippet}
+
 {#snippet bsMusicPlayerFillIcon()}
   <svg
     stroke="currentColor"
@@ -475,12 +484,6 @@
       )}
       {@render pageRedirect('theme', '/theme', currentPage === '/theme', t('home:themes_name'))}
       {@render pageRedirect(
-        'blog',
-        '/blog',
-        currentPage.startsWith('/blog'),
-        t('home:blog_and_guides_name')
-      )}
-      {@render pageRedirect(
         'keybinds',
         '/keybinds',
         currentPage === '/keybinds',
@@ -493,6 +496,12 @@
         '/changelog',
         currentPage === '/changelog',
         t('home:changelog_name')
+      )}
+      {@render pageRedirect(
+        'blog',
+        '/blog',
+        currentPage.startsWith('/blog'),
+        t('home:blog_and_guides_name')
       )}
 
       <a href="https://specy.app" target="_blank" onclick={handleSpecyClick}>
@@ -529,23 +538,24 @@
       {t('home:rights', { company_name: game.display.company.shortName })}
     </span>
     <Row gap="0.5rem">
-      <div
+      <button
         class="home-dont-show-again row-centered"
         onclick={() => setDontShowHome(!homeStore.state.canShow)}
-        role="button"
-        tabindex="0"
-        onkeydown={handleDontShowKeydown}
       >
-        <input
-          type="checkbox"
-          checked={!homeStore.state.canShow}
-          readonly
-          id="hide-on-open-checkbox"
-        />
-        <label for="hide-on-open-checkbox">
+        <span
+          class={[
+            'home-dont-show-again-box',
+            !homeStore.state.canShow && 'home-dont-show-again-box-checked',
+          ]}
+        >
+          {#if !homeStore.state.canShow}
+            {@render faCheckIcon()}
+          {/if}
+        </span>
+        <span>
           {t('home:hide_on_open')}
-        </label>
-      </div>
+        </span>
+      </button>
       <LanguageSelector />
     </Row>
   </div>
@@ -555,3 +565,48 @@
     </div>
   {/if}
 </div>
+
+<style>
+  /* The hide-on-open control is a real <button> whose leading square only
+     *looks* like a checkbox (a readonly <input type="checkbox"> read as
+     interactive but wasn't). The surface itself stays a plain subtle button
+     matching the LanguageSelector sitting next to it - only the square goes
+     accent. The rest of Home's CSS lives in the global App.css. */
+  .home-dont-show-again {
+    gap: 0.4rem;
+    padding: 0.5rem;
+    border: none;
+    border-radius: 0.4rem;
+    background-color: var(--primary);
+    color: var(--primary-text);
+    /* buttons don't inherit typography from .home-bottom on their own */
+    font-family: inherit;
+    cursor: pointer;
+    font-size: 0.7rem;
+    transition: filter 0.1s linear;
+  }
+
+  .home-dont-show-again:hover {
+    filter: brightness(1.1);
+  }
+
+  .home-dont-show-again-box {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 1rem;
+    height: 1rem;
+    border-radius: 0.25rem;
+    /* unchecked: an empty outline, dimmed so it reads as "off" */
+    border: solid 2px currentColor;
+    opacity: 0.6;
+  }
+
+  .home-dont-show-again-box-checked {
+    background-color: var(--accent);
+    border-color: var(--accent);
+    color: var(--accent-text);
+    opacity: 1;
+  }
+</style>

@@ -1,5 +1,6 @@
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest'
 import {KeyboardProvider} from '../src/lib/providers/KeyboardProvider'
+import {createShortcutListener} from '../src/lib/stores/KeybindsStore.svelte'
 
 function dispatchKey(code: string, type: 'keydown' | 'keyup' = 'keydown', init: KeyboardEventInit = {}) {
     window.dispatchEvent(new KeyboardEvent(type, {code, bubbles: true, ...init}))
@@ -140,5 +141,124 @@ describe('KeyboardProvider', () => {
     it('getTextOfCode falls back to DEFAULT_ENG_KEYBOARD_MAP when no navigator layout map resolved', () => {
         expect(KeyboardProvider.getTextOfCode('KeyA')).toBe('A')
         expect(KeyboardProvider.getTextOfCode('Digit0')).toBe('0')
+    })
+})
+
+/**
+ * THE COMBO COMPOSER'S TRANSPARENCY RULE (user revision 2026-08-22) - KeybindsStore's
+ * KeyComboOptions, and the reason it exists: a composer shortcut is matched against the WHOLE set of
+ * keys currently down, and the composer's note keys ARE the letter row that carries a/d. A note key
+ * held (a sustain being performed, or a Duration Hold editing a span - CONTEXT.md) used to poison
+ * every combo for as long as it was down.
+ *
+ * Driven through the real KeyboardProvider rather than a fake, because the composer is what these
+ * two listeners share: one of them is what puts the key in the set at all.
+ */
+describe('shortcut combos and held note keys', () => {
+    beforeEach(() => {
+        KeyboardProvider.create()
+    })
+    afterEach(() => {
+        KeyboardProvider.destroy()
+        document.body.innerHTML = ''
+    })
+
+    /** The shortcut names a listener saw, in order - the whole of what these rows assert. */
+    function listenFor<T extends 'composer' | 'player'>(
+        page: T,
+        id: string,
+        options?: {transparentCodes?: () => ReadonlySet<string>}
+    ) {
+        const fired: string[] = []
+        const dispose = createShortcutListener(
+            page,
+            id,
+            ({shortcut}) => fired.push((shortcut as {name: string}).name),
+            options
+        )
+        return {fired, dispose}
+    }
+
+    it('a HELD note key steps aside, so the column shortcuts still fire under it', () => {
+        //KeyF is a note key on both games' default instruments; here it stands for "currently
+        //holding a note", which is what the composer's own registry answers
+        const held = new Set(['KeyF'])
+        const {fired, dispose} = listenFor('composer', 'combo_transparent', {
+            transparentCodes: () => held,
+        })
+        try {
+            dispatchKey('KeyF')
+            dispatchKey('KeyD')
+            //...and again after that one is let go: a shortcut key held down is still part of the
+            //next combo, transparency being about keys that are HOLDING A NOTE and nothing else
+            dispatchKey('KeyD', 'keyup')
+            dispatchKey('KeyA')
+            expect(fired).toEqual(['next_column', 'previous_column'])
+        } finally {
+            dispose()
+        }
+    })
+
+    it('...and without the option the same held key blocks them, exactly as before', () => {
+        const {fired, dispose} = listenFor('composer', 'combo_opaque')
+        try {
+            dispatchKey('KeyF')
+            dispatchKey('KeyD')
+            expect(fired).toEqual([])
+        } finally {
+            dispose()
+        }
+    })
+
+    it('the key being PRESSED is never transparent, whatever the set says', () => {
+        //the composer's own note keys are the column keys too: `d` pressed on its own is
+        //next_column, and it is only a key held from BEFORE the press that steps aside
+        const held = new Set(['KeyD'])
+        const {fired, dispose} = listenFor('composer', 'combo_pressed_key', {
+            transparentCodes: () => held,
+        })
+        try {
+            dispatchKey('KeyD')
+            expect(fired).toEqual(['next_column'])
+        } finally {
+            dispose()
+        }
+    })
+
+    it('leaves real combos alone: a held note key does not break Shift+S', () => {
+        const held = new Set(['KeyF'])
+        const {fired, dispose} = listenFor('player', 'combo_shift', {
+            transparentCodes: () => held,
+        })
+        try {
+            dispatchKey('KeyF')
+            dispatchKey('ShiftLeft')
+            dispatchKey('KeyS')
+            //the shift combo resolves under the held note key - which is also what keeps
+            //"Shift+note is note entry" true in the composer: that combo is still matched whole
+            expect(fired).toEqual(['stop'])
+        } finally {
+            dispose()
+        }
+    })
+
+    it('a key that stops holding a note comes back into the combos with no second keydown', () => {
+        const held = new Set(['KeyF'])
+        const {fired, dispose} = listenFor('composer', 'combo_released_hold', {
+            transparentCodes: () => held,
+        })
+        try {
+            dispatchKey('KeyF')
+            dispatchKey('KeyD')
+            expect(fired).toEqual(['next_column'])
+            //the note is let go while the KEY is still physically down (a covered button, a layer
+            //change, the popover's own release path): `currentKeybinds` never lost it, so the
+            //combo is the full set again the moment the registry stops naming it
+            held.delete('KeyF')
+            dispatchKey('KeyA')
+            expect(fired).toEqual(['next_column'])
+        } finally {
+            dispose()
+        }
     })
 })

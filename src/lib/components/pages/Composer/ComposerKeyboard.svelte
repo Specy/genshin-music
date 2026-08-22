@@ -65,6 +65,13 @@
       handleNoteRelease: (note: ObservableNote, pointerId: number) => void;
       handleNoteLongPress: (note: ObservableNote, anchor: HTMLElement) => void;
       handleNoteDrag: (note: ObservableNote, deltaX: number) => void;
+      /**
+       * A key publishing its own element as it mounts (null as it goes). It is not a gesture at
+       * all: it is what lets a hold started on the PHYSICAL keyboard - which has no element of its
+       * own - anchor the duration popover to the key on screen that wears the same letter (see
+       * Composer.svelte's physicalKeyAnchor).
+       */
+      registerNoteElement: (note: ObservableNote, element: HTMLElement | null) => void;
       startRecordingAudio: (override?: boolean) => void;
       selectColumnFromDirection: (direction: number) => void;
       handleTempoChanger: (tempoChanger: (typeof game.composer.tempoChangers)[number]) => void;
@@ -182,6 +189,7 @@
               releaseAction={functions.handleNoteRelease}
               longPressAction={functions.handleNoteLongPress}
               dragAction={functions.handleNoteDrag}
+              registerElement={functions.registerNoteElement}
               held={data.heldButtons.has(i)}
             />
           {/if}

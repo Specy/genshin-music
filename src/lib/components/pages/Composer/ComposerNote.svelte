@@ -39,6 +39,7 @@
     releaseAction,
     longPressAction,
     dragAction,
+    registerElement,
     held = false,
     noteText,
     noteImage,
@@ -50,10 +51,16 @@
     clickAction: (data: ObservableNote, pointerId: number) => void;
     /** Pointer released/left the button — completes the press gesture (short press). */
     releaseAction?: (data: ObservableNote, pointerId: number) => void;
-    /** Held ~450ms without release — opens the duration popover for this note, anchored to the button element (live element so the popover can follow resizes). */
+    /** Held COMPOSER_LONG_PRESS_MS without release — opens the duration popover for this note, anchored to the button element (live element so the popover can follow resizes). */
     longPressAction?: (data: ObservableNote, anchor: HTMLElement) => void;
     /** Pointer moved while the long press is still held — signed horizontal travel in px from where the press began. */
     dragAction?: (data: ObservableNote, deltaX: number) => void;
+    /**
+     * This key's element, published on mount and withdrawn (null) on unmount — NOT a gesture. A hold
+     * started on the physical keyboard has no element of its own to anchor its duration popover to,
+     * so it borrows the on-screen key wearing the same letter (Composer.svelte's physicalKeyAnchor).
+     */
+    registerElement?: (data: ObservableNote, element: HTMLElement | null) => void;
     /** The current column is covered by this button's note span on the current layer. */
     held?: boolean;
     noteText: string;
@@ -91,6 +98,17 @@
     longPressFired = false;
     releaseAction?.(data, pointerId);
   }
+
+  //THE KEY PUBLISHES ITSELF (see registerElement): re-runs if the button element or the note it
+  //stands for is replaced, and the cleanup withdraws the pair it registered rather than "this
+  //note's entry", so a re-run cannot delete the registration it has just made.
+  $effect(() => {
+    const element = buttonElement;
+    const note = data;
+    if (!registerElement || !element) return;
+    registerElement(note, element);
+    return () => registerElement(note, null);
+  });
 
   //A held note outlives the pointer events of a button that can be destroyed under it: the
   //keyboard is swapped out wholesale while audio-recording, and re-created when the layer's
