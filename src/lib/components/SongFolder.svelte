@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { Snippet } from 'svelte';
+  import { slide } from 'svelte/transition';
   import cloneDeep from 'lodash.clonedeep';
   import { Folder, type FolderFilterType } from '$core/Folder';
   import { APP_NAME, FOLDER_FILTER_TYPES } from '$core/legacyConfig';
@@ -12,12 +13,10 @@
   import FloatingDropdown from './utility/FloatingDropdown.svelte';
   import FloatingDropdownRow from './utility/FloatingDropdownRow.svelte';
   import FloatingDropdownText from './utility/FloatingDropdownText.svelte';
-  import Column from './layout/Column.svelte';
   import FaEllipsisH from './icons/FaEllipsisH.svelte';
 
-  // CSS (.folder/.folder-header/.folder-header-button/.folder-name/
-  // .folder-overflow* etc.) lives in global App.css; no component-local
-  // <style> is needed here.
+  // CSS (.folder/.folder-header/.folder-header-button/.folder-name etc.)
+  // lives in global App.css; no component-local <style> is needed here.
   //
   // FOLDER_FILTER_TYPES/APP_NAME come from `$core/legacyConfig` even though
   // this is UI code: both are plain literals identical for both games
@@ -52,26 +51,6 @@
   let expanded = $derived(defaultOpen);
   let isRenaming = $state(false);
   let folderName = $derived(data.name);
-  let height = $state(0);
-
-  // A ResizeObserver and NOT a remeasure keyed on `data.songs`/`expanded`:
-  // the song menu panel is `display:none` while closed (App.css
-  // `.menu-panel`), so a song added while it was closed measured 0 and the
-  // folder never remeasured when the menu opened again - the songs then
-  // overflowed the folder. The observer fires on the display:none -> visible
-  // transition (0 -> real size), which is exactly the case data-keyed
-  // remeasuring misses, and covers content growth (new songs, a rename
-  // wrapping to two lines) too. It also fires once on observe(), so the
-  // initial measure is covered. Attachments are client-only, so there is
-  // nothing to guard for SSR.
-  function measureContentHeight(node: HTMLElement) {
-    const observer = new ResizeObserver(() => {
-      // +100 of slack so the max-height animation never clips the content
-      height = node.getBoundingClientRect().height + 100;
-    });
-    observer.observe(node);
-    return () => observer.disconnect();
-  }
 
   const wrapperStyle = $derived(`background-color:${backgroundColor};color:${color}`);
 
@@ -121,13 +100,14 @@
   }
 </script>
 
-<div class={['folder', expanded && 'folder-expanded']} style={wrapperStyle}>
+<div class="folder" style={wrapperStyle}>
   <div class="folder-header">
     <div
       onclick={toggleExpanded}
       onkeydown={handleHeaderKeydown}
       role="button"
       tabindex="0"
+      aria-expanded={expanded}
       class="folder-header-button"
       style="color:{headerColor}"
     >
@@ -234,9 +214,21 @@
     {/if}
   </div>
 
-  <Column class="folder-overflow" style="max-height:{expanded ? height + 'px' : '0'}">
-    <div class="column folder-overflow-expandible" {@attach measureContentHeight}>
+  <!-- {#if}+slide, NOT an animated max-height with a measured content
+       height: the menu panels are display:none while closed (App.css
+       `.menu-panel`), so any height measured or cached there reads 0 and
+       goes stale - past measured-height versions (effect-, timeout- and
+       ResizeObserver-based) all ended up painting folder contents over the
+       folders below because of exactly that. `slide` measures at toggle
+       time, when the folder is necessarily visible, and applies
+       overflow:hidden only while the transition runs - so once open there
+       is no clipping ancestor and the song rows' absolutely positioned
+       dropdowns escape the folder without the old overflow-flipping
+       keyframe hack. Collapsed content leaves the DOM entirely: it can't
+       paint over siblings or take keyboard focus. -->
+  {#if expanded}
+    <div class="column" transition:slide={{ duration: 200 }}>
       {@render children?.()}
     </div>
-  </Column>
+  {/if}
 </div>

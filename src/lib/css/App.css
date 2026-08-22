@@ -928,42 +928,22 @@ a {
   border-radius: 0.2rem;
 }
 
+/* `flex-direction` without a `display:flex` is inert here on purpose: the
+   element is display:block (its children stack anyway), and the rule is kept
+   only because the legacy app shipped it. The open/close animation itself
+   lives in SongFolder.svelte as an {#if}+slide transition - there is
+   deliberately NO transition/animation CSS on the folder body, since a CSS
+   transition on it would fight slide's per-frame inline styles. */
 .folder-content {
   padding: 0.5rem;
   padding-top: 0;
   flex-direction: column;
-  opacity: 1;
-  transition: all 0.2s;
 }
 
 .folder-songs-wrapper {
   display: grid;
   grid-template-columns: 1fr;
   gap: 0.3rem;
-}
-
-.folder-overflow {
-  overflow: hidden;
-  transition: all 0.2s;
-}
-
-.folder-overflow-expandible {
-  transition: all 0.2s;
-}
-
-.folder-expanded .folder-overflow {
-  animation: show-folder 0.2s;
-  animation-fill-mode: forwards;
-}
-
-/* Super hacky way to make overflow work */
-@keyframes show-folder {
-  99% {
-    overflow: hidden;
-  }
-  100% {
-    overflow: unset;
-  }
 }
 
 .folder-title {
