@@ -1,3 +1,30 @@
+<script module lang="ts">
+  // App-wide "at most one dropdown open" rule: opening any instance closes the
+  // one that was open before it. Without this each instance only knew its own
+  // `isActive`, so the 3-dots menus of several song rows stayed open together
+  // (clicking another row's toggle is a <button>, which `hasFocusable` below
+  // deliberately exempts from click-outside, so nothing closed the first one).
+  type OpenDropdown = { close: () => void };
+
+  // Plain module variable, not `$state`: nothing renders from it, it only routes
+  // one close call to one instance. Only a click ever writes it, so it stays null
+  // through prerendering.
+  let openDropdown: OpenDropdown | null = null;
+
+  function openExclusively(instance: OpenDropdown) {
+    // Claim the token BEFORE closing the previous instance: that instance's
+    // close() calls releaseIfOpen on itself, which would otherwise clear the
+    // token we just set and leave nothing registered as open.
+    const previous = openDropdown;
+    openDropdown = instance;
+    if (previous && previous !== instance) previous.close();
+  }
+
+  function releaseIfOpen(instance: OpenDropdown) {
+    if (openDropdown === instance) openDropdown = null;
+  }
+</script>
+
 <script lang="ts">
   import type { Component, Snippet } from 'svelte';
   import type { ClassValue } from 'svelte/elements';
@@ -49,20 +76,39 @@
     });
   }
 
+  // Identity for the module-level single-open token; `close` is what another
+  // instance calls when it supersedes this one. Note this ignores
+  // `ignoreClickOutside`: being superseded is not a click-outside, and the
+  // single-open rule wins even mid-rename - the caller's `onClose` still runs,
+  // so its rename state is reset rather than stranded on a closed menu.
+  const instance: OpenDropdown = { close };
+
+  function close() {
+    if (!isActive) return;
+    isActive = false;
+    releaseIfOpen(instance);
+    onClose?.();
+  }
+
   function handleClickOutside(e: MouseEvent) {
     if (ignoreClickOutside) return;
     const clickedOutside = !(ref?.contains(e.target as Node) ?? false);
     if (clickedOutside) {
       if (hasFocusable(e)) return;
-      isActive = false;
-      onClose?.();
+      close();
     }
   }
 
   $effect(() => {
     if (!isActive) return;
     document.addEventListener('click', handleClickOutside);
-    return () => document.removeEventListener('click', handleClickOutside);
+    return () => {
+      document.removeEventListener('click', handleClickOutside);
+      // Also covers destroy-while-open: a token left pointing at a torn-down
+      // instance would have the next `openExclusively` close a dead component.
+      // No `onClose` here - whatever this component is inside is going away.
+      releaseIfOpen(instance);
+    };
   });
 
   $effect(() => {
@@ -80,9 +126,12 @@
   );
 
   function toggle() {
-    const wasActive = isActive;
-    isActive = !isActive;
-    if (wasActive && onClose) onClose();
+    if (isActive) {
+      close();
+      return;
+    }
+    isActive = true;
+    openExclusively(instance);
   }
 </script>
 
