@@ -28,6 +28,18 @@ export default class AudioRecorder {
   }
 
   delete() {
+    // Disconnecting the MediaStreamAudioDestinationNode does not stop the MediaRecorder which is
+    // consuming its stream. During a context rebuild there is deliberately no blob to preserve,
+    // but the native recorder and its tracks still need a terminal transition before references
+    // are dropped or they can remain alive recording silence.
+    if (this.recorder.state !== 'inactive') {
+      try {
+        this.recorder.stop();
+      } catch {
+        // Teardown is idempotent and best-effort: another stop may already be queued.
+      }
+    }
+    this.node?.stream.getTracks().forEach((track) => track.stop());
     this.node?.disconnect();
     this.node = null;
   }

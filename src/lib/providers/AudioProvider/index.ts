@@ -148,7 +148,9 @@ export class AudioProviderClass {
   private recovery: Promise<void> | null = null;
   /** Tail of the ensureRunning chain - see there for why the ladder may not run concurrently. */
   private ensureQueue: Promise<void> | null = null;
-  private stateListenerAttached = false;
+  /** The state listener follows the published context and is removed before an old one closes. */
+  private observedContext: AudioContext | null = null;
+  private disposeContextState: (() => void) | null = null;
   private disposeLifecycle: (() => void) | null = null;
   private disarmGesture: (() => void) | null = null;
   /**
@@ -178,33 +180,47 @@ export class AudioProviderClass {
     this.timings = { ...DEFAULT_TIMINGS, ...timings };
   }
 
-  private loadReverb = (): Promise<void> => {
-    this.reverbLoading = new Promise((resolve) => {
-      fetch(`${base}/assets/audio/reverb4.wav`)
-        .then((r) => r.arrayBuffer())
-        .then((b) => {
-          if (this.audioContext) {
-            this.audioContext.decodeAudioData(b, (impulse_response) => {
-              const convolver = this.audioContext!.createConvolver();
-              const gainNode = this.audioContext!.createGain();
-              gainNode.gain.value = 2.5;
-              convolver.buffer = impulse_response;
-              convolver.connect(gainNode);
-              gainNode.connect(this.audioContext!.destination);
-              this.reverbNode = convolver;
-              this.reverbVolumeNode = gainNode;
-              this.reverbLoading = null;
-              resolve();
-            });
-          }
-        })
-        .catch((e) => {
-          console.error(e);
-          this.reverbLoading = null;
-          resolve();
-        });
-    });
-    return this.reverbLoading;
+  private loadReverb = (context: AudioContext): Promise<void> => {
+    // Capture the context rather than repeatedly reading this.audioContext inside the async
+    // chain. An init-time decode can still be in flight when a rebuild publishes a replacement;
+    // that old completion must not create half of its graph on each context or overwrite the
+    // replacement's reverb nodes.
+    const loading = fetch(`${base}/assets/audio/reverb4.wav`)
+      .then((r) => r.arrayBuffer())
+      // The CALLBACK form decides this, matching the "dont change any of this, safari bug" note
+      // on Instrument.fetchAudioBuffer. The promise-returning overload is the newer half of the
+      // API and the older WebKit this whole file exists for returns undefined from it - so
+      // chaining onto the return value is both how the impulse response silently comes back
+      // undefined and, here, a TypeError on `undefined.catch`.
+      .then(
+        (buffer) =>
+          new Promise<AudioBuffer>((resolve, reject) => {
+            const decoding = context.decodeAudioData(buffer, resolve, reject);
+            // Undefined on exactly those engines. On the ones that DO return a promise it
+            // rejects alongside the error callback, so it needs an observer of its own or the
+            // same failure surfaces a second time as an unhandled rejection.
+            void (decoding as Promise<AudioBuffer> | undefined)?.catch(() => {});
+          })
+      )
+      .then((impulseResponse) => {
+        if (this.audioContext !== context) return;
+        const convolver = context.createConvolver();
+        const gainNode = context.createGain();
+        gainNode.gain.value = 2.5;
+        convolver.buffer = impulseResponse;
+        convolver.connect(gainNode);
+        gainNode.connect(context.destination);
+        this.reverbNode = convolver;
+        this.reverbVolumeNode = gainNode;
+      })
+      .catch((error) => {
+        console.error(error);
+      })
+      .finally(() => {
+        if (this.reverbLoading === loading) this.reverbLoading = null;
+      });
+    this.reverbLoading = loading;
+    return loading;
   };
   getAudioContext = (): AudioContext => {
     if (!this.audioContext) {
@@ -283,8 +299,31 @@ export class AudioProviderClass {
 
     // Before the probe, because the probe cannot see this failure: the clock is advancing.
     if (this.rendererCycleDue) {
-      this.rendererCycleDue = false;
-      if (stateOf(context) === 'running') await this.restartRenderer(context);
+      if (stateOf(context) === 'running') {
+        const restarted = await this.restartRenderer(context);
+        if (!restarted) {
+          // This flag is the ONLY evidence for WebKit's advancing-clock-but-silent failure, so
+          // falling through to the clock probe would launder a failed repair into success: the
+          // clock is advancing, that is the whole point of the failure.
+          //
+          // But this must not simply throw either. The commonest way to get here is a resume()
+          // that never settles (WebKit 281566) on the very path the cycle is armed for - which
+          // ALSO leaves the context suspended, so the next walk skips this block on the state
+          // gate and can never reach the rebuild below. That is a livelock in which the one
+          // repair capable of fixing the context is unreachable precisely because the context
+          // is broken. Escalate straight to it instead.
+          const rebuilt = await this.rebuildContext();
+          if (!rebuilt) {
+            this.clockSuspect = true;
+            throw new Error('Audio renderer could not be restarted');
+          }
+          // The replacement has never been backgrounded, so it owes no cycle.
+          this.rendererCycleDue = false;
+          if (attempt < 1) return this.walkLadder(attempt + 1);
+          context = rebuilt;
+        }
+        this.rendererCycleDue = false;
+      }
     }
 
     if (this.clockSuspect) {
@@ -315,9 +354,9 @@ export class AudioProviderClass {
     return context;
   };
   waitReverb = async (): Promise<void> => {
-    if (this.reverbLoading) {
-      await this.reverbLoading;
-    }
+    // A rebuild can replace the load being awaited. Continue until the CURRENT context's load,
+    // rather than merely the promise that happened to be current on entry, has finished.
+    while (this.reverbLoading) await this.reverbLoading;
   };
   init = async () => {
     this.audioContext =
@@ -330,7 +369,7 @@ export class AudioProviderClass {
     // free-play surfaces below never call ensureRunning to unlock it.
     this.armGestureRecovery();
     this.recorder = new AudioRecorder(this.audioContext);
-    await this.loadReverb();
+    await this.loadReverb(this.audioContext);
     this.setAudioDestinations();
     return this;
   };
@@ -340,11 +379,17 @@ export class AudioProviderClass {
    * invisible to the app and why nothing ever retried once a play request had failed.
    */
   observeContext = (context: AudioContext) => {
-    if (this.stateListenerAttached || typeof context.addEventListener !== 'function') return;
-    this.stateListenerAttached = true;
+    if (this.observedContext === context) return;
+    this.disposeContextState?.();
+    this.disposeContextState = null;
+    this.observedContext = context;
     this.contextState = stateOf(context);
     this.hasBeenRunning ||= this.contextState === 'running';
-    context.addEventListener('statechange', () => {
+    if (typeof context.addEventListener !== 'function') return;
+    const onStateChange = () => {
+      // A close() that timed out can emit its final event after a replacement was published.
+      // Never let that retired context overwrite the state observed for the live one.
+      if (this.audioContext !== context) return;
       const previous = this.contextState;
       this.contextState = stateOf(context);
       this.hasBeenRunning ||= this.contextState === 'running';
@@ -354,7 +399,12 @@ export class AudioProviderClass {
       if (previous === 'interrupted' || this.contextState === 'interrupted') {
         this.clockSuspect = true;
       }
-    });
+    };
+    context.addEventListener('statechange', onStateChange);
+    this.disposeContextState = () => {
+      context.removeEventListener?.('statechange', onStateChange);
+      if (this.observedContext === context) this.observedContext = null;
+    };
   };
 
   /**
@@ -384,7 +434,12 @@ export class AudioProviderClass {
     };
     // A bfcache restore is by definition a return from hidden, and does not always come with a
     // visibilitychange pair, so it arms the cycle itself.
-    const onPageShow = () => {
+    const onPageShow = (event: PageTransitionEvent) => {
+      // `pageshow` also fires for an ordinary initial navigation. Only a persisted document is
+      // returning from the back-forward cache without the hidden visibility event that normally
+      // arms the cycle; treating first load as a restore makes the first iOS gesture pay an
+      // unnecessary resume -> suspend -> resume sequence.
+      if (!event.persisted) return;
       this.rendererCycleDue = true;
       onForeground();
     };
@@ -466,7 +521,10 @@ export class AudioProviderClass {
     // Stuck (web-audio-api#2585): the page is in the foreground and the interruption was never
     // lifted. suspend() is documented to resolve even while one is active, and the pair is the
     // only lever anyone has found that moves a wedged context (WebKit 263627).
-    await this.restartRenderer(context);
+    const restarted = await this.restartRenderer(context);
+    // If this interruption came from a background transition, the successful pair just paid the
+    // renderer-cycle debt too. Leaving it armed would immediately suspend/resume a second time.
+    if (restarted) this.rendererCycleDue = false;
   };
 
   private waitForStateChange = (context: AudioContext): Promise<void> => {
@@ -490,15 +548,19 @@ export class AudioProviderClass {
 
   /**
    * The suspend()/resume() pair that is the only known way back from a context whose renderer
-   * has stopped while its state still reads `running` (WebKit 263627). Never throws: it is a
-   * repair attempt, and whether it worked is answered by the clock, not by these promises.
+   * has stopped while its state still reads `running` (WebKit 263627). Returns whether the whole
+   * pair completed and left the context running. Most callers can still judge the result by the
+   * clock; the post-background renderer-cycle path cannot, because its failure mode has a live
+   * clock and silent output, so it must retain this explicit success signal.
    */
-  private restartRenderer = async (context: AudioContext) => {
+  private restartRenderer = async (context: AudioContext): Promise<boolean> => {
     try {
       await withTimeout(context.suspend(), this.timings.callTimeoutMs, 'suspend');
       await withTimeout(context.resume(), this.timings.callTimeoutMs, 'resume');
+      return stateOf(context) === 'running';
     } catch (error) {
       console.warn('Audio renderer restart failed', error);
+      return false;
     }
   };
 
@@ -562,6 +624,22 @@ export class AudioProviderClass {
     if (!previous || typeof window === 'undefined') return null;
     const now = Date.now();
     if (this.lastRebuildAt && now - this.lastRebuildAt < REBUILD_COOLDOWN_MS) return null;
+
+    // Acquire a replacement BEFORE changing any live state. Construction can fail transiently
+    // on iOS (especially while a wedged previous context still owns the hardware). The old code
+    // discovered that only after detaching every instrument, deleting the recorder and closing
+    // the old context, then restored a pointer to an object whose whole graph was gone and barred
+    // another attempt for the cooldown. A failed acquisition must be a true no-op.
+    let context: AudioContext;
+    try {
+      context =
+        // @ts-expect-error window.webkitAudioContext (legacy Safari prefix) not in Window type definitions
+        new (window.AudioContext || window.webkitAudioContext)();
+    } catch (error) {
+      console.warn('Could not build a replacement audio context', error);
+      return null;
+    }
+    // Rate-limit completed acquisitions, not failed attempts which changed nothing.
     this.lastRebuildAt = now;
 
     // Read the graph BEFORE tearing it down: after re-homing, an instrument's endNode is a
@@ -593,37 +671,35 @@ export class AudioProviderClass {
     this.recorder?.delete();
     this.recorder = null;
     this.isRecording = false;
-    // Best effort: a context that has stopped rendering is exactly the kind that can refuse to
-    // close, and holding up the replacement to find out helps nobody.
+
+    // The old sample pool must be retired before the replacement is published. Once published,
+    // reactive Player/Composer work is free to start a load synchronously against it, and that
+    // load must neither see old-context buffers nor be erased by a later clearPool().
+    Instrument.clearPool();
+    this.audioContext = context;
+    this.observeContext(context);
+    try {
+      this.recorder = new AudioRecorder(context);
+    } catch (error) {
+      // Recording is optional; losing it must not abort re-homing the actual audio graph.
+      console.warn('Could not build an audio recorder for the replacement context', error);
+    }
+
+    // Start replacement work immediately, before the first yield. In particular, every routed
+    // instrument now owns a new-context gain node before an old in-flight load can settle and
+    // hand its owner control again. The old close runs alongside decoding and is timeboxed: a
+    // context that stopped rendering is exactly the kind that can refuse to close.
+    const reverbLoading = this.loadReverb(context);
+    const rehomes = routing.map(({ instrument }) => instrument.rehome(context));
     try {
       await withTimeout(previous.close(), this.timings.callTimeoutMs, 'close');
     } catch {
       /* a context that will not close is still being replaced */
     }
-
-    this.stateListenerAttached = false;
-    let context: AudioContext;
-    try {
-      context =
-        // @ts-expect-error window.webkitAudioContext (legacy Safari prefix) not in Window type definitions
-        new (window.AudioContext || window.webkitAudioContext)();
-    } catch (error) {
-      // No replacement to be had - the environment has no usable audio output. This is a repair
-      // attempt, so it reports that it achieved nothing and lets the ladder give the caller the
-      // honest "clock is not advancing" rather than an internal error from three rungs down.
-      console.warn('Could not build a replacement audio context', error);
-      this.audioContext = previous;
-      return null;
-    }
-    this.audioContext = context;
-    this.observeContext(context);
-    // The pooled buffers were decoded by the context we just closed and are unusable now.
-    Instrument.clearPool();
-    this.recorder = new AudioRecorder(context);
-    await this.loadReverb();
+    await reverbLoading;
+    await Promise.all(rehomes);
 
     for (const { instrument, to } of routing) {
-      await instrument.rehome(context);
       this.connect(instrument.endNode, to === null ? null : to === 'reverb');
     }
     this.setAudioDestinations();
@@ -658,6 +734,15 @@ export class AudioProviderClass {
       console.warn('Refusing to connect an audio node from a retired context');
       return this;
     }
+    // An owner whose pre-rebuild load was invalidated can resume while rehome() is still decoding
+    // and connect the replacement gain first. Rebuild connects it again when decoding finishes;
+    // update that one registry entry instead of retaining duplicate routes for the same node.
+    const existing = this.nodes.find((entry) => entry.node === node);
+    if (existing) {
+      existing.to = reverbOverride === null ? null : reverbOverride ? 'reverb' : 'end';
+      this.setNodeDestination(existing);
+      return this;
+    }
     this.nodes.push({
       node,
       to: reverbOverride === null ? null : reverbOverride ? 'reverb' : 'end',
@@ -669,6 +754,9 @@ export class AudioProviderClass {
   destroy = () => {
     this.disposeLifecycle?.();
     this.disposeLifecycle = null;
+    this.disposeContextState?.();
+    this.disposeContextState = null;
+    this.observedContext = null;
     this.disarmGesture?.();
     this.nodes.forEach((node) => node.node.disconnect());
     this.nodes = [];
@@ -722,9 +810,13 @@ export class AudioProviderClass {
     const { recorder, reverbVolumeNode, audioContext } = this;
     if (!recorder) return;
     const recording = await recorder.stop();
+    // A rebuild can replace all three while MediaRecorder is asynchronously delivering its final
+    // dataavailable event. The captured blob is still valid, but reconnecting an old reverb node
+    // to the new context would throw a cross-context InvalidAccessError.
+    if (this.recorder !== recorder || this.audioContext !== audioContext) return recording;
     if (reverbVolumeNode && audioContext) {
       reverbVolumeNode.disconnect();
-      reverbVolumeNode.connect(this.audioContext!.destination);
+      reverbVolumeNode.connect(audioContext.destination);
     }
     this.isRecording = false;
     this.setAudioDestinations();

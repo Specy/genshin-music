@@ -284,6 +284,60 @@ describe('the failure no probe can see', () => {
 
     expect(context.suspend).not.toHaveBeenCalled();
   });
+
+  it('does not treat the initial pageshow as a background restore', async () => {
+    // pageshow fires on normal navigation as well as bfcache restoration. Cycling here makes the
+    // first iOS unlock gesture resume, suspend and resume a context which was never backgrounded.
+    const context = fakeContext('running');
+    const provider = providerWith(context);
+    provider.installLifecycleRecovery();
+    const pageShow = new Event('pageshow');
+    Object.defineProperty(pageShow, 'persisted', { value: false });
+
+    window.dispatchEvent(pageShow);
+    await provider.recoverAudioContext();
+
+    expect(context.suspend).not.toHaveBeenCalled();
+    provider.destroy();
+  });
+
+  it('still cycles for a persisted bfcache pageshow', async () => {
+    const context = fakeContext('running');
+    const provider = providerWith(context);
+    provider.installLifecycleRecovery();
+    const pageShow = new Event('pageshow');
+    Object.defineProperty(pageShow, 'persisted', { value: true });
+
+    window.dispatchEvent(pageShow);
+    await provider.recoverAudioContext();
+
+    expect(context.suspend).toHaveBeenCalledOnce();
+    expect(context.state).toBe('running');
+    provider.destroy();
+  });
+
+  it('retains the cycle debt when suspend/resume did not complete', async () => {
+    // The clock still advances in WebKit 276687, so losing this bit after a failed suspend would
+    // make the ordinary clock probe certify silent output as healthy.
+    const context = fakeContext('running');
+    const provider = providerWith(context);
+    provider.installLifecycleRecovery();
+    Object.defineProperty(document, 'visibilityState', { value: 'hidden', configurable: true });
+    document.dispatchEvent(new Event('visibilitychange'));
+    const workingSuspend = context.suspend;
+    context.suspend = vi.fn().mockRejectedValue(new Error('activation required'));
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+    await expect(provider.ensureRunning()).rejects.toThrow(/could not be restarted/);
+
+    // A later activated attempt receives the same debt and actually performs the cycle.
+    context.suspend = workingSuspend;
+    Object.defineProperty(document, 'visibilityState', { value: 'visible', configurable: true });
+    await expect(provider.ensureRunning()).resolves.toBe(context);
+    expect(workingSuspend).toHaveBeenCalledOnce();
+    provider.destroy();
+    warn.mockRestore();
+  });
 });
 
 describe('a context that could not be repaired', () => {
@@ -298,5 +352,60 @@ describe('a context that could not be repaired', () => {
     context.setState('running');
 
     await expect(provider.ensureRunning()).rejects.toThrow(/clock is not advancing/);
+  });
+});
+
+describe('a forced cycle that cannot complete', () => {
+  it('escalates to the rebuild rung instead of stranding the context', async () => {
+    // The reachable shape of this: resume() never settles (WebKit 281566) on exactly the
+    // post-background path the cycle is armed for. suspend() has already succeeded by then, so
+    // the context is left SUSPENDED - and a later walk skips the cycle block on its state gate.
+    // Throwing here would put the one repair that can fix this context permanently out of reach.
+    const context = fakeContext('running');
+    context.resume = vi.fn(() => new Promise<void>(() => {}));
+    const replacement = fakeContext('running');
+    const built: unknown[] = [];
+    vi.stubGlobal('fetch', vi.fn(async () => ({ arrayBuffer: async () => new ArrayBuffer(8) })));
+    vi.stubGlobal('MediaRecorder', class {
+      state = 'inactive';
+      start() {}
+      stop() {}
+      addEventListener() {}
+    });
+    vi.stubGlobal('AudioContext', function () {
+      built.push(replacement);
+      return replacement;
+    });
+    window.AudioContext = globalThis.AudioContext as never;
+
+    const provider = providerWith(context);
+    await provider.ensureRunning().catch(() => {});
+    provider.installLifecycleRecovery();
+    Object.defineProperty(document, 'visibilityState', { value: 'hidden', configurable: true });
+    document.dispatchEvent(new Event('visibilitychange'));
+    Object.defineProperty(document, 'visibilityState', { value: 'visible', configurable: true });
+
+    const live = await provider.ensureRunning();
+
+    expect(context.suspend).toHaveBeenCalled();
+    expect(built).toHaveLength(1);
+    expect(live).toBe(replacement);
+    provider.destroy();
+    vi.unstubAllGlobals();
+  });
+
+  it('reports failure when no replacement can be built either', async () => {
+    // Cooldown or a hostile environment: nothing left to try, and resolving would hand back a
+    // context whose renderer was never restarted.
+    const context = fakeContext('running');
+    context.resume = vi.fn(() => new Promise<void>(() => {}));
+    const provider = providerWith(context);
+    provider.installLifecycleRecovery();
+    Object.defineProperty(document, 'visibilityState', { value: 'hidden', configurable: true });
+    document.dispatchEvent(new Event('visibilitychange'));
+    Object.defineProperty(document, 'visibilityState', { value: 'visible', configurable: true });
+
+    await expect(provider.ensureRunning()).rejects.toThrow(/could not be restarted/);
+    provider.destroy();
   });
 });

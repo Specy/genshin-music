@@ -124,6 +124,8 @@ export class Instrument {
   buffers: AudioBuffer[] = [];
   isDeleted: boolean = false;
   isLoaded: boolean = false;
+  /** Invalidates an older async load when this engine is detached, disposed, or loaded again. */
+  private loadGeneration = 0;
   /**
    * BaseAudioContext, not AudioContext: everything this class asks of it (createGain,
    * createBufferSource, createBuffer, currentTime, decodeAudioData) is on the base
@@ -618,6 +620,7 @@ export class Instrument {
     }
   };
   load = async (audioContext: BaseAudioContext) => {
+    const generation = ++this.loadGeneration;
     const epoch = CONTEXT_EPOCH;
     const isLive = !isOfflineContext(audioContext);
     this.audioContext = audioContext;
@@ -644,14 +647,24 @@ export class Instrument {
       // The context these were decoded against was retired while we waited. Publishing them
       // would pool buffers no live context can play; the rebuild is already re-loading this
       // engine onto the replacement, so the only correct move is to drop them silently.
-      if (isLive && epoch !== CONTEXT_EPOCH) return false;
+      if (
+        this.isDeleted ||
+        generation !== this.loadGeneration ||
+        (isLive && epoch !== CONTEXT_EPOCH)
+      )
+        return false;
       this.buffers = decoded;
       // Render loop-boundary crossfades once per decode, BEFORE pooling: pool hits
       // must reuse the processed buffers, never re-blend already-blended audio.
       this.renderLoopCrossfades();
       if (loadedCorrectly) INSTRUMENT_BUFFER_POOL.set(this.name, this.buffers);
     } else {
-      if (isLive && epoch !== CONTEXT_EPOCH) return false;
+      if (
+        this.isDeleted ||
+        generation !== this.loadGeneration ||
+        (isLive && epoch !== CONTEXT_EPOCH)
+      )
+        return false;
       this.buffers = INSTRUMENT_BUFFER_POOL.get(this.name)!;
     }
     this.isLoaded = true;
@@ -668,6 +681,9 @@ export class Instrument {
    * owner (a keyboard, a composer layer) still holds it and expects it to make sound again.
    */
   detachFromContext = () => {
+    // A load which finishes after this point belongs to the node/context being retired. A
+    // rehome starts a new generation immediately; a standalone detach leaves it invalidated.
+    this.loadGeneration++;
     this.cancelScheduledAfter(0);
     this.releaseAllNotes(true);
     this.disconnect();
@@ -696,8 +712,12 @@ export class Instrument {
     // earlier pass), in which case the level it was carrying is waiting in `detachedGain`.
     this.detachFromContext();
     const gain = this.detachedGain;
-    const loaded = await this.load(audioContext);
+    const loading = this.load(audioContext);
+    // load() creates the replacement gain synchronously before its first await. Restore the old
+    // level now, so a newer owner changing volume while samples decode wins instead of being
+    // overwritten when the rehome eventually settles.
     if (gain !== null && this.volumeNode) this.volumeNode.gain.value = gain;
+    const loaded = await loading;
     this.detachedGain = null;
     return loaded;
   };
@@ -709,6 +729,7 @@ export class Instrument {
     this.volumeNode?.connect(node);
   };
   dispose = () => {
+    this.loadGeneration++;
     // Committed one-shots are NOT voices, so releaseAllNotes cannot reach them: an engine
     // disposed while a transport still had a window committed on it (the player swaps the song's
     // instruments back to the user's own at stop, ADR-0009) would leave up to a horizon of

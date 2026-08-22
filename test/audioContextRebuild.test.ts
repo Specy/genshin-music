@@ -7,6 +7,7 @@
 // by owner rather than by node), none of which needs a real renderer to be wrong.
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { AudioProviderClass } from '../src/lib/providers/AudioProvider';
+import AudioRecorder from '../src/lib/audio/AudioRecorder';
 import { Instrument } from '../src/lib/audio/Instrument.svelte';
 import { INSTRUMENTS } from './imports';
 
@@ -41,7 +42,10 @@ function fakeContext(initial: FakeState = 'suspended', options: { clockFrozen?: 
     }),
     createGain: vi.fn(() => fakeNode(context)),
     createConvolver: vi.fn(() => ({ ...fakeNode(context), buffer: null })),
-    createMediaStreamDestination: vi.fn(() => ({ ...fakeNode(context), stream: {} })),
+    createMediaStreamDestination: vi.fn(() => {
+      const tracks = [{ stop: vi.fn() }];
+      return { ...fakeNode(context), stream: { getTracks: () => tracks } };
+    }),
     createBuffer: vi.fn((channels: number) => ({
       numberOfChannels: channels,
       sampleRate: 44100,
@@ -66,9 +70,15 @@ type FakeContext = ReturnType<typeof fakeContext>;
 
 /** Contexts the provider builds for itself, newest last. */
 let built: FakeContext[] = [];
+let mediaRecorders: Array<{
+  state: RecordingState;
+  start: ReturnType<typeof vi.fn>;
+  stop: ReturnType<typeof vi.fn>;
+}> = [];
 
 beforeEach(() => {
   built = [];
+  mediaRecorders = [];
   vi.stubGlobal(
     'fetch',
     vi.fn(async () => ({ arrayBuffer: async () => new ArrayBuffer(8) }))
@@ -78,9 +88,18 @@ beforeEach(() => {
   vi.stubGlobal(
     'MediaRecorder',
     class {
-      start() {}
-      stop() {}
+      state: RecordingState = 'inactive';
+      start = vi.fn(() => {
+        this.state = 'recording';
+      });
+      stop = vi.fn(() => {
+        this.state = 'inactive';
+      });
       addEventListener() {}
+
+      constructor() {
+        mediaRecorders.push(this);
+      }
     }
   );
   vi.stubGlobal(
@@ -234,6 +253,85 @@ describe('AudioProvider.rebuildContext', () => {
     const provider = new AudioProviderClass(FAST);
     expect(await provider.rebuildContext()).toBe(null);
   });
+
+  it('publishes the replacement before waiting for a stuck old close', async () => {
+    // Player teardown causes reactive instrument restoration. On WebKit that work can run during
+    // the three-second close timeout, so getAudioContext() must already return the replacement;
+    // otherwise this late engine is absent from the snapshot but loads against the retired epoch.
+    const original = fakeContext('running');
+    let finishClose!: () => void;
+    original.close = vi.fn(
+      () =>
+        new Promise<void>((resolve) => {
+          finishClose = () => {
+            original.closed = true;
+            original.setState('closed');
+            resolve();
+          };
+        })
+    );
+    const provider = new AudioProviderClass(FAST);
+    provider.audioContext = original as unknown as AudioContext;
+
+    const rebuilding = provider.rebuildContext();
+    const replacement = built.at(-1)!;
+    expect(provider.getAudioContext()).toBe(replacement);
+
+    const late = new Instrument(INSTRUMENTS[1]);
+    await expect(late.load(provider.getAudioContext())).resolves.toBe(true);
+    provider.connect(late.endNode, null);
+    expect(late.endNode?.context).toBe(replacement);
+    expect(provider.nodes.some((entry) => entry.node === late.endNode)).toBe(true);
+
+    finishClose();
+    await rebuilding;
+    expect(late.isLoaded).toBe(true);
+    late.dispose();
+  });
+
+  it('leaves the original graph intact and permits retry when acquisition fails', async () => {
+    const original = fakeContext('running');
+    const provider = new AudioProviderClass(FAST);
+    provider.audioContext = original as unknown as AudioContext;
+    const instrument = await loadedInstrument(original);
+    provider.connect(instrument.endNode, null);
+    const originalNode = instrument.endNode;
+    const workingConstructor = window.AudioContext;
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    window.AudioContext = function FailingAudioContext() {
+      throw new Error('hardware still owned');
+    } as unknown as typeof AudioContext;
+
+    await expect(provider.rebuildContext()).resolves.toBe(null);
+    expect(original.close).not.toHaveBeenCalled();
+    expect(instrument.endNode).toBe(originalNode);
+    expect(provider.nodes.some((entry) => entry.node === originalNode)).toBe(true);
+
+    // A failed acquisition did not spend the success cooldown, so the next attempt can repair it.
+    window.AudioContext = workingConstructor;
+    await expect(provider.rebuildContext()).resolves.not.toBe(null);
+    expect(instrument.endNode?.context).toBe(built.at(-1));
+    instrument.dispose();
+    warn.mockRestore();
+  });
+
+  it('stops an active recorder and its stream track before dropping it', async () => {
+    const original = fakeContext('running');
+    const provider = new AudioProviderClass(FAST);
+    provider.audioContext = original as unknown as AudioContext;
+    provider.recorder = new AudioRecorder(original as unknown as AudioContext);
+    const outgoing = provider.recorder;
+    const track = outgoing.node!.stream.getTracks()[0];
+    outgoing.start();
+    const nativeRecorder = mediaRecorders.at(-1)!;
+
+    await provider.rebuildContext();
+
+    expect(nativeRecorder.stop).toHaveBeenCalledOnce();
+    expect(track.stop).toHaveBeenCalledOnce();
+    expect(outgoing.node).toBe(null);
+    expect(provider.recorder).not.toBe(outgoing);
+  });
 });
 
 describe('the ladder escalating to a rebuild', () => {
@@ -320,5 +418,62 @@ describe('Instrument load epoch', () => {
     expect(instrument.isLoaded).toBe(true);
     expect(instrument.buffers.length).toBeGreaterThan(0);
     instrument.dispose();
+  });
+});
+
+describe('reverb decoding on the engines the callback form exists for', () => {
+  it('loads the impulse response when decodeAudioData returns undefined', async () => {
+    // Older WebKit implements only the callback overload and returns undefined rather than a
+    // promise. Chaining onto that return value is how the impulse response silently comes back
+    // undefined - a reverb bus wired to nothing - on the one platform this file exists for.
+    const original = fakeContext('running');
+    const replacement = fakeContext('running');
+    const decoded = { numberOfChannels: 2, sampleRate: 44100, getChannelData: () => new Float32Array(128) };
+    // ASYNCHRONOUSLY, as the real API calls back. Called synchronously the callback would win a
+    // race it does not win in a browser, and a decode chained onto the undefined return would
+    // look fine here while failing on a device.
+    replacement.decodeAudioData = vi.fn((_buffer: ArrayBuffer, success?: (b: unknown) => void) => {
+      queueMicrotask(() => success?.(decoded));
+      return undefined as unknown as Promise<AudioBuffer>;
+    });
+    vi.stubGlobal('AudioContext', function AudioContextStub() {
+      built.push(replacement);
+      return replacement;
+    });
+    window.AudioContext = globalThis.AudioContext;
+
+    const provider = new AudioProviderClass(FAST);
+    provider.audioContext = original as unknown as AudioContext;
+
+    await provider.rebuildContext();
+
+    expect(replacement.decodeAudioData).toHaveBeenCalled();
+    expect(provider.reverbNode).not.toBe(null);
+    expect(provider.reverbNode?.buffer).toBe(decoded);
+  });
+
+  it('still resolves when the decode fails through the error callback', async () => {
+    const original = fakeContext('running');
+    const replacement = fakeContext('running');
+    replacement.decodeAudioData = vi.fn(
+      (_buffer: ArrayBuffer, _success?: (b: unknown) => void, failure?: (e: unknown) => void) => {
+        queueMicrotask(() => failure?.(new Error('corrupt impulse response')));
+        return undefined as unknown as Promise<AudioBuffer>;
+      }
+    );
+    vi.stubGlobal('AudioContext', function AudioContextStub() {
+      built.push(replacement);
+      return replacement;
+    });
+    window.AudioContext = globalThis.AudioContext;
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    const provider = new AudioProviderClass(FAST);
+    provider.audioContext = original as unknown as AudioContext;
+
+    // A reverb that cannot decode must not hang the rebuild - the dry path still works.
+    await expect(provider.rebuildContext()).resolves.not.toBe(null);
+    expect(provider.reverbNode).toBe(null);
+    error.mockRestore();
   });
 });
