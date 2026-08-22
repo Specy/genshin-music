@@ -1204,9 +1204,9 @@ a {
 }
 
 .home-padded {
-    padding: 0.6rem;
-    max-width: 48rem;
-    margin: 0 auto;
+  padding: 0.6rem;
+  max-width: 48rem;
+  margin: 0 auto;
 }
 
 @keyframes home-appear {
@@ -3353,6 +3353,27 @@ select {
   pointer-events: auto;
 }
 
+/* THE KEYS' MISS MARGIN (user revision 2026-08-22), which is the band of the keyboard's own box
+   that is NOT a key. The rule above hands the keyboard its presses; this widens what "the
+   keyboard" means by a finger's worth, so a press that lands just off the outermost key stops on
+   this padding and does nothing. Without it that same slip reaches the CANVAS underneath, where a
+   settled tap is the dismiss gesture (spec §7, composerInput.stageReleaseIntent) - so a
+   fat-fingered chord put the sheet away mid-edit.
+
+   RAISED ONLY, and that is why this is not on the base `.composer-grid-pro` rule: the lowered
+   sheet's sliver is the TOP `--pro-sliver-height` of the wrapper's box (see the transform above),
+   so 2rem of padding at the top while it is down would fill most of that band with empty air
+   instead of the keys it exists to show. Down there the whole wrapper is `pointer-events: none`
+   anyway, so there is no press for the margin to catch until the sheet is up.
+
+   NOTHING AT THE BOTTOM: that edge is the window's own - there is no canvas below the keys to slip
+   onto, and padding there would push the keys up off the sheet's foot. The flanks are wider than
+   the head because the miss that matters is horizontal: the rows' end keys have canvas beside them
+   at the same height, while above the top row the scrim's head is already there to aim by. */
+.composer-grid-pro-raised .composer-keyboard-wrapper .keyboard {
+  padding: 2rem 3rem 0 3rem;
+}
+
 /* THE SCRIM the raised sheet stands on: plain rgba and deliberately NO blur (a backdrop-filter over
    a full-window canvas costs a full-screen readback every frame the canvas repaints).
 
@@ -3496,7 +3517,6 @@ select {
    keyboard covers the song's name rather than printing it over the keys. Being covered is fine for
    text nothing is edited through - it is the canvas underneath that has to stay reachable. */
 .song-info-pro {
-  width: 100%;
   padding-left: calc(4rem + 0.5vw);
   flex-direction: row;
   align-items: center;

@@ -538,9 +538,9 @@ describe('the Pro View canvas: the window it fills and the band it stops above',
      * THE SONG INFO AS AN OVERLAY AT THE WINDOW'S BOTTOM (spec §8, user revision 2026-08-22).
      *
      * It had a row of its own for one round, with the canvas stopping above it and the sheet
-     * standing on it. What this pins now is that it reserves NOTHING: no height, no z-index of its
-     * own, so the canvas runs under it to the sliver and the sheet covers it when raised, while the
-     * one thing kept from that round - the side-by-side row shape - stays.
+     * standing on it. What this pins now is that it reserves NOTHING: no height, no width, no
+     * z-index of its own, so the canvas runs under it to the sliver and the sheet covers it when
+     * raised, while the one thing kept from that round - the side-by-side row shape - stays.
      */
     it('puts the song info at the window\'s bottom as an overlay that reserves nothing', () => {
         const info = declarationsOf('.song-info-pro')
@@ -557,15 +557,20 @@ describe('the Pro View canvas: the window it fills and the band it stops above',
         //a ROW and not the base rule's column, so it covers one line of canvas rather than two
         expect(info.get('flex-direction')).toBe('row')
         expect(info.get('align-items')).toBe('center')
-        //the full width, clear of the sidebar by padding rather than by the base rule's
-        //`left: calc(4rem + 0.5vw)`
+        //clear of the sidebar by padding rather than by the base rule's `left: calc(4rem + 0.5vw)`
         expect(info.get('left')).toBe('0.4rem')
         //...and flush again on a phone, where the padding alone is all the clearance there is room
         //for (user's 2026-08-22 placement, same round as the two insets above)
         expect(mediaBlock(`only screen and (max-width: ${COMPOSER_MOBILE_MAX_WIDTH}px)`)).toMatch(
             /\.song-info-pro \{\s*left: 0;/
         )
-        expect(info.get('width')).toBe('100%')
+        //NO WIDTH EITHER, which is the horizontal half of "reserves nothing" (user revision
+        //2026-08-22). It was `100%` for one round: an absolutely positioned box that wide is a
+        //strip across the canvas' whole bottom band, standing over the surface being edited for
+        //the sake of two lines of read-only text - and the base `.song-info` sets no
+        //`pointer-events`, so it is the strip a press down there lands on. Undeclared, the overlay
+        //is shrink-to-fit and covers the song name it prints and nothing else.
+        expect(info.get('width')).toBeUndefined()
         expect(info.get('padding-left')).toBe('calc(4rem + 0.5vw)')
         //...and the text keeps the contrast the base rule gives it everywhere else
         expect(declarationsOf('.song-info div').get('text-shadow')).toBe('rgb(51 51 51) 0px 1px 5px')
