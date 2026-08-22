@@ -21,21 +21,18 @@ type AudioExportFormat = 'wav' | 'mp3';
  * is noise. Every other failure is one error toast plus the real error on the console.
  */
 export async function exportSongAudio(song: RecordedSong | ComposedSong, songName: string) {
-  const format = await asyncSelect<AudioExportFormat>(
-    i18n.t('question:pick_audio_export_format'),
-    [
-      {
-        value: 'wav',
-        text: i18n.t('menu:audio_format_wav'),
-        description: i18n.t('menu:audio_format_wav_description'),
-      },
-      {
-        value: 'mp3',
-        text: i18n.t('menu:audio_format_mp3'),
-        description: i18n.t('menu:audio_format_mp3_description'),
-      },
-    ]
-  );
+  const format = await asyncSelect<AudioExportFormat>(i18n.t('question:pick_audio_export_format'), [
+    {
+      value: 'wav',
+      text: i18n.t('menu:audio_format_wav'),
+      description: i18n.t('menu:audio_format_wav_description'),
+    },
+    {
+      value: 'mp3',
+      text: i18n.t('menu:audio_format_mp3'),
+      description: i18n.t('menu:audio_format_mp3_description'),
+    },
+  ]);
   if (format === null) return;
   // The 0 matters: toRecordedSong's default offset would prepend 100 ms of silence to the file.
   const recorded = song instanceof ComposedSong ? song.toRecordedSong(0) : song;

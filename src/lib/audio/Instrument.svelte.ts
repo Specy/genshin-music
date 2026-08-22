@@ -620,7 +620,10 @@ export class Instrument {
   };
 }
 
-export function fetchAudioBuffer(url: string, audioContext: BaseAudioContext): Promise<AudioBuffer> {
+export function fetchAudioBuffer(
+  url: string,
+  audioContext: BaseAudioContext
+): Promise<AudioBuffer> {
   //dont change any of this, safari bug
   return new Promise((res, rej) => {
     fetch(url)

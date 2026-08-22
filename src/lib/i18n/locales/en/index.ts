@@ -911,8 +911,7 @@ export const i18n_en = {
       'change-4': 'Sheet minimap in the composer timeline',
       'change-5': 'Used layers in a column are highlighted in the composer',
       'change-6': 'Slight redesigns throughout the app',
-      'change-7':
-        'MIDI export is now more accurate and works properly when imported in other apps',
+      'change-7': 'MIDI export is now more accurate and works properly when imported in other apps',
       'change-8':
         'New "Pro view" in the composer settings: Improved and more advanced composer for complex songs',
       'change-9':
