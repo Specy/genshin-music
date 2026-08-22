@@ -221,6 +221,18 @@
    * puts the zoom back to the current layer's own fit.
    */
   let viewLocked = $state(true);
+  /**
+   * WHETHER THE SIDE MENU IS CURRENTLY EATING OUTSIDE CLICKS AS DISMISSALS - ComposerMenu's own
+   * clickOutside predicate, reported up through `onPanelOpenChange` rather than re-derived here.
+   * Borrowing the menu's condition instead of writing a second one is the point: while it is true a
+   * press on the composer is aimed at putting the menu away, and the guard and the menu can never
+   * disagree about which presses those are.
+   *
+   * WHAT IT SUPPRESSES IS NOTE EDITS ONLY - the keyboard press below and the canvas' two cell
+   * gestures (see ComposerCanvas' `menuDismissesClicks`). Column selection, seeking, the timeline
+   * and scrolling all stay live: a dismissing tap that lands on one of those is harmless.
+   */
+  let menuDismissesClicks = $state(false);
 
   let broadcastChannel: BroadcastChannel | null = null;
   let mounted = false;
@@ -1194,6 +1206,12 @@
   }
 
   function handleClick(note: ObservableNote, pointerId: number) {
+    //A PRESS MADE TO DISMISS THE SIDE MENU EDITS NOTHING. This runs on POINTERDOWN, and the menu
+    //closes itself on the document `click` that the same gesture ends in - so the dismissing press
+    //still sees the flag up and is dropped here, while every press after it sees a menu that has
+    //already closed and enters its note as usual. No press record is written either, so the
+    //release finds nothing to remove and the hold clock finds nothing to open a popover on.
+    if (menuDismissesClicks) return;
     //the clicked button's Note Number on the current layer's instrument - the one currency the
     //song edits below and the audio engine both speak (ADR-0005/ADR-0007)
     const id = numberOfNote(note);
@@ -2456,6 +2474,7 @@
           {selectedColumns}
           {viewLocked}
           keyboardRaised={keyboardSheetRaised}
+          {menuDismissesClicks}
           {selectColumn}
           {toggleBreakpoint}
           onProCellTap={handleProCellTap}
@@ -2618,6 +2637,7 @@
     changeMidiVisibility,
   }}
   {inPreview}
+  onPanelOpenChange={(open) => (menuDismissesClicks = open)}
 />
 <ComposerTools
   data={{

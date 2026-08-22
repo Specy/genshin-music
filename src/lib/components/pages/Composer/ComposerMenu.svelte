@@ -40,6 +40,7 @@
     data,
     functions,
     inPreview = false,
+    onPanelOpenChange,
   }: {
     data: {
       settings: ComposerSettingsDataType;
@@ -62,6 +63,12 @@
       changeMidiVisibility: (visible: boolean) => void;
     };
     inPreview?: boolean;
+    /**
+     * WHETHER A CLICK OUTSIDE THIS MENU IS NOW A DISMISSAL - the predicate the clickOutside action
+     * below runs on, published so the composer can decline to ALSO treat that click as an edit.
+     * Reported rather than asked for, because the condition is made of this component's own state.
+     */
+    onPanelOpenChange?: (open: boolean) => void;
   } = $props();
 
   const excludedSongs: SongType[] = ['vsrg'];
@@ -86,6 +93,22 @@
   let wrapperEl: HTMLDivElement | undefined = $state();
 
   /**
+   * WHEN AN OUTSIDE CLICK MEANS "PUT THIS AWAY" - the one expression, read both by the clickOutside
+   * action below and by whoever this component reports it to. Not two spellings of "the menu is
+   * open": a consumer that guessed the condition from `isOpen` alone would disagree with the menu
+   * about which clicks are dismissals, and the composer suppresses note edits on exactly those.
+   */
+  const dismissesOutsideClicks = $derived(isOpen && isVisible);
+
+  //REPORTED FROM THE PREDICATE and not from the writes that move it: `isOpen`, `isStripVisible` and
+  //the media query behind `isSidebarPinned` all feed it from different places (setVisible, the
+  //sidebar's setOpen, the panel's own buttons), so notifying at each write is a list that the next
+  //new write site silently drops off.
+  $effect(() => {
+    onPanelOpenChange?.(dismissesOutsideClicks);
+  });
+
+  /**
    * EVERY "hide the menu" PATH GOES THROUGH HERE - the close button, Escape, click-outside, and the
    * song/MIDI actions that dismiss the menu once they have done their work.
    *
@@ -104,7 +127,7 @@
   $effect(() => {
     if (!wrapperEl) return;
     const action = clickOutside(wrapperEl, {
-      active: isOpen && isVisible,
+      active: dismissesOutsideClicks,
       ignoreFocusable: true,
       onOutside: () => {
         // On mobile this closes only the panel (isVisible), leaving the hamburger

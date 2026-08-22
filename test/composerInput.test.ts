@@ -484,3 +484,77 @@ describe('every input surface runs the one note-press machine', () => {
     expect(code).toContain("entriesOfSource('keyboard')");
   });
 });
+
+/**
+ * THE CLICK THAT PUTS THE SIDE MENU AWAY EDITS NOTHING (maintainer rule, 2026-08-22). With the menu
+ * open a press on the composer is aimed at dismissing it, and it used to add or remove a note under
+ * itself on the way past.
+ *
+ * Policy again, and for a second reason on top of this block's own: the guard is made of a DOM event
+ * ordering (a pointerdown precedes the document `click` that ComposerMenu's clickOutside closes on)
+ * across three components, and a jsdom test that mounted all three would be asserting jsdom's
+ * dispatch order rather than the browser's. What is pinned here is what such a test could not see
+ * either way - that the three halves are wired to ONE predicate and that the guard is taken at the
+ * PRESS.
+ */
+const composerCanvas = readFileSync(
+  'src/lib/components/pages/Composer/ComposerCanvas.svelte',
+  'utf8'
+);
+const composerMenu = readFileSync('src/lib/components/pages/Composer/ComposerMenu.svelte', 'utf8');
+
+describe('a press made to dismiss the composer menu is not an edit', () => {
+  it('the menu reports the very condition its own clickOutside runs on', () => {
+    //ONE expression, read twice - the guard and the menu cannot disagree about which clicks are
+    //dismissals, which is the whole reason the predicate is published instead of `isOpen`
+    expect(composerMenu).toContain('const dismissesOutsideClicks = $derived(isOpen && isVisible);');
+    expect(composerMenu).toContain('active: dismissesOutsideClicks,');
+    expect(composerMenu).toContain('onPanelOpenChange?.(dismissesOutsideClicks);');
+  });
+
+  it('the keyboard press refuses before it sounds or adds anything', () => {
+    const code = functionCode('handleClick');
+    //FIRST, above both the sustain branch and the press machine: a dismissing tap must not record a
+    //hold, add a note or preview one
+    expect(code.indexOf('if (menuDismissesClicks) return')).toBeLessThan(
+      code.indexOf('startSustainRecording')
+    );
+    expect(code.indexOf('if (menuDismissesClicks) return')).toBeLessThan(
+      code.indexOf('beginNotePress')
+    );
+    //...and the flag is the menu's own report rather than a second reading of the menu's state
+    //(the wiring is in the TEMPLATE, so this reads the whole file rather than the instance script)
+    expect(composer).toContain('onPanelOpenChange={(open) => (menuDismissesClicks = open)}');
+  });
+
+  it('the canvas latches the flag at the press, not when the edit fires', () => {
+    //the press edge, in the CAPTURE phase on the element the pixi canvas is appended into
+    expect(composerCanvas).toContain(
+      'onpointerdowncapture={() => (pressDismissedMenu = menuDismissesClicks)}'
+    );
+    //...and both cell gestures answer that latch. A settled tap fires at the RELEASE and a Duration
+    //Hold 400ms into the press, so reading the live flag at either would be asking about a menu the
+    //gesture may already have closed.
+    expect(composerCanvas).toContain('if (pressDismissedMenu) return;');
+    expect(composerCanvas).toContain('pressDismissedMenu ? false : onProCellLongPress(');
+  });
+
+  it('gates those two gestures and nothing else the canvas does', () => {
+    //everything handed to the renderer at construction, up to its geometry report
+    const handedToTheRenderer = composerCanvas.slice(
+      composerCanvas.indexOf('new ComposerRendererClass('),
+      composerCanvas.indexOf('onGeometryChange:')
+    );
+    //TWO READS, one per cell gesture. `selectColumn`, `toggleBreakpoint`, `onKeyboardDismiss` and
+    //the hold's drag/end go over unwrapped, which is what keeps a dismissing tap that lands on
+    //column selection, seeking or a scroll harmless-but-functional (the maintainer's scope)
+    expect(handedToTheRenderer.match(/pressDismissedMenu/g)).toHaveLength(2);
+    //...and the pixi side is told nothing about the menu at all: the flag never crosses into it
+    const composerRenderer = readFileSync(
+      'src/lib/components/pages/Composer/ComposerRenderer.ts',
+      'utf8'
+    );
+    expect(composerRenderer).not.toContain('menuDismissesClicks');
+    expect(composerRenderer).not.toContain('pressDismissedMenu');
+  });
+});

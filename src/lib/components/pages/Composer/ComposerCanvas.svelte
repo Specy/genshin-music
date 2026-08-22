@@ -64,6 +64,13 @@
      * reactive value - a drag is unaffected, so the canvas goes on scrolling with the sheet up.
      */
     keyboardRaised: boolean;
+    /**
+     * Whether the composer's side menu is currently taking outside clicks as dismissals (see
+     * Composer.svelte's `menuDismissesClicks`, which is ComposerMenu's own clickOutside predicate).
+     * A plain reactive prop and not a getter: it is read in this component's own pointerdown
+     * handler below, never inside the renderer - the pixi side knows nothing about the menu.
+     */
+    menuDismissesClicks: boolean;
     selectColumn: (index: number, ignoreAudio?: boolean, forceAnchor?: boolean) => void;
     toggleBreakpoint: () => void;
     /** A settled Pro View tap, as the cell it landed on - what it EDITS is Composer.svelte's. */
@@ -131,6 +138,7 @@
     selectedColumns,
     viewLocked,
     keyboardRaised,
+    menuDismissesClicks,
     selectColumn,
     toggleBreakpoint,
     onProCellTap,
@@ -145,6 +153,23 @@
 
   let canvasContainerEl: HTMLDivElement | undefined;
   let renderer: ComposerRenderer | null = $state(null);
+
+  /**
+   * WHETHER THE GESTURE NOW ON THE CANVAS BEGAN AS A DISMISSAL of the side menu, latched by the
+   * capture-phase pointerdown on the wrapper below.
+   *
+   * THE ORDERING IS THE WHOLE MECHANISM. The menu closes itself from a document `click` listener
+   * (ComposerMenu's clickOutside), and a click is delivered after the pointerdown that starts it -
+   * so the press of the dismissing tap still sees the menu open and is latched, while the press of
+   * every tap after it sees a menu that has already closed. Latched at the PRESS rather than read
+   * again when the edit fires, because the edits below fire later in the same gesture (a settled
+   * tap at the release, a Duration Hold 400ms in) and what they must answer is what the gesture was
+   * aimed at.
+   *
+   * Not `$state`: only the two callbacks handed to the renderer read it, and none of them is a
+   * reactive context.
+   */
+  let pressDismissedMenu = false;
 
   // Everything here comes from the renderer's onGeometryChange callback, not $derived: they're
   // pixi/DOM-measurement values this template cannot compute on its own. The three timeline
@@ -237,8 +262,18 @@
         {
           selectColumn,
           toggleBreakpoint,
-          onProCellTap,
-          onProCellLongPress,
+          //THE TWO CELL GESTURES THAT EDIT THE SONG, and the only things the latch above gates: a
+          //tap made to put the side menu away must not also write a note under itself. Everything
+          //else this canvas does with the same press is left alone - the drag still scrolls, the
+          //release still picks a column in the Compressed View, the timeline still seeks - because
+          //a dismissing tap that lands on one of those is harmless-but-functional.
+          //The long press answers FALSE, which is what tells the renderer nothing took the hold.
+          onProCellTap: (column, number) => {
+            if (pressDismissedMenu) return;
+            onProCellTap(column, number);
+          },
+          onProCellLongPress: (column, number, rect) =>
+            pressDismissedMenu ? false : onProCellLongPress(column, number, rect),
           onProCellLongPressDrag,
           onProCellLongPressEnd,
           onKeyboardDismiss,
@@ -455,7 +490,14 @@
   style:--composer-canvas-width-desktop={cssSize?.desktopWidth}
   style:--composer-canvas-height={cssSize?.height}
 >
-  <div class="canvas-relative" bind:this={canvasContainerEl}>
+  <!-- THE LATCH'S PRESS EDGE (see `pressDismissedMenu`). On the CONTAINER the pixi canvas is
+       appended into, in the CAPTURE phase, so it is written before the canvas' own listeners see
+       the same pointerdown - and long before the document `click` that closes the menu. -->
+  <div
+    class="canvas-relative"
+    bind:this={canvasContainerEl}
+    onpointerdowncapture={() => (pressDismissedMenu = menuDismissesClicks)}
+  >
     <!--
       `height` is the NOTES region, and the inline height is what holds these chevrons to it:
       `.canvas-buttons`' own `height: 100%` is 100% of `.canvas-relative`, which since the merge
