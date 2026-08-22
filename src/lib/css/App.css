@@ -1596,7 +1596,7 @@ a {
 
   /* Home.css's own mobile block */
   .home-padded {
-    padding: 0.6rem 4vw;
+    padding: 0.6rem 0.6rem 0.2rem 3.6rem;
   }
 
   .home-dont-show-again,
