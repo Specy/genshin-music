@@ -151,6 +151,22 @@ export class AudioProviderClass {
   private stateListenerAttached = false;
   private disposeLifecycle: (() => void) | null = null;
   private disarmGesture: (() => void) | null = null;
+  /**
+   * Set when the page has actually been hidden, and consumed by the next ladder walk.
+   *
+   * WebKit 276687: after a spell in the background the context can report `running` with a
+   * currentTime that keeps incrementing, and still produce no sound - so neither the state nor
+   * the clock probe can detect it, and the only known cure is a suspend()/resume() cycle. The
+   * bug report notes it does not occur when the context WAS suspended and resumed across the
+   * background transition, which is exactly what this forces on the way back.
+   *
+   * The cost is a renderer stop/start on every return to the foreground, which is a brief gap if
+   * audio happens to be playing at that moment. That is the whole trade: an occasional hiccup on
+   * tab-return against audio that is silently dead until the app is restarted. Not narrowed to
+   * WebKit, because "output is silently broken" has no feature test and sniffing the UA would be
+   * a worse guess than paying the cost everywhere.
+   */
+  private rendererCycleDue = false;
   /** Wall-clock time of the last rebuild, for REBUILD_COOLDOWN_MS. */
   private lastRebuildAt = 0;
   private teardownSubscribers = new Set<() => void>();
@@ -265,6 +281,12 @@ export class AudioProviderClass {
       }
     }
 
+    // Before the probe, because the probe cannot see this failure: the clock is advancing.
+    if (this.rendererCycleDue) {
+      this.rendererCycleDue = false;
+      if (stateOf(context) === 'running') await this.restartRenderer(context);
+    }
+
     if (this.clockSuspect) {
       const live = await this.verifyClock(context);
       // The rebuild rung replaces the context wholesale, which makes every reading taken above
@@ -281,6 +303,13 @@ export class AudioProviderClass {
 
     if (stateOf(context) !== 'running') {
       throw new Error(`Audio context is "${stateOf(context)}" and could not be resumed`);
+    }
+    if (this.clockSuspect) {
+      // Every repair was tried and the clock still does not move - commonly because the rebuild
+      // rung was inside its cooldown. Reporting success here would hand a caller a `running`
+      // context whose currentTime never arrives, which is the exact silent freeze this ladder
+      // exists to prevent; the flag stays set so the next gesture tries again.
+      throw new Error('Audio context clock is not advancing');
     }
     this.hasBeenRunning = true;
     return context;
@@ -338,8 +367,12 @@ export class AudioProviderClass {
   installLifecycleRecovery = () => {
     if (this.disposeLifecycle || typeof document === 'undefined') return;
     const onForeground = () => {
-      // Fires on the way out too, and a hidden page is the one moment recovery must not run.
-      if (document.visibilityState !== 'visible') return;
+      // Fires on the way out too, and a hidden page is the one moment recovery must not run -
+      // but it IS the moment to remember that a background transition happened at all.
+      if (document.visibilityState !== 'visible') {
+        this.rendererCycleDue = true;
+        return;
+      }
       // Set BEFORE recovering, so the probe in ensureRunning runs on this pass: coming back
       // from the background is the exact event after which the clock cannot be trusted.
       this.clockSuspect = true;
@@ -349,11 +382,17 @@ export class AudioProviderClass {
       // switch. The gesture arm above is what unlocks that one.
       if (this.hasBeenRunning) void this.recoverAudioContext();
     };
+    // A bfcache restore is by definition a return from hidden, and does not always come with a
+    // visibilitychange pair, so it arms the cycle itself.
+    const onPageShow = () => {
+      this.rendererCycleDue = true;
+      onForeground();
+    };
     document.addEventListener('visibilitychange', onForeground);
-    window.addEventListener('pageshow', onForeground);
+    window.addEventListener('pageshow', onPageShow);
     this.disposeLifecycle = () => {
       document.removeEventListener('visibilitychange', onForeground);
-      window.removeEventListener('pageshow', onForeground);
+      window.removeEventListener('pageshow', onPageShow);
     };
   };
 
@@ -374,9 +413,10 @@ export class AudioProviderClass {
     const onGesture = () => {
       this.disarmGesture?.();
       void this.recoverAudioContext().then(() => {
-        // Re-arm while it is still not running: a context that needs an activation we did not
-        // get should keep getting the next one, rather than going quiet after one attempt.
-        if (this.audioContext && stateOf(this.audioContext) !== 'running') {
+        // Re-arm while it is still not running OR still not ticking: a context that needs an
+        // activation we did not get, or whose rebuild was refused by the cooldown, should keep
+        // getting the next gesture rather than going quiet after one attempt.
+        if (this.audioContext && (stateOf(this.audioContext) !== 'running' || this.clockSuspect)) {
           this.armGestureRecovery();
         }
       });
@@ -526,6 +566,9 @@ export class AudioProviderClass {
 
     // Read the graph BEFORE tearing it down: after re-homing, an instrument's endNode is a
     // different object, so the routing has to be carried across by owner rather than by node.
+    // Retire the old context for load purposes FIRST: anything decoding against it right now
+    // must discard its result rather than land after the close (see Instrument's CONTEXT_EPOCH).
+    Instrument.beginContextEpoch();
     const instruments = Instrument.liveInstruments();
     const routing = instruments.map((instrument) => ({
       instrument,
@@ -544,17 +587,35 @@ export class AudioProviderClass {
     this.nodes = [];
     this.reverbNode = null;
     this.reverbVolumeNode = null;
+    // An in-flight recording cannot survive the context it was capturing, and by this point it
+    // has been recording a dead renderer anyway. Release its stream node explicitly rather than
+    // dropping the reference and leaving it attached to a context about to be closed.
+    this.recorder?.delete();
     this.recorder = null;
     this.isRecording = false;
     // Best effort: a context that has stopped rendering is exactly the kind that can refuse to
     // close, and holding up the replacement to find out helps nobody.
-    await withTimeout(previous.close(), this.timings.callTimeoutMs, 'close').catch(() => {});
+    try {
+      await withTimeout(previous.close(), this.timings.callTimeoutMs, 'close');
+    } catch {
+      /* a context that will not close is still being replaced */
+    }
 
     this.stateListenerAttached = false;
-    this.audioContext =
-      // @ts-expect-error window.webkitAudioContext (legacy Safari prefix) not in Window type definitions
-      new (window.AudioContext || window.webkitAudioContext)();
-    const context = this.audioContext;
+    let context: AudioContext;
+    try {
+      context =
+        // @ts-expect-error window.webkitAudioContext (legacy Safari prefix) not in Window type definitions
+        new (window.AudioContext || window.webkitAudioContext)();
+    } catch (error) {
+      // No replacement to be had - the environment has no usable audio output. This is a repair
+      // attempt, so it reports that it achieved nothing and lets the ladder give the caller the
+      // honest "clock is not advancing" rather than an internal error from three rungs down.
+      console.warn('Could not build a replacement audio context', error);
+      this.audioContext = previous;
+      return null;
+    }
+    this.audioContext = context;
     this.observeContext(context);
     // The pooled buffers were decoded by the context we just closed and are unusable now.
     Instrument.clearPool();
@@ -589,6 +650,14 @@ export class AudioProviderClass {
 
   connect = (node: AudioNode | null, reverbOverride: boolean | null) => {
     if (!node) return this;
+    // A node belongs to the context that created it, and cross-context connect() throws. This
+    // catches whatever the rebuild's epoch token did not: a caller still holding an engine's
+    // pre-rebuild endNode has nothing useful to register, and refusing is better than either
+    // throwing at it or filing a dead node that setAudioDestinations will keep re-wiring.
+    if (this.audioContext && node.context && node.context !== this.audioContext) {
+      console.warn('Refusing to connect an audio node from a retired context');
+      return this;
+    }
     this.nodes.push({
       node,
       to: reverbOverride === null ? null : reverbOverride ? 'reverb' : 'end',

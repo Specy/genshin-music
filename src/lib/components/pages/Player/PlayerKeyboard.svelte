@@ -792,6 +792,16 @@
     const disposeKeyboard = createKeyboardListener('player_keyboard_keys', handleKeyboard, {
       onRelease: handleKeyboardRelease,
     });
+    //A context rebuild resets the audio clock to zero, and this run's anchor and commit
+    //watermarks are absolute times taken from the old one - it would sit waiting on a timestamp
+    //the new clock reaches minutes from now, or never. Every note it committed died with the old
+    //context too, so there is no run left to salvage: end it here, while the old context is still
+    //open and cancelScheduledSounds can still retract what it queued.
+    cleanup.push(
+      AudioProvider.onContextTeardown(() => {
+        if (data.hasSong) stopAndClear();
+      })
+    );
     //visual counterpart of Player's audio blur guard: lift held-pressed buttons whose
     //key-up will never arrive
     const releaseVisualsOnLeave = () => {

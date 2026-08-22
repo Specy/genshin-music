@@ -251,3 +251,52 @@ describe('AudioProvider.ensureRunning serialisation', () => {
     await expect(provider.ensureRunning()).resolves.toBe(context);
   });
 });
+
+describe('the failure no probe can see', () => {
+  it('cycles the renderer once after a real background transition', async () => {
+    // WebKit 276687: after time in the background the context reports `running`, currentTime
+    // keeps incrementing, and no sound comes out. Neither the state nor the clock probe can
+    // detect it - a suspend()/resume() pair is the only known cure, so a genuine hidden->visible
+    // transition earns one unconditionally.
+    const context = fakeContext('running');
+    const provider = providerWith(context);
+    await provider.ensureRunning();
+    provider.installLifecycleRecovery();
+
+    Object.defineProperty(document, 'visibilityState', { value: 'hidden', configurable: true });
+    document.dispatchEvent(new Event('visibilitychange'));
+    Object.defineProperty(document, 'visibilityState', { value: 'visible', configurable: true });
+    document.dispatchEvent(new Event('visibilitychange'));
+    await provider.recoverAudioContext();
+
+    expect(context.suspend).toHaveBeenCalled();
+    expect(context.state).toBe('running');
+    provider.destroy();
+  });
+
+  it('does not cycle the renderer without one', async () => {
+    // Every ordinary play request would otherwise pay for a renderer stop/start.
+    const context = fakeContext('running');
+    const provider = providerWith(context);
+
+    await provider.ensureRunning();
+    await provider.ensureRunning();
+
+    expect(context.suspend).not.toHaveBeenCalled();
+  });
+});
+
+describe('a context that could not be repaired', () => {
+  it('reports failure rather than handing back a frozen clock', async () => {
+    // The rebuild rung is inside its cooldown, so nothing else can be tried. Resolving here
+    // would hand a caller a `running` context whose currentTime never arrives.
+    const context = fakeContext('running', { clockFrozen: true });
+    context.suspend = vi.fn(async () => context.setState('suspended'));
+    const provider = providerWith(context);
+    // No window.AudioContext stub in this file, so the rebuild rung cannot build a replacement.
+    context.setState('interrupted');
+    context.setState('running');
+
+    await expect(provider.ensureRunning()).rejects.toThrow(/clock is not advancing/);
+  });
+});

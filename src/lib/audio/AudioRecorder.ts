@@ -37,6 +37,14 @@ export default class AudioRecorder {
     toUrl: () => string;
   }> {
     return new Promise((resolve) => {
+      // MediaRecorder.stop() throws InvalidStateError when it is not recording, which rejects
+      // this promise from inside the executor. Reachable without any misuse by a caller: a
+      // context rebuild replaces this recorder with a fresh, inactive one under a Player that
+      // still believes a recording is running, and its Stop then lands here.
+      if (this.recorder.state === 'inactive') {
+        resolve({ data: new Blob(), toUrl: () => '' });
+        return;
+      }
       this.recorder.addEventListener(
         'dataavailable',
         function (e) {

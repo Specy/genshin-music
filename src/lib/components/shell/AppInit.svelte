@@ -320,8 +320,19 @@
     // explicitly. Teardown runs while the outgoing context is still open - stopping a committed
     // beat on a closed one throws - and the rebuilt hook re-creates the node and re-decodes the
     // click samples against the replacement.
-    const disposeTeardown = AudioProvider.onContextTeardown(() => metronome.destroy());
-    const disposeRebuilt = AudioProvider.onContextRebuilt((context) => metronome.init(context));
+    // destroy() stops it and init() does not start anything, so a metronome that was ticking
+    // would come back silent while its toggle still read ON - the page-level flags mirror it in
+    // component state and nothing would rerun to correct them.
+    let metronomeWasRunning = false;
+    const disposeTeardown = AudioProvider.onContextTeardown(() => {
+      metronomeWasRunning = metronome.running;
+      metronome.destroy();
+    });
+    const disposeRebuilt = AudioProvider.onContextRebuilt((context) => {
+      metronome.init(context);
+      if (metronomeWasRunning) metronome.start();
+      metronomeWasRunning = false;
+    });
     KeyboardProvider.create();
     MIDIProvider.init().catch(console.error);
     globalConfigStore.load(); //before songsStore

@@ -44,6 +44,9 @@ vi.mock('$core/Analytics', () => ({default: {songEvent: mocks.songEvent}}))
 vi.mock('$lib/providers/AudioProvider', () => ({
     AudioProvider: {
         ensureRunning: vi.fn(async () => {}),
+        // PlayerKeyboard/Player subscribe so a context rebuild can end a run whose
+        // absolute timestamps belong to the retired clock. Returns an unsubscribe fn.
+        onContextTeardown: vi.fn(() => () => {}),
         getAudioContext: vi.fn(() => ({
             get currentTime() {
                 return Date.now() / 1000

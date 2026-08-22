@@ -63,6 +63,17 @@ function isOfflineContext(audioContext: BaseAudioContext): boolean {
   return 'startRendering' in audioContext;
 }
 
+/**
+ * Which generation of the live audio context loads are decoding against.
+ *
+ * A load is a long await - fetch, then decodeAudioData - and AudioProvider's rebuild rung closes
+ * the context out from under anything in flight. Without this token such a load lands after the
+ * close and quietly poisons the app: it pools buffers decoded by a dead context, marks itself
+ * loaded, and leaves its owner to connect a dead gain node to the new destination (which throws).
+ * Bumped by AudioProvider before it starts tearing the old context down.
+ */
+let CONTEXT_EPOCH = 0;
+
 type ScheduledOneShot = {
   source: AudioBufferSourceNode;
   /** The absolute AudioContext time this one-shot was committed to sound at. */
@@ -206,6 +217,11 @@ export class Instrument {
   /** Engines loaded against the live context, in load order. See LIVE_INSTRUMENTS. */
   static liveInstruments(): Instrument[] {
     return [...LIVE_INSTRUMENTS];
+  }
+
+  /** Retire the current live context: loads still in flight for it will discard their results. */
+  static beginContextEpoch() {
+    CONTEXT_EPOCH++;
   }
 
   constructor(name: InstrumentName = INSTRUMENTS[0]) {
@@ -602,9 +618,15 @@ export class Instrument {
     }
   };
   load = async (audioContext: BaseAudioContext) => {
+    const epoch = CONTEXT_EPOCH;
+    const isLive = !isOfflineContext(audioContext);
     this.audioContext = audioContext;
     this.volumeNode = audioContext.createGain();
     this.volumeNode.gain.value = 0.8;
+    // Registered BEFORE the await, not after it. A rebuild snapshots this registry, and an engine
+    // that only appears once its samples have decoded is invisible to one that starts mid-load -
+    // so it would be left behind on the closed context with nothing to re-home it.
+    if (isLive) LIVE_INSTRUMENTS.add(this);
     let loadedCorrectly = true;
     if (!INSTRUMENT_BUFFER_POOL.has(this.name)) {
       const emptyBuffer = this.audioContext.createBuffer(
@@ -618,16 +640,21 @@ export class Instrument {
           return emptyBuffer;
         })
       );
-      this.buffers = await Promise.all(requests);
+      const decoded = await Promise.all(requests);
+      // The context these were decoded against was retired while we waited. Publishing them
+      // would pool buffers no live context can play; the rebuild is already re-loading this
+      // engine onto the replacement, so the only correct move is to drop them silently.
+      if (isLive && epoch !== CONTEXT_EPOCH) return false;
+      this.buffers = decoded;
       // Render loop-boundary crossfades once per decode, BEFORE pooling: pool hits
       // must reuse the processed buffers, never re-blend already-blended audio.
       this.renderLoopCrossfades();
       if (loadedCorrectly) INSTRUMENT_BUFFER_POOL.set(this.name, this.buffers);
     } else {
+      if (isLive && epoch !== CONTEXT_EPOCH) return false;
       this.buffers = INSTRUMENT_BUFFER_POOL.get(this.name)!;
     }
     this.isLoaded = true;
-    if (!isOfflineContext(audioContext)) LIVE_INSTRUMENTS.add(this);
     return loadedCorrectly;
   };
 

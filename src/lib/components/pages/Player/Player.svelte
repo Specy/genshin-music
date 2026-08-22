@@ -100,6 +100,15 @@
       window.removeEventListener('blur', releaseOnLeave);
       document.removeEventListener('visibilitychange', releaseOnLeave);
     });
+    //A context rebuild replaces the recorder with a fresh, inactive one, so whatever was being
+    //captured is gone and nothing is being captured now. Left alone, this mirror keeps the UI
+    //claiming a recording is in progress until the user presses stop on a recorder that never
+    //started. (AudioRecorder.stop tolerates that press; this stops it being offered.)
+    cleanup.push(
+      AudioProvider.onContextTeardown(() => {
+        isRecordingAudio = false;
+      })
+    );
 
     // init() is intentionally not awaited: $effect below must be registered synchronously,
     // before any await, or Svelte throws effect_orphan. Fire-and-forget is safe here since

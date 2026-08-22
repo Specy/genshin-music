@@ -309,6 +309,16 @@
       });
     }
     cleanup.push(registerLeaveHandler(prepareToLeave));
+    //A context rebuild resets the audio clock to zero, while this run's columnStartTime and
+    //commitTime are absolute times taken from the old one - the transport would park waiting on
+    //a boundary the new clock will not reach, with isPlaying stuck true and a play button that
+    //does nothing. Everything it committed died with the old context, so stop here, while that
+    //context is still open and the retraction can still reach what was queued.
+    cleanup.push(
+      AudioProvider.onContextTeardown(() => {
+        if (playbackActive || transport.isRunning) void togglePlay(false);
+      })
+    );
     if (window.location.hostname !== 'localhost') {
       window.addEventListener('beforeunload', handleUnload);
     }

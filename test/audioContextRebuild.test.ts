@@ -14,8 +14,8 @@ const FAST = { callTimeoutMs: 50, interruptionWaitMs: 20, statePollMs: 2, clockP
 
 type FakeState = 'suspended' | 'running' | 'interrupted' | 'closed';
 
-function fakeNode() {
-  return { connect: vi.fn(), disconnect: vi.fn(), gain: { value: 1 } };
+function fakeNode(context?: unknown) {
+  return { connect: vi.fn(), disconnect: vi.fn(), gain: { value: 1 }, context };
 }
 
 function fakeContext(initial: FakeState = 'suspended', options: { clockFrozen?: boolean } = {}) {
@@ -25,6 +25,7 @@ function fakeContext(initial: FakeState = 'suspended', options: { clockFrozen?: 
     state: initial as FakeState,
     sampleRate: 44100,
     destination: fakeNode(),
+    // Set after construction - a node's `context` is the object being built here.
     closed: false,
     get currentTime() {
       if (!options.clockFrozen) time += 0.01;
@@ -38,9 +39,9 @@ function fakeContext(initial: FakeState = 'suspended', options: { clockFrozen?: 
       context.closed = true;
       context.setState('closed');
     }),
-    createGain: vi.fn(() => fakeNode()),
-    createConvolver: vi.fn(() => ({ ...fakeNode(), buffer: null })),
-    createMediaStreamDestination: vi.fn(() => ({ ...fakeNode(), stream: {} })),
+    createGain: vi.fn(() => fakeNode(context)),
+    createConvolver: vi.fn(() => ({ ...fakeNode(context), buffer: null })),
+    createMediaStreamDestination: vi.fn(() => ({ ...fakeNode(context), stream: {} })),
     createBuffer: vi.fn((channels: number) => ({
       numberOfChannels: channels,
       sampleRate: 44100,
@@ -265,5 +266,59 @@ describe('the ladder escalating to a rebuild', () => {
     await expect(provider.ensureRunning()).resolves.toBe(original);
     expect(original.close).not.toHaveBeenCalled();
     expect(built.length).toBe(0);
+  });
+});
+
+describe('AudioProvider.connect cross-context guard', () => {
+  it('refuses a node left over from a retired context', async () => {
+    // The backstop behind Instrument's epoch token: connecting across contexts throws, and a
+    // dead node filed in the registry would be re-wired by every setAudioDestinations after.
+    const original = fakeContext('running');
+    const provider = new AudioProviderClass(FAST);
+    provider.audioContext = original as unknown as AudioContext;
+    const stale = original.createGain();
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+    await provider.rebuildContext();
+    provider.connect(stale as unknown as AudioNode, null);
+
+    expect(provider.nodes.some((n) => n.node === (stale as unknown as AudioNode))).toBe(false);
+    expect(warn).toHaveBeenCalled();
+    warn.mockRestore();
+  });
+
+  it('still accepts a node belonging to the current context', async () => {
+    const context = fakeContext('running');
+    const provider = new AudioProviderClass(FAST);
+    provider.audioContext = context as unknown as AudioContext;
+    const node = context.createGain();
+
+    provider.connect(node as unknown as AudioNode, null);
+
+    expect(provider.nodes).toHaveLength(1);
+  });
+});
+
+describe('Instrument load epoch', () => {
+  it('discards a load that was decoding when its context was retired', async () => {
+    // ComposerInstrumentSynchronizer deliberately runs loads concurrently, so a load in flight
+    // across a rebuild is reachable. Landing it would pool buffers decoded by a closed context.
+    const original = fakeContext('running');
+    const instrument = new Instrument(INSTRUMENTS[0]);
+    const pending = instrument.load(original as unknown as BaseAudioContext);
+    // Registered before the await, so a rebuild starting right now can still see it.
+    expect(Instrument.liveInstruments()).toContain(instrument);
+
+    Instrument.beginContextEpoch();
+    await expect(pending).resolves.toBe(false);
+    expect(instrument.isLoaded).toBe(false);
+    instrument.dispose();
+  });
+
+  it('lets a load against the current epoch through', async () => {
+    const instrument = await loadedInstrument(fakeContext('running'));
+    expect(instrument.isLoaded).toBe(true);
+    expect(instrument.buffers.length).toBeGreaterThan(0);
+    instrument.dispose();
   });
 });
