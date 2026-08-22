@@ -12,10 +12,12 @@
   // of languages/currentLanguage/onChange to fully control it instead.
   const flagsMap: Record<AppLanguage, string> = {
     en: '🇬🇧',
+    es: '🇪🇸',
     zh: '🇨🇳',
     'zh-HK': '🇭🇰',
     'zh-TW': '🇹🇼',
     id: '🇮🇩',
+    it: '🇮🇹',
     pt: '🇧🇷',
     ru: '🇷🇺',
     tr: '🇹🇷',
@@ -25,10 +27,12 @@
 
   const namesMap: Record<AppLanguage, string> = {
     en: 'English',
+    es: 'Español',
     zh: '中文',
     'zh-HK': '中文（香港）',
     'zh-TW': '中文（台灣）',
     id: 'Indonesia',
+    it: 'Italiano',
     pt: 'Brasileiro',
     ru: 'русский',
     tr: 'Türkçe',

@@ -27,10 +27,12 @@ declare module 'i18next' {
 
 export const AVAILABLE_LANGUAGES = [
   'en',
+  'es',
   'zh',
   'zh-HK',
   'zh-TW',
   'id',
+  'it',
   'pt',
   'ru',
   'tr',
