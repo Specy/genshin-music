@@ -436,10 +436,6 @@
         />
         <Separator background="var(--secondary)" height="0.1rem" verticalMargin="0.5rem" />
         <div class="settings-row-wrap">
-          {t('settings:select_language')}
-          <LanguageSelector />
-        </div>
-        <div class="settings-row-wrap">
           {#if globalConfigStore.state.IS_MIDI_AVAILABLE}
             <AppLink href="/keybinds">
               <AppButton style="width:fit-content">
@@ -452,6 +448,7 @@
               {t('menu:change_app_theme')}
             </AppButton>
           </AppLink>
+          <LanguageSelector />
         </div>
         <DonateButton />
       </MenuPanel>

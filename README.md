@@ -46,15 +46,11 @@ The app is built with SvelteKit 2 and Svelte 5 (using runes) in TypeScript, bund
 
 # Multi-game architecture
 
-Genshin music and Sky music are the same codebase, built twice. Each game's data lives in its own folder under `src/lib/games/<id>/`, and a build or dev run picks one of them at build time through the `$game` import alias, which points at that folder depending on the `PUBLIC_GAME` environment variable. Adding a new game means creating its `src/lib/games/<id>/` folder and registering it in `scripts/buildApp.js`.
+Genshin music and Sky music are derived from the same codebase.
 
-# Translations
+You can edit and add a new game by creating a new folder under `src/lib/games/` and registering it in `scripts/buildApp.js`. You can reuse the current keyboard layouts or create your own custom ones by editing the
 
-English is the source of truth and lives in TypeScript at `src/lib/i18n/locales/en/index.ts` (it is bundled into the app); every other language is a JSON file in `static/locales/`, fetched and cached at runtime. Run `npm run check:translations` to see, per language, which keys are missing, which are empty, and which no longer exist in English. Add `-- --strict` to make it exit non-zero when anything is missing.
-
-# Icons
-
-Most icons are inline `<svg>` markup. New ones can instead be imported as components through [unplugin-icons](https://github.com/unplugin/unplugin-icons): `import IconName from '~icons/fa6-solid/download'`, then `<IconName />`. Only the icons you import are bundled. Icon sets are installed per collection - `@iconify-json/fa6-solid` is the one set up; add another `@iconify-json/*` devDependency to use a different one.
+Each game's data lives in its own folder under `src/lib/games/<id>/`, and a build or dev run picks one of them at build time through the `$game` import alias, which points at that folder depending on the `PUBLIC_GAME` environment variable. Adding a new game means creating its `src/lib/games/<id>/` folder and registering it in `scripts/buildApp.js`.
 
 # Documentation
 
@@ -64,8 +60,6 @@ It is not very detailed but might help to understand how the format works.
 # How to contribute
 
 Make a new issue saying what you want to work on and wait for me to assign the issue. This way we can also communicate whether or it would be a valid issue to fix/add
-
-No auto-formatter (e.g. Prettier) is used in this repo - the codebase is the result of a full framework migration with thousands of lines ported byte-verbatim from the previous app, and a full-tree reformat would erase that history for no real benefit. Please match the existing style by hand: 4-space indentation, no space just inside `{`/`}`, single quotes, LF line endings. `npm run lint` enforces what eslint can check mechanically.
 
 # Checks to run
 

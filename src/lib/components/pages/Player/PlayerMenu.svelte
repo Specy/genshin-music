@@ -534,10 +534,6 @@
         />
         <Separator background="var(--secondary)" height="0.1rem" verticalMargin="0.5rem" />
         <div class="settings-row-wrap">
-          {t('settings:select_language')}
-          <LanguageSelector />
-        </div>
-        <div class="settings-row-wrap">
           {#if globalConfigStore.state.IS_MIDI_AVAILABLE}
             <AppLink href="/keybinds">
               <AppButton style="width:fit-content">
@@ -550,21 +546,19 @@
               {t('menu:change_app_theme')}
             </AppButton>
           </AppLink>
+          <LanguageSelector />
         </div>
-        <div style="margin-top:0.4rem;margin-bottom:0.6rem" class={hasTooltip(true)}>
-          {isPersistentStorage
-            ? t('settings:memory_persisted')
-            : t('settings:memory_not_persisted')}
-          {#if isPersistentStorage}
-            <Tooltip position="top" style="max-width:unset">
-              {t('settings:memory_persisted_description')}
-            </Tooltip>
-          {:else}
+        {#if !isPersistentStorage}
+          <div
+            style="margin-top:0.4rem;margin-bottom:0.6rem; text-align:center"
+            class={hasTooltip(true)}
+          >
+            {t('settings:memory_not_persisted')}
             <Tooltip position="top">
               {t('settings:memory_not_persisted_description')}
             </Tooltip>
-          {/if}
-        </div>
+          </div>
+        {/if}
         <DonateButton />
       </MenuPanel>
 

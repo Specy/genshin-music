@@ -67,7 +67,6 @@
 </script>
 
 {#if !instrument}
-  <!-- QUIRK: two spaces between the class tokens is old's typo, kept byte-for-byte — HTML ignores it. The has-instrument branch below has one space, also matching old. -->
   <div class="floating-instrument-settings box-shadow">
     {t('instrument_settings:no_instrument_selected')}
   </div>
@@ -76,7 +75,7 @@
     class="floating-instrument-settings box-shadow"
     use:clickOutside={{ active: true, ignoreFocusable: true, onOutside: onClose }}
   >
-    <div class="row space-between">
+    <div class="row space-between items-center">
       {t('instrument_settings:layer_name')}
       <input
         type="text"
@@ -89,7 +88,7 @@
       />
     </div>
 
-    <div class="row space-between" style="margin-top:0.4rem">
+    <div class="row space-between items-center">
       {t('common:instrument')}
       <InstrumentSelect
         style="width:8rem"
@@ -97,7 +96,7 @@
         onChange={(name) => onChange(edited({ name }))}
       />
     </div>
-    <div class="row space-between" style="margin-top:0.4rem">
+    <div class="row space-between items-center">
       {t('common:pitch')}
       <PitchSelect
         style="padding:0.3rem;width:8rem"
@@ -109,7 +108,7 @@
         </option>
       </PitchSelect>
     </div>
-    <div class="row space-between" style="margin-top:0.4rem">
+    <div class="row space-between items-center">
       {t('common:reverb')}
       <Select
         style="padding:0.3rem;width:8rem"
@@ -130,7 +129,7 @@
       </Select>
     </div>
 
-    <div class="row space-between" style="margin-top:0.4rem">
+    <div class="row space-between items-center">
       {t('instrument_settings:note_icon')}
       <Select
         style="padding:0.3rem;width:8rem"
@@ -143,7 +142,7 @@
       </Select>
     </div>
 
-    <div class="row" style="margin-top:1rem;align-items:center">
+    <div class="row" style="margin-top:0.2rem;align-items:center">
       {t('instrument_settings:volume')}
       <span
         style="margin-left:0.4rem;width:3rem{instrument.volume > 100
@@ -209,8 +208,8 @@
          right where the move buttons already were.
          The bounds are also the single-layer guard: with one layer left, `currentLayer` is both 0
          and `instruments.length - 1`, so both merges are disabled with nothing to merge into. -->
-    <div class="row" style="margin-top:1rem;gap:0.4rem">
-      <div class="column" style="flex:1;gap:0.4rem">
+    <div class="row" style="margin-top:0.4rem;gap:0.3rem">
+      <div class="column" style="flex:1;gap:0.3rem">
         <AppButton
           onclick={() => onMerge(-1)}
           disabled={currentLayer === 0}
@@ -254,7 +253,7 @@
           {t('instrument_settings:merge_down')}
         </AppButton>
       </div>
-      <div class="column" style="flex:1;gap:0.4rem">
+      <div class="column" style="flex:1;gap:0.3rem">
         <AppButton
           onclick={() => onChangePosition(-1)}
           disabled={currentLayer === 0}

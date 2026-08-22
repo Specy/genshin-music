@@ -3024,6 +3024,7 @@ select {
   color: var(--menu-background-text);
   display: flex;
   flex-direction: column;
+  gap: 0.4rem;
   padding: 0.6rem;
   border-radius: 0.4rem;
   border: solid 2px var(--secondary);
@@ -3581,8 +3582,10 @@ select {
   }
 
   .floating-instrument-settings {
-    top: 1.2rem;
+    top: 0.4rem;
     padding: 0.5rem;
+    margin-left: 5.8rem;
+    gap: 0.3rem;
   }
 
   .buttons-composer-wrapper,
