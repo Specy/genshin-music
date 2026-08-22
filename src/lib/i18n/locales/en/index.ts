@@ -74,6 +74,7 @@ export const i18n_en = {
     delete_song: `Are you sure you want to delete the song "{{song_name}}"?`,
 
     confirm_import_opened_file: `You opened the files "{{files_names}}", do you want to import it?`,
+    merge_layers: `Merge the layer "{{source_layer}}" into "{{destination_layer}}"? Its notes move onto "{{destination_layer}}" and the layer is removed. This cannot be undone.`,
   },
   common: {
     warning: 'Warning',
@@ -751,6 +752,8 @@ export const i18n_en = {
     volume_high_warning: 'If you hear distortion, reduce the volume',
     move_down: 'Move down',
     move_up: 'Move up',
+    merge_up: 'Merge up',
+    merge_down: 'Merge down',
   },
 
   tutorials: {

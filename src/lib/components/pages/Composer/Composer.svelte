@@ -761,6 +761,44 @@
     }
   }
 
+  /**
+   * The layer panel's Merge up / Merge down: fold the selected layer's notes into its neighbour and
+   * retire the layer. Destructive and NOT undoable, so the confirm is the whole guard - see below.
+   */
+  async function mergeLayer(direction: 1 | -1) {
+    const target = layer + direction;
+    if (target < 0 || target > song.instruments.length - 1) return;
+    // the same lookup removeInstrument's `layer_name` does - locale key, else config displayName,
+    // else the raw name - except `||`, because `alias` defaults to the empty string rather than
+    // undefined (as toMidi's track-name comment records); under `??` every unnamed layer would be
+    // announced as "" in the question below.
+    const layerName = (index: number) =>
+      song.instruments[index].alias || tInstrument(song.instruments[index].name);
+    const confirm = await asyncConfirm(
+      t('confirm:merge_layers', {
+        source_layer: layerName(layer),
+        destination_layer: layerName(target),
+      })
+    );
+    if (!confirm) return;
+    // NO undo entry, deliberately. addToHistory() does snapshot the roster and the notes from one
+    // clone, so an entry COULD restore the pair - but it only records while the tools panel is open,
+    // and this edit is reachable with it closed, so half the merges would be undoable and half not.
+    // The decision is none of them: the question above is the guard.
+    song.mergeTrackInto(layer, target);
+    // BEFORE the funnel below: the roster shrank, so the engine list has to be re-requested for the
+    // notes' new track indexes to address the right instruments. Slots whose instrument actually
+    // changed settle on the synchronizer's own resync (onSynced), the same second pass an
+    // instrument swap made from this panel relies on.
+    syncInstruments(song);
+    // merging UP moves the selection to the destination above; merging DOWN leaves it where it is,
+    // because removing this layer slides the destination down into the index it already sits at
+    if (direction === -1) layer = target;
+    // the note-edit funnel, as every path that changes what playback would sound: it marks the song
+    // dirty (which is what the unsaved-changes prompts read) and carries the ADR-0006 resync
+    handleAutoSave();
+  }
+
   function editInstrument(instrument: InstrumentData, index: number) {
     // setInstrument clones and REPLACES the array entry. That fresh identity is load-bearing:
     // InstrumentControls renders a keyed {#each} over the roster, so an in-place field edit would
@@ -2435,6 +2473,7 @@
       onInstrumentChange={editInstrument}
       onInstrumentDelete={removeInstrument}
       onChangePosition={switchLayerPosition}
+      onMerge={mergeLayer}
     />
   </div>
   <div class="top-panel-composer" style="grid-area:b">

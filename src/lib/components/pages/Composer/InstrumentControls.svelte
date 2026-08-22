@@ -14,6 +14,7 @@
     onInstrumentDelete,
     onInstrumentAdd,
     onChangePosition,
+    onMerge,
   }: {
     instruments: InstrumentData[];
     selected: number;
@@ -23,6 +24,7 @@
     onInstrumentDelete: (index: number) => void;
     onInstrumentAdd: () => void;
     onChangePosition: (direction: 1 | -1) => void;
+    onMerge: (direction: 1 | -1) => void;
   } = $props();
 
   let isEditing = $state(false);
@@ -61,6 +63,12 @@
       setNotEditing();
     }}
     {onChangePosition}
+    onMerge={(direction) => {
+      onMerge(direction);
+      //the panel is showing a layer that may no longer exist (a merge removes one), and its own
+      //`instrument` prop is read by index - the same close the delete path does, for the same reason
+      setNotEditing();
+    }}
     onClose={setNotEditing}
   />
 {/if}

@@ -57,7 +57,8 @@
     },
     "confirm": {
         "delete_song": "Вы уверены, что хотите удалить мелодию \"{{song_name}}\"?",
-        "confirm_import_opened_file": "Вы открыли файлы \"{{files_names}}\", хотите их импортировать?"
+        "confirm_import_opened_file": "Вы открыли файлы \"{{files_names}}\", хотите их импортировать?",
+        "merge_layers": "Объединить слой \"{{source_layer}}\" со слоем \"{{destination_layer}}\"? Его ноты перейдут на \"{{destination_layer}}\", а сам слой будет удалён. Это действие нельзя отменить."
     },
     "common": {
         "warning": "Предупреждение",
@@ -636,7 +637,9 @@
         "volume": "Volume",
         "volume_high_warning": "If you hear distortion, reduce the volume",
         "move_down": "Move down",
-        "move_up": "Move up"
+        "move_up": "Move up",
+        "merge_up": "Объединить вверх",
+        "merge_down": "Объединить вниз"
     },
     "tutorials": {
         "composer": {

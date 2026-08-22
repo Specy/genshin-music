@@ -57,7 +57,8 @@
     },
     "confirm": {
         "delete_song": "\"{{song_name}}\" isimli müziği silmek istediğine emin misin?",
-        "confirm_import_opened_file": "\"{{files_names}}\" isimli dosyayı açtın, onu içe aktarmak ister misin?"
+        "confirm_import_opened_file": "\"{{files_names}}\" isimli dosyayı açtın, onu içe aktarmak ister misin?",
+        "merge_layers": "\"{{source_layer}}\" katmanı \"{{destination_layer}}\" katmanıyla birleştirilsin mi? Notaları \"{{destination_layer}}\" katmanına taşınır ve katman silinir. Bu işlem geri alınamaz."
     },
     "common": {
         "warning": "Uyarı",
@@ -636,7 +637,9 @@
         "volume": "Ses seviyesi",
         "volume_high_warning": "Eğer sesde bozulma duyarsan ses seviyesini kıs",
         "move_down": "Aşağı kaydır",
-        "move_up": "Yukarı kaydır"
+        "move_up": "Yukarı kaydır",
+        "merge_up": "Yukarı birleştir",
+        "merge_down": "Aşağı birleştir"
     },
     "tutorials": {
         "composer": {

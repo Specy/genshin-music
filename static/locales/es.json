@@ -57,7 +57,8 @@
   },
   "confirm": {
     "delete_song": "¿Estás seguro de que deseas eliminar la canción \"{{song_name}}\"?",
-    "confirm_import_opened_file": "Abriste los archivos \"{{files_names}}\", ¿quieres importarlos?"
+    "confirm_import_opened_file": "Abriste los archivos \"{{files_names}}\", ¿quieres importarlos?",
+    "merge_layers": "¿Fusionar la capa \"{{source_layer}}\" en \"{{destination_layer}}\"? Sus notas pasarán a \"{{destination_layer}}\" y la capa se eliminará. Esto no se puede deshacer."
   },
   "common": {
     "warning": "Advertencia",
@@ -634,7 +635,9 @@
     "volume": "Volumen",
     "volume_high_warning": "Si escuchas distorsión, reduce el volumen.",
     "move_down": "Mover hacia abajo",
-    "move_up": "Mover hacia arriba"
+    "move_up": "Mover hacia arriba",
+    "merge_up": "Fusionar arriba",
+    "merge_down": "Fusionar abajo"
   },
   "tutorials": {
     "composer": {

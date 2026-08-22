@@ -57,7 +57,8 @@
     },
     "confirm": {
         "delete_song": "您是否確定刪除歌曲「{{song_name}}」？",
-        "confirm_import_opened_file": "您開啟了檔案「{{files_names}}」，是否要匯入它？"
+        "confirm_import_opened_file": "您開啟了檔案「{{files_names}}」，是否要匯入它？",
+        "merge_layers": "要將音層「{{source_layer}}」合併到「{{destination_layer}}」嗎？它的音符會移動到「{{destination_layer}}」，該音層將被刪除。此操作無法復原。"
     },
     "common": {
         "warning": "警告",
@@ -636,7 +637,9 @@
         "volume": "音量",
         "volume_high_warning": "如果聽到失真，請降低音量",
         "move_down": "向下移動",
-        "move_up": "向上移動"
+        "move_up": "向上移動",
+        "merge_up": "向上合併",
+        "merge_down": "向下合併"
     },
     "tutorials": {
         "composer": {

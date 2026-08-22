@@ -31,6 +31,7 @@
     onDelete,
     onClose,
     onChangePosition,
+    onMerge,
     currentLayer,
     instruments,
   }: {
@@ -39,6 +40,7 @@
     instrument: InstrumentData;
     onChange: (instrument: InstrumentData) => void;
     onChangePosition: (direction: 1 | -1) => void;
+    onMerge: (direction: 1 | -1) => void;
     onDelete: () => void;
     onClose: () => void;
   } = $props();
@@ -201,49 +203,101 @@
         {/if}
       </AppButton>
     </div>
-    <div class="row space-between" style="margin-top:1rem">
-      <AppButton
-        onclick={() => onChangePosition(-1)}
-        disabled={currentLayer === 0}
-        class="flex-centered"
-        style="padding:0.5rem;flex:1;margin-right:0.4rem"
-      >
-        <svg
-          stroke="currentColor"
-          fill="currentColor"
-          stroke-width="0"
-          viewBox="0 0 448 512"
-          style="margin-right:0.2rem"
-          height="1em"
-          width="1em"
-          xmlns="http://www.w3.org/2000/svg"
-          ><path
-            d="M34.9 289.5l-22.2-22.2c-9.4-9.4-9.4-24.6 0-33.9L207 39c9.4-9.4 24.6-9.4 33.9 0l194.3 194.3c9.4 9.4 9.4 24.6 0 33.9L413 289.4c-9.5 9.5-25 9.3-34.3-.4L264 168.6V456c0 13.3-10.7 24-24 24h-32c-13.3 0-24-10.7-24-24V168.6L69.2 289.1c-9.3 9.8-24.8 10-34.3.4z"
-          /></svg
+    <!-- TWO PAIRS SIDE BY SIDE, not four buttons in one row: merging FOLDS this layer into its
+         neighbour and deletes it, moving only reorders, and reading them as one strip is what would
+         let a mis-aimed tap destroy a layer. Destructive pair on the left, harmless pair on the
+         right where the move buttons already were.
+         The bounds are also the single-layer guard: with one layer left, `currentLayer` is both 0
+         and `instruments.length - 1`, so both merges are disabled with nothing to merge into. -->
+    <div class="row" style="margin-top:1rem;gap:0.4rem">
+      <div class="column" style="flex:1;gap:0.4rem">
+        <AppButton
+          onclick={() => onMerge(-1)}
+          disabled={currentLayer === 0}
+          class="flex-centered"
+          style="padding:0.5rem"
         >
-        {t('instrument_settings:move_up')}
-      </AppButton>
-      <AppButton
-        onclick={() => onChangePosition(1)}
-        disabled={currentLayer === instruments.length - 1}
-        class="flex-centered"
-        style="padding:0.5rem;flex:1"
-      >
-        <svg
-          stroke="currentColor"
-          fill="currentColor"
-          stroke-width="0"
-          viewBox="0 0 448 512"
-          style="margin-right:0.2rem"
-          height="1em"
-          width="1em"
-          xmlns="http://www.w3.org/2000/svg"
-          ><path
-            d="M413.1 222.5l22.2 22.2c9.4 9.4 9.4 24.6 0 33.9L241 473c-9.4 9.4-24.6 9.4-33.9 0L12.7 278.6c-9.4-9.4-9.4-24.6 0-33.9l22.2-22.2c9.5-9.5 25-9.3 34.3.4L184 343.4V56c0-13.3 10.7-24 24-24h32c13.3 0 24 10.7 24 24v287.4l114.8-120.5c9.3-9.8 24.8-10 34.3-.4z"
-          /></svg
+          <svg
+            stroke="currentColor"
+            fill="currentColor"
+            stroke-width="0"
+            viewBox="0 0 576 512"
+            style="margin-right:0.2rem"
+            height="1em"
+            width="1em"
+            xmlns="http://www.w3.org/2000/svg"
+            ><path
+              d="M32 96h512c17.7 0 32-14.3 32-32s-14.3-32-32-32H32C14.3 32 0 46.3 0 64s14.3 32 32 32M9.4 233.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L96 237.3V448c0 17.7 14.3 32 32 32s32-14.3 32-32V237.3l41.4 41.4c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3l-96-96c-12.5-12.5-32.8-12.5-45.3 0zm320 45.3c12.5 12.5 32.8 12.5 45.3 0l41.3-41.4V448c0 17.7 14.3 32 32 32s32-14.3 32-32V237.3l41.4 41.4c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3l-96-96c-12.5-12.5-32.8-12.5-45.3 0l-96 96c-12.5 12.5-12.5 32.8 0 45.3"
+            /></svg
+          >
+          {t('instrument_settings:merge_up')}
+        </AppButton>
+        <AppButton
+          onclick={() => onMerge(1)}
+          disabled={currentLayer === instruments.length - 1}
+          class="flex-centered"
+          style="padding:0.5rem"
         >
-        {t('instrument_settings:move_down')}
-      </AppButton>
+          <svg
+            stroke="currentColor"
+            fill="currentColor"
+            stroke-width="0"
+            viewBox="0 0 576 512"
+            style="margin-right:0.2rem"
+            height="1em"
+            width="1em"
+            xmlns="http://www.w3.org/2000/svg"
+            ><path
+              d="M544 416H32c-17.7 0-32 14.3-32 32s14.3 32 32 32h512c17.7 0 32-14.3 32-32s-14.3-32-32-32m22.6-137.4c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L480 274.7V64c0-17.7-14.3-32-32-32s-32 14.3-32 32v210.7l-41.4-41.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l96 96c12.5 12.5 32.8 12.5 45.3 0zm-320-45.3c-12.5-12.5-32.8-12.5-45.3 0L160 274.7V64c0-17.7-14.3-32-32-32S96 46.3 96 64v210.7l-41.4-41.3c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l96 96c12.5 12.5 32.8 12.5 45.3 0l96-96c12.5-12.5 12.5-32.8 0-45.3z"
+            /></svg
+          >
+          {t('instrument_settings:merge_down')}
+        </AppButton>
+      </div>
+      <div class="column" style="flex:1;gap:0.4rem">
+        <AppButton
+          onclick={() => onChangePosition(-1)}
+          disabled={currentLayer === 0}
+          class="flex-centered"
+          style="padding:0.5rem"
+        >
+          <svg
+            stroke="currentColor"
+            fill="currentColor"
+            stroke-width="0"
+            viewBox="0 0 448 512"
+            style="margin-right:0.2rem"
+            height="1em"
+            width="1em"
+            xmlns="http://www.w3.org/2000/svg"
+            ><path
+              d="M34.9 289.5l-22.2-22.2c-9.4-9.4-9.4-24.6 0-33.9L207 39c9.4-9.4 24.6-9.4 33.9 0l194.3 194.3c9.4 9.4 9.4 24.6 0 33.9L413 289.4c-9.5 9.5-25 9.3-34.3-.4L264 168.6V456c0 13.3-10.7 24-24 24h-32c-13.3 0-24-10.7-24-24V168.6L69.2 289.1c-9.3 9.8-24.8 10-34.3.4z"
+            /></svg
+          >
+          {t('instrument_settings:move_up')}
+        </AppButton>
+        <AppButton
+          onclick={() => onChangePosition(1)}
+          disabled={currentLayer === instruments.length - 1}
+          class="flex-centered"
+          style="padding:0.5rem"
+        >
+          <svg
+            stroke="currentColor"
+            fill="currentColor"
+            stroke-width="0"
+            viewBox="0 0 448 512"
+            style="margin-right:0.2rem"
+            height="1em"
+            width="1em"
+            xmlns="http://www.w3.org/2000/svg"
+            ><path
+              d="M413.1 222.5l22.2 22.2c9.4 9.4 9.4 24.6 0 33.9L241 473c-9.4 9.4-24.6 9.4-33.9 0L12.7 278.6c-9.4-9.4-9.4-24.6 0-33.9l22.2-22.2c9.5-9.5 25-9.3 34.3.4L184 343.4V56c0-13.3 10.7-24 24-24h32c13.3 0 24 10.7 24 24v287.4l114.8-120.5c9.3-9.8 24.8-10 34.3-.4z"
+            /></svg
+          >
+          {t('instrument_settings:move_down')}
+        </AppButton>
+      </div>
     </div>
     <div class="row space-between" style="margin-top:0.4rem">
       <AppButton class="row-centered" style="padding:0.4rem;width:fit-content" onclick={onDelete}>

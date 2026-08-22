@@ -447,6 +447,137 @@ describe('an instrument swap rewrites the track button-preservingly', () => {
 })
 
 /**
+ * The layer-settings panel's Merge up / Merge down. One logical edit with two halves that have to
+ * agree: the notes move onto the destination track, and the emptied slot leaves the roster - so
+ * every track above it renumbers, or the survivors address the wrong instrument.
+ */
+describe('merging a layer folds its notes into another and retires its slot', () => {
+    /** The absolute Note Number a button of the default instrument enters at Basepoint C. */
+    const numberOf = (button: number) => INSTRUMENTS_DATA[INSTRUMENTS[0]].notes[button].sounding
+
+    /** Three layers, so there is always a track ABOVE the merged slot left to renumber. */
+    const threeLayers = () =>
+        new ComposedSong('merge', [INSTRUMENTS[0], INSTRUMENTS[0], INSTRUMENTS[0]])
+
+    it('carries the notes over with their Note Numbers untouched', () => {
+        const song = threeLayers()
+        song.addNoteAt(0, 1, numberOf(3), 2)
+
+        song.mergeTrackInto(1, 0)
+
+        const notes = song.columns[0].notesOfTrack(0)
+        expect(notes).toHaveLength(1)
+        //ADR-0007: a number is absolute, so the note goes on SOUNDING what it sounded. Remapping it
+        //onto the destination's buttons would re-pitch the track behind a prompt that only offered
+        //to move it.
+        expect(notes[0].id).toBe(numberOf(3))
+        expect(notes[0].span).toBe(2)
+        //...and the source layer is gone, notes and roster slot together
+        expect(song.instruments).toHaveLength(2)
+        expect(song.columns[0].notesOfTrack(1)).toEqual([])
+    })
+
+    it('a number the destination cannot voice arrives as a Stranded Note, not a rewrite', () => {
+        //by capability, never by game id: a layer holding a number no instrument of this build can
+        //voice is exactly the case a swap already passes through untouched
+        const stranded = Math.max(...INSTRUMENTS.flatMap((name) =>
+            INSTRUMENTS_DATA[name].notes.map((note) => note.sounding))) + 1
+        const song = new ComposedSong('strand by merge', [INSTRUMENTS[0], INSTRUMENTS[0]])
+        song.addNoteAt(0, 1, stranded)
+
+        song.mergeTrackInto(1, 0)
+
+        expect(song.columns[0].notesOfTrack(0)[0].id).toBe(stranded)
+        expect(gridRowForNumber(INSTRUMENTS[0], 'C', stranded).stranded).toBe(true)
+    })
+
+    it('two notes landing on one (column, number) merge keeping the longest span', () => {
+        const song = threeLayers()
+        //the longer span is on the INCOMING note, so a merge that kept the wrong one is visible
+        song.addNoteAt(0, 0, numberOf(2), 1)
+        song.addNoteAt(0, 1, numberOf(2), 4)
+
+        song.mergeTrackInto(1, 0)
+
+        const notes = song.columns[0].notesOfTrack(0)
+        expect(notes).toHaveLength(1)
+        expect(notes[0].span).toBe(4)
+        //...and the survivor is the note the editor can reach: behind a duplicate, removeNote takes
+        //the first and leaves the second sounding
+        song.removeNoteAt(0, 0, numberOf(2))
+        expect(song.columns[0].notes).toEqual([])
+    })
+
+    it('a span kept by the merge is truncated where it now runs into a later note', () => {
+        const song = new ComposedSong('merge spans', [INSTRUMENTS[0], INSTRUMENTS[0]])
+        const number = numberOf(2)
+        song.addNoteAt(0, 0, number, 1)
+        song.addNoteAt(3, 0, number, 1)
+        //longest-span-wins hands column 0 a span of 6, which reaches straight through column 3 -
+        //same-number spans on one track never overlap, so the pass has to re-enforce that
+        song.addNoteAt(0, 1, number, 6)
+
+        song.mergeTrackInto(1, 0)
+
+        expect(song.columns[0].notesOfTrack(0)[0].span).toBe(3)
+        expect(song.columns[3].notesOfTrack(0)).toHaveLength(1)
+    })
+
+    it('every track above the removed slot renumbers, roster and notes together', () => {
+        const song = threeLayers()
+        //the destination is the MIDDLE layer, so the merge leaves a track above it to move down
+        song.setInstrument(1, new InstrumentData({name: INSTRUMENTS[0], alias: 'destination'}))
+        song.setInstrument(2, new InstrumentData({name: INSTRUMENTS[0], alias: 'above'}))
+        song.addNoteAt(0, 0, numberOf(1))
+        song.addNoteAt(1, 2, numberOf(5))
+
+        song.mergeTrackInto(0, 1)
+
+        expect(song.instruments.map((instrument) => instrument.alias)).toEqual(['destination', 'above'])
+        //the merged notes followed the destination down into slot 0...
+        expect(song.columns[0].notesOfTrack(0)[0].id).toBe(numberOf(1))
+        //...and the layer that sat above the removed slot came down with its own notes
+        expect(song.columns[1].notesOfTrack(1)[0].id).toBe(numberOf(5))
+    })
+
+    it('the destination keeps every one of its own settings', () => {
+        const song = new ComposedSong('merge settings', [INSTRUMENTS[0], INSTRUMENTS[0]])
+        const destination = new InstrumentData({
+            name: INSTRUMENTS[0],
+            alias: 'keep me',
+            volume: 42,
+            pitch: 'D',
+            icon: 'line',
+            muted: true,
+            solo: true,
+            reverbOverride: true,
+            visible: false,
+        })
+        song.setInstrument(0, destination)
+        song.addNoteAt(0, 1, numberOf(4))
+
+        song.mergeTrackInto(1, 0)
+
+        //nothing of the source survives except its notes - not its instrument, and not one of the
+        //per-layer settings the panel writes
+        expect(song.instruments[0].serialize()).toEqual(destination.serialize())
+    })
+
+    it('refuses an index that addresses no layer, and a layer merged into itself', () => {
+        const song = threeLayers()
+        song.addNoteAt(0, 1, numberOf(2))
+        const before = song.serialize()
+
+        song.mergeTrackInto(1, 1)
+        song.mergeTrackInto(1, 9)
+        song.mergeTrackInto(-1, 0)
+
+        //a merge into itself would otherwise retarget nothing and still delete the layer
+        expect(song.serialize()).toEqual(before)
+    })
+})
+
+/**
  * `breakpoints` holds column INDEXES, so it goes stale the moment the column array shrinks under
  * it. serialize() writes whatever is in the array, and the composer's UI simply never draws a
  * marker it cannot place - so a stale entry is invisible until it is already in IndexedDB, which

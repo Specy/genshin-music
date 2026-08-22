@@ -57,7 +57,8 @@
   },
   "confirm": {
     "delete_song": "Vuoi davvero eliminare il brano \"{{song_name}}\"?",
-    "confirm_import_opened_file": "Hai aperto i file \"{{files_names}}\". Vuoi importarli?"
+    "confirm_import_opened_file": "Hai aperto i file \"{{files_names}}\". Vuoi importarli?",
+    "merge_layers": "Vuoi unire il livello \"{{source_layer}}\" in \"{{destination_layer}}\"? Le sue note passeranno a \"{{destination_layer}}\" e il livello verrà rimosso. L'operazione non può essere annullata."
   },
   "common": {
     "warning": "Avviso",
@@ -634,7 +635,9 @@
     "volume": "Volume",
     "volume_high_warning": "Se senti distorsioni, riduci il volume",
     "move_down": "Sposta verso il basso",
-    "move_up": "Sposta verso l'alto"
+    "move_up": "Sposta verso l'alto",
+    "merge_up": "Unisci sopra",
+    "merge_down": "Unisci sotto"
   },
   "tutorials": {
     "composer": {

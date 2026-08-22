@@ -745,6 +745,64 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 5> 
         }
     }
 
+    /**
+     * Fold track `from` into track `into`: every note of `from` is retargeted, then the emptied
+     * slot leaves the roster. The DESTINATION keeps all of its own settings - instrument, alias,
+     * volume, Basepoint override, mute/solo/reverb override, icon, visibility - so nothing of the
+     * source survives except its notes.
+     *
+     * NOTE NUMBERS ARE NOT REWRITTEN, and that is the decision rather than an omission. A number is
+     * absolute (ADR-0007), so a note carried onto another track goes on SOUNDING what it sounded,
+     * and one the destination's instrument cannot voice at its Basepoint simply becomes a Stranded
+     * Note there - exactly what an instrument swap leaves behind, and exactly what the canvas
+     * already draws. What that prevents: "helpfully" remapping the numbers onto the destination's
+     * buttons, which would re-pitch a whole track behind a prompt that only ever offered to move it.
+     *
+     * The retarget can put two notes on one (track, number) in a column, so it ends the way every
+     * non-injective pass in this class does - #mergeTrackDuplicates (longest span wins), then
+     * normalizeSpans() when something merged, because a kept span may now reach into a later note
+     * of the same (track, number). Same tail as setInstrument's.
+     *
+     * Deliberately NOT chained onto the public removeInstrument, for the reason removeInstrument
+     * itself gives for not calling eraseColumns: that method ends in its own touch-all + bump and
+     * its own roster assignment, so one logical edit would advance every column's plain `version`
+     * twice and publish the roster twice. Its retagging pass is inlined below instead.
+     *
+     * Both indexes must address a roster slot, and be distinct; anything else is a no-op that
+     * publishes nothing. A layer merged into ITSELF is the one worth naming: it would retarget
+     * nothing and then delete the layer, which is a delete wearing a merge's prompt.
+     */
+    mergeTrackInto(from: number, into: number) {
+        if (from === into) return
+        if (this.instruments[from] === undefined || this.instruments[into] === undefined) return
+        for (const column of this.#columns) {
+            for (const note of column.notes) {
+                if (note.trackIndex === from) note.trackIndex = into
+            }
+        }
+        //keyed on the index the notes carry RIGHT NOW, before the reindex below moves it: two notes
+        //are only comparable while both are stated in the same terms
+        const merged = this.#mergeTrackDuplicates(into)
+        //the source slot leaves the roster, so every track above it shifts down - the same inline
+        //pass removeInstrument runs, minus its note clearing (nothing is left on `from` to clear)
+        for (const column of this.#columns) {
+            for (const note of column.notes) {
+                if (note.trackIndex > from) note.trackIndex--
+            }
+        }
+        if (merged) {
+            //normalizeSpans is what publishes the graph half in this branch - it ends in its own
+            //touch-all + bump, and doing both here as well is the double publish above
+            this.normalizeSpans()
+        } else {
+            this.#touchAllColumns()
+            this.#bumpStructure()
+        }
+        const instruments = [...this.instruments]
+        instruments.splice(from, 1)
+        this.instruments = instruments
+    }
+
     //(the static `selection(start, end)` helper lived here and built an index list for
     //removeInstrument's eraseColumns() call. Its last caller went away when removeInstrument
     //stopped double-publishing, and it was only ever correct for start = 0 - it mapped

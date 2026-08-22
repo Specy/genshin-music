@@ -462,6 +462,30 @@ const CASES: PublishCase[] = [
         touches: 'all',
         run: song => song.removeInstrument(0),
     },
+    {
+        name: 'mergeTrackInto',
+        //the same ONE-logical-edit rule as the row above, and the reason it inlines the retagging
+        //pass instead of chaining removeInstrument: retarget + merge + reindex + roster shrink is
+        //one edit, so every counter moves by exactly 1 and the roster publishes once
+        publishes: ['structure', 'instruments'],
+        touches: 'all',
+        run: song => song.mergeTrackInto(1, 0),
+    },
+    {
+        name: 'mergeTrackInto',
+        label: 'no such layer',
+        publishes: [],
+        touches: 'none',
+        run: song => song.mergeTrackInto(0, 9),
+    },
+    {
+        name: 'mergeTrackInto',
+        //a merge into itself would otherwise retarget nothing and still delete the layer
+        label: 'a layer into itself',
+        publishes: [],
+        touches: 'none',
+        run: song => song.mergeTrackInto(1, 1),
+    },
     // ---- breakpoints -----------------------------------------------------------------------
     {
         name: 'toggleBreakpoint',

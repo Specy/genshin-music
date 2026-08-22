@@ -57,7 +57,8 @@
     },
     "confirm": {
         "delete_song": "本当に曲 \"{{song_name}}\" を削除してもよろしいですか？",
-        "confirm_import_opened_file": "ファイル \"{{files_names}}\" を開きました。インポートしますか？"
+        "confirm_import_opened_file": "ファイル \"{{files_names}}\" を開きました。インポートしますか？",
+        "merge_layers": "レイヤー「{{source_layer}}」を「{{destination_layer}}」に統合しますか？ノートは「{{destination_layer}}」に移動し、このレイヤーは削除されます。この操作は元に戻せません。"
     },
     "common": {
         "warning": "警告",
@@ -636,7 +637,9 @@
         "volume": "音量",
         "volume_high_warning": "歪みが聞こえる場合は音量を下げてください",
         "move_down": "下に移動",
-        "move_up": "上に移動"
+        "move_up": "上に移動",
+        "merge_up": "上に統合",
+        "merge_down": "下に統合"
     },
     "tutorials": {
         "composer": {

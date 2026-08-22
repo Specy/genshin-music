@@ -57,7 +57,8 @@
   },
   "confirm": {
     "delete_song": "노래: \"{{song_name}}\"를 정말로 지우시겠습니까?",
-    "confirm_import_opened_file": "파일: \"{{files_names}}\"을 열었습니다. 이 파일들을 불러오고 싶으십니까?"
+    "confirm_import_opened_file": "파일: \"{{files_names}}\"을 열었습니다. 이 파일들을 불러오고 싶으십니까?",
+    "merge_layers": "\"{{source_layer}}\" 레이어를 \"{{destination_layer}}\"에 병합할까요? 노트는 \"{{destination_layer}}\"로 옮겨지고 해당 레이어는 삭제됩니다. 이 작업은 되돌릴 수 없습니다."
   },
   "common": {
     "warning": "경고",
@@ -636,7 +637,9 @@
     "volume": "음량",
     "volume_high_warning": "음이 깨져 들린다면, 볼륨을 줄여주세요.",
     "move_down": "아래로 내리기",
-    "move_up": "위로 올리기"
+    "move_up": "위로 올리기",
+    "merge_up": "위로 병합",
+    "merge_down": "아래로 병합"
   },
   "tutorials": {
     "composer": {

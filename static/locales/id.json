@@ -57,7 +57,8 @@
     },
     "confirm": {
         "delete_song": "Apakah Anda yakin ingin menghapus lagu \"{{song_name}}\"?",
-        "confirm_import_opened_file": "Anda membuka file \"{{files_names}}\", apakah Anda ingin mengimpornya?"
+        "confirm_import_opened_file": "Anda membuka file \"{{files_names}}\", apakah Anda ingin mengimpornya?",
+        "merge_layers": "Gabungkan lapisan \"{{source_layer}}\" ke \"{{destination_layer}}\"? Not-notnya akan pindah ke \"{{destination_layer}}\" dan lapisan tersebut dihapus. Tindakan ini tidak dapat dibatalkan."
     },
     "common": {
         "warning": "Peringatan",
@@ -636,7 +637,9 @@
         "volume": "Volume",
         "volume_high_warning": "Jika Anda mendengar distorsi, kurangi volume",
         "move_down": "Geser ke bawah",
-        "move_up": "Geser ke Atas"
+        "move_up": "Geser ke Atas",
+        "merge_up": "Gabung ke atas",
+        "merge_down": "Gabung ke bawah"
     },
     "tutorials": {
         "composer": {
