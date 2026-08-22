@@ -612,6 +612,12 @@ export class Instrument {
     this.volumeNode?.connect(node);
   };
   dispose = () => {
+    // Committed one-shots are NOT voices, so releaseAllNotes cannot reach them: an engine
+    // disposed while a transport still had a window committed on it (the player swaps the song's
+    // instruments back to the user's own at stop, ADR-0009) would leave up to a horizon of
+    // sources started on the audio clock. Disconnecting below makes them inaudible, which is not
+    // the same as retracting them - retract first, so the rule holds without depending on that.
+    this.cancelScheduledAfter(0);
     this.releaseAllNotes(true);
     this.disconnect();
     this.isDeleted = true;

@@ -104,6 +104,30 @@ describe('what the plan renders', () => {
         expect(audible.some(note => note.time > 0)).toBe(true)
     })
 
+    it('points every event back at the note of the song it came from', () => {
+        //ADR-0009: the player's sheet cursor, chunk position and keyboard flash are keyed by a
+        //note's index in the song, and the plan is what carries them back to it.
+        const recorded = buildSong().toRecordedSong(0)
+        const plan = planSongRender(recorded)
+        plan.events.forEach(event => {
+            const note = recorded.notes[event.noteIndex]
+            expect(note).toBeDefined()
+            expect(note.trackIndex).toBe(event.trackIndex)
+            expect(note.id).toBe(event.id)
+            expect(note.time / 1000).toBe(event.atS)
+        })
+        //the indexes SKIP the muted track's notes rather than renumbering around them, which is
+        //the whole reason a caller cannot just count events
+        expect(plan.events.map(event => event.noteIndex)).toEqual(
+            recorded.notes
+                .map((note, index) => ({note, index}))
+                .filter(({note}) => note.trackIndex !== MUTED_TRACK)
+                .map(({index}) => index)
+        )
+        //non-vacuity: something really was left out, so the two numberings differ
+        expect(plan.events.length).toBeLessThan(recorded.notes.length)
+    })
+
     it('leaves a muted track out entirely, notes and all', () => {
         const song = buildSong()
         const plan = planOf(song)
@@ -126,20 +150,29 @@ describe('what the plan renders', () => {
         const song = buildSong()
         const recorded = song.toRecordedSong(0)
         const plan = planSongRender(recorded)
-        const notes = recorded.notes.filter(note => note.trackIndex === SUSTAIN_TRACK)
+        const notes = recorded.notes
+            .map((note, index) => ({note, index}))
+            .filter(({note}) => note.trackIndex === SUSTAIN_TRACK)
         const events = eventsOfTrack(plan, SUSTAIN_TRACK)
         expect(events.length).toBe(notes.length)
-        notes.forEach((note, i) => {
+        notes.forEach(({note, index}, i) => {
             expect(events[i]).toEqual(
                 note.duration > 0
                     ? {
                         trackIndex: SUSTAIN_TRACK,
+                        noteIndex: index,
                         id: note.id,
                         atS: note.time / 1000,
                         kind: 'press',
                         durationMs: note.duration,
                     }
-                    : {trackIndex: SUSTAIN_TRACK, id: note.id, atS: note.time / 1000, kind: 'play'}
+                    : {
+                        trackIndex: SUSTAIN_TRACK,
+                        noteIndex: index,
+                        id: note.id,
+                        atS: note.time / 1000,
+                        kind: 'play',
+                    }
             )
         })
         //the track carries both, so neither branch is being asserted vacuously

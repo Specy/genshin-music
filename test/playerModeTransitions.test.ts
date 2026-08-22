@@ -36,6 +36,29 @@ vi.mock('$lib/providers/MIDIProvider', () => ({
 
 vi.mock('$core/Analytics', () => ({default: {songEvent: mocks.songEvent}}))
 
+// PLAY MODE runs on the audio clock now (ADR-0009), so the component needs both of the transport's
+// seams. jsdom has no AudioContext: the clock below is the (real or faked) wall clock in seconds,
+// which is all the transport asks of it - it only ever differences two readings. And worker-timers
+// runs its wakes inside a Worker jsdom does not provide, so they are routed to the global timers,
+// which vi.useFakeTimers can then drive where a test wants to.
+vi.mock('$lib/providers/AudioProvider', () => ({
+    AudioProvider: {
+        ensureRunning: vi.fn(async () => {}),
+        getAudioContext: vi.fn(() => ({
+            get currentTime() {
+                return Date.now() / 1000
+            },
+        })),
+    },
+}))
+
+vi.mock('worker-timers', () => ({
+    setTimeout: (handler: () => void, ms: number) => globalThis.setTimeout(handler, ms),
+    clearTimeout: (id: number) => globalThis.clearTimeout(id),
+    setInterval: (handler: () => void, ms: number) => globalThis.setInterval(handler, ms),
+    clearInterval: (id: number) => globalThis.clearInterval(id),
+}))
+
 import PlayerKeyboard from '../src/lib/components/pages/Player/PlayerKeyboard.svelte'
 import {Instrument} from '../src/lib/audio/Instrument.svelte'
 import {playerStore} from '../src/lib/stores/PlayerStore.svelte'
@@ -51,10 +74,17 @@ describe('Player mode transition ownership', () => {
     let playSound: ReturnType<typeof vi.fn>
     let releaseSound: ReturnType<typeof vi.fn>
     let releaseAllSounds: ReturnType<typeof vi.fn>
+    let commitSongNote: ReturnType<typeof vi.fn>
+    let recordSoundedNote: ReturnType<typeof vi.fn>
+    let cancelScheduledSounds: ReturnType<typeof vi.fn>
     let onSongFinished: ReturnType<typeof vi.fn>
     // the props object the component keeps reading from - the harness mutates it where
     // Player.svelte would republish it (see setHasSong below)
     let data: ComponentProps<typeof PlayerKeyboard>['data']
+    /** Seconds each committed note was handed to the audio clock BEFORE the clock reached it. */
+    const commitLeads: number[] = []
+    /** Which teardown step ran first: retracting the window has to precede fading what sounds. */
+    const teardownOrder: string[] = []
 
     beforeEach(() => {
         mocks.pendingDelays.splice(0)
@@ -83,9 +113,15 @@ describe('Player mode transition ownership', () => {
             visualSheetSize: 4,
             hideNotesInPracticeMode: false,
         }
+        commitLeads.splice(0)
+        teardownOrder.splice(0)
         playSound = vi.fn()
         releaseSound = vi.fn()
-        releaseAllSounds = vi.fn()
+        releaseAllSounds = vi.fn(() => teardownOrder.push('release'))
+        commitSongNote = vi.fn((_event: unknown, _track: unknown, atAudioTime: number) =>
+            commitLeads.push(atAudioTime - Date.now() / 1000))
+        recordSoundedNote = vi.fn()
+        cancelScheduledSounds = vi.fn(() => teardownOrder.push('cancel'))
         onSongFinished = vi.fn()
         component = mount(PlayerKeyboard, {
             target,
@@ -95,6 +131,9 @@ describe('Player mode transition ownership', () => {
                     playSound,
                     releaseSound,
                     releaseAllSounds,
+                    commitSongNote,
+                    recordSoundedNote,
+                    cancelScheduledSounds,
                     restartMetronome: vi.fn(),
                     setHasSong: (hasSong: boolean) => {
                         // Player.svelte normally republishes this prop. The component reads the
@@ -159,7 +198,7 @@ describe('Player mode transition ownership', () => {
         Object.defineProperty(press, 'pointerId', {value: 7})
         hitbox.dispatchEvent(press)
         flushSync()
-        expect(playSound).toHaveBeenLastCalledWith(pressedNumber, undefined)
+        expect(playSound).toHaveBeenLastCalledWith(pressedNumber)
 
         data.pitch = 'D'
         expect(note.numberAt('D')).not.toBe(pressedNumber)
@@ -172,6 +211,52 @@ describe('Player mode transition ownership', () => {
         expect(releaseSound).toHaveBeenCalledWith(pressedNumber)
         expect(releaseSound).not.toHaveBeenCalledWith(note.numberAt('D'))
     })
+
+    // ADR-0009: play mode runs on the audio clock. Sound is committed to it up to a horizon ahead
+    // of being heard, while everything visible about a note happens at the boundary the listener
+    // hears it on - the two used to be one main-thread instant.
+    it('commits every play-mode note ahead of the audio clock, and moves the cursor when it sounds', async () => {
+        const song = buildRecordedSong()
+        playerStore.play(song, 0, song.notes.length)
+
+        await vi.waitFor(() => expect(commitSongNote).toHaveBeenCalled())
+        //committed AHEAD: a note handed over at the clock's own instant is at the mercy of
+        //whatever the main thread does next, which is the defect the transport removes
+        expect(commitLeads.length).toBeGreaterThan(0)
+        commitLeads.forEach(lead => expect(lead).toBeGreaterThan(0))
+        //...and nothing has SOUNDED yet, so the cursor has not moved with the commits
+        expect(playerControlsStore.current).toBe(0)
+
+        await vi.waitFor(
+            () => expect(playerControlsStore.current).toBe(song.notes.length),
+            {timeout: 4000},
+        )
+        expect(commitSongNote).toHaveBeenCalledTimes(song.notes.length)
+        //every note reached the ear, and the recording hook was handed the sounding note's own id
+        expect(recordSoundedNote.mock.calls.map(([id]) => id)).toEqual(song.notes.map(n => n.id))
+        await vi.waitFor(() => expect(onSongFinished).toHaveBeenCalled())
+    }, 10000)
+
+    it('retracts the committed window before releasing what already sounds, on stop', async () => {
+        const song = buildRecordedSong()
+        playerStore.play(song, 0, song.notes.length)
+        await vi.waitFor(() => expect(commitSongNote).toHaveBeenCalled())
+        const committedBeforeStop = commitSongNote.mock.calls.length
+        const sweepsBeforeStop = cancelScheduledSounds.mock.calls.length
+        teardownOrder.splice(0)
+
+        playerStore.resetSong()
+        await vi.waitFor(() =>
+            expect(cancelScheduledSounds.mock.calls.length).toBeGreaterThan(sweepsBeforeStop))
+
+        //ADR-0006's exact rationale: with a ~1 s horizon, fading first and cancelling afterwards
+        //leaks a full second of runaway notes
+        expect(teardownOrder).toEqual(['cancel', 'release'])
+        //and the stopped transport commits nothing more, however long the rest of the song was
+        await new Promise(resolve => setTimeout(resolve, 400))
+        expect(commitSongNote).toHaveBeenCalledTimes(committedBeforeStop)
+        expect(onSongFinished).not.toHaveBeenCalled()
+    }, 10000)
 
     it('clears the practice sheet and score as soon as approach preparation starts', async () => {
         const song = await enterPractice()

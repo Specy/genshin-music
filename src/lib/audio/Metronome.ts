@@ -104,11 +104,11 @@ function wakeIntervalMs(period: number) {
  * `missedBeats`) rather than a correction term: a margin of <= 0 means the audio clock had
  * already passed the beat, which is the only genuine failure this design admits.
  *
- * DELIBERATELY NOT the `delayOffset` idiom used by PlayerKeyboard.svelte's playback loop.
- * That measures wall-clock overshoot and shortens the next wait by it,
+ * DELIBERATELY NOT the `delayOffset` idiom the player's song loop ran on until ADR-0009 moved it
+ * onto this pattern too. That measures wall-clock overshoot and shortens the next wait by it,
  * which corrects when we WAKE but still fires the sound from the main thread whenever it gets
  * around to it. Porting it here would preserve the audible per-click jitter being fixed. Do not
- * "harmonise" the two loops.
+ * reintroduce it.
  */
 export class Metronome {
   emptyBuffer: AudioBuffer | null = null;

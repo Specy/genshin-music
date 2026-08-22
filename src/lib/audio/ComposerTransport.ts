@@ -134,7 +134,8 @@ export interface TransportCallbacks {
  * the next wait corrects when we WAKE while still timing the work from the main thread. Here a
  * late wake self-corrects for free - the next sleep is computed from the absolute boundary, not
  * from an accumulated interval - and the audio was committed ahead of time anyway. Do not
- * "harmonise" this loop with the wall-clock idiom PlayerKeyboard.svelte still uses.
+ * "harmonise" this loop back onto the wall-clock idiom; the player has since left it too, on its
+ * own lean sibling of this class (PlayerTransport.ts, ADR-0009).
  *
  * The transport never touches audio. commitColumn hands notes out; retracting
  * committed-but-unstarted events on stop/resync is the composer's job, through the

@@ -9,6 +9,10 @@
 // where each one lands — while `renderSongToAudioBuffer` only builds nodes and schedules what
 // the plan already decided. jsdom ships no OfflineAudioContext, so the planner is the half the
 // test suite can hold, and it is the half that can be wrong about a song.
+//
+// That split is also why the player anchors its live transport on this same plan (ADR-0009):
+// what a song sounds like is decided once, here, and an export can no longer disagree with the
+// performance it was taken from.
 
 import { base } from '$app/paths';
 import type { Pitch } from '$core/legacyConfig';
@@ -57,6 +61,13 @@ export type PlannedTrack = {
 
 export type PlannedEvent = {
   trackIndex: number;
+  /**
+   * Which note of `song.notes` this event came from. The render itself never needs it — live
+   * playback does (ADR-0009): the player's sheet cursor, chunk position and keyboard flash are
+   * all keyed by a note's index in the song, so the plan carries the way back to it rather than
+   * making the caller re-derive the mapping and get it wrong on a song with muted tracks.
+   */
+  noteIndex: number;
   /** Note Number — absolute, Basepoint included, which is what the engine's API is keyed by. */
   id: number;
   /** Absolute context time in seconds. */
@@ -119,7 +130,7 @@ export function planSongRender(song: RecordedSong): SongRenderPlan {
   );
   const events: PlannedEvent[] = [];
   let lastNoteEndS = 0;
-  for (const note of song.notes) {
+  for (const [noteIndex, note] of song.notes.entries()) {
     const track = tracks[note.trackIndex];
     // A note whose track has no roster entry sounds nowhere: a live surface indexes its loaded
     // engines by trackIndex and returns on a miss, so the render answers it the same way.
@@ -129,12 +140,13 @@ export function planSongRender(song: RecordedSong): SongRenderPlan {
       note.duration > 0 && supportsSustain[note.trackIndex]
         ? {
             trackIndex: note.trackIndex,
+            noteIndex,
             id: note.id,
             atS,
             kind: 'press',
             durationMs: note.duration,
           }
-        : { trackIndex: note.trackIndex, id: note.id, atS, kind: 'play' }
+        : { trackIndex: note.trackIndex, noteIndex, id: note.id, atS, kind: 'play' }
     );
     lastNoteEndS = Math.max(lastNoteEndS, (note.time + note.duration) / 1000);
   }

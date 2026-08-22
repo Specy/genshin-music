@@ -21,12 +21,8 @@
   import { createShortcutListener } from '$stores/KeybindsStore.svelte';
   import { delay } from '$core/utils/Utilities';
   import Analytics from '$core/Analytics';
-  import {
-    InstrumentData,
-    isTrackAudible,
-    Recording,
-    type RecordedNote,
-  } from '$core/Songs/SongClasses';
+  import { InstrumentData, Recording } from '$core/Songs/SongClasses';
+  import type { PlannedEvent, PlannedTrack } from '$lib/audio/OfflineSongRenderer';
   import { RecordedSong } from '$core/Songs/RecordedSong';
   import { VsrgSong } from '$core/Songs/VsrgSong.svelte';
   import { songService } from '$core/Services/SongService';
@@ -56,7 +52,6 @@
    * audio nodes - see displayInstrumentNameFor for which instrument it follows and why.
    */
   let songDisplayInstrument = $state(new Instrument(game.instruments.list[0]));
-  let instrumentsData: InstrumentData[] = [new InstrumentData({ name: game.instruments.list[0] })];
   let isLoadingInstrument = $state(true);
   let isRecording = $state(false);
   let isRecordingAudio = $state(false);
@@ -259,7 +254,6 @@
       if (!mounted) return;
       if (playerStore.eventType === 'stop') playerStore.setKeyboardLayout(instrument.notes);
       instruments[0] = instrument;
-      instrumentsData[0] = new InstrumentData({ name, volume });
       instruments = [...instruments];
       isLoadingInstrument = false;
       AudioProvider.setReverb(settings.reverb.value);
@@ -355,42 +349,65 @@
       playerStore.setKeyboardLayout(instruments[0].notes);
     }
     instruments = newInstruments;
-    instrumentsData = toLoad;
     if (needsLoad) logger.hidePill();
   }
 
   /**
-   * The surface→engine entry point, keyed by NOTE NUMBER (ADR-0005 §4 / ADR-0007):
-   * PlayerKeyboard hands over the number the pressed key ENTERS at the player's Basepoint (or
-   * the song note's own stored number), never a button — so an instrument that cannot voice
-   * that number is simply silent instead of sounding whatever its button of the same index
-   * happens to be.
+   * The LIVE press entry point, keyed by NOTE NUMBER (ADR-0005 §4 / ADR-0007): PlayerKeyboard
+   * hands over the number the pressed key ENTERS at the player's Basepoint, never a button — so
+   * an instrument that cannot voice that number is simply silent instead of sounding whatever its
+   * button of the same index happens to be.
+   *
+   * The recording stores that pressed Note Number, which is also what the saved song carries (a
+   * recording is saved at settings.pitch, the same Basepoint the press entered at). pressNote =
+   * one-shot on non-sustaining instruments, held Voice on sustaining ones (released by
+   * releaseSound on key/pointer up).
+   *
+   * Song playback does NOT come through here: its notes are planned and committed to the audio
+   * clock ahead of time (ADR-0009) — see commitSongNote.
    */
-  function playSound(number: number, songNote?: RecordedNote) {
-    if (!songNote) {
-      //live playing on the main instrument; the recording stores the pressed Note Number, which
-      //is also what the saved song carries (the recording is saved at settings.pitch, the same
-      //Basepoint the press entered at). pressNote = one-shot on non-sustaining instruments, held
-      //Voice on sustaining ones (released by releaseSound on key/pointer up)
-      if (isRecording) handleRecording(number);
-      instruments[0].pressNote(number, settings.pitch.value);
+  function playSound(number: number) {
+    if (isRecording) handleRecording(number);
+    instruments[0].pressNote(number, settings.pitch.value);
+  }
+
+  /**
+   * Commit one planned song event to the audio clock (ADR-0009). Everything musical about it —
+   * which track, which Note Number, press or plain trigger, how long, at what Basepoint — was
+   * decided by `planSongRender`, mute and solo included, so this only hands it to that track's
+   * engine at the absolute time the transport chose. `skipMs` enters the sample partway in, for a
+   * note whose span was already running when playback started.
+   */
+  function commitSongNote(
+    event: PlannedEvent,
+    track: PlannedTrack,
+    atAudioTime: number,
+    skipMs?: number
+  ) {
+    //the roster is loaded asynchronously and can lag a freshly selected song; a track with no
+    //engine yet is silent, exactly as it was before
+    const instrument = instruments[event.trackIndex];
+    if (!instrument) return;
+    if (event.kind === 'press') {
+      instrument.pressNote(event.id, track.pitch, {
+        at: atAudioTime,
+        durationMs: event.durationMs,
+        skipMs,
+      });
     } else {
-      //song playback: the note belongs to exactly one track — play it on that track's
-      //instrument (a number that track cannot voice is stranded, and silent). Notes with a
-      //duration self-release after it (speed-scaled upstream) when the instrument sustains.
-      if (isRecording) handleRecording(songNote.id);
-      const ins = instruments[songNote.trackIndex];
-      const insData = instrumentsData[songNote.trackIndex];
-      //the same derivation the composer plays through, so a song saved with a solo set sounds
-      //identical here; the roster can lag the instrument list, which isTrackAudible tolerates
-      if (!ins || !isTrackAudible(instrumentsData, songNote.trackIndex)) return;
-      const pitch = insData?.pitch || settings.pitch.value;
-      if (songNote.duration > 0 && ins.supportsSustain) {
-        ins.pressNote(songNote.id, pitch, { durationMs: songNote.duration });
-      } else {
-        ins.play(songNote.id, pitch);
-      }
+      instrument.play(event.id, track.pitch, atAudioTime);
     }
+  }
+
+  /**
+   * Retract every committed-but-unstarted event on every track, from this instant on. The
+   * transport never touches audio (its contract), so the stop path runs this sweep itself and
+   * BEFORE fading what already sounds: with a ~1 s horizon an uncancelled stop leaks the whole
+   * window as runaway notes (ADR-0006).
+   */
+  function cancelScheduledSounds() {
+    const now = AudioProvider.getAudioContext().currentTime;
+    instruments.forEach((ins) => ins.cancelScheduledAfter(now));
   }
 
   function releaseSound(number: number) {
@@ -636,6 +653,9 @@
         playSound,
         releaseSound,
         releaseAllSounds,
+        commitSongNote,
+        recordSoundedNote: handleRecording,
+        cancelScheduledSounds,
         restartMetronome,
         setHasSong,
         onSongFinished,

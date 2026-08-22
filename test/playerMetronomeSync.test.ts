@@ -14,6 +14,15 @@ vi.mock('$core/utils/Utilities', async importOriginal => ({
     delay: mocks.delay,
 }))
 
+// The transport's wakes are worker-timers, which run inside a Worker jsdom does not provide; route
+// them to the global timers so the real scheduler runs here.
+vi.mock('worker-timers', () => ({
+    setTimeout: (handler: () => void, ms: number) => globalThis.setTimeout(handler, ms),
+    clearTimeout: (id: number) => globalThis.clearTimeout(id),
+    setInterval: (handler: () => void, ms: number) => globalThis.setInterval(handler, ms),
+    clearInterval: (id: number) => globalThis.clearInterval(id),
+}))
+
 // Player's lifecycle is what these tests exercise; loading/connecting sample buffers is orthogonal
 // and jsdom has no AudioContext. Keep the real Instrument model (notes/shapes/ids) with a no-I/O
 // load method so the full Player + PlayerKeyboard component graph can mount.
@@ -27,10 +36,18 @@ vi.mock('$lib/audio/Instrument.svelte', async importOriginal => {
     }
 })
 
+// PLAY MODE runs on the audio clock now (ADR-0009). jsdom has no AudioContext, so `currentTime` is
+// the (real or faked) wall clock in seconds - all the transport asks of a clock is that it advance,
+// since it only ever differences two readings.
 vi.mock('$lib/providers/AudioProvider', () => ({
     AudioProvider: {
         waitReverb: vi.fn(async () => {}),
-        getAudioContext: vi.fn(() => ({})),
+        ensureRunning: vi.fn(async () => {}),
+        getAudioContext: vi.fn(() => ({
+            get currentTime() {
+                return Date.now() / 1000
+            },
+        })),
         disconnect: vi.fn(),
         connect: vi.fn(),
         setReverb: vi.fn(),
@@ -140,12 +157,12 @@ describe('Player metronome transport synchronization', () => {
         playerStore.play(song)
         await vi.waitFor(() => expect(restart).toHaveBeenCalledTimes(1))
         expect(metronome.bpm).toBe(song.bpm)
-        // PlayerKeyboard gives the song a 200ms lead-in. The old grid is cancelled immediately,
-        // while the replacement downbeat is anchored at that same playback boundary.
+        // PlayerKeyboard gives the song a 200ms lead-in and hands the same number to both: the
+        // metronome anchors its downbeat there, and the transport anchors the first note there.
         expect(restart).toHaveBeenLastCalledWith(200)
+        // Nothing has SOUNDED yet - the lead-in is still running, and the cursor moves at the
+        // boundary rather than when the note was committed to the audio clock.
         expect(playerControlsStore.current).toBe(0)
-        expect(mocks.pendingDelays.some(({ms}) => ms === 200)).toBe(true)
-        takePendingDelay(200).resolve()
         await vi.waitFor(() => expect(playerControlsStore.current).toBe(1))
 
         playerStore.play(song)

@@ -27,6 +27,13 @@
   } from '$stores/KeybindsStore.svelte';
   import { t } from '$i18n/binding.svelte';
   import { Song } from '$core/Songs/Song.svelte';
+  import { AudioProvider } from '$lib/providers/AudioProvider';
+  import {
+    planSongRender,
+    type PlannedEvent,
+    type PlannedTrack,
+  } from '$lib/audio/OfflineSongRenderer';
+  import { PlayerTransport } from '$lib/audio/PlayerTransport';
 
   let {
     data,
@@ -49,9 +56,24 @@
     };
     functions: {
       //id-keyed (ADR-0005 §4): what this surface hands the engine is the Note Id it pressed
-      playSound: (id: number, songNote?: RecordedNote) => void;
+      playSound: (id: number) => void;
       releaseSound: (id: number) => void;
       releaseAllSounds: () => void;
+      /**
+       * Hand one planned song event to its track's engine, committed at the absolute audio time
+       * the transport chose (ADR-0009). `skipMs` enters the sample partway in, for a note whose
+       * span was already running when playback started.
+       */
+      commitSongNote: (
+        event: PlannedEvent,
+        track: PlannedTrack,
+        atAudioTime: number,
+        skipMs?: number
+      ) => void;
+      /** A song note reached the ear: a running note recording writes what the performer hears. */
+      recordSoundedNote: (id: number) => void;
+      /** Retract every committed-but-unstarted event, on every track, from this instant on. */
+      cancelScheduledSounds: () => void;
       restartMetronome: (bpm: number, firstBeatDelayMs?: number) => void;
       setHasSong: (override: boolean) => void;
       onSongFinished: () => void;
@@ -64,8 +86,22 @@
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   let nextChunkDelay = 0;
   const tickTime = 50;
+  /**
+   * How long after the play request the first note sounds. It is the transport's start margin AND
+   * the metronome's first-beat delay, handed to both from here, which is what keeps beat zero and
+   * the first note on the same instant.
+   */
   const playbackLeadInMs = 200;
   let tickInterval: Timer = 0;
+  /**
+   * PLAY MODE's transport (ADR-0009), one per run and null while stopped. Practice and approaching
+   * keep their tick/queue machinery: their sounds are user presses on the immediate path, so there
+   * is nothing for a committed horizon to be ahead of.
+   */
+  let playTransport: PlayerTransport | null = null;
+  // The one clock playback timing lives on. AudioProvider owns the context; reading currentTime
+  // through it (rather than caching a context) keeps this honest across a context recreation.
+  const audioClock = { now: () => AudioProvider.getAudioContext().currentTime };
   let mounted = true;
   let songTimestamp = 0;
   let cleanup: (() => void)[] = [];
@@ -349,6 +385,12 @@
     }
   }
 
+  /**
+   * PLAY MODE, on the audio clock (ADR-0009). The song is planned once through the offline
+   * export's own planner and handed to a transport, which commits each event to the audio clock
+   * up to a horizon ahead while the sounding cursor drives everything the ear-moment owns: the
+   * key flash, the sheet cursor and chunk position, and a running note recording.
+   */
   async function playSong(
     song: RecordedSong,
     start = 0,
@@ -357,57 +399,144 @@
   ) {
     mode = 'play';
     activeRunKey = runKey;
-    end = end ?? song.notes.length;
+    const rangeEnd = end ?? song.notes.length;
     songTimestamp = song.timestamp;
     const keyboard = playerStore.keyboard;
     const { visualSheetSize } = data;
-    const notes = applySpeedChange(song.notes).slice(start, end);
-    if (notes.length === 0) return;
-    const mergedNotes = RecordedSong.mergeNotesIntoChunks(notes.map((n) => n.clone()));
+    //mutates the per-run clone in place, so `song.notes` IS the speed-scaled timeline every index
+    //below - the plan's noteIndex included - addresses
+    const notes = applySpeedChange(song.notes);
+    const ranged = notes.slice(start, rangeEnd);
+    if (ranged.length === 0) return;
+    const mergedNotes = RecordedSong.mergeNotesIntoChunks(ranged.map((n) => n.clone()));
     playerControlsStore.setPages(groupArrayEvery(mergedNotes, visualSheetSize));
-    // Cancel the old click grid now and schedule beat zero at the end of the same preparation
-    // window as the song. A delayed audio-clock anchor avoids both a stray old click during the
-    // lead-in and the phase error that results from starting the metronome's default 50ms margin
-    // alongside this transport's 200ms margin.
-    functions.restartMetronome(song.bpm * data.speedChanger.value, playbackLeadInMs);
-    await delay(playbackLeadInMs);
-    if (!isCurrentRun(runKey, 'play')) return;
-    const startOffset = notes[0].time;
-    let previous = startOffset;
-    let delayOffset = 0;
-    let startTime = Date.now();
-    let chunkPlayedNotes = 0;
-    for (let i = 0; i < notes.length; i++) {
-      const delayTime = notes[i].time - previous;
-      previous = notes[i].time;
-      if (delayTime > 16) await delay(delayTime + delayOffset);
-      if (!isCurrentRun(runKey, 'play') || songTimestamp !== song.timestamp) return;
-      //the note's key on this keyboard, or nothing on screen to press (keyboardButton -1, which
-      //indexes nothing) — either way the sound is the song note's own id, played on its own
-      //track's instrument
-      const keyboardNote = keyboard[notes[i].keyboardButton];
-      if (keyboardNote) handleClick(keyboardNote, notes[i]);
-      else functions.playSound(notes[i].id, notes[i]);
-      //(both branches sound `notes[i]` itself: playSound ignores its first argument whenever a
-      //song note is supplied, so a key with no note on screen is still heard)
-      if (chunkPlayedNotes >= (playerControlsStore.currentChunk?.notes.length ?? 0)) {
-        chunkPlayedNotes = 1;
-        playerControlsStore.incrementChunkPositionAndSetCurrent(start + i + 1);
-      } else {
-        chunkPlayedNotes++;
-        playerControlsStore.setCurrent(start + i + 1);
-      }
-      delayOffset = startTime + previous - startOffset - Date.now();
+
+    // ONE PLANNER for the audio export, the composer's conversion and live play: which tracks are
+    // audible, at what Basepoint, press or plain trigger, and how long is decided there and
+    // nowhere else, so a performance and a rendered file of the same song cannot disagree.
+    const planned = new RecordedSong(song.name, notes, []);
+    planned.instruments = song.instruments;
+    planned.pitch = song.pitch;
+    planned.reverb = song.reverb;
+    const plan = planSongRender(planned);
+    // The range's END is a cut; its START is not - the events before it stay on the timeline, so
+    // a note whose span covers the start can still be found and resumed below.
+    const events = plan.events.filter((event) => event.noteIndex < rangeEnd);
+    const fromIndex = events.findIndex((event) => event.noteIndex >= start);
+    // Nothing audible in the range (every track muted, or soloed away): there is no sounding
+    // moment to drive a run from, so it ends here exactly as an empty note range does above.
+    if (fromIndex === -1) return;
+    const finishS = events
+      .slice(fromIndex)
+      .reduce(
+        (latest, event) =>
+          Math.max(
+            latest,
+            event.atS + (event.kind === 'press' ? (event.durationMs ?? 0) / 1000 : 0)
+          ),
+        events[fromIndex].atS
+      );
+
+    try {
+      // The transport's only clock is the audio clock, and a context created outside a user
+      // gesture starts suspended - anchoring onto a frozen currentTime would wait forever (see
+      // AudioProvider.ensureRunning).
+      await AudioProvider.ensureRunning();
+    } catch (error) {
+      console.error('Unable to start the audio context for player playback', error);
+      return;
     }
-    const lastNoteTime = notes.at(-1)?.time ?? 0;
-    const finalReleaseTime = notes.reduce(
-      (latest, note) =>
-        Math.max(latest, note.time + (sustainingTracks[note.trackIndex] ? note.duration : 0)),
-      lastNoteTime
-    );
-    if (finalReleaseTime > lastNoteTime) await delay(finalReleaseTime - lastNoteTime);
     if (!isCurrentRun(runKey, 'play') || songTimestamp !== song.timestamp) return;
-    functions.onSongFinished();
+    // Cancel the old click grid and anchor beat zero at the same preparation window as the first
+    // note, so one instant is the downbeat for both. Done after the resume above rather than
+    // before it, so a slow resume cannot leave the two anchored on different moments.
+    functions.restartMetronome(song.bpm * data.speedChanger.value, playbackLeadInMs);
+
+    let countedThrough = start - 1;
+    let chunkPlayedNotes = 0;
+    /**
+     * The sheet cursor and chunk position, counted note by note as they always were. It CATCHES
+     * UP over indexes the plan left out - an inaudible track contributes no events - because the
+     * chunk position counts notes: a chunk that never sounds would otherwise leave it one behind
+     * for the rest of the song.
+     */
+    const advanceCountingTo = (noteIndex: number) => {
+      for (let i = countedThrough + 1; i <= noteIndex; i++) {
+        if (chunkPlayedNotes >= (playerControlsStore.currentChunk?.notes.length ?? 0)) {
+          chunkPlayedNotes = 1;
+          playerControlsStore.incrementChunkPositionAndSetCurrent(i + 1);
+        } else {
+          chunkPlayedNotes++;
+          playerControlsStore.setCurrent(i + 1);
+        }
+      }
+      countedThrough = noteIndex;
+    };
+
+    const transport = new PlayerTransport(audioClock, {
+      // COMMIT = SOUND ONLY. Nothing visible happens here: this event is up to a horizon away
+      // from being heard, and everything a listener can see about it belongs to onSounding.
+      commitEvent: (index, atAudioTime) => {
+        if (!isCurrentRun(runKey, 'play') || songTimestamp !== song.timestamp) return;
+        const event = events[index];
+        functions.commitSongNote(event, plan.tracks[event.trackIndex], atAudioTime);
+      },
+      onSounding: (index) => {
+        if (!isCurrentRun(runKey, 'play') || songTimestamp !== song.timestamp) return;
+        const event = events[index];
+        const note = song.notes[event.noteIndex];
+        //keyboardButton -1, or a button this keyboard does not have: the note still sounded (it
+        //was committed a horizon ago) and still counts - there is simply no key to light
+        const keyboardNote = keyboard[note.keyboardButton];
+        if (keyboardNote) flashSongNote(keyboardNote, note);
+        advanceCountingTo(event.noteIndex);
+        //a recording writes what the performer HEARS, which is this instant and not the one the
+        //note was handed to the audio clock at
+        functions.recordSoundedNote(note.id);
+      },
+      // The audio-true end: the last note has finished sounding, a horizon after it went out.
+      onFinished: () => {
+        if (!isCurrentRun(runKey, 'play') || songTimestamp !== song.timestamp) return;
+        //notes the plan left out at the tail still have to be counted, or the slider stops short
+        advanceCountingTo(rangeEnd - 1);
+        functions.onSongFinished();
+      },
+    });
+    playTransport = transport;
+    transport.anchor({ events, finishS }, fromIndex, playbackLeadInMs / 1000);
+    const anchorAudioTime = transport.anchorAudioTime;
+    if (anchorAudioTime === null) return;
+
+    /**
+     * Notes cut off BEFORE the start whose span still covers it (playback resumed mid-note): each
+     * is pressed at the anchor's own absolute audio time, entering its sample where the playhead
+     * would have reached and holding for what is left of the span. This is the composer's
+     * `pressSpansCoveringStart` rule with one difference it has to state: the composer leans on
+     * its no-overlap invariant to know the nearest earlier same-(track, id) note is the only
+     * possible coverer, and a RECORDED song may hold two notes of one id on one track at once. So
+     * the backward scan's FIRST sighting is taken as the answer - the nearest earlier note is the
+     * one the playhead is inside, and an older one still ringing underneath it is a doubling
+     * nobody can pick out once resumed. Only presses resume: a one-shot's attack happened in the
+     * past and cannot be meaningfully re-entered.
+     */
+    const anchorPlanS = events[fromIndex].atS;
+    // eslint-disable-next-line svelte/prefer-svelte-reactivity -- transient local dedupe set
+    const seen = new Set<string>();
+    for (let i = fromIndex - 1; i >= 0; i--) {
+      const event = events[i];
+      const key = `${event.trackIndex}:${event.id}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      if (event.kind !== 'press' || event.atS >= anchorPlanS) continue;
+      const remainingS = event.atS + (event.durationMs ?? 0) / 1000 - anchorPlanS;
+      if (remainingS <= 0) continue;
+      functions.commitSongNote(
+        { ...event, durationMs: remainingS * 1000 },
+        plan.tracks[event.trackIndex],
+        anchorAudioTime,
+        (anchorPlanS - event.atS) * 1000
+      );
+    }
   }
 
   function practiceSong(
@@ -492,7 +621,13 @@
     approachingNotes = Array2d.from(game.notes.perColumn);
     playerControlsStore.clearPages();
     playerControlsStore.resetScore();
-    //stopping playback releases every still-held voice (live and scheduled)
+    //STOP IS THREE STEPS IN THIS ORDER (ADR-0006/0009). The transport stops advancing but never
+    //touches audio, so the committed window has to be retracted here - with a ~1 s horizon an
+    //uncancelled stop leaks a full second of runaway notes - and only then is what is already
+    //sounding faded, which is a release rather than a cancellation: started audio always rings out.
+    playTransport?.stop();
+    playTransport = null;
+    functions.cancelScheduledSounds();
     functions.releaseAllSounds();
     playerStore.setKeyboardLayout(data.instrument.notes);
     functions.setHasSong(false);
@@ -566,7 +701,33 @@
     }
   }
 
-  function handleClick(note: ObservableNote, songNote?: RecordedNote) {
+  /**
+   * The VISUAL half of a song note reaching the ear: light the key it lands on and schedule it
+   * back off. Split out of `handleClick` because a song note's sound is now committed to the
+   * audio clock ahead of time (ADR-0009) while its flash belongs to the instant it is heard - the
+   * two are no longer one moment. A free-play press is still both at once, and stays in
+   * `handleClick`.
+   */
+  function flashSongNote(note: ObservableNote, songNote: RecordedNote) {
+    const prevStatus = note.status;
+    playerStore.setNoteState(note, {
+      status: 'clicked',
+      delay: 0,
+      holdMs: 0,
+      holdTimerMs: 0,
+      holdTimerId: note.data.holdTimerId + 1,
+      animationId: data.hasAnimation ? Math.floor(Math.random() * 10000) + Date.now() : 0,
+    });
+    //a re-press before the previous flash expired must not be unlit by the old timer
+    const pendingReset = timeouts.get(note);
+    if (pendingReset) clearTimeout(pendingReset);
+    //the key stays lit for as long as the note is held where its track can sustain, never less
+    //than the plain tap animation
+    const holdDuration = sustainingTracks[songNote.trackIndex] ? songNote.duration : 0;
+    scheduleStatusReset(note, prevStatus, Math.max(game.notes.animationDelayMs, holdDuration));
+  }
+
+  function handleClick(note: ObservableNote) {
     const hasAnimation = data.hasAnimation;
     if (!note) return;
     const prevStatus = note.status;
@@ -588,14 +749,12 @@
     if (ownsCurrentRun && mode === 'practice' && playerStore.eventType === 'practice')
       handlePracticeClick(note);
     //the engine speaks Note Numbers: play what THIS key enters at the player's Basepoint, not
-    //whatever the sounding instrument keeps at the same button. (With a `songNote` the sound is
-    //the song note's own stored number — see Player.playSound — so this argument is the free-play
-    //half alone.)
+    //whatever the sounding instrument keeps at the same button
     const number = note.numberAt(data.pitch);
-    //a live press is the only kind that is ever released by hand — a song note self-releases on
-    //its own duration — so only it books the number handleRelease will hand back
-    if (!songNote) heldNumbers.set(note, number);
-    functions.playSound(number, songNote);
+    //every press through here is a LIVE one, and a live press is the kind that is released by
+    //hand — so it books the number handleRelease will hand back
+    heldNumbers.set(note, number);
+    functions.playSound(number);
     if (ownsCurrentRun && mode === 'approaching' && playerStore.eventType === 'approaching') {
       const status = handleApproachClick(note);
       playerStore.setNoteState(note, { status });
@@ -604,10 +763,7 @@
     //TODO could add this to the player store
     const pendingReset = timeouts.get(note);
     if (pendingReset && playerStore.eventType === 'play') clearTimeout(pendingReset);
-    if (songNote) {
-      const holdDuration = sustainingTracks[songNote.trackIndex] ? songNote.duration : 0;
-      scheduleStatusReset(note, prevStatus, Math.max(game.notes.animationDelayMs, holdDuration));
-    } else if (data.instrument.supportsSustain) {
+    if (data.instrument.supportsSustain) {
       //live press on a sustaining instrument: the button stays visually pressed until
       //handleRelease lifts it — clear any pending reset from a previous tap so it
       //can't unlight the hold
@@ -761,6 +917,12 @@
     return () => {
       cleanup.forEach((d) => d());
       songTimestamp = 0;
+      //a run left committed on unmount keeps sounding for up to a horizon after the page is gone
+      //(Instrument.dispose ends VOICES, not one-shots already handed to the audio clock), so the
+      //window is retracted here as well as on the stop path
+      playTransport?.stop();
+      playTransport = null;
+      functions.cancelScheduledSounds();
       playerStore.resetSong();
       mounted = false;
       clearInterval(tickInterval);
