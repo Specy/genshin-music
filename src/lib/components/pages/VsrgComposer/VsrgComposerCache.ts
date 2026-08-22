@@ -175,16 +175,14 @@ export class VsrgCanvasCache {
       .lineTo(0, 0);
     thumb.fill({ color: colors.accent[1] });
 
-    // Vertical line through thumb - HORIZONTAL MODE ONLY. It reads as part of the horizontal
-    // playhead, which runs down the canvas in line with it; in vertical mode the playhead is a
-    // horizontal bar elsewhere, so the line is a leftover that draws a stray stripe across the
-    // timeline (user, 2026-08-22). The triangle groups above and below are drawn in both modes.
-    if (isHorizontal) {
-      thumb
-        .moveTo(thumbSize / 2, 0)
-        .lineTo(thumbSize / 2, sizes.timelineSize)
-        .stroke({ width: 3, color: colors.accent[1], alpha: 1 });
-    }
+    // Vertical line through thumb, in BOTH orientations. It was briefly gated to horizontal mode
+    // as a "stray stripe" cleanup, and the maintainer reversed that the same day: the timeline
+    // itself stays horizontal in vertical mode, so the line is the thumb's position marker there
+    // too, not a leftover of the horizontal playhead.
+    thumb
+      .moveTo(thumbSize / 2, 0)
+      .lineTo(thumbSize / 2, sizes.timelineSize)
+      .stroke({ width: 3, color: colors.accent[1], alpha: 1 });
 
     // Bottom triangle group: two degenerate/collapsed triangles + two real triangles
     thumb
