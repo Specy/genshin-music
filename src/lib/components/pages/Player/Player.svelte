@@ -8,8 +8,6 @@
   import PlayerKeyboard from './PlayerKeyboard.svelte';
   import PlayerSongControls from './PlayerSongControls.svelte';
   import AppButton from '$cmp/inputs/AppButton.svelte';
-  //the record dot, which is what a filled circle means on a button that captures audio
-  import IconRecord from '~icons/fa6-solid/circle';
   import { playerStore } from '$stores/PlayerStore.svelte';
   import { playerControlsStore } from '$stores/PlayerControlsStore.svelte';
   import { Instrument } from '$lib/audio/Instrument.svelte';
