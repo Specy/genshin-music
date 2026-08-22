@@ -32,7 +32,6 @@ export const PAGES_VERSIONS = {
     ]),
     theme: makePageVersion('theme', 0),
     transfer: makePageVersion('transfer', 0),
-    umaMode: makePageVersion('umaMode', 0),
     vsrgComposer: makePageVersion('vsrgComposer', 1, [
         "Fixed selecting hit objects and switching between the horizontal and vertical editor",
         "New layers now get a different color",

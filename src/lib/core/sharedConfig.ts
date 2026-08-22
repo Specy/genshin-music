@@ -1,13 +1,17 @@
 // Shared, game-INDEPENDENT constants. BASE_LAYER_LIMIT is deliberately NOT in
 // GameDefinition: it is BigInt-capability-based, not game data (audit Step-3
-// documented exception; both games' config-surface fixtures carry 52).
+// documented exception) - each game's config-surface golden captures whatever
+// value this file holds, so moving it moves those fixtures.
 import { BASE_NOTES, type BaseNote } from '$lib/games/types';
 
 export const APP_VERSION = '4.0.0' as const
 
 export const HAS_BIGINT = typeof BigInt !== 'undefined'
 
-export const BASE_LAYER_LIMIT = HAS_BIGINT ? 52 : 30
+// A song's layer set is a bitmask (NoteLayer), so the cap is bounded by the widest integer that
+// mask can be: BigInt shifts arbitrarily far, while the fallback path shifts a plain number, where
+// `1 << 32` and beyond wrap around instead of growing. Hence the two very different numbers.
+export const BASE_LAYER_LIMIT = HAS_BIGINT ? 64 : 30
 
 // Minimum recorded-note duration (ms) that UI surfaces treat as a deliberate hold.
 // Post-format-v3, EVERY recorded note carries its press→release time — ordinary taps

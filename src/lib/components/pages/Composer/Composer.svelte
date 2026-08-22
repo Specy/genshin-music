@@ -59,7 +59,6 @@
   import { songsStore } from '$stores/SongsStore.svelte';
   import { songService } from '$core/Services/SongService';
   import { fileService } from '$core/Services/FileService';
-  import { globalConfigStore } from '$stores/GlobalConfigStore.svelte';
   import { asyncConfirm, asyncPrompt } from '$stores/AsyncPromptStore.svelte';
   import {
     createKeyboardListener,
@@ -735,8 +734,7 @@
   }
 
   function addInstrument() {
-    const isUmaMode = globalConfigStore.get().IS_UMA_MODE;
-    if (song.instruments.length >= NoteLayer.MAX_LAYERS && !isUmaMode)
+    if (song.instruments.length >= NoteLayer.MAX_LAYERS)
       return logger.error(
         t('composer:cant_add_more_than_n_layers', { max_layers: NoteLayer.MAX_LAYERS })
       );

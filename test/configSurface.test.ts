@@ -77,6 +77,19 @@ describe('game config surface', () => {
         // and invisible in the importer's counters. Corrected so the bound agrees with the map
         // it guards. Sky's 84 is correct: its map really does go up to 84.
         if (APP_NAME === 'Genshin') frozen.midiBounds.upper = 83
+        // Deliberate VALUE divergence (2026-08-22, uma-mode retirement) — the composer's layer
+        // cap. "Uma mode" was a hidden switch that raised NoteLayer.MAX_LAYERS far past
+        // BASE_LAYER_LIMIT for whoever found its passphrase; it is gone, and the ordinary cap rose
+        // to 64 to absorb the arrangements it existed for. BASE_LAYER_LIMIT is a BigInt-capability
+        // constant, never converted GameDefinition data, so moving it says nothing about whether
+        // the folder-based config reproduces the old parallel arrays — which is all this proof
+        // asserts. Written as a literal, not as BASE_LAYER_LIMIT, so a LATER change to the cap
+        // still fails here and gets its own review; asserted before patching like the edits above.
+        expect(
+            frozen.baseLayerLimit,
+            'frozen baseLayerLimit is not the value this exception was written against'
+        ).toBe(52)
+        frozen.baseLayerLimit = 64
         delete frozen.layoutKinds
         delete frozen.layoutIconsKinds
         delete frozen.instrumentNoteLayoutKinds
