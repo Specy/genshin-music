@@ -315,6 +315,13 @@
   onMount(() => {
     AudioProvider.init().catch(console.error);
     metronome.init(AudioProvider.getAudioContext());
+    // The metronome owns a gain node and a queue of beats committed to the audio clock, none of
+    // which AudioProvider's node registry can see, so a context rebuild has to hand it over
+    // explicitly. Teardown runs while the outgoing context is still open - stopping a committed
+    // beat on a closed one throws - and the rebuilt hook re-creates the node and re-decodes the
+    // click samples against the replacement.
+    const disposeTeardown = AudioProvider.onContextTeardown(() => metronome.destroy());
+    const disposeRebuilt = AudioProvider.onContextRebuilt((context) => metronome.init(context));
     KeyboardProvider.create();
     MIDIProvider.init().catch(console.error);
     globalConfigStore.load(); //before songsStore
@@ -328,6 +335,8 @@
     // Audio/Keyboard/MIDI - preserved as-is, not an oversight.
     setupProtocol().catch(console.error);
     return () => {
+      disposeTeardown();
+      disposeRebuilt();
       AudioProvider.destroy();
       KeyboardProvider.destroy();
       MIDIProvider.destroy();

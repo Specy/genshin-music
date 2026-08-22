@@ -1,5 +1,6 @@
 import { base } from '$app/paths';
 import AudioRecorder from '$lib/audio/AudioRecorder';
+import { Instrument } from '$lib/audio/Instrument.svelte';
 
 export type AppAudioNode = {
   node: AudioNode;
@@ -72,6 +73,15 @@ const DEFAULT_TIMINGS: AudioRecoveryTimings = {
   clockProbeMs: CLOCK_PROBE_MS,
 };
 
+/**
+ * Shortest gap between two context rebuilds, in ms.
+ *
+ * A rebuild re-decodes every sample in the app, so it is a last resort and must never become a
+ * loop: if a replacement context is born broken too, the fault is environmental (no output
+ * device, an audio session the page cannot get) and building a third one will not help.
+ */
+const REBUILD_COOLDOWN_MS = 30_000;
+
 /** Gestures that re-arm a recovery attempt - see AudioProviderClass.armGestureRecovery. */
 const GESTURE_EVENTS = ['pointerdown', 'touchend', 'keydown'] as const;
 
@@ -141,6 +151,10 @@ export class AudioProviderClass {
   private stateListenerAttached = false;
   private disposeLifecycle: (() => void) | null = null;
   private disarmGesture: (() => void) | null = null;
+  /** Wall-clock time of the last rebuild, for REBUILD_COOLDOWN_MS. */
+  private lastRebuildAt = 0;
+  private teardownSubscribers = new Set<() => void>();
+  private rebuiltSubscribers = new Set<(context: AudioContext) => void>();
 
   constructor(timings: Partial<AudioRecoveryTimings> = {}) {
     // Injectable for the same reason Metronome takes a MetronomeTimer: the recovery ladder is
@@ -229,8 +243,8 @@ export class AudioProviderClass {
     return run;
   };
 
-  private walkLadder = async (): Promise<AudioContext> => {
-    const context = this.getAudioContext();
+  private walkLadder = async (attempt = 0): Promise<AudioContext> => {
+    let context = this.getAudioContext();
     this.observeContext(context);
 
     if (stateOf(context) === 'interrupted') await this.waitOutInterruption(context);
@@ -251,7 +265,19 @@ export class AudioProviderClass {
       }
     }
 
-    if (this.clockSuspect) await this.verifyClock(context);
+    if (this.clockSuspect) {
+      const live = await this.verifyClock(context);
+      // The rebuild rung replaces the context wholesale, which makes every reading taken above
+      // stale. Walk the ladder once more on the replacement rather than reasoning about the
+      // object we just closed; `attempt` keeps that from becoming a loop, and the rebuild's own
+      // cooldown means the second pass cannot reach that rung again.
+      if (live !== context) {
+        if (attempt < 1) return this.walkLadder(attempt + 1);
+        // Unreachable while the cooldown holds, and not worth trusting it to: judge the context
+        // that is actually live rather than the one that was closed out from under us.
+        context = live;
+      }
+    }
 
     if (stateOf(context) !== 'running') {
       throw new Error(`Audio context is "${stateOf(context)}" and could not be resumed`);
@@ -437,18 +463,122 @@ export class AudioProviderClass {
   };
 
   /**
-   * Clear `clockSuspect` only once `currentTime` has been SEEN to advance, restarting the
-   * renderer once if it has not. A context that fails both probes needs a rebuild (new context,
-   * re-decoded buffers, reconnected graph) which this ladder deliberately does not attempt;
-   * leaving the flag set means the next foreground or gesture tries again.
+   * Clear `clockSuspect` only once `currentTime` has been SEEN to advance, escalating while it
+   * has not: first a renderer restart, then a whole new context. Returns the context that is
+   * live at the end, which is a DIFFERENT object when the rebuild rung ran.
    */
-  private verifyClock = async (context: AudioContext) => {
+  private verifyClock = async (context: AudioContext): Promise<AudioContext> => {
     if (await this.isClockAdvancing(context)) {
       this.clockSuspect = false;
-      return;
+      return context;
     }
     await this.restartRenderer(context);
-    this.clockSuspect = !(await this.isClockAdvancing(context));
+    if (await this.isClockAdvancing(context)) {
+      this.clockSuspect = false;
+      return context;
+    }
+    // Nothing short of a new context fixes this one. The commonest cause is a sample rate that
+    // changed under us while the page was away - iOS switches the hardware rate when headphones
+    // or a Bluetooth device connect, and a context built at the old rate is simply finished.
+    const rebuilt = await this.rebuildContext();
+    if (!rebuilt) return context;
+    this.clockSuspect = !(await this.isClockAdvancing(rebuilt));
+    return rebuilt;
+  };
+
+  /**
+   * Subscribe to the rebuild rung. `teardown` runs while the outgoing context is still OPEN -
+   * the only moment its nodes can be stopped without throwing - and `rebuilt` once the
+   * replacement is live. AppInit uses the pair to re-init the metronome, which owns a gain node
+   * and a queue of committed beats that AudioProvider's own node registry never sees.
+   */
+  onContextTeardown = (handler: () => void): (() => void) => {
+    this.teardownSubscribers.add(handler);
+    return () => this.teardownSubscribers.delete(handler);
+  };
+
+  onContextRebuilt = (handler: (context: AudioContext) => void): (() => void) => {
+    this.rebuiltSubscribers.add(handler);
+    return () => this.rebuiltSubscribers.delete(handler);
+  };
+
+  /**
+   * Replace the shared context outright and re-home everything hanging off it.
+   *
+   * The last rung, and the only one that survives a sample-rate change. It is expensive - every
+   * sample in the app is re-decoded, because an AudioBuffer belongs to the context that decoded
+   * it - so it is rate-limited and never runs speculatively.
+   *
+   * ORDER MATTERS. Everything that has to touch the outgoing context (stopping committed
+   * one-shots, releasing sounding voices, disconnecting nodes) happens BEFORE it is closed,
+   * because those same calls throw on a closed context. Reverb, recorder and every instrument
+   * are then rebuilt against the replacement, and each instrument is reconnected to the
+   * destination it had - a layer that was dry must not come back wet.
+   *
+   * Returns the new context, or null when it declined (too soon, or no context to replace).
+   */
+  rebuildContext = async (): Promise<AudioContext | null> => {
+    const previous = this.audioContext;
+    if (!previous || typeof window === 'undefined') return null;
+    const now = Date.now();
+    if (this.lastRebuildAt && now - this.lastRebuildAt < REBUILD_COOLDOWN_MS) return null;
+    this.lastRebuildAt = now;
+
+    // Read the graph BEFORE tearing it down: after re-homing, an instrument's endNode is a
+    // different object, so the routing has to be carried across by owner rather than by node.
+    const instruments = Instrument.liveInstruments();
+    const routing = instruments.map((instrument) => ({
+      instrument,
+      to: this.nodes.find((entry) => entry.node === instrument.endNode)?.to ?? null,
+    }));
+
+    this.teardownSubscribers.forEach((handler) => {
+      try {
+        handler();
+      } catch (error) {
+        console.warn('Audio context teardown subscriber failed', error);
+      }
+    });
+    for (const { instrument } of routing) instrument.detachFromContext();
+    this.nodes.forEach((entry) => entry.node.disconnect());
+    this.nodes = [];
+    this.reverbNode = null;
+    this.reverbVolumeNode = null;
+    this.recorder = null;
+    this.isRecording = false;
+    // Best effort: a context that has stopped rendering is exactly the kind that can refuse to
+    // close, and holding up the replacement to find out helps nobody.
+    await withTimeout(previous.close(), this.timings.callTimeoutMs, 'close').catch(() => {});
+
+    this.stateListenerAttached = false;
+    this.audioContext =
+      // @ts-expect-error window.webkitAudioContext (legacy Safari prefix) not in Window type definitions
+      new (window.AudioContext || window.webkitAudioContext)();
+    const context = this.audioContext;
+    this.observeContext(context);
+    // The pooled buffers were decoded by the context we just closed and are unusable now.
+    Instrument.clearPool();
+    this.recorder = new AudioRecorder(context);
+    await this.loadReverb();
+
+    for (const { instrument, to } of routing) {
+      await instrument.rehome(context);
+      this.connect(instrument.endNode, to === null ? null : to === 'reverb');
+    }
+    this.setAudioDestinations();
+
+    // A brand-new context is born suspended outside a user activation, exactly as at startup.
+    if (stateOf(context) === 'suspended') {
+      await withTimeout(context.resume(), this.timings.callTimeoutMs, 'resume').catch(() => {});
+    }
+    this.rebuiltSubscribers.forEach((handler) => {
+      try {
+        handler(context);
+      } catch (error) {
+        console.warn('Audio context rebuild subscriber failed', error);
+      }
+    });
+    return context;
   };
 
   private isClockAdvancing = async (context: AudioContext): Promise<boolean> => {

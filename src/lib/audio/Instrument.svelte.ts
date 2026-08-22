@@ -45,6 +45,24 @@ type Layouts = {
 // eslint-disable-next-line svelte/prefer-svelte-reactivity
 const INSTRUMENT_BUFFER_POOL = new Map<InstrumentName, AudioBuffer[]>();
 
+/**
+ * Every engine currently loaded against the LIVE audio context, so AudioProvider can re-home
+ * them onto a replacement one (its rebuild rung). An AudioBuffer belongs to the context that
+ * decoded it and a GainNode to the context that created it, so a new context means every engine
+ * in the app has to be rebuilt or it plays into nothing.
+ *
+ * OFFLINE engines are deliberately excluded - see `load`. An export renders on its own
+ * throwaway OfflineAudioContext, has no relationship to the live one, and is finished long
+ * before anything could rebuild it; re-homing one mid-render would corrupt the render.
+ */
+// eslint-disable-next-line svelte/prefer-svelte-reactivity -- engine registry, never UI-observed
+const LIVE_INSTRUMENTS = new Set<Instrument>();
+
+/** OfflineAudioContext renders to a buffer and has startRendering; a live AudioContext has not. */
+function isOfflineContext(audioContext: BaseAudioContext): boolean {
+  return 'startRendering' in audioContext;
+}
+
 type ScheduledOneShot = {
   source: AudioBufferSourceNode;
   /** The absolute AudioContext time this one-shot was committed to sound at. */
@@ -105,6 +123,8 @@ export class Instrument {
   audioContext: BaseAudioContext | null = null;
   /** Sounding sustained voices (pruned opportunistically); engine state, never UI-observed. */
   private activeVoices: Voice[] = [];
+  /** The gain the engine was carrying when it was detached, held across a context swap. */
+  private detachedGain: number | null = null;
   /**
    * Live (key-still-down) voice per BUTTON — the registry the one-voice-per-key retrigger choke
    * in pressNote is enforced through, and where the minimum note length is read from the key
@@ -181,6 +201,11 @@ export class Instrument {
 
   static clearPool() {
     INSTRUMENT_BUFFER_POOL.clear();
+  }
+
+  /** Engines loaded against the live context, in load order. See LIVE_INSTRUMENTS. */
+  static liveInstruments(): Instrument[] {
+    return [...LIVE_INSTRUMENTS];
   }
 
   constructor(name: InstrumentName = INSTRUMENTS[0]) {
@@ -602,7 +627,52 @@ export class Instrument {
       this.buffers = INSTRUMENT_BUFFER_POOL.get(this.name)!;
     }
     this.isLoaded = true;
+    if (!isOfflineContext(audioContext)) LIVE_INSTRUMENTS.add(this);
     return loadedCorrectly;
+  };
+
+  /**
+   * Cut every tie to the current context WITHOUT retiring the engine, so it can be loaded again
+   * onto a replacement one. Everything below - committed one-shots, sounding voices, the gain
+   * node - belongs to the outgoing context, and must be torn down while that context is still
+   * open: the same calls throw once it has been closed.
+   *
+   * Unlike `dispose` this leaves `isDeleted` false and keeps the engine registered, because its
+   * owner (a keyboard, a composer layer) still holds it and expects it to make sound again.
+   */
+  detachFromContext = () => {
+    this.cancelScheduledAfter(0);
+    this.releaseAllNotes(true);
+    this.disconnect();
+    // Remembered HERE rather than read back in `rehome`, because the rebuild detaches every
+    // engine up front - while the outgoing context can still be torn down safely - and re-homes
+    // them only after the replacement exists. Read at re-home time the node is long gone, and
+    // every layer silently came back at load()'s 0.8 default.
+    this.detachedGain = this.volumeNode?.gain.value ?? this.detachedGain;
+    this.volumeNode = null;
+    this.audioContext = null;
+    this.buffers = [];
+    this.isLoaded = false;
+  };
+
+  /**
+   * Load onto a replacement context, preserving the gain the engine was carrying.
+   *
+   * `load` always sets a fresh node to the 0.8 default and every ordinary caller follows it with
+   * `changeVolume(...)` from the roster it is syncing. A rebuild has no roster to read - it is
+   * repairing whatever is already on screen - so the level is carried across here instead, or a
+   * muted layer would come back audible.
+   */
+  rehome = async (audioContext: BaseAudioContext) => {
+    if (this.isDeleted) return false;
+    // Idempotent: the caller may already have detached this engine (the rebuild does, in an
+    // earlier pass), in which case the level it was carrying is waiting in `detachedGain`.
+    this.detachFromContext();
+    const gain = this.detachedGain;
+    const loaded = await this.load(audioContext);
+    if (gain !== null && this.volumeNode) this.volumeNode.gain.value = gain;
+    this.detachedGain = null;
+    return loaded;
   };
   disconnect = (node?: AudioNode) => {
     if (node) return this.volumeNode?.disconnect(node);
@@ -623,6 +693,7 @@ export class Instrument {
     this.isDeleted = true;
     this.buffers = [];
     this.volumeNode = null;
+    LIVE_INSTRUMENTS.delete(this);
   };
 }
 

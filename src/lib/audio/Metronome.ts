@@ -161,6 +161,11 @@ export class Metronome {
 
   destroy() {
     this.stop();
+    // Drop the queue too, not just cancel it: stop() deliberately keeps entries that are already
+    // sounding, and after a destroy those reference a context the caller is about to close. A
+    // later cancelPendingBeats would compare their old-clock times against a fresh context's
+    // currentTime, decide they are still ahead, and call stop() on a dead node.
+    this.scheduled = [];
     this.volumeNode?.disconnect();
     // Terminal, and the reference has to go with the disconnect: start() only ever bailed on a
     // missing audioContext, so after a destroy it would install a wake timer, report `running`,
