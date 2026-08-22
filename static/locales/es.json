@@ -712,7 +712,9 @@
       "set_tap_hand_description": "Establecer el clic para crear una nota de toque",
       "set_hold_hand_description": "Configura el clic para crear una nota de pulsación prolongada",
       "set_delete_hand_description": "Establecer el clic para eliminar una nota",
-      "vsrg_add_hit_object": "Añadir objeto de golpe (se sincroniza con las teclas asignadas)"
+      "vsrg_add_hit_object": "Añadir objeto de golpe (se sincroniza con las teclas asignadas)",
+      "pro_vertical_scroll_description": "Desplaza verticalmente la vista Pro",
+      "pro_zoom_description": "Acerca o aleja las filas de la vista Pro (también funciona el gesto de pellizcar en el trackpad)"
     }
   },
   "instruments": {

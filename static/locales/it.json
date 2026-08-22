@@ -712,7 +712,9 @@
       "set_tap_hand_description": "Imposta il clic per creare una nota da toccare",
       "set_hold_hand_description": "Imposta il clic per creare una nota da tenere premuta",
       "set_delete_hand_description": "Imposta il clic per eliminare una nota",
-      "vsrg_add_hit_object": "Aggiungi oggetto da colpire (sincronizzato con i tasti associati)"
+      "vsrg_add_hit_object": "Aggiungi oggetto da colpire (sincronizzato con i tasti associati)",
+      "pro_vertical_scroll_description": "Scorri verticalmente la vista Pro",
+      "pro_zoom_description": "Ingrandisci o riduci le righe della vista Pro (funziona anche il gesto di pizzicamento sul trackpad)"
     }
   },
   "instruments": {
