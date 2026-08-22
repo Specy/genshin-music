@@ -32,6 +32,14 @@ const TRIM_TAIL_S = 0.1;
 const SILENCE_THRESHOLD = 1e-4;
 /** Song-time distance between render suspensions — the progress ticks, and the only cancel point. */
 const PROGRESS_CHECKPOINT_S = 2;
+/**
+ * How far ahead of the render clock a note may be committed — the offline peer of the ~1s live
+ * horizon ADR-0006 gives the composer, kept larger because a render's top-ups are the progress
+ * checkpoints rather than a per-column loop. Must stay comfortably ABOVE PROGRESS_CHECKPOINT_S:
+ * that inequality is what keeps every committed event strictly ahead of the parked clock, which
+ * the invariant in `renderSongToAudioBuffer` explains and depends on.
+ */
+const LEAD_S = 5;
 
 /** Where a track's volume node lands, exactly as the live surfaces route it. */
 export type RenderDestination = 'reverb' | 'end';
@@ -278,48 +286,86 @@ export async function renderSongToAudioBuffer(
         );
     });
 
-    // Every event is committed ahead of currentTime 0, so the render inherits the COMPOSER's
-    // committed-playback semantics: Instrument skips both the same-button retrigger choke and
-    // the 64-voice steal for a press scheduled ahead of now, and no note is silently dropped.
-    // A dense song can therefore render FULLER than the live player sounds. That is the
-    // deliberate answer for an export — the file is the song, not a performance of it under a
-    // voice budget. (A note at time 0 is not "ahead" and does take the choke/steal path; it
-    // finds nothing to cut, since a render registers no live press for it to choke or steal.)
-    for (const event of plan.events) {
-      const instrument = instruments.get(event.trackIndex);
-      const track = plan.tracks[event.trackIndex];
-      if (!instrument || !track) continue;
-      if (event.kind === 'press') {
-        instrument.pressNote(event.id, track.pitch, {
-          at: event.atS,
-          durationMs: event.durationMs,
-        });
-      } else {
-        instrument.play(event.id, track.pitch, event.atS);
+    // The window pointer walks the event list once, so an out-of-order event would be stranded
+    // behind it. A RecordedSong's notes are time-ordered and the plan preserves that, but a
+    // hand-edited file is still a file — one comparison pass says whether that held, and only a
+    // song that failed it pays for a sorted copy.
+    const events = plan.events.every((event, i) => i === 0 || plan.events[i - 1].atS <= event.atS)
+      ? plan.events
+      : [...plan.events].sort((a, b) => a.atS - b.atS);
+    let nextEvent = 0;
+    /** Commit every remaining event that starts before `untilS`; the pointer only moves forward. */
+    const commitBefore = (untilS: number) => {
+      for (; nextEvent < events.length && events[nextEvent].atS < untilS; nextEvent++) {
+        const event = events[nextEvent];
+        const instrument = instruments.get(event.trackIndex);
+        const track = plan.tracks[event.trackIndex];
+        if (!instrument || !track) continue;
+        if (event.kind === 'press') {
+          instrument.pressNote(event.id, track.pitch, {
+            at: event.atS,
+            durationMs: event.durationMs,
+          });
+        } else {
+          instrument.play(event.id, track.pitch, event.atS);
+        }
       }
-    }
+    };
 
     // startRendering() has no abort of its own, so these suspensions are the only real cancel
     // there is: the renderer parks at each one, and a cancelled render is simply never
     // resumed — leaving an orphaned context that goes away with the last reference to it when
     // this function throws. Where suspend is unavailable the abort still rejects at once and
     // the finished render is discarded: a wasted render, but never a stuck promise.
-    if (typeof context.suspend === 'function') {
+    //
+    // They are also where the next slice of the song is committed. An OfflineAudioContext
+    // visits every connected node on every 128-frame quantum — a source waiting on a future
+    // start included — so committing a whole song before startRendering costs (node count ×
+    // duration) and makes a long dense song render at roughly the speed of listening to it.
+    // A moving window is the same trade ADR-0006 makes live, for the same reason.
+    //
+    // INVARIANT: every event committed at a checkpoint must start STRICTLY after that
+    // checkpoint's clock time. `pressNote`/`play` skip the same-button choke and the 64-voice
+    // steal only for `at > now`; an event committed AT the parked clock would run that steal
+    // against voices genuinely sounding mid-song and cut them. LEAD_S > PROGRESS_CHECKPOINT_S
+    // makes it structural rather than hoped-for: the batch at checkpoint `t` begins where the
+    // previous one stopped, at `t - PROGRESS_CHECKPOINT_S + LEAD_S`, which clears `t` by
+    // LEAD_S - PROGRESS_CHECKPOINT_S seconds — far more than the up-to-one-quantum rounding
+    // suspend applies to its own time. Do not narrow that margin.
+    const canSuspend = typeof context.suspend === 'function';
+    if (canSuspend) {
       for (let at = PROGRESS_CHECKPOINT_S; at < lengthS; at += PROGRESS_CHECKPOINT_S) {
         const fraction = at / lengthS;
         void context.suspend(at).then(
           () => {
             if (cancelled) return;
+            commitBefore(at + LEAD_S);
             onProgress?.(fraction);
             void context.resume();
           },
           () => {
             // A suspension the renderer has already passed is rejected: there is nothing to
-            // report for a checkpoint that never happened, and the render must not stall.
+            // report for a checkpoint that never happened, and the render must not stall. The
+            // pointer simply stays put, so the next checkpoint commits the wider batch.
           }
         );
       }
     }
+    // The t=0 batch is the one place a note can land ON the clock rather than ahead of it, and
+    // that is unchanged and deliberate: notes at exactly 0 take the choke/steal path and find
+    // empty registries, since a render holds no live press to choke or steal. Everything after
+    // it is committed ahead of the clock, so the render keeps the COMPOSER's committed-playback
+    // semantics — no note silently dropped under a voice budget, and a dense song rendering
+    // FULLER than the live player sounds. That is the right answer for an export: the file is
+    // the song, not a performance of it.
+    //
+    // Without suspend there is no later moment to commit from, so the whole song goes in
+    // up-front exactly as it used to: still correct, just slow on a long dense song.
+    //
+    // Nothing trims the window's trailing edge here, and nothing needs to: the main thread sits
+    // idle while startRendering runs, so each Voice's and one-shot's 'ended' handler fires
+    // mid-render and disconnects the nodes that have finished sounding.
+    commitBefore(canSuspend ? LEAD_S : Infinity);
 
     const rendered = await Promise.race([context.startRendering(), cancellation]);
     onProgress?.(1);
