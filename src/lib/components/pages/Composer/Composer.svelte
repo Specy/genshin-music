@@ -41,7 +41,7 @@
   import { ComposedSong } from '$core/Songs/ComposedSong.svelte';
   import { RecordedSong } from '$core/Songs/RecordedSong';
   import { VsrgSong } from '$core/Songs/VsrgSong.svelte';
-  import { Song, type SerializedSong } from '$core/Songs/Song.svelte';
+  import type { SerializedSong } from '$core/Songs/Song.svelte';
   import { NoteLayer } from '$core/Songs/Layer';
   import {
     isTrackAudible,
@@ -887,15 +887,14 @@
     instrument.pressNote(number, pitch);
   }
 
-  /** Real length in ms of columns [from, to) at the current bpm, honoring each column's tempo changer (same math and rounding as the transport's grid — it sums exactly what this returns). */
+  /**
+   * Real length in ms of columns [from, to): the song's own boundary grid (ADR-0008), which is
+   * the difference of two rounded cumulative onsets rather than a sum of rounded columns. The
+   * transport's running sum of consecutive calls therefore telescopes back onto the very times
+   * song.toRecordedSong() writes — what plays and what exports cannot drift apart.
+   */
   function columnsDurationMs(from: number, to: number): number {
-    const msPerBeat = 60000 / settings.bpm.value;
-    let ms = 0;
-    for (let i = from; i < to; i++) {
-      const changer = song.columns[i]?.getTempoChanger().changer ?? 1;
-      ms += Song.roundTime(msPerBeat * changer);
-    }
-    return ms;
+    return song.columnsDurationMs(from, to);
   }
 
   // ── playback transport (ADR-0006: one clock, two meanings of "ahead") ──────────────────────

@@ -691,16 +691,17 @@ export interface ComposerRendererState {
    * ComposerSettings' `bpm`, as a number: what lets this class work out how long a column lasts and
    * therefore how fast to travel through it - see columnDurationMs.
    *
-   * THE SETTING AND NOT `song.bpm`, which is the one thing here that has to be right: the transport
-   * this glide has to keep time with commits columns `(60000 / settings.bpm.value) * changer` ms
-   * apart (the columnDurationMs callback Composer.svelte hands ComposerTransport), so reading the
-   * same value is what makes them the same number by construction rather than by an argument that
-   * has to hold. It used to take the song's,
-   * on the argument that Composer.svelte keeps the two equal - it does not on two ordinary paths.
-   * `song.bpm` is seeded from the DEFAULT settings at declaration and re-seeded nowhere when the
-   * stored settings land in onMount, and createNewSong builds a ComposedSong at its own default; so
-   * a user with a persisted composer bpm who opens the composer with no songId, or makes a new
-   * song, had the glide running at one tempo and the transport at another.
+   * THE SETTING AND NOT `song.bpm`, and the two must carry the same number: the transport this
+   * glide keeps time with commits columns on the SONG's boundary grid (ADR-0008 -
+   * ComposedSong.columnsDurationMs, at `song.bpm`), so a disagreement is a glide that outruns or
+   * lags the audio it accompanies. Composer.svelte is what holds them equal: it seeds `song.bpm`
+   * from these settings at declaration and again when the stored ones land, writes every bpm edit
+   * straight onto the song (handleSettingChange's songSetting branch), and re-seeds the setting FROM
+   * the song whenever one is loaded.
+   *
+   * This field records what that sync going missing looks like: reading `song.bpm` here, back when
+   * a persisted composer bpm was not seeded onto a fresh song, left the glide running at one tempo
+   * and the transport at another for anyone who opened the composer with no songId.
    */
   bpm: number;
 }
@@ -1540,6 +1541,13 @@ export class ComposerRenderer {
    */
   private maxSpanCache: { columns: NoteColumn[]; structureVersion: number; span: number } | null =
     null;
+  /** The scroll schedule's ms boundary grid, cached against what it is a function of - see columnMsPrefix(). */
+  private columnMsPrefixCache: {
+    columns: NoteColumn[];
+    structureVersion: number;
+    bpm: number;
+    prefix: number[];
+  } | null = null;
   /**
    * The tail accent the pool is painted in, which is a different moment from `theme.tailAccent`.
    *
@@ -3281,21 +3289,63 @@ export class ComposerRenderer {
 
   /**
    * How long column `index` lasts, by the arithmetic the transport commits columns with: the
-   * columnDurationMs callback Composer.svelte hands ComposerTransport rounds
-   * `(60000 / bpm) * changer` to whole ms, which is the same rounding Song.roundTime does.
-   * Matching the rounding is what keeps a glide the same length as the column it travels through,
-   * so the two do not drift apart within a column.
+   * difference between two adjacent boundaries of the rounded cumulative ms grid (ADR-0008 —
+   * ComposedSong.columnsDurationMs builds the same grid for the audio side, and `Song.roundTime`
+   * is `Math.round`). Rounding each column on its own instead — what this did — drifts against
+   * that grid wherever `(60000 / bpm) * changer` is not whole ms, so a glide and the column it
+   * travels through would end at the same place only at the tempos where the two policies happen
+   * to agree.
    *
    * The number is exact and the segment's start comes from the explicit performance-clock boundary
    * on ComposerRendererState. That timestamp, rather than callback arrival, absorbs worker-timer and
    * Svelte-flush latency without asking this arithmetic to know about either.
+   *
+   * The floor stays for the degenerate inputs a difference can still be zero on: an index past the
+   * last column, or a column shorter than a millisecond. A zero-length segment would teleport the
+   * playhead across the column instead of gliding it; the transport guards the same class of input
+   * with its own DURATION_FLOOR_S.
    */
   private columnDurationMs(index: number): number {
-    const column = this.state.columns[index];
-    const changer = column ? (TEMPO_CHANGERS[column.tempoChanger]?.changer ?? 1) : 1;
+    const prefix = this.columnMsPrefix();
+    const last = prefix.length - 1;
+    const start = Math.round(prefix[clamp(index, 0, last)]);
+    const end = Math.round(prefix[clamp(index + 1, 0, last)]);
+    return Math.max(1, end - start);
+  }
+
+  /**
+   * The cumulative ms grid columnDurationMs differences, prefix[i] being the EXACT ms at which
+   * column `i` begins. Accumulated left to right, one `msPerBeat * changer` at a time, because the
+   * song's grid is: the same additions in the same order are what make the two bit-identical
+   * rather than merely equal in theory.
+   *
+   * Rebuilt on read when its key moved, the way maxSpan() does it and for the same reason — the
+   * grid is a function of the graph and the tempo, and a tick that only moves `selected` must not
+   * pay for a rebuild. `bpm` joins the key because it is the one input that changes with no
+   * structural edit behind it.
+   */
+  private columnMsPrefix(): number[] {
+    const { columns, structureVersion, bpm } = this.state;
+    const cached = this.columnMsPrefixCache;
+    if (
+      cached &&
+      cached.columns === columns &&
+      cached.structureVersion === structureVersion &&
+      cached.bpm === bpm
+    ) {
+      return cached.prefix;
+    }
     //a zero/absent bpm would make every segment infinitely long and freeze the playhead
-    const bpm = this.state.bpm > 0 ? this.state.bpm : 220;
-    return Math.max(1, Math.round((60000 / bpm) * changer));
+    const msPerBeat = 60000 / (bpm > 0 ? bpm : 220);
+    const prefix = new Array<number>(columns.length + 1);
+    prefix[0] = 0;
+    let exact = 0;
+    for (let i = 0; i < columns.length; i++) {
+      exact += msPerBeat * (TEMPO_CHANGERS[columns[i].tempoChanger]?.changer ?? 1);
+      prefix[i + 1] = exact;
+    }
+    this.columnMsPrefixCache = { columns, structureVersion, bpm, prefix };
+    return prefix;
   }
 
   private scheduleScrollSegment(column: number, startMs: number, durationMs: number): void {

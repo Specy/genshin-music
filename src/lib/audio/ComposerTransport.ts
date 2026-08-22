@@ -76,9 +76,11 @@ type SoundingEvent = { index: number; atAudioTime: number };
  */
 export interface TransportCallbacks {
   /**
-   * Real duration of column `index` in ms, honoring tempo changers, already Song.roundTime'd
-   * by the caller - the transport sums what it is given and must agree with the song's own
-   * arithmetic, so the rounding policy lives in exactly one place and it is not here.
+   * Real duration of column `index` in ms, honoring tempo changers. The caller returns the
+   * DIFFERENCE of two adjacent boundaries on the song's own rounded cumulative grid (ADR-0008),
+   * so the running sums built from these values telescope back onto the song's own column onsets
+   * by construction - the transport does no rounding of its own, and adding one here would put
+   * the audio grid back out of step with what the song says its times are.
    */
   columnDurationMs(index: number): number;
   columnCount(): number;

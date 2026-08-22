@@ -142,6 +142,12 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 5> 
      */
     #structure = $state(0)
     #columns: NoteColumn[] = []
+    /**
+     * columnsDurationMs' cumulative ms grid, cached against the two things it is a function of.
+     * Validated on read rather than invalidated by the mutators - see the method for why that is
+     * the only scheme that can work here, and ADR-0008 for the drift it exists to remove.
+     */
+    #msPrefixCache: { structureVersion: number, bpm: number, prefix: number[] } | null = null
 
     constructor(name: string, instruments: InstrumentName[] = []) {
         super(name, 5, 'composed', {
@@ -508,6 +514,72 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 5> 
         })
         recordedSong.instruments = this.instruments.map(ins => ins.clone())
         return recordedSong
+    }
+
+    /**
+     * Real length in ms of columns [from, to) at this song's bpm, honoring each column's tempo
+     * changer. What the composer's transport builds its audio grid from and what a spanned note is
+     * played for; it lives here, beside toRecordedSong, because it must never drift from the
+     * arithmetic above (ADR-0008).
+     *
+     * A DIFFERENCE OF TWO ROUNDED BOUNDARIES, never a sum of rounded per-column lengths. Rounding
+     * each column and adding those up drifts against the conversion wherever 60000/bpm * changer
+     * is not whole ms - over 400 plain columns: -182 ms at bpm 110, +133 at 90, +171 at 140, +109
+     * at 220, and nothing at all at 40/60/100/120/150/200/240/300 - so what the composer plays and
+     * what the exported/re-imported song says slide apart, in opposite directions at different
+     * tempos. Differencing the boundaries instead makes a running
+     * sum of consecutive calls TELESCOPE: summing [0,1), [1,2), ... [n-1,n) leaves
+     * roundTime(prefix[n]), which is precisely the onset toRecordedSong(0) emits for column n.
+     *
+     * The prefix accumulates left to right adding `msPerBeat * changer` per column because
+     * toRecordedSong's exactTime does, and the two must agree BIT FOR BIT: an algebraically equal
+     * sum in another order (a bpm-free changer prefix multiplied at query time) can land a half-ulp
+     * on the other side of a .5 and round the opposite way - a silent one-ms disagreement with the
+     * format the goldens pin. Columns past the end contribute nothing, as they do in toRecordedSong
+     * (`columnDurations[i] ?? 0`) when a span overhangs the song.
+     *
+     * The cache is validated ON READ against (structureVersion, bpm) instead of being invalidated
+     * by the mutators, because bpm is its own signal on Song and no bpm write goes through
+     * #bumpStructure - there is nothing for an invalidation hook to hang off. structureVersion is
+     * only comparable within one instance (see its getter) and this cache is per-instance, so that
+     * caveat is met; reading both keys through their getters also leaves a reactive caller
+     * subscribed to exactly what the answer depends on. Rebuilding is one pass over the columns,
+     * which matters: the composer rebuilds its committed window on every edit made during playback
+     * and queries this per column, per spanned note and per held key.
+     */
+    columnsDurationMs(from: number, to: number): number {
+        const prefix = this.#msPrefix()
+        const last = prefix.length - 1
+        //both endpoints rounded, then subtracted - rounding the difference would reintroduce the
+        //per-column error this method exists to avoid
+        const start = Song.roundTime(prefix[clamp(from, 0, last)])
+        const end = Song.roundTime(prefix[clamp(to, 0, last)])
+        return end - start
+    }
+
+    /** columnsDurationMs' grid: prefix[i] is the EXACT ms at which column `i` begins, offset 0. */
+    #msPrefix(): number[] {
+        const structureVersion = this.structureVersion
+        const bpm = this.bpm
+        const cached = this.#msPrefixCache
+        if (cached && cached.structureVersion === structureVersion && cached.bpm === bpm) {
+            return cached.prefix
+        }
+        //hoisted: every read of the getter touches the #structure signal
+        const columns = this.columns
+        const msPerBeat = 60000 / bpm
+        const prefix = new Array<number>(columns.length + 1)
+        prefix[0] = 0
+        let exact = 0
+        for (let i = 0; i < columns.length; i++) {
+            //an unknown changer id (hand-edited file) counts as 1x, as the composer's grid always
+            //did; toRecordedSong throws on that same column, so there is no rounded time from the
+            //conversion for this one to disagree with
+            exact += msPerBeat * (TEMPO_CHANGERS[columns[i].tempoChanger]?.changer ?? 1)
+            prefix[i + 1] = exact
+        }
+        this.#msPrefixCache = {structureVersion, bpm, prefix}
+        return prefix
     }
 
     toComposedSong = () => {

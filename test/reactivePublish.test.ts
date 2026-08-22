@@ -541,6 +541,10 @@ const READERS: PublishCase[] = [
     },
     {name: 'getSpanCovering', publishes: [], touches: 'none', run: song => void song.getSpanCovering(2, 0, idOf(0))},
     {name: 'maxSpanAt', publishes: [], touches: 'none', run: song => void song.maxSpanAt(0, 1, idOf(4))},
+    //a read that WRITES: it fills a private ms-boundary cache on the way through (ADR-0008). The
+    //row pins that this stays invisible - the cache is not a signal, so filling it must not make a
+    //timing query look like an edit to anything watching the song.
+    {name: 'columnsDurationMs', publishes: [], touches: 'none', run: song => void song.columnsDurationMs(0, 4)},
 ]
 
 /**
