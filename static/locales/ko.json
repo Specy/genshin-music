@@ -11,6 +11,11 @@
     "error_opening_file": "이 파일을 여는 데 에러가 발생했습니다",
     "error_downloading_audio": "음원을 다운로드하는데 에러가 발생했습니다. 노래가 너무 길어서 문제가 될 수도 있습니다.",
     "song_downloaded": "노래가 다운로드 되었습니다",
+    "rendering_song_audio": "오디오 렌더링 중... {{percentage}}%",
+    "encoding_song_audio": "오디오 파일 인코딩 중...",
+    "song_audio_exported": "오디오를 내보냈습니다",
+    "error_exporting_song_audio": "오디오를 내보내는 중 오류가 발생했습니다",
+    "exporting_unsaved_song": "이 곡은 한 번도 저장되지 않았습니다. 현재 열려 있는 내용에서 오디오를 내보냅니다",
     "error_downloading_song": "노래를 다운로드하는 데 에러가 발생했습니다",
     "error_downloading_songs": "노래들을 다운로드 하는데 에러가 발생했습니다",
     "error_importing_file": "파일: \"{{file_name}}}\"을 불러오는데 에러가 발생했습니다",
@@ -47,7 +52,8 @@
     "unsaved_song_save": "노래: \"{{song_name}}\"의 변경사항을 저장하지 않았습니다. 지금 저장하시겠습니까? 저장되지 않은 변경사항은 지워질것입니다",
     "enter_song_name": "노래의 이름을 작성해주세요",
     "enter_folder_name": "폴더의 이름을 작성해주세요",
-    "ask_song_name_cancellable": "노래의 이름을 적어주세요. 취소를 눌러 무시할 수 있습니다"
+    "ask_song_name_cancellable": "노래의 이름을 적어주세요. 취소를 눌러 무시할 수 있습니다",
+    "pick_audio_export_format": "어떤 오디오 형식으로 내보내시겠습니까?"
   },
   "confirm": {
     "delete_song": "노래: \"{{song_name}}\"를 정말로 지우시겠습니까?",
@@ -166,6 +172,11 @@
     "play_song": "노래 재생하기",
     "invalid_song": "유효하지 않은 노래",
     "download_song": "노래: {{song_name}}를 다운로드 하기",
+    "export_as_audio": "오디오로 내보내기",
+    "audio_format_wav": "WAV",
+    "audio_format_wav_description": "최고 음질, 큰 파일",
+    "audio_format_mp3": "MP3",
+    "audio_format_mp3_description": "좋은 음질, 더 작은 파일",
     "delete_song": "노래: {{song_name}}를 삭제하기",
     "change_app_theme": "앱 테마 바꾸기",
     "download_all_songs_backup": "모든 노래를 다운로드하기 (백업)",
@@ -220,6 +231,16 @@
       "composer_sync_tabs_description": "고급 기능으로, 다른 탭이 동시에 연주하도록 합니다",
       "composer_pro_view": "Pro view",
       "composer_pro_view_description": "Shows every semitone as its own row, with all the notes at their real pitch, and lets you add or remove them by tapping the canvas itself",
+      "sheet_visualizer_note_names": "노트 이름 표시",
+      "sheet_visualizer_note_names_description": "아래에서 선택한 배열을 사용하여 각 노트 안에 이름을 표시합니다",
+      "sheet_visualizer_note_name_type": "노트 이름 형식",
+      "sheet_visualizer_note_name_type_description": "노트 안에 표시할 명명 방식입니다. 노트 이름을 표시하지 않으면 아무 효과가 없습니다",
+      "sheet_visualizer_merge_empty_spaces": "빈 공간 병합",
+      "sheet_visualizer_merge_empty_spaces_description": "연속된 빈 열을 합쳐 악보를 더 짧고 읽기 쉽게 만듭니다",
+      "sheet_visualizer_different_color_rows": "행마다 다른 색상",
+      "sheet_visualizer_different_color_rows_description": "키보드의 각 행에 고유한 배경색을 적용해 한눈에 구분할 수 있게 합니다",
+      "sheet_visualizer_per_row": "행당 프레임 수",
+      "sheet_visualizer_per_row_description": "악보의 각 행에 배치할 프레임 수입니다. 프레임이 많을수록 각각 더 작아집니다",
       "player_instrument": "악기",
       "player_instrument_description": "플레이어의 기본(처음) 악기. 곡을 녹음할 때도 저장이 됩니다",
       "player_pitch": "음높이",
@@ -311,7 +332,8 @@
       "song_settings": "노래 세팅",
       "composer_settings": "작곡 모드 세팅",
       "editor_settings": "에디터 모드 세팅",
-      "player_practice_settings": "연습 모드 세팅"
+      "player_practice_settings": "연습 모드 세팅",
+      "sheet_visualizer_settings": "악보 설정"
     },
     "select_language": "언어 설정"
   },
@@ -539,6 +561,7 @@
     "confirm_layer_remove": "정말로 레이어: \"{{layer_name}}\"을 삭제하고 싶으십니까? 이 레이어의 모든 노트가 삭제될 것입니다",
     "cant_add_more_than_n_layers": "{{max_layers}}개보다 더 많은 레이어을 만들 수 없습니다!",
     "ask_song_name_for_composed_song_version": "편곡본의 이름을 입력하세요. 취소를 눌러 건너뛰세요",
+    "export_audio": "오디오 내보내기",
     "create_new_song": "새로운 곡 만들기",
     "create_from_midi_or_audio": "MIDI/오디오로 만들기",
     "previous_breakpoint": "이전 제어점으로 이동하기",
@@ -581,6 +604,9 @@
       "include_accidentals": "임시표 포함하기",
       "global_note_offset": "전역 노트 오프셋",
       "global_note_offset_description": "노트들의 위치가 각각 이 값만큼 움직입니다. 사용자는 곡이 앱의 음역대에 맞도록 사용할 수 있습니다. \n            또한 각각의 레이어에 다른 값을 지정할 수 있습니다.",
+      "merged_notes": "병합된 반복",
+      "suggest_offset": "추천",
+      "suggested_offset": "오프셋 {{offset}}: 임시표 {{accidentals}}개, 악기로 연주할 수 없는 노트 {{stranded}}개",
       "local_note_offset": "레이어 노트 오프셋",
       "local_note_offset_description": "노트들을 각각 이 값만큼 움직입니다.",
       "max_octave_scaling": "노트 옥타브 옮기기",
@@ -697,7 +723,9 @@
       "set_tap_hand_description": "마우스를 클릭할 때 탭 노트를 만들도록 합니다",
       "set_hold_hand_description": "마우스를 클릭할 때 홀드 노트를 만들도록 합니다",
       "set_delete_hand_description": "마우스를 클릭할 때 노트를 만들도록 합니다",
-      "vsrg_add_hit_object": "노트를 추가합니다 (설정된 키와 동기화시킵니다)"
+      "vsrg_add_hit_object": "노트를 추가합니다 (설정된 키와 동기화시킵니다)",
+      "pro_vertical_scroll_description": "Pro 보기를 세로로 스크롤",
+      "pro_zoom_description": "Pro 보기의 행 확대/축소(트랙패드 핀치 동작도 사용할 수 있습니다)"
     }
   },
   "instruments": {
@@ -757,18 +785,16 @@
   "versions": {
     "4-0-0": {
       "title": "새로워진 앱, 지속 노트, 부드러운 스크롤, 새로운 악기",
-      "change-1": "앱 전체를 처음부터 새로 만들었습니다. 모든 곳에서 성능이 개선되었을 것입니다.",
-      "change-2": "지속 노트가 추가되었습니다. 작곡 모드에서는 키보드의 노트를 길게 눌러 노트 길이 설정 창을 연 후, 몇 개의 열만큼 이어질지 정할 수 있습니다. 플레이어와 Zen 키보드에서는 노트 버튼을 누르고 있기만 하면 노트가 계속 이어집니다.",
-      "change-3": "재생하는 동안 작곡 모드 화면이 부드럽게 스크롤되며, 곡의 현재 위치를 선으로 표시합니다. 화면을 드래그하거나 스크롤하는 것도 부드러워졌습니다. 이 기능은 작곡 모드 설정에서 끌 수 있습니다.",
-      "change-4": "작곡 모드 타임라인에 악보 미니맵을 추가했습니다.",
-      "change-5": "작곡 모드에서 열에 사용된 레이어가 강조 표시됩니다.",
-      "change-6": "사용자 경험을 개선하기 위해 앱 전반의 디자인을 조금씩 다듬었습니다.",
-      "change-7": "작곡 모드 재생은 이제 하나의 시계로 작동하여 소리, 시각 효과, 녹음이 항상 정확히 동기화됩니다(룩어헤드 설정은 제거되었습니다).",
-      "change-13": "The composer has a new \"Pro view\", which you can turn on in its settings: every semitone gets its own row and every note sits at its real pitch, so you see exactly what the song plays.",
-      "change-14": "In pro view you edit on the canvas itself: tap a cell to add or remove a note, long press one of your notes to choose how long it lasts, and unlock the view to drag the rows up and down freely.",
-      "change-15": "Sky에 없던 악기 일곱 개를 추가했습니다: 첼로, 바이올린, 색소폰, 하모니카, 가로 피리, 작은 종, 복 북.",
-      "change-16": "오로라와 라이트 기타가 게임에서처럼 음을 길게 유지합니다. 이전에는 짧은 샘플이라 길게 눌러도 아무 일도 없었습니다.",
-      "change-17": "그 외 많은 버그 수정과 개선이 있습니다."
+      "change-1": "처음부터 다시 작성",
+      "change-2": "지속음",
+      "change-3": "부드럽게 스크롤되는 작곡 모드",
+      "change-4": "작곡 모드 타임라인의 악보 미니맵",
+      "change-5": "작곡 모드에서 열에 사용된 레이어 강조 표시",
+      "change-6": "앱 전체의 간단한 디자인 개선",
+      "change-7": "MIDI 내보내기가 더 정확해졌으며 다른 앱으로 가져올 때도 올바르게 작동합니다",
+      "change-8": "작곡 모드 설정의 새로운 \"Pro 보기\": 복잡한 곡을 위한 개선된 고급 작곡 모드",
+      "change-9": "Sky에 일곱 가지 악기를 추가했습니다: 첼로, 바이올린, 색소폰, 하모니카, 가로 피리, 작은 종, 복 북. 오로라와 라이트 기타도 이제 음을 지속할 수 있습니다.",
+      "change-10": "기타 버그 수정 및 개선"
     },
     "3-7-0": {
       "title": "새로운 악기 추가 (원신)",

@@ -11,6 +11,11 @@
         "error_opening_file": "Не получилось открыть файл",
         "error_downloading_audio": "Не получилось скачать аудиофайл, может мелодия слишком длинная?",
         "song_downloaded": "Мелодия загружена",
+        "rendering_song_audio": "Рендеринг аудио... {{percentage}}%",
+        "encoding_song_audio": "Кодирование аудиофайла...",
+        "song_audio_exported": "Аудио экспортировано",
+        "error_exporting_song_audio": "Произошла ошибка при экспорте аудио",
+        "exporting_unsaved_song": "Эта мелодия ещё ни разу не сохранялась; аудио будет экспортировано из открытой сейчас версии",
         "error_downloading_song": "Не получилось скачать мелодию",
         "error_downloading_songs": "Не вышло скачать мелодии",
         "error_importing_file": "Не удалось импортировать файл \"{{file_name}}}\"",
@@ -47,7 +52,8 @@
         "unsaved_song_save": "Вы не сохранили изменения мелодии: \"{{song_name}}\", хотите сохранить? НЕСОХРАНЁННЫЕ ИЗМЕНЕНИЯ БУДУТ УТЕРЯНЫ",
         "enter_song_name": "Введите название мелодии",
         "enter_folder_name": "Введите название папки",
-        "ask_song_name_cancellable": "Введите имя мелодии, нажмите \"Отмена\" чтобы проигнорировать"
+        "ask_song_name_cancellable": "Введите имя мелодии, нажмите \"Отмена\" чтобы проигнорировать",
+        "pick_audio_export_format": "В какой аудиоформат вы хотите экспортировать?"
     },
     "confirm": {
         "delete_song": "Вы уверены, что хотите удалить мелодию \"{{song_name}}\"?",
@@ -166,6 +172,11 @@
         "play_song": "Проиграть",
         "invalid_song": "Недействительная мелодия",
         "download_song": "Скачать {{song_name}}",
+        "export_as_audio": "Экспортировать как аудио",
+        "audio_format_wav": "WAV",
+        "audio_format_wav_description": "Максимальное качество, большой файл",
+        "audio_format_mp3": "MP3",
+        "audio_format_mp3_description": "Хорошее качество, меньший файл",
         "delete_song": "Удалить {{song_name}}",
         "change_app_theme": "Сменить тему",
         "download_all_songs_backup": "Скачать все мелодии (копия)",
@@ -220,6 +231,16 @@
             "composer_sync_tabs_description": "Advanced feature, it syncs other browser tabs to all play at the same time",
             "composer_pro_view": "Pro view",
             "composer_pro_view_description": "Shows every semitone as its own row, with all the notes at their real pitch, and lets you add or remove them by tapping the canvas itself",
+            "sheet_visualizer_note_names": "Показывать названия нот",
+            "sheet_visualizer_note_names_description": "Отображает название внутри каждой ноты, используя выбранную ниже раскладку",
+            "sheet_visualizer_note_name_type": "Тип названий нот",
+            "sheet_visualizer_note_name_type_description": "Система названий, используемая внутри нот; действует только при отображении названий нот",
+            "sheet_visualizer_merge_empty_spaces": "Объединять пустые промежутки",
+            "sheet_visualizer_merge_empty_spaces_description": "Объединяет соседние пустые столбцы, делая нотный лист короче и удобнее для чтения",
+            "sheet_visualizer_different_color_rows": "Разные цвета строк",
+            "sheet_visualizer_different_color_rows_description": "Задаёт каждой строке клавиатуры собственный цвет фона, чтобы их можно было различать с первого взгляда",
+            "sheet_visualizer_per_row": "Кадров в строке",
+            "sheet_visualizer_per_row_description": "Количество кадров нотного листа в каждой строке; чем их больше, тем меньше каждый кадр",
             "player_instrument": "Инструмент",
             "player_instrument_description": "Основной музыкальный инструмент, который так же будет использован при записи мелодии",
             "player_pitch": "Высота",
@@ -311,7 +332,8 @@
             "song_settings": "Звучание",
             "composer_settings": "Настройки секвенсора",
             "editor_settings": "Editor settings",
-            "player_practice_settings": "Настройки практики"
+            "player_practice_settings": "Настройки практики",
+            "sheet_visualizer_settings": "Настройки нотного листа"
         },
         "select_language": "Выбрать язык"
     },
@@ -539,6 +561,7 @@
         "confirm_layer_remove": "Are you sure you want to remove \"{{layer_name}}\"? ALL NOTES OF THIS LAYER WILL BE DELETED",
         "cant_add_more_than_n_layers": "You can't add more than {{max_layers}} layers!",
         "ask_song_name_for_composed_song_version": "Write the song name for the composed version, press cancel to ignore",
+        "export_audio": "Экспорт аудио",
         "create_new_song": "Create new song",
         "create_from_midi_or_audio": "Create from MIDI/Audio",
         "previous_breakpoint": "Previous Breakpoint",
@@ -581,6 +604,9 @@
             "include_accidentals": "Include accidentals",
             "global_note_offset": "Global note offset",
             "global_note_offset_description": "The index of each note will be pushed up/down by this amount, you can use it to make\n                            the song fit into the app range. You can also change the offset of each layer.",
+            "merged_notes": "Объединённые повторы",
+            "suggest_offset": "Предложить",
+            "suggested_offset": "Смещение {{offset}}: {{accidentals}} знаков альтерации, {{stranded}} нот, которые инструмент не может сыграть",
             "local_note_offset": "Local track notes offset",
             "local_note_offset_description": " Changes the index of each note by this amount.",
             "max_octave_scaling": "Max notes octave scaling",
@@ -697,7 +723,9 @@
             "set_tap_hand_description": "Set the click to create a tap note",
             "set_hold_hand_description": "Set the click to create a hold note",
             "set_delete_hand_description": "Set the click to delete a note",
-            "vsrg_add_hit_object": "Add hit object (syncs to the registered keybinds)"
+            "vsrg_add_hit_object": "Add hit object (syncs to the registered keybinds)",
+            "pro_vertical_scroll_description": "Прокручивать режим Pro по вертикали",
+            "pro_zoom_description": "Масштабировать строки режима Pro (также работает жест сведения или разведения пальцев на трекпаде)"
         }
     },
     "instruments": {
@@ -756,18 +784,16 @@
     "versions": {
         "4-0-0": {
             "title": "Новое приложение, длительность нот, плавная прокрутка, новые инструменты",
-            "change-1": "Всё приложение переписано с нуля. Производительность должна вырасти везде.",
-            "change-2": "Добавлена длительность нот. В секвенсоре нажмите и удерживайте ноту на клавиатуре, чтобы открыть окно выбора длительности и указать, на сколько колонок она растянется. В плеере и простой клавиатуре достаточно удерживать кнопку ноты, чтобы её протянуть.",
-            "change-3": "Во время воспроизведения секвенсор теперь прокручивается плавно, а линия показывает, где вы находитесь в мелодии. Перетаскивание и прокрутка холста тоже стали плавными. Это можно отключить в настройках секвенсора.",
-            "change-4": "В таймлайн секвенсора добавлена мини-карта нотного листа",
+            "change-1": "Переписано с нуля",
+            "change-2": "Длительность нот",
+            "change-3": "Плавная прокрутка секвенсора",
+            "change-4": "Мини-карта нотного листа на таймлайне секвенсора",
             "change-5": "В секвенсоре подсвечиваются слои, используемые в колонке",
-            "change-6": "Небольшие изменения оформления по всему приложению для удобства пользования",
-            "change-7": "Воспроизведение секвенсора теперь работает по единому таймеру — звук, визуальные эффекты и запись остаются полностью синхронизированными (настройка упреждения удалена)",
-            "change-13": "The composer has a new \"Pro view\", which you can turn on in its settings: every semitone gets its own row and every note sits at its real pitch, so you see exactly what the song plays.",
-            "change-14": "In pro view you edit on the canvas itself: tap a cell to add or remove a note, long press one of your notes to choose how long it lasts, and unlock the view to drag the rows up and down freely.",
-            "change-15": "В Sky добавлены семь недостающих инструментов: виолончель, скрипка, саксофон, губная гармоника, поперечная флейта, маленький колокольчик и барабан удачи.",
-            "change-16": "Aurora и Light Guitar теперь тянут ноту, как в игре. Раньше они использовали короткие сэмплы, поэтому удержание клавиши ничего не давало.",
-            "change-17": "Множество других исправлений ошибок и улучшений"
+            "change-6": "Небольшие изменения оформления по всему приложению",
+            "change-7": "Экспорт MIDI стал точнее и теперь корректно работает при импорте в другие приложения",
+            "change-8": "Новый «Pro-режим» в настройках секвенсора: улучшенный и более продвинутый секвенсор для сложных мелодий",
+            "change-9": "В Sky добавлено семь инструментов: виолончель, скрипка, саксофон, губная гармоника, поперечная флейта, маленький колокольчик и барабан удачи. Aurora и Light Guitar теперь поддерживают длительные ноты.",
+            "change-10": "Другие исправления ошибок и улучшения"
         },
         "3-7-0": {
             "title": "Новые инструменты (Genshin)",

@@ -80,7 +80,15 @@
     </DecoratedCard>
   {/each}
 </div>
-<div class={['flex-centered', 'pill', logger.pillState.visible && 'pill-visible']}>
+<div
+  class={[
+    'flex-centered',
+    'pill',
+    logger.pillState.visible && 'pill-visible',
+    logger.pillState.spinner && 'pill-with-spinner',
+    logger.pillState.actions.length > 0 && 'pill-with-actions',
+  ]}
+>
   {#if logger.pillState.spinner}
     <!-- Decorative only - the pill's text already says what is loading, so a screen reader
          announcing the spinner as well would just repeat it. -->

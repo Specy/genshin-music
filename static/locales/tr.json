@@ -11,6 +11,11 @@
         "error_opening_file": "Bu dosya açılırken bir hata oluştu",
         "error_downloading_audio": "Ses dosyası indirilirken bir sorun oluştu, şarkı çok uzun olabilir",
         "song_downloaded": "Şarkı indirildi",
+        "rendering_song_audio": "Ses oluşturuluyor... {{percentage}}%",
+        "encoding_song_audio": "Ses dosyası kodlanıyor...",
+        "song_audio_exported": "Ses dışa aktarıldı",
+        "error_exporting_song_audio": "Ses dışa aktarılırken bir hata oluştu",
+        "exporting_unsaved_song": "Bu şarkı hiç kaydedilmedi; ses, şu anda açık olan içerikten dışa aktarılacak",
         "error_downloading_song": "Şarkı indirilirken hata oluştu",
         "error_downloading_songs": "Şarkılar indirilirken hata oluştu",
         "error_importing_file": "\"{{file_name}}}\" dosyası içe aktarılırken hata oluştu",
@@ -47,7 +52,8 @@
         "unsaved_song_save": "\"{{song_name}}\" isimli şarkıda kaydedilmemiş değişiklikleriniz var. Şimdi kaydetmek ister misiniz? KAYDEDİLMEYEN DEĞİŞİKLİKLER KAYBOLACAKTIR.",
         "enter_song_name": "Şarkı adını yazın",
         "enter_folder_name": "Klasör adını yazın",
-        "ask_song_name_cancellable": "Şarkı adını yazın, Görmezden gelmek için iptale basın"
+        "ask_song_name_cancellable": "Şarkı adını yazın, Görmezden gelmek için iptale basın",
+        "pick_audio_export_format": "Hangi ses biçiminde dışa aktarmak istiyorsunuz?"
     },
     "confirm": {
         "delete_song": "\"{{song_name}}\" isimli müziği silmek istediğine emin misin?",
@@ -166,6 +172,11 @@
         "play_song": "Şarkıyı oynat",
         "invalid_song": "Geçersiz Şarkı",
         "download_song": "{{song_name}} isimli müziği indir",
+        "export_as_audio": "Ses olarak dışa aktar",
+        "audio_format_wav": "WAV",
+        "audio_format_wav_description": "En yüksek kalite, büyük dosya",
+        "audio_format_mp3": "MP3",
+        "audio_format_mp3_description": "İyi kalite, daha küçük dosya",
         "delete_song": "{{song_name}} isimli müziği sil",
         "change_app_theme": "Uygulama temasını değiştir",
         "download_all_songs_backup": "Yedeklenen tüm şarkıları indir",
@@ -220,6 +231,16 @@
             "composer_sync_tabs_description": "Gelişmiş özellik: diğer tarayıcı sekmelerini aynı anda çalacak şekilde senkronize eder.",
             "composer_pro_view": "Pro view",
             "composer_pro_view_description": "Shows every semitone as its own row, with all the notes at their real pitch, and lets you add or remove them by tapping the canvas itself",
+            "sheet_visualizer_note_names": "Nota adlarını göster",
+            "sheet_visualizer_note_names_description": "Aşağıda seçilen düzeni kullanarak her notanın içine adını yazar",
+            "sheet_visualizer_note_name_type": "Nota adı türü",
+            "sheet_visualizer_note_name_type_description": "Notaların içine hangi adlandırmanın yazılacağı; nota adları gösterilmedikçe etkisi yoktur",
+            "sheet_visualizer_merge_empty_spaces": "Boş alanları birleştir",
+            "sheet_visualizer_merge_empty_spaces_description": "Art arda gelen boş sütunları birleştirerek nota sayfasını daha kısa ve okunması daha kolay hâle getirir",
+            "sheet_visualizer_different_color_rows": "Farklı renkli satırlar",
+            "sheet_visualizer_different_color_rows_description": "Klavyenin her satırına ayrı bir arka plan rengi vererek bir bakışta ayırt edilmelerini sağlar",
+            "sheet_visualizer_per_row": "Satır başına kare",
+            "sheet_visualizer_per_row_description": "Nota sayfasının her satırına sığacak kare sayısı; daha fazla kare her birini küçültür",
             "player_instrument": "Enstrüman",
             "player_instrument_description": "Oynatıcının ana (ilk) enstrümanı, kaydettiğiniz şarkıya da kaydedilecektir",
             "player_pitch": "Akort",
@@ -311,7 +332,8 @@
             "song_settings": "Şarkı ayarları",
             "composer_settings": "Besteleyici ayarları",
             "editor_settings": "Düzenleyici ayarları",
-            "player_practice_settings": "Pratik ayarları"
+            "player_practice_settings": "Pratik ayarları",
+            "sheet_visualizer_settings": "Nota sayfası ayarları"
         },
         "select_language": "Dil seç"
     },
@@ -539,6 +561,7 @@
         "confirm_layer_remove": "\"{{layer_name}}\" isimli katmanı kaldırmak istediğine emin misin? BU KATMANDAKİ TÜM NOTALAR SİLİNECEK!",
         "cant_add_more_than_n_layers": "{{max_layers}} sayısından fazla katman ekleyemezsin!",
         "ask_song_name_for_composed_song_version": "Bestelenmiş versiyon için şarkı adı yaz, yazmak istemiyorsan iptale bas",
+        "export_audio": "Sesi dışa aktar",
         "create_new_song": "Yeni şarkı oluştur",
         "create_from_midi_or_audio": "Ses/MIDI den oluştur",
         "previous_breakpoint": "Önceki yer imi",
@@ -581,6 +604,9 @@
             "include_accidentals": "Arızaları dahil et",
             "global_note_offset": "Global nota kaydırma",
             "global_note_offset_description": "Her notanın dizini bu miktarla yukarı/aşağı taşınacak. Şarkının uygulama menziline sığmasını sağlamak için kullanabilirsiniz. \n  Ayrıca, her katmanın kaydırmasını değiştirebilirsiniz.",
+            "merged_notes": "Birleştirilmiş tekrarlar",
+            "suggest_offset": "Öner",
+            "suggested_offset": "Kaydırma {{offset}}: {{accidentals}} değiştirici işaret, enstrümanın çalamadığı {{stranded}} nota",
             "local_note_offset": "Yerel parça nota kaydırma",
             "local_note_offset_description": "Her notanın dizinini bu miktarla değiştirir.",
             "max_octave_scaling": "Maksimum oktav ölçekleme",
@@ -697,7 +723,9 @@
             "set_tap_hand_description": "Dokunma modu ile notayı ekleyin",
             "set_hold_hand_description": "Basılı tutma modu ile notayı ekleyin",
             "set_delete_hand_description": "Silme modu ile notayı silin",
-            "vsrg_add_hit_object": "Vuruş nesnesi ekle (kayıtlı tuş atamalarına senkronize edilir)"
+            "vsrg_add_hit_object": "Vuruş nesnesi ekle (kayıtlı tuş atamalarına senkronize edilir)",
+            "pro_vertical_scroll_description": "Pro görünümünü dikey kaydır",
+            "pro_zoom_description": "Pro görünümünün satırlarını yakınlaştır veya uzaklaştır (izleme dörtgeninde kıstırma hareketi de çalışır)"
         }
     },
     "instruments": {
@@ -757,18 +785,16 @@
     "versions": {
         "4-0-0": {
             "title": "Yeni uygulama, uzatılan notalar, yumuşak kaydırma, yeni enstrümanlar",
-            "change-1": "Uygulamanın tamamı sıfırdan yeniden yazıldı. Performans her yerde iyileşmiş olmalı.",
-            "change-2": "Uzatılan notalar eklendi. Besteleyicide, süre penceresini açmak için klavyedeki bir notaya uzun basın ve notanın kaç sütun boyunca süreceğini seçin. Oynatıcıda ve zen klavyede ise notayı uzatmak için nota butonunu basılı tutmanız yeterli.",
-            "change-3": "Çalma sırasında besteleyici artık, şarkının neresinde olduğunuzu gösteren bir çizgiyle birlikte yumuşak bir şekilde kayıyor. Sürükleme ve kaydırma da yumuşak hale geldi. Bunu besteleyici ayarlarından kapatabilirsiniz.",
-            "change-4": "Besteleyici zaman çizelgesine nota sayfası mini haritası eklendi",
-            "change-5": "Besteleyicide, bir sütunda kullanılan katmanlar vurgulanır",
-            "change-6": "Kullanıcı deneyimini iyileştirmek için uygulama genelinde küçük tasarım değişiklikleri yapıldı",
-            "change-7": "Besteleyici oynatması artık tek bir saat üzerinden çalışıyor; ses, görseller ve kayıt tamamen senkron kalıyor (lookahead ayarı kaldırıldı)",
-            "change-13": "The composer has a new \"Pro view\", which you can turn on in its settings: every semitone gets its own row and every note sits at its real pitch, so you see exactly what the song plays.",
-            "change-14": "In pro view you edit on the canvas itself: tap a cell to add or remove a note, long press one of your notes to choose how long it lasts, and unlock the view to drag the rows up and down freely.",
-            "change-15": "Sky'a eksik olan yedi enstrüman eklendi: Çello, Keman, Saksofon, Mızıka, Yan Flüt, Küçük Çan ve Şans Davulu.",
-            "change-16": "Aurora ve Light Guitar artık oyundaki gibi notayı uzatıyor. Önceden kısa örnekleri kullandıkları için tuşu basılı tutmak bir şey yapmıyordu.",
-            "change-17": "Diğer birçok hata düzeltmesi ve iyileştirme"
+            "change-1": "Baştan yazıldı",
+            "change-2": "Uzatılan notalar",
+            "change-3": "Yumuşak kaydırmalı besteleyici",
+            "change-4": "Besteleyici zaman çizelgesinde nota sayfası mini haritası",
+            "change-5": "Besteleyicide bir sütunda kullanılan katmanlar vurgulanır",
+            "change-6": "Uygulama genelinde küçük tasarım değişiklikleri",
+            "change-7": "MIDI dışa aktarma artık daha doğru ve diğer uygulamalara aktarıldığında düzgün çalışıyor",
+            "change-8": "Besteleyici ayarlarında yeni \"Pro görünümü\": karmaşık şarkılar için geliştirilmiş ve daha ileri düzey bir besteleyici",
+            "change-9": "Sky'a yedi enstrüman eklendi: Çello, Keman, Saksofon, Mızıka, Yan Flüt, Küçük Çan ve Şans Davulu. Aurora ve Light Guitar artık uzatılan notaları destekliyor.",
+            "change-10": "Diğer hata düzeltmeleri ve iyileştirmeler"
         },
         "3-7-0": {
             "title": "Yeni enstrümanlar (Genshin)",

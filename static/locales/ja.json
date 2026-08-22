@@ -9,6 +9,11 @@
         "error_opening_file": "このファイルを開く際にエラーが発生しました",
         "error_downloading_audio": "オーディオのダウンロード中にエラーが発生しました。曲が長すぎる可能性があります。",
         "song_downloaded": "曲がダウンロードされました",
+        "rendering_song_audio": "オーディオをレンダリング中... {{percentage}}%",
+        "encoding_song_audio": "オーディオファイルをエンコード中...",
+        "song_audio_exported": "オーディオをエクスポートしました",
+        "error_exporting_song_audio": "オーディオのエクスポート中にエラーが発生しました",
+        "exporting_unsaved_song": "この曲はまだ保存されていません。現在開いている内容からオーディオをエクスポートします",
         "error_downloading_song": "曲のダウンロード中にエラーが発生しました",
         "error_downloading_songs": "曲のダウンロード中にエラーが発生しました",
         "error_importing_file": "ファイル \"{{file_name}}\" のインポート中にエラーが発生しました",
@@ -47,7 +52,8 @@
         "unsaved_song_save": "保存されていない変更があります: \"{{song_name}}\" を今すぐ保存しますか？ 保存されていない変更は失われます。",
         "enter_song_name": "曲名を入力してください",
         "enter_folder_name": "フォルダ名を入力してください",
-        "ask_song_name_cancellable": "曲名を入力するか、無視するにはキャンセルを押してください"
+        "ask_song_name_cancellable": "曲名を入力するか、無視するにはキャンセルを押してください",
+        "pick_audio_export_format": "どのオーディオ形式でエクスポートしますか？"
     },
     "confirm": {
         "delete_song": "本当に曲 \"{{song_name}}\" を削除してもよろしいですか？",
@@ -166,6 +172,11 @@
         "play_song": "曲を再生",
         "invalid_song": "無効な曲",
         "download_song": "曲 {{song_name}} をダウンロード",
+        "export_as_audio": "オーディオとしてエクスポート",
+        "audio_format_wav": "WAV",
+        "audio_format_wav_description": "最高音質、大きいファイル",
+        "audio_format_mp3": "MP3",
+        "audio_format_mp3_description": "良好な音質、小さいファイル",
         "delete_song": "曲 {{song_name}} を削除",
         "change_app_theme": "アプリのテーマを変更",
         "download_all_songs_backup": "すべての曲をダウンロード（バックアップ）",
@@ -221,6 +232,16 @@
             "composer_sync_tabs_description": "他のブラウザタブを同期して同時に再生する高度な機能です。",
             "composer_pro_view": "Pro view",
             "composer_pro_view_description": "Shows every semitone as its own row, with all the notes at their real pitch, and lets you add or remove them by tapping the canvas itself",
+            "sheet_visualizer_note_names": "ノート名を表示",
+            "sheet_visualizer_note_names_description": "下で選択した配列を使用して、各ノート内に名前を表示します",
+            "sheet_visualizer_note_name_type": "ノート名の種類",
+            "sheet_visualizer_note_name_type_description": "ノート内に表示する命名方式。ノート名が表示されている場合にのみ有効です",
+            "sheet_visualizer_merge_empty_spaces": "空白を結合",
+            "sheet_visualizer_merge_empty_spaces_description": "連続する空の列を結合し、シートを短く読みやすくします",
+            "sheet_visualizer_different_color_rows": "行ごとに色分け",
+            "sheet_visualizer_different_color_rows_description": "キーボードの各行に異なる背景色を付け、一目で区別できるようにします",
+            "sheet_visualizer_per_row": "1行あたりのフレーム数",
+            "sheet_visualizer_per_row_description": "シートの各行に収めるフレーム数。多いほど各フレームは小さくなります",
             "player_instrument": "楽器",
             "player_instrument_description": "プレイヤーの主要（最初の）楽器。録音した曲にも保存されます。",
             "player_pitch": "ピッチ",
@@ -312,7 +333,8 @@
             "player_practice_settings": "練習設定",
             "song_settings": "曲設定",
             "composer_settings": "コンポーザー設定",
-            "editor_settings": "エディター設定"
+            "editor_settings": "エディター設定",
+            "sheet_visualizer_settings": "シート設定"
         }
     },
     "zen_keyboard": {
@@ -539,6 +561,7 @@
         "confirm_layer_remove": "本当に \"{{layer_name}}\" を削除してもよろしいですか？このレイヤーのすべてのノートが削除されます。",
         "cant_add_more_than_n_layers": "{{max_layers}} 層以上追加することはできません！",
         "ask_song_name_for_composed_song_version": "作曲済みバージョンの曲名を入力してください。キャンセルすると無視されます",
+        "export_audio": "オーディオをエクスポート",
         "create_new_song": "新しい曲を作成",
         "create_from_midi_or_audio": "MIDI/オーディオから作成",
         "previous_breakpoint": "前のブレークポイント",
@@ -581,6 +604,9 @@
             "include_accidentals": "臨時記号を含める",
             "global_note_offset": "グローバルノートオフセット",
             "global_note_offset_description": "各ノートのインデックスがこの量だけ上/下に押し上げ/下げられます。これを使用して、曲をアプリの音域に合わせることができます。各レイヤーのオフセットも変更できます。",
+            "merged_notes": "統合された繰り返し",
+            "suggest_offset": "提案",
+            "suggested_offset": "オフセット {{offset}}：臨時記号 {{accidentals}} 個、楽器で演奏できないノート {{stranded}} 個",
             "local_note_offset": "ローカルトラックノートオフセット",
             "local_note_offset_description": "この量だけ各ノートのインデックスを変更します。",
             "max_octave_scaling": "最大ノートオクターブスケーリング",
@@ -697,7 +723,9 @@
             "set_tap_hand_description": "クリック機能を短音作成に設定",
             "set_hold_hand_description": "クリック機能を長音作成に設定",
             "set_delete_hand_description": "クリック機能をノート削除に設定",
-            "vsrg_add_hit_object": "ヒットオブジェクトを追加（登録されたキーバインドと同期）"
+            "vsrg_add_hit_object": "ヒットオブジェクトを追加（登録されたキーバインドと同期）",
+            "pro_vertical_scroll_description": "Proビューを縦にスクロール",
+            "pro_zoom_description": "Proビューの行を拡大・縮小（トラックパッドのピンチ操作も使用できます）"
         }
     },
     "instruments": {
@@ -758,18 +786,16 @@
     "versions": {
         "4-0-0": {
             "title": "新しいアプリ、サステインノート、スムーズスクロール、新しい楽器",
-            "change-1": "アプリ全体を一から書き直しました。あらゆる場所でパフォーマンスが向上しているはずです。",
-            "change-2": "サステインノート（音を伸ばせるノート）を追加しました。コンポーザーでは、キーボード上のノートを長押しすると長さのポップオーバーが開き、そのノートが何列分続くかを選択できます。プレイヤーと禅キーボードでは、ノートのボタンを押し続けるだけで音を伸ばせます。",
-            "change-3": "再生中、コンポーザーが滑らかにスクロールするようになり、曲のどこを再生しているかを示す線が表示されます。キャンバスのドラッグやスクロールも滑らかになりました。この機能はコンポーザー設定でオフにできます。",
-            "change-4": "コンポーザーのタイムラインに楽譜のミニマップを追加しました",
-            "change-5": "コンポーザーで、列内で使用されているレイヤーがハイライト表示されるようになりました",
-            "change-6": "ユーザー体験を向上させるため、アプリ全体のデザインを少し見直しました",
-            "change-7": "コンポーザーの再生は単一のクロックで動作するようになり、音声、映像、録音が常に完全に同期するようになりました（先読み設定は削除されました）",
-            "change-13": "The composer has a new \"Pro view\", which you can turn on in its settings: every semitone gets its own row and every note sits at its real pitch, so you see exactly what the song plays.",
-            "change-14": "In pro view you edit on the canvas itself: tap a cell to add or remove a note, long press one of your notes to choose how long it lasts, and unlock the view to drag the rows up and down freely.",
-            "change-15": "Skyに未収録だった7つの楽器を追加しました：チェロ、ヴァイオリン、サックス、ハーモニカ、横笛、小さなベル、福鼓。",
-            "change-16": "オーロラとライトギターが、ゲーム内と同じように音を伸ばせるようになりました。これまでは短いサンプルだったため、長押ししても何も起きませんでした。",
-            "change-17": "その他多数の問題を修正し改善しました"
+            "change-1": "ゼロから全面的に書き直し",
+            "change-2": "サステインノート",
+            "change-3": "コンポーザーのスムーズスクロール",
+            "change-4": "コンポーザーのタイムラインに楽譜ミニマップ",
+            "change-5": "コンポーザーで列内の使用レイヤーをハイライト表示",
+            "change-6": "アプリ全体の軽微なデザイン変更",
+            "change-7": "MIDIエクスポートの精度が向上し、他のアプリに正しくインポートできるようになりました",
+            "change-8": "コンポーザー設定に新しい「Proビュー」：複雑な曲向けに改良された高度なコンポーザー",
+            "change-9": "Skyに7つの楽器を追加しました：チェロ、ヴァイオリン、サックス、ハーモニカ、横笛、小さなベル、福鼓。オーロラとライトギターがサステイン対応になりました。",
+            "change-10": "その他のバグ修正と改善"
         },
         "3-7-0": {
             "title": "新しい楽器と翻訳",

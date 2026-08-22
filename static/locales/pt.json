@@ -11,6 +11,11 @@
     "error_opening_file": "Ocorreu um erro ao abrir este arquivo",
     "error_downloading_audio": "Ocorreu um erro ao baixar o áudio, talvez a música seja muito longa?",
     "song_downloaded": "Música baixada",
+    "rendering_song_audio": "Renderizando o áudio... {{percentage}}%",
+    "encoding_song_audio": "Codificando o arquivo de áudio...",
+    "song_audio_exported": "Áudio exportado",
+    "error_exporting_song_audio": "Ocorreu um erro ao exportar o áudio",
+    "exporting_unsaved_song": "Esta música nunca foi salva; o áudio será exportado a partir do que está aberto no momento",
     "error_downloading_song": "Erro ao baixar a música",
     "error_downloading_songs": "Erro ao baixar músicas",
     "error_importing_file": "Erro ao importar o arquivo \"{{file_name}}\"",
@@ -47,7 +52,8 @@
     "unsaved_song_save": "Você tem mudanças não salvas na música: \"{{song_name}}\" deseja salvar agora? MUDANÇAS NÃO SALVAS SERÃO PERDIDAS",
     "enter_song_name": "Digite o nome da música",
     "enter_folder_name": "Digite o nome da pasta",
-    "ask_song_name_cancellable": "Digite o nome da música ou pressione cancelar para ignorar"
+    "ask_song_name_cancellable": "Digite o nome da música ou pressione cancelar para ignorar",
+    "pick_audio_export_format": "Em qual formato de áudio você deseja exportar?"
   },
   "confirm": {
     "delete_song": "Tem certeza de que deseja excluir a música \"{{song_name}}\"?",
@@ -166,6 +172,11 @@
     "play_song": "Tocar música",
     "invalid_song": "Música inválida",
     "download_song": "Baixar música {{song_name}}",
+    "export_as_audio": "Exportar como áudio",
+    "audio_format_wav": "WAV",
+    "audio_format_wav_description": "Qualidade máxima, arquivo grande",
+    "audio_format_mp3": "MP3",
+    "audio_format_mp3_description": "Boa qualidade, arquivo menor",
     "delete_song": "Excluir música {{song_name}}",
     "change_app_theme": "Mudar tema do aplicativo",
     "download_all_songs_backup": "Baixar todas as músicas (backup)",
@@ -220,6 +231,16 @@
       "composer_sync_tabs_description": "Recurso avançado, sincroniza outras abas do navegador para todas tocarem ao mesmo tempo",
       "composer_pro_view": "Pro view",
       "composer_pro_view_description": "Shows every semitone as its own row, with all the notes at their real pitch, and lets you add or remove them by tapping the canvas itself",
+      "sheet_visualizer_note_names": "Mostrar nomes das notas",
+      "sheet_visualizer_note_names_description": "Escreve o nome dentro de cada nota usando a disposição selecionada abaixo",
+      "sheet_visualizer_note_name_type": "Tipo de nome da nota",
+      "sheet_visualizer_note_name_type_description": "A nomenclatura a ser escrita dentro das notas; não tem efeito se os nomes das notas não estiverem visíveis",
+      "sheet_visualizer_merge_empty_spaces": "Mesclar espaços vazios",
+      "sheet_visualizer_merge_empty_spaces_description": "Une colunas vazias consecutivas, tornando a partitura mais curta e fácil de ler",
+      "sheet_visualizer_different_color_rows": "Linhas com cores diferentes",
+      "sheet_visualizer_different_color_rows_description": "Dá a cada linha do teclado sua própria cor de fundo para diferenciá-las rapidamente",
+      "sheet_visualizer_per_row": "Quadros por linha",
+      "sheet_visualizer_per_row_description": "Quantos quadros da partitura devem caber em cada linha; quanto mais quadros, menor será cada um",
       "player_instrument": "Instrumento",
       "player_instrument_description": "O principal (primeiro) instrumento do reprodutor, também será salvo na música que você gravar",
       "player_pitch": "Tonalidade",
@@ -311,7 +332,8 @@
       "song_settings": "Configurações da música",
       "composer_settings": "Configurações do compositor",
       "editor_settings": "Configurações do editor",
-      "player_practice_settings": "Configurações de prática"
+      "player_practice_settings": "Configurações de prática",
+      "sheet_visualizer_settings": "Configurações da partitura"
     },
     "select_language": "Selecionar idioma"
   },
@@ -539,6 +561,7 @@
     "confirm_layer_remove": "Tem certeza de que deseja remover \"{{layer_name}}\"? TODAS AS NOTAS DESTA CAMADA SERÃO EXCLUÍDAS",
     "cant_add_more_than_n_layers": "Você não pode adicionar mais de {{max_layers}} camadas!",
     "ask_song_name_for_composed_song_version": "Digite o nome da música para a versão composta, pressione cancelar para ignorar",
+    "export_audio": "Exportar áudio",
     "create_new_song": "Criar nova música",
     "create_from_midi_or_audio": "Criar a partir de MIDI/Áudio",
     "previous_breakpoint": "Ponto de interrupção anterior",
@@ -581,6 +604,9 @@
       "include_accidentals": "Incluir acidentais",
       "global_note_offset": "Deslocamento global de notas",
       "global_note_offset_description": "O índice de cada nota será empurrado para cima/baixo por essa quantidade, você pode usar isso para ajustar\n                            a música ao alcance do aplicativo. Você também pode alterar o deslocamento de cada camada.",
+      "merged_notes": "Repetições mescladas",
+      "suggest_offset": "Sugerir",
+      "suggested_offset": "Deslocamento {{offset}}: {{accidentals}} acidentes, {{stranded}} notas que o instrumento não pode tocar",
       "local_note_offset": "Deslocamento local de notas da faixa",
       "local_note_offset_description": "Altera o índice de cada nota por essa quantidade.",
       "max_octave_scaling": "Escala máxima de oitavas das notas",
@@ -697,7 +723,9 @@
       "set_tap_hand_description": "Configurar o clique para criar uma nota de toque",
       "set_hold_hand_description": "Configurar o clique para criar uma nota de segurar",
       "set_delete_hand_description": "Configurar o clique para excluir uma nota",
-      "vsrg_add_hit_object": "Adicionar objeto de batida (sincroniza com os atalhos registrados)"
+      "vsrg_add_hit_object": "Adicionar objeto de batida (sincroniza com os atalhos registrados)",
+      "pro_vertical_scroll_description": "Rolar a visualização Pro verticalmente",
+      "pro_zoom_description": "Ampliar ou reduzir as linhas da visualização Pro (o gesto de pinça no trackpad também funciona)"
     }
   },
   "instruments": {
@@ -756,18 +784,16 @@
   "versions": {
     "4-0-0": {
       "title": "Novo aplicativo, notas sustentadas, rolagem suave, novos instrumentos",
-      "change-1": "Todo o aplicativo foi reescrito do zero. O desempenho deve estar melhor em toda parte.",
-      "change-2": "Foram adicionadas as notas sustentadas. No compositor, pressione e segure uma nota no teclado para abrir o menu de duração e escolher por quantas colunas ela deve durar. No reprodutor e no teclado Zen, basta manter o botão da nota pressionado para sustentar a nota.",
-      "change-3": "Durante a reprodução, o compositor agora rola suavemente, com uma linha marcando onde você está na música. Arrastar e rolar a área de edição também ficou suave. Você pode desativar isso nas configurações do compositor.",
-      "change-4": "Adicionado um minimapa da partitura à linha do tempo do compositor",
+      "change-1": "Reescrito do zero",
+      "change-2": "Notas sustentadas",
+      "change-3": "Rolagem suave no compositor",
+      "change-4": "Minimapa da partitura na linha do tempo do compositor",
       "change-5": "As camadas usadas em uma coluna são destacadas no compositor",
-      "change-6": "Pequenas mudanças de design em todo o aplicativo para melhorar a experiência do usuário",
-      "change-7": "A reprodução do compositor agora funciona com um único relógio — som, elementos visuais e gravação permanecem perfeitamente sincronizados (a configuração de antecipação foi removida)",
-      "change-13": "The composer has a new \"Pro view\", which you can turn on in its settings: every semitone gets its own row and every note sits at its real pitch, so you see exactly what the song plays.",
-      "change-14": "In pro view you edit on the canvas itself: tap a cell to add or remove a note, long press one of your notes to choose how long it lasts, and unlock the view to drag the rows up and down freely.",
-      "change-15": "O Sky ganha sete instrumentos que faltavam: Violoncelo, Violino, Saxofone, Gaita, Flauta Transversal, Sino Pequeno e Tambor da Fortuna.",
-      "change-16": "A Aurora e a Light Guitar agora sustentam as notas, como no jogo. Antes usavam as amostras curtas, então segurar a tecla não fazia nada.",
-      "change-17": "Muitas outras correções de bugs e melhorias"
+      "change-6": "Pequenos ajustes de design em todo o aplicativo",
+      "change-7": "A exportação MIDI agora é mais precisa e funciona corretamente quando importada em outros aplicativos",
+      "change-8": "Nova \"Visualização Pro\" nas configurações do compositor: um compositor melhorado e mais avançado para músicas complexas",
+      "change-9": "Foram adicionados sete instrumentos ao Sky: Violoncelo, Violino, Saxofone, Gaita, Flauta Transversal, Sino Pequeno e Tambor da Fortuna. A Aurora e a Light Guitar agora sustentam as notas.",
+      "change-10": "Outras correções de bugs e melhorias"
     },
     "3-7-0": {
       "title": "Novos instrumentos (Genshin)",

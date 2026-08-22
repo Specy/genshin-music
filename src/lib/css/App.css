@@ -344,6 +344,14 @@ input[type='number'] {
   transform: translateX(50%) translateY(calc(-120% - 0.8rem));
 }
 
+.pill-with-spinner {
+  padding-left: 0.8rem;
+}
+
+.pill-with-actions {
+  padding-right: 0.6rem;
+}
+
 .pill-visible {
   opacity: 1;
   transform: translateY(0) translateX(50%);
@@ -353,8 +361,8 @@ input[type='number'] {
 /* Sized in em so the spinner tracks the pill's font-size, and drawn in currentColor so it
    inherits whatever text color the active theme resolved for the pill's background. */
 .pill-spinner {
-  width: 0.9em;
-  height: 0.9em;
+  width: 1rem;
+  height: 1rem;
   flex-shrink: 0;
   border-radius: 50%;
   border: 2px solid currentColor;

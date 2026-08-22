@@ -17,16 +17,9 @@ export const CHANGELOG: Update[] = [
             'Sheet minimap in the composer timeline',
             'Used layers in a column are highlighted in the composer',
             'Slight redesigns throughout the app',
-            'Composer playback now runs on a single clock — sound, visuals and recording stay exactly in sync (the lookahead setting is gone)',
-            'Songs now store the note each button actually plays; your existing songs are upgraded when you open them',
-            'Changing the pitch of a song or of a single layer now moves its notes',
-            'MIDI export now writes the notes you actually hear, pitch included',
-            'Saved songs use a new format version — third party tools that read the song JSON must check the "version" field',
-            'The player always follows the loaded song\'s pitch and instruments, and returns to your own settings when the song stops (the "sync song data" setting is gone)',
-            'New "Pro view" in the composer settings: every semitone is its own row and every note sits at its real pitch',
-            'In pro view you add and remove notes by tapping the canvas itself, long press one of your notes for its duration, and can unlock the view to drag the rows up and down',
-            'Added seven instruments to Sky: Cello, Violin, Saxophone, Harmonica, Transverse Flute, Small Bell and Fortune Drum',
-            'The Aurora and the Light Guitar now hold when you hold the note, using the game\'s full-length samples instead of the short ones',
+            'MIDI export is now more accurate and works properly when imported in other apps',
+            'New "Pro view" in the composer settings: Improved and more advanced composer for complex songs',
+            'Added seven instruments to Sky: Cello, Violin, Saxophone, Harmonica, Transverse Flute, Small Bell and Fortune Drum. The Aurora and the Light Guitar are now sustained.',
             'Other bug fixes and improvements',
         ]
     },
@@ -362,7 +355,7 @@ export const CHANGELOG: Update[] = [
             - Music track selection (select or deselect which tracks to include) $l
             - Instrument track selection (select what instrument to give to each track) $l
             - Track info (get info on how successful your parsing was, accidentals and notes out of range) $l
-            - Change note offset (in case that the song is outside of the octaves available) 
+            - Change note offset (in case that the song is outside of the octaves available)
             `
         ]
     }, {

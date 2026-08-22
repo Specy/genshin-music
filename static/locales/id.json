@@ -10,6 +10,11 @@
         "error_opening_file": "Terjadi kesalahan saat membuka file ini",
         "error_downloading_audio": "Terjadi kesalahan saat mengunduh audio, mungkin lagunya terlalu panjang?",
         "song_downloaded": "Lagu terunduh",
+        "rendering_song_audio": "Merender audio... {{percentage}}%",
+        "encoding_song_audio": "Mengenkode file audio...",
+        "song_audio_exported": "Audio berhasil diekspor",
+        "error_exporting_song_audio": "Terjadi kesalahan saat mengekspor audio",
+        "exporting_unsaved_song": "Lagu ini belum pernah disimpan, audio akan diekspor dari apa yang saat ini terbuka",
         "error_downloading_song": "Terjadi kesalahan saat mengunduh lagu",
         "error_downloading_songs": "Terjadi kesalahan saat mengunduh lagu",
         "error_importing_file": "Terjadi kesalahan saat mengimpor file \"{{file_name}}\"",
@@ -47,7 +52,8 @@
         "unsaved_song_save": "Anda memiliki perubahan yang belum disimpan pada lagu: \"{{song_name}}\" ingin menyimpan sekarang? PERUBAHAN YANG BELUM DISIMPAN AKAN HILANG",
         "enter_song_name": "Tulis nama lagu",
         "enter_folder_name": "Tulis nama folder",
-        "ask_song_name_cancellable": "Tulis nama lagu, tekan batal untuk mengabaikan"
+        "ask_song_name_cancellable": "Tulis nama lagu, tekan batal untuk mengabaikan",
+        "pick_audio_export_format": "Format audio mana yang ingin Anda ekspor?"
     },
     "confirm": {
         "delete_song": "Apakah Anda yakin ingin menghapus lagu \"{{song_name}}\"?",
@@ -166,6 +172,11 @@
         "play_song": "Putar lagu",
         "invalid_song": "Lagu tidak valid",
         "download_song": "Unduh lagu {{song_name}}",
+        "export_as_audio": "Ekspor sebagai audio",
+        "audio_format_wav": "WAV",
+        "audio_format_wav_description": "Kualitas tertinggi, file besar",
+        "audio_format_mp3": "MP3",
+        "audio_format_mp3_description": "Kualitas baik, file lebih kecil",
         "delete_song": "Hapus lagu {{song_name}}",
         "change_app_theme": "Ubah tema aplikasi",
         "download_all_songs_backup": "Unduh semua lagu (cadangan)",
@@ -221,6 +232,16 @@
             "composer_sync_tabs_description": "Fitur lanjutan, fitur ini menyinkronkan tab browser lain untuk bermain secara bersamaan",
             "composer_pro_view": "Pro view",
             "composer_pro_view_description": "Shows every semitone as its own row, with all the notes at their real pitch, and lets you add or remove them by tapping the canvas itself",
+            "sheet_visualizer_note_names": "Tampilkan nama nada",
+            "sheet_visualizer_note_names_description": "Menuliskan nama setiap nada di dalamnya menggunakan tata letak yang dipilih di bawah",
+            "sheet_visualizer_note_name_type": "Jenis nama nada",
+            "sheet_visualizer_note_name_type_description": "Penamaan yang ditulis di dalam nada; tidak berpengaruh kecuali nama nada ditampilkan",
+            "sheet_visualizer_merge_empty_spaces": "Gabungkan ruang kosong",
+            "sheet_visualizer_merge_empty_spaces_description": "Menggabungkan kolom kosong yang berurutan sehingga lembar menjadi lebih pendek dan mudah dibaca",
+            "sheet_visualizer_different_color_rows": "Baris dengan warna berbeda",
+            "sheet_visualizer_different_color_rows_description": "Memberikan setiap baris keyboard warna latar sendiri agar mudah dibedakan sekilas",
+            "sheet_visualizer_per_row": "Bingkai per baris",
+            "sheet_visualizer_per_row_description": "Jumlah bingkai lembar yang dimuat di setiap baris; lebih banyak bingkai membuat masing-masing lebih kecil",
             "player_instrument": "Instrumen",
             "player_instrument_description": "Instrumen utama (pertama) pemain, juga akan disimpan dalam lagu yang Anda rekam",
             "player_pitch": "Pitch",
@@ -312,7 +333,8 @@
             "player_practice_settings": "Pengaturan Latihan",
             "song_settings": "Pengaturan lagu",
             "composer_settings": "Pengaturan komposer",
-            "editor_settings": "Pengaturan editor"
+            "editor_settings": "Pengaturan editor",
+            "sheet_visualizer_settings": "Pengaturan lembar"
         }
     },
     "zen_keyboard": {
@@ -539,6 +561,7 @@
         "confirm_layer_remove": "Apakah Anda yakin ingin menghapus \"{{layer_name}}\"? SEMUA NOTE PADA LAPISAN INI AKAN DIHAPUS",
         "cant_add_more_than_n_layers": "Anda tidak dapat menambahkan lebih dari {{max_layers}} lapisan!",
         "ask_song_name_for_composed_song_version": "Tulis nama lagu untuk versi yang dikomposisikan, tekan batal untuk mengabaikan",
+        "export_audio": "Ekspor audio",
         "create_new_song": "Buat lagu baru",
         "create_from_midi_or_audio": "Buat dari MIDI/Audio",
         "previous_breakpoint": "Breakpoint Sebelumnnya",
@@ -581,6 +604,9 @@
             "include_accidentals": "Sertakan kecelakaan",
             "global_note_offset": "Offset note global",
             "global_note_offset_description": "Indeks setiap nada akan didorong ke atas/bawah sejumlah ini, Anda bisa menggunakannya untuk membuat\n                        lagu cocok dengan jangkauan aplikasi. Anda juga bisa mengubah offset setiap lapisan.",
+            "merged_notes": "Pengulangan yang digabungkan",
+            "suggest_offset": "Sarankan",
+            "suggested_offset": "Offset {{offset}}: {{accidentals}} tanda aksidental, {{stranded}} nada yang tidak dapat dimainkan instrumen",
             "local_note_offset": "Offset note trek lokal",
             "local_note_offset_description": " Mengubah indeks setiap nada sejumlah ini.",
             "max_octave_scaling": "Penskalaan oktaf note maksimal",
@@ -697,7 +723,9 @@
             "set_tap_hand_description": "Atur klik untuk membuat nada ketukan",
             "set_hold_hand_description": "Atur klik untuk membuat nada tahan",
             "set_delete_hand_description": "Atur klik untuk menghapus nada",
-            "vsrg_add_hit_object": "Tambahkan objek hit (sinkron dengan keybinds yang terdaftar)"
+            "vsrg_add_hit_object": "Tambahkan objek hit (sinkron dengan keybinds yang terdaftar)",
+            "pro_vertical_scroll_description": "Gulir tampilan Pro secara vertikal",
+            "pro_zoom_description": "Perbesar atau perkecil baris tampilan Pro (gerakan mencubit pada trackpad juga dapat digunakan)"
         }
     },
     "instruments": {
@@ -756,18 +784,16 @@
     "versions": {
         "4-0-0": {
             "title": "Aplikasi baru, note tertahan, scroll halus, instrumen baru",
-            "change-1": "Seluruh aplikasi telah ditulis ulang dari awal. Kinerja seharusnya meningkat di semua bagian.",
-            "change-2": "Note tertahan telah ditambahkan. Di komposer, tekan lama sebuah note pada keyboard untuk membuka popover durasi dan pilih berapa kolom note tersebut akan bertahan. Di pemain dan keyboard Zen, cukup tahan tombol note untuk menahan note tersebut.",
-            "change-3": "Saat memutar lagu, komposer kini melakukan scroll dengan mulus, disertai garis yang menandai posisi Anda di dalam lagu. Menyeret dan menggeser kanvas juga terasa mulus. Anda dapat mematikannya di pengaturan komposer.",
-            "change-4": "Menambahkan minimap lembar lagu pada timeline komposer",
-            "change-5": "Layer yang digunakan dalam sebuah kolom disorot di komposer",
-            "change-6": "Sedikit perubahan desain di seluruh aplikasi untuk meningkatkan pengalaman pengguna",
-            "change-7": "Pemutaran komposer kini berjalan pada satu jam — suara, visual, dan rekaman tetap sepenuhnya sinkron (pengaturan lookahead telah dihapus)",
-            "change-13": "The composer has a new \"Pro view\", which you can turn on in its settings: every semitone gets its own row and every note sits at its real pitch, so you see exactly what the song plays.",
-            "change-14": "In pro view you edit on the canvas itself: tap a cell to add or remove a note, long press one of your notes to choose how long it lasts, and unlock the view to drag the rows up and down freely.",
-            "change-15": "Sky mendapat tujuh instrumen yang belum ada: Cello, Biola, Saksofon, Harmonika, Suling Melintang, Lonceng Kecil, dan Genderang Keberuntungan.",
-            "change-16": "Aurora dan Light Guitar kini menahan nadanya, seperti di dalam game. Sebelumnya keduanya memakai sampel pendek, jadi menahan tombol tidak berpengaruh.",
-            "change-17": "Banyak perbaikan bug dan peningkatan lainnya"
+            "change-1": "Ditulis ulang dari awal",
+            "change-2": "Nada tertahan",
+            "change-3": "Komposer dengan gulir halus",
+            "change-4": "Minimap lembar pada linimasa komposer",
+            "change-5": "Lapisan yang digunakan dalam sebuah kolom disorot di komposer",
+            "change-6": "Sedikit perubahan desain di seluruh aplikasi",
+            "change-7": "Ekspor MIDI kini lebih akurat dan berfungsi dengan baik saat diimpor di aplikasi lain",
+            "change-8": "Tampilan Pro baru di pengaturan komposer: komposer yang lebih baik dan lebih canggih untuk lagu kompleks",
+            "change-9": "Menambahkan tujuh instrumen ke Sky: Cello, Biola, Saksofon, Harmonika, Suling Melintang, Lonceng Kecil, dan Genderang Keberuntungan. Aurora dan Light Guitar kini dapat menahan nada.",
+            "change-10": "Perbaikan bug dan peningkatan lainnya"
         },
         "3-7-0": {
             "title": "Instrumen baru (Genshin)",

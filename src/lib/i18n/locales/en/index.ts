@@ -198,9 +198,9 @@ export const i18n_en = {
     download_song: 'Download song {{song_name}}',
     export_as_audio: 'Export as audio',
     audio_format_wav: 'WAV',
-    audio_format_wav_description: 'Lossless, large file',
+    audio_format_wav_description: 'Highest quality, large file',
     audio_format_mp3: 'MP3',
-    audio_format_mp3_description: 'Smaller file, 320 kbps',
+    audio_format_mp3_description: 'Good quality, smaller file',
     delete_song: 'Delete song {{song_name}}',
     change_app_theme: 'Change app theme',
     download_all_songs_backup: 'Download all songs (backup)',
@@ -905,36 +905,19 @@ export const i18n_en = {
   versions: {
     '4-0-0': {
       title: 'New app, sustained notes, smooth scrolling, new instruments',
-      'change-1':
-        'The whole app has been rewritten from scratch. Performance should be improved everywhere.',
-      'change-2':
-        'Sustained notes have been added. In the composer, long press a note on the keyboard to open the duration popover and choose how many columns it should last. In the player and zen keyboard, just hold the note button to sustain the note.',
-      'change-3':
-        'While playing, the composer now scrolls smoothly with a line marking where you are in the song. Dragging and scrolling the canvas is smooth too. You can turn this off in the composer settings.',
-      'change-4': 'Added a minimap of the sheet to the composer timeline',
-      'change-5': 'Layers used in a column are highlighted in the composer',
-      'change-6': 'Slight redesigns throughout the app to improve User Experience',
+      'change-1': 'Rewritten from scratch',
+      'change-2': 'Sustained notes',
+      'change-3': 'Smooth scrolling composer',
+      'change-4': 'Sheet minimap in the composer timeline',
+      'change-5': 'Used layers in a column are highlighted in the composer',
+      'change-6': 'Slight redesigns throughout the app',
       'change-7':
-        'Composer playback now runs on a single clock — sound, visuals and recording stay exactly in sync (the lookahead setting is gone)',
+        'MIDI export is now more accurate and works properly when imported in other apps',
       'change-8':
-        'Songs now store the note each button actually plays, instead of the position of the key you pressed. Your existing songs are upgraded automatically the first time you open them, and they sound exactly as they did before.',
+        'New "Pro view" in the composer settings: Improved and more advanced composer for complex songs',
       'change-9':
-        'Changing the pitch of a song, or of a single layer, now really moves its notes instead of only renaming them. Switching a layer to another instrument keeps its notes on the same keys where the two instruments share them.',
-      'change-10':
-        'Exporting to MIDI now writes the notes you actually hear, pitch included. Before, a song written at a pitch other than C exported as if it were at C.',
-      'change-11':
-        'Because of all this, saved songs carry a new format version (composed 5, recorded 4, VSRG 3). If you use third party tools that read the song JSON, they must check the "version" field: in the new versions each note is a real note number, not a keyboard position, so a tool that ignores the version will read them wrong.',
-      'change-12':
-        'The player now always follows the loaded song\'s pitch and instruments — songs can no longer play silently because your own pitch differed from theirs. Your settings come back when the song stops, so the "sync song data" setting is gone.',
-      'change-13':
-        'The composer has a new "Pro view", which you can turn on in its settings: every semitone gets its own row and every note sits at its real pitch, so you see exactly what the song plays.',
-      'change-14':
-        'In pro view you edit on the canvas itself: tap a cell to add or remove a note, long press one of your notes to choose how long it lasts, and unlock the view to drag the rows up and down freely.',
-      'change-15':
-        'Sky gains seven instruments it was missing: the Cello, Violin, Saxophone, Harmonica, Transverse Flute, Small Bell and Fortune Drum.',
-      'change-16':
-        'The Aurora and the Light Guitar hold their notes now, like they do in game. They shipped with the short samples before, so holding a key did nothing.',
-      'change-17': 'Many other bug fixes and improvements',
+        'Added seven instruments to Sky: Cello, Violin, Saxophone, Harmonica, Transverse Flute, Small Bell and Fortune Drum. The Aurora and the Light Guitar are now sustained.',
+      'change-10': 'Other bug fixes and improvements',
     },
     '3-7-0': {
       title: 'New instruments (Genshin)',
