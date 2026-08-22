@@ -4116,6 +4116,11 @@
       "family": "pipe",
       "midiName": "flute",
       "shape": "sky-3x5",
+      "sustain": {
+        "release": 0.28,
+        "minLength": 0.15,
+        "loopMode": "loop-continuous"
+      },
       "notes": [
         {
           "file": "0.mp3",
