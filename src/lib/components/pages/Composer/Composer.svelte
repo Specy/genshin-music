@@ -227,9 +227,10 @@
    * press on the composer is aimed at putting the menu away, and the guard and the menu can never
    * disagree about which presses those are.
    *
-   * WHAT IT SUPPRESSES IS NOTE EDITS ONLY - the keyboard press below and the canvas' two cell
-   * gestures (see ComposerCanvas' `menuDismissesClicks`). Column selection, seeking, the timeline
-   * and scrolling all stay live: a dismissing tap that lands on one of those is harmless.
+   * WHAT IT SUPPRESSES IS THE PRO VIEW CANVAS' TWO CELL GESTURES ONLY (see ComposerCanvas'
+   * `menuDismissesClicks`) - the maintainer's scope, revised the day it shipped: the composer
+   * KEYBOARD stays live with the menu open, and so do column selection, seeking, the timeline and
+   * scrolling. Only a tap that would write a note onto the canvas under a dismissal is dropped.
    */
   let menuDismissesClicks = $state(false);
 
@@ -1242,12 +1243,6 @@
   }
 
   function handleClick(note: ObservableNote, pointerId: number) {
-    //A PRESS MADE TO DISMISS THE SIDE MENU EDITS NOTHING. This runs on POINTERDOWN, and the menu
-    //closes itself on the document `click` that the same gesture ends in - so the dismissing press
-    //still sees the flag up and is dropped here, while every press after it sees a menu that has
-    //already closed and enters its note as usual. No press record is written either, so the
-    //release finds nothing to remove and the hold clock finds nothing to open a popover on.
-    if (menuDismissesClicks) return;
     //the clicked button's Note Number on the current layer's instrument - the one currency the
     //song edits below and the audio engine both speak (ADR-0005/ADR-0007)
     const id = numberOfNote(note);

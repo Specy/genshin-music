@@ -486,9 +486,10 @@ describe('every input surface runs the one note-press machine', () => {
 });
 
 /**
- * THE CLICK THAT PUTS THE SIDE MENU AWAY EDITS NOTHING (maintainer rule, 2026-08-22). With the menu
- * open a press on the composer is aimed at dismissing it, and it used to add or remove a note under
- * itself on the way past.
+ * THE CLICK THAT PUTS THE SIDE MENU AWAY WRITES NO NOTE ON THE PRO VIEW CANVAS (maintainer rule,
+ * 2026-08-22, scope revised the same day: the CANVAS only). With the menu open a tap on the canvas
+ * is aimed at dismissing it, and it used to add or remove a note under itself on the way past. The
+ * composer KEYBOARD deliberately stays live - its presses edit and sound as ever, menu or no menu.
  *
  * Policy again, and for a second reason on top of this block's own: the guard is made of a DOM event
  * ordering (a pointerdown precedes the document `click` that ComposerMenu's clickOutside closes on)
@@ -512,16 +513,11 @@ describe('a press made to dismiss the composer menu is not an edit', () => {
     expect(composerMenu).toContain('onPanelOpenChange?.(dismissesOutsideClicks);');
   });
 
-  it('the keyboard press refuses before it sounds or adds anything', () => {
-    const code = functionCode('handleClick');
-    //FIRST, above both the sustain branch and the press machine: a dismissing tap must not record a
-    //hold, add a note or preview one
-    expect(code.indexOf('if (menuDismissesClicks) return')).toBeLessThan(
-      code.indexOf('startSustainRecording')
-    );
-    expect(code.indexOf('if (menuDismissesClicks) return')).toBeLessThan(
-      code.indexOf('beginNotePress')
-    );
+  it('the keyboard press stays live - the guard is the canvas gestures alone', () => {
+    //THE SCOPE REVISION, pinned in the negative: the guard shipped covering the keyboard press too
+    //and the maintainer narrowed it to the Pro View canvas the same day, so a keyboard press must
+    //not consult the flag - with the menu open, keys still edit and sound
+    expect(functionCode('handleClick')).not.toContain('menuDismissesClicks');
     //...and the flag is the menu's own report rather than a second reading of the menu's state
     //(the wiring is in the TEMPLATE, so this reads the whole file rather than the instance script)
     expect(composer).toContain('onPanelOpenChange={(open) => (menuDismissesClicks = open)}');
