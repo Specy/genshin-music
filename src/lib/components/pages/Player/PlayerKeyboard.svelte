@@ -16,6 +16,7 @@
   import { ApproachingNote, type RecordedNote } from '$core/Songs/SongClasses';
   import type { NoteStatus } from '$core/types';
   import { effectiveTrackPitch, resolvePlayerNoteButtons } from '$core/Songs/noteIds';
+  import { dedupeChunkNotes, dedupeSimultaneousNotes } from '$core/Songs/duplicateNotes';
   import type { Instrument, ObservableNote } from '$lib/audio/Instrument.svelte';
   import { RecordedSong, type Chunk } from '$core/Songs/RecordedSong';
   import { MIDIProvider, type MIDIEvent } from '$lib/providers/MIDIProvider';
@@ -214,16 +215,22 @@
     approachRate = data.approachRate || 1500;
     const startDelay = approachRate;
     const startOffset = song.notes[start] !== undefined ? song.notes[start].time : 0;
-    for (let i = start; i < end && i < song.notes.length; i++) {
-      const note = song.notes[i];
-      // Notes with no key on THIS keyboard can't be practiced — skip (they were unplayable rows
-      // before too). The test is `keyboardButton`, the display instrument's own Button space,
-      // which is also what the queue rows below are keyed by and what a click resolves to: a note
-      // this keyboard cannot play can never be clicked, so admitting it would only queue it up to
-      // expire and be scored as a MISS. The second bound is the queue's own row count (one row per
-      // Song Grid slot); a Button is always within its instrument's range, and every instrument's
-      // ids come from the grid's, so it only ever fires for a malformed config.
-      if (note.keyboardButton < 0 || note.keyboardButton >= game.notes.perColumn) continue;
+    // Notes with no key on THIS keyboard can't be practiced — skip (they were unplayable rows
+    // before too). The test is `keyboardButton`, the display instrument's own Button space,
+    // which is also what the queue rows below are keyed by and what a click resolves to: a note
+    // this keyboard cannot play can never be clicked, so admitting it would only queue it up to
+    // expire and be scored as a MISS. The second bound is the queue's own row count (one row per
+    // Song Grid slot); a Button is always within its instrument's range, and every instrument's
+    // ids come from the grid's, so it only ever fires for a malformed config.
+    const playable = song.notes
+      .slice(start, end)
+      .filter((note) => note.keyboardButton >= 0 && note.keyboardButton < game.notes.perColumn);
+    // ...and a note the keyboard CAN play, but twice over: two tracks doubling the same note in
+    // one instant used to spawn two identical circles on one row, of which a press can only ever
+    // clear one - the twin expired and was scored as a MISS through no fault of the player
+    // (duplicateNotes.ts). Deduping on the song's own times, before the speed scaling below,
+    // keeps the window the same one the practice chunks merge on.
+    for (const note of dedupeSimultaneousNotes(playable, sustainingTracks)) {
       const obj = new ApproachingNote({
         time: Song.roundTime((note.time - startOffset) / speedChanger.value + startDelay),
         index: note.keyboardButton,
@@ -559,6 +566,14 @@
       .slice(start, end)
       .filter((note) => note.keyboardButton >= 0 && note.keyboardButton < keyboard.length);
     const chunks = RecordedSong.mergeNotesIntoChunks(notes.map((n) => n.clone()));
+    // One entry per key inside each chunk (duplicateNotes.ts): two tracks doubling the same note
+    // in one instant put two entries with the same `keyboardButton` in one chunk, but a click
+    // splices out only ONE of them while the key's red mark clears either way - so the chunk kept
+    // a leftover nothing on screen could point at, and practice stopped dead with every visible
+    // note already clicked. Per chunk only: the same key in a later chunk is a real next press.
+    chunks.forEach((chunk) => {
+      chunk.notes = dedupeChunkNotes(chunk.notes, sustainingTracks);
+    });
     if (chunks.length === 0) return;
     nextChunkDelay = 0;
     const firstChunk = chunks[0];

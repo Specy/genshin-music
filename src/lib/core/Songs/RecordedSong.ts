@@ -10,6 +10,7 @@ import {
 } from "./SongClasses"
 import {ComposedSong, defaultInstrumentMap} from "./ComposedSong.svelte"
 import {clamp, groupByNotes} from "../utils/Utilities"
+import {SIMULTANEOUS_NOTE_THRESHOLD_MS} from "./duplicateNotes"
 import {encodeMidiMetadata} from "./midiMetadata"
 import clonedeep from 'lodash.clonedeep'
 import {NoteLayer} from "./Layer"
@@ -518,7 +519,9 @@ export class RecordedSong extends Song<RecordedSong, SerializedRecordedSong> {
             )
             const startTime = chunk.notes.length > 0 ? chunk.notes[0].time : 0
             for (let j = 0; j < notes.length && j < 20; j++) {
-                const difference = notes[j].time - chunk.notes[0].time - 50 //TODO add threshold here
+                //the same window duplicateNotes.ts admits one note per key in — shared so the
+                //approaching queue cannot drift apart from what lands in one practice chunk
+                const difference = notes[j].time - chunk.notes[0].time - SIMULTANEOUS_NOTE_THRESHOLD_MS //TODO add threshold here
                 if (difference < 0) {
                     chunk.notes.push(notes.shift() as RecordedNote)
                     j--
