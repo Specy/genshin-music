@@ -124,3 +124,7 @@ _Avoid_: current column (ambiguous with edit-time selection), playhead column
 **Committed**:
 Audio already handed to the audio clock ahead of being heard. Committed audio is retractable until the moment it starts sounding; once started it always rings out — deleting a note never silences its in-flight sound.
 _Avoid_: scheduled (says when it was decided, not whether it can still be taken back)
+
+**Audition**:
+Pressing or selecting a track sounds that track's notes in the selected column, as taps — regardless of Mute and Solo, and silent while the song is playing.
+_Avoid_: preview (the column's own, which is every track at once and obeys Mute/Solo)

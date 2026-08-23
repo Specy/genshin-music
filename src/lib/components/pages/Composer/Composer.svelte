@@ -902,6 +902,37 @@
   }
 
   /**
+   * The one sound that IGNORES Mute/Solo: an audition (CONTEXT.md) exists to answer "what is on
+   * this track here", and a muted track is exactly the one that question gets asked about — a
+   * silent answer would be indistinguishable from an empty column. Everything else playSound
+   * guards is kept, in particular the getNoteByNumber null-check: a note stranded outside this
+   * instrument's range has nothing to sound and must stay silent here too.
+   */
+  function playAuditionSound(layer: number, number: number) {
+    const instrument = layers[layer];
+    if (!instrument) return;
+    const pitch = song.instruments[layer].pitch || song.pitch;
+    if (instrument.getNoteByNumber(number, pitch) === null) return;
+    instrument.play(number, pitch);
+  }
+
+  /**
+   * Sound what the given track plays in the column the user is standing on — the layer half of
+   * the preview selectColumn gives a browsed column, so that walking the layers is as audible as
+   * walking the columns. Taps only: sounding spans at length is playback's business.
+   *
+   * Silent while the song is playing, for the same reason the column preview is: the transport
+   * owns the ear then, and a layer switch mid-playback would fire a chord over it.
+   */
+  function auditionLayer(layerToAudition: number) {
+    if (playbackActive || transport.isRunning) return;
+    song.selectedColumn.notes.forEach((note) => {
+      if (note.trackIndex !== layerToAudition) return;
+      playAuditionSound(note.trackIndex, note.id);
+    });
+  }
+
+  /**
    * Attack a note and LEAVE IT SOUNDING until releaseNote — the live half of sustain recording.
    * Same guards as playSound, but no durationMs and no `at`: only the no-durationMs press is
    * registered in the instrument's heldVoices, so it is the only one a release can ever reach —
@@ -2083,6 +2114,9 @@
     //releases on the track that actually sounded it
     endAllSustainRecordings();
     abandonNotePresses();
+    //every entry into this function auditions, including re-pressing the layer already selected
+    //(InstrumentControls does not short-circuit that click) - the press IS the request to hear it
+    auditionLayer(newLayer);
   }
 
   function toggleTools() {
