@@ -486,16 +486,21 @@ describe('every input surface runs the one note-press machine', () => {
 });
 
 /**
- * THE CLICK THAT PUTS THE SIDE MENU AWAY WRITES NO NOTE ON THE PRO VIEW CANVAS (maintainer rule,
- * 2026-08-22, scope revised the same day: the CANVAS only). With the menu open a tap on the canvas
- * is aimed at dismissing it, and it used to add or remove a note under itself on the way past. The
- * composer KEYBOARD deliberately stays live - its presses edit and sound as ever, menu or no menu.
+ * THE CLICK THAT PUTS AN OVERLAY AWAY WRITES NO NOTE ON THE PRO VIEW CANVAS (maintainer rule,
+ * 2026-08-22, scope revised the same day: the CANVAS only; extended to the layer settings popup
+ * 2026-08-23). With one of them open a tap on the canvas is aimed at dismissing it, and it used to
+ * add or remove a note under itself on the way past. The composer KEYBOARD deliberately stays live
+ * - its presses edit and sound as ever, overlay or no overlay.
+ *
+ * TWO SOURCES, ONE GUARD: the side menu publishes its own clickOutside predicate and the layer
+ * settings popup publishes `isEditing` (its clickOutside is `active: true` while mounted, so being
+ * open IS its predicate). Composer.svelte ORs them, and the canvas is told only the answer.
  *
  * Policy again, and for a second reason on top of this block's own: the guard is made of a DOM event
- * ordering (a pointerdown precedes the document `click` that ComposerMenu's clickOutside closes on)
- * across three components, and a jsdom test that mounted all three would be asserting jsdom's
+ * ordering (a pointerdown precedes the document `click` those clickOutsides close on)
+ * across four components, and a jsdom test that mounted all four would be asserting jsdom's
  * dispatch order rather than the browser's. What is pinned here is what such a test could not see
- * either way - that the three halves are wired to ONE predicate and that the guard is taken at the
+ * either way - that the halves are wired to ONE predicate and that the guard is taken at the
  * PRESS.
  */
 const composerCanvas = readFileSync(
@@ -503,8 +508,16 @@ const composerCanvas = readFileSync(
   'utf8'
 );
 const composerMenu = readFileSync('src/lib/components/pages/Composer/ComposerMenu.svelte', 'utf8');
+const instrumentControls = readFileSync(
+  'src/lib/components/pages/Composer/InstrumentControls.svelte',
+  'utf8'
+);
+const instrumentSettingsPopup = readFileSync(
+  'src/lib/components/pages/Composer/InstrumentSettingsPopup.svelte',
+  'utf8'
+);
 
-describe('a press made to dismiss the composer menu is not an edit', () => {
+describe('a press made to dismiss a composer overlay is not an edit', () => {
   it('the menu reports the very condition its own clickOutside runs on', () => {
     //ONE expression, read twice - the guard and the menu cannot disagree about which clicks are
     //dismissals, which is the whole reason the predicate is published instead of `isOpen`
@@ -518,21 +531,51 @@ describe('a press made to dismiss the composer menu is not an edit', () => {
     //and the maintainer narrowed it to the Pro View canvas the same day, so a keyboard press must
     //not consult the flag - with the menu open, keys still edit and sound
     expect(functionCode('handleClick')).not.toContain('menuDismissesClicks');
+    expect(functionCode('handleClick')).not.toContain('layerSettingsDismissesClicks');
+    expect(functionCode('handleClick')).not.toContain('overlayDismissesClicks');
     //...and the flag is the menu's own report rather than a second reading of the menu's state
     //(the wiring is in the TEMPLATE, so this reads the whole file rather than the instance script)
     expect(composer).toContain('onPanelOpenChange={(open) => (menuDismissesClicks = open)}');
   });
 
+  it('the layer settings popup answers the same guard as the side menu', () => {
+    //THE POPUP'S PREDICATE IS ITS OWN MOUNTED-NESS: its clickOutside is unconditionally active, so
+    //`isEditing` is the whole condition and there is no second expression that could disagree
+    expect(instrumentSettingsPopup).toContain(
+      'use:clickOutside={{ active: true, ignoreFocusable: true, onOutside: onClose }}'
+    );
+    //...and it is mounted only while editing, so `isEditing` and "dismisses outside clicks" are
+    //the same fact rather than two that could drift
+    expect(instrumentControls).toContain('{#if isEditing}');
+    //...reported from the state itself, not from the four call sites that close it
+    expect(instrumentControls).toContain('onSettingsOpenChange?.(isEditing);');
+    expect(composer).toContain(
+      'onSettingsOpenChange={(open) => (layerSettingsDismissesClicks = open)}'
+    );
+  });
+
+  it('the canvas is told the answer, not which overlay is open', () => {
+    //ONE derived value feeds the one prop: the canvas never learns there are two sources, which is
+    //what keeps a third overlay a change to this line alone
+    expect(composer).toContain(
+      'const overlayDismissesClicks = $derived(menuDismissesClicks || layerSettingsDismissesClicks);'
+    );
+    expect(composer).toContain('{overlayDismissesClicks}');
+    //and the canvas takes exactly one such prop - no per-overlay flags leaked through
+    expect(composerCanvas).not.toContain('menuDismissesClicks');
+    expect(composerCanvas).not.toContain('layerSettingsDismissesClicks');
+  });
+
   it('the canvas latches the flag at the press, not when the edit fires', () => {
     //the press edge, in the CAPTURE phase on the element the pixi canvas is appended into
     expect(composerCanvas).toContain(
-      'onpointerdowncapture={() => (pressDismissedMenu = menuDismissesClicks)}'
+      'onpointerdowncapture={() => (pressDismissedOverlay = overlayDismissesClicks)}'
     );
     //...and both cell gestures answer that latch. A settled tap fires at the RELEASE and a Duration
     //Hold 400ms into the press, so reading the live flag at either would be asking about a menu the
     //gesture may already have closed.
-    expect(composerCanvas).toContain('if (pressDismissedMenu) return;');
-    expect(composerCanvas).toContain('pressDismissedMenu ? false : onProCellLongPress(');
+    expect(composerCanvas).toContain('if (pressDismissedOverlay) return;');
+    expect(composerCanvas).toContain('pressDismissedOverlay ? false : onProCellLongPress(');
   });
 
   it('gates those two gestures and nothing else the canvas does', () => {
@@ -544,13 +587,13 @@ describe('a press made to dismiss the composer menu is not an edit', () => {
     //TWO READS, one per cell gesture. `selectColumn`, `toggleBreakpoint`, `onKeyboardDismiss` and
     //the hold's drag/end go over unwrapped, which is what keeps a dismissing tap that lands on
     //column selection, seeking or a scroll harmless-but-functional (the maintainer's scope)
-    expect(handedToTheRenderer.match(/pressDismissedMenu/g)).toHaveLength(2);
+    expect(handedToTheRenderer.match(/pressDismissedOverlay/g)).toHaveLength(2);
     //...and the pixi side is told nothing about the menu at all: the flag never crosses into it
     const composerRenderer = readFileSync(
       'src/lib/components/pages/Composer/ComposerRenderer.ts',
       'utf8'
     );
-    expect(composerRenderer).not.toContain('menuDismissesClicks');
-    expect(composerRenderer).not.toContain('pressDismissedMenu');
+    expect(composerRenderer).not.toContain('overlayDismissesClicks');
+    expect(composerRenderer).not.toContain('pressDismissedOverlay');
   });
 });

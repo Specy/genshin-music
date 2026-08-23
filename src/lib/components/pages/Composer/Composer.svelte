@@ -228,11 +228,25 @@
    * disagree about which presses those are.
    *
    * WHAT IT SUPPRESSES IS THE PRO VIEW CANVAS' TWO CELL GESTURES ONLY (see ComposerCanvas'
-   * `menuDismissesClicks`) - the maintainer's scope, revised the day it shipped: the composer
+   * `overlayDismissesClicks`) - the maintainer's scope, revised the day it shipped: the composer
    * KEYBOARD stays live with the menu open, and so do column selection, seeking, the timeline and
    * scrolling. Only a tap that would write a note onto the canvas under a dismissal is dropped.
    */
   let menuDismissesClicks = $state(false);
+  /**
+   * THE SAME QUESTION FOR THE LAYER SETTINGS POPUP - InstrumentControls' `isEditing`, reported up
+   * through `onSettingsOpenChange`. The popup floats over the canvas and its clickOutside is
+   * `active: true` for as long as it is mounted, so "open" and "dismisses outside clicks" are one
+   * state there and there is no second predicate to borrow.
+   */
+  let layerSettingsDismissesClicks = $state(false);
+  /**
+   * EITHER OVERLAY, which is what the canvas guard actually asks about: whichever of the two a
+   * press is aimed at putting away, it is a dismissal and not an edit. Kept as one derived value
+   * rather than two props so the canvas never has to know how many overlays there are - adding a
+   * third is a third source here and nothing at all down there.
+   */
+  const overlayDismissesClicks = $derived(menuDismissesClicks || layerSettingsDismissesClicks);
 
   let broadcastChannel: BroadcastChannel | null = null;
   let mounted = false;
@@ -2479,6 +2493,7 @@
       onInstrumentDelete={removeInstrument}
       onChangePosition={switchLayerPosition}
       onMerge={mergeLayer}
+      onSettingsOpenChange={(open) => (layerSettingsDismissesClicks = open)}
     />
   </div>
   <div class="top-panel-composer" style="grid-area:b">
@@ -2516,7 +2531,7 @@
           {selectedColumns}
           {viewLocked}
           keyboardRaised={keyboardSheetRaised}
-          {menuDismissesClicks}
+          {overlayDismissesClicks}
           {selectColumn}
           {toggleBreakpoint}
           onProCellTap={handleProCellTap}

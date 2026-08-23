@@ -65,12 +65,15 @@
      */
     keyboardRaised: boolean;
     /**
-     * Whether the composer's side menu is currently taking outside clicks as dismissals (see
-     * Composer.svelte's `menuDismissesClicks`, which is ComposerMenu's own clickOutside predicate).
+     * Whether an overlay over the composer is currently taking outside clicks as dismissals - the
+     * side menu or the layer settings popup (see Composer.svelte's `overlayDismissesClicks`, which
+     * is those two components' own clickOutside predicates ORed together). WHICH one is open is
+     * deliberately not said here: both dismiss on a document `click`, so both answer this the same
+     * way, and a third overlay is a change to that derivation alone.
      * A plain reactive prop and not a getter: it is read in this component's own pointerdown
-     * handler below, never inside the renderer - the pixi side knows nothing about the menu.
+     * handler below, never inside the renderer - the pixi side knows nothing about the overlays.
      */
-    menuDismissesClicks: boolean;
+    overlayDismissesClicks: boolean;
     selectColumn: (index: number, ignoreAudio?: boolean, forceAnchor?: boolean) => void;
     toggleBreakpoint: () => void;
     /** A settled Pro View tap, as the cell it landed on - what it EDITS is Composer.svelte's. */
@@ -138,7 +141,7 @@
     selectedColumns,
     viewLocked,
     keyboardRaised,
-    menuDismissesClicks,
+    overlayDismissesClicks,
     selectColumn,
     toggleBreakpoint,
     onProCellTap,
@@ -155,13 +158,13 @@
   let renderer: ComposerRenderer | null = $state(null);
 
   /**
-   * WHETHER THE GESTURE NOW ON THE CANVAS BEGAN AS A DISMISSAL of the side menu, latched by the
-   * capture-phase pointerdown on the wrapper below.
+   * WHETHER THE GESTURE NOW ON THE CANVAS BEGAN AS A DISMISSAL of an open overlay - the side menu
+   * or the layer settings popup - latched by the capture-phase pointerdown on the wrapper below.
    *
-   * THE ORDERING IS THE WHOLE MECHANISM. The menu closes itself from a document `click` listener
-   * (ComposerMenu's clickOutside), and a click is delivered after the pointerdown that starts it -
-   * so the press of the dismissing tap still sees the menu open and is latched, while the press of
-   * every tap after it sees a menu that has already closed. Latched at the PRESS rather than read
+   * THE ORDERING IS THE WHOLE MECHANISM. Each overlay closes itself from a document `click`
+   * listener (their clickOutside), and a click is delivered after the pointerdown that starts it -
+   * so the press of the dismissing tap still sees the overlay open and is latched, while the press
+   * of every tap after it sees one that has already closed. Latched at the PRESS rather than read
    * again when the edit fires, because the edits below fire later in the same gesture (a settled
    * tap at the release, a Duration Hold 400ms in) and what they must answer is what the gesture was
    * aimed at.
@@ -169,7 +172,7 @@
    * Not `$state`: only the two callbacks handed to the renderer read it, and none of them is a
    * reactive context.
    */
-  let pressDismissedMenu = false;
+  let pressDismissedOverlay = false;
 
   // Everything here comes from the renderer's onGeometryChange callback, not $derived: they're
   // pixi/DOM-measurement values this template cannot compute on its own. The three timeline
@@ -263,17 +266,17 @@
           selectColumn,
           toggleBreakpoint,
           //THE TWO CELL GESTURES THAT EDIT THE SONG, and the only things the latch above gates: a
-          //tap made to put the side menu away must not also write a note under itself. Everything
+          //tap made to put an overlay away must not also write a note under itself. Everything
           //else this canvas does with the same press is left alone - the drag still scrolls, the
           //release still picks a column in the Compressed View, the timeline still seeks - because
           //a dismissing tap that lands on one of those is harmless-but-functional.
           //The long press answers FALSE, which is what tells the renderer nothing took the hold.
           onProCellTap: (column, number) => {
-            if (pressDismissedMenu) return;
+            if (pressDismissedOverlay) return;
             onProCellTap(column, number);
           },
           onProCellLongPress: (column, number, rect) =>
-            pressDismissedMenu ? false : onProCellLongPress(column, number, rect),
+            pressDismissedOverlay ? false : onProCellLongPress(column, number, rect),
           onProCellLongPressDrag,
           onProCellLongPressEnd,
           onKeyboardDismiss,
@@ -490,13 +493,13 @@
   style:--composer-canvas-width-desktop={cssSize?.desktopWidth}
   style:--composer-canvas-height={cssSize?.height}
 >
-  <!-- THE LATCH'S PRESS EDGE (see `pressDismissedMenu`). On the CONTAINER the pixi canvas is
+  <!-- THE LATCH'S PRESS EDGE (see `pressDismissedOverlay`). On the CONTAINER the pixi canvas is
        appended into, in the CAPTURE phase, so it is written before the canvas' own listeners see
        the same pointerdown - and long before the document `click` that closes the menu. -->
   <div
     class="canvas-relative"
     bind:this={canvasContainerEl}
-    onpointerdowncapture={() => (pressDismissedMenu = menuDismissesClicks)}
+    onpointerdowncapture={() => (pressDismissedOverlay = overlayDismissesClicks)}
   >
     <!--
       `height` is the NOTES region, and the inline height is what holds these chevrons to it:
