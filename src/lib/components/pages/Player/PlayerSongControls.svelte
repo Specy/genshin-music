@@ -24,7 +24,6 @@
     setLoopEnabled,
     isVisualSheetVisible,
     visualSheetColumns,
-    hasSong,
     isMetronomePlaying,
     isRecordingAudio,
   }: {
@@ -39,7 +38,6 @@
     setLoopEnabled: (enabled: boolean) => void;
     isVisualSheetVisible: boolean;
     visualSheetColumns: number;
-    hasSong: boolean;
     isMetronomePlaying: boolean;
     isRecordingAudio: boolean;
   } = $props();
@@ -62,6 +60,14 @@
   // `hideNotesInPracticeMode && mode === 'practice'`), so outside it the eye is shown disabled
   // rather than removed: the row's other controls must not shift every time the mode changes.
   const canHidePracticeNotes = $derived(songData.eventType === 'practice');
+
+  // The record-audio button and the song controls under it must swap in the same flush, so both
+  // key off this one synchronous store field. Player's `hasSong` can drive neither: PlayerKeyboard
+  // flips it a debounced tick after eventType changes, and that lag painted the button one frame
+  // before the sliders vanished - a visible layout shift on leaving approaching mode.
+  const hasActiveSong = $derived(songData.eventType !== 'stop');
+  // Audio recording stays available while a song plays; practice and approaching hide it.
+  const canRecordAudio = $derived(songData.eventType === 'stop' || songData.eventType === 'play');
 </script>
 
 {#snippet faEyeIcon()}
@@ -168,15 +174,14 @@
   </div>
 {/if}
 <div class="column player-controls">
-  <!--this div is here to keep an empty element to keep the styling consistent -->
-  <div>
-    {#if songData.eventType !== 'approaching'}
-      <AppButton toggled={isRecordingAudio} onclick={() => onToggleRecordAudio(!isRecordingAudio)}>
-        {isRecordingAudio ? t('player:finish_recording') : t('player:record_audio')}
-      </AppButton>
+    {#if canRecordAudio}
+        <div>
+        <AppButton toggled={isRecordingAudio} onclick={() => onToggleRecordAudio(!isRecordingAudio)}>
+            {isRecordingAudio ? t('player:finish_recording') : t('player:record_audio')}
+        </AppButton>
+        </div>
     {/if}
-  </div>
-  <div class="column slider-wrapper" style={!hasSong ? 'display:none' : ''}>
+  <div class="column slider-wrapper" style={!hasActiveSong ? 'display:none' : ''}>
     <div class="row" style="width:100%;gap:0.4rem">
       {#if hidePracticeNotes !== undefined}
         <!-- The greying is inline rather than left to `.app-button:disabled` (opacity .8): a

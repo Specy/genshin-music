@@ -679,7 +679,6 @@
   visualSheetColumns={settings.numberOfVisualColumns.value}
   loopEnabled={settings.loopPractice.value}
   {isMetronomePlaying}
-  {hasSong}
   {speedChanger}
   setLoopEnabled={enableLoop}
   {setHidePracticeNotes}
