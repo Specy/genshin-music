@@ -49,7 +49,7 @@
     "Aurora": {
       "name": "Aurora",
       "displayName": "Aurora",
-      "family": "vocal",
+      "family": "ensemble",
       "midiName": "voice oohs",
       "shape": "sky-3x5",
       "sustain": {
@@ -2568,8 +2568,8 @@
     "SFX_BassSynth": {
       "name": "SFX_BassSynth",
       "displayName": "Bass Synth",
-      "family": "Bass",
-      "midiName": "Electric Bass",
+      "family": "bass",
+      "midiName": "synth bass 1",
       "shape": "sky-2x4",
       "notes": [
         {
@@ -2770,8 +2770,8 @@
     "SFX_ChimeSynth": {
       "name": "SFX_ChimeSynth",
       "displayName": "Chime Synth",
-      "family": "percussion",
-      "midiName": "Bellchime",
+      "family": "percussive",
+      "midiName": "tubular bells",
       "shape": "sky-2x4",
       "notes": [
         {
@@ -3562,8 +3562,8 @@
     "SFX_SineSynth": {
       "name": "SFX_SineSynth",
       "displayName": "Sine Synth",
-      "family": "synth",
-      "midiName": "sine",
+      "family": "synth lead",
+      "midiName": "lead 1 (square)",
       "shape": "sky-2x4",
       "notes": [
         {
@@ -3764,8 +3764,8 @@
     "SFX_TR-909": {
       "name": "SFX_TR-909",
       "displayName": "TR-909",
-      "family": "percussion",
-      "midiName": "Roland TR-808",
+      "family": "percussive",
+      "midiName": "synth drum",
       "shape": "sky-2x4",
       "notes": [
         {

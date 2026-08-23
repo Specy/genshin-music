@@ -1,7 +1,7 @@
 {
   "displayName": "Sine Synth",
-  "family": "synth",
-  "midiName": "sine",
+  "family": "synth lead",
+  "midiName": "lead 1 (square)",
   "shape": "sky-2x4",
   "notes": "synth-8"
 }

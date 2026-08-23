@@ -29,6 +29,7 @@ import {
   SUSTAIN_LOOP_MODES,
 } from './types';
 import type { GameJson, InstrumentMetaJson, NoteMetaJson, NotePresetsJson } from './schema';
+import { isGeneralMidiFamily, isGeneralMidiPatchName } from './generalMidi';
 
 export type GameMeta = {
   gameJson: GameJson;
@@ -282,7 +283,13 @@ function buildGameMeta(id: string): GameMeta {
     assertSafeSegment(context, 'instrument folder name', name);
     assertNonEmptyString(context, 'displayName', meta.displayName);
     assertNonEmptyString(context, 'family', meta.family);
+    if (!isGeneralMidiFamily(meta.family)) {
+      fail(context, `family "${meta.family}" is not an exact General MIDI family name`);
+    }
     assertNonEmptyString(context, 'midiName', meta.midiName);
+    if (!isGeneralMidiPatchName(meta.midiName)) {
+      fail(context, `midiName "${meta.midiName}" is not an exact General MIDI patch name`);
+    }
     assertNonEmptyString(context, 'shape', meta.shape);
     if (meta.sustain !== undefined) {
       if (!Number.isFinite(meta.sustain.release) || meta.sustain.release < 0) {

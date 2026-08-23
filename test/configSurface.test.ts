@@ -69,6 +69,55 @@ describe('game config surface', () => {
         //    `sustained_recorder` was itself a stress test and is gone too
         //    (2026-08-21), but it post-dates the freeze so it never appears here
         const frozen = readFixture('config-surface')
+        // Deliberate VALUE divergence (2026-08-24, ADR-0012) — `midiName` is the General MIDI
+        // program exported for an instrument, while `family` is the import suggestion key. Six
+        // instruments used names that do not exist in General MIDI (and therefore exported as
+        // program 0), and five Sky instruments used words that are not General MIDI families.
+        // The v1 fixture is frozen, so patch its in-memory copy only after asserting every old
+        // value. Literal replacements keep this exception narrow: a later metadata edit must get
+        // its own review instead of being hidden by this one.
+        const MIDI_METADATA_EDITS: Record<
+            string,
+            {field: 'family' | 'midiName'; from: string; to: string}[]
+        > = APP_NAME === 'Genshin'
+            ? {
+                HarmonicKey: [
+                    {field: 'midiName', from: 'acoustic grand', to: 'acoustic grand piano'},
+                ],
+                LeapingSpiritPiano: [
+                    {field: 'midiName', from: 'acoustic grand', to: 'acoustic grand piano'},
+                ],
+            }
+            : {
+                Aurora: [
+                    {field: 'family', from: 'vocal', to: 'ensemble'},
+                ],
+                SFX_BassSynth: [
+                    {field: 'family', from: 'Bass', to: 'bass'},
+                    {field: 'midiName', from: 'Electric Bass', to: 'synth bass 1'},
+                ],
+                SFX_ChimeSynth: [
+                    {field: 'family', from: 'percussion', to: 'percussive'},
+                    {field: 'midiName', from: 'Bellchime', to: 'tubular bells'},
+                ],
+                SFX_SineSynth: [
+                    {field: 'family', from: 'synth', to: 'synth lead'},
+                    {field: 'midiName', from: 'sine', to: 'lead 1 (square)'},
+                ],
+                'SFX_TR-909': [
+                    {field: 'family', from: 'percussion', to: 'percussive'},
+                    {field: 'midiName', from: 'Roland TR-808', to: 'synth drum'},
+                ],
+            }
+        for (const [name, edits] of Object.entries(MIDI_METADATA_EDITS)) {
+            for (const {field, from, to} of edits) {
+                expect(
+                    frozen.instrumentsData[name][field],
+                    `${name}.${field} is not the frozen value this exception was written against`
+                ).toBe(from)
+                frozen.instrumentsData[name][field] = to
+            }
+        }
         // Deliberate VALUE divergence (2026-08-09, midi round-trip work) — the one place this
         // proof no longer reproduces the frozen surface, because the frozen value was wrong.
         // Genshin declared midi bounds.upper 84 while the highest key in its own mapToNote was

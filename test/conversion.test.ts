@@ -1,8 +1,8 @@
 import {Buffer} from 'node:buffer'
 import {describe, expect, it} from 'vitest'
 import {
-    APP_NAME, ComposedSong, convertedSongLostNotes, LEGACY_NOTE_TABLES,
-    RecordedSong, songService, VsrgSong,
+    APP_NAME, ComposedSong, convertedSongLostNotes, INSTRUMENTS, INSTRUMENTS_DATA,
+    LEGACY_NOTE_TABLES, RecordedSong, songService, VsrgSong,
 } from './imports'
 import {numberToButton} from '../src/lib/core/Songs/noteIds'
 import {buildComposedSong, buildRecordedSong} from './builders'
@@ -347,9 +347,35 @@ describe('MIDI export', () => {
     it('.mid binary output is stable', () => {
         const composed = buildComposedSong()
         const recorded = buildRecordedSong()
+        // These are exactly the Phase-C configs whose former midiName was not in General MIDI,
+        // selected by roster membership rather than game id. Give every one its own track so both
+        // per-game byte goldens actually cover the corrected program-change events.
+        const correctedNames = [
+            'HarmonicKey',
+            'LeapingSpiritPiano',
+            'SFX_BassSynth',
+            'SFX_ChimeSynth',
+            'SFX_SineSynth',
+            'SFX_TR-909',
+        ].filter((name) => INSTRUMENTS.includes(name))
+        expect(correctedNames.length).toBeGreaterThan(0)
+        const correctedPrograms = new ComposedSong('Corrected MIDI programs', correctedNames)
+        correctedNames.forEach((name, trackIndex) => {
+            const instrument = INSTRUMENTS_DATA[name as keyof typeof INSTRUMENTS_DATA]
+            correctedPrograms.columns[0].addNote(trackIndex, instrument.notes[0].sounding)
+        })
+        const correctedProgramsMidi = correctedPrograms.toMidi()
+        expect(correctedProgramsMidi.tracks.map((track) => track.instrument.name)).toEqual(
+            correctedNames.map(
+                (name) => INSTRUMENTS_DATA[name as keyof typeof INSTRUMENTS_DATA].midiName
+            )
+        )
         expectGolden('midi-export', {
             composedMidiBase64: Buffer.from(composed.toMidi().toArray()).toString('base64'),
             recordedMidiBase64: Buffer.from(recorded.toMidi().toArray()).toString('base64'),
+            correctedProgramsMidiBase64: Buffer.from(correctedProgramsMidi.toArray()).toString(
+                'base64'
+            ),
         })
     })
 })

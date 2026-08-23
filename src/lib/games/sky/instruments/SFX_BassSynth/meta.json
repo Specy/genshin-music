@@ -1,7 +1,7 @@
 {
   "displayName": "Bass Synth",
-  "family": "Bass",
-  "midiName": "Electric Bass",
+  "family": "bass",
+  "midiName": "synth bass 1",
   "shape": "sky-2x4",
   "notes": "synth-8"
 }
