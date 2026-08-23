@@ -116,6 +116,8 @@ export const NOTE_NAME_TYPES = game.notes.nameTypes
 // COMPOSER_NOTE_POSITIONS[N], so a note's canvas row follows from its id alone.
 export const CANONICAL_NOTE_IDS = game.notes.canonicalNoteIds
 export const COMPOSER_NOTE_POSITIONS = game.notes.composerPositions
+// HISTORIC, NOT LIVE: no consumer in src/ since ADR-0011 gave the legacy remap a per-SOURCE-game
+// table in $core/Songs/legacyNoteTables. Exported only for the frozen config-surface fixture.
 export const IMPORT_NOTE_POSITIONS = game.notes.importPositions
 
 // ---- layouts ----

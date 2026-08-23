@@ -284,6 +284,16 @@
     );
   }
 
+  function seekToNote(noteIndex: number) {
+    if (!mounted) return;
+    // "Go to here" (ADR-0010): the run restarts at the chosen frame and the Section stays where the
+    // user drew it - `playerStore.seek` is what keeps the dispatch from publishing this range as
+    // the Section. A target already at or past the Section's end would otherwise be a dead run, so
+    // THAT ONE RUN goes to the song's end instead; the stored `end` is never written.
+    const end = playerControlsStore.end;
+    playerStore.seek(noteIndex, noteIndex >= end ? playerControlsStore.size : end);
+  }
+
   async function onSongFinished() {
     if (!settings.loopPractice.value) return;
     const finishedKey = playerStore.state.key;
@@ -684,6 +694,7 @@
   {setHidePracticeNotes}
   onToggleRecordAudio={toggleRecordAudio}
   onRestart={restartSong}
+  onSeek={seekToNote}
   onToggleMetronome={toggleMetronome}
   onRawSpeedChange={handleSpeedChanger}
 />

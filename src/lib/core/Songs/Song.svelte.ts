@@ -77,6 +77,24 @@ export abstract class Song<T = any, T2 extends SerializedSong = any, T3 = number
     //`instruments[i] = x` or `.push()` compiles, mutates, and publishes NOTHING.
     instruments: InstrumentData[] = $state.raw([])
 
+    /**
+     * Notes the LEGACY cross-game remap discarded while deserializing this song. Two discards,
+     * both counted, both cross-game only:
+     * - a source button index with no slot in the target game's keyboard (Genshin's top octave
+     *   has no Sky button, `importPositions[index] === -1`);
+     * - a remapped index with no button on the decoding instrument (`legacyIndexToId` returns
+     *   null, e.g. a Genshin index against Sky's 8-button DunDun table).
+     *
+     * A SAME-GAME legacy load hits the second discard too - that is the historic silent ghost
+     * note, inaudible in the legacy runtime as well - and deliberately does not count it.
+     *
+     * A dropped note is NOT a Stranded Note - it is gone, so countStrandedNotes() cannot see it -
+     * yet the user loses it just the same, which is why the import warning reads both. Transient
+     * and deliberately plain: set by the deserializers, never serialized, never cloned, and read
+     * by the import surfaces right after parseSong.
+     */
+    legacyDroppedNotes = 0
+
     constructor(name: string, version: T3, type: SongType, data?: SongData) {
         this.name = name
         this.version = version

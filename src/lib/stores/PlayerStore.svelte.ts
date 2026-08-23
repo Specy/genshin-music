@@ -22,6 +22,14 @@ type PlayerStoreState = {
   eventType: eventType;
   start: number;
   end: number;
+  /**
+   * A SEEK IS NOT A SECTION EDIT (ADR-0010). `start`/`end` are what the next run consumes, and the
+   * dispatch normally publishes them back as the Section the slider and the Sheet Frames draw -
+   * the two are the same pair of numbers for every ordinary run. "Go to here" breaks that for one
+   * run: it runs from an arbitrary frame (to the song's end, if the target is already past the
+   * Section) while the Section the user drew must stay exactly where it is. Set only by `seek`.
+   */
+  preservesSection: boolean;
 };
 
 class PlayerStore {
@@ -32,6 +40,7 @@ class PlayerStore {
     eventType: 'stop',
     start: 0,
     end: 0,
+    preservesSection: false,
   });
   /**
    * The notes currently on the player's keyboard, in the displayed instrument's authored
@@ -90,6 +99,7 @@ class PlayerStore {
       start,
       eventType: 'play',
       end,
+      preservesSection: false,
       key: this.state.key + 1,
       playId: this.state.playId + 1,
     });
@@ -100,6 +110,7 @@ class PlayerStore {
       start,
       eventType: 'practice',
       end,
+      preservesSection: false,
       key: this.state.key + 1,
       playId: this.state.playId + 1,
     });
@@ -110,6 +121,7 @@ class PlayerStore {
       start,
       eventType: 'approaching',
       end,
+      preservesSection: false,
       key: this.state.key + 1,
       playId: this.state.playId + 1,
     });
@@ -120,6 +132,7 @@ class PlayerStore {
       eventType: 'stop',
       start: 0,
       end: 0,
+      preservesSection: false,
       key: this.state.key + 1,
       playId: 0,
     });
@@ -128,6 +141,20 @@ class PlayerStore {
     this.setState({
       start,
       end,
+      preservesSection: false,
+      key: this.state.key + 1,
+      playId: this.state.playId + 1,
+    });
+  };
+  /**
+   * Restart the current run over [start, end) without publishing that range as the Section - see
+   * `preservesSection`. The mode is whatever is already running.
+   */
+  seek = (start: number, end: number) => {
+    this.setState({
+      start,
+      end,
+      preservesSection: true,
       key: this.state.key + 1,
       playId: this.state.playId + 1,
     });

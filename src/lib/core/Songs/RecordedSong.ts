@@ -24,9 +24,9 @@ import {Midi as MidiConstructor} from "./midiConstructor"
 import type {InstrumentName} from "$core/types"
 import {assertKnownSongVersion, type SerializedSong, Song} from "./Song.svelte"
 import type {OldFormat, OldNote} from "$core/types"
-import {isLegacyAppName, LEGACY_NOTE_TABLES, legacyIndexToId} from "./legacyNoteTables"
+import {isLegacyAppName, LEGACY_NOTE_TABLES, type LegacyAppName, legacyIndexToId} from "./legacyNoteTables"
 import {type ConversionGame, findSimilarInstrument} from "./instrumentSimilarity"
-import {foldNumberIntoRange, nominalToNumber} from "./noteIds"
+import {effectiveTrackPitch, nominalToNumber, numberToButton} from "./noteIds"
 
 /** Legacy (≤v2): flat index+layer notes, top-level instruments. */
 /**
@@ -202,7 +202,7 @@ export class RecordedSong extends Song<RecordedSong, SerializedRecordedSong> {
      * game's names (historic quirk — they fall back to the default instrument at
      * runtime, and the frozen tables replicate exactly that for id-ification).
      */
-    static deserialize(obj: UnknownSerializedRecordedSong, importInto?: 'Genshin' | 'Sky'): RecordedSong {
+    static deserialize(obj: UnknownSerializedRecordedSong, importInto?: LegacyAppName): RecordedSong {
         const {name} = obj
         //before anything is decoded: an unrecognised HIGHER version would fall through to the
         //legacy branch below and return a song with no notes at all
@@ -243,10 +243,16 @@ export class RecordedSong extends Song<RecordedSong, SerializedRecordedSong> {
         //legacy (v1/v2) path: decode flat index+layer notes, expand per track
         if (song.instruments.length === 0) song.instruments = [new InstrumentData()]
         const legacyNotes = 'notes' in obj && Array.isArray(obj.notes) ? obj.notes : []
-        const crossGame = importInto !== undefined && song.data.appName !== importInto
+        //captured BEFORE the rewrite below: the remap is keyed by the game whose index space the
+        //file speaks, and `song.data.appName` stops being that the moment it is retargeted
+        const sourceAppName = song.data.appName
+        const crossGame = importInto !== undefined && sourceAppName !== importInto
         if (crossGame) song.data.appName = importInto
         const appName = isLegacyAppName(song.data.appName) ? song.data.appName : APP_NAME
-        const importPositions = crossGame ? LEGACY_NOTE_TABLES[importInto].importPositions : null
+        //no known source index space, nothing to translate FROM: indices pass through
+        const importPositions = crossGame && isLegacyAppName(sourceAppName)
+            ? LEGACY_NOTE_TABLES[importInto].importPositions[sourceAppName]
+            : null
         // QUIRK: a v1 note's layer is a decimal number, but the legacy decoder fed it to
         // NoteLayer.deserializeHex - so a decimal layer is read as hex (10 becomes 16).
         // Harmless for the `|| 1` default; preserved so old saves keep decoding exactly
@@ -267,20 +273,34 @@ export class RecordedSong extends Song<RecordedSong, SerializedRecordedSong> {
             })
         }
         song.notes = []
+        let dropped = 0
         rawNotes.forEach(note => {
             const index = importPositions ? (importPositions[note.index] ?? -1) : note.index
-            if (index === -1) return
+            //counted, not just skipped: a discarded note is invisible to countStrandedNotes
+            //(there is nothing left to strand), so this is the import warning's only evidence
+            if (index === -1) {
+                dropped++
+                return
+            }
             for (let trackIndex = 0; trackIndex < song.instruments.length; trackIndex++) {
                 if (!note.layer.test(trackIndex)) continue
                 const instrument = song.instruments[trackIndex]
+                //CROSS-GAME the table is the TARGET's while the instrument NAMES stay the
+                //source's, so a short table (Sky's 8-button DunDun against a Genshin index) can
+                //drop a note the file did hold — a conversion loss the warning must see.
+                //Same-game it is the historic silent ghost note, which must not start warning.
                 const id = legacyIndexToId(appName, instrument.name, index)
-                if (id === null) continue
+                if (id === null) {
+                    if (crossGame) dropped++
+                    continue
+                }
                 //frozen-table decode lands on a NOMINAL; ADR-0007's one extra step lifts it
                 //onto the absolute axis at this track's effective Basepoint (spec §9)
                 const number = nominalToNumber(instrument.name, instrument.pitch || song.pitch, id)
                 song.notes.push(new RecordedNote(number, note.time, 0, trackIndex))
             }
         })
+        song.legacyDroppedNotes = dropped
         return song
     }
 
@@ -529,6 +549,10 @@ export class RecordedSong extends Song<RecordedSong, SerializedRecordedSong> {
             }
             chunk.delay = previousChunkDelay
             previousChunkDelay = notes.length > 0 ? notes[0].time - startTime : 0
+            //the span is captured HERE, the one moment the chunk still holds every note that
+            //belongs to it - dedupe and the practice seam trim both run on the result
+            chunk.firstNoteIndex = chunk.notes[0]?.absoluteIndex ?? -1
+            chunk.lastNoteIndex = chunk.notes[chunk.notes.length - 1]?.absoluteIndex ?? -1
             chunks.push(chunk)
         }
         return chunks
@@ -618,14 +642,15 @@ export class RecordedSong extends Song<RecordedSong, SerializedRecordedSong> {
                         return n.key.split('Key')[1] === note.key.split('Key')[1] && n.time === note.time
                     })
             )
-            //old-sky files carry the OTHER game's index space; the frozen importPositions
-            //of the RUNNING game receive it (identity on Sky, the historic remap on Genshin)
+            //old-format files are SKY-index-space by definition (the type is literally 'oldSky'),
+            //so the RUNNING game receives them through its Sky column: identity in the Sky build,
+            //the historic remap in Genshin's
             const legacyTables = LEGACY_NOTE_TABLES[APP_NAME]
             const parsed: { index: number, time: number, layer: NoteLayer }[] = []
             notes.forEach((note) => {
                 const data = note.key.split("Key")
                 const layer = new NoteLayer((note.l ?? Number(data[0])) || 1)
-                const index = legacyTables.importPositions[Number(data[1])] ?? -1
+                const index = legacyTables.importPositions.Sky[Number(data[1])] ?? -1
                 if (index === -1) return
                 parsed.push({index, time: note.time, layer})
             })
@@ -653,7 +678,7 @@ export class RecordedSong extends Song<RecordedSong, SerializedRecordedSong> {
             return null
         }
     }
-    /** NEW-format cross-game conversion (see ComposedSong.toOtherGame): tracks swap to the target game's most similar instruments (settings kept), Note Numbers fold into the mapped instrument's range in SOUNDING space, fold collisions merge keeping the longest duration. */
+    /** NEW-format cross-game conversion (see ComposedSong.toOtherGame): tracks swap to the target game's most similar instruments (settings kept) and nothing else — Note Numbers pass through untouched, and the ones the matched instrument cannot voice strand rather than being folded into range (ADR-0011). */
     toOtherGame = (target: ConversionGame) => {
         const clone = this.clone()
         if (target !== APP_NAME) throw new Error(`toOtherGame can only convert into the running game (${APP_NAME}), got ${target}`)
@@ -669,29 +694,19 @@ export class RecordedSong extends Song<RecordedSong, SerializedRecordedSong> {
             swapped.name = INSTRUMENTS.find(name => name === similar) ?? INSTRUMENTS[0]
             return swapped
         })
-        clone.notes = clone.notes.map(note => {
-            const instrument = clone.instruments[note.trackIndex]
-            note.id = foldNumberIntoRange(
-                instrument?.name ?? INSTRUMENTS[0],
-                instrument?.pitch || clone.pitch,
-                note.id
-            )
-            return note
-        })
-        //fold can collide (e.g. 84 folding onto an existing 72): same-track same-time
-        //duplicates merge, keeping the longest duration (a folded hold must not become a tap)
-        const seen = new Map<string, RecordedNote>()
-        clone.notes = clone.notes.filter(note => {
-            const key = `${note.time}-${note.trackIndex}-${note.id}`
-            const existing = seen.get(key)
-            if (existing) {
-                existing.duration = Math.max(existing.duration, note.duration)
-                return false
-            }
-            seen.set(key, note)
-            return true
-        })
+        //notes are deliberately untouched: no number is rewritten, so the same-track same-time
+        //duplicates the fold used to create cannot appear and there is nothing left to merge
         return clone
+    }
+    /** Notes whose track instrument cannot voice them at its effective Basepoint — see ComposedSong.countStrandedNotes for why `numberToButton === -1` is the only definition. */
+    countStrandedNotes(): number {
+        let stranded = 0
+        for (const note of this.notes) {
+            const instrument = this.instruments[note.trackIndex]
+            const name = instrument?.name ?? INSTRUMENTS[0]
+            if (numberToButton(name, effectiveTrackPitch(instrument, this.pitch), note.id) === -1) stranded++
+        }
+        return stranded
     }
     clone = () => {
         const clone = new RecordedSong(this.name)
@@ -719,13 +734,28 @@ export class RecordedSong extends Song<RecordedSong, SerializedRecordedSong> {
 export class Chunk {
     notes: RecordedNote[]
     delay: number
+    /**
+     * THE ABSOLUTE SPAN this chunk draws (ADR-0010): the first and last `RecordedNote.absoluteIndex`
+     * it was BUILT from, -1 on a chunk built outside a player run. Stored rather than read back off
+     * `notes`, because the notes are what later steps remove: dedupeChunkNotes drops a doubled key,
+     * a practice seam chunk is trimmed to the Section, and a click splices the note it cleared - the
+     * frame still stands for the same part of the song after all of that.
+     *
+     * `firstNoteIndex` is what the cursor lookup orders by and what "Section starts here" writes;
+     * spans of a MODE-FILTERED chunk list are not contiguous (an unplayable note between two chunks
+     * belongs to neither), so nothing may assume `previous.lastNoteIndex + 1 === next.firstNoteIndex`.
+     */
+    firstNoteIndex: number
+    lastNoteIndex: number
 
-    constructor(notes: RecordedNote[], delay: number) {
+    constructor(notes: RecordedNote[], delay: number, firstNoteIndex?: number, lastNoteIndex?: number) {
         this.notes = notes
         this.delay = delay
+        this.firstNoteIndex = firstNoteIndex ?? (notes[0]?.absoluteIndex ?? -1)
+        this.lastNoteIndex = lastNoteIndex ?? (notes[notes.length - 1]?.absoluteIndex ?? -1)
     }
 
     clone() {
-        return new Chunk(this.notes.map(note => note.clone()), this.delay)
+        return new Chunk(this.notes.map(note => note.clone()), this.delay, this.firstNoteIndex, this.lastNoteIndex)
     }
 }

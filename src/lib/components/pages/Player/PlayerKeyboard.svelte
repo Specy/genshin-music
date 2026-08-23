@@ -17,6 +17,7 @@
   import type { NoteStatus } from '$core/types';
   import { effectiveTrackPitch, resolvePlayerNoteButtons } from '$core/Songs/noteIds';
   import { dedupeChunkNotes, dedupeSimultaneousNotes } from '$core/Songs/duplicateNotes';
+  import { sectionQueue } from '$core/Songs/sectionChunks';
   import type { Instrument, ObservableNote } from '$lib/audio/Instrument.svelte';
   import { RecordedSong, type Chunk } from '$core/Songs/RecordedSong';
   import { MIDIProvider, type MIDIEvent } from '$lib/providers/MIDIProvider';
@@ -236,9 +237,29 @@
         index: note.keyboardButton,
         //durations scale with playback speed like the times do (matches applySpeedChange)
         duration: sustainingTracks[note.trackIndex] ? note.duration / speedChanger.value : 0,
+        //what the sheet cursor moves past when this circle resolves (ADR-0010)
+        absoluteIndex: note.absoluteIndex,
       });
       notes.push(obj);
     }
+    //THE SHEET IS THE WHOLE SONG (ADR-0010) while the circles above stay Section-bounded. Built
+    //from the same playability test, and chunked on SPEED-SCALED times, because the merge window is
+    //a fixed 50ms over `note.time`: approaching scales inline into the circle rather than through
+    //applySpeedChange, so without scaling these clones its frames would be the speed-1.0 chunking
+    //while practice's move with the speed setting, and the two sheets would disagree.
+    const pageNotes = song.notes
+      .filter((note) => note.keyboardButton >= 0 && note.keyboardButton < game.notes.perColumn)
+      .map((note) => {
+        const clone = note.clone();
+        clone.time = clone.time / speedChanger.value;
+        clone.duration = clone.duration / speedChanger.value;
+        return clone;
+      });
+    const pageChunks = RecordedSong.mergeNotesIntoChunks(pageNotes);
+    //one entry per key per frame, the same rule the circles were deduped by above
+    pageChunks.forEach((chunk) => {
+      chunk.notes = dedupeChunkNotes(chunk.notes, sustainingTracks);
+    });
     await delay(2000); //add an initial delay to let the user prepare
     // A mode change during the preparation delay owns the surface now. Without this guard, the
     // old approach run wakes up two seconds later and clears/replaces the newer mode's pages,
@@ -250,6 +271,9 @@
     //playerControlsStore.setSong(song)
     approachingNotes = Array2d.from(game.notes.perColumn);
     approachingNotesList = notes;
+    //published only now, beside the ticker: a stale approach that lost the surface during the
+    //preparation delay must not install its pages over the newer run's
+    playerControlsStore.setPages(groupArrayEvery(pageChunks, data.visualSheetSize));
     setTicker(true, runKey);
   }
 
@@ -269,6 +293,9 @@
           index: notes[i].index,
           id: Math.floor(Math.random() * 10000),
           duration: notes[i].duration,
+          //the grid's circle is a NEW object, and it is the one that gets clicked or expires —
+          //without carrying this the cursor would never learn which note resolved
+          absoluteIndex: notes[i].absoluteIndex,
         });
         stateNotes[notes[i].index].push(newNote);
         notes.splice(i, 1);
@@ -278,7 +305,9 @@
         break;
       }
     }
-    let removed = 0;
+    //the furthest note this tick resolved, in absolute positions — the sheet cursor follows the
+    //circles that LEFT the grid, so a row that clears out of order cannot pull it back
+    let resolvedThrough = -1;
     stateNotes.forEach((approachingNotesRow) => {
       for (let i = 0; i < approachingNotesRow.length; i++) {
         const note = approachingNotesRow[i];
@@ -298,7 +327,7 @@
           approachingNotesRow.splice(i, 1);
           i--;
           hasChanges = true;
-          removed++;
+          resolvedThrough = Math.max(resolvedThrough, note.absoluteIndex);
         }
       }
     });
@@ -313,8 +342,13 @@
     if (notes.length === 0 && stateNotes.every((row) => row.length === 0)) {
       setTicker(false);
       functions.onSongFinished();
+      //the run is over, so the cursor belongs on its exclusive end - every circle it owned has
+      //left the grid, and that is where the slider's progress line has to reach. The frame
+      //highlight stays on the last frame played through the store's `runEnd` lookup clamp.
+      playerControlsStore.advanceCurrentTo(playerControlsStore.state.runEnd);
+    } else if (resolvedThrough >= 0) {
+      playerControlsStore.advanceCurrentTo(resolvedThrough + 1);
     }
-    playerControlsStore.setCurrent(playerControlsStore.current + removed);
     approachingNotes = stateNotes.map((arr) => arr.slice());
   }
 
@@ -413,9 +447,11 @@
     //mutates the per-run clone in place, so `song.notes` IS the speed-scaled timeline every index
     //below - the plan's noteIndex included - addresses
     const notes = applySpeedChange(song.notes);
-    const ranged = notes.slice(start, rangeEnd);
-    if (ranged.length === 0) return;
-    const mergedNotes = RecordedSong.mergeNotesIntoChunks(ranged.map((n) => n.clone()));
+    if (rangeEnd - start <= 0) return;
+    //THE SHEET IS THE WHOLE SONG (ADR-0010), the Section only bounds what runs below. The clone is
+    //not optional: mergeNotesIntoChunks empties the array it is handed, and `notes` is the same
+    //array the planner is built from a few lines down.
+    const mergedNotes = RecordedSong.mergeNotesIntoChunks(notes.map((n) => n.clone()));
     playerControlsStore.setPages(groupArrayEvery(mergedNotes, visualSheetSize));
 
     // ONE PLANNER for the audio export, the composer's conversion and live play: which tracks are
@@ -460,24 +496,19 @@
     functions.restartMetronome(song.bpm * data.speedChanger.value, playbackLeadInMs);
 
     let countedThrough = start - 1;
-    let chunkPlayedNotes = 0;
     /**
-     * The sheet cursor and chunk position, counted note by note as they always were. It CATCHES
-     * UP over indexes the plan left out - an inaudible track contributes no events - because the
-     * chunk position counts notes: a chunk that never sounds would otherwise leave it one behind
-     * for the rest of the song.
+     * The sheet cursor, in absolute note positions: `current` is the note that has NOT sounded yet,
+     * and the frame under the highlight follows from it (ADR-0010). Indexes the plan left out - an
+     * inaudible track contributes no events - are simply passed over rather than counted one by
+     * one, because nothing steps here any more.
      */
     const advanceCountingTo = (noteIndex: number) => {
-      for (let i = countedThrough + 1; i <= noteIndex; i++) {
-        if (chunkPlayedNotes >= (playerControlsStore.currentChunk?.notes.length ?? 0)) {
-          chunkPlayedNotes = 1;
-          playerControlsStore.incrementChunkPositionAndSetCurrent(i + 1);
-        } else {
-          chunkPlayedNotes++;
-          playerControlsStore.setCurrent(i + 1);
-        }
-      }
+      if (noteIndex <= countedThrough) return;
       countedThrough = noteIndex;
+      //UNCLAMPED, so a finished run lands `current` on `rangeEnd` and the slider's progress line
+      //reaches the end. The frame highlight is kept off the run's exclusive end by the store's
+      //own `runEnd` lookup clamp, not here.
+      playerControlsStore.advanceCurrentTo(noteIndex + 1);
     };
 
     const transport = new PlayerTransport(audioClock, {
@@ -504,7 +535,9 @@
       // The audio-true end: the last note has finished sounding, a horizon after it went out.
       onFinished: () => {
         if (!isCurrentRun(runKey, 'play') || songTimestamp !== song.timestamp) return;
-        //notes the plan left out at the tail still have to be counted, or the slider stops short
+        //notes the plan left out at the tail still have to be counted (an inaudible track's notes
+        //produce no onSounding), which lands `current` on `rangeEnd`: the run consumed everything
+        //up to it
         advanceCountingTo(rangeEnd - 1);
         functions.onSongFinished();
       },
@@ -546,12 +579,17 @@
     }
   }
 
+  /**
+   * PRACTICE. Returns where the cursor should start this run - the queue's first absolute note
+   * index, which is not always the Section's `start` (see the dispatch) - or undefined when there
+   * is nothing to practice.
+   */
   function practiceSong(
     song: RecordedSong,
     start = 0,
     end?: number,
     runKey: number = playerStore.state.key
-  ) {
+  ): number | undefined {
     mode = 'practice';
     activeRunKey = runKey;
     //TODO move this to the song class
@@ -559,24 +597,32 @@
     const keyboard = playerStore.keyboard;
     const { visualSheetSize } = data;
     //only notes this keyboard has a key for can ever be clicked, so only those may enter the
-    //practice queue — a chunk holding an unclickable note would never complete. The pages built
-    //from these chunks follow, by necessity: they ARE the queue. Each surviving note still draws
-    //at its own `displayButton` inside its frame.
-    const notes = applySpeedChange(song.notes)
-      .slice(start, end)
-      .filter((note) => note.keyboardButton >= 0 && note.keyboardButton < keyboard.length);
+    //practice queue — a chunk holding an unclickable note would never complete. The sheet is built
+    //from the same filtered list, so a frame and a queue chunk hold the same notes. Each surviving
+    //note still draws at its own `displayButton` inside its frame.
+    const notes = applySpeedChange(song.notes).filter(
+      (note) => note.keyboardButton >= 0 && note.keyboardButton < keyboard.length
+    );
+    //ONE chunking for the WHOLE song (ADR-0010), pages and queue both cut from it: chunking the
+    //Section's slice separately re-anchors the merge window at the seam, and two chunk lists that
+    //disagree there make "which frame is current" unanswerable.
     const chunks = RecordedSong.mergeNotesIntoChunks(notes.map((n) => n.clone()));
+    //what actually RUNS is still the Section alone, seam chunks trimmed by absolute index
+    const queue = sectionQueue(chunks, start, end, sustainingTracks);
     // One entry per key inside each chunk (duplicateNotes.ts): two tracks doubling the same note
     // in one instant put two entries with the same `keyboardButton` in one chunk, but a click
     // splices out only ONE of them while the key's red mark clears either way - so the chunk kept
     // a leftover nothing on screen could point at, and practice stopped dead with every visible
     // note already clicked. Per chunk only: the same key in a later chunk is a real next press.
+    // Applied to the pages AFTER the queue was cut, because the queue must trim before it dedupes.
     chunks.forEach((chunk) => {
       chunk.notes = dedupeChunkNotes(chunk.notes, sustainingTracks);
     });
     if (chunks.length === 0) return;
+    playerControlsStore.setPages(groupArrayEvery(chunks, visualSheetSize));
+    if (queue.length === 0) return;
     nextChunkDelay = 0;
-    const firstChunk = chunks[0];
+    const firstChunk = queue[0];
     firstChunk.notes.forEach((note) => {
       //one lookup from the note's key on THIS keyboard to the note object, then everything is
       //the object
@@ -591,15 +637,15 @@
             : 0,
       });
     });
-    const secondChunk = chunks[1];
+    const secondChunk = queue[1];
     secondChunk?.notes.forEach((note) => {
       const keyboardNote = keyboard[note.keyboardButton];
       if (keyboardNote.status === 'toClick') return keyboardNote.setStatus('toClickAndNext');
       keyboardNote.setStatus('toClickNext');
     });
     functions.setHasSong(true);
-    playerControlsStore.setPages(groupArrayEvery(chunks, visualSheetSize));
-    songToPractice = chunks;
+    songToPractice = queue;
+    return firstChunk.firstNoteIndex;
   }
 
   async function restartSong(override?: number) {
@@ -679,10 +725,22 @@
         (e) => e.keyboardButton === button
       );
       if (clickedNoteIndex !== -1) {
-        songToPractice[0].notes.splice(clickedNoteIndex, 1);
+        //the span of the chunk being cleared, read BEFORE the splice can empty it: both the
+        //in-chunk advance and the finished-run cursor below are clamped to it
+        const clearingChunkLast = songToPractice[0].lastNoteIndex;
+        const [clicked] = songToPractice[0].notes.splice(clickedNoteIndex, 1);
         if (songToPractice[0].notes.length === 0) {
           songToPractice.shift();
-          playerControlsStore.incrementChunkPositionAndSetCurrent();
+          //CHUNK DONE: the cursor jumps to the next queue chunk's first absolute note, rather than
+          //counting one per click. Notes the filter dropped, a dedupe removed or the seam trim cut
+          //all sit inside the span just completed, and counting would leave the highlight stranded
+          //behind by exactly those. With the queue emptied it lands on the run's exclusive end
+          //instead, which is where the slider's progress line has to reach; the store's `runEnd`
+          //lookup clamp is what keeps the highlight on the last frame actually played.
+          const nextChunk = songToPractice[0];
+          playerControlsStore.advanceCurrentTo(
+            nextChunk ? nextChunk.firstNoteIndex : playerControlsStore.state.runEnd
+          );
         }
         if (songToPractice.length === 0) {
           functions.onSongFinished();
@@ -711,7 +769,13 @@
             });
           }
         }
-        playerControlsStore.incrementCurrent();
+        //a click inside an unfinished chunk moves the cursor past the note it cleared, but NEVER
+        //past the chunk itself: the notes of a chunk can be cleared in any order, and clearing the
+        //last-indexed one first would otherwise derive the next frame while this one still has
+        //notes to press. The completion branch above is what moves the highlight off a frame.
+        playerControlsStore.advanceCurrentTo(
+          Math.min(clicked.absoluteIndex + 1, clearingChunkLast)
+        );
       }
     }
   }
@@ -885,6 +949,13 @@
             //track through the same override
             effectiveTrackPitch(songInstruments[0], data.pitch)
           );
+          //...and stamp each note's position in THIS run's note list (ADR-0010), the space
+          //`playerControlsStore.current` counts in. Here is the only place it provably equals the
+          //index the plan's `noteIndex` and the Section's start/end address, because it is before
+          //every slice, filter, dedupe and clone the three modes apply below.
+          lostReference.notes.forEach((note, index) => {
+            note.absoluteIndex = index;
+          });
 
           lostReference.timestamp = Date.now();
           const start = clamp(state.start, 0, lostReference.notes.length);
@@ -898,20 +969,30 @@
           const hasPlayableNotes = lostReference.notes
             .slice(start, end)
             .some((note) => note.keyboardButton >= 0);
+          //the Section this run publishes, and the one case where the run range is NOT it: a seek
+          //("Go to here") runs an arbitrary range while the bounds the user drew stay put (ADR-0010)
+          const section = state.preservesSection ? {} : { position: start, end };
+          //...and `runEnd` is published UNCONDITIONALLY, unlike the pair above: it is the RUN's
+          //bound, so a seek run has to overwrite the previous one's rather than inherit it
           if (end === start || !hasPlayableNotes) {
             playerControlsStore.setState({
               size: lostReference.notes.length,
-              position: start,
-              end,
+              ...section,
+              runEnd: end,
               current: start,
             });
             return;
           }
+          //where the cursor STARTS this run. `start` for every mode but practice, whose queue can
+          //begin later than the Section does: a seam chunk trimmed to nothing (its notes were
+          //duplicates, or unplayable) is dropped, and a cursor left on the Section's own start
+          //would highlight a frame the run never asks the user to play.
+          let runCurrent = start;
           if (type === 'play') {
             playSong(lostReference, start, end, runKey);
           }
           if (type === 'practice') {
-            practiceSong(lostReference, start, end, runKey);
+            runCurrent = practiceSong(lostReference, start, end, runKey) ?? start;
           }
           if (type === 'approaching') {
             approachingSong(lostReference, start, end, runKey);
@@ -920,9 +1001,9 @@
           Analytics.songEvent({ type });
           playerControlsStore.setState({
             size: lostReference.notes.length,
-            position: start,
-            end,
-            current: start,
+            ...section,
+            runEnd: end,
+            current: runCurrent,
           });
         }
       }, 4);

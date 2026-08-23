@@ -26,7 +26,12 @@
   import { ThemeProvider } from '$core/theme/ThemeProvider.svelte';
   import { ComposedSong } from '$core/Songs/ComposedSong.svelte';
   import { type InstrumentData } from '$core/Songs/SongClasses';
-  import { importMidiTracks, playableIdsOf, suggestOffset } from '$core/Songs/midiImport';
+  import {
+    defaultLayerForTrack,
+    importMidiTracks,
+    playableIdsOf,
+    suggestOffset,
+  } from '$core/Songs/midiImport';
   import { basepointOffset } from '$core/Songs/noteIds';
   import { decodeMidiMetadata, type MidiMetadata } from '$core/Songs/midiMetadata';
   import { delay, isAudioFormat, isVideoFormat } from '$core/utils/Utilities';
@@ -40,6 +45,7 @@
   import Column from '$cmp/layout/Column.svelte';
   import TrackInfo from './TrackInfo.svelte';
   import NumericalInput from './NumericalInput.svelte';
+  import MidiStatsTable from './MidiStatsTable.svelte';
   // Midi/Track stay type-only imports (erased, so nothing to resolve at runtime); the two
   // `new Midi(...)` calls below take the constructor from $core/Songs/midiConstructor, which is
   // where the reason lives - no static import of '@tonejs/midi' as a value works in every runtime
@@ -82,8 +88,6 @@
   let importedMetadata: MidiMetadata | null = $state(null);
   let totalNotes = $state(0);
   let includeAccidentals = $state(true);
-  // QUIRK: ignoreEmptytracks (not ignoreEmptyTracks) is an intentional preserved typo.
-  let ignoreEmptytracks = $state(false);
   let warnedOfExperimental = false;
 
   //the layer roster the tracks land on: the file's own when it is one of our exports, otherwise
@@ -209,28 +213,31 @@
       //ours. Everything musical below — tempo, placement, note lengths — is still read off the
       //MIDI itself, so importing our own export exercises the same code a foreign file does.
       importedMetadata = decodeMidiMetadata(midi.header.meta ?? []);
-      tracks = midi.tracks.map((track, i) => {
-        const customtrack: CustomTrack = {
-          track,
-          selected: true,
-          //one track per layer where the song has the layers for it, instead of stacking
-          //everything on layer 0 — two layers sounding the same id in one column used to
-          //collide and lose a note to the dedupe, which is unrecoverable
-          layer: Math.min(
-            i,
-            Math.max(0, (importedMetadata?.instruments ?? data.instruments).length - 1)
-          ),
-          name: track.name || `Track n.${i + 1}`,
-          numberOfAccidentals: 0,
-          maxScaling: 0,
-          outOfRangeBounds: {
-            lower: 0,
-            upper: 0,
-          },
-          localOffset: null,
-        };
-        return customtrack;
-      });
+      const layerCount = (importedMetadata?.instruments ?? data.instruments).length;
+      tracks = midi.tracks
+        //a track with no notes has nothing to import and nothing to configure, so it is never
+        //listed. Its INDEX still counts below: dropping it must not renumber the tracks after it.
+        .map((track, originalIndex) => ({ track, originalIndex }))
+        .filter(({ track }) => track.notes.length > 0)
+        .map(({ track, originalIndex }) => {
+          const customtrack: CustomTrack = {
+            track,
+            selected: true,
+            //one track per layer where the song has the layers for it, instead of stacking
+            //everything on layer 0 — two layers sounding the same id in one column used to
+            //collide and lose a note to the dedupe, which is unrecoverable
+            layer: defaultLayerForTrack(originalIndex, layerCount),
+            name: track.name || `Track n.${originalIndex + 1}`,
+            numberOfAccidentals: 0,
+            maxScaling: 0,
+            outOfRangeBounds: {
+              lower: 0,
+              upper: 0,
+            },
+            localOffset: null,
+          };
+          return customtrack;
+        });
       fileName = name;
       //round, not floor: this is the inverse of toMidi's setTempo(bpm / 4), and the tempo
       //survives serialization as an integer microseconds-per-quarter, so the value coming
@@ -242,7 +249,11 @@
       //foreign file supplies one. Since ADR-0007 it also decides what the emitted notes ARE (the
       //snapped nominals are lifted by it), which is why convertMidi below is re-run on any change.
       pitch = PITCHES.find((candidate) => candidate === key) ?? importedMetadata?.pitch ?? 'C';
-      if (tracks.length) convertMidi();
+      //a file whose every track was filtered out above has nothing to convert, and both the track
+      //list and the summary table are gated on `tracks.length` - without this the screen would
+      //show the filename and then say nothing at all, which reads as a broken importer
+      if (tracks.length === 0) return logger.warn(t('composer:midi_parser.there_are_no_notes'));
+      convertMidi();
     } catch (e) {
       console.error(e);
       logger.error(t('composer:midi_parser.error_is_file_midi'));
@@ -371,14 +382,14 @@
 
 <DecoratedCard class="floating-midi" size="1.2rem" isRelative={false} offset="0.1rem">
   <Column class="floating-midi-content" gap="0.3rem">
-    <Row class="separator-border" align="center" style="width:100%">
+    <Row align="center" style="width:100%">
       <FilePicker onPick={handleFile} as="buffer">
         <button class="midi-btn" style="{midiInputsStyle};white-space:nowrap">
           {t('composer:midi_parser.open_midi_audio_file')}
         </button>
       </FilePicker>
-      <div style="margin:0 0.5rem" class="text-ellipsis">
-        {fileName}
+      <div style="margin:0 0.5rem;{fileName ? '' : 'opacity:0.6'}" class="text-ellipsis">
+        {fileName || t('composer:midi_parser.no_file_selected')}
       </div>
       <button
         class="midi-btn"
@@ -389,111 +400,100 @@
       </button>
     </Row>
 
-    <Row justify="between" align="center">
-      <div style="margin-right:0.5rem">{t('common:bpm')}:</div>
-      <NumericalInput
-        value={bpm}
-        onChange={changeBpm}
-        delay={600}
-        style={midiInputsStyle}
-        step={5}
-      />
-    </Row>
-    <Row justify="between" align="center">
-      <div class="row flex-centered">
-        <span style="margin-right:0.5rem">{t('composer:midi_parser.global_note_offset')}: </span>
-        <HelpTooltip buttonStyle="width:1.2rem;height:1.2rem">
-          {t('composer:midi_parser.global_note_offset_description')}
-        </HelpTooltip>
-      </div>
-      <Row align="center" style="gap:0.4rem">
-        <button
-          class="midi-suggest-button"
-          disabled={tracks.length === 0}
-          onclick={suggestGlobalOffset}
-        >
-          {t('composer:midi_parser.suggest_offset')}
-        </button>
-        <NumericalInput
-          value={offset}
-          onChange={changeOffset}
-          delay={600}
-          style={midiInputsStyle}
-          step={1}
-        />
-      </Row>
-    </Row>
-    <Row justify="between" align="center">
-      <div style="margin-right:0.5rem">{t('common:pitch')}:</div>
-      <PitchSelect style="width:5rem;{midiInputsStyle}" selected={pitch} onChange={changePitch} />
-    </Row>
-    <Row justify="between" align="center">
-      <Row align="center">
-        <div style="margin-right:0.5rem">{t('composer:midi_parser.include_accidentals')}:</div>
-        <Switch
-          checked={includeAccidentals}
-          onchange={toggleAccidentals}
-          styleOuter={midiInputsStyle}
-        />
-      </Row>
-      <Row align="center">
-        <div style="margin-right:0.5rem">{t('composer:midi_parser.ignore_empty_tracks')}:</div>
-        <Switch
-          checked={ignoreEmptytracks}
-          onchange={(b) => (ignoreEmptytracks = b)}
-          styleOuter={midiInputsStyle}
-        />
-      </Row>
-    </Row>
+    <fieldset class={['midi-section', tracks.length === 0 && 'midi-section-disabled']}>
+      <legend>{t('composer:midi_parser.import_settings')}</legend>
+      <Column gap="0.3rem" style="width:100%">
+        <Row justify="between" align="center">
+          <div style="margin-right:0.5rem">{t('composer:midi_parser.tempo_bpm')}:</div>
+          <NumericalInput value={bpm} onChange={changeBpm} delay={600} step={5} />
+        </Row>
+        <Row justify="between" align="center">
+          <div class="row flex-centered">
+            <span style="margin-right:0.5rem"
+              >{t('composer:midi_parser.global_note_offset')}:
+            </span>
+            <HelpTooltip buttonStyle="width:1.2rem;height:1.2rem">
+              {t('composer:midi_parser.global_note_offset_description')}
+            </HelpTooltip>
+          </div>
+          <Row align="center" style="gap:0.4rem">
+            <button
+              class="midi-suggest-button"
+              disabled={tracks.length === 0}
+              onclick={suggestGlobalOffset}
+            >
+              {t('composer:midi_parser.suggest_offset')}
+            </button>
+            <NumericalInput value={offset} onChange={changeOffset} delay={600} step={1} />
+          </Row>
+        </Row>
+        <Row justify="between" align="center">
+          <div style="margin-right:0.5rem">{t('composer:midi_parser.base_pitch')}:</div>
+          <PitchSelect
+            style="width:5rem;{midiInputsStyle}"
+            selected={pitch}
+            onChange={changePitch}
+          />
+        </Row>
+        <Row justify="between" align="center">
+          <div style="margin-right:0.5rem">{t('composer:midi_parser.include_accidentals')}:</div>
+          <Switch
+            checked={includeAccidentals}
+            onchange={toggleAccidentals}
+            styleOuter={midiInputsStyle}
+          />
+        </Row>
+      </Column>
+    </fieldset>
     {#if tracks.length > 0}
-      <Column class="separator-border" style="width:100%">
+      <fieldset class="midi-section">
+        <legend>{t('composer:midi_parser.track_settings')}</legend>
         <Column style="width:100%">
-          <div style="text-align:center">{t('composer:midi_parser.select_midi_tracks')}</div>
           {#each tracks as track, i (i)}
-            {#if !(ignoreEmptytracks && track.track.notes.length === 0)}
-              <TrackInfo
-                data={track}
-                instruments={data.instruments}
-                index={i}
-                onChange={editTrack}
-              />
-            {/if}
+            <TrackInfo data={track} instruments={data.instruments} index={i} onChange={editTrack} />
           {/each}
         </Column>
-      </Column>
-    {/if}
-    {#if tracks.length > 0}
-      <table>
-        <tbody>
-          <tr>
-            <td>{t('composer:midi_parser.total_notes')}:</td>
-            <td></td>
-            <td>{totalNotes}</td>
-          </tr>
-          <tr>
-            <td>{t('composer:midi_parser.accidentals')}:</td>
-            <td></td>
-            <td>{accidentals}</td>
-          </tr>
-          <tr>
-            <td>{t('composer:midi_parser.out_of_range')}:</td>
-            <td></td>
-            <td>{outOfRange}</td>
-          </tr>
-          {#if merged > 0}
-            <tr>
-              <td>{t('composer:midi_parser.merged_notes')}:</td>
-              <td></td>
-              <td>{merged}</td>
-            </tr>
-          {/if}
-        </tbody>
-      </table>
+      </fieldset>
+      <MidiStatsTable notes={totalNotes} {accidentals} {outOfRange} />
+      {#if merged > 0}
+        <Row justify="between" align="center" style="width:100%">
+          <div>{t('composer:midi_parser.merged_notes')}:</div>
+          <div>{merged}</div>
+        </Row>
+      {/if}
     {/if}
   </Column>
 </DecoratedCard>
 
 <style>
+  /* A real fieldset/legend: the browser breaks the border under the title on its own, which no
+     background-matched overlay can do over this card - it is translucent (.floating-midi). */
+  .midi-section {
+    width: 100%;
+    margin: 0;
+    padding: 0.2rem 0.6rem 0.5rem;
+    border: solid 0.1rem var(--secondary);
+    border-radius: 0.3rem;
+    min-inline-size: min-content;
+  }
+
+  .midi-section legend {
+    padding: 0 0.3rem;
+    font-weight: bold;
+  }
+
+  /* No file yet: the settings are inert, and they LOOK it. The cursor lives on the fieldset -
+     which keeps its pointer events - because a pointer-events:none element shows no cursor at
+     all; only the content below it is made unreachable. */
+  .midi-section-disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  .midi-section-disabled > :global(*) {
+    pointer-events: none;
+  }
+
   .midi-suggest-button {
     background-color: var(--primary);
     color: var(--primary-text);

@@ -11,3 +11,15 @@ if (typeof globalThis.ResizeObserver === 'undefined') {
         disconnect() {}
     }
 }
+
+// Same story for IntersectionObserver: PlayerFramePopover watches its anchor with one to close
+// itself when the frame scrolls out of the Sheet Card's clipped box. Inert for the same reason -
+// jsdom does no layout, so every element would be "not intersecting" if it ever fired.
+if (typeof globalThis.IntersectionObserver === 'undefined') {
+    // @ts-expect-error inert stand-in: jsdom provides no layout for a real one to report on
+    globalThis.IntersectionObserver = class IntersectionObserver {
+        observe() {}
+        unobserve() {}
+        disconnect() {}
+    }
+}

@@ -8,7 +8,8 @@
 
 <script lang="ts">
   import { logger } from '$stores/LoggerStore.svelte';
-  import { songService } from '$core/Services/SongService';
+  import { t } from '$i18n/binding.svelte';
+  import { convertedSongLostNotes, isForeignSong, songService } from '$core/Services/SongService';
   import { ThemeProvider } from '$core/theme/ThemeProvider.svelte';
   import type { ComposedSong } from '$core/Songs/ComposedSong.svelte';
   import type { RecordedSong } from '$core/Songs/RecordedSong';
@@ -33,18 +34,44 @@
 
   let fetching = $state(false);
   let cache: RecordedSong | ComposedSong | null = $state(null);
+  // Answered where the song is PARSED, and kept beside the cache, because a preview populates the
+  // cache too: without it, previewing then importing (the natural order on this screen) would
+  // import through the early return below and never warn. Plain, not $state - nothing renders it.
+  let cacheLostNotes = false;
+
+  async function fetchAndParse() {
+    fetching = true;
+    try {
+      const raw = await fetch(
+        'https://sky-music.herokuapp.com/api/songs?get=' + encodeURI(data.file)
+      ).then((res) => res.json());
+      // This library serves Sky files, so in any other build every download is a conversion — the
+      // only import surface that never goes through FileService, hence its own warning.
+      const converted = isForeignSong(raw);
+      const song = songService.parseSong(raw) as RecordedSong | ComposedSong;
+      cacheLostNotes = converted && convertedSongLostNotes(song);
+      cache = song;
+      return song;
+    } finally {
+      fetching = false;
+    }
+  }
+
+  // Raised on IMPORT only: play() converts too, but nothing is stored and the toast would fire
+  // again on every preview.
+  function warnIfLostNotes() {
+    if (cacheLostNotes) logger.warn(t('logs:converted_song_stranded_notes'), 8000);
+  }
 
   async function download() {
     if (fetching) return;
     try {
-      if (cache) return importSong(cache.clone());
-      fetching = true;
-      let song = await fetch(
-        'https://sky-music.herokuapp.com/api/songs?get=' + encodeURI(data.file)
-      ).then((res) => res.json());
-      fetching = false;
-      song = songService.parseSong(song);
-      cache = song;
+      if (cache) {
+        warnIfLostNotes();
+        return importSong(cache.clone());
+      }
+      const song = await fetchAndParse();
+      warnIfLostNotes();
       importSong(song);
     } catch (e) {
       fetching = false;
@@ -57,14 +84,7 @@
     if (fetching) return;
     try {
       if (cache) return onClick(cache, 0);
-      fetching = true;
-      let song = await fetch(
-        'https://sky-music.herokuapp.com/api/songs?get=' + encodeURI(data.file)
-      ).then((res) => res.json());
-      fetching = false;
-      song = songService.parseSong(song);
-      onClick(song, 0);
-      cache = song;
+      onClick(await fetchAndParse(), 0);
     } catch (e) {
       console.error(e);
       fetching = false;

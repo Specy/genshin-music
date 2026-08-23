@@ -117,19 +117,22 @@ describe('every VsrgSong conversion carries the whole song across', () => {
         expect(song.clone().serialize()).toEqual(song.serialize())
     })
 
-    it('toOtherGame changes the instruments and the note ids, and carries the rest', () => {
+    it('toOtherGame changes the instruments and carries the rest, notes included', () => {
         const song = buildFullSong()
         //toOtherGame only converts INTO the running game, and only from another one
         song.data.appName = APP_NAME === 'Genshin' ? 'Sky' : 'Genshin'
         const converted = song.toOtherGame(APP_NAME)
+        //ADR-0011: the swap is the whole conversion — the notes are not the conversion's to touch
+        expect(converted.tracks.map(track => track.hitObjects.map(h => h.notes)))
+            .toEqual(song.tracks.map(track => track.hitObjects.map(h => h.notes)))
 
-        //`data` (appName is rewritten by definition) and `tracks` (instruments and note ids are
-        //what the conversion IS) are the two it is allowed to change; everything else must survive
+        //`data` (appName is rewritten by definition) and `tracks` (the instrument swap is what
+        //the conversion IS) are the two it is allowed to change; everything else must survive
         const {data: _sourceData, tracks: _sourceTracks, ...carried} = song.serialize()
         const {data: _convertedData, tracks: _convertedTracks, ...convertedCarried} = converted.serialize()
         expect(convertedCarried).toEqual(carried)
 
-        //and inside the tracks, only those two things moved: colours and every hit object's
+        //and inside the tracks, only the instruments moved: colours and every hit object's
         //placement are still the ones the user drew
         const placement = (s: VsrgSong) => s.tracks.map(track => ({
             color: track.color,

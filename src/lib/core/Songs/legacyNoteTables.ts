@@ -1,4 +1,6 @@
-// FROZEN LEGACY NOTE TABLES — DO NOT EDIT, EVER.
+// FROZEN LEGACY NOTE TABLES — DO NOT EDIT, EVER. Values a released build ever applied to a
+// stored file are frozen; a direction that was UNREACHABLE (see importPositions below) had
+// nothing to freeze, so filling it in is an addition, not an edit.
 //
 // Snapshot (2026-08-03, pre-format-v4/v3/vsrg-v2) of every instrument's button→noteId
 // mapping (`midiNotes` as they were when songs still stored layout indices), for BOTH
@@ -11,18 +13,27 @@
 // must be decoded with SKY's tables. It is DOM-free, side-effect-free, numeric data
 // only, and safe for any bundle including the service worker.
 //
-// `importPositions` is the frozen copy of each game's IMPORT_NOTE_POSITIONS: how THAT
-// game receives the other game's legacy note indices (index-level remap, applied
-// BEFORE id-ification so legacy cross-game imports reproduce the old converter's
-// output exactly — for the default instruments this equals a uniform -12 id shift,
-// e.g. Sky 72 → Genshin 60).
+// `importPositions` is how a game RECEIVES another game's legacy note indices (an
+// index-level remap applied BEFORE id-ification, so legacy cross-game imports reproduce
+// the old converter's output exactly — for the default instruments this equals a uniform
+// -12 id shift, e.g. Sky 72 → Genshin 60). It is keyed by the SOURCE game because one
+// array per receiver cannot carry two meanings: Sky's entry was the frozen copy of its
+// IMPORT_NOTE_POSITIONS, the identity, which is what the old-format (Sky-index-space)
+// decode needs from the Sky build — and identity is NOT the Genshin→Sky remap. That
+// direction never ran before ADR-0011 (the Sky build rejected foreign songs at the door),
+// so nothing was frozen for it: `Sky.importPositions.Genshin` is NEW data, the exact
+// inverse of the historic -12, added rather than substituted so every array a released
+// build ever applied stays byte-identical.
+
+/** The games whose legacy formats exist. Legacy `data.appName` values are storageIds. */
+export type LegacyAppName = 'Genshin' | 'Sky'
 
 type LegacyGameTables = {
     defaultInstrument: string
     /** Legacy index-space size (NOTES_PER_COLUMN as of the snapshot). */
     perColumn: number
-    /** How this game receives the OTHER game's legacy note indices. */
-    importPositions: readonly number[]
+    /** How this game receives another game's legacy note indices, keyed by the SOURCE game. */
+    importPositions: Readonly<Record<LegacyAppName, readonly number[]>>
     tables: Readonly<Record<string, readonly number[]>>
 }
 
@@ -37,11 +48,27 @@ const SKY_BELLS = Object.freeze([60, 62, 67, 69, 72, 74, 79, 81])
 const SKY_HANDPAN = Object.freeze([62, 69, 72, 74, 77, 79, 81, 84])
 const SKY_SFX6 = Object.freeze([60, 62, 64, 65, 67, 69])
 
-export const LEGACY_NOTE_TABLES: Readonly<Record<'Genshin' | 'Sky', LegacyGameTables>> = Object.freeze({
+// A game receiving its OWN index space remaps nothing. Only Sky's identity is ever read
+// (old-format files are Sky-index-space by definition); Genshin's exists so the record is
+// total and a same-game lookup can never silently miss.
+const GENSHIN_IDENTITY = Object.freeze([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20])
+const SKY_IDENTITY = Object.freeze([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14])
+
+// FROZEN: the historic Sky→Genshin remap (a uniform -12 in id space).
+const SKY_INTO_GENSHIN = Object.freeze([14, 15, 16, 17, 18, 19, 20, 7, 8, 9, 10, 11, 12, 13, 0])
+// Its exact inverse, +12 in id space, so a Sky legacy file that round-trips through Genshin
+// and back lands on the notes it started from. -1 is "this index has no slot here": Genshin's
+// top octave (ids 74-83 at indices 1-6) sounds above Sky's highest button, and dropping is what
+// the decoders already do with an unmapped index. The other candidate mapping — no octave shift,
+// dropping Genshin's BOTTOM octave instead — keeps more absolute pitches but is not the inverse
+// of anything, so a Sky→Genshin→Sky round trip would transpose.
+const GENSHIN_INTO_SKY = Object.freeze([14, -1, -1, -1, -1, -1, -1, 7, 8, 9, 10, 11, 12, 13, 0, 1, 2, 3, 4, 5, 6])
+
+export const LEGACY_NOTE_TABLES: Readonly<Record<LegacyAppName, LegacyGameTables>> = Object.freeze({
     Genshin: Object.freeze({
         defaultInstrument: 'Lyre',
         perColumn: 21,
-        importPositions: Object.freeze([14, 15, 16, 17, 18, 19, 20, 7, 8, 9, 10, 11, 12, 13, 0]),
+        importPositions: Object.freeze({Sky: SKY_INTO_GENSHIN, Genshin: GENSHIN_IDENTITY}),
         tables: Object.freeze({
             'Lyre': GENSHIN_DEFAULT,
             'Vintage-Lyre': GENSHIN_DEFAULT,
@@ -58,7 +85,7 @@ export const LEGACY_NOTE_TABLES: Readonly<Record<'Genshin' | 'Sky', LegacyGameTa
     Sky: Object.freeze({
         defaultInstrument: 'Piano',
         perColumn: 15,
-        importPositions: Object.freeze([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]),
+        importPositions: Object.freeze({Genshin: GENSHIN_INTO_SKY, Sky: SKY_IDENTITY}),
         tables: Object.freeze({
             'Piano': SKY_DEFAULT,
             'GrandPiano': SKY_DEFAULT,
@@ -98,9 +125,6 @@ export const LEGACY_NOTE_TABLES: Readonly<Record<'Genshin' | 'Sky', LegacyGameTa
         }),
     }),
 })
-
-/** The games whose legacy formats exist. Legacy `data.appName` values are storageIds. */
-export type LegacyAppName = keyof typeof LEGACY_NOTE_TABLES
 
 export function isLegacyAppName(appName: unknown): appName is LegacyAppName {
     return appName === 'Genshin' || appName === 'Sky'

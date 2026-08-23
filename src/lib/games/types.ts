@@ -393,7 +393,9 @@ export interface GameDefinition {
     // id through this list, so no instrument's Button layout can move a row.
     canonicalNoteIds: number[];
     composerPositions: number[]; // COMPOSER_NOTE_POSITIONS
-    importPositions: number[]; // IMPORT_NOTE_POSITIONS
+    // IMPORT_NOTE_POSITIONS — HISTORIC, NOT LIVE: the legacy cross-game remap is keyed by
+    // SOURCE game and frozen in $core/Songs/legacyNoteTables (see schema.ts for the full note).
+    importPositions: number[];
     animationDelayMs: number; // note press/animation delay (100 | 200)
     composerRowHeightScale: number; // ComposerCanvas (1 | 0.95)
     defaultIcon: NoteImage; // ObservableNote default ('do' | 'cr')

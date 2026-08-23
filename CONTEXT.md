@@ -67,7 +67,7 @@ An instrument's _capability_ to keep sounding while a note is held and to stop s
 _Avoid_: hold (reserved for the VSRG gameplay mechanic — a scored held lane press, which exists independently of audio sustain)
 
 **Stranded Note**:
-A note whose Note Number the track's instrument cannot voice at the current Basepoint — including off-scale numbers that fall between the grid's rows. Skipped at playback, marked in the composer (nearest row, accidental hint), never silently rewritten; Basepoint changes move it with its track — never changing whether it strands, since the view moves with the notes — while instrument swaps pass it through and may un-strand it. Explicit imports still remap: legacy files decode through the frozen historic remap, and cross-game imports octave-fold out-of-range numbers while producing the converted copy.
+A note whose Note Number the track's instrument cannot voice at the current Basepoint — including off-scale numbers that fall between the grid's rows. Skipped at playback, marked in the composer (nearest row, accidental hint), never silently rewritten; Basepoint changes move it with its track — never changing whether it strands, since the view moves with the notes — while instrument swaps pass it through and may un-strand it. Cross-game imports pass notes through as-is too (the swap to Similar Instruments may strand them, warned at import, never folded); only legacy files still remap, decoding through the frozen historic tables.
 
 **Similar Instrument**:
 The target game's curated counterpart for a source game's instrument — the one a track swaps to during cross-game conversion so the song keeps a comparable timbre. Unmapped instruments fall back to the target's default.
@@ -111,6 +111,24 @@ _Avoid_: tap-to-stop "click" (a Catch never takes the click path)
 **Duration Hold**:
 The press that opened the duration popover — on a keyboard key, a Pro View cell, a physical note key, or a held MIDI note — for as long as it stays down. While it lasts, sustain length is edited by whole-column increments from the span it opened at: one column per visible column-width of pointer travel, and one column per column the selection moves underneath it, from any source (canvas scroll, wheel, the < > buttons, shortcuts). Column changes never dismiss the popover while it lasts, and neither does a press outside it — a second finger scrolling the canvas IS such a press, and it is part of the gesture. A layer change still dismisses, and so does playback starting: the transport moves the selection on its own, and a hold it drove would grow the span one column per tick. The Hold ends with the release — the popover outlives it.
 _Avoid_: drag-to-resize (suggests grabbing the tail and snapping it to a position — a Duration Hold only ever increments), snap-to-column
+
+### Player
+
+**Section**:
+The contiguous stretch of a song a player run performs — play, practice and approaching all bound themselves to it. Note-granular (start inclusive, end exclusive), settable from the slider or frame-by-frame from the Sheet Card, and independent of Loop, which only auto-restarts the Section when a run finishes.
+_Avoid_: loop range (Loop is the repeat toggle, not the bounds), range (overloaded — see Editable Zone), selection
+
+**Chunk**:
+One playable instant of a song in the player: the near-simultaneous notes merged into a single group. The unit practice advances by and the unit the sheet draws by.
+_Avoid_: column (composer-side), chord (a Chunk may hold one note)
+
+**Sheet Frame**:
+One Chunk drawn as a tile of the player's visual sheet. The frame-granular handle for the Section: a frame can start it, end it, or be sought to.
+_Avoid_: frame (alone, ambiguous with animation frames), sheet tile
+
+**Sheet Card**:
+The card holding the Sheet Frames above the player keyboard — the current page inline, the whole song when fullscreen. Section bounds render on it as brackets; frames outside the Section stay visible, dimmed.
+_Avoid_: visual sheet (the setting's name for the feature, not the surface)
 
 ### Composer Playback
 

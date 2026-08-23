@@ -96,7 +96,7 @@ describe('Player mode transition ownership', () => {
         playerStore.resetSong()
         playerControlsStore.clearPages()
         playerControlsStore.resetScore()
-        playerControlsStore.setState({position: 0, current: 0, size: 0, end: 0})
+        playerControlsStore.setState({position: 0, current: 0, size: 0, end: 0, runEnd: 0})
 
         target = document.createElement('div')
         document.body.append(target)
@@ -164,19 +164,59 @@ describe('Player mode transition ownership', () => {
         vi.useRealTimers()
     })
 
-    async function enterPractice() {
+    /**
+     * Two notes close enough to share a frame, both playable on this keyboard and on different
+     * keys, so neither the playability filter nor the dedupe thins the frame out: the frame's
+     * `lastNoteIndex` is then carried by a note the user actually has to press, which is the only
+     * shape in which an unclamped per-note advance can walk the cursor off an unfinished frame.
+     */
+    function buildAdjacentFrameSong() {
         const song = buildRecordedSong()
-        playerStore.practice(song, 0, song.notes.length)
-        await vi.waitFor(() => expect(playerControlsStore.pagesState.pages.length).toBeGreaterThan(0))
+        //the three track-0 notes of the golden song (buttons 0, 7 and 14 of the display instrument)
+        const [low, , mid, , high] = song.notes
+        low.time = 100
+        mid.time = 120
+        high.time = 900
+        song.notes = [low, mid, high]
         return song
     }
 
-    async function beginApproach() {
+    async function enterPractice(start = 0, end?: number, song = buildRecordedSong()) {
+        playerStore.practice(song, start, end ?? song.notes.length)
+        // `position` is written by the run dispatch itself, after the mode has built its pages and
+        // queue - waiting on the pages alone would let a second call read the previous run's state
+        await vi.waitFor(() => {
+            expect(playerControlsStore.pagesState.pages.length).toBeGreaterThan(0)
+            expect(playerControlsStore.position).toBe(start)
+        })
+        return song
+    }
+
+    async function beginApproach(start = 0, end?: number) {
         const song = buildRecordedSong()
-        playerStore.approaching(song, 0, song.notes.length)
+        playerStore.approaching(song, start, end ?? song.notes.length)
         await vi.waitFor(() =>
             expect(mocks.pendingDelays.some(({ms}) => ms === 2000)).toBe(true))
         return song
+    }
+
+    /** The absolute span of every frame on the sheet, in page order. */
+    function sheetSpans() {
+        return playerControlsStore.pagesState.pages
+            .flat()
+            .map(chunk => [chunk.firstNoteIndex, chunk.lastNoteIndex])
+    }
+
+    let nextPointerId = 1
+
+    function pressButton(button: number, pointerId = nextPointerId++) {
+        const hitboxes = target.querySelectorAll<HTMLButtonElement>('.button-hitbox-bigger')
+        const hitbox = hitboxes[button]
+        if (!hitbox) throw new Error(`No keyboard hitbox for button ${button}`)
+        const press = new Event('pointerdown', {bubbles: true, cancelable: true})
+        Object.defineProperty(press, 'pointerId', {value: pointerId})
+        hitbox.dispatchEvent(press)
+        flushSync()
     }
 
     function takePendingDelay(ms: number) {
@@ -230,14 +270,17 @@ describe('Player mode transition ownership', () => {
         //...and nothing has SOUNDED yet, so the cursor has not moved with the commits
         expect(playerControlsStore.current).toBe(0)
 
-        await vi.waitFor(
-            () => expect(playerControlsStore.current).toBe(song.notes.length),
-            {timeout: 4000},
-        )
+        //waited on the FINISH, not on the cursor: `current` reaches the note after the last one
+        //while that note is still sounding, so it cannot signal "every note was heard"
+        await vi.waitFor(() => expect(onSongFinished).toHaveBeenCalled(), {timeout: 4000})
         expect(commitSongNote).toHaveBeenCalledTimes(song.notes.length)
         //every note reached the ear, and the recording hook was handed the sounding note's own id
         expect(recordSoundedNote.mock.calls.map(([id]) => id)).toEqual(song.notes.map(n => n.id))
-        await vi.waitFor(() => expect(onSongFinished).toHaveBeenCalled())
+        //the cursor ends ON the run's exclusive end, which is what the slider's progress line
+        //divides by `size`; keeping the highlight off that end is the store's `runEnd` clamp
+        expect(playerControlsStore.current).toBe(song.notes.length)
+        expect(playerControlsStore.currentGlobalChunkIndex)
+            .toBe(playerControlsStore.pagesState.pages.flat().length - 1)
     }, 10000)
 
     it('retracts the committed window before releasing what already sounds, on stop', async () => {
@@ -271,6 +314,182 @@ describe('Player mode transition ownership', () => {
         await vi.waitFor(() => expect(playerControlsStore.pagesState.pages).toEqual([]))
         expect(playerControlsStore.score).toEqual({correct: 1, wrong: 1, score: 0, combo: 0})
         expect(mocks.pendingDelays.some(({ms}) => ms === 2000)).toBe(true)
+    })
+
+    // ADR-0010: the sheet is the WHOLE song in every mode - approaching included, which built no
+    // pages at all before - and the Section only bounds what runs. The assertions below are
+    // written against the sheet a full-song run produces rather than against literal spans,
+    // because which notes are playable is a property of the game's keyboard.
+    it('builds the play-mode sheet from the whole song, not from the Section', async () => {
+        const song = buildRecordedSong()
+        playerStore.play(song, 2, 4)
+
+        await vi.waitFor(() =>
+            expect(playerControlsStore.pagesState.pages.length).toBeGreaterThan(0))
+        const spans = sheetSpans()
+        // frames outside [2,4) are on the sheet as targets; only the plan is Section-bounded. Play
+        // filters nothing, so its frames cover every note of the song exactly once.
+        expect(spans[0][0]).toBe(0)
+        expect(spans[spans.length - 1][1]).toBe(song.notes.length - 1)
+        expect(playerControlsStore.pagesState.pages.flat()
+            .reduce((total, chunk) => total + chunk.notes.length, 0)).toBe(song.notes.length)
+    })
+
+    it('publishes a run range as the Section, but leaves the Section alone for a seek', async () => {
+        const song = buildRecordedSong()
+        playerStore.play(song, 1, 3)
+        await vi.waitFor(() => expect(playerControlsStore.position).toBe(1))
+        expect(playerControlsStore.end).toBe(3)
+
+        // "Go to here" on a frame past the Section's end: that ONE run reaches the song's end and
+        // the cursor moves there, while the bounds the user drew are untouched (ADR-0010)
+        playerStore.seek(4, song.notes.length)
+        await vi.waitFor(() => expect(playerControlsStore.current).toBe(4))
+        expect(playerControlsStore.position).toBe(1)
+        expect(playerControlsStore.end).toBe(3)
+        expect(playerControlsStore.size).toBe(song.notes.length)
+
+        // ...and the next ordinary restart publishes the Section again
+        playerStore.restartSong(playerControlsStore.position, playerControlsStore.end)
+        await vi.waitFor(() => expect(playerControlsStore.current).toBe(1))
+        expect(playerControlsStore.position).toBe(1)
+        expect(playerControlsStore.end).toBe(3)
+    })
+
+    it('shows the whole song in practice while queueing only the Section', async () => {
+        await enterPractice()
+        const wholeSong = sheetSpans()
+        expect(wholeSong.length).toBeGreaterThan(1)
+
+        // a Section that is exactly the second frame
+        await enterPractice(wholeSong[1][0], wholeSong[1][1] + 1)
+
+        expect(sheetSpans()).toEqual(wholeSong)
+        // the cursor starts on the queue's first frame, and which frame is current follows from it
+        expect(playerControlsStore.current).toBe(wholeSong[1][0])
+        expect(playerControlsStore.currentChunkIndex).toBe(1)
+    })
+
+    it('jumps the practice cursor to the next queued frame, over notes no click can clear', async () => {
+        const song = await enterPractice()
+        const frames = playerControlsStore.pagesState.pages.flat()
+            .map(chunk => ({
+                first: chunk.firstNoteIndex,
+                last: chunk.lastNoteIndex,
+                buttons: chunk.notes.map(note => note.keyboardButton),
+                lastNote: chunk.notes[chunk.notes.length - 1].absoluteIndex,
+            }))
+        expect(frames.length).toBeGreaterThan(1)
+        // the case this test exists for is live: some frame spans an absolute index none of its
+        // surviving notes carries (a doubled key the dedupe dropped), so counting one per click
+        // would leave the cursor short of the next frame forever
+        expect(frames.some(frame => frame.last > frame.lastNote)).toBe(true)
+        expect(playerControlsStore.current).toBe(frames[0].first)
+
+        frames.forEach((frame, index) => {
+            frame.buttons.forEach(button => pressButton(button))
+            // a completed frame hands the cursor to the next QUEUED frame's first note - and, once
+            // the queue empties, to the run's exclusive `end`, whatever the last frame's own notes
+            // were
+            expect(playerControlsStore.current)
+                .toBe(frames[index + 1]?.first ?? song.notes.length)
+        })
+        expect(playerControlsStore.current).toBe(song.notes.length)
+        // ...while the highlight stays on the last frame the run played
+        expect(playerControlsStore.currentChunkIndex).toBe(frames.length - 1)
+        expect(onSongFinished).toHaveBeenCalledTimes(1)
+    })
+
+    it('keeps the practice highlight on a frame until every one of its notes is clicked', async () => {
+        const song = buildAdjacentFrameSong()
+        await enterPractice(0, song.notes.length, song)
+        const frames = playerControlsStore.pagesState.pages.flat()
+        expect(frames[0].notes.length).toBe(2)
+        // the frame's span ENDS on a note that still has to be pressed - see buildAdjacentFrameSong
+        expect(frames[0].lastNoteIndex).toBe(frames[0].notes[1].absoluteIndex)
+
+        // its highest-indexed note first: the per-note advance is clamped to the frame, so the
+        // highlight only leaves a frame the completion branch declared done
+        pressButton(frames[0].notes[1].keyboardButton)
+        expect(playerControlsStore.currentGlobalChunkIndex).toBe(0)
+        pressButton(frames[0].notes[0].keyboardButton)
+        // completion hands the highlight to the next queued frame - unless this game's keyboard
+        // has no key for the third note (Sky's doesn't), in which case the sheet holds only this
+        // one frame, the run ends here, and the run-end cap keeps the highlight on it
+        expect(playerControlsStore.currentGlobalChunkIndex).toBe(frames.length > 1 ? 1 : 0)
+    })
+
+    it('lands the finished practice cursor on the run end, with the highlight on the last frame it queued', async () => {
+        await enterPractice()
+        const frames = playerControlsStore.pagesState.pages.flat()
+        expect(frames.length).toBeGreaterThan(1)
+        const lastQueued = frames.length - 2
+
+        // a Section ending one past that frame: `end` is exclusive, so the final frame never runs
+        const sectionEnd = frames[lastQueued].lastNoteIndex + 1
+        await enterPractice(0, sectionEnd)
+        // both runs start at 0, so the published `end` is the only proof the SECOND one is up
+        await vi.waitFor(() => expect(playerControlsStore.end).toBe(sectionEnd))
+        for (let index = 0; index <= lastQueued; index++)
+            frames[index].notes.forEach(note => pressButton(note.keyboardButton))
+
+        expect(onSongFinished).toHaveBeenCalled()
+        // the cursor reaches `end` itself, so the slider's progress line does too - and the
+        // highlight still sits on the last frame the run queued rather than on the first frame
+        // AFTER the Section, which is what the store's `runEnd` lookup clamp buys
+        expect(playerControlsStore.current).toBe(playerControlsStore.end)
+        expect(playerControlsStore.currentGlobalChunkIndex).toBe(lastQueued)
+    })
+
+    it('advances the approaching cursor by the circles that resolve, and lands it on the last frame', async () => {
+        await beginApproach()
+        const preparation = takePendingDelay(2000)
+
+        vi.useFakeTimers()
+        preparation.resolve()
+        await Promise.resolve()
+        await Promise.resolve()
+        flushSync()
+
+        const frames = playerControlsStore.pagesState.pages.flat()
+        expect(frames.length).toBeGreaterThan(1)
+        expect(playerControlsStore.current).toBe(0)
+
+        // the cursor follows the CIRCLES now, not a count of how many left the grid: the first one
+        // to resolve puts it one past its own note
+        let elapsed = 0
+        while (playerControlsStore.current === 0 && elapsed < 10000) {
+            vi.advanceTimersByTime(50)
+            elapsed += 50
+        }
+        expect(playerControlsStore.current).toBe(frames[0].notes[0].absoluteIndex + 1)
+
+        // ...and the run ending takes it to the run's exclusive `end`, which is where the slider's
+        // progress line has to reach, while the highlight stays on the last frame the run played
+        // (the store's `runEnd` lookup clamp) rather than the dimmed one after it.
+        vi.advanceTimersByTime(10000)
+        expect(onSongFinished).toHaveBeenCalled()
+        expect(playerControlsStore.current).toBe(playerControlsStore.end)
+        expect(playerControlsStore.currentGlobalChunkIndex).toBe(frames.length - 1)
+    })
+
+    it('keeps the approaching sheet whole-song while the circles stay Section-bounded', async () => {
+        await beginApproach()
+        takePendingDelay(2000).resolve()
+        await vi.waitFor(() =>
+            expect(playerControlsStore.pagesState.pages.length).toBeGreaterThan(0))
+        const wholeSong = sheetSpans()
+        expect(wholeSong.length).toBeGreaterThan(1)
+
+        await beginApproach(wholeSong[1][0], wholeSong[1][1] + 1)
+        // the pages stay empty for the whole preparation window, so a stale run cannot install
+        // them over a newer mode's
+        expect(playerControlsStore.pagesState.pages).toEqual([])
+        takePendingDelay(2000).resolve()
+        await vi.waitFor(() =>
+            expect(playerControlsStore.pagesState.pages.length).toBeGreaterThan(0))
+
+        expect(sheetSpans()).toEqual(wholeSong)
     })
 
     it.each(['practice', 'play'] as const)(

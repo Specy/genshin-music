@@ -15,7 +15,7 @@ import {type SerializedSong, Song} from "../Songs/Song.svelte"
 // uses `Midi` as a type annotation (downloadMidi's parameter), never constructs one.
 import type {Midi} from "@tonejs/midi"
 import {type SerializedTheme, Theme, ThemeProvider} from "../theme/ThemeProvider.svelte"
-import {songService} from "./SongService"
+import {convertedSongLostNotes, isForeignSong, songService} from "./SongService"
 import {Folder, type SerializedFolder} from "../Folder"
 import {folderStore} from "$stores/FoldersStore.svelte"
 import {type SerializedVsrgSong, VsrgSong} from "../Songs/VsrgSong.svelte"
@@ -58,6 +58,14 @@ type ImportError<T> = {
 class UnknownFileResult {
     successful: UnknownFileTypes[]
     errors: ImportError<UnknownFileTypes>[]
+    /**
+     * Imported songs that were CONVERTED from another game and came out with fewer audible notes
+     * than the file held — stranded on the matched instrument (new format), or discarded by the
+     * legacy button remap (see convertedSongLostNotes). Conversion never folds any more
+     * (ADR-0011), so a track landing on a shorter instrument strands instead of being transposed —
+     * counted per song here, toasted once per import operation by importAndLog.
+     */
+    convertedWithStrandedNotes = 0
 
     constructor(successful?: UnknownFileTypes[], errors?: ImportError<UnknownFileTypes>[]) {
         this.successful = successful || []
@@ -148,6 +156,11 @@ export class FileService {
         songErrors.forEach(e => logger.error(`${i18n.t('logs:error_importing_song', {song_name: e.file?.name ?? ''})} | ${e.error}`))
         const unknown = result.getUnknownErrors()
         unknown.forEach(e => logger.error(`${i18n.t('logs:error_importing_unknown_file', {file_name: e.file?.name ?? ''})} | ${e.error}`))
+        //ONCE per import operation, never per song (ADR-0011): restoring a foreign backup is one
+        //file holding N converted songs and must not toast N times. A gesture handing over
+        //SEVERAL files calls importAndLog once per file, which is the granularity every other
+        //message in this method already has.
+        if (result.convertedWithStrandedNotes > 0) logger.warn(i18n.t('logs:converted_song_stranded_notes'), 8000)
 
         const folders = result.getSuccessfulFolders()
         if (folders.length > 5) {
@@ -193,9 +206,13 @@ export class FileService {
                 const oldId = song.id ?? null
                 song.id = null //remove the id so it can be generated
                 song.folderId = folderIds.get(song.folderId!) ?? null
+                //asked BEFORE parsing: the conversion is what rewrites `data.appName`, so after
+                //it the parsed song no longer says which game it came from
+                const converted = isForeignSong(song)
                 const parsed = songService.parseSong(song)
                 const id = await songsStore.addSong(parsed)
                 songIds.set(oldId!, id)
+                if (converted && convertedSongLostNotes(parsed)) result.convertedWithStrandedNotes++
                 result.appendSuccessful(parsed)
             } catch (e) {
                 console.error(e)
@@ -207,8 +224,10 @@ export class FileService {
                 vsrgSong.id = null //remove the id so it can be generated
                 vsrgSong.audioSongId = songIds.get(vsrgSong.audioSongId!) ?? null //related ID of the song
                 vsrgSong.folderId = folderIds.get(vsrgSong.folderId!) ?? null
+                const converted = isForeignSong(vsrgSong)
                 const parsed = songService.parseSong(vsrgSong)
                 await songsStore.addSong(parsed)
+                if (converted && convertedSongLostNotes(parsed)) result.convertedWithStrandedNotes++
                 result.appendSuccessful(parsed)
             } catch (e) {
                 console.error(e)

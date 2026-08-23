@@ -2,9 +2,9 @@ import {APP_NAME, INSTRUMENTS, type Pitch, VSRG_TRACK_COLORS} from "$core/legacy
 // SnapPoint normally lives in $cmp/pages/VsrgComposer/VsrgBottom.tsx (not ported until the UI
 // phase) - hoisted into $core/types.ts instead, same pattern as VsrgKeyboardLayout (Task 6).
 import type {SnapPoint} from "$core/types";
-import {isLegacyAppName, LEGACY_NOTE_TABLES, legacyIndexToId} from "./legacyNoteTables";
+import {isLegacyAppName, LEGACY_NOTE_TABLES, type LegacyAppName, legacyIndexToId} from "./legacyNoteTables";
 import {type ConversionGame, findSimilarInstrument} from "./instrumentSimilarity";
-import {foldNumberIntoRange, nominalToNumber} from "./noteIds";
+import {effectiveTrackPitch, nominalToNumber, numberToButton} from "./noteIds";
 import {basepointDelta, migrateTrackNotes, rewriteForSwap, rewriteNumbersForBasepoint} from "./noteNumberTransforms";
 import type {InstrumentName} from "$core/types";
 import {RecordedSong} from "./RecordedSong";
@@ -247,7 +247,7 @@ export class VsrgSong extends Song<VsrgSong, SerializedVsrgSong, 3> {
      * unlike composed/recorded, cross-game vsrg conversion does NOT rewrite
      * data.appName — a converted vsrg song keeps the exporting game's appName.
      */
-    static deserialize(obj: SerializedVsrgSong, importInto?: 'Genshin' | 'Sky'): VsrgSong {
+    static deserialize(obj: SerializedVsrgSong, importInto?: LegacyAppName): VsrgSong {
         //before anything is decoded: the version collapse below reads ANY unrecognised version as
         //v1, and a newer file's Note Numbers decode through the frozen v1 tables to nothing
         assertKnownSongVersion('vsrg', obj.version, VsrgSong.LATEST_VERSION)
@@ -267,11 +267,18 @@ export class VsrgSong extends Song<VsrgSong, SerializedVsrgSong, 3> {
         //field was introduced WITH v2, so a legacy vsrg song carries none at all
         const version = obj.version === 3 ? 3 : obj.version === 2 ? 2 : 1
         if (version === 1) {
-            const crossGame = importInto !== undefined && song.data.appName !== importInto
+            //`song.data.appName` is still the SOURCE here even after conversion — this path keeps
+            //the appName-preservation quirk documented above — so it is what keys the remap
+            const sourceAppName = song.data.appName
+            const crossGame = importInto !== undefined && sourceAppName !== importInto
             const appName = crossGame
                 ? importInto
-                : (isLegacyAppName(song.data.appName) ? song.data.appName : APP_NAME)
-            const importPositions = crossGame ? LEGACY_NOTE_TABLES[importInto].importPositions : null
+                : (isLegacyAppName(sourceAppName) ? sourceAppName : APP_NAME)
+            //no known source index space, nothing to translate FROM: indices pass through
+            const importPositions = crossGame && isLegacyAppName(sourceAppName)
+                ? LEGACY_NOTE_TABLES[importInto].importPositions[sourceAppName]
+                : null
+            let dropped = 0
             song.tracks.forEach(track => {
                 if (crossGame) track.instrument.name = "DunDun"
                 const pitch = track.instrument.pitch || song.pitch
@@ -279,16 +286,30 @@ export class VsrgSong extends Song<VsrgSong, SerializedVsrgSong, 3> {
                     const numbers: number[] = []
                     hitObject.notes.forEach(note => {
                         const index = importPositions ? (importPositions[note] ?? -1) : note
-                        if (index === -1) return
-                        //out-of-table indices were silent in the legacy runtime — dropped
+                        //counted, not just skipped: a discarded note is invisible to
+                        //countStrandedNotes (nothing is left to strand), so this is the import
+                        //warning's only evidence
+                        if (index === -1) {
+                            dropped++
+                            return
+                        }
+                        //out-of-table indices were silent in the legacy runtime — dropped.
+                        //CROSS-GAME this is a conversion loss the warning must see: the table is
+                        //the TARGET's, and the forced DunDun roster is 8 buttons long, so a
+                        //remapped index can land past its end. Same-game it is the historic ghost
+                        //note, which was already inaudible and must not start warning.
                         const id = legacyIndexToId(appName, track.instrument.name, index)
-                        if (id === null) return
+                        if (id === null) {
+                            if (crossGame) dropped++
+                            return
+                        }
                         const number = nominalToNumber(track.instrument.name, pitch, id)
                         if (!numbers.includes(number)) numbers.push(number)
                     })
                     hitObject.notes = numbers
                 })
             })
+            song.legacyDroppedNotes = dropped
         } else if (version === 2) {
             song.tracks.forEach(track => {
                 const numbers = migrateTrackNotes(
@@ -347,11 +368,13 @@ export class VsrgSong extends Song<VsrgSong, SerializedVsrgSong, 3> {
 
     /**
      * NEW-format (v3/v2) cross-game conversion: each track swaps to the target game's most
-     * similar instrument (settings kept; target default when unmapped), Note Numbers
-     * octave-fold into the mapped instrument's range IN SOUNDING SPACE (fold collisions
-     * dedupe), and — unlike the legacy path, which keeps the historic appName-preservation
-     * quirk — data.appName IS rewritten, so the song converts once instead of on every load.
-     * Legacy v1 files never reach this: their conversion happens inside deserialize(importInto).
+     * similar instrument (settings kept; target default when unmapped) and nothing else —
+     * Note Numbers pass through untouched, and the ones the matched instrument cannot voice
+     * strand rather than octave-folding into range (ADR-0011, the same rule composed and
+     * recorded conversion now follow). Unlike the legacy path, which keeps the historic
+     * appName-preservation quirk, data.appName IS rewritten here, so the song converts once
+     * instead of on every load. Legacy v1 files never reach this: their conversion happens
+     * inside deserialize(importInto).
      */
     toOtherGame(target: ConversionGame) {
         //everything below mutates the CLONE, which nobody is watching yet - the same contract
@@ -365,17 +388,25 @@ export class VsrgSong extends Song<VsrgSong, SerializedVsrgSong, 3> {
         song.tracks.forEach(t => {
             const similar = findSimilarInstrument(sourceGame, t.instrument.name, target)
             t.instrument.name = INSTRUMENTS.find(name => name === similar) ?? INSTRUMENTS[0]
-            const pitch = t.instrument.pitch || song.pitch
-            t.hitObjects.forEach(h => {
-                const numbers: number[] = []
-                h.notes.forEach(n => {
-                    const folded = foldNumberIntoRange(t.instrument.name, pitch, n)
-                    if (!numbers.includes(folded)) numbers.push(folded)
-                })
-                h.notes = numbers
-            })
+            //hitObjects are deliberately untouched: no number is rewritten, so the fold's
+            //within-hit-object collisions cannot appear and there is nothing left to dedupe
         })
         return song
+    }
+
+    /** Notes whose track instrument cannot voice them at its effective Basepoint — see ComposedSong.countStrandedNotes for why `numberToButton === -1` is the only definition. */
+    countStrandedNotes(): number {
+        let stranded = 0
+        for (const track of this.tracks) {
+            const pitch = effectiveTrackPitch(track.instrument, this.pitch)
+            const name = track.instrument?.name ?? INSTRUMENTS[0]
+            for (const hitObject of track.hitObjects) {
+                for (const note of hitObject.notes) {
+                    if (numberToButton(name, pitch, note) === -1) stranded++
+                }
+            }
+        }
+        return stranded
     }
 
     //startPlayback/tickPlayback advance each track's private lastPlayedHitObjectIndex cursor and

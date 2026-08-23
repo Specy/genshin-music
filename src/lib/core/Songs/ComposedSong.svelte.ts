@@ -30,9 +30,9 @@ import {
 } from "./SongClasses"
 import {assertKnownSongVersion, type SerializedSong, Song} from "./Song.svelte"
 import {clamp} from "../utils/Utilities"
-import {isLegacyAppName, LEGACY_NOTE_TABLES, legacyIndexToId} from "./legacyNoteTables"
+import {isLegacyAppName, LEGACY_NOTE_TABLES, type LegacyAppName, legacyIndexToId} from "./legacyNoteTables"
 import {type ConversionGame, findSimilarInstrument} from "./instrumentSimilarity"
-import {effectiveTrackPitch, foldNumberIntoRange, gridRowForNumber, nominalToNumber} from "./noteIds"
+import {effectiveTrackPitch, gridRowForNumber, nominalToNumber, numberToButton} from "./noteIds"
 import {basepointDelta, rewriteForBasepoint, rewriteForSwap} from "./noteNumberTransforms"
 
 // Used only by the retired old-format EXPORT (see the commented block beside serialize()); kept
@@ -292,10 +292,11 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 5> 
      * appName ≠ the running game), the legacy path reproduces the historic
      * deserialize-then-toGenshin pipeline in one step: indices remapped through the
      * TARGET's frozen importPositions, roster reset to the target's default instrument
-     * (icon cycle preserved), ids from the target's frozen default table. v4 songs
-     * ignore it (their cross-game path is toOtherGame's similarity-swap + id-fold).
+     * (icon cycle preserved), ids from the target's frozen default table. v5/v4 songs
+     * ignore it (their cross-game path is toOtherGame's similarity swap, which leaves
+     * Note Numbers untouched — ADR-0011).
      */
-    static deserialize(song: UnknownSerializedComposedSong, importInto?: 'Genshin' | 'Sky'): ComposedSong {
+    static deserialize(song: UnknownSerializedComposedSong, importInto?: LegacyAppName): ComposedSong {
         //@ts-ignore
         if (song.version === undefined) song.version = 1
         //before anything is decoded: an unrecognised HIGHER version would fall through to
@@ -360,7 +361,7 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 5> 
      * game. Out-of-table indices (silent ghost notes in the legacy runtime) are
      * dropped — see legacyNoteTables.legacyIndexToId.
      */
-    private static deserializeLegacy(song: SerializedComposedSongV1 | SerializedComposedSongV2 | SerializedComposedSongV3, parsed: ComposedSong, importInto?: 'Genshin' | 'Sky'): ComposedSong {
+    private static deserializeLegacy(song: SerializedComposedSongV1 | SerializedComposedSongV2 | SerializedComposedSongV3, parsed: ComposedSong, importInto?: LegacyAppName): ComposedSong {
         type LegacyNote = { index: number, layer: NoteLayer }
         //parsing columns (legacy decode, byte-faithful)
         const legacyColumns: { tempoChanger: number, notes: LegacyNote[] }[] = []
@@ -410,7 +411,10 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 5> 
             parsed.instruments = instruments
         }
         if (parsed.instruments.length > NoteLayer.MAX_LAYERS) throw new Error(`Sheet has ${song.instruments.length} instruments, but the max is ${NoteLayer.MAX_LAYERS}`)
-        const crossGame = importInto !== undefined && parsed.data.appName !== importInto
+        //captured BEFORE the rewrite below: the remap is keyed by the game whose index space the
+        //file speaks, and `parsed.data.appName` stops being that the moment it is retargeted
+        const sourceAppName = parsed.data.appName
+        const crossGame = importInto !== undefined && sourceAppName !== importInto
         if (crossGame) {
             //historic toGenshin(): roster reset to the target default with the icon cycle
             parsed.data.appName = importInto
@@ -427,24 +431,42 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 5> 
         //then ADR-0007's migration formula lifts it onto the absolute axis (spec §9 — the legacy
         //chain gains exactly one step, run per track at its effective Basepoint)
         const appName = isLegacyAppName(parsed.data.appName) ? parsed.data.appName : APP_NAME
-        const importPositions = crossGame ? LEGACY_NOTE_TABLES[importInto].importPositions : null
+        //no known source index space, nothing to translate FROM: indices pass through
+        const importPositions = crossGame && isLegacyAppName(sourceAppName)
+            ? LEGACY_NOTE_TABLES[importInto].importPositions[sourceAppName]
+            : null
+        let dropped = 0
         parsed.initColumnsForConstruction(legacyColumns.map(legacyColumn => {
             const column = new NoteColumn()
             column.tempoChanger = legacyColumn.tempoChanger
             legacyColumn.notes.forEach(note => {
                 const index = importPositions ? (importPositions[note.index] ?? -1) : note.index
-                if (index === -1) return
+                //counted, not just skipped: a discarded note is invisible to countStrandedNotes
+                //(there is nothing left to strand), so this is the import warning's only evidence
+                if (index === -1) {
+                    dropped++
+                    return
+                }
                 for (let trackIndex = 0; trackIndex < parsed.instruments.length; trackIndex++) {
                     if (!note.layer.test(trackIndex)) continue
                     const instrument = parsed.instruments[trackIndex]
+                    //CROSS-GAME an out-of-table index is a conversion loss the warning must see;
+                    //same-game it is the historic silent ghost note and must not warn. (The
+                    //cross-game branch above resets the roster to the target's DEFAULT
+                    //instrument, whose table is full-length, so this counts nothing today — it
+                    //is the same rule the other two legacy decoders need.)
                     const id = legacyIndexToId(appName, instrument.name, index)
-                    if (id === null) continue
+                    if (id === null) {
+                        if (crossGame) dropped++
+                        continue
+                    }
                     const number = nominalToNumber(instrument.name, instrument.pitch || parsed.pitch, id)
                     if (column.findNote(trackIndex, number) === null) column.addNote(trackIndex, number)
                 }
             })
             return column
         }))
+        parsed.legacyDroppedNotes = dropped
         return parsed
     }
 
@@ -1563,16 +1585,18 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 5> 
      * NEW-format cross-game conversion (v5/v4 songs imported into another game's build,
      * many-to-many by design): each track's instrument swaps to the target game's most
      * similar instrument (instrumentSimilarity map; target default when unmapped),
-     * keeping the track's volume/pitch/icon/alias; Note Numbers octave-fold into the
-     * mapped instrument's range IN SOUNDING SPACE (ADR-0007 keeps this conversion
-     * sound-preserving; numbers landing on scale gaps stay as stranded notes — never
-     * rewritten further); fold collisions merge keeping the longest span; the Duration
-     * no-overlap invariant is re-enforced. Legacy (≤v3) files never reach this: their
-     * cross-game path remaps indices inside deserialization via the frozen tables,
-     * reproducing the historic converter byte-for-byte.
+     * keeping the track's volume/pitch/icon/alias. That swap is the WHOLE conversion —
+     * Note Numbers pass through untouched (ADR-0011). A number the matched instrument
+     * cannot voice becomes a Stranded Note: skipped at playback, visible in the composer,
+     * never rewritten — exactly what a same-game instrument swap already produces. It used
+     * to octave-fold into the mapped instrument's range and merge fold collisions, which
+     * changed octaves and dropped notes irreversibly at save time; a folding tool in the
+     * composer is the right home for that as an explicit, undoable edit. Legacy (≤v3) files
+     * never reach this: their cross-game path remaps indices inside deserialization via the
+     * frozen tables, reproducing the historic converter byte-for-byte.
      *
-     * Numbers can only fold against the RUNNING game's live tables, so `target` must
-     * be it — the parameter exists so call sites already express the many-to-many
+     * `target` must be the RUNNING game — the similarity swap resolves names against its
+     * live roster — and the parameter exists so call sites already express the many-to-many
      * intent (game #3 needs no signature change).
      */
     toOtherGame = (target: ConversionGame) => {
@@ -1590,31 +1614,31 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 5> 
             swapped.name = INSTRUMENTS.find(name => name === similar) ?? INSTRUMENTS[0]
             return swapped
         })
-        clone.columns.forEach(column => {
-            column.notes.forEach(note => {
-                const instrument = clone.instruments[note.trackIndex]
-                note.id = foldNumberIntoRange(
-                    instrument?.name ?? INSTRUMENTS[0],
-                    instrument?.pitch || clone.pitch,
-                    note.id
-                )
-            })
-            //fold collisions merge, keeping the longest span
-            const seen = new Map<string, ColumnNote>()
-            column.notes = column.notes.filter(note => {
-                const key = `${note.trackIndex}-${note.id}`
-                const existing = seen.get(key)
-                if (existing) {
-                    existing.span = Math.max(existing.span, note.span)
-                    return false
-                }
-                seen.set(key, note)
-                return true
-            })
-        })
-        //folding can land a held note onto a later same-id note — re-enforce the invariant
-        clone.normalizeSpans()
+        //columns are deliberately untouched: no number is rewritten, so no two notes can newly
+        //collide and no span can newly overlap — normalizeSpans() has nothing left to re-enforce
         return clone
+    }
+    /**
+     * How many notes this song cannot sound as it stands: their track's instrument has no button
+     * for the Note Number at the track's EFFECTIVE Basepoint. `numberToButton(...) === -1` is not
+     * a definition invented here — it is what playback asks (Instrument.getButtonOfNumber returns
+     * null and the note is skipped) and what the composer canvas dims, so counting anything else
+     * would be a second, disagreeing answer.
+     *
+     * Cross-game import is what needs the count: conversion no longer folds (ADR-0011), so a
+     * track landing on a shorter instrument strands instead of being transposed, and the import
+     * warns once when this is nonzero.
+     */
+    countStrandedNotes(): number {
+        let stranded = 0
+        for (const column of this.columns) {
+            for (const note of column.notes) {
+                const instrument = this.instruments[note.trackIndex]
+                const name = instrument?.name ?? INSTRUMENTS[0]
+                if (numberToButton(name, effectiveTrackPitch(instrument, this.pitch), note.id) === -1) stranded++
+            }
+        }
+        return stranded
     }
     toMidi = (): Midi => {
         const song = this.toRecordedSong()

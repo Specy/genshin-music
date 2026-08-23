@@ -59,6 +59,8 @@ export const i18n_en = {
     imported_theme: `Imported theme "{{theme_name}}"`,
     imported_folder: `Imported folder "{{folder_name}}"`,
     imported_song: `Imported {{song_type}} song "{{song_name}}"`,
+    converted_song_stranded_notes:
+      'Some notes might not play as they are not supported by some instruments',
 
     changing_language: 'Changing language...',
     error_changing_language: 'Error changing language',
@@ -134,6 +136,9 @@ export const i18n_en = {
     reset: 'Reset',
     add_new_instrument: 'Add new instrument',
     new: 'New',
+    //screen-reader names for the shared number stepper's two buttons, which show only a glyph
+    increment: 'Increment',
+    decrement: 'Decrement',
   },
   home: {
     app_description: 'An app where you can create, practice and play songs for {{APP_NAME}}',
@@ -244,10 +249,10 @@ export const i18n_en = {
                             data when cache is automatically cleared. To get persistent storage, add the app to the home
                             screen. If that still doesn't work, make sure you do a backup often`,
     props: {
-      composer_bpm: 'Bpm',
+      composer_bpm: 'Tempo (BPM)',
       composer_bpm_description:
         'Beats per minute, the speed of the song. Usually the BPM inside the app should be 4 times the BPM of the song you are trying to compose',
-      composer_base_pitch: 'Base pitch',
+      composer_base_pitch: 'Base Pitch',
       composer_base_pitch_description: 'The main pitch of the song',
       composer_beat_marks: 'Beat marks',
       composer_beat_marks_description:
@@ -518,6 +523,12 @@ export const i18n_en = {
     loop_tooltip: 'Loop the song',
     hide_practice_notes: 'Hide notes in practice mode',
     hide_practice_notes_only_in_practice: 'Only affects practice mode',
+    sheet_frame_options: 'Frame options',
+    section_starts_here: 'Section starts here',
+    section_ends_here: 'Section ends here',
+    go_to_here: 'Go to here',
+    expand_sheet: 'Expand sheet',
+    collapse_sheet: 'Collapse sheet',
   },
   keybinds: {
     already_used_keybind: `This keybind is already used by the note "{{note_name}}"`,
@@ -711,11 +722,12 @@ export const i18n_en = {
       copy_notes: 'Copy all notes',
     },
     midi_parser: {
-      out_of_range: 'Out of range',
-      accidentals: 'Accidentals',
-      total_notes: 'Total notes',
-      select_midi_tracks: 'Select MIDI tracks',
-      ignore_empty_tracks: 'Ignore empty tracks',
+      import_settings: 'Import settings',
+      track_settings: 'Track settings',
+      tempo_bpm: 'Tempo (BPM)',
+      base_pitch: 'Base Pitch',
+      of_which_dont_fit: "Of which don't fit the instrument",
+      of_which_out_of_range: 'Of which are outside of range',
       include_accidentals: 'Include accidentals',
       global_note_offset: 'Global note offset',
       global_note_offset_description: `The index of each note will be pushed up/down by this amount, you can use it to make
@@ -726,12 +738,16 @@ export const i18n_en = {
         'Offset {{offset}}: {{accidentals}} accidentals, {{stranded}} notes the instrument cannot play',
       local_note_offset: 'Local track notes offset',
       local_note_offset_description: ' Changes the index of each note by this amount.',
+      //placeholders: the two fields below are empty when the track uses no override
+      no_offset: 'No offset',
+      no_scaling: 'No scaling',
       max_octave_scaling: 'Max notes octave scaling',
       max_octave_scaling_description:
         ' Scale down/up the notes which are out of scale by theose octaves.',
       number_of_notes: 'Number of notes',
 
-      open_midi_audio_file: 'Open MIDI/Audio/Video file',
+      open_midi_audio_file: 'Select MIDI/Audio/Video file',
+      no_file_selected: 'select a file',
       there_are_no_notes: 'There are no notes',
       error_is_file_midi: 'There was an error importing this file, is it a .mid file?',
       converting_audio_to_midi: 'Converting audio to midi (might take a while)..',
@@ -740,8 +756,6 @@ export const i18n_en = {
       audio_conversion_warning: `🔬 This feature is experimental, it might not work or get stuck. \nAudio and video conversion is less accurate than MIDI, if you can, it's better to use MIDI or compose manually. \nUse audio and videos that have only one instrument playing.`,
     },
 
-    warning_opening_midi_importer: `Opening the midi importer to import a MIDI file, please reselect the file`,
-    warning_opening_audio_importer: `Opening the midi importer to import a video/audio file... Please reselect the file. video/audio conversion is not very accurate`,
     error_importing_file_invalid_format: `Error importing file, invalid format`,
     error_importing_file_invalid_format_audio_video: `Error importing file, invalid format, if it's a MIDI,Video or audio file, use the "Create from MIDI" button`,
     ask_download_of_current_song: `You are currently editing this song ("{{song_name}}"), do you want to save it before downloading?`,

@@ -268,6 +268,7 @@ interface ApproachingNoteProps {
     clicked?: boolean
     id?: number
     duration?: number
+    absoluteIndex?: number
 }
 
 /** Player practice-mode runtime object; `index` is a BUTTON on the player's instrument, resolved from the song note's id at queue-build time. Never serialized. */
@@ -278,13 +279,24 @@ export class ApproachingNote {
     id: number
     /** Song note's sustain duration in ms (0 = tap) — display cue only. */
     duration: number
+    /**
+     * The source note's `RecordedNote.absoluteIndex` (ADR-0010), carried so a resolved circle can
+     * say WHICH song note it was and move the sheet cursor past it. Optional because the field is
+     * meaningless outside a player run; -1 then, and the cursor is left alone.
+     *
+     * It has to be copied twice: the queue's circle is not the object that resolves — `tick()`
+     * builds a fresh ApproachingNote when a note enters the grid, and it is that one which is
+     * clicked or expires.
+     */
+    absoluteIndex: number
 
-    constructor({time, index, clicked = false, id = 0, duration = 0}: ApproachingNoteProps) {
+    constructor({time, index, clicked = false, id = 0, duration = 0, absoluteIndex = -1}: ApproachingNoteProps) {
         this.time = time
         this.index = index
         this.clicked = clicked
         this.id = id
         this.duration = duration
+        this.absoluteIndex = absoluteIndex
     }
 }
 
@@ -320,6 +332,15 @@ export class RecordedNote {
      * cleared keys that play unrelated notes on every multi-instrument song.
      */
     keyboardButton: number = -1
+    /**
+     * `absoluteIndex` — this note's position in the RUN's `song.notes`, stamped once at run setup
+     * beside the two coordinates above and, like them, runtime only (never serialized, -1 outside a
+     * player run). It is the space `playerControlsStore.current` counts in, so it is what makes the
+     * sheet's chunk cursor derivable (ADR-0010) rather than stepped: it is taken BEFORE any mode
+     * filter drops unplayable notes, and it rides the note through every clone/filter/dedupe on the
+     * way into a Chunk, so a chunk built from a filtered list still knows which song notes it spans.
+     */
+    absoluteIndex: number = -1
 
     constructor(id?: number, time?: number, duration?: number, trackIndex?: number) {
         this.id = id || 0
@@ -344,6 +365,10 @@ export class RecordedNote {
         //resolving them (playSong's sheet pages, practiceSong's chunks), and a chunk note that
         //lost its keyboardButton would stop matching the key that clears it
         clone.keyboardButton = this.keyboardButton
+        //...and so does the run position: the note is cloned twice on the way to a sheet frame
+        //(the mode's chunk build, then setPages), and a chunk whose notes lost it could no longer
+        //say which part of the song it draws
+        clone.absoluteIndex = this.absoluteIndex
         return clone
     }
 }

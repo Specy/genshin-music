@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { untrack } from 'svelte';
   import type { CustomTrack } from './MidiParser.svelte';
   import type { InstrumentData } from '$core/Songs/SongClasses';
   import { ThemeProvider } from '$core/theme/ThemeProvider.svelte';
@@ -11,6 +10,7 @@
   import Tooltip from '$cmp/utility/Tooltip.svelte';
   import { hasTooltip } from '$cmp/utility/tooltip';
   import NumericalInput from './NumericalInput.svelte';
+  import MidiStatsTable from './MidiStatsTable.svelte';
 
   let {
     data,
@@ -29,40 +29,17 @@
     `background-color:${ThemeProvider.layer('menu_background', 0.15).toString()}`
   );
 
-  // offset is a writable $derived (Svelte 5.25+), same pattern as NumericalInput.svelte's
-  // elementValue: it tracks data.localOffset, but the +/- buttons and input below can override
-  // it locally until data.localOffset actually changes again.
-  let offset = $derived(`${data.localOffset ?? ''}`);
-  // One-time seed; only the debounce effect below updates it after that.
-  // svelte-ignore state_referenced_locally
-  let debouncedOffset = $state(`${data.localOffset ?? ''}`);
-
-  $effect(() => {
-    void offset;
-    const handle = setTimeout(() => {
-      debouncedOffset = offset;
-    }, 600);
-    return () => clearTimeout(handle);
-  });
-
-  // onChange (MidiParser.svelte's editTrack) goes through untrack(): it funnels into
-  // convertMidi(), which mutates several $state fields - left untracked, this effect would pick
-  // those up as dependencies and self-invalidate, throwing effect_update_depth_exceeded the
-  // moment a MIDI file loads. Same hazard as NumericalInput.svelte's identical effect.
-  $effect(() => {
-    const parsedOffset = parseInt(debouncedOffset);
-    const localOffset = Number.isFinite(parsedOffset) ? parsedOffset : null;
-    offset = `${localOffset ?? ''}`;
-    untrack(() => onChange(index, { localOffset }));
-  });
+  function onLocalOffsetChange(localOffset: number | null) {
+    onChange(index, { localOffset });
+  }
 
   function onMaxScaleChange(maxScaling: number) {
     onChange(index, { maxScaling: Math.max(0, maxScaling) });
   }
 </script>
 
-<Column gap="0.5rem" class="midi-track-column" style={background}>
-  <div class="midi-track-wrapper">
+<Column class={['midi-track-column', dataShown && 'midi-track-open']}>
+  <div class="midi-track-wrapper" style={background}>
     <div class="midi-track-center">
       <input
         type="checkbox"
@@ -106,7 +83,7 @@
   </div>
   <Column
     padding="0.4rem"
-    gap="0.2rem"
+    gap="0.4rem"
     style="display:{dataShown ? 'flex' : 'none'};border-top:solid 0.1rem var(--secondary)"
   >
     <Row align="center" justify="between">
@@ -116,18 +93,13 @@
         </Tooltip>
         {t('composer:midi_parser.local_note_offset')}
       </div>
-      <Row gap="0.3rem">
-        <button onclick={() => (offset = `${Number(offset) - 1}`)} class="midi-btn-small">-</button>
-        <input
-          type="text"
-          value={offset}
-          placeholder="No offset"
-          class="midi-input"
-          style="width:4rem"
-          oninput={(e) => (offset = e.currentTarget.value)}
-        />
-        <button onclick={() => (offset = `${Number(offset) + 1}`)} class="midi-btn-small">+</button>
-      </Row>
+      <NumericalInput
+        value={data.localOffset}
+        nullable
+        placeholder={t('composer:midi_parser.no_offset')}
+        delay={600}
+        onChange={onLocalOffsetChange}
+      />
     </Row>
     <Row align="center" justify="between">
       <div class={hasTooltip(true)}>
@@ -138,7 +110,7 @@
       </div>
       <NumericalInput
         value={data.maxScaling}
-        placeholder="No scaling"
+        placeholder={t('composer:midi_parser.no_scaling')}
         onChange={onMaxScaleChange}
       />
     </Row>
@@ -146,53 +118,11 @@
       <div>{t('common:instrument')}</div>
       <div>{data.track.instrument.name}</div>
     </Row>
-    <Row align="center" justify="between">
-      <div>{t('composer:midi_parser.number_of_notes')}</div>
-      <div>{data.track.notes.length}</div>
-    </Row>
-    <Row align="center" justify="between">
-      <div>{t('composer:midi_parser.accidentals')}</div>
-      <div>{data.numberOfAccidentals}</div>
-    </Row>
-    <Row align="center" justify="between">
-      <div>
-        {t('composer:midi_parser.out_of_range')}({data.outOfRangeBounds.upper +
-          data.outOfRangeBounds.lower})
-      </div>
-      <Row style="width:fit-content">
-        <Row style="margin-right:0.4rem">
-          <svg
-            stroke="currentColor"
-            fill="currentColor"
-            stroke-width="0"
-            viewBox="0 0 448 512"
-            height="1em"
-            width="1em"
-            xmlns="http://www.w3.org/2000/svg"
-            style="margin-right:0.2rem"
-            ><path
-              d="M34.9 289.5l-22.2-22.2c-9.4-9.4-9.4-24.6 0-33.9L207 39c9.4-9.4 24.6-9.4 33.9 0l194.3 194.3c9.4 9.4 9.4 24.6 0 33.9L413 289.4c-9.5 9.5-25 9.3-34.3-.4L264 168.6V456c0 13.3-10.7 24-24 24h-32c-13.3 0-24-10.7-24-24V168.6L69.2 289.1c-9.3 9.8-24.8 10-34.3.4z"
-            /></svg
-          >
-          {data.outOfRangeBounds.upper}
-        </Row>
-        <Row>
-          <svg
-            stroke="currentColor"
-            fill="currentColor"
-            stroke-width="0"
-            viewBox="0 0 448 512"
-            height="1em"
-            width="1em"
-            xmlns="http://www.w3.org/2000/svg"
-            style="margin-right:0.2rem"
-            ><path
-              d="M413.1 222.5l22.2 22.2c9.4 9.4 9.4 24.6 0 33.9L241 473c-9.4 9.4-24.6 9.4-33.9 0L12.7 278.6c-9.4-9.4-9.4-24.6 0-33.9l22.2-22.2c9.5-9.5 25-9.3 34.3.4L184 343.4V56c0-13.3 10.7-24 24-24h32c13.3 0 24 10.7 24 24v287.4l114.8-120.5c9.3-9.8 24.8-10 34.3-.4z"
-            /></svg
-          >
-          {data.outOfRangeBounds.lower}
-        </Row>
-      </Row>
-    </Row>
+    <MidiStatsTable
+      notes={data.track.notes.length}
+      accidentals={data.numberOfAccidentals}
+      outOfRange={data.outOfRangeBounds.upper + data.outOfRangeBounds.lower}
+      outOfRangeBounds={data.outOfRangeBounds}
+    />
   </Column>
 </Column>

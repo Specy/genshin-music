@@ -195,12 +195,12 @@
     if (files.length > 0) {
       const file = files[0];
       const name = file.name;
-      if (isMidiFormat(name)) logger.warn(t('composer:warning_opening_midi_importer'), 6000);
-      else if (isVideoFormat(name) || isAudioFormat(name))
-        logger.warn(t('composer:warning_opening_audio_importer'), 6000);
-      else return logger.error(t('composer:error_importing_file_invalid_format'), 8000);
+      if (!isMidiFormat(name) && !isVideoFormat(name) && !isAudioFormat(name))
+        return logger.error(t('composer:error_importing_file_invalid_format'), 8000);
       // Carry the file over instead of making the user pick it again inside the importer; the
-      // importer takes it while opening, so this must be set BEFORE changeMidiVisibility.
+      // importer takes it while opening, so this must be set BEFORE changeMidiVisibility. The
+      // hand-off is silent: the importer opens with the file already in it, so there is nothing
+      // to tell the user to do.
       setPendingMidiImport(file);
       functions.changeMidiVisibility(true);
       toggleMenu();

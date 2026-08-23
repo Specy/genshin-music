@@ -9,7 +9,7 @@ import {buildRecordedSong} from './builders'
 beforeEach(() => {
     playerControlsStore.resetScore()
     playerControlsStore.clearPages()
-    playerControlsStore.setState({position: 0, current: 0, size: 0, end: 0})
+    playerControlsStore.setState({position: 0, current: 0, size: 0, end: 0, runEnd: 0})
 })
 
 describe('increaseScore (combo/score math)', () => {
@@ -38,9 +38,24 @@ describe('increaseScore (combo/score math)', () => {
     })
 })
 
+/**
+ * The three chunks the builder song produces once resolved and merged (see
+ * test/playerModeTransitions.test.ts for the run that proves it): note 0 alone, notes 1-3 in one
+ * ~50ms instant, note 4 alone. Spans are what the merge stamps, BEFORE dedupe drops the doubled
+ * key at absolute 3 - so chunk 1 owns an index no note of its own carries any more, which is
+ * exactly the case a cursor lookup has to survive.
+ */
+function spannedChunk(first: number, last: number, delay = 0): Chunk {
+    const notes = [new RecordedNote(first, first * 100)]
+    notes[0].absoluteIndex = first
+    return new Chunk(notes, delay, first, last)
+}
+
 describe('setPages (clone depth)', () => {
     it('deep-clones pages/chunks so the store never aliases the caller\'s arrays', () => {
-        const original = [[new Chunk([new RecordedNote(0, 100)], 10)]]
+        const note = new RecordedNote(0, 100)
+        note.absoluteIndex = 3
+        const original = [[new Chunk([note], 10, 3, 7)]]
         playerControlsStore.setPages(original)
 
         expect(playerControlsStore.pagesState.pages).not.toBe(original)
@@ -50,65 +65,157 @@ describe('setPages (clone depth)', () => {
         // content is preserved by Chunk.clone()/RecordedNote.clone() despite the new identities
         expect(playerControlsStore.pagesState.pages[0][0].delay).toBe(10)
         expect(playerControlsStore.pagesState.pages[0][0].notes[0].id).toBe(0)
+        // ...the absolute span included (ADR-0010): setPages clones, and a frame that lost its span
+        // could no longer say which part of the song it draws
+        expect(playerControlsStore.pagesState.pages[0][0].firstNoteIndex).toBe(3)
+        expect(playerControlsStore.pagesState.pages[0][0].lastNoteIndex).toBe(7)
+        expect(playerControlsStore.pagesState.pages[0][0].notes[0].absoluteIndex).toBe(3)
 
-        // currentPage mirrors the FIRST cloned page's content. NOTE for reviewer: under Svelte 5
-        // runes this is content-equal but NOT reference-equal (`.toBe` fails here) - `setPagesState`
-        // assigns `pages` and `currentPage` as two separate `Object.assign` targets on the reactive
-        // `$state` proxy, and Svelte proxies each raw array independently on assignment (unlike a
-        // plain-JS object graph, or mobx's own admin-object wrapping, there is no cross-property
-        // proxy-identity cache) - `pagesState.currentPage` and `pagesState.pages[0]` end up as two
-        // distinct Proxy objects around the same underlying clone. No store method ever compares
-        // them by reference (only by content/index), so this is a reactivity-substrate detail, not
-        // a port bug - documented here rather than silently asserted away.
-        expect(playerControlsStore.pagesState.currentPage).toEqual(playerControlsStore.pagesState.pages[0])
-        expect(playerControlsStore.pagesState.currentPageIndex).toBe(0)
-        expect(playerControlsStore.pagesState.currentChunkIndex).toBe(0)
+        // currentPage is DERIVED from `current` now (ADR-0010) rather than stored beside `pages`,
+        // so it is the page array itself - reference-equal, unlike the two independent `$state`
+        // proxies the stored copy used to produce.
+        expect(playerControlsStore.currentPage).toBe(playerControlsStore.pagesState.pages[0])
+        expect(playerControlsStore.currentPageIndex).toBe(0)
+        expect(playerControlsStore.currentChunkIndex).toBe(0)
     })
 
     it('falls back to an empty currentPage when pages is empty', () => {
         playerControlsStore.setPages([])
         expect(playerControlsStore.pagesState.pages).toEqual([])
-        expect(playerControlsStore.pagesState.currentPage).toEqual([])
+        expect(playerControlsStore.currentPage).toEqual([])
     })
 })
 
-describe('incrementChunkPositionAndSetCurrent (page/chunk advance)', () => {
-    it('advances the chunk index within a page, then rolls over to the next page, then STOPS (and does not even update `current`) once on the last chunk of the last page', () => {
-        const chunkA = new Chunk([new RecordedNote(0, 0)], 0)
-        const chunkB = new Chunk([new RecordedNote(1, 10)], 10)
-        const chunkC = new Chunk([new RecordedNote(2, 20)], 10)
-        playerControlsStore.setPages([[chunkA, chunkB], [chunkC]])
+/**
+ * ADR-0010: nothing steps the chunk position any more. `current` is an absolute `song.notes`
+ * index and the frame under the highlight is a pure lookup of it against the chunk spans - which
+ * is what lets the sheet hold the WHOLE song while only the Section runs.
+ */
+describe('derived chunk/page cursor', () => {
+    const wholeSong = () => [spannedChunk(0, 0), spannedChunk(1, 3, 250), spannedChunk(4, 4, 550)]
 
-        // chunk 0 -> chunk 1, still page 0 (2 chunks on page 0)
-        playerControlsStore.incrementChunkPositionAndSetCurrent(5)
-        expect(playerControlsStore.pagesState.currentPageIndex).toBe(0)
-        expect(playerControlsStore.pagesState.currentChunkIndex).toBe(1)
-        expect(playerControlsStore.current).toBe(5)
+    it('resolves the cursor to the chunk containing `current`', () => {
+        playerControlsStore.setPages([wholeSong()])
+        playerControlsStore.setCurrent(0)
+        expect(playerControlsStore.currentChunkIndex).toBe(0)
+        expect(playerControlsStore.currentGlobalChunkIndex).toBe(0)
+        expect(playerControlsStore.currentChunk?.firstNoteIndex).toBe(0)
+    })
 
-        // last chunk of page 0 -> rolls over to page 1, chunk 0
-        playerControlsStore.incrementChunkPositionAndSetCurrent(6)
-        expect(playerControlsStore.pagesState.currentPageIndex).toBe(1)
-        expect(playerControlsStore.pagesState.currentChunkIndex).toBe(0)
+    it('holds the cursor on a chunk across EVERY index of its span, including ones no surviving note carries', () => {
+        playerControlsStore.setPages([wholeSong()])
+        // absolute 3 is inside chunk 1's span but its note was deduped away as a doubled key: a
+        // lookup that asked "which chunk holds a note at 3" would answer nothing at all
+        for (const current of [1, 2, 3]) {
+            playerControlsStore.setCurrent(current)
+            expect(playerControlsStore.currentChunkIndex).toBe(1)
+        }
+        playerControlsStore.setCurrent(4)
+        expect(playerControlsStore.currentChunkIndex).toBe(2)
+    })
+
+    it('clamps a cursor before the first chunk and one past the last note', () => {
+        playerControlsStore.setPages([wholeSong()])
+
+        playerControlsStore.setCurrent(-1)
+        expect(playerControlsStore.currentChunkIndex).toBe(0)
+
+        // play mode really ends here: `current` is the note that has not sounded, so a finished
+        // 5-note song leaves it at 5 - one past every span
+        playerControlsStore.setCurrent(5)
+        expect(playerControlsStore.currentChunkIndex).toBe(2)
+        expect(playerControlsStore.currentChunk?.lastNoteIndex).toBe(4)
+    })
+
+    it('reaches FORWARD across the gaps a mode filter leaves, never back onto the finished chunk', () => {
+        // an unplayable pair at absolute 2-3 belongs to no chunk: practice and approaching chunk
+        // only the notes their keyboard can play. `current` means "the next note to consume", so
+        // the answer is the chunk still ahead - answering with chunk 0 would leave the highlight
+        // one frame behind for the rest of the run.
+        playerControlsStore.setPages([[spannedChunk(0, 1), spannedChunk(4, 5)]])
+        for (const current of [2, 3]) {
+            playerControlsStore.setCurrent(current)
+            expect(playerControlsStore.currentChunkIndex).toBe(1)
+        }
+    })
+
+    it('converts the global chunk index into a page index and a page-relative one', () => {
+        playerControlsStore.setPages([[spannedChunk(0, 0), spannedChunk(1, 3)], [spannedChunk(4, 4)]])
+        playerControlsStore.setCurrent(4)
+
+        expect(playerControlsStore.currentPageIndex).toBe(1)
+        // page-relative: it is what PlayerPagesRenderer compares its own each-index to
+        expect(playerControlsStore.currentChunkIndex).toBe(0)
+        expect(playerControlsStore.currentGlobalChunkIndex).toBe(2)
+        expect(playerControlsStore.currentPage).toHaveLength(1)
+        expect(playerControlsStore.currentChunk?.firstNoteIndex).toBe(4)
+    })
+
+    // A finished run parks `current` ON its exclusive end so the slider's progress line reaches the
+    // end (PlayerSlider divides current/size). The frame lookup is the other consumer of the same
+    // number and must NOT overshoot, so it is taken one note inside `runEnd`.
+    it('derives the run\'s LAST frame when `current` lands on the run end, not the one after it', () => {
+        playerControlsStore.setPages([wholeSong()])
+        // a Section of the first two frames: `end` 4 is exclusive, so frame 2 (span [4,4]) is
+        // outside the run and must never take the highlight
+        playerControlsStore.setState({size: 5, position: 0, end: 4, runEnd: 4})
+        playerControlsStore.setCurrent(4)
+        expect(playerControlsStore.currentGlobalChunkIndex).toBe(1)
+        expect(playerControlsStore.currentChunk?.lastNoteIndex).toBe(3)
+    })
+
+    // The bound is applied to the FRAME, not the note index: practice/approaching cut frames from
+    // playable notes only, so a Section whose tail notes have no key leaves `runEnd - 1` inside a
+    // span gap - and chunkIndexAt's forward reach would jump that gap into the frame past the run.
+    it('caps the parked highlight at the run\'s last frame even when the run ends inside a gap', () => {
+        playerControlsStore.setPages([[
+            spannedChunk(0, 20), spannedChunk(21, 44, 250), spannedChunk(52, 60, 550),
+        ]])
+        // no frame covers notes 45-51; the run ends at 50, so its last frame is [21,44]
+        playerControlsStore.setState({size: 61, position: 0, end: 50, runEnd: 50})
+        playerControlsStore.setCurrent(50)
+        expect(playerControlsStore.currentGlobalChunkIndex).toBe(1)
+    })
+
+    it('leaves mid-run lookups unclamped, including a seek run whose end is the song length', () => {
+        playerControlsStore.setPages([wholeSong()])
+        playerControlsStore.setState({size: 5, position: 0, end: 5, runEnd: 5})
+        for (const [current, chunk] of [[0, 0], [1, 1], [3, 1], [4, 2]] as const) {
+            playerControlsStore.setCurrent(current)
+            expect(playerControlsStore.currentGlobalChunkIndex).toBe(chunk)
+        }
+        // ...and the run's own end still resolves to the last frame it played
+        playerControlsStore.setCurrent(5)
+        expect(playerControlsStore.currentGlobalChunkIndex).toBe(2)
+    })
+
+    it('answers safely with no pages at all', () => {
+        playerControlsStore.setCurrent(7)
+        expect(playerControlsStore.currentPage).toEqual([])
+        expect(playerControlsStore.currentChunk).toBeUndefined()
+        expect(playerControlsStore.currentPageIndex).toBe(0)
+        expect(playerControlsStore.currentChunkIndex).toBe(0)
+        expect(playerControlsStore.currentGlobalChunkIndex).toBe(-1)
+    })
+})
+
+describe('advanceCurrentTo (monotonic cursor)', () => {
+    it('moves `current` forward and ignores anything at or behind it', () => {
+        playerControlsStore.setCurrent(4)
+        playerControlsStore.advanceCurrentTo(6)
         expect(playerControlsStore.current).toBe(6)
-        expect(playerControlsStore.currentChunk?.notes[0].id).toBe(2) // chunkC (cloned)
-
-        // last chunk of the LAST page: old quirk - early `return` before any setState/setPagesState,
-        // so `current` is NOT updated to 7 either (byte-parity with old PlayerControlsStore.ts).
-        playerControlsStore.incrementChunkPositionAndSetCurrent(7)
-        expect(playerControlsStore.pagesState.currentPageIndex).toBe(1)
-        expect(playerControlsStore.pagesState.currentChunkIndex).toBe(0)
+        // a note clicked out of order, or a circle that expires after a later one, must not drag
+        // the highlight back over ground already covered
+        playerControlsStore.advanceCurrentTo(2)
+        expect(playerControlsStore.current).toBe(6)
+        playerControlsStore.advanceCurrentTo(6)
         expect(playerControlsStore.current).toBe(6)
     })
 
-    it('defaults the `current` argument to the store\'s own current value when omitted', () => {
-        const chunkA = new Chunk([new RecordedNote(0, 0)], 0)
-        const chunkB = new Chunk([new RecordedNote(1, 10)], 10)
-        playerControlsStore.setPages([[chunkA, chunkB]])
-        playerControlsStore.setCurrent(42)
-
-        playerControlsStore.incrementChunkPositionAndSetCurrent()
-        expect(playerControlsStore.pagesState.currentChunkIndex).toBe(1)
-        expect(playerControlsStore.current).toBe(42)
+    it('leaves a run dispatch free to reset the cursor backwards through setCurrent', () => {
+        playerControlsStore.setCurrent(9)
+        playerControlsStore.setCurrent(2)
+        expect(playerControlsStore.current).toBe(2)
     })
 })
 

@@ -60,4 +60,4 @@ export {
     SheetVisualizerSettings,
 } from '$core/BaseSettings'
 // Import pipeline (pulls DbInstance -> ZangoDB -> needs fake-indexeddb from setup)
-export {songService} from '$core/Services/SongService'
+export {songService, convertedSongLostNotes} from '$core/Services/SongService'

@@ -5,6 +5,7 @@
     SettingsNumber,
     SettingsText,
   } from '$core/types/SettingsPropriety';
+  import StepperButton from '$cmp/inputs/StepperButton.svelte';
 
   // Old set el.value = '' before calling onChange to dodge a React-only
   // leading-zero rendering artifact - not ported: Svelte's controlled
@@ -59,25 +60,11 @@
 
 <div class="settings-input">
   {#if data.type === 'number'}
-    <button
+    <StepperButton
+      direction="decrement"
       onclick={() => handleIncrement(-1)}
-      class="settings-input-button"
       style="margin-right:0.15rem"
-      aria-label="Decrement"
-    >
-      <svg
-        stroke="currentColor"
-        fill="currentColor"
-        stroke-width="0"
-        viewBox="0 0 448 512"
-        height="1em"
-        width="1em"
-        xmlns="http://www.w3.org/2000/svg"
-        ><path
-          d="M416 208H32c-17.67 0-32 14.33-32 32v32c0 17.67 14.33 32 32 32h384c17.67 0 32-14.33 32-32v-32c0-17.67-14.33-32-32-32z"
-        /></svg
-      >
-    </button>
+    />
   {/if}
   <input
     type={data.type}
@@ -88,25 +75,11 @@
     aria-label={data.name}
   />
   {#if data.type === 'number'}
-    <button
+    <StepperButton
+      direction="increment"
       onclick={() => handleIncrement(1)}
-      class="settings-input-button"
       style="margin-left:0.15rem"
-      aria-label="Increment"
-    >
-      <svg
-        stroke="currentColor"
-        fill="currentColor"
-        stroke-width="0"
-        viewBox="0 0 448 512"
-        height="1em"
-        width="1em"
-        xmlns="http://www.w3.org/2000/svg"
-        ><path
-          d="M416 208H272V64c0-17.67-14.33-32-32-32h-32c-17.67 0-32 14.33-32 32v144H32c-17.67 0-32 14.33-32 32v32c0 17.67 14.33 32 32 32h144v144c0 17.67 14.33 32 32 32h32c17.67 0 32-14.33 32-32V304h144c17.67 0 32-14.33 32-32v-32c0-17.67-14.33-32-32-32z"
-        /></svg
-      >
-    </button>
+    />
   {/if}
 </div>
 
@@ -137,44 +110,6 @@
     -moz-appearance: textfield;
   }
 
-  .settings-input-button {
-    width: 1.4rem;
-    height: 1.4rem;
-    font-weight: bold;
-    font-family: Arial;
-    display: flex;
-    padding: 0;
-    justify-content: center;
-    align-items: center;
-    border: none;
-    background-color: var(--primary);
-    color: var(--primary-text);
-    border-radius: 0.2rem;
-    cursor: pointer;
-    font-size: 0.7rem;
-    /* the RELEASE of the press below - a state rule's transition only runs on the way INTO it */
-    transition: transform 0.12s;
-  }
-
-  /* THE PRESS, the same brightness and scale App.css gives `.app-button` and the composer's tools
-     (its own comment carries the reasoning). Repeated here rather than reached from there because
-     these two buttons are this component's alone: they are the only `-`/`+` in the app, and their
-     whole appearance is declared in this block.
-
-     IT MATTERS MOST HERE. Increment and decrement are the buttons a user presses repeatedly and
-     often without looking at the number - so a press that shows nothing is a press they cannot
-     count. */
-  .settings-input-button:not(:disabled):active {
-    filter: brightness(0.9);
-    transform: scale(0.98);
-    transition:
-      filter 0.06s,
-      transform 0.06s;
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .settings-input-button:not(:disabled):active {
-      transform: none;
-    }
-  }
+  /* The `-`/`+` buttons and their press live in StepperButton.svelte: the MIDI importer's number
+     inputs step with the same control, so the look is shared rather than declared here. */
 </style>

@@ -7,13 +7,14 @@
   import IconButton from '$cmp/inputs/IconButton.svelte';
   import AppButton from '$cmp/inputs/AppButton.svelte';
   import PlayerSlider from './PlayerSlider.svelte';
-  import PlayerVisualSheetRenderer from './PlayerPagesRenderer.svelte';
+  import PlayerSheetCard from './PlayerSheetCard.svelte';
   import { t } from '$i18n/binding.svelte';
   import './Slider.css';
   import './VisualSheet.css';
 
   let {
     onRestart,
+    onSeek,
     onRawSpeedChange,
     onToggleRecordAudio,
     onToggleMetronome,
@@ -28,6 +29,7 @@
     isRecordingAudio,
   }: {
     onRestart: () => void;
+    onSeek: (noteIndex: number) => void;
     onRawSpeedChange: (event: Event & { currentTarget: EventTarget & HTMLSelectElement }) => void;
     onToggleRecordAudio: (override: boolean) => void;
     onToggleMetronome: () => void;
@@ -47,9 +49,12 @@
   const songData = playerStore.state;
   let needsRefresh = $state(false);
 
+  // A new run clears the hint - but a SEEK is not a new run's worth of Section (ADR-0010): "Go to
+  // here" restarts from a frame while leaving `position`/`end` exactly as the user drew them, so a
+  // Section edit that has not been applied yet is still pending after it and the hint has to stay.
   $effect(() => {
     void songData.key;
-    needsRefresh = false;
+    if (!songData.preservesSection) needsRefresh = false;
   });
 
   function toggleNeedsRefresh() {
@@ -272,5 +277,5 @@
   </IconButton>
 </div>
 {#if isVisualSheetVisible}
-  <PlayerVisualSheetRenderer columns={visualSheetColumns} />
+  <PlayerSheetCard columns={visualSheetColumns} {onSeek} onSectionChange={toggleNeedsRefresh} />
 {/if}

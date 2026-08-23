@@ -103,14 +103,15 @@ describe('the rejection reaches the import path as a per-song failure', () => {
         }
     })
 
-    // The cross-game route is the one that re-enumerated the version lists: a Sky file whose
+    // The cross-game route is the one that re-enumerated the version lists: a foreign file whose
     // version this build does not know must be REJECTED, not fed to the legacy frozen-table remap.
-    it.runIf(APP_NAME === 'Genshin')('a Sky song from a newer app is rejected by parseSong too', () => {
+    // Build-agnostic since ADR-0011 — both builds convert foreign songs now.
+    it('a foreign song from a newer app is rejected by parseSong too', () => {
         const composed = buildComposedSong().serialize()
         const payload = {
             ...composed,
             version: ComposedSong.LATEST_VERSION + 1,
-            data: {...composed.data, appName: 'Sky'},
+            data: {...composed.data, appName: APP_NAME === 'Genshin' ? 'Sky' : 'Genshin'},
         }
         expect(() => songService.parseSong(JSON.parse(JSON.stringify(payload)))).toThrow(/v6/)
     })

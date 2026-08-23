@@ -491,10 +491,15 @@ export function nominalToNumber(instrumentName: RuntimeInstrumentName, pitch: Pi
 // }
 
 /**
- * foldIdIntoRange on the absolute axis — the cross-game conversion policy (ADR-0007 keeps it
- * SOUND-preserving): fold in SOUNDING space, so what the listener hears moves by whole octaves
- * only, then carry the Basepoint back. A number landing on a gap of the target instrument stays
- * where it fell and strands visibly, exactly as an id did.
+ * foldIdIntoRange on the absolute axis: fold in SOUNDING space, so what the listener hears moves
+ * by whole octaves only, then carry the Basepoint back. A number landing on a gap of the target
+ * instrument stays where it fell and strands visibly, exactly as an id did.
+ *
+ * NO LONGER USED BY IMPORT. This was the cross-game conversion policy until ADR-0011, which made
+ * conversion note-preserving: folding changed octaves and merged collisions irreversibly, at save
+ * time, without being asked. The arithmetic is kept for the composer folding tool the ADR names —
+ * pulling stranded notes into range as an explicit, undoable edit is the right home for it — and
+ * `test/noteIds.test.ts` keeps pinning it in the meantime.
  */
 export function foldNumberIntoRange(instrumentName: RuntimeInstrumentName, pitch: Pitch, number: number): number {
     if (!Number.isFinite(number)) return number

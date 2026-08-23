@@ -10,9 +10,11 @@ import {
 import type {Pitch} from '../src/lib/core/legacyConfig'
 import type {InstrumentName} from '../src/lib/core/types'
 
-// The cross-game import policy, on the axis songs actually store (its nominal predecessor
+// The octave-fold arithmetic, on the axis songs actually store (its nominal predecessor
 // `foldIdIntoRange` was deleted at ADR-0007 phase E along with every other nominal-only helper
-// the flip left unconsumed — these rows moved over rather than being dropped with it).
+// the flip left unconsumed — these rows moved over rather than being dropped with it). It was
+// the cross-game import policy until ADR-0011 made conversion note-preserving; it has no caller
+// in src/ now, and is kept (with these rows) for the composer folding tool the ADR names.
 describe('foldNumberIntoRange', () => {
     it('octave-folds ordinary numbers without changing their pitch class', () => {
         const instrument = INSTRUMENTS[0]

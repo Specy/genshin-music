@@ -671,10 +671,14 @@ a {
   right: 0.8rem;
 }
 
+/* TOP-LEFT, beside the Sheet Card rather than under it (ADR-0010). Its containing block is body
+   (every ancestor is static), and with no `left` it took its static position - which
+   `.app { justify-content: center }` centres, i.e. exactly where the card now sits. Anchoring it to
+   the viewport edge means it must clear the fixed menu column itself. */
 .approaching-accuracy {
   position: absolute;
   top: 0.5rem;
-  margin: 0 auto;
+  left: calc(var(--menu-size) + 0.4rem);
   color: var(--primary-text);
   padding: 0.4rem;
   background-color: var(--primary);
@@ -685,6 +689,48 @@ a {
 .approaching-accuracy table {
   font-size: 0.8rem;
   border-collapse: collapse;
+}
+
+/* THE STRIP THIS BOX LIVES IN IS NARROWEST JUST ABOVE THE CARD'S OWN BREAKPOINT, not below it.
+   The card is centred, so the room to its left is (100vw - card width)/2 minus the menu column -
+   and the card goes from 55vw to 65vw at 921px, which CUTS that room from 0.225 to 0.175 of the
+   window. Keying a compact tier to `max-width: 920px` therefore shrank the box exactly where it
+   had the most space and left it full-size where it had the least.
+   Measured against BonoboBold's advances: the two-column table is ~208px wide from the viewport's
+   left edge at 0.8rem (label 59.8px + 3.5rem value column + paddings + the 4.4rem menu offset),
+   which only clears the card from ~1140px up. At 0.7rem it is still ~187px and would need
+   ~1070px, so below 1140px the label goes ABOVE its value instead: a ~62px column - the width of
+   the word "Accuracy" - that clears the card at every width down to ~590px. */
+@media only screen and (max-width: 1139px) {
+  .approaching-accuracy {
+    padding: 0.3rem;
+  }
+
+  .approaching-accuracy table {
+    font-size: 0.7rem;
+  }
+
+  .approaching-accuracy tbody,
+  .approaching-accuracy tr,
+  .approaching-accuracy td {
+    display: block;
+  }
+
+  .approaching-accuracy tr + tr {
+    margin-top: 0.25rem;
+  }
+
+  /* the border-left that separated the two columns has no side to sit on once they are stacked */
+  .approaching-accuracy .sc-2 {
+    padding-right: 0;
+    opacity: 0.75;
+  }
+
+  .approaching-accuracy .sc-1 {
+    padding-left: 0;
+    min-width: 0;
+    border-left: none;
+  }
 }
 
 .bg-image {
@@ -3051,13 +3097,15 @@ select {
   margin-left: auto;
   margin-right: auto;
   bottom: 2rem;
-  max-height: 48vh;
+  /* FIXED size, not bounds: sized to its content, the card grew the moment a file was opened
+     (track list + summary appearing), shifting everything in it under the pointer. The mobile
+     override below was already fixed for the same reason. */
+  height: 48vh;
   border-radius: 0.5rem;
   background-color: rgba(var(--menu-background-rgb), 0.9);
   border: solid 2px var(--secondary);
   color: var(--menu-background-text);
-  max-width: 60vw;
-  min-width: 45vw;
+  width: 60vw;
   z-index: 10;
   display: flex;
   flex-direction: column;
@@ -3094,7 +3142,6 @@ select {
 }
 
 .midi-btn,
-.midi-btn-small,
 .midi-btn-green {
   background-color: var(--primary);
   color: white;
@@ -3109,18 +3156,6 @@ select {
 
 .midi-btn-green:active {
   filter: brightness(1.1);
-}
-
-.midi-btn-small {
-  min-width: unset;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-  font-weight: bold;
-  height: 2rem;
-  width: 2rem;
-  font-size: 1.2rem;
 }
 
 .midi-btn-green {
@@ -3141,21 +3176,30 @@ select {
   justify-content: space-between;
 }
 
+/* The row's background lives on the HEADER alone (TrackInfo paints it inline); the column
+   itself only ever contributes the open-state border below. */
 .midi-track-wrapper {
   display: flex;
   justify-content: space-between;
   width: 100%;
   align-items: center;
+  padding: 0.3rem 0.5rem;
+  border-radius: 0.2rem;
 }
 
 .midi-track-column {
-  background: var(--primary);
-  padding: 0.3rem 0.5rem;
   border-radius: 0.2rem;
   display: flex;
   flex-direction: column;
   margin-top: 0.3rem;
   width: 100%;
+  /* reserved while closed, so opening a row never shifts its neighbours */
+  border: solid 0.1rem transparent;
+}
+
+/* Open: the same border as the .midi-section wrapper around the track list. */
+.midi-track-open {
+  border-color: var(--secondary);
 }
 
 .midi-track-center {
@@ -3168,28 +3212,15 @@ select {
   margin-right: 0.5rem;
 }
 
-.separator-border {
-  margin-bottom: 0.25rem;
-  padding-bottom: 0.25rem;
-  border-bottom: solid 2px var(--secondary);
-}
-
-.midi-input,
 .midi-select {
-  width: 4rem;
+  width: 10rem;
   border: none;
   background-color: var(--primary);
   height: 1.9rem;
   border-radius: 0.2rem;
   color: var(--primary-text);
-  text-align: center;
-  outline: none;
-}
-
-.midi-select {
-  width: 10rem;
   text-align: left;
-  padding: 0.5rem;
+  outline: none;
   padding: 0.2rem;
   padding-left: 0.5rem;
 }

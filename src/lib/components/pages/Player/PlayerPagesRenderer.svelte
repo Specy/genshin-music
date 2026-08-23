@@ -1,30 +1,50 @@
 <script lang="ts">
   import { game } from '$game';
-  import SheetFrame from '$cmp/pages/SheetVisualizer/SheetFrame.svelte';
-  import { playerControlsStore } from '$stores/PlayerControlsStore.svelte';
+  import type { Chunk } from '$core/Songs/RecordedSong';
   import { ThemeProvider as theme } from '$core/theme/ThemeProvider.svelte';
+  import PlayerSheetFrame from './PlayerSheetFrame.svelte';
   import './VisualSheet.css';
 
-  // RecordedSong.ts and VisualSong.ts each declare their own, unrelated Chunk class - SheetFrame's
-  // chunk prop is typed against VisualSong's, but the value passed below is a RecordedSong Chunk.
-  // TypeScript accepts this structurally; don't assume the two types stay in sync.
-  let { columns }: { columns: number } = $props();
+  // One grid of Sheet Frames. The inline card feeds it the current page and the fullscreen card
+  // feeds it every frame of the song, so the frames are addressed by their WHOLE-SONG index
+  // (`indexOffset` + the each-index) - the Section markers and the playback cursor are both
+  // computed in that space and would otherwise disagree between the two views.
+  let {
+    chunks,
+    columns,
+    indexOffset,
+    sectionFirstIndex,
+    sectionLastIndex,
+    openFrameIndex,
+    onFrameSelect,
+  }: {
+    chunks: Chunk[];
+    columns: number;
+    indexOffset: number;
+    /** First and last frame the Section touches; everything outside the pair dims. */
+    sectionFirstIndex: number;
+    sectionLastIndex: number;
+    openFrameIndex: number;
+    onFrameSelect: (element: HTMLElement, chunk: Chunk, index: number) => void;
+  } = $props();
 
   const layoutType = game.settings.defaultNoteNameType.sheetVisualizer;
 </script>
 
-{#if playerControlsStore.pagesState.pages.length > 0}
-  <div class="player-chunks-page" style="grid-template-columns:repeat({columns}, 1fr)">
-    <!-- QUIRK: keyed by index on purpose — old reconciled on the array index, and chunks carry no stable id. Switching to a content key changes re-render behaviour, so this is the one place the "never key by index" rule does not apply. -->
-    {#each playerControlsStore.pagesState.currentPage as chunk, i (i)}
-      <SheetFrame
-        keyboardLayout={layoutType}
-        {theme}
-        selected={i === playerControlsStore.pagesState.currentChunkIndex}
-        {chunk}
-        rows={3}
-        hasText={false}
-      />
-    {/each}
-  </div>
-{/if}
+<div class="player-chunks-page" style="grid-template-columns:repeat({columns}, 1fr)">
+  <!-- QUIRK: keyed by index on purpose — old reconciled on the array index, and chunks carry no stable id. Switching to a content key changes re-render behaviour, so this is the one place the "never key by index" rule does not apply. -->
+  {#each chunks as chunk, i (i)}
+    {@const index = indexOffset + i}
+    <PlayerSheetFrame
+      {chunk}
+      {index}
+      {theme}
+      keyboardLayout={layoutType}
+      dimmed={index < sectionFirstIndex || index > sectionLastIndex}
+      bracketStart={index === sectionFirstIndex}
+      bracketEnd={index === sectionLastIndex}
+      expanded={index === openFrameIndex}
+      onSelect={onFrameSelect}
+    />
+  {/each}
+</div>

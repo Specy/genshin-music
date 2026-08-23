@@ -554,7 +554,7 @@ const READERS: PublishCase[] = [
     {name: 'trackPitches', publishes: [], touches: 'none', run: song => void song.trackPitches()},
     {
         name: 'toOtherGame',
-        //genuinely worth pinning: it normalizes spans and rewrites ids, but only on the clone it
+        //genuinely worth pinning: it swaps the instrument roster, but only on the clone it
         //returns. The source song must come out untouched, counters included.
         publishes: [],
         touches: 'none',
@@ -563,6 +563,7 @@ const READERS: PublishCase[] = [
         },
         run: song => void song.toOtherGame(APP_NAME === 'Genshin' ? 'Genshin' : 'Sky'),
     },
+    {name: 'countStrandedNotes', publishes: [], touches: 'none', run: song => void song.countStrandedNotes()},
     {name: 'getSpanCovering', publishes: [], touches: 'none', run: song => void song.getSpanCovering(2, 0, idOf(0))},
     {name: 'maxSpanAt', publishes: [], touches: 'none', run: song => void song.maxSpanAt(0, 1, idOf(4))},
     //a read that WRITES: it fills a private ms-boundary cache on the way through (ADR-0008). The
@@ -1164,13 +1165,14 @@ const VSRG_READERS: VsrgPublishCase[] = [
     {name: 'clone', publishes: [], run: song => void song.clone()},
     {
         name: 'toOtherGame',
-        //worth pinning: it rewrites instruments and note ids, but only on the clone it returns
+        //worth pinning: it rewrites instruments, but only on the clone it returns
         publishes: [],
         setup: song => {
             song.data.appName = APP_NAME === 'Genshin' ? 'Sky' : 'Genshin'
         },
         run: song => void song.toOtherGame(APP_NAME === 'Genshin' ? 'Genshin' : 'Sky'),
     },
+    {name: 'countStrandedNotes', publishes: [], run: song => void song.countStrandedNotes()},
     {name: 'getHighestNoteTime', publishes: [], run: song => void song.getHighestNoteTime()},
     {name: 'getClosestBreakpoint', publishes: [], run: song => void song.getClosestBreakpoint(1000, 1)},
     {name: 'getRenderableNotes', publishes: [], run: song => void song.getRenderableNotes(buildRecordedSong())},

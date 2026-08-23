@@ -175,6 +175,16 @@ export type GameJson = {
      */
     canonicalNoteIds: number[];
     composerPositions: number[];
+    /**
+     * HISTORIC, NOT LIVE — a new game copies whatever shape it likes here and changes
+     * nothing. This was the pre-ADR-0011 "how this game receives THE OTHER game's legacy
+     * button indices", back when there was exactly one other game. The remap is now keyed
+     * by SOURCE game and frozen in `$core/Songs/legacyNoteTables`
+     * (`LEGACY_NOTE_TABLES[target].importPositions[source]`), which is the sole authority
+     * the app reads; this array survives only because it is part of the frozen
+     * config-surface fixture (test/configSurface.test.ts) that proves ADR-0003 moved
+     * structure without changing values.
+     */
     importPositions: number[];
     animationDelayMs: number;
     composerRowHeightScale: number;

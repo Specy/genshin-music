@@ -191,6 +191,19 @@ export type MidiImportOptions = {
     layers: readonly MidiImportLayer[]
 }
 
+/**
+ * The layer a midi track lands on by default, from its ORIGINAL index in the file.
+ *
+ * Original and not the index the track has after empty tracks are dropped from the list: the
+ * export side deliberately writes one midi track per layer, silent layers included (see
+ * RecordedSong.toMidi), so track i of one of our own files IS layer i. Renumbering after the drop
+ * would shift every layer past an empty one onto the wrong instrument. The clamp is what absorbs a
+ * foreign file carrying more tracks than the open song has layers.
+ */
+export function defaultLayerForTrack(originalIndex: number, layerCount: number): number {
+    return Math.min(originalIndex, Math.max(0, layerCount - 1))
+}
+
 export type MidiTrackStats = {
     accidentals: number
     outOfRangeLower: number
