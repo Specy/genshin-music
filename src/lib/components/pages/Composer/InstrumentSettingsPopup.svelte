@@ -214,7 +214,7 @@
           onclick={() => onMerge(-1)}
           disabled={currentLayer === 0}
           class="flex-centered"
-          style="padding:0.5rem"
+          style="padding:calc(0.5rem - var(--instrument-settings-button-trim)) 0.5rem"
         >
           <svg
             stroke="currentColor"
@@ -235,7 +235,7 @@
           onclick={() => onMerge(1)}
           disabled={currentLayer === instruments.length - 1}
           class="flex-centered"
-          style="padding:0.5rem"
+          style="padding:calc(0.5rem - var(--instrument-settings-button-trim)) 0.5rem"
         >
           <svg
             stroke="currentColor"
@@ -258,7 +258,7 @@
           onclick={() => onChangePosition(-1)}
           disabled={currentLayer === 0}
           class="flex-centered"
-          style="padding:0.5rem"
+          style="padding:calc(0.5rem - var(--instrument-settings-button-trim)) 0.5rem"
         >
           <svg
             stroke="currentColor"
@@ -279,7 +279,7 @@
           onclick={() => onChangePosition(1)}
           disabled={currentLayer === instruments.length - 1}
           class="flex-centered"
-          style="padding:0.5rem"
+          style="padding:calc(0.5rem - var(--instrument-settings-button-trim)) 0.5rem"
         >
           <svg
             stroke="currentColor"
@@ -299,7 +299,11 @@
       </div>
     </div>
     <div class="row space-between" style="margin-top:0.4rem">
-      <AppButton class="row-centered" style="padding:0.4rem;width:fit-content" onclick={onDelete}>
+      <AppButton
+        class="row-centered"
+        style="padding:calc(0.4rem - var(--instrument-settings-button-trim)) 0.4rem;width:fit-content"
+        onclick={onDelete}
+      >
         <svg
           stroke="currentColor"
           fill="currentColor"
@@ -315,7 +319,10 @@
         >
         {t('common:delete')}
       </AppButton>
-      <AppButton onclick={onClose} style="padding:0.4rem;width:fit-content">
+      <AppButton
+        onclick={onClose}
+        style="padding:calc(0.4rem - var(--instrument-settings-button-trim)) 0.4rem;width:fit-content"
+      >
         {t('common:ok')}
       </AppButton>
     </div>

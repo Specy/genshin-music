@@ -67,9 +67,24 @@ node docs/skills/instrument-from-sequential-capture/scripts/extract-notes.mjs \
 Per note this trims to onset/tail (10 ms pre-roll, 3 ms fade-in, 100 ms
 fade-out), removes DC, downmixes, peak-normalizes to ~−3.5 dBFS and encodes
 128 kbps CBR mono (`m<midi>.mp3`, the house recipe) — then decodes everything
-back and re-verifies pitch and level. `notes.json` is a meta.json starter:
+back and re-verifies pitch, level and onset. `notes.json` is a meta.json starter:
 review `baseNote` spellings (display choice, e.g. Vintage-Lyre's Db) and add
 `icon`s yourself.
+
+The encode ends by prepending a Xing/Info frame (`mp3-gapless.mjs`). lamejs does
+not write one, and without it a decoder has no way to know about the encoder's
+576-sample lookahead — it hands it back as 25 ms of leading silence, which
+`Instrument` plays as latency on every attack. Nothing about the pitch or level
+of such a file looks wrong, so the verify pass checks the onset too: a `lead`
+over ~12 ms means the tag is missing or the trim left real silence in.
+
+Samples encoded before this existed are repaired in place, losslessly — the
+audio frames are copied byte-for-byte and only the tag is added:
+
+```bash
+node docs/skills/instrument-from-sequential-capture/scripts/add-gapless-tag.mjs \
+  [--dry-run] [--verify] [<file-or-dir> ...]
+```
 
 ## Choose the sustain authoring
 

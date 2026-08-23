@@ -19,6 +19,7 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
+import { TOTAL_DELAY, withGaplessTag } from './mp3-gapless.mjs';
 
 // ---------------------------------------------------------------- arg parsing
 const args = process.argv.slice(2);
@@ -194,7 +195,10 @@ async function encodeMp3(int16, sampleRate) {
   }
   const tail = enc.flush();
   if (tail.length) parts.push(Buffer.from(tail));
-  return Buffer.concat(parts);
+  // lamejs stops here, which leaves the stream with no Xing/Info frame and so no
+  // way for a decoder to know about the 576-sample lookahead — it plays it back as
+  // 25 ms of leading silence on every note. Tag it.
+  return withGaplessTag(Buffer.concat(parts), int16.length, { kbps: KBPS, sampleRate });
 }
 
 function writeWav(file, float32, sampleRate) {
@@ -373,7 +377,10 @@ for (const r of report) {
   notes.push({ file, midi: r.authored, baseNote: NOTE_NAMES[((r.authored % 12) + 12) % 12] });
 }
 
-// verify what was actually written: decode back, re-check pitch and level
+// verify what was actually written: decode back, re-check pitch, level and onset.
+// Onset matters because it is silent when it goes wrong — an untagged stream still
+// decodes at the right pitch and level, it just arrives TOTAL_DELAY samples late.
+const MAX_LEAD_SILENCE = TOTAL_DELAY / 2; // half the delay: comfortably under a miss
 const { MPEGDecoder } = await import('mpg123-decoder');
 for (const r of report) {
   const decoder = new MPEGDecoder();
@@ -387,11 +394,18 @@ for (const r of report) {
   for (const v of ch) peak = Math.max(peak, Math.abs(v));
   const p = pitchTrack(ch, out.sampleRate, 0, out.samplesDecoded);
   const dev = p ? (p.median - r.authored) * 100 : null;
-  const bad = peak > 1 || peak < TARGET_PEAK * 0.7 || (dev !== null && Math.abs(dev) > 12);
+  let lead = 0;
+  while (lead < ch.length && Math.abs(ch[lead]) < 2.5e-4) lead++; // ~-72 dBFS
+  const bad =
+    peak > 1 ||
+    peak < TARGET_PEAK * 0.7 ||
+    (dev !== null && Math.abs(dev) > 12) ||
+    lead > MAX_LEAD_SILENCE;
   if (bad) failed = true;
   console.log(
     `verify m${r.authored}.mp3: ${(out.samplesDecoded / out.sampleRate).toFixed(2)}s peak ${db(peak).toFixed(1)}dB` +
       (dev !== null ? ` pitch dev ${dev.toFixed(0)}c` : '') +
+      ` lead ${((lead / out.sampleRate) * 1000).toFixed(1)}ms` +
       (bad ? '  <-- CHECK' : '')
   );
 }
