@@ -36,6 +36,12 @@
   const flattenSpaces = $derived(settings.mergeEmptySpaces.value);
   const multiColor = $derived(settings.multiColorRows.value);
   const framesPerRow = $derived(settings.framesPerRow.value);
+  const dotColor = $derived(theme.layer('primary', 0.2).toString());
+  const rowColors = $derived.by(() => {
+    if (!multiColor) return ['var(--accent)', 'var(--accent)', 'var(--accent)'];
+    const base = theme.get('accent');
+    return [base.hue(90).toString(), base.toString(), base.hue(-30).toString()];
+  });
 
   onMount(() => {
     settings = settingsService.getSheetVisualizerSettings();
@@ -145,19 +151,13 @@
     </div>
     <div
       class="visualizer-frame-wrapper"
-      style="grid-template-columns:repeat({framesPerRow},1fr)"
+      style="grid-template-columns:repeat({framesPerRow},1fr);--sheet-cols:{game.notes
+        .perRow};--sheet-dot-color:{dotColor};--sheet-row-color-0:{rowColors[0]};--sheet-row-color-1:{rowColors[1]};--sheet-row-color-2:{rowColors[2]}"
       bind:this={ref}
     >
       {#if sheet}
         {#each sheet.chunks as chunk, i (i)}
-          <SheetFrame2
-            {chunk}
-            rows={3}
-            {theme}
-            multiColorRows={multiColor}
-            {hasText}
-            {keyboardLayout}
-          />
+          <SheetFrame2 {chunk} rows={3} {hasText} {keyboardLayout} />
         {/each}
       {/if}
     </div>

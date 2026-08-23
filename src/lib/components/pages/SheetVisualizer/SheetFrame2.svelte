@@ -9,7 +9,6 @@
 <script lang="ts">
   import { game } from '$game';
   import type { TempoChunk } from '$core/Songs/VisualSong';
-  import type { Theme } from '$core/theme/ThemeProvider.svelte';
   import type { NoteNameType } from '$lib/games/types';
   import './SheetFrame.css';
 
@@ -21,15 +20,11 @@
     rows,
     hasText,
     keyboardLayout,
-    multiColorRows,
-    theme,
   }: {
     chunk: TempoChunk;
     rows: number;
     hasText: boolean;
     keyboardLayout: NoteNameType;
-    multiColorRows: boolean;
-    theme: Theme;
   } = $props();
 
   function getBackgroundColor(tempoChanger: number) {
@@ -47,41 +42,41 @@
   }
 
   const columnsPerRow = $derived(game.notes.perRow);
-  const colors = $derived.by(() => {
-    const color = theme.layer('primary', 0.2).toString();
-    if (multiColorRows) {
-      const base = theme.get('accent');
-      return {
-        none: color,
-        rows: [base.hue(90).toString(), base.toString(), base.hue(-30).toString()],
-      };
-    }
-    return {
-      none: color,
-      rows: ['var(--accent)', 'var(--accent)', 'var(--accent)'],
-    };
-  });
-  // Produces the {column, notes, outerStyle} triples the template below iterates; outerStyle
+  // Produces the {column, filledNotes, outerStyle} triples the template below iterates; outerStyle
   // folds the background/getBorderStyle(...) values into one CSS-text string per column so the
   // template attribute stays a simple single-expression interpolation.
   const columnsWithNotes = $derived.by(() => {
     return chunk.columns.map((column, i) => {
-      const notes: (false | { held: boolean })[] = new Array(columnsPerRow * rows).fill(false);
+      // eslint-disable-next-line svelte/prefer-svelte-reactivity -- transient local accumulator, never UI-observed
+      const byCell = new Map<number, boolean>();
+      const max = columnsPerRow * rows;
       column.notes.forEach((note) => {
-        const existing = notes[note.note];
-        notes[note.note] = { held: note.held || (existing !== false && existing.held) };
+        const cell = note.note;
+        if (cell < 0 || cell >= max) return;
+        const held = note.held || (byCell.get(cell) ?? false);
+        byCell.set(cell, held);
+      });
+      const filledNotes = [...byCell.entries()].map(([cell, held]) => {
+        const rowIndex = Math.floor(cell / columnsPerRow);
+        return {
+          cell,
+          held,
+          rowIndex,
+          gridRow: rowIndex + 1,
+          gridColumn: (cell % columnsPerRow) + 1,
+        };
       });
       const background =
         chunk.columns.length - 1 === i && chunk.endingTempoChanger !== chunk.tempoChanger
           ? `linear-gradient(to right, ${getBackgroundColor(chunk.tempoChanger)} 50%, ${getBackgroundColor(chunk.endingTempoChanger)} 50%)`
           : getBackgroundColor(chunk.tempoChanger);
       const outerStyle = `background:${background};${getBorderStyle(i, chunk.columns.length)}`;
-      return { column, notes, outerStyle };
+      return { column, filledNotes, outerStyle };
     });
   });
 </script>
 
-{#each columnsWithNotes as { column, notes, outerStyle }, i (i)}
+{#each columnsWithNotes as { column, filledNotes, outerStyle }, i (i)}
   <div class="frame-outer-background" style={outerStyle}>
     <div class={['frame-outer', column.notes.length === 0 && 'visualizer-ball']}>
       <!-- Dead code, deliberately kept inert (disabled in old too, never rendered either
@@ -90,23 +85,13 @@
       {#if column.notes.length === 0}
         <div></div>
       {:else}
-        <div class="visualizer-frame" style="grid-template-columns:repeat({columnsPerRow},1fr)">
-          {#each notes as exists, j (j)}
+        <div class="visualizer-frame">
+          {#each filledNotes as f (f.cell)}
             <div
-              class={exists ? 'frame-note-s' : 'frame-note-ns'}
-              style="{!exists
-                ? `background-color:${colors.none};`
-                : 'position:relative;'}--selected-note-background:{colors.rows[
-                Math.floor(j / columnsPerRow)
-              ]}"
+              class={f.held ? 'frame-note-s frame-note-held' : 'frame-note-s'}
+              style="grid-row:{f.gridRow};grid-column:{f.gridColumn};--selected-note-background:var(--sheet-row-color-{f.rowIndex})"
             >
-              {exists && hasText ? baseInstrument.getNoteText(j, keyboardLayout, 'C') : ''}
-              {#if exists && exists.held}
-                <!-- held-note marker (Duration over the visual threshold) -->
-                <div
-                  style="position:absolute;bottom:8%;left:22%;right:22%;height:0.14rem;border-radius:1rem;background-color:currentColor;opacity:0.75;pointer-events:none"
-                ></div>
-              {/if}
+              {f && hasText ? baseInstrument.getNoteText(f.cell, keyboardLayout, 'C') : ''}
             </div>
           {/each}
         </div>

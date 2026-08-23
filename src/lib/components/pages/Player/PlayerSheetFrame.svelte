@@ -1,7 +1,6 @@
 <script lang="ts">
   import type { Chunk } from '$core/Songs/RecordedSong';
   import type { NoteNameType } from '$lib/games/types';
-  import type { Theme } from '$core/theme/ThemeProvider.svelte';
   import SheetFrame from '$cmp/pages/SheetVisualizer/SheetFrame.svelte';
   import { playerControlsStore } from '$stores/PlayerControlsStore.svelte';
   import { t } from '$i18n/binding.svelte';
@@ -22,7 +21,6 @@
     bracketEnd,
     expanded,
     keyboardLayout,
-    theme,
     onSelect,
   }: {
     chunk: Chunk;
@@ -33,7 +31,6 @@
     bracketEnd: boolean;
     expanded: boolean;
     keyboardLayout: NoteNameType;
-    theme: Theme;
     onSelect: (element: HTMLElement, chunk: Chunk, index: number) => void;
   } = $props();
 </script>
@@ -57,7 +54,6 @@
   >
     <SheetFrame
       {chunk}
-      {theme}
       {keyboardLayout}
       rows={3}
       hasText={false}
@@ -80,6 +76,11 @@
     background: none;
     color: inherit;
     cursor: pointer;
+    content-visibility: auto;
+    /* height ≈ width × 0.49 (the frame aspect); ~4rem at the default 5-column card width.
+       `auto` makes the browser remember the real size after first layout, so the estimate
+       only affects never-seen frames' scroll math. */
+    contain-intrinsic-size: auto 4rem;
   }
 
   .sheet-frame-dimmed {

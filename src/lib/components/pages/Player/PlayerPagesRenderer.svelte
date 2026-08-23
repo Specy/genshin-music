@@ -29,16 +29,20 @@
   } = $props();
 
   const layoutType = game.settings.defaultNoteNameType.sheetVisualizer;
+  const dotColor = $derived(theme.layer('primary', 0.2).toString());
 </script>
 
-<div class="player-chunks-page" style="grid-template-columns:repeat({columns}, 1fr)">
+<div
+  class="player-chunks-page"
+  style="grid-template-columns:repeat({columns}, 1fr);--sheet-cols:{game.notes
+    .perRow};--sheet-dot-color:{dotColor}"
+>
   <!-- QUIRK: keyed by index on purpose — old reconciled on the array index, and chunks carry no stable id. Switching to a content key changes re-render behaviour, so this is the one place the "never key by index" rule does not apply. -->
   {#each chunks as chunk, i (i)}
     {@const index = indexOffset + i}
     <PlayerSheetFrame
       {chunk}
       {index}
-      {theme}
       keyboardLayout={layoutType}
       dimmed={index < sectionFirstIndex || index > sectionLastIndex}
       bracketStart={index === sectionFirstIndex}

@@ -12,16 +12,26 @@
   top: 5%;
   left: 3%;
   display: grid;
-  grid-template-columns: repeat(7, 1fr);
+  grid-template-columns: repeat(var(--sheet-cols, 7), 1fr);
   grid-template-rows: repeat(3, 1fr);
   justify-items: center;
   align-items: center;
+  background-image: radial-gradient(
+    circle closest-side,
+    var(--sheet-dot-color, var(--primary)) calc(var(--sheet-dot-r, 25%) - 0.5px),
+    transparent var(--sheet-dot-r, 25%)
+  );
+  background-size: calc(100% / var(--sheet-cols, 7)) calc(100% / 3);
+  print-color-adjust: exact;
+  -webkit-print-color-adjust: exact;
 }
 
 .frame-outer-background {
   width: 100%;
   height: 100%;
   padding: 0.25rem;
+  content-visibility: auto;
+  contain-intrinsic-size: auto 5rem;
 }
 .frame-empty-counter {
   position: absolute;
@@ -73,15 +83,23 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  background-color: var(--selected-note-background);
+  position: relative;
+  background-color: var(--selected-note-background, var(--accent));
   color: var(--accent-text);
 }
 
-.frame-note-ns {
-  border-radius: 50%;
-  width: 25%;
-  padding-bottom: 25%;
-  background-color: var(--primary);
+/* held-note marker (Duration over the visual threshold) — replaces the inline-styled div */
+.frame-note-held::after {
+  content: '';
+  position: absolute;
+  bottom: 8%;
+  left: 22%;
+  right: 22%;
+  height: 0.14rem;
+  border-radius: 1rem;
+  background-color: currentColor;
+  opacity: 0.75;
+  pointer-events: none;
 }
 
 .visualizer-ball {
@@ -105,12 +123,16 @@
 }
 
 @media print {
+  .frame-outer-background {
+    content-visibility: visible;
+  }
+
   .frame-note-s {
     border-radius: 2px;
   }
 
-  .frame-note-ns {
-    background-color: black !important;
+  .visualizer-frame {
+    --sheet-dot-color: black;
   }
 
   .frame-outer {

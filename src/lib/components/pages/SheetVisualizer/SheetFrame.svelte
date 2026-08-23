@@ -10,33 +10,32 @@
   import { game } from '$game';
   import { SUSTAIN_VISUAL_THRESHOLD_MS } from '$core/legacyConfig';
   import type { Chunk } from '$core/Songs/VisualSong';
-  import type { Theme } from '$core/theme/ThemeProvider.svelte';
   import type { NoteNameType } from '$lib/games/types';
   import { cn, cs } from '$core/utils/Utilities';
   import './SheetFrame.css';
 
   // One note-grid "frame" tile - the small per-chunk sheet-music preview block rendered under
   // the player keyboard (fed RecordedSong chunks, duck-typed against this file's `Chunk` type).
+  // CSS paints the empty-dot lattice; only filled notes render as explicitly placed grid children.
   let {
     chunk,
     rows,
     hasText,
     keyboardLayout,
     selected,
-    theme,
   }: {
     chunk: Chunk;
     rows: number;
     hasText: boolean;
     keyboardLayout: NoteNameType;
     selected?: boolean;
-    theme: Theme;
   } = $props();
 
   const columnsPerRow = $derived(game.notes.perRow);
-  const color = $derived(theme.layer('primary', 0.2).toString());
-  const notes = $derived.by(() => {
-    const result: (false | { held: boolean })[] = new Array(columnsPerRow * rows).fill(false);
+  const filledNotes = $derived.by(() => {
+    // eslint-disable-next-line svelte/prefer-svelte-reactivity -- transient local accumulator, never UI-observed
+    const byButton = new Map<number, boolean>();
+    const max = columnsPerRow * rows;
     chunk.notes.forEach((note) => {
       //`displayButton`, resolved once at queue-build by resolvePlayerNoteButtons, which owns
       //this coordinate outright: the note's OWN track instrument's button (ADR-0004 keeps these
@@ -46,14 +45,16 @@
       //the note's `keyboardButton`: that is the key on the player's on-screen keyboard, a
       //different coordinate space (see RecordedNote), and these frames are not that keyboard.
       const button = note.displayButton;
-      if (button >= 0 && button < result.length) {
-        const existing = result[button];
-        const held =
-          note.duration >= SUSTAIN_VISUAL_THRESHOLD_MS || (existing !== false && existing.held);
-        result[button] = { held };
-      }
+      if (button < 0 || button >= max) return;
+      const held = note.duration >= SUSTAIN_VISUAL_THRESHOLD_MS || (byButton.get(button) ?? false);
+      byButton.set(button, held);
     });
-    return result;
+    return [...byButton.entries()].map(([button, held]) => ({
+      button,
+      held,
+      row: Math.floor(button / columnsPerRow) + 1,
+      column: (button % columnsPerRow) + 1,
+    }));
   });
   // cs() returns a CSSProperties-shaped object; Svelte's style attribute is string-only, so only
   // the one property this call produces is read directly rather than stringifying the whole object.
@@ -67,22 +68,13 @@
   {#if chunk.notes.length === 0}
     <div></div>
   {:else}
-    <div
-      class="visualizer-frame"
-      style="grid-template-columns:repeat({columnsPerRow},1fr);--selected-note-background:var(--accent)"
-    >
-      {#each notes as exists, i (i)}
+    <div class="visualizer-frame">
+      {#each filledNotes as note (note.button)}
         <div
-          class={exists ? 'frame-note-s' : 'frame-note-ns'}
-          style={!exists ? `background-color:${color}` : 'position:relative'}
+          class={note.held ? 'frame-note-s frame-note-held' : 'frame-note-s'}
+          style="grid-row:{note.row};grid-column:{note.column}"
         >
-          {exists && hasText ? baseInstrument.getNoteText(i, keyboardLayout, 'C') : ''}
-          {#if exists && exists.held}
-            <!-- held-note marker (Duration over the visual threshold) -->
-            <div
-              style="position:absolute;bottom:8%;left:22%;right:22%;height:0.14rem;border-radius:1rem;background-color:currentColor;opacity:0.75;pointer-events:none"
-            ></div>
-          {/if}
+          {hasText ? baseInstrument.getNoteText(note.button, keyboardLayout, 'C') : ''}
         </div>
       {/each}
     </div>
