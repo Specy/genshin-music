@@ -435,7 +435,8 @@
     "midi_or_audio_import_redirect_warning": "No puede importar directamente este formato de archivo. Los archivos MIDI, vídeo y audio deben convertirse en el compositor, ¿quieres abrirlo?",
     "loop": "Repetición",
     "loop_tooltip": "Repetir la canción",
-    "hide_practice_notes": "Ocultar notas en modo práctica"
+    "hide_practice_notes": "Ocultar notas en modo práctica",
+    "hide_practice_notes_only_in_practice": "Solo afecta al modo práctica"
   },
   "keybinds": {
     "already_used_keybind": "Esta tecla ya está asignada a la nota \"{{note_name}}\"",

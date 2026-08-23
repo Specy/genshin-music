@@ -437,7 +437,8 @@
     "midi_or_audio_import_redirect_warning": "You cannot directly import this file format. MIDI, Video and Audio files need to be converted in the composer, do you want to open it?",
     "loop": "반복",
     "loop_tooltip": "곡을 반복 재생합니다",
-    "hide_practice_notes": "연습 모드에서 노트를 숨깁니다"
+    "hide_practice_notes": "연습 모드에서 노트를 숨깁니다",
+    "hide_practice_notes_only_in_practice": "연습 모드에서만 적용됩니다"
   },
   "keybinds": {
     "already_used_keybind": "이 키는 이미 노트: \"{{note_name}}\"에서 사용중인 키입니다",

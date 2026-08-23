@@ -437,7 +437,8 @@
         "midi_or_audio_import_redirect_warning": "このファイル形式は直接インポートできません。MIDI、ビデオ、オーディオファイルはコンポーザーで変換する必要があります。開きますか？",
         "loop": "ループ",
         "loop_tooltip": "曲をループ再生",
-        "hide_practice_notes": "プラクティスモードでテキストを非表示"
+        "hide_practice_notes": "プラクティスモードでテキストを非表示",
+        "hide_practice_notes_only_in_practice": "プラクティスモードでのみ有効です"
     },
     "keybinds": {
         "already_used_keybind": "このキーバインドはすでにノート \"{{note_name}}\" で使用されています。",

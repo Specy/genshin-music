@@ -437,7 +437,8 @@
         "midi_or_audio_import_redirect_warning": "您不能直接导入此文件格式。MIDI、视频和音频文件需要在composer中转换，是否要打开它？",
         "loop": "循环",
         "loop_tooltip": "循环播放歌曲",
-        "hide_practice_notes": "在练习模式下隐藏文字"
+        "hide_practice_notes": "在练习模式下隐藏文字",
+        "hide_practice_notes_only_in_practice": "仅在练习模式下生效"
     },
     "keybinds": {
         "already_used_keybind": "这个按键绑定已经被音符“{{note_name}}”使用。",

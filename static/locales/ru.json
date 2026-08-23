@@ -437,7 +437,8 @@
         "midi_or_audio_import_redirect_warning": "Вы не можете импортировать этот файл напрямую. MIDI, видео или аудио файлы должны быть конвертированы в секвенсоре, желаете открыть его?",
         "loop": "Повтор",
         "loop_tooltip": "Повторять мелодию",
-        "hide_practice_notes": "Скрыть ноты в режиме практики"
+        "hide_practice_notes": "Скрыть ноты в режиме практики",
+        "hide_practice_notes_only_in_practice": "Действует только в режиме практики"
     },
     "keybinds": {
         "already_used_keybind": "Эта горячая клавиша уже используется нотой \"{{note_name}}\"",

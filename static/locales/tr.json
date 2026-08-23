@@ -437,7 +437,8 @@
         "midi_or_audio_import_redirect_warning": "Bu dosya formatını doğrudan içe aktaramazsın. MIDI, video ve ses dosyaları besteleyicide dönüştürülmeli, açmak ister misin?",
         "loop": "Döngü",
         "loop_tooltip": "Şarkıyı döngüye al",
-        "hide_practice_notes": "Pratik modunda notaları gizle"
+        "hide_practice_notes": "Pratik modunda notaları gizle",
+        "hide_practice_notes_only_in_practice": "Yalnızca pratik modunu etkiler"
     },
     "keybinds": {
         "already_used_keybind": "Bu tuş düzeni zaten \"{{note_name}}\" notasında kullanılıyor",

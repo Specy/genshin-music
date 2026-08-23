@@ -57,6 +57,11 @@
   function toggleNeedsRefresh() {
     needsRefresh = true;
   }
+
+  // The hide-notes flag is only ever read in practice mode (PlayerKeyboard applies it as
+  // `hideNotesInPracticeMode && mode === 'practice'`), so outside it the eye is shown disabled
+  // rather than removed: the row's other controls must not shift every time the mode changes.
+  const canHidePracticeNotes = $derived(songData.eventType === 'practice');
 </script>
 
 {#snippet faEyeIcon()}
@@ -174,10 +179,17 @@
   <div class="column slider-wrapper" style={!hasSong ? 'display:none' : ''}>
     <div class="row" style="width:100%;gap:0.4rem">
       {#if hidePracticeNotes !== undefined}
+        <!-- The greying is inline rather than left to `.app-button:disabled` (opacity .8): a
+             toggled-on eye keeps its accent background, which on its own still reads as live. -->
         <IconButton
-          style="width:2.4rem"
+          style={canHidePracticeNotes
+            ? 'width:2.4rem'
+            : 'width:2.4rem;opacity:0.5;filter:grayscale(1)'}
+          disabled={!canHidePracticeNotes}
           onclick={() => setHidePracticeNotes(!hidePracticeNotes)}
-          tooltip={t('player:hide_practice_notes')}
+          tooltip={canHidePracticeNotes
+            ? t('player:hide_practice_notes')
+            : t('player:hide_practice_notes_only_in_practice')}
           toggled={hidePracticeNotes}
           ariaLabel={t('player:hide_practice_notes')}
         >

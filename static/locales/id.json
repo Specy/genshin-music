@@ -437,7 +437,8 @@
         "midi_or_audio_import_redirect_warning": "Anda tidak dapat langsung mengimpor format file ini. File MIDI, Video dan Audio perlu dikonversi di komposer, apakah Anda ingin membukanya?",
         "loop": "Putar ulang",
         "loop_tooltip": "Putar ulang lagu",
-        "hide_practice_notes": "Sembunyikan note dalam mode latihan"
+        "hide_practice_notes": "Sembunyikan note dalam mode latihan",
+        "hide_practice_notes_only_in_practice": "Hanya berpengaruh pada mode latihan"
     },
     "keybinds": {
         "already_used_keybind": "Tata keyboard ini sudah digunakan oleh note \"{{note_name}}\"",

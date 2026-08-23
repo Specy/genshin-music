@@ -517,6 +517,7 @@ export const i18n_en = {
     loop: 'Loop',
     loop_tooltip: 'Loop the song',
     hide_practice_notes: 'Hide notes in practice mode',
+    hide_practice_notes_only_in_practice: 'Only affects practice mode',
   },
   keybinds: {
     already_used_keybind: `This keybind is already used by the note "{{note_name}}"`,
