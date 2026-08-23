@@ -13,6 +13,7 @@
   import { globalConfigStore } from '$stores/GlobalConfigStore.svelte';
   import { createShortcutListener } from '$stores/KeybindsStore.svelte';
   import { asyncConfirm, asyncPrompt } from '$stores/AsyncPromptStore.svelte';
+  import { setPendingMidiImport } from '$stores/PendingMidiImportStore';
   import { settingsService } from '$core/Services/SettingsService';
   import { fileService } from '$core/Services/FileService';
   import { songService } from '$core/Services/SongService';
@@ -186,6 +187,10 @@
     if (isAudioFormat(fileName) || isVideoFormat(fileName) || isMidiFormat(fileName)) {
       const confirmed = await asyncConfirm(t('player:midi_or_audio_import_redirect_warning'));
       if (confirmed) {
+        // Hand the file to the composer's importer rather than making the user pick it again
+        // over there. Module state is the only thing that crosses goto(); a hard reload of
+        // /composer?showMidi=true loses it and simply opens the importer empty.
+        setPendingMidiImport(file);
         await goto(resolve('/composer?showMidi=true'));
       }
     } else {

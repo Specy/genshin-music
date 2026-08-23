@@ -17,6 +17,7 @@
 </script>
 
 <script lang="ts">
+  import { onMount } from 'svelte';
   import { base } from '$app/paths';
   import { PITCHES } from '$core/sharedConfig';
   import type { Pitch } from '$lib/games/types';
@@ -50,6 +51,7 @@
   let {
     data,
     functions,
+    initialFile = null,
   }: {
     data: {
       instruments: InstrumentData[];
@@ -60,6 +62,12 @@
       changePitch: (pitch: Pitch) => void;
       loadSong: (song: ComposedSong) => void;
     };
+    /**
+     * A file that already made the app open this screen (dropped on a menu that can't parse it):
+     * parsed on mount so the user isn't asked to pick the same file twice. Read once at mount -
+     * this component is mounted/unmounted with the modal, so "opened again" means a fresh mount.
+     */
+    initialFile?: File | null;
   } = $props();
 
   let fileName = $state('');
@@ -111,6 +119,23 @@
       logger.error(t('logs:error_opening_file'));
     }
   }
+
+  // The handed-over file goes through handleFile untouched, i.e. the exact path a manual pick
+  // takes: FilePicker(as="buffer") hands over the file's ArrayBuffer plus the File itself, which
+  // is what tells midi from audio from video below (by name, not by content).
+  onMount(() => {
+    const file = initialFile;
+    if (!file) return;
+    void (async () => {
+      try {
+        const data = await file.arrayBuffer();
+        await handleFile([{ data, file }]);
+      } catch (e) {
+        console.error(e);
+        logger.error(t('logs:error_opening_file'));
+      }
+    })();
+  });
 
   async function extractAudio(audio: FileElement<ArrayBuffer>): Promise<AudioBuffer> {
     const ctx = new AudioContext({

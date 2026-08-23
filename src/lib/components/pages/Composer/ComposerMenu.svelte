@@ -8,6 +8,7 @@
   import { folderStore } from '$stores/FoldersStore.svelte';
   import { globalConfigStore } from '$stores/GlobalConfigStore.svelte';
   import { asyncConfirm, asyncPrompt } from '$stores/AsyncPromptStore.svelte';
+  import { setPendingMidiImport } from '$stores/PendingMidiImportStore';
   import { fileService } from '$core/Services/FileService';
   import { KeyboardProvider } from '$lib/providers/KeyboardProvider';
   import { clickOutside } from '$lib/utils/clickOutside';
@@ -198,6 +199,9 @@
       else if (isVideoFormat(name) || isAudioFormat(name))
         logger.warn(t('composer:warning_opening_audio_importer'), 6000);
       else return logger.error(t('composer:error_importing_file_invalid_format'), 8000);
+      // Carry the file over instead of making the user pick it again inside the importer; the
+      // importer takes it while opening, so this must be set BEFORE changeMidiVisibility.
+      setPendingMidiImport(file);
       functions.changeMidiVisibility(true);
       toggleMenu();
     } else {

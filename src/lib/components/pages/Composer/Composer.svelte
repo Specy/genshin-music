@@ -38,6 +38,7 @@
   import Analytics from '$core/Analytics';
   import { homeStore } from '$stores/HomeStore.svelte';
   import { logger } from '$stores/LoggerStore.svelte';
+  import { consumePendingMidiImport } from '$stores/PendingMidiImportStore';
   import { ComposedSong } from '$core/Songs/ComposedSong.svelte';
   import { RecordedSong } from '$core/Songs/RecordedSong';
   import { VsrgSong } from '$core/Songs/VsrgSong.svelte';
@@ -161,6 +162,12 @@
   // One-time seed from the prop; later showMidi changes (callers never send any) are not tracked.
   // svelte-ignore state_referenced_locally
   let isMidiVisible = $state(showMidi || false);
+  // The file that sent the user here, handed over by whichever menu could not parse it
+  // (PendingMidiImportStore). Taken at the moment the importer opens - so a hand-opened importer
+  // never re-imports a stale file - and passed down for MidiParser to parse on mount.
+  // ?showMidi=true is the player's route, which is why the seed consumes too.
+  // svelte-ignore state_referenced_locally
+  let pendingMidiFile = $state.raw(showMidi ? consumePendingMidiImport() : null);
   let isPlaying = $state(false);
   // A context resume can be pending before playback has an audio-clock anchor. Keep that state
   // separate from isPlaying: the canvas must not move until audio has an exact start time, while
@@ -2190,6 +2197,9 @@
   }
 
   function changeMidiVisibility(visible: boolean) {
+    // Consume on open, drop on close: the handoff is one-shot, and a file left behind by a
+    // closed importer must not be picked up by the next one.
+    pendingMidiFile = visible ? consumePendingMidiImport() : null;
     isMidiVisible = visible;
     if (visible) Analytics.songEvent({ type: 'create_MIDI' });
   }
@@ -2440,6 +2450,7 @@
       instruments: song.instruments,
       selectedColumn: song.selected,
     }}
+    initialFile={pendingMidiFile}
     functions={{
       changeMidiVisibility,
       changePitch,
