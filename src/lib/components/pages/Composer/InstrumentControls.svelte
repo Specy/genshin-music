@@ -15,6 +15,7 @@
     onInstrumentAdd,
     onChangePosition,
     onMerge,
+    onSettingsOpenChange,
   }: {
     instruments: InstrumentData[];
     selected: number;
@@ -25,9 +26,24 @@
     onInstrumentAdd: () => void;
     onChangePosition: (direction: 1 | -1) => void;
     onMerge: (direction: 1 | -1) => void;
+    /**
+     * Whether the layer settings popup is up, which is the same thing as whether it is taking
+     * outside clicks as dismissals — its clickOutside is `active: true` for as long as it is
+     * mounted, so being open IS the predicate. Reported for the composer's edit guard, the way
+     * ComposerMenu reports its own (see Composer.svelte's `overlayDismissesClicks`).
+     */
+    onSettingsOpenChange?: (open: boolean) => void;
   } = $props();
 
   let isEditing = $state(false);
+
+  //REPORTED FROM THE STATE ITSELF and not from the writes that move it: the popup is opened by the
+  //row's settings button and closed from four places (the close button, click-outside, and the
+  //delete/merge paths that dismiss it once the layer they were showing is gone), so notifying at
+  //each write is a list the next new call site silently drops off.
+  $effect(() => {
+    onSettingsOpenChange?.(isEditing);
+  });
 
   // Drives the dim cue below: while it holds, every row that is NOT soloed is silent, so the
   // panel says so. It is the same predicate isTrackAudible derives from — read here rather than
