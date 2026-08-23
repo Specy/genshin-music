@@ -68,6 +68,10 @@ export const i18n_en = {
     enter_song_name: "Write the song's name",
     enter_folder_name: "Write the folder's name",
     ask_song_name_cancellable: 'Write the song name, press cancel to ignore',
+    // Audio recordings are not stored anywhere, they are downloaded straight away: cancelling
+    // here throws the take away, unlike the note recording prompt above which only skips saving.
+    ask_audio_recording_name_cancellable:
+      'Write the file name, press cancel to discard the recording',
     pick_audio_export_format: 'Which audio format do you want to export?',
   },
   confirm: {

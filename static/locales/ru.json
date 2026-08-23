@@ -53,6 +53,7 @@
         "enter_song_name": "Введите название мелодии",
         "enter_folder_name": "Введите название папки",
         "ask_song_name_cancellable": "Введите имя мелодии, нажмите \"Отмена\" чтобы проигнорировать",
+        "ask_audio_recording_name_cancellable": "Введите имя файла, нажмите «Отмена», чтобы удалить запись",
         "pick_audio_export_format": "В какой аудиоформат вы хотите экспортировать?"
     },
     "confirm": {

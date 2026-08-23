@@ -53,6 +53,7 @@
     "enter_song_name": "Escribe el nombre de la canción.",
     "enter_folder_name": "Escribe el nombre de la carpeta",
     "ask_song_name_cancellable": "Escribe el nombre de la canción o pulsa Cancelar para ignorar",
+    "ask_audio_recording_name_cancellable": "Escribe el nombre del archivo o pulsa Cancelar para descartar la grabación",
     "pick_audio_export_format": "¿En qué formato de audio quieres exportar?"
   },
   "confirm": {

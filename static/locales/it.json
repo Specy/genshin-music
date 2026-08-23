@@ -53,6 +53,7 @@
     "enter_song_name": "Inserisci il nome del brano",
     "enter_folder_name": "Inserisci il nome della cartella",
     "ask_song_name_cancellable": "Inserisci il nome del brano oppure premi Annulla per ignorare",
+    "ask_audio_recording_name_cancellable": "Inserisci il nome del file oppure premi Annulla per eliminare la registrazione",
     "pick_audio_export_format": "In quale formato audio vuoi esportare?"
   },
   "confirm": {

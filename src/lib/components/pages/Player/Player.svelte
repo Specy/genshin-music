@@ -605,7 +605,7 @@
       AudioProvider.startRecording();
     } else {
       const audioRecording = await AudioProvider.stopRecording();
-      const fileName = await asyncPrompt(t('question:ask_song_name_cancellable'));
+      const fileName = await asyncPrompt(t('question:ask_audio_recording_name_cancellable'));
       if (!mounted || !audioRecording) return;
       try {
         if (fileName) await AudioRecorder.downloadBlob(audioRecording.data, fileName + '.wav');

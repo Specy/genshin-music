@@ -53,6 +53,7 @@
         "enter_song_name": "Tulis nama lagu",
         "enter_folder_name": "Tulis nama folder",
         "ask_song_name_cancellable": "Tulis nama lagu, tekan batal untuk mengabaikan",
+        "ask_audio_recording_name_cancellable": "Tulis nama berkas, tekan batal untuk membuang rekaman",
         "pick_audio_export_format": "Format audio mana yang ingin Anda ekspor?"
     },
     "confirm": {

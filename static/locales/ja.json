@@ -53,6 +53,7 @@
         "enter_song_name": "曲名を入力してください",
         "enter_folder_name": "フォルダ名を入力してください",
         "ask_song_name_cancellable": "曲名を入力するか、無視するにはキャンセルを押してください",
+        "ask_audio_recording_name_cancellable": "ファイル名を入力してください。キャンセルを押すと録音は破棄されます",
         "pick_audio_export_format": "どのオーディオ形式でエクスポートしますか？"
     },
     "confirm": {

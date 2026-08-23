@@ -53,6 +53,7 @@
         "enter_song_name": "填写歌曲名称",
         "enter_folder_name": "填写文件夹名称",
         "ask_song_name_cancellable": "请填写歌曲名称，点击取消可忽略。",
+        "ask_audio_recording_name_cancellable": "请填写文件名，点击取消将丢弃此录音。",
         "pick_audio_export_format": "您想导出哪种音频格式？"
     },
     "confirm": {
