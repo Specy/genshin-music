@@ -22,8 +22,8 @@ import {
   proRowLabel,
   songNumberSpan,
 } from '$cmp/pages/Composer/proViewNotes';
-import { addressableSpan } from '$cmp/pages/Composer/proViewGeometry';
 import {
+  addressableSpan,
   basepointOffset,
   getSoundingTable,
   isAccidentalMidi,

@@ -26,7 +26,6 @@ import {
   PRO_ZOOM_MAX,
   PRO_ZOOM_MIN,
   ROW_HEIGHT_FRAMING_ROWS,
-  addressableSpan,
   clampCameraY,
   clampProZoom,
   editableZone,
@@ -46,6 +45,7 @@ import {
   type ProViewAxis,
 } from '$cmp/pages/Composer/proViewGeometry';
 import {
+  addressableSpan,
   basepointOffset,
   effectiveTrackPitch,
   getNoteIdTable,

@@ -1,42 +1,134 @@
 import {describe, expect, it} from 'vitest'
-import {CANONICAL_NOTE_IDS, INSTRUMENTS, InstrumentData} from './imports'
+import {CANONICAL_NOTE_IDS, INSTRUMENTS, MIDI_BOUNDS, InstrumentData} from './imports'
 import type {ColumnNote} from './imports'
 import type {InstrumentNoteIcon} from '../src/lib/core/Songs/SongClasses'
 import {
     songGridSlotForId, computeButtonLayerStatuses, computeGridStrandedMarks,
     displayButtonForNumber, foldNumberIntoRange, getNoteIdTable, getSoundingTable,
-    gridRowForNumber, nominalToNumber, noteIdToButton, numberToButton,
+    gridRowForNumber, nominalToNumber, noteIdToButton, numberToButton, snapMidiToGrid,
+    snapMidiToGridPeriodically,
 } from '../src/lib/core/Songs/noteIds'
 import type {Pitch} from '../src/lib/core/legacyConfig'
 import type {InstrumentName} from '../src/lib/core/types'
 
-// The octave-fold arithmetic, on the axis songs actually store (its nominal predecessor
-// `foldIdIntoRange` was deleted at ADR-0007 phase E along with every other nominal-only helper
-// the flip left unconsumed — these rows moved over rather than being dropped with it). It was
-// the cross-game import policy until ADR-0011 made conversion note-preserving; it has no caller
-// in src/ now, and is kept (with these rows) for the composer folding tool the ADR names.
+describe('snapMidiToGridPeriodically', () => {
+    const pitchClasses = new Set(CANONICAL_NOTE_IDS.map(id => ((id % 12) + 12) % 12))
+
+    /** Independent statement of "nearest repeated grid degree at or below". */
+    const expectedSnap = (midi: number) => {
+        for (let distance = 0; distance < 12; distance++) {
+            const id = midi - distance
+            if (pitchClasses.has(((id % 12) + 12) % 12)) {
+                return {id, isAccidental: distance !== 0}
+            }
+        }
+        throw new Error('The Song Grid has no pitch class')
+    }
+
+    it('is byte-for-byte the bounded snap inside MIDI_BOUNDS', () => {
+        for (let midi = MIDI_BOUNDS.lower; midi <= MIDI_BOUNDS.upper; midi++) {
+            expect(snapMidiToGridPeriodically(midi), `midi ${midi}`)
+                .toEqual(snapMidiToGrid(midi))
+        }
+    })
+
+    it('continues the grid below and above MIDI_BOUNDS, including negative numbers', () => {
+        const samples = [
+            -25,
+            -1,
+            0,
+            MIDI_BOUNDS.lower - 25,
+            MIDI_BOUNDS.lower - 1,
+            MIDI_BOUNDS.upper + 1,
+            MIDI_BOUNDS.upper + 25,
+            127,
+        ]
+        for (const midi of samples) {
+            expect(snapMidiToGridPeriodically(midi), `midi ${midi}`)
+                .toEqual(expectedSnap(midi))
+        }
+    })
+
+    it('repeats exactly one octave apart', () => {
+        for (let midi = MIDI_BOUNDS.lower - 24; midi <= MIDI_BOUNDS.upper + 24; midi++) {
+            const snapped = snapMidiToGridPeriodically(midi)
+            expect(snapMidiToGridPeriodically(midi + 12), `midi ${midi}`)
+                .toEqual({id: snapped.id + 12, isAccidental: snapped.isAccidental})
+        }
+    })
+
+    it('rejects non-finite input without inventing an accidental', () => {
+        for (const midi of [NaN, Infinity, -Infinity]) {
+            expect(snapMidiToGridPeriodically(midi)).toEqual({id: -1, isAccidental: false})
+        }
+    })
+})
+
+// The octave-fold arithmetic, on the axis songs actually store. Phase B makes this the MIDI
+// importer's best-effort fold: it approaches the chosen instrument's sounding span by whole
+// octaves, but never takes more steps than the user's maxScaling cap.
 describe('foldNumberIntoRange', () => {
-    it('octave-folds ordinary numbers without changing their pitch class', () => {
+    it('moves toward the sounding span by no more than the requested octave count', () => {
         const instrument = INSTRUMENTS[0]
         const table = getSoundingTable(instrument)
         const min = Math.min(...table)
         const max = Math.max(...table)
 
-        expect(foldNumberIntoRange(instrument, 'C', max + 1) % 12).toBe((max + 1) % 12)
-        expect(foldNumberIntoRange(instrument, 'C', min - 1) % 12).toBe((min - 1 + 12) % 12)
+        expect(foldNumberIntoRange(instrument, 'C', max + 36, 0)).toBe(max + 36)
+        expect(foldNumberIntoRange(instrument, 'C', max + 36, 1)).toBe(max + 24)
+        expect(foldNumberIntoRange(instrument, 'C', max + 36, 2)).toBe(max + 12)
+        expect(foldNumberIntoRange(instrument, 'C', max + 36, 3)).toBe(max)
+        expect(foldNumberIntoRange(instrument, 'C', max + 36, 4)).toBe(max)
+
+        expect(foldNumberIntoRange(instrument, 'C', min - 36, 1)).toBe(min - 24)
+        expect(foldNumberIntoRange(instrument, 'C', min - 36, 3)).toBe(min)
     })
 
     it('folds in SOUNDING space, carrying the Basepoint back afterwards', () => {
         //what the listener hears moves by whole octaves only, whatever Basepoint the track is at
         const instrument = INSTRUMENTS[0]
         const max = Math.max(...getSoundingTable(instrument))
-        expect(foldNumberIntoRange(instrument, 'D', max + 1 + 2))
-            .toBe(foldNumberIntoRange(instrument, 'C', max + 1) + 2)
+        expect(foldNumberIntoRange(instrument, 'D', max + 36 + 2, 2))
+            .toBe(foldNumberIntoRange(instrument, 'C', max + 36, 2) + 2)
+    })
+
+    it('normalizes the cap without turning invalid controls into unbounded folds', () => {
+        const instrument = INSTRUMENTS[0]
+        const max = Math.max(...getSoundingTable(instrument))
+        const number = max + 36
+
+        expect(foldNumberIntoRange(instrument, 'C', number, 2.9)).toBe(max + 12)
+        expect(foldNumberIntoRange(instrument, 'C', number, -1)).toBe(number)
+        expect(foldNumberIntoRange(instrument, 'C', number, NaN)).toBe(number)
+        expect(foldNumberIntoRange(instrument, 'C', number, Infinity)).toBe(max)
+    })
+
+    const subOctave = INSTRUMENTS.find(name => {
+        const table = getSoundingTable(name)
+        return Math.max(...table) - Math.min(...table) < 12
+    })
+
+    it.runIf(subOctave !== undefined)('is stable on a sub-octave span instead of oscillating past it', () => {
+        const table = getSoundingTable(subOctave!)
+        const max = Math.max(...table)
+        //Sky's 60–65 drums make this the concrete regression from the spec: 78 becomes 66 at
+        //both caps, rather than cap 4 walking on through to 54 below the instrument.
+        expect(foldNumberIntoRange(subOctave!, 'C', max + 13, 1)).toBe(max + 1)
+        expect(foldNumberIntoRange(subOctave!, 'C', max + 13, 4)).toBe(max + 1)
+        const min = Math.min(...table)
+        expect(foldNumberIntoRange(subOctave!, 'C', min - 13, 1)).toBe(min - 1)
+        expect(foldNumberIntoRange(subOctave!, 'C', min - 13, 4)).toBe(min - 1)
     })
 
     it('handles huge finite numbers in bounded time', () => {
-        expect(Number.isFinite(foldNumberIntoRange(INSTRUMENTS[0], 'C', 1e308))).toBe(true)
-        expect(Number.isFinite(foldNumberIntoRange(INSTRUMENTS[0], 'C', -1e308))).toBe(true)
+        expect(Number.isFinite(foldNumberIntoRange(INSTRUMENTS[0], 'C', 1e308, 4))).toBe(true)
+        expect(Number.isFinite(foldNumberIntoRange(INSTRUMENTS[0], 'C', -1e308, 4))).toBe(true)
+    })
+
+    it('leaves a non-finite note unchanged', () => {
+        for (const number of [NaN, Infinity, -Infinity]) {
+            expect(foldNumberIntoRange(INSTRUMENTS[0], 'C', number, Infinity)).toBe(number)
+        }
     })
 })
 

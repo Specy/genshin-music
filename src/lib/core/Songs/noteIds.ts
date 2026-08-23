@@ -23,7 +23,15 @@
 // legacy serialized songs (possibly of the OTHER game); this module reflects the current
 // build's live instrument data and is used for playback, rendering, and authoring.
 
-import {CANONICAL_NOTE_IDS, INSTRUMENTS, INSTRUMENTS_DATA, MIDI_BOUNDS, type Pitch, PITCH_TO_INDEX} from '$core/legacyConfig'
+import {
+    CANONICAL_NOTE_IDS,
+    INSTRUMENTS,
+    INSTRUMENTS_DATA,
+    MIDI_BOUNDS,
+    PITCHES,
+    type Pitch,
+    PITCH_TO_INDEX,
+} from '$core/legacyConfig'
 import type {ColumnNote, InstrumentData, RecordedNote} from './SongClasses'
 import type {LayerStatus} from './Layer'
 
@@ -158,7 +166,36 @@ export function snapMidiToGrid(midiNote: number): {id: number, isAccidental: boo
     for (const candidate of CANONICAL_NOTE_IDS) {
         if (candidate <= midiNote && candidate > id) id = candidate
     }
+    // Distinct from the bounds failure above: a future grid may deliberately leave an in-bounds
+    // prefix below its first authored row. The bounded legacy-compatible helper still rejects it.
+    if (id === -1) return {id: -1, isAccidental: false}
     return {id, isAccidental: isAccidentalMidi(midiNote)}
+}
+
+/** Positive modulo, including for negative and fractional Note Numbers. */
+function positiveModulo(value: number, divisor: number): number {
+    return ((value % divisor) + divisor) % divisor
+}
+
+/**
+ * Snap anywhere on the absolute MIDI axis to the nearest repeating Song-Grid scale degree at or
+ * below the number. Unlike `snapMidiToGrid`, this is periodic rather than bounded: the grid's
+ * authored pitch classes repeat every octave, so notes outside MIDI_BOUNDS still receive a
+ * nominal candidate for the importer's later instrument-specific voiceability decision.
+ */
+export function snapMidiToGridPeriodically(midiNote: number): {id: number, isAccidental: boolean} {
+    if (!Number.isFinite(midiNote) || gridPitchClasses.size === 0) {
+        return {id: -1, isAccidental: false}
+    }
+    let nearestDistance = Infinity
+    for (const pitchClass of gridPitchClasses) {
+        const distance = positiveModulo(midiNote - pitchClass, 12)
+        if (distance < nearestDistance) nearestDistance = distance
+    }
+    return {
+        id: midiNote - nearestDistance,
+        isAccidental: isAccidentalMidi(midiNote),
+    }
 }
 
 /**
@@ -348,25 +385,6 @@ export function computeGridStrandedMarks(notes: readonly ColumnNote[], instrumen
     return stranded
 }
 
-/** Octave-fold a value into the [min, max] of a table, keeping its pitch class. */
-function foldIntoTable(table: readonly number[], value: number): number {
-    if (table.length === 0 || !Number.isFinite(value)) return value
-    let min = table[0], max = table[0]
-    for (const t of table) {
-        if (t < min) min = t
-        if (t > max) max = t
-    }
-    if (value > max) {
-        const offsetBelowMax = ((max - value) % 12 + 12) % 12
-        return max - offsetBelowMax
-    }
-    if (value < min) {
-        const offsetAboveMin = ((value - min) % 12 + 12) % 12
-        return min + offsetAboveMin
-    }
-    return value
-}
-
 // ─── Note Numbers (ADR-0007) ───────────────────────────────────────────────────────────
 // The absolute axis songs store, and the Basepoint-aware resolution between it and an
 // instrument's Buttons. Since the phase-C flip this is what every format, the engine and
@@ -397,6 +415,36 @@ export function getSoundingTable(instrumentName: RuntimeInstrumentName): readonl
     const table = INSTRUMENTS_DATA[name].notes.map((note) => note.sounding)
     soundingTableCache.set(name, table)
     return table
+}
+
+/** Highest upward transposition any authored Basepoint can apply. */
+const MAX_BASEPOINT_OFFSET = PITCHES.length - 1
+
+// Build-time game data, so the all-instrument scan is paid once. This intentionally scans the
+// complete data registry rather than only the menu roster: an unlisted instrument remains fully
+// loadable by a song and therefore contributes to what the app can address.
+let addressable: {min: number, max: number} | null = null
+
+/**
+ * Every Note Number any instrument can voice at any Basepoint. The floor is the lowest Sounding
+ * Pitch at C; the ceiling is the highest Sounding Pitch lifted by the highest Basepoint.
+ */
+export function addressableSpan(): {min: number, max: number} {
+    if (addressable) return addressable
+    let min = Infinity
+    let max = -Infinity
+    for (const name of Object.keys(INSTRUMENTS_DATA)) {
+        for (const sounding of getSoundingTable(name)) {
+            if (sounding < min) min = sounding
+            if (sounding > max) max = sounding
+        }
+    }
+    // Registry validation makes an empty result unreachable; keep the fallback finite so corrupt
+    // configuration cannot poison every axis/counter derived from this span with NaN.
+    addressable = Number.isFinite(min)
+        ? {min, max: max + MAX_BASEPOINT_OFFSET}
+        : {min: 0, max: MAX_BASEPOINT_OFFSET}
+    return addressable
 }
 
 // QUIRK: plain module-level Map cache, not reactive — same reasoning as reverseCache.
@@ -491,20 +539,60 @@ export function nominalToNumber(instrumentName: RuntimeInstrumentName, pitch: Pi
 // }
 
 /**
- * foldIdIntoRange on the absolute axis: fold in SOUNDING space, so what the listener hears moves
- * by whole octaves only, then carry the Basepoint back. A number landing on a gap of the target
- * instrument stays where it fell and strands visibly, exactly as an id did.
+ * Octave-fold on the absolute axis, capped by the user's requested number of octave moves. Work in
+ * SOUNDING space so pitch class is preserved, then carry the Basepoint back.
  *
- * NO LONGER USED BY IMPORT. This was the cross-game conversion policy until ADR-0011, which made
- * conversion note-preserving: folding changed octaves and merged collisions irreversibly, at save
- * time, without being asked. The arithmetic is kept for the composer folding tool the ADR names —
- * pulling stranded notes into range as an explicit, undoable edit is the right home for it — and
- * `test/noteIds.test.ts` keeps pinning it in the meantime.
+ * Best-effort is deliberate: an instrument whose closed min/max span is narrower than an octave
+ * may have no octave-equivalent candidate inside it. In that case choose the candidate nearest the
+ * span (ties stay on the input's side, requiring fewer moves) and let the later voiceability gate
+ * decide whether the resulting gap/strand is kept. Modulo arithmetic makes the answer stable as
+ * the cap grows; unlike the retired repeated +/-12 loop it cannot oscillate across a narrow span.
  */
-export function foldNumberIntoRange(instrumentName: RuntimeInstrumentName, pitch: Pitch, number: number): number {
+export function foldNumberIntoRange(
+    instrumentName: RuntimeInstrumentName,
+    pitch: Pitch,
+    number: number,
+    maxOctaves: number
+): number {
     if (!Number.isFinite(number)) return number
     const offset = basepointOffset(pitch)
-    return foldIntoTable(getSoundingTable(instrumentName), number - offset) + offset
+    const value = number - offset
+    const table = getSoundingTable(instrumentName)
+    if (table.length === 0) return number
+    let min = table[0]
+    let max = table[0]
+    for (const entry of table) {
+        if (entry < min) min = entry
+        if (entry > max) max = entry
+    }
+    if (value >= min && value <= max) return number
+
+    const distanceToSpan = (candidate: number) =>
+        candidate < min ? min - candidate : candidate > max ? candidate - max : 0
+    let target: number
+    if (value > max) {
+        const atOrBelow = max - positiveModulo(max - value, 12)
+        const stillAbove = atOrBelow + 12
+        // On an exact tie, remain above: it is one octave move closer to the original value.
+        target = distanceToSpan(stillAbove) <= distanceToSpan(atOrBelow) ? stillAbove : atOrBelow
+    } else {
+        const atOrAbove = min + positiveModulo(value - min, 12)
+        const stillBelow = atOrAbove - 12
+        // Mirror the upper case: an exact tie remains below, on the original side.
+        target = distanceToSpan(stillBelow) <= distanceToSpan(atOrAbove) ? stillBelow : atOrAbove
+    }
+
+    const cap = maxOctaves === Infinity
+        ? Infinity
+        : Number.isFinite(maxOctaves) && maxOctaves > 0
+          ? Math.floor(maxOctaves)
+          : 0
+    if (cap === 0) return number
+    const requiredMoves = Math.round(Math.abs(target - value) / 12)
+    const folded = cap >= requiredMoves
+        ? target
+        : value + Math.sign(target - value) * cap * 12
+    return folded + offset
 }
 
 /**

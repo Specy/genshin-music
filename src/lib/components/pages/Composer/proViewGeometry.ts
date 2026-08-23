@@ -11,22 +11,21 @@
 // `document` (ComposerCanvas.svelte is prerendered), no DOM measurement (the caller measures and
 // passes px in).
 //
-// ONE DELIBERATE DIFFERENCE, and it is a stated exception rather than an oversight: legacyConfig's
-// UI-TIER IMPORT RULE sends UI code to `$game` for GAME-DATA constants, and composerCanvasGeometry
-// duly reads `game.notes.composerRowHeightScale` that way — this file instead reads its game data
-// through the core-tier `$core/legacyConfig` adapter, exactly as $core/Songs/noteIds does. The file
-// lives in the Composer folder for locality, but every line of it is arithmetic over the instrument
-// tables noteIds owns (it calls straight into `getSoundingTable`/`basepointOffset`), and a second
-// import path for those same tables would be a second thing to keep in step for zero behavioral
-// difference — `INSTRUMENTS_DATA`/`NOTES_PER_COLUMN` ARE `game.instruments.data`/`game.notes
-// .perColumn`, aliased. Same reasoning as the adapter's audio/provider-tier carve-out, and it is
-// what keeps the module importable from plain vitest with no SvelteKit graph.
+// ONE DELIBERATE DIFFERENCE: this pure arithmetic module reads NOTES_PER_COLUMN through the
+// core-tier legacy adapter rather than `$game`, keeping it importable from plain vitest. Instrument
+// table arithmetic and the all-instrument Addressable Span now live beside those tables in noteIds;
+// this module imports only their answers.
 //
 // WHAT IS NOT HERE: anything about a song. The axis widens for a loaded song's outlier numbers, but
 // the caller hands those in as a plain {min, max} (see spanOfNumbers) — no song class is imported,
 // so the module stays a pure function of the game's config plus the caller's pixels.
-import { INSTRUMENTS_DATA, NOTES_PER_COLUMN, PITCHES, type Pitch } from '$core/legacyConfig';
-import { basepointOffset, getSoundingTable, type RuntimeInstrumentName } from '$core/Songs/noteIds';
+import { NOTES_PER_COLUMN, type Pitch } from '$core/legacyConfig';
+import {
+  addressableSpan,
+  basepointOffset,
+  getSoundingTable,
+  type RuntimeInstrumentName,
+} from '$core/Songs/noteIds';
 
 /**
  * THE VISUAL PADDING AT BOTH ENDS OF THE AXIS, in rows (spec §4).
@@ -38,16 +37,6 @@ import { basepointOffset, getSoundingTable, type RuntimeInstrumentName } from '$
  * instrument's reach at every Basepoint by construction).
  */
 export const AXIS_PADDING_ROWS = 3;
-
-/**
- * THE HIGHEST A BASEPOINT CAN LIFT A BUTTON, in semitones.
- *
- * Basepoints are the PITCHES list and `basepointOffset` is an index into it, so the shift is always
- * UPWARD and never exceeds the list's last index — 11 today, C through B. Derived from PITCHES
- * rather than written as 11 so that a game which ever authored a different Basepoint list cannot
- * silently lose the rows its top Basepoints reach.
- */
-const MAX_BASEPOINT_OFFSET = PITCHES.length - 1;
 
 /**
  * THE FRAMING ROWS THE NOTES REGION IS TALLER THAN WHAT IT IS FRAMING, in rows (spec §4, as revised
@@ -155,45 +144,6 @@ export type ProViewAxis = NumberSpan & { rowCount: number };
  * notes — ask `isAddable`, never `min <= n && n <= max`.
  */
 export type EditableZone = NumberSpan & { numbers: ReadonlySet<number> };
-
-// The game's addressable span, computed once: every instrument table it reads is a build-time
-// constant of the selected game (noteIds caches them for the same reason), so the scan over the
-// whole roster — 35 instruments on sky — happens on the first Pro View paint and never again.
-let addressable: NumberSpan | null = null;
-
-/**
- * THE SPAN THE GAME CAN ADDRESS AT ALL: `lo` = the lowest Sounding Pitch any instrument has at
- * Basepoint C, `hi` = the highest, lifted by the highest Basepoint (spec §4).
- *
- * Every note any button of any instrument can enter, at any Basepoint, lies inside it — Basepoints
- * only ever shift upward, so the bottom needs no headroom and the top needs exactly
- * MAX_BASEPOINT_OFFSET. Assigned Buttons (percussion, SFX, Ukulele's chord row) need no special
- * case: their sounding-table entry is their own Nominal Id, so they are already in the tables this
- * scans.
- *
- * Over INSTRUMENTS_DATA and not INSTRUMENTS: the data map is every instrument FOLDER, Unlisted
- * Instruments included, and an Unlisted Instrument is fully loadable by a song even though no menu
- * offers it. The two lists are identical in both shipped games today, so this is a no-op now and a
- * missing row later.
- */
-export function addressableSpan(): NumberSpan {
-  if (addressable) return addressable;
-  let min = Infinity;
-  let max = -Infinity;
-  for (const name of Object.keys(INSTRUMENTS_DATA)) {
-    for (const sounding of getSoundingTable(name)) {
-      if (sounding < min) min = sounding;
-      if (sounding > max) max = sounding;
-    }
-  }
-  //the registry rejects a game with no instruments and an instrument with no notes, so this is
-  //unreachable — but a non-finite span would poison rowCount and every clamp derived from it with
-  //NaN, which fails far worse and far later than an empty axis does
-  addressable = Number.isFinite(min)
-    ? { min, max: max + MAX_BASEPOINT_OFFSET }
-    : { min: 0, max: MAX_BASEPOINT_OFFSET };
-  return addressable;
-}
 
 /**
  * The min/max of the Note Numbers a caller walked out of the loaded song, or null when it holds

@@ -23,7 +23,7 @@
 //    The composer already refuses to author a hold on a non-sustaining layer
 //    (Composer.svelte handleNoteLongPress), so import was the only path producing spans
 //    nothing could play. Capability is read from instrument config, never from the game id.
-import {INSTRUMENTS_DATA, type Pitch, TEMPO_CHANGERS} from '$core/legacyConfig'
+import {INSTRUMENTS, INSTRUMENTS_DATA, type Pitch, TEMPO_CHANGERS} from '$core/legacyConfig'
 import {MidiNote, NoteColumn, type ColumnNote} from './SongClasses'
 import {
     basepointOffset,
@@ -206,6 +206,7 @@ export function defaultLayerForTrack(originalIndex: number, layerCount: number):
 
 export type MidiTrackStats = {
     accidentals: number
+    outOfRange: number
     outOfRangeLower: number
     outOfRangeUpper: number
 }
@@ -215,6 +216,8 @@ export type MidiImportResult = {
     totalNotes: number
     accidentals: number
     outOfRange: number
+    /** Otherwise mapped accidental notes rejected because includeAccidentals was off. */
+    droppedAccidentals: number
     /**
      * Notes that mapped fine but were absorbed by another: a re-strike of the same number landing
      * in the same column after quantization. Counted so the importer's totals can never claim
@@ -229,10 +232,13 @@ export type MidiImportResult = {
 /**
  * Whether an instrument responds to hold length. Mirrors Instrument.supportsSustain, which is
  * what playback and the composer already gate on — kept in step deliberately, since a note
- * imported as a hold that the engine plays as a tap is worse than no hold at all.
+ * imported as a hold that the engine plays as a tap is worse than no hold at all. Unknown names
+ * use the default instrument, matching note lifting and the runtime Instrument constructor.
  */
 export function instrumentSupportsSustain(instrumentName: string): boolean {
-    const sustain = INSTRUMENTS_DATA[instrumentName as keyof typeof INSTRUMENTS_DATA]?.sustain
+    const data = INSTRUMENTS_DATA[instrumentName as keyof typeof INSTRUMENTS_DATA]
+        ?? INSTRUMENTS_DATA[INSTRUMENTS[0]]
+    const sustain = data.sustain
     return sustain !== undefined && sustain.loopMode !== 'one-shot'
 }
 
@@ -274,6 +280,7 @@ export function importMidiTracks(
     const {bpm, offset, includeAccidentals, layers} = options
     const perTrack: MidiTrackStats[] = tracks.map(() => ({
         accidentals: 0,
+        outOfRange: 0,
         outOfRangeLower: 0,
         outOfRangeUpper: 0,
     }))
@@ -282,6 +289,7 @@ export function importMidiTracks(
         totalNotes: 0,
         accidentals: 0,
         outOfRange: 0,
+        droppedAccidentals: 0,
         merged: 0,
         perTrack,
     }
@@ -308,6 +316,7 @@ export function importMidiTracks(
     let totalNotes = 0
     let accidentals = 0
     let outOfRange = 0
+    let droppedAccidentals = 0
     tracks.forEach((track, trackIndex) => {
         const stats = perTrack[trackIndex]
         for (const midiNote of track.notes) {
@@ -329,14 +338,18 @@ export function importMidiTracks(
             }
             if (note.data.id !== -1) {
                 if (includeAccidentals || !note.data.isAccidental) notes.push(note)
+                else droppedAccidentals++
             } else {
                 outOfRange++
+                stats.outOfRange++
                 if (note.data.outOfRangeBound === -1) stats.outOfRangeLower++
                 if (note.data.outOfRangeBound === 1) stats.outOfRangeUpper++
             }
         }
     })
-    if (notes.length === 0) return {...empty, totalNotes, accidentals, outOfRange}
+    if (notes.length === 0) {
+        return {...empty, totalNotes, accidentals, outOfRange, droppedAccidentals}
+    }
 
     notes.sort((a, b) => a.time - b.time)
 
@@ -445,5 +458,5 @@ export function importMidiTracks(
         })
     }
 
-    return {columns, totalNotes, accidentals, outOfRange, merged, perTrack}
+    return {columns, totalNotes, accidentals, outOfRange, droppedAccidentals, merged, perTrack}
 }
