@@ -569,13 +569,15 @@ describe('a press made to dismiss a composer overlay is not an edit', () => {
   it('the canvas latches the flag at the press, not when the edit fires', () => {
     //the press edge, in the CAPTURE phase on the element the pixi canvas is appended into
     expect(composerCanvas).toContain(
-      'onpointerdowncapture={() => (pressDismissedOverlay = overlayDismissesClicks)}'
+      'onpointerdowncapture={() => (pressDismissedOverlay = overlayDismissesClicks || songLocked)}'
     );
     //...and both cell gestures answer that latch. A settled tap fires at the RELEASE and a Duration
     //Hold 400ms into the press, so reading the live flag at either would be asking about a menu the
     //gesture may already have closed.
-    expect(composerCanvas).toContain('if (pressDismissedOverlay) return;');
-    expect(composerCanvas).toContain('pressDismissedOverlay ? false : onProCellLongPress(');
+    expect(composerCanvas).toContain('if (pressDismissedOverlay || songLocked) return;');
+    expect(composerCanvas).toContain(
+      'pressDismissedOverlay || songLocked ? false : onProCellLongPress('
+    );
   });
 
   it('gates those two gestures and nothing else the canvas does', () => {

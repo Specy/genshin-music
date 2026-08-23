@@ -162,6 +162,13 @@
   // One-time seed from the prop; later showMidi changes (callers never send any) are not tracked.
   // svelte-ignore state_referenced_locally
   let isMidiVisible = $state(showMidi || false);
+  // The save/discard/cancel question is part of opening. Lock after settling existing gestures so
+  // physical keys and MIDI cannot create a fresh edit while that asynchronous question is up.
+  let midiOpening = $state(false);
+  /** The importer's live preview owns the song while its panel is open. */
+  const songLocked = $derived(isMidiVisible || midiOpening);
+  /** Whether this import session has actually installed a preview that must leave the song dirty. */
+  let midiPreviewLoaded = $state(false);
   // The file that sent the user here, handed over by whichever menu could not parse it
   // (PendingMidiImportStore). Taken at the moment the importer opens - so a hand-opened importer
   // never re-imports a stale file - and passed down for MidiParser to parse on mount.
@@ -177,6 +184,9 @@
   let playbackColumnStartMs = $state(0);
   let playbackAnchorGeneration = $state(0);
   let changes = $state(0);
+  // Opening the importer settles a live sustain before asking what to do with the finished edit.
+  // Its normal change accounting still runs, but autosave must not race that explicit question.
+  let suppressAutoSave = false;
   /**
    * CONTEXT.md: Pro View. The persisted setting, ANDed with `!inPreview` once here so every
    * consumer below - the grid modifier, the canvas' `{#key}`, the keyboard's sheet, the tempo
@@ -640,7 +650,7 @@
     //no-op recommit — cheap, and simpler than exempting them.
     resyncPlayback();
     changes++;
-    if (changes > 5 && settings.autosave.value) {
+    if (!suppressAutoSave && changes > 5 && settings.autosave.value) {
       //TODO maybe add here that songs which arent saved dont get autosaved
       if (song.name !== 'Untitled') {
         updateSong(song);
@@ -721,6 +731,7 @@
   }
 
   function handleSettingChange({ data, key }: SettingUpdate) {
+    if (songLocked && data.songSetting) return;
     //captured BEFORE the write below, because a Basepoint change is a real note edit and needs
     //both ends of the interval (ADR-0007). Undo has to see the song as it was, so the snapshot
     //goes in first too.
@@ -766,6 +777,7 @@
   }
 
   function addInstrument() {
+    if (songLocked) return;
     if (song.instruments.length >= NoteLayer.MAX_LAYERS)
       return logger.error(
         t('composer:cant_add_more_than_n_layers', { max_layers: NoteLayer.MAX_LAYERS })
@@ -775,6 +787,7 @@
   }
 
   async function removeInstrument(index: number) {
+    if (songLocked) return;
     if (layers.length <= 1) return logger.warn(t('composer:cant_remove_all_layers'));
     const confirm = await asyncConfirm(
       t('composer:confirm_layer_remove', {
@@ -786,6 +799,7 @@
         layer_name: song.instruments[index].alias ?? tInstrument(song.instruments[index].name),
       })
     );
+    if (songLocked) return;
     if (confirm) {
       song.removeInstrument(index);
       syncInstruments(song);
@@ -798,6 +812,7 @@
    * retire the layer. Destructive and NOT undoable, so the confirm is the whole guard - see below.
    */
   async function mergeLayer(direction: 1 | -1) {
+    if (songLocked) return;
     const target = layer + direction;
     if (target < 0 || target > song.instruments.length - 1) return;
     // the same lookup removeInstrument's `layer_name` does - locale key, else config displayName,
@@ -812,7 +827,7 @@
         destination_layer: layerName(target),
       })
     );
-    if (!confirm) return;
+    if (!confirm || songLocked) return;
     // NO undo entry, deliberately. addToHistory() does snapshot the roster and the notes from one
     // clone, so an entry COULD restore the pair - but it only records while the tools panel is open,
     // and this edit is reachable with it closed, so half the merges would be undoable and half not.
@@ -832,6 +847,7 @@
   }
 
   function editInstrument(instrument: InstrumentData, index: number) {
+    if (songLocked) return;
     // setInstrument clones and REPLACES the array entry. That fresh identity is load-bearing:
     // InstrumentControls renders a keyed {#each} over the roster, so an in-place field edit would
     // leave the layer panel showing the old name/colour/visibility. Do not "optimise" it away.
@@ -1056,20 +1072,6 @@
     }
   }
 
-  function changePitch(value: Pitch) {
-    // MidiParser's own pitch funnel. It DELEGATES rather than repeating handleSettingChange's pitch
-    // branch: the two entry points have to leave the song in the same state, and the copy that used
-    // to live here had already drifted — it rewrote the notes and resynced but never counted the
-    // change, so a Basepoint moved from the MIDI panel was a transposition the save prompts never
-    // heard about.
-    //
-    // The guard is load-bearing rather than an optimisation: MidiParser calls this for the side
-    // effects alone (its <PitchSelect> re-emits the value it is showing), and the branch it feeds
-    // takes an undo snapshot and rewrites every note only when the Basepoint really moved.
-    if (value === song.pitch) return;
-    handleSettingChange({ key: 'pitch', data: { ...settings.pitch, value } });
-  }
-
   /**
    * WHAT THE CANVAS CAN BE ASKED, once its renderer exists (see ComposerCanvas' onCanvasMeasures):
    * one visible column's width, and where a Pro View cell is on screen. Both are read at the instant
@@ -1192,6 +1194,11 @@
    * SHRINK an authored span back to what the finger has held so far.
    */
   function startSustainRecording(holder: string, id: number): boolean {
+    // A locked press is still an audition, but it never enters either recording/edit registry.
+    if (songLocked) {
+      playAuditionSound(layer, id);
+      return true;
+    }
     if (!isPlaying) return false;
     if (!layers[layer]?.supportsSustain) return false;
     if (sustainRecordings.isHolding(holder)) return true; //auto-repeat / duplicate note-on
@@ -1259,6 +1266,7 @@
 
   /** The playhead moved: every still-held note re-quantizes against how long it has been down. */
   function advanceSustainRecordings() {
+    if (songLocked) return;
     for (const { holder, id, meta } of sustainRecordings.entries()) {
       if (applySustainSpan(id, meta) === 'stale') endSustainRecording(holder);
     }
@@ -1269,10 +1277,10 @@
     const released = sustainRecordings.release(holder);
     if (!released) return;
     const { id, meta, isLastHolderOfId } = released;
-    applySustainSpan(id, meta);
+    if (!songLocked) applySustainSpan(id, meta);
     if (isLastHolderOfId) layers[meta.trackIndex]?.releaseNote(id);
     //one save per recorded sustain - the per-tick growth deliberately does not count changes
-    if (meta.grew) handleAutoSave();
+    if (meta.grew && !songLocked) handleAutoSave();
   }
 
   function endAllSustainRecordings() {
@@ -1324,6 +1332,10 @@
    * release's, so a hold can open the duration popover without deleting the note first.
    */
   function beginNotePress(id: number) {
+    if (songLocked) {
+      playAuditionSound(layer, id);
+      return;
+    }
     playSound(layer, id);
     const covering = song.getSpanCovering(song.selected, layer, id);
     if (covering) {
@@ -1358,6 +1370,10 @@
    */
   function endNotePress(id: number) {
     if (durationPopover?.id === id) durationPopover.holdActive = false;
+    if (songLocked) {
+      notePresses.delete(id);
+      return;
+    }
     const press = notePresses.get(id);
     //a pointer fires twice per gesture (pointerup then pointerleave): the delete below consumes the
     //record, so the second call misses and does nothing
@@ -1377,6 +1393,10 @@
    * the press machine instead (handleKeyNoteDown) - see it for why MIDI does not.
    */
   function toggleNoteImmediate(note: ObservableNote) {
+    if (songLocked) {
+      playAuditionSound(layer, numberOfNote(note));
+      return;
+    }
     toggleNoteInColumn(song.selected, numberOfNote(note));
   }
 
@@ -1398,6 +1418,7 @@
    * where a pressed key becomes this number.
    */
   function toggleNoteInColumn(columnIndex: number, id: number) {
+    if (songLocked) return;
     playSound(layer, id);
     if (song.getSpanCovering(columnIndex, layer, id)) return;
     const existing = song.columns[columnIndex]?.findNote(layer, id);
@@ -1427,6 +1448,7 @@
    * pushes nothing.
    */
   function handleProCellTap(columnIndex: number, id: number) {
+    if (songLocked) return;
     const instrument = song.instruments[layer];
     const action = proCellAction({
       hasOwnNote: song.columns[columnIndex]?.findNote(layer, id) != null,
@@ -1457,6 +1479,7 @@
    * hold edits what is already there.
    */
   function handleProCellLongPress(columnIndex: number, id: number, rect: ScreenRect): boolean {
+    if (songLocked) return false;
     if (isPlaying) return false;
     if (!layers[layer]?.supportsSustain) return false;
     const startColumn = song.getSpanCovering(columnIndex, layer, id)?.startColumn ?? columnIndex;
@@ -1519,6 +1542,7 @@
    * is the occupancy rule the tap half already obeys.
    */
   function openDurationPopover(id: number, anchor: ComposerPopoverAnchor) {
+    if (songLocked) return;
     if (isPlaying) return;
     if (!layers[layer]?.supportsSustain) return;
     const press = notePresses.get(id);
@@ -1595,6 +1619,7 @@
    * moved under the hold re-enters through reapplyDurationHold with the travel already reported.
    */
   function dragPopoverSpan(deltaX: number) {
+    if (songLocked) return;
     const popover = durationPopover;
     if (!popover) return;
     popover.dragDeltaX = deltaX;
@@ -1647,7 +1672,7 @@
   });
 
   function setPopoverSpan(span: number) {
-    if (!durationPopover) return;
+    if (songLocked || !durationPopover) return;
     song.setNoteSpan(
       durationPopover.startColumn,
       durationPopover.trackIndex,
@@ -1706,8 +1731,9 @@
   });
 
   async function renameSong(newName: string, id: string) {
+    if (songLocked && song.id === id) return;
     await songsStore.renameSong(id, newName);
-    if (song.id === id) {
+    if (song.id === id && !songLocked) {
       song.name = newName;
     }
   }
@@ -1726,6 +1752,7 @@
       songToSave.name = name;
       changes = 0;
       await addSong(songToSave);
+      midiPreviewLoaded = false;
       return true;
     }
     //if it exists, update it
@@ -1735,18 +1762,21 @@
       await songsStore.updateSong(songToSave);
       console.log('song saved:', songToSave.name);
       changes = 0;
+      midiPreviewLoaded = false;
     } else {
       //if it doesn't exist, add it
       if (songToSave.name.includes('- Composed')) {
         const name = await asyncPrompt(t('composer:ask_song_name_for_composed_song_version'));
         if (name === null) return false;
         songToSave.name = name;
-        addSong(songToSave);
+        await addSong(songToSave);
+        changes = 0;
+        midiPreviewLoaded = false;
         return true;
       }
       console.warn("song doesn't exist");
       songToSave.name = 'Untitled';
-      updateSong(songToSave);
+      return updateSong(songToSave);
     }
     return true;
   }
@@ -1760,11 +1790,14 @@
   }
 
   async function createNewSong() {
-    if (song.name !== 'Untitled' && changes > 0) {
+    // Closing an active import makes its installed preview an ordinary unsaved working song before
+    // the create flow decides whether to save or discard it.
+    if (isMidiVisible) await changeMidiVisibility(false);
+    if (changes > 0) {
       const promptResult = await askForSongUpdate();
       if (promptResult === null) return;
       if (promptResult) {
-        await updateSong(song);
+        if (!(await updateSong(song))) return;
       }
     }
     const name = await asyncPrompt(t('question:ask_song_name_cancellable'));
@@ -1797,10 +1830,14 @@
     // editor-level one: preserving it is what allows copy -> new song -> paste.
     selectedColumns = [];
     undoHistory = [];
+    midiPreviewLoaded = false;
     Analytics.songEvent({ type: 'create' });
   }
 
-  async function loadSong(songToLoad: SerializedSong | ComposedSong) {
+  async function loadSong(
+    songToLoad: SerializedSong | ComposedSong,
+    { preview = false }: { preview?: boolean } = {}
+  ) {
     //loading replaces the song under a running transport, and the committed window, the
     //sounding position and the play-run promise all belong to the song being replaced — playing
     //the incoming song from a stale index would be an accident, not a behavior. Stop first.
@@ -1822,9 +1859,9 @@
         }
       }
       if (!parsed) return;
-      if (changes !== 0) {
+      if (!preview && changes !== 0) {
         let confirm = settings.autosave.value && song.name !== 'Untitled';
-        if (!confirm && song.columns.length > 0) {
+        if (!confirm) {
           //TODO is there a reason why this was not cancellable before?
           const promptResult = await asyncConfirm(
             t('question:unsaved_song_save', { song_name: song.name }),
@@ -1846,13 +1883,11 @@
       settings.pitch = { ...settings.pitch, value: parsed.pitch };
       settings.reverb = { ...settings.reverb, value: parsed.reverb };
       AudioProvider.setReverb(parsed.reverb);
-      if (songToLoad.id && song.id === null) {
-        isMidiVisible = false;
-      }
       changes = 0;
       console.log('song loaded');
       layer = 0;
       song = parsed;
+      midiPreviewLoaded = preview;
       selectedColumns = [];
       // Both hold columns cloned from the PREVIOUS song, carrying that song's track indices.
       // refreshSong() used to launder a stale restore into a fresh graph one tick later; with no
@@ -1870,6 +1905,12 @@
     }
   }
 
+  /** Song-menu loads close the importer explicitly; mount-time loads deliberately do not. */
+  async function loadSongFromMenu(songToLoad: SerializedSong) {
+    if (isMidiVisible) await changeMidiVisibility(false);
+    await loadSong(songToLoad);
+  }
+
   // In both functions the funnel (and its resync) runs BEFORE the selection move, not after.
   // While playing (reachable via the MIDI shortcuts) the move is a jump, and a jump's re-anchor
   // commits the target column's audio a start-margin into the future — still retractable, so a
@@ -1877,12 +1918,14 @@
   // recommit the sounding column: the jumped-to column would land silent. Resync the mutation
   // first, then jump; the anchor is the last word on the committed window.
   function addColumns(amount = 1, position: number | 'end' = 'end') {
+    if (songLocked) return;
     song.addColumns(amount, position);
     handleAutoSave();
     if (amount === 1) selectColumn(song.selected + 1);
   }
 
   function removeColumns(amount: number, position: number) {
+    if (songLocked) return;
     if (song.columns.length < settings.beatMarks.value * 4) return;
     song.removeColumns(amount, position);
     handleAutoSave();
@@ -2007,10 +2050,12 @@
   // wrapper's to solve: the paths that shrink the live song's column array validate inside
   // ComposedSong - see validateBreakpoints' own docstring for which and why.
   function toggleBreakpoint(override?: number) {
+    if (songLocked) return;
     song.toggleBreakpoint(override);
   }
 
   function handleTempoChanger(changer: (typeof game.composer.tempoChangers)[number]) {
+    if (songLocked) return;
     if (selectedColumns.length) {
       addToHistory();
       song.setTempoChangerAt(selectedColumns, changer);
@@ -2148,6 +2193,7 @@
   }
 
   function undo() {
+    if (songLocked) return;
     const history = undoHistory.pop();
     if (!history) return;
     song.restoreColumns(history.columns);
@@ -2182,6 +2228,7 @@
   }
 
   function pasteColumns(insert: boolean, targetLayer: number | 'all') {
+    if (songLocked) return;
     addToHistory();
     if (targetLayer === 'all') song.pasteColumns(clipboard.columns, insert, clipboard.pitches);
     else if (Number.isFinite(targetLayer))
@@ -2192,6 +2239,7 @@
   }
 
   function eraseColumns(targetLayer: number | 'all') {
+    if (songLocked) return;
     addToHistory();
     song.eraseColumns(selectedColumns, targetLayer);
     changes++;
@@ -2200,6 +2248,7 @@
   }
 
   function moveNotesBy(amount: number, position: number | 'all') {
+    if (songLocked) return;
     addToHistory();
     song.moveNotesBy(selectedColumns, amount, position);
     changes++;
@@ -2207,6 +2256,7 @@
   }
 
   function switchLayerPosition(direction: 1 | -1) {
+    if (songLocked) return;
     const toSwap = layer + direction;
     if (toSwap < 0 || toSwap > song.instruments.length - 1) return;
     // two halves of one move: swapLayer retags the notes (structure version), swapInstruments
@@ -2220,6 +2270,7 @@
   }
 
   function deleteColumns() {
+    if (songLocked) return;
     addToHistory();
     // no validateBreakpoints() chained on: deleteColumns() runs it itself, like the other paths
     // that shrink the column array. It did not use to, and while that was so, this call site was
@@ -2230,12 +2281,60 @@
     selectedColumns = [song.selected];
   }
 
-  function changeMidiVisibility(visible: boolean) {
-    // Consume on open, drop on close: the handoff is one-shot, and a file left behind by a
-    // closed importer must not be picked up by the next one.
-    pendingMidiFile = visible ? consumePendingMidiImport() : null;
-    isMidiVisible = visible;
-    if (visible) Analytics.songEvent({ type: 'create_MIDI' });
+  async function changeMidiVisibility(visible: boolean): Promise<boolean> {
+    if (visible) {
+      if (isMidiVisible || midiOpening) return isMidiVisible;
+
+      // Settle everything which could write later from a release/pagehide/selection move. A sustain
+      // recording is an edit that began before the lock, so it gets its normal final quantization;
+      // only its automatic persistence is held back for the explicit question immediately below.
+      durationPopover = null;
+      abandonNoteHolds();
+      abandonNotePresses();
+      suppressAutoSave = true;
+      try {
+        endAllSustainRecordings();
+      } finally {
+        suppressAutoSave = false;
+      }
+
+      // Lock while the asynchronous question is visible so a physical key or MIDI event cannot
+      // create a new edit after the state the question refers to has been settled.
+      midiOpening = true;
+      if (changes > 0) {
+        const shouldSave = await askForSongUpdate();
+        if (shouldSave === null) {
+          midiOpening = false;
+          return false;
+        }
+        if (shouldSave && !(await updateSong(song))) {
+          midiOpening = false;
+          return false;
+        }
+      }
+      if (!mounted) {
+        midiOpening = false;
+        return false;
+      }
+
+      // Consume only after opening is accepted. A cancelled attempt keeps the handoff available for
+      // the user's next attempt instead of silently losing the file that brought them here.
+      pendingMidiFile = consumePendingMidiImport();
+      midiPreviewLoaded = false;
+      isMidiVisible = true;
+      midiOpening = false;
+      Analytics.songEvent({ type: 'create_MIDI' });
+      return true;
+    }
+
+    // The live preview remains installed. Mark only a session which actually installed one dirty;
+    // opening and closing the empty panel must not turn an untouched song into unsaved work.
+    if (isMidiVisible && midiPreviewLoaded) changes = Math.max(changes, 1);
+    pendingMidiFile = null;
+    isMidiVisible = false;
+    midiOpening = false;
+    midiPreviewLoaded = false;
+    return true;
   }
 
   async function downloadSong(songToDownload: SerializedSong, as: 'song' | 'midi') {
@@ -2487,7 +2586,6 @@
     initialFile={pendingMidiFile}
     functions={{
       changeMidiVisibility,
-      changePitch,
       loadSong,
     }}
   />
@@ -2538,6 +2636,7 @@
       onInstrumentDelete={removeInstrument}
       onChangePosition={switchLayerPosition}
       onMerge={mergeLayer}
+      {songLocked}
       onSettingsOpenChange={(open) => (layerSettingsDismissesClicks = open)}
     />
   </div>
@@ -2577,6 +2676,7 @@
           {viewLocked}
           keyboardRaised={keyboardSheetRaised}
           {overlayDismissesClicks}
+          {songLocked}
           {selectColumn}
           {toggleBreakpoint}
           onProCellTap={handleProCellTap}
@@ -2592,6 +2692,7 @@
       <div class="buttons-composer-wrapper-right">
         <CanvasTool
           onclick={() => addColumns(1, song.selected)}
+          disabled={songLocked}
           tooltip={t('composer:add_column')}
           ariaLabel={t('composer:add_column')}
         >
@@ -2599,6 +2700,7 @@
         </CanvasTool>
         <CanvasTool
           onclick={() => removeColumns(1, song.selected)}
+          disabled={songLocked}
           tooltip={t('composer:remove_column')}
           ariaLabel={t('composer:remove_column')}
         >
@@ -2606,6 +2708,7 @@
         </CanvasTool>
         <CanvasTool
           onclick={() => addColumns(Number(settings.beatMarks.value) * 4, 'end')}
+          disabled={songLocked}
           tooltip={t('composer:add_new_page')}
           ariaLabel={t('composer:add_new_page')}
         >
@@ -2653,6 +2756,7 @@
             {isPlaying}
             currentColumn={song.selectedColumn}
             {handleTempoChanger}
+            {songLocked}
           />
         {/if}
       </div>
@@ -2695,6 +2799,7 @@
       noteNameType: settings.noteNameType.value,
       proView,
       noteStatesCleared,
+      songLocked,
     }}
   />
   {#if proView}
@@ -2716,6 +2821,7 @@
       holdActive={durationPopover.holdActive}
       onChange={setPopoverSpan}
       onClose={closeDurationPopover}
+      disabled={songLocked}
     />
   {/if}
 </div>
@@ -2724,9 +2830,10 @@
     settings,
     hasChanges: changes > 0,
     currentSongId: song.id,
+    songLocked,
   }}
   functions={{
-    loadSong,
+    loadSong: loadSongFromMenu,
     renameSong,
     downloadSong,
     exportSongAudio,
@@ -2749,6 +2856,7 @@
     selectedColumns,
     undoHistory,
     proView,
+    songLocked,
   }}
   functions={{
     toggleTools,

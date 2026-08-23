@@ -41,6 +41,7 @@
     dragAction,
     registerElement,
     held = false,
+    locked = false,
     noteText,
     noteImage,
   }: {
@@ -63,6 +64,8 @@
     registerElement?: (data: ObservableNote, element: HTMLElement | null) => void;
     /** The current column is covered by this button's note span on the current layer. */
     held?: boolean;
+    /** MIDI import keeps the key audible but makes its editing gesture read-only. */
+    locked?: boolean;
     noteText: string;
     noteImage: NoteImage;
   } = $props();
@@ -77,11 +80,11 @@
   let activePointerId: number | null = null;
 
   function startLongPress() {
-    if (!longPressAction) return;
+    if (!longPressAction || locked) return;
     clearTimeout(longPressTimeout);
     longPressTimeout = setTimeout(() => {
       longPressTimeout = 0;
-      if (!buttonElement) return;
+      if (!buttonElement || locked) return;
       longPressFired = true;
       longPressAction(data, buttonElement);
     }, COMPOSER_LONG_PRESS_MS);
@@ -168,7 +171,8 @@
   onpointerup={(e) => endPress(e.pointerId)}
   onpointerleave={(e) => endPress(e.pointerId)}
   onpointercancel={(e) => endPress(e.pointerId)}
-  class="button-hitbox"
+  class={['button-hitbox', locked && 'composer-note-locked']}
+  aria-disabled={locked}
   oncontextmenu={preventDefault}
 >
   <div class={className}>
@@ -192,3 +196,11 @@
     </div>
   </div>
 </button>
+
+<style>
+  /* Read-only, not natively disabled: a locked key still auditions through its guarded handler. */
+  .composer-note-locked {
+    opacity: 0.65;
+    cursor: not-allowed;
+  }
+</style>

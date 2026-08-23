@@ -13,10 +13,13 @@
     settings,
     changeVolume,
     onUpdate,
+    songLocked = false,
   }: {
     settings: Record<string, SettingsPropriety>;
     changeVolume?: (data: SettingVolumeUpdate) => void;
     onUpdate: (data: SettingUpdate) => void;
+    /** Disable only settings serialized into the open song during a MIDI import session. */
+    songLocked?: boolean;
   } = $props();
 
   type Group = {
@@ -46,12 +49,14 @@
       {t(`settings:category.${group.category}`)}
     </h1>
     {#each Object.entries(group.settings) as [key, setting] (key)}
-      <SettingsRow
-        objKey={key as SettingUpdateKey}
-        data={setting}
-        {changeVolume}
-        update={onUpdate}
-      />
+      <fieldset class="settings-row-fieldset" disabled={songLocked && setting.songSetting}>
+        <SettingsRow
+          objKey={key as SettingUpdateKey}
+          data={setting}
+          {changeVolume}
+          update={onUpdate}
+        />
+      </fieldset>
     {/each}
   </div>
 {/each}
@@ -60,5 +65,16 @@
   .settings-group-title {
     font-size: 1.3rem;
     margin: 0.5rem 0;
+  }
+
+  .settings-row-fieldset {
+    min-inline-size: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+
+  .settings-row-fieldset:disabled {
+    opacity: 0.55;
   }
 </style>

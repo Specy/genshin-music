@@ -34,6 +34,7 @@
     onMerge,
     currentLayer,
     instruments,
+    disabled = false,
   }: {
     currentLayer: number;
     instruments: InstrumentData[];
@@ -43,6 +44,7 @@
     onMerge: (direction: 1 | -1) => void;
     onDelete: () => void;
     onClose: () => void;
+    disabled?: boolean;
   } = $props();
 
   /**
@@ -83,6 +85,7 @@
         class="input"
         style="width:7.4rem"
         value={instrument.alias}
+        {disabled}
         oninput={(e) => onChange(edited({ alias: e.currentTarget.value }))}
         placeholder={tInstrument(instrument.name)}
       />
@@ -93,6 +96,7 @@
       <InstrumentSelect
         style="width:8rem"
         selected={instrument.name}
+        {disabled}
         onChange={(name) => onChange(edited({ name }))}
       />
     </div>
@@ -101,6 +105,7 @@
       <PitchSelect
         style="padding:0.3rem;width:8rem"
         selected={instrument.pitch as Pitch}
+        {disabled}
         onChange={(pitch) => onChange(edited({ pitch }))}
       >
         <option value="">
@@ -116,6 +121,7 @@
           onChange(edited({ reverbOverride: toReverbValue(e.currentTarget.value) }));
         }}
         value={getReverbValue(instrument.reverbOverride)}
+        {disabled}
       >
         <option value="On">
           {t('common:on')}
@@ -135,6 +141,7 @@
         style="padding:0.3rem;width:8rem"
         onchange={(e) => onChange(edited({ icon: e.currentTarget.value as InstrumentNoteIcon }))}
         value={instrument.icon}
+        {disabled}
       >
         {#each noteIcons as iconKind (iconKind)}
           <option value={iconKind}>{t(`common:${iconKind}`)}</option>
@@ -162,11 +169,13 @@
         min={0}
         max={125}
         value={instrument.volume}
+        {disabled}
         oninput={(e) => onChange(edited({ volume: Number(e.currentTarget.value) }))}
       />
       <AppButton
         class="flex-centered"
         toggled={instrument.muted}
+        {disabled}
         style="padding:0;min-width:unset;width:1.6rem;height:1.6rem;border-radius:2rem"
         onclick={() => {
           if (instrument.volume === 0 && !instrument.muted) return;
@@ -212,7 +221,7 @@
       <div class="column" style="flex:1;gap:0.3rem">
         <AppButton
           onclick={() => onMerge(-1)}
-          disabled={currentLayer === 0}
+          disabled={disabled || currentLayer === 0}
           class="flex-centered"
           style="padding:calc(0.5rem - var(--instrument-settings-button-trim)) 0.5rem"
         >
@@ -233,7 +242,7 @@
         </AppButton>
         <AppButton
           onclick={() => onMerge(1)}
-          disabled={currentLayer === instruments.length - 1}
+          disabled={disabled || currentLayer === instruments.length - 1}
           class="flex-centered"
           style="padding:calc(0.5rem - var(--instrument-settings-button-trim)) 0.5rem"
         >
@@ -256,7 +265,7 @@
       <div class="column" style="flex:1;gap:0.3rem">
         <AppButton
           onclick={() => onChangePosition(-1)}
-          disabled={currentLayer === 0}
+          disabled={disabled || currentLayer === 0}
           class="flex-centered"
           style="padding:calc(0.5rem - var(--instrument-settings-button-trim)) 0.5rem"
         >
@@ -277,7 +286,7 @@
         </AppButton>
         <AppButton
           onclick={() => onChangePosition(1)}
-          disabled={currentLayer === instruments.length - 1}
+          disabled={disabled || currentLayer === instruments.length - 1}
           class="flex-centered"
           style="padding:calc(0.5rem - var(--instrument-settings-button-trim)) 0.5rem"
         >
@@ -303,6 +312,7 @@
         class="row-centered"
         style="padding:calc(0.4rem - var(--instrument-settings-button-trim)) 0.4rem;width:fit-content"
         onclick={onDelete}
+        {disabled}
       >
         <svg
           stroke="currentColor"

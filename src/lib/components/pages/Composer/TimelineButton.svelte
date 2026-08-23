@@ -8,13 +8,27 @@
     tooltip?: string;
     ariaLabel?: string;
     style?: string;
+    disabled?: boolean;
     children: Snippet;
   }
 
-  let { onclick, children, tooltip, style, ariaLabel }: TimelineButtonProps = $props();
+  let {
+    onclick,
+    children,
+    tooltip,
+    style,
+    ariaLabel,
+    disabled = false,
+  }: TimelineButtonProps = $props();
 </script>
 
-<button class={['timeline-button', hasTooltip(tooltip)]} {onclick} {style} aria-label={ariaLabel}>
+<button
+  class={['timeline-button', hasTooltip(tooltip)]}
+  {onclick}
+  {style}
+  {disabled}
+  aria-label={ariaLabel}
+>
   {@render children()}
   {#if tooltip}
     <Tooltip>

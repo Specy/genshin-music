@@ -21,6 +21,7 @@
     holdActive,
     onChange,
     onClose,
+    disabled = false,
   }: {
     span: number;
     maxSpan: number;
@@ -40,6 +41,7 @@
     holdActive: boolean;
     onChange: (span: number) => void;
     onClose: () => void;
+    disabled?: boolean;
   } = $props();
 
   let popoverElement: HTMLDivElement | undefined = $state();
@@ -138,6 +140,7 @@
 >
   <button
     class="duration-popover-step"
+    {disabled}
     onclick={() => setHoldAmount(holdAmount - 1)}
     aria-label="-1"
   >
@@ -145,6 +148,7 @@
   </button>
   <input
     type="range"
+    {disabled}
     min="0"
     max={SLIDER_MAX}
     value={Math.min(holdAmount, SLIDER_MAX)}
@@ -153,6 +157,7 @@
   />
   <button
     class="duration-popover-step"
+    {disabled}
     onclick={() => setHoldAmount(holdAmount + 1)}
     aria-label="+1"
   >
@@ -171,6 +176,7 @@
        simply does not apply: the note keeps the span it has until a real number arrives. -->
   <input
     type="number"
+    {disabled}
     class="duration-popover-value"
     min="0"
     max={maxHoldAmount}

@@ -110,7 +110,7 @@
     const inset = Math.max(0, surfaceHeight - collapsedHeight);
     //`fill: both` so the from-state holds from creation (this runs before the phase flip's first
     //paint) and the end-state holds until finishReveal swaps it for the equivalent scroll offset
-    const options: KeyframeAnimationOptions = { duration: 150, easing: 'ease-out', fill: 'both' };
+    const options = { duration: 150, easing: 'ease-out', fill: 'both' as const };
     const surfaceAnimation = surfaceElement.animate(
       [
         { clipPath: `inset(0 0 ${inset}px 0 round 0.5rem)` },

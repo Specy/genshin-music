@@ -74,6 +74,8 @@
      * handler below, never inside the renderer - the pixi side knows nothing about the overlays.
      */
     overlayDismissesClicks: boolean;
+    /** MIDI import keeps navigation/zoom live while refusing canvas writes. */
+    songLocked: boolean;
     selectColumn: (index: number, ignoreAudio?: boolean, forceAnchor?: boolean) => void;
     toggleBreakpoint: () => void;
     /** A settled Pro View tap, as the cell it landed on - what it EDITS is Composer.svelte's. */
@@ -142,6 +144,7 @@
     viewLocked,
     keyboardRaised,
     overlayDismissesClicks,
+    songLocked,
     selectColumn,
     toggleBreakpoint,
     onProCellTap,
@@ -272,12 +275,15 @@
           //a dismissing tap that lands on one of those is harmless-but-functional.
           //The long press answers FALSE, which is what tells the renderer nothing took the hold.
           onProCellTap: (column, number) => {
-            if (pressDismissedOverlay) return;
+            if (pressDismissedOverlay || songLocked) return;
             onProCellTap(column, number);
           },
           onProCellLongPress: (column, number, rect) =>
-            pressDismissedOverlay ? false : onProCellLongPress(column, number, rect),
-          onProCellLongPressDrag,
+            pressDismissedOverlay || songLocked ? false : onProCellLongPress(column, number, rect),
+          onProCellLongPressDrag: (deltaX) => {
+            if (songLocked) return;
+            onProCellLongPressDrag(deltaX);
+          },
           onProCellLongPressEnd,
           onKeyboardDismiss,
           onViewUnlock,
@@ -488,6 +494,7 @@
 
 <div
   class={['canvas-wrapper', inPreview && 'canvas-wrapper-in-preview']}
+  aria-readonly={songLocked}
   style="width:{width}px;background-color:{hasCache ? 'unset' : backgroundHex}"
   style:--composer-canvas-width-mobile={cssSize?.mobileWidth}
   style:--composer-canvas-width-desktop={cssSize?.desktopWidth}
@@ -499,7 +506,7 @@
   <div
     class="canvas-relative"
     bind:this={canvasContainerEl}
-    onpointerdowncapture={() => (pressDismissedOverlay = overlayDismissesClicks)}
+    onpointerdowncapture={() => (pressDismissedOverlay = overlayDismissesClicks || songLocked)}
   >
     <!--
       `height` is the NOTES region, and the inline height is what holds these chevrons to it:
@@ -593,6 +600,7 @@
            gap between it and the two above exactly the strip's span - see the comment above -->
       <TimelineButton
         onclick={toggleBreakpoint}
+        disabled={songLocked}
         style="margin-left:auto"
         tooltip={isBreakpointSelected
           ? t('composer:remove_breakpoint')

@@ -136,16 +136,14 @@ describe('composer undo is a compound snapshot (ADR-0007)', () => {
         expect(text.indexOf('addToHistory()')).toBeLessThan(text.indexOf('applyBasepointChange'))
     })
 
-    it('MidiParser\'s pitch funnel DELEGATES rather than repeating the edit', () => {
-        //the two entry points have to leave the song in the same state, and the copy that used to
-        //live in changePitch had already drifted from the branch it duplicated — it rewrote the
-        //notes but never counted the change
-        const text = functionCode('changePitch')
-        expect(text).toContain('handleSettingChange(')
-        expect(text).not.toContain('applyBasepointChange')
-        //the guard is load-bearing, not an optimisation: MidiParser calls this for the side effects
-        //alone, and the branch it feeds snapshots and rewrites only when the Basepoint really moved
-        expect(text).toContain('if (value === song.pitch) return')
+    it('MidiParser keeps its Basepoint local instead of rewriting the song it is previewing over', () => {
+        const midiParser = readFileSync(
+            'src/lib/components/pages/Composer/MidiParser/MidiParser.svelte',
+            'utf8',
+        )
+        expect(midiParser).not.toContain('functions.changePitch')
+        expect(midiParser).toContain('pitch = value')
+        expect(midiParser).toContain('functions.loadSong(song, { preview: true })')
     })
 })
 

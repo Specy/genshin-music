@@ -16,6 +16,7 @@
     onChangePosition,
     onMerge,
     onSettingsOpenChange,
+    songLocked = false,
   }: {
     instruments: InstrumentData[];
     selected: number;
@@ -26,6 +27,7 @@
     onInstrumentAdd: () => void;
     onChangePosition: (direction: 1 | -1) => void;
     onMerge: (direction: 1 | -1) => void;
+    songLocked?: boolean;
     /**
      * Whether the layer settings popup is up, which is the same thing as whether it is taking
      * outside clicks as dismissals — its clickOutside is `active: true` for as long as it is
@@ -86,6 +88,7 @@
       setNotEditing();
     }}
     onClose={setNotEditing}
+    disabled={songLocked}
   />
 {/if}
 <div class="column instruments-button-wrapper">
@@ -230,7 +233,8 @@
               >
             </AppButton>
             <AppButton
-              onclick={() => onInstrumentChange(ins.set({ visible: !ins.visible }), i)}
+              onclick={() => onInstrumentChange(ins.clone().set({ visible: !ins.visible }), i)}
+              disabled={songLocked}
               ariaLabel={ins.visible ? 'Hide' : 'Show'}
               toggled={!ins.visible}
               class="flex-centered"
@@ -268,7 +272,8 @@
                the ADR-0006 resync), and describes only THIS entry: solo never writes a field on
                another track, the set is derived from the flags at play time. -->
           <AppButton
-            onclick={() => onInstrumentChange(ins.set({ solo: !ins.solo }), i)}
+            onclick={() => onInstrumentChange(ins.clone().set({ solo: !ins.solo }), i)}
+            disabled={songLocked}
             toggled={ins.solo}
             class="flex-centered instrument-solo-button"
           >
@@ -280,6 +285,7 @@
   {/each}
   <div style="min-height:1rem"></div>
   <AppButton
+    disabled={songLocked}
     onclick={(e) => {
       onInstrumentAdd();
       setTimeout(() => {

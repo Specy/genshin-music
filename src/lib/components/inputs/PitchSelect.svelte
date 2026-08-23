@@ -13,12 +13,14 @@
     style = '',
     children,
     class: cls = '',
+    disabled = false,
   }: {
     selected: Pitch;
     onChange: (pitch: Pitch) => void;
     style?: string;
     children?: Snippet;
     class?: ClassValue;
+    disabled?: boolean;
   } = $props();
 
   function handleChange(e: Event & { currentTarget: EventTarget & HTMLSelectElement }) {
@@ -32,6 +34,7 @@
   style="width:100%;padding:0.3rem;{style}"
   onchange={handleChange}
   value={selected}
+  {disabled}
 >
   {@render children?.()}
   {#each PITCHES as pitch (pitch)}
@@ -55,6 +58,11 @@
 
   .select:focus {
     outline: none;
+  }
+
+  .select:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
   }
 
   .select :global(option:checked) {

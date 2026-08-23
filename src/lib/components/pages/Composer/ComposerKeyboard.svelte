@@ -56,6 +56,8 @@
        * reading the column at all.
        */
       noteStatesCleared: boolean;
+      /** The MIDI import session is read-only; note keys still audition. */
+      songLocked?: boolean;
     };
     functions: {
       handleClick: (note: ObservableNote, pointerId: number) => void;
@@ -177,6 +179,7 @@
               dragAction={functions.handleNoteDrag}
               registerElement={functions.registerNoteElement}
               held={data.heldButtons.has(i)}
+              locked={data.songLocked}
             />
           {/if}
         {/snippet}
@@ -206,6 +209,7 @@
       isPlaying={data.isPlaying}
       currentColumn={data.currentColumn}
       handleTempoChanger={functions.handleTempoChanger}
+      songLocked={data.songLocked}
     />
   {/if}
 {/if}

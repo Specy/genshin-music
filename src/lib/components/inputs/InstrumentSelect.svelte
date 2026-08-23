@@ -32,11 +32,13 @@
     onChange,
     style = '',
     class: cls = '',
+    disabled = false,
   }: {
     selected: InstrumentName;
     onChange: (instrument: InstrumentName) => void;
     style?: string;
     class?: ClassValue;
+    disabled?: boolean;
   } = $props();
 
   function handleChange(e: Event & { currentTarget: EventTarget & HTMLSelectElement }) {
@@ -57,6 +59,7 @@
   style="width:100%;padding:0.3rem;background-image:{backgroundImage};{style}"
   onchange={handleChange}
   value={selected}
+  {disabled}
 >
   {#if entries.length === 1}
     {#each instrumentGroups.instruments as ins (ins)}
@@ -90,6 +93,11 @@
 
   .select:focus {
     outline: none;
+  }
+
+  .select:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
   }
 
   .select option:checked {

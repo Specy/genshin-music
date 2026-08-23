@@ -49,6 +49,7 @@
       // the id of the song open in the composer (null while it is unsaved), so its row in the
       // song list can show it is the one being edited
       currentSongId: string | null;
+      songLocked: boolean;
     };
     functions: {
       loadSong: (song: SerializedSong) => void;
@@ -395,6 +396,7 @@
           componentProps={{
             folders: folderStore.folders,
             currentSongId: data.currentSongId,
+            songLocked: data.songLocked,
             functions: {
               loadSong: functions.loadSong,
               removeSong,
@@ -437,6 +439,7 @@
           settings={data.settings}
           onUpdate={functions.handleSettingChange}
           changeVolume={functions.changeVolume}
+          songLocked={data.songLocked}
         />
         <Separator background="var(--secondary)" height="0.1rem" verticalMargin="0.5rem" />
         <div class="settings-row-wrap">

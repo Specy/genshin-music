@@ -18,11 +18,13 @@
     data,
     folders,
     currentSongId,
+    songLocked = false,
     functions,
   }: {
     data: SongStorable;
     folders: Folder[];
     currentSongId: string | null;
+    songLocked?: boolean;
     functions: {
       removeSong: (name: string, id: string) => void;
       renameSong: (newName: string, id: string) => void;
@@ -44,6 +46,7 @@
   let songName = $derived(data.name);
   //the null guard matters: an unsaved song's id is null, and so is a storable row's in theory
   const isCurrent = $derived(currentSongId !== null && data.id === currentSongId);
+  const renameLocked = $derived(songLocked && isCurrent);
 
   async function openInComposer(event: MouseEvent | KeyboardEvent) {
     if (isRenaming) return;
@@ -67,6 +70,7 @@
   }
 
   function toggleRename() {
+    if (renameLocked) return;
     const wasRenaming = isRenaming;
     if (wasRenaming) {
       functions.renameSong(songName, data.id!);
@@ -228,7 +232,7 @@
       {#if isRenaming}
         <input
           class={['song-name-input', isRenaming && 'song-rename']}
-          disabled={!isRenaming}
+          disabled={!isRenaming || renameLocked}
           oninput={(e) => (songName = e.currentTarget.value)}
           style="width:100%;color:var(--primary-text)"
           value={songName}
@@ -251,7 +255,12 @@
         tooltip={t('settings:more_options')}
         onClose={() => (isRenaming = false)}
       >
-        <AppButton class="row row-centered" style="padding:0.4rem" onclick={toggleRename}>
+        <AppButton
+          class="row row-centered"
+          style="padding:0.4rem"
+          onclick={toggleRename}
+          disabled={renameLocked}
+        >
           {@render faPenIcon()}
           <FloatingDropdownText text={isRenaming ? t('common:save') : t('common:rename')} />
         </AppButton>

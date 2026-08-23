@@ -22,10 +22,12 @@
     isPlaying,
     currentColumn,
     handleTempoChanger,
+    songLocked = false,
   }: {
     isPlaying: boolean;
     currentColumn: NoteColumn;
     handleTempoChanger: (tempoChanger: (typeof game.composer.tempoChangers)[number]) => void;
+    songLocked?: boolean;
   } = $props();
 </script>
 
@@ -35,6 +37,7 @@
   </div>
   {#each game.composer.tempoChangers as tempoChanger (tempoChanger.id)}
     <button
+      disabled={songLocked}
       onclick={() => handleTempoChanger(tempoChanger)}
       style="{tempoChanger.changer === 1
         ? `background-color:${ThemeProvider.get('primary').toString()};color:${ThemeProvider.getText('primary').toString()}`

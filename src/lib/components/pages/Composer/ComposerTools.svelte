@@ -25,6 +25,7 @@
        * that modifier's own note.
        */
       proView: boolean;
+      songLocked: boolean;
     };
     functions: {
       toggleTools: () => void;
@@ -239,7 +240,7 @@
       )}
       {@render toolButton(
         {
-          disabled: !data.hasCopiedColumns,
+          disabled: data.songLocked || !data.hasCopiedColumns,
           onClick: () => functions.pasteColumns(false, selectedTarget),
           tooltip: t('composer:tools.paste_copied_notes'),
           tooltipPosition: 'bottom',
@@ -249,7 +250,7 @@
       )}
       {@render toolButton(
         {
-          disabled: !data.hasCopiedColumns,
+          disabled: data.songLocked || !data.hasCopiedColumns,
           onClick: () => functions.pasteColumns(true, selectedTarget),
           tooltip: t('composer:tools.insert_copied_notes'),
           area: 'c',
@@ -258,7 +259,7 @@
       )}
       {@render toolButton(
         {
-          disabled: data.hasCopiedColumns,
+          disabled: data.songLocked || data.hasCopiedColumns,
           onClick: () => functions.eraseColumns(selectedTarget),
           tooltip: t('composer:tools.erase_all_selected_notes'),
           area: 'd',
@@ -267,7 +268,7 @@
       )}
       {@render toolButton(
         {
-          disabled: data.hasCopiedColumns || selectedTarget !== 'all',
+          disabled: data.songLocked || data.hasCopiedColumns || selectedTarget !== 'all',
           onClick: functions.deleteColumns,
           tooltip: t('composer:tools.delete_selected_columns'),
           area: 'f',
@@ -276,7 +277,7 @@
       )}
       {@render toolButton(
         {
-          disabled: data.hasCopiedColumns,
+          disabled: data.songLocked || data.hasCopiedColumns,
           tooltip: t('composer:tools.move_notes_up_description'),
           area: 'e',
           onClick: () => functions.moveNotesBy(1, selectedTarget),
@@ -285,7 +286,7 @@
       )}
       {@render toolButton(
         {
-          disabled: data.hasCopiedColumns,
+          disabled: data.songLocked || data.hasCopiedColumns,
           tooltip: t('composer:tools.move_notes_down_description'),
           onClick: () => functions.moveNotesBy(-1, selectedTarget),
           area: 'g',
@@ -357,7 +358,7 @@
       <div class="row" style="flex:1;align-items:flex-end">
         <AppButton
           style="flex:1;justify-content:center"
-          disabled={data.undoHistory.length === 0}
+          disabled={data.songLocked || data.undoHistory.length === 0}
           onclick={functions.undo}
         >
           {t('common:undo')}

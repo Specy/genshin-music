@@ -17,7 +17,7 @@
 </script>
 
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import { onDestroy, onMount } from 'svelte';
   import { base } from '$app/paths';
   import { PITCHES } from '$core/sharedConfig';
   import type { Pitch } from '$lib/games/types';
@@ -65,8 +65,7 @@
     };
     functions: {
       changeMidiVisibility: (override: boolean) => void;
-      changePitch: (pitch: Pitch) => void;
-      loadSong: (song: ComposedSong) => void;
+      loadSong: (song: ComposedSong, options?: { preview?: boolean }) => void;
     };
     /**
      * A file that already made the app open this screen (dropped on a menu that can't parse it):
@@ -89,6 +88,14 @@
   let totalNotes = $state(0);
   let includeAccidentals = $state(true);
   let warnedOfExperimental = false;
+  // Parsing audio/video can outlive this import session by several seconds. A closed importer must
+  // never install that stale result over the song after the lock has gone (or over a newer import).
+  let componentAlive = true;
+
+  onDestroy(() => {
+    componentAlive = false;
+    logger.hidePill();
+  });
 
   //the layer roster the tracks land on: the file's own when it is one of our exports, otherwise
   //the layers the open composer song already has — which is what this screen has always mapped
@@ -109,15 +116,18 @@
       const name = file.file.name;
       if (isVideoFormat(name)) {
         const audio = await extractAudio(file);
-        parseAudioToMidi(audio, name);
+        if (!componentAlive) return;
+        return await parseAudioToMidi(audio, name);
       } else if (isAudioFormat(name)) {
         const audio = await extractAudio(file);
-        parseAudioToMidi(audio, name);
+        if (!componentAlive) return;
+        return await parseAudioToMidi(audio, name);
       } else {
         const midi = new MidiConstructor(file.data as ArrayBuffer);
-        return mandleMidiFile(midi, name);
+        if (componentAlive) return mandleMidiFile(midi, name);
       }
     } catch (e) {
+      if (!componentAlive) return;
       console.error(e);
       logger.hidePill();
       logger.error(t('logs:error_opening_file'));
@@ -133,8 +143,10 @@
     void (async () => {
       try {
         const data = await file.arrayBuffer();
+        if (!componentAlive) return;
         await handleFile([{ data, file }]);
       } catch (e) {
+        if (!componentAlive) return;
         console.error(e);
         logger.error(t('logs:error_opening_file'));
       }
@@ -160,6 +172,7 @@
     const model = `${base}/assets/audio-midi-model.json`;
     logger.showPill(`${t('composer:midi_parser.detecting_notes')}...`, { spinner: true });
     const { BasicPitch, noteFramesToTime, outputToNotesPoly } = await basicPitchLoader();
+    if (!componentAlive) return;
     const basicPitch = new BasicPitch(model);
     const mono = audio.getChannelData(0);
     await basicPitch.evaluateModel(
@@ -169,14 +182,17 @@
         onsets.push(...o);
       },
       (progress) => {
+        if (!componentAlive) return;
         logger.showPill(
           `${t('composer:midi_parser.detecting_notes')}: ${Math.floor(progress * 100)}%...`,
           { spinner: true }
         );
       }
     );
+    if (!componentAlive) return;
     logger.showPill(t('composer:midi_parser.converting_audio_to_midi'), { spinner: true });
     await delay(300);
+    if (!componentAlive) return;
     const notes = noteFramesToTime(
       outputToNotesPoly(
         frames, //frames
@@ -200,12 +216,14 @@
         velocity: note.amplitude,
       });
     });
+    if (!componentAlive) return;
     logger.hidePill();
     mandleMidiFile(midi, name);
   }
 
   // QUIRK: mandleMidiFile (not handleMidiFile) is an intentional preserved typo.
   function mandleMidiFile(midi: Midi, name: string) {
+    if (!componentAlive) return;
     try {
       const midiBpm = midi.header.tempos[0]?.bpm;
       const key = midi.header.keySignatures[0]?.key;
@@ -304,7 +322,8 @@
     if (song.columns.length === 0) {
       return logger.warn(t('composer:midi_parser.there_are_no_notes'));
     }
-    functions.loadSong(song);
+    if (!componentAlive) return;
+    functions.loadSong(song, { preview: true });
     accidentals = result.accidentals;
     totalNotes = result.totalNotes;
     outOfRange = result.outOfRange;
@@ -360,7 +379,6 @@
   }
 
   function changePitch(value: Pitch) {
-    functions.changePitch(value);
     pitch = value;
     //the Basepoint is an input to the CONVERSION now, not just a playback label the composer
     //keeps beside it: re-run so the preview the user is looking at is the song they would load
