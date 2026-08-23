@@ -29,11 +29,9 @@
 @media only screen and (max-width: 920px) {
   .player-chunks-page {
     width: 55vw;
-    top: 0.4rem;
   }
 
   .player-controls {
     right: 0;
-    padding: 0.4rem;
   }
 }
