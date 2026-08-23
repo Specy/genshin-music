@@ -11,7 +11,7 @@ jank:
 
 1. **Player fullscreen frame picker** — `PlayerSheetCard` swaps `visibleChunks` to `allChunks`
    (one chunk per musical instant; a few-minute song is 500–1500 frames → 15k–40k nodes) the
-   instant the expand phase flips, so node creation + layout runs *inside* the 150ms height
+   instant the expand phase flips, so node creation + layout runs _inside_ the 150ms height
    animation.
 2. **Sheet visualizer page** — one `SheetFrame2` per `VisualSong` chunk (for composed songs
    essentially one per column) → 25k–100k nodes on first song load; first render takes seconds.
@@ -46,7 +46,7 @@ session is **explicitly out of scope** here (separate task).
   keys its `{#each}` by index on purpose** (QUIRK comment in file). Leave that alone.
 - **Preserve the narrative comments** (the `displayButton` / ADR-0004 / ADR-0007 blocks, the
   "Dead code, deliberately kept inert" block in SheetFrame2, the containing-block notes in
-  PlayerSheetCard). Update a comment's *content* where this plan changes the behavior it
+  PlayerSheetCard). Update a comment's _content_ where this plan changes the behavior it
   describes (e.g. references to per-cell divs); never delete the rationale.
 - **The working tree has many unrelated uncommitted changes** (the user edits while agents run —
   see memory "Don't revert unexplained tree changes"). Touch only the files this plan names. Do
@@ -55,16 +55,16 @@ session is **explicitly out of scope** here (separate task).
 
 ### Files touched (complete list)
 
-| File | Items |
-|---|---|
-| `src/lib/components/pages/SheetVisualizer/SheetFrame.css` | A, B2 |
-| `src/lib/components/pages/SheetVisualizer/SheetFrame.svelte` | A |
-| `src/lib/components/pages/SheetVisualizer/SheetFrame2.svelte` | A |
-| `src/routes/sheet-visualizer/+page.svelte` | A |
-| `src/lib/components/pages/Player/PlayerPagesRenderer.svelte` | A |
-| `src/lib/components/pages/Player/PlayerSheetFrame.svelte` | A, B2 |
-| `src/lib/components/pages/Player/PlayerSheetCard.svelte` | B1 |
-| `test/playerSheetCard.test.ts` | B1 |
+| File                                                          | Items |
+| ------------------------------------------------------------- | ----- |
+| `src/lib/components/pages/SheetVisualizer/SheetFrame.css`     | A, B2 |
+| `src/lib/components/pages/SheetVisualizer/SheetFrame.svelte`  | A     |
+| `src/lib/components/pages/SheetVisualizer/SheetFrame2.svelte` | A     |
+| `src/routes/sheet-visualizer/+page.svelte`                    | A     |
+| `src/lib/components/pages/Player/PlayerPagesRenderer.svelte`  | A     |
+| `src/lib/components/pages/Player/PlayerSheetFrame.svelte`     | A, B2 |
+| `src/lib/components/pages/Player/PlayerSheetCard.svelte`      | B1    |
+| `test/playerSheetCard.test.ts`                                | B1    |
 
 Verified consumer map (2026-08-23): `SheetFrame.svelte` is imported **only** by
 `PlayerSheetFrame.svelte`; `SheetFrame2.svelte` **only** by `sheet-visualizer/+page.svelte`; the
@@ -103,7 +103,7 @@ filled cell is simply hidden beneath the opaque note block (25%-size dot centere
 
 .frame-note-s {
   /* existing rules, plus: */
-  position: relative;                                        /* was inline on filled cells */
+  position: relative; /* was inline on filled cells */
   background-color: var(--selected-note-background, var(--accent)); /* add the fallback */
 }
 
@@ -128,9 +128,9 @@ filled cell is simply hidden beneath the opaque note block (25%-size dot centere
   `.visualizer-frame { --sheet-dot-color: black; }`.
 - Keep everything else byte-identical, including the two "intentionally empty, preserved
   byte-for-byte" QUIRK rules and the disabled `@supports` block.
-- **Dot geometry note:** the old dot's diameter was 25% of the *cell width*
+- **Dot geometry note:** the old dot's diameter was 25% of the _cell width_
   (`width:25%; padding-bottom:25%`). `circle closest-side` keys the 25% stop to half the cell's
-  *shorter* side — identical on Genshin (cells ≈ square), slightly smaller on Sky player frames
+  _shorter_ side — identical on Genshin (cells ≈ square), slightly smaller on Sky player frames
   (5 columns → cells wider than tall). `--sheet-dot-r` is the tuning knob if the eyeball check
   (see Verification) says Sky dots shrank noticeably; bump it via the container var rather than
   adding any game branch.
@@ -148,8 +148,7 @@ const filledNotes = $derived.by(() => {
     /* …existing displayButton comment block stays here… */
     const button = note.displayButton;
     if (button < 0 || button >= max) return;
-    const held =
-      note.duration >= SUSTAIN_VISUAL_THRESHOLD_MS || (byButton.get(button) ?? false);
+    const held = note.duration >= SUSTAIN_VISUAL_THRESHOLD_MS || (byButton.get(button) ?? false);
     byButton.set(button, held);
   });
   return [...byButton.entries()].map(([button, held]) => ({
@@ -221,11 +220,12 @@ Same transformation per column, plus the multi-color rows concern:
 ### A.4 `PlayerPagesRenderer.svelte` (container vars, player)
 
 On the `.player-chunks-page` element, extend the existing style attribute (the outer
-`grid-template-columns:repeat({columns},1fr)` — the *frames-per-row* grid — stays; `--sheet-cols`
-is the *cells-within-a-frame* count, a different number):
+`grid-template-columns:repeat({columns},1fr)` — the _frames-per-row_ grid — stays; `--sheet-cols`
+is the _cells-within-a-frame_ count, a different number):
 
 ```svelte
-style="grid-template-columns:repeat({columns}, 1fr);--sheet-cols:{game.notes.perRow};--sheet-dot-color:{dotColor}"
+style="grid-template-columns:repeat({columns}, 1fr);--sheet-cols:{game.notes
+  .perRow};--sheet-dot-color:{dotColor}"
 ```
 
 with `const dotColor = $derived(theme.layer('primary', 0.2).toString());` — computed **once per
@@ -246,7 +246,8 @@ const rowColors = $derived.by(() => {
 ```
 
 ```svelte
-style="grid-template-columns:repeat({framesPerRow},1fr);--sheet-cols:{game.notes.perRow};--sheet-dot-color:{dotColor};--sheet-row-color-0:{rowColors[0]};--sheet-row-color-1:{rowColors[1]};--sheet-row-color-2:{rowColors[2]}"
+style="grid-template-columns:repeat({framesPerRow},1fr);--sheet-cols:{game.notes
+  .perRow};--sheet-dot-color:{dotColor};--sheet-row-color-0:{rowColors[0]};--sheet-row-color-1:{rowColors[1]};--sheet-row-color-2:{rowColors[2]}"
 ```
 
 (`game` and `theme` are already imported here.) This preserves the exact old color math from
@@ -264,7 +265,7 @@ unchanged); print dots come out black and aligned.
 
 **File:** `PlayerSheetCard.svelte` (+ test). Today `showsAllFrames` flips the moment
 `openFullscreen()` sets the phase, so the whole-song mount competes with the 150ms height
-animation. New behavior: the growth animates over the *current inline page*; all frames mount at
+animation. New behavior: the growth animates over the _current inline page_; all frames mount at
 `animationend`; the collapse continues to show all frames while shrinking (unchanged, per the
 existing comment).
 
@@ -281,19 +282,19 @@ any   --playerStore stop event--> closed          (existing effect, unchanged sh
 
 Derived mapping (replaces today's booleans — get each one right, several gates move):
 
-| Concern | Phases |
-|---|---|
-| `.player-sheet-card-expanded` class (runs the grow animation) | `opening`, `open` |
-| `.player-sheet-card-closing` class | `closing` |
-| `showsAllFrames` (content = `allChunks`) | `open`, `closing` |
-| `--sheet-collapsed-height` style var applied | any phase `!== 'closed'` ⚠ today it's gated on `showsAllFrames`; during `opening` the animation needs it, so this gate MUST widen |
-| collapse icon shown / Escape collapses / outside-pointerdown collapses | `opening`, `open` |
-| scroll thumb visible (`updateScrollThumb` guard) | `open` only (unchanged) |
-| re-centre-on-new-pages effect guard | `open` only (unchanged) |
-| `cardVisible` | unchanged (`pages.length > 0 || (phase !== 'closed' && eventType !== 'stop')`) |
+| Concern                                                                | Phases                                                                                                                            |
+| ---------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| `.player-sheet-card-expanded` class (runs the grow animation)          | `opening`, `open`                                                                                                                 |
+| `.player-sheet-card-closing` class                                     | `closing`                                                                                                                         |
+| `showsAllFrames` (content = `allChunks`)                               | `open`, `closing`                                                                                                                 |
+| `--sheet-collapsed-height` style var applied                           | any phase `!== 'closed'` ⚠ today it's gated on `showsAllFrames`; during `opening` the animation needs it, so this gate MUST widen |
+| collapse icon shown / Escape collapses / outside-pointerdown collapses | `opening`, `open`                                                                                                                 |
+| scroll thumb visible (`updateScrollThumb` guard)                       | `open` only (unchanged)                                                                                                           |
+| re-centre-on-new-pages effect guard                                    | `open` only (unchanged)                                                                                                           |
+| `cardVisible`                                                          | unchanged (`pages.length > 0                                                                                                      |     | (phase !== 'closed' && eventType !== 'stop')`) |
 
-Popover invalidation (`activePopover`): the stored `fullscreen` field describes which *content
-view* the anchor element lives in, so capture and compare it against `showsAllFrames` (not the
+Popover invalidation (`activePopover`): the stored `fullscreen` field describes which _content
+view_ the anchor element lives in, so capture and compare it against `showsAllFrames` (not the
 chrome state): `popover.fullscreen !== showsAllFrames → null`, and keep the
 `pageIndex` check applying only when `!showsAllFrames`. Net effect: a popover opened inline
 survives the growth (its page is still what's mounted) and closes when the content swaps at
@@ -339,22 +340,22 @@ any phase change and on unmount.
 
 ### B1.3 Test update — `test/playerSheetCard.test.ts`
 
-The last case (*"shows every frame of the song when expanded…"*) asserts all frames immediately
+The last case (_"shows every frame of the song when expanded…"_) asserts all frames immediately
 after the expand click; under B1 that's now the **intermediate** state. Rework it to cover both
 halves — dispatch `animationend` directly on the card (the handler checks
 `e.target === cardElement`, and jsdom never fires it naturally):
 
 ```ts
-target.querySelector<HTMLButtonElement>('.player-sheet-expand button')!.click()
-await Promise.resolve()
-flushSync()
+target.querySelector<HTMLButtonElement>('.player-sheet-expand button')!.click();
+await Promise.resolve();
+flushSync();
 // growth still animating: the card shows the inline page, not the whole song
-expect(frames().length).toBe(2)
+expect(frames().length).toBe(2);
 
-target.querySelector('.player-sheet-card')!.dispatchEvent(new Event('animationend'))
-await Promise.resolve() // promoteToOpen awaits tick() before centering
-flushSync()
-expect(frames().map(f => f.dataset.frameIndex)).toEqual(['0', '1', '2'])
+target.querySelector('.player-sheet-card')!.dispatchEvent(new Event('animationend'));
+await Promise.resolve(); // promoteToOpen awaits tick() before centering
+flushSync();
+expect(frames().map((f) => f.dataset.frameIndex)).toEqual(['0', '1', '2']);
 ```
 
 (Adjust the microtask awaits until green — the semantics above are the contract.) The
@@ -369,7 +370,7 @@ expect(frames().map(f => f.dataset.frameIndex)).toEqual(['0', '1', '2'])
 `content-visibility: auto` implies paint containment, which **clips descendants to the element's
 bounds** — and the Section brackets deliberately overhang `.player-sheet-frame` by 0.25rem (see
 the comment in `PlayerSheetFrame.svelte`). Putting it on the wrapper would clip the brackets.
-Put it on `.sheet-frame-target` (the button) instead: the brackets are its *siblings*, and
+Put it on `.sheet-frame-target` (the button) instead: the brackets are its _siblings_, and
 nothing inside the button overhangs it. In `PlayerSheetFrame.svelte`'s scoped style:
 
 ```css
@@ -458,7 +459,7 @@ Manual QA (dev servers: `npm run dev:genshin`, `npm run dev:sky`; the memory
 - Fullscreen expand animation runs without a visible hitch on a 500+ chunk song; frames appear at
   animation end, centered.
 - Sheet visualizer first render of a long song no longer blocks for seconds (streaming/windowing
-  is *not* in this scope — B2 + A only reduce the constant; note remaining cost honestly if still
+  is _not_ in this scope — B2 + A only reduce the constant; note remaining cost honestly if still
   slow on target hardware).
 - Zero visual regressions in the checklist above; print output equivalent.
 - All tests/checks/lint/format green for both games; no new i18n keys; no game-id branches.

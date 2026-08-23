@@ -165,7 +165,10 @@ export const DRUMS_4_LABELS: ShapeLabels = {
   keyboard: [...DRUMS_8_LABELS.keyboard.slice(0, 2), ...DRUMS_8_LABELS.keyboard.slice(4, 6)],
   abc: [...DRUMS_8_LABELS.abc.slice(0, 2), ...DRUMS_8_LABELS.abc.slice(4, 6)],
   number: [...DRUMS_8_LABELS.number.slice(0, 2), ...DRUMS_8_LABELS.number.slice(4, 6)],
-  playstation: [...DRUMS_8_LABELS.playstation.slice(0, 2), ...DRUMS_8_LABELS.playstation.slice(4, 6)],
+  playstation: [
+    ...DRUMS_8_LABELS.playstation.slice(0, 2),
+    ...DRUMS_8_LABELS.playstation.slice(4, 6),
+  ],
   switch: [...DRUMS_8_LABELS.switch.slice(0, 2), ...DRUMS_8_LABELS.switch.slice(4, 6)],
 };
 

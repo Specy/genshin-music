@@ -11,7 +11,7 @@ are Assigned Buttons (`pitched: false`) like the rest of the drums.
 
 Source: the user's in-game recording (`fortune drum.wav`, 44.1 kHz 16-bit
 stereo, 2026-08-23), buttons left→right with every sound played twice
-(0 0 1 1 2 2 3 3); the cleaner take of each pair shipped. 
+(0 0 1 1 2 2 3 3); the cleaner take of each pair shipped.
 
 The raw capture was ~5 dB right-heavy (in-game spatial audio placed the drum
 right of the listener). No pan correction is baked in or needed: the house

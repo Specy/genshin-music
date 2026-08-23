@@ -33,6 +33,10 @@ _Avoid_: base note (the authored label it derives from), real pitch
 The pitch a track's view starts at (C, Db, … B; song-level default, per-track override). Buttons enter and display notes relative to it, and changing it rewrites every Note Number in the affected tracks by the same interval — a real, undoable edit, stranded notes included. Applied to audio as a playback-rate shift at play time.
 _Avoid_: transposition (the retired play-time-only meaning), pitch (alone — overloaded with Sounding Pitch)
 
+**Addressable Span**:
+The band of Note Numbers the game can address at all: from the lowest Sounding Pitch any instrument has at Basepoint C, up to the highest lifted by the highest Basepoint. A number outside it can be voiced by no instrument at any Basepoint, whatever the track is later swapped to — the one thing no edit can rescue, and the floor MIDI import refuses to cross. A song may still hold numbers beyond it; surfaces draw them and nothing sounds them.
+_Avoid_: range (overloaded — see Editable Zone), instrument range (that is one instrument's, at one Basepoint), MIDI bounds (the Song Grid's own extent, a narrower thing)
+
 ### Instruments
 
 **Shape**:
@@ -67,10 +71,14 @@ An instrument's _capability_ to keep sounding while a note is held and to stop s
 _Avoid_: hold (reserved for the VSRG gameplay mechanic — a scored held lane press, which exists independently of audio sustain)
 
 **Stranded Note**:
-A note whose Note Number the track's instrument cannot voice at the current Basepoint — including off-scale numbers that fall between the grid's rows. Skipped at playback, marked in the composer (nearest row, accidental hint), never silently rewritten; Basepoint changes move it with its track — never changing whether it strands, since the view moves with the notes — while instrument swaps pass it through and may un-strand it. Cross-game imports pass notes through as-is too (the swap to Similar Instruments may strand them, warned at import, never folded); only legacy files still remap, decoding through the frozen historic tables.
+A note whose Note Number the track's instrument cannot voice at the current Basepoint — including off-scale numbers that fall between the grid's rows. Skipped at playback, marked in the composer (nearest row, accidental hint), never silently rewritten; Basepoint changes move it with its track — never changing whether it strands, since the view moves with the notes — while instrument swaps pass it through and may un-strand it. Cross-game imports pass notes through as-is too (the swap to Similar Instruments may strand them, warned at import, never folded); only legacy files still remap, decoding through the frozen historic tables. MIDI import is the one path that REMOVES them rather than passing them through: a note the chosen instrument cannot voice is excluded unless the import is asked to keep it (the importer calls these out-of-range notes), and a note outside the Addressable Span is excluded either way.
 
 **Similar Instrument**:
 The target game's curated counterpart for a source game's instrument — the one a track swaps to during cross-game conversion so the song keeps a comparable timbre. Unmapped instruments fall back to the target's default.
+
+**Suggested Instrument**:
+The game instrument a MIDI track is offered when imported, derived from the General MIDI identity the track declares and never from the notes it contains — so it cannot move under the user's hand when the import's transposition does. Four tiers, each falling through to the next: the track's GM patch name, its GM family, the nearest family in a fixed General-MIDI adjacency order that this game has any instrument for, and finally the game's default instrument. A proposal only: the importer pre-selects it and the choice is the user's. Distinct from a Similar Instrument, which answers between two of our own games rather than from General MIDI.
+_Avoid_: matched instrument (a MIDI file names a General MIDI program, not one of ours), detected instrument, auto-instrument
 
 **Solo**:
 A per-track flag that narrows playback to the solo set: while any track is Solo, only Solo tracks sound. Solo flags stack, are saved with the song, and never rewrite other tracks' Mute — audibility is derived fresh from the flags wherever the song plays. A track's own Mute still silences it inside the solo set.

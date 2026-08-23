@@ -566,7 +566,7 @@ const gridRowCache = new Map<string, Map<number, GridRowPlacement>>()
 
 /** gridRowForNumber memoized per (instrument, Basepoint) — what per-draw surfaces call. */
 export function gridRowForNumberCached(instrumentName: RuntimeInstrumentName, pitch: Pitch, number: number): GridRowPlacement {
-    const key = `${instrumentName} ${pitch}`
+    const key = `${instrumentName}\0${pitch}`
     let lut = gridRowCache.get(key)
     if (lut === undefined) {
         lut = new Map<number, GridRowPlacement>()

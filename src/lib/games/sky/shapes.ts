@@ -3,7 +3,13 @@
 // Genshin's 2x4 deliberately (identical label data), while the ids stay per-game
 // so behavior can fork without data migrations.
 import type { NoteShape, ShapeDefinition, ShapeId } from '../types';
-import { DRUMS_4_LABELS, DRUMS_8_LABELS, SFX_1_LABELS, SFX_6_LABELS, STANDARD_15_LABELS } from '../shapes/labels';
+import {
+  DRUMS_4_LABELS,
+  DRUMS_8_LABELS,
+  SFX_1_LABELS,
+  SFX_6_LABELS,
+  STANDARD_15_LABELS,
+} from '../shapes/labels';
 import GridShape from '../shapes/GridShape.svelte';
 
 //Sky's buttons are rounded squares. The ratio matches .note-sky's border-radius against its

@@ -572,59 +572,58 @@
           {t('player:song_search_description')}
         </div>
         <div class="column">
-
-        <div class="library-search-row">
-          <input
-            class="library-search-input"
-            style="background-color:{layer1Color.toString()};color:{layer1ColorText.toString()}"
-            placeholder={t('menu:song_name')}
-            onkeydown={(e) => {
-              if (e.code === 'Enter') searchSongs();
-            }}
-            oninput={(e) => (searchInput = e.currentTarget.value)}
-            value={searchInput}
-          />
-          <button
-            class="library-search-btn"
-            onclick={clearSearch}
-            style="background-color:{layer1Color.toString()};color:{layer1ColorText.toString()}"
-          >
-            {@render faTimesIcon()}
-          </button>
-          <button
-            class="library-search-btn"
-            onclick={searchSongs}
-            style="background-color:{layer1Color.toString()};color:{layer1ColorText.toString()}"
-          >
-            {@render faSearchIcon()}
-          </button>
-        </div>
-        {#if searchStatus || searchedSongs.length > 0}
-          <div
-            class="library-search-songs-wrapper"
-            style="background-color:{layer2Color.toString()};color:{layer2ColorText.toString()};margin-bottom:0.5rem"
-          >
-            {#if searchStatus === 'success'}
-              {#if searchedSongs.length > 0}
-                {#each searchedSongs as song (song.file)}
-                  <LibrarySearchedSong
-                    data={song}
-                    importSong={functions.addSong}
-                    onClick={playerStore.play}
-                  />
-                {/each}
+          <div class="library-search-row">
+            <input
+              class="library-search-input"
+              style="background-color:{layer1Color.toString()};color:{layer1ColorText.toString()}"
+              placeholder={t('menu:song_name')}
+              onkeydown={(e) => {
+                if (e.code === 'Enter') searchSongs();
+              }}
+              oninput={(e) => (searchInput = e.currentTarget.value)}
+              value={searchInput}
+            />
+            <button
+              class="library-search-btn"
+              onclick={clearSearch}
+              style="background-color:{layer1Color.toString()};color:{layer1ColorText.toString()}"
+            >
+              {@render faTimesIcon()}
+            </button>
+            <button
+              class="library-search-btn"
+              onclick={searchSongs}
+              style="background-color:{layer1Color.toString()};color:{layer1ColorText.toString()}"
+            >
+              {@render faSearchIcon()}
+            </button>
+          </div>
+          {#if searchStatus || searchedSongs.length > 0}
+            <div
+              class="library-search-songs-wrapper"
+              style="background-color:{layer2Color.toString()};color:{layer2ColorText.toString()};margin-bottom:0.5rem"
+            >
+              {#if searchStatus === 'success'}
+                {#if searchedSongs.length > 0}
+                  {#each searchedSongs as song (song.file)}
+                    <LibrarySearchedSong
+                      data={song}
+                      importSong={functions.addSong}
+                      onClick={playerStore.play}
+                    />
+                  {/each}
+                {:else}
+                  <div class="library-search-result-text">
+                    {t('player:song_search_no_results')}
+                  </div>
+                {/if}
               {:else}
                 <div class="library-search-result-text">
-                  {t('player:song_search_no_results')}
+                  {searchStatus}
                 </div>
               {/if}
-            {:else}
-              <div class="library-search-result-text">
-                {searchStatus}
-              </div>
-            {/if}
-          </div>
-        {/if}
+            </div>
+          {/if}
         </div>
 
         <DonateButton style="margin-top:auto" />
