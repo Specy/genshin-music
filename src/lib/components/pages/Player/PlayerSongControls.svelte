@@ -174,13 +174,13 @@
   </div>
 {/if}
 <div class="column player-controls">
-    {#if canRecordAudio}
-        <div>
-        <AppButton toggled={isRecordingAudio} onclick={() => onToggleRecordAudio(!isRecordingAudio)}>
-            {isRecordingAudio ? t('player:finish_recording') : t('player:record_audio')}
-        </AppButton>
-        </div>
-    {/if}
+  {#if canRecordAudio}
+    <div>
+      <AppButton toggled={isRecordingAudio} onclick={() => onToggleRecordAudio(!isRecordingAudio)}>
+        {isRecordingAudio ? t('player:finish_recording') : t('player:record_audio')}
+      </AppButton>
+    </div>
+  {/if}
   <div class="column slider-wrapper" style={!hasActiveSong ? 'display:none' : ''}>
     <div class="row" style="width:100%;gap:0.4rem">
       {#if hidePracticeNotes !== undefined}
