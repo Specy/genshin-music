@@ -161,6 +161,35 @@ export const GENERAL_MIDI_FAMILIES = [
 
 export type GeneralMidiFamily = (typeof GENERAL_MIDI_FAMILIES)[number];
 
+/** Tone's melodic families plus its special channel-9 identity. */
+export type GeneralMidiTrackFamily = GeneralMidiFamily | 'drums';
+
+/**
+ * Nearest useful authored families for each incoming General MIDI family. Every melodic row starts
+ * with itself, so an exact family match and its fallbacks can share one ordered walk. `drums` is an
+ * incoming track identity only; registry validation deliberately does not accept it as authored
+ * instrument metadata.
+ */
+export const GENERAL_MIDI_FAMILY_ADJACENCY = {
+  piano: ['piano', 'chromatic percussion', 'guitar', 'strings'],
+  'chromatic percussion': ['chromatic percussion', 'piano', 'percussive'],
+  organ: ['organ', 'piano', 'reed', 'ensemble'],
+  guitar: ['guitar', 'strings', 'piano'],
+  bass: ['bass', 'guitar', 'strings', 'piano'],
+  strings: ['strings', 'ensemble', 'guitar', 'piano'],
+  ensemble: ['ensemble', 'strings', 'pipe', 'piano'],
+  brass: ['brass', 'reed', 'pipe', 'ensemble'],
+  reed: ['reed', 'pipe', 'brass', 'ensemble'],
+  pipe: ['pipe', 'reed', 'ensemble', 'brass'],
+  'synth lead': ['synth lead', 'pipe', 'reed', 'piano'],
+  'synth pad': ['synth pad', 'ensemble', 'strings', 'piano'],
+  'synth effects': ['synth effects', 'synth pad', 'ensemble', 'piano'],
+  world: ['world', 'guitar', 'strings', 'pipe', 'percussive'],
+  percussive: ['percussive', 'chromatic percussion', 'piano'],
+  'sound effects': ['sound effects', 'synth effects', 'percussive'],
+  drums: ['percussive', 'sound effects', 'chromatic percussion'],
+} as const satisfies Record<GeneralMidiTrackFamily, readonly GeneralMidiFamily[]>;
+
 const PATCH_NAME_SET: ReadonlySet<string> = new Set(GENERAL_MIDI_PATCH_NAMES);
 const FAMILY_SET: ReadonlySet<string> = new Set(GENERAL_MIDI_FAMILIES);
 
@@ -170,4 +199,8 @@ export function isGeneralMidiPatchName(value: unknown): value is GeneralMidiPatc
 
 export function isGeneralMidiFamily(value: unknown): value is GeneralMidiFamily {
   return typeof value === 'string' && FAMILY_SET.has(value);
+}
+
+export function isGeneralMidiTrackFamily(value: unknown): value is GeneralMidiTrackFamily {
+  return value === 'drums' || isGeneralMidiFamily(value);
 }
