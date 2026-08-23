@@ -571,6 +571,8 @@
         <div>
           {t('player:song_search_description')}
         </div>
+        <div class="column">
+
         <div class="library-search-row">
           <input
             class="library-search-input"
@@ -623,6 +625,8 @@
             {/if}
           </div>
         {/if}
+        </div>
+
         <DonateButton style="margin-top:auto" />
       </MenuPanel>
       <MenuPanel title={t('common:help')} id="Help">

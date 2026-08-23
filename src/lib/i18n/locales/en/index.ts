@@ -903,7 +903,8 @@ export const i18n_en = {
     Kalimba: 'Kalimba',
     ToyUkulele: 'Toy Ukulele',
     Drum: 'Drum',
-    FortuneDrum: 'Fortune Drum', //from the Days of Fortune event; the only 4-sound instrument
+    FortuneDrum: 'Fortune Drum', //from the Days of Fortune event; 4 sounds on a 2x2 pad
+    Cymbals: 'Cymbals', //Season of Radiance; 4 sounds on a 2x2 pad like the Fortune Drum
     Bells: 'Bells',
     SmallBell: 'Small Bell',
     HandPan: 'HandPan',
@@ -919,6 +920,7 @@ export const i18n_en = {
     SFX_JellyCall: 'Jelly Call',
     SFX_MantaCall: 'Manta Call',
     SFX_MothCall: 'Moth Call',
+    SFX_KrillHorn: 'Krill Horn', //one-button prop that plays a single krill roar
     GrandPiano: 'Grand Piano',
     LingeringEuphonia: 'Lingering Euphonia',
     LeapingSpiritPiano: 'Leaping Spirit Piano',

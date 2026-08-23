@@ -1,7 +1,7 @@
 {
-  "displayName": "Fortune drum",
+  "displayName": "Cymbals",
   "family": "percussive",
-  "midiName": "taiko drum",
+  "midiName": "reverse cymbal",
   "shape": "sky-2x2",
   "notes": "drums-4"
 }

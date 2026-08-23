@@ -777,6 +777,7 @@
         "ToyUkulele": "おもちゃのウクレレ",
         "Drum": "ドラム",
         "FortuneDrum": "福鼓",
+        "Cymbals": "Cymbals",
         "Bells": "ベル",
         "SmallBell": "小さなベル",
         "HandPan": "ハンドパン",
@@ -792,6 +793,7 @@
         "SFX_JellyCall": "クラゲの鳴き声",
         "SFX_MantaCall": "マンタの鳴き声",
         "SFX_MothCall": "蛾の鳴き声",
+        "SFX_KrillHorn": "Krill Horn",
         "GrandPiano": "グランドピアノ",
         "HarmonicKey": "諧律のチェンバロ"
     },

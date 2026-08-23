@@ -235,5 +235,13 @@
       "pitched": false,
       "icon": "dm"
     }
+  ],
+  "sfx-1": [
+    {
+      "midi": 60,
+      "baseNote": "C",
+      "pitched": false,
+      "icon": "cr"
+    }
   ]
 }

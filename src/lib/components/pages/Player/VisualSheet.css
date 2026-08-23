@@ -21,13 +21,6 @@
   gap: 0.2rem;
 }
 
-/* A virtual window already contains only the viewport and two overscan rows. Laying those real
-   rows out is both cheap and necessary: an intrinsic-size estimate in an overscan row would make
-   its spacer pitch disagree with the visible rows and slowly skew the scrollbar. */
-.player-chunks-page.player-chunks-page-virtual .sheet-frame-target {
-  content-visibility: visible;
-}
-
 .player-controls {
   position: absolute;
   align-items: flex-end;

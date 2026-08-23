@@ -3,7 +3,7 @@
 // Genshin's 2x4 deliberately (identical label data), while the ids stay per-game
 // so behavior can fork without data migrations.
 import type { NoteShape, ShapeDefinition, ShapeId } from '../types';
-import { DRUMS_4_LABELS, DRUMS_8_LABELS, SFX_6_LABELS, STANDARD_15_LABELS } from '../shapes/labels';
+import { DRUMS_4_LABELS, DRUMS_8_LABELS, SFX_1_LABELS, SFX_6_LABELS, STANDARD_15_LABELS } from '../shapes/labels';
 import GridShape from '../shapes/GridShape.svelte';
 
 //Sky's buttons are rounded squares. The ratio matches .note-sky's border-radius against its
@@ -35,11 +35,20 @@ export const shapes: Readonly<Record<ShapeId, ShapeDefinition>> = {
     noteShape: ROUNDED_SQUARE,
     component: GridShape,
   },
-  //The Fortune Drum's four sounds sit in one row - the only 4-button Instrument in either game.
-  'sky-1x4': {
-    id: 'sky-1x4',
+  //The Krill Horn is a single button - blowing it plays the one krill roar it has.
+  'sky-1x1': {
+    id: 'sky-1x1',
+    capacity: 1,
+    columns: 1,
+    labels: SFX_1_LABELS,
+    noteShape: ROUNDED_SQUARE,
+    component: GridShape,
+  },
+  //The Fortune Drum's four sounds sit in a 2x2 square - the only 4-button Instrument in either game.
+  'sky-2x2': {
+    id: 'sky-2x2',
     capacity: 4,
-    columns: 4,
+    columns: 2,
     labels: DRUMS_4_LABELS,
     noteShape: ROUNDED_SQUARE,
     component: GridShape,

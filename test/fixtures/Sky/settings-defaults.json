@@ -139,7 +139,7 @@
   },
   "player": {
     "other": {
-      "settingVersion": "Sky86"
+      "settingVersion": "Sky88"
     },
     "data": {
       "instrument": {
@@ -175,6 +175,7 @@
           "ToyUkulele",
           "Drum",
           "FortuneDrum",
+          "Cymbals",
           "Bells",
           "SmallBell",
           "DunDun",
@@ -190,7 +191,8 @@
           "SFX_SpiritMantaCall",
           "SFX_JellyCall",
           "SFX_MantaCall",
-          "SFX_MothCall"
+          "SFX_MothCall",
+          "SFX_KrillHorn"
         ],
         "category": "song_settings"
       },
@@ -694,7 +696,7 @@
   },
   "zenKeyboard": {
     "other": {
-      "settingVersion": "Sky30"
+      "settingVersion": "Sky32"
     },
     "data": {
       "instrument": {
@@ -730,6 +732,7 @@
           "ToyUkulele",
           "Drum",
           "FortuneDrum",
+          "Cymbals",
           "Bells",
           "SmallBell",
           "DunDun",
@@ -745,7 +748,8 @@
           "SFX_SpiritMantaCall",
           "SFX_JellyCall",
           "SFX_MantaCall",
-          "SFX_MothCall"
+          "SFX_MothCall",
+          "SFX_KrillHorn"
         ],
         "category": "keyboard"
       },

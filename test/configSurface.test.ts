@@ -183,6 +183,10 @@ describe('game config surface', () => {
             'TransverseFlute',
             'SmallBell',
             'FortuneDrum',
+            //Sky, 2026-08-23: one-button krill roar, in-game capture
+            'SFX_KrillHorn',
+            //Sky, 2026-08-23: Season of Radiance 2x2 cymbals, in-game capture
+            'Cymbals',
         ])
 
         const derivedInstrumentsData = Object.fromEntries(

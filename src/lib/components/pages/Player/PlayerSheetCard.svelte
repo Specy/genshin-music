@@ -49,6 +49,13 @@
   let scrollElement: HTMLDivElement | undefined = $state();
   let collapsedHeight = $state(0);
   let revealCenterShift = $state(0);
+  /**
+   * Where the reveal translate STARTS. Usually 0 - the initial scrollTop alone puts the current
+   * page's rows exactly where the inline card had them - but near the song's tail that scrollTop
+   * would exceed the scroll range, so the clamped remainder is carried by the transform instead:
+   * the rows still open in place, wherever the page is.
+   */
+  let revealFromShift = $state(0);
   let revealFinalScrollTop = 0;
   let hasCenteredThisOpen = $state(false);
   let collapseAfterReveal = false;
@@ -118,6 +125,7 @@
       fullscreenPhase = 'closed';
       hasCenteredThisOpen = false;
       collapseAfterReveal = false;
+      revealFromShift = 0;
       revealCenterShift = 0;
       revealFinalScrollTop = 0;
       resizeRevision++;
@@ -137,10 +145,7 @@
     const pageSet = pages;
     centeredPages = pageSet;
     const finalViewportHeight = scrollElement?.clientHeight || expandedViewportEstimate();
-    const revealScrollTop = prepareVirtualWindowForCurrentFrame(
-      hasCenteredThisOpen ? finalViewportHeight : revealViewportHeight(),
-      finalViewportHeight
-    );
+    const revealScrollTop = prepareVirtualWindowForCurrentFrame(finalViewportHeight);
     tick().then(() => {
       if (fullscreenPhase !== 'open' || pages !== pageSet || centeredPages !== pageSet) return;
       if (hasCenteredThisOpen) centerOnCurrentFrame();
@@ -343,38 +348,53 @@
     return Math.max(virtualMetrics.rowHeight, window.innerHeight - cardInset);
   }
 
-  function revealViewportHeight() {
-    return Math.max(virtualMetrics.rowHeight, collapsedHeight || scrollElement?.clientHeight || 0);
-  }
-
+  /**
+   * THE REVEAL OPENS IN PLACE (anchorToPage): the initial scroll offset is the one that puts the
+   * current PAGE's rows at exactly the viewport positions the inline card just showed them at, so
+   * the first animation frame is pixel-identical to what was on screen - centring the current
+   * frame in the collapsed window instead made every frame jump by up to a row-pitch the instant
+   * the animation began. The translate then glides everything to the final centred position.
+   * After the reveal (a page set replaced mid-fullscreen), there is no inline picture to match,
+   * so the window is centred outright and the translate degenerates to zero.
+   */
   function prepareVirtualWindowForCurrentFrame(
-    centerViewportHeight = revealViewportHeight(),
-    finalViewportHeight = expandedViewportEstimate()
+    finalViewportHeight = expandedViewportEstimate(),
+    anchorToPage = !hasCenteredThisOpen
   ) {
     const index = playerControlsStore.currentGlobalChunkIndex;
     if (index < 0) {
+      revealFromShift = 0;
       revealCenterShift = 0;
       revealFinalScrollTop = 0;
       return 0;
     }
-    const scrollTop = centeredScrollTop(index, centerViewportHeight);
-    // The surface has its final layout size from the first animation frame and is progressively
-    // revealed. Seed enough rows for that whole size so the clip never uncovers an empty spacer.
     const finalHeight = Math.max(virtualMetrics.rowHeight, finalViewportHeight);
-    const rangeHeight = Math.max(expandedViewportEstimate(), finalHeight);
-    // Also pre-mount what the final centred position needs. Animationend can then change only
-    // scrollTop and remove surplus rows; it never has to create another band during hand-off.
     const finalScrollTop = centeredScrollTop(index, finalHeight);
+    // The page's first row sits marginTop below the card's top inline; at scrollTop = row * pitch
+    // it sits there again, so every row of the page keeps its exact position.
+    const pitch = virtualMetrics.rowHeight + virtualMetrics.rowGap;
+    const desired = anchorToPage
+      ? Math.floor(pageIndexOffset / safeColumns) * pitch
+      : finalScrollTop;
+    // scrollTop cannot exceed the scroll range; the shortfall rides the translate's start instead
+    // (revealFromShift), so a tail page still opens in place.
+    const clamped = clampScrollTop(desired, finalHeight);
     revealFinalScrollTop = finalScrollTop;
-    revealCenterShift = scrollTop - finalScrollTop;
-    const rangeTop = Math.min(scrollTop, finalScrollTop);
-    const rangeBottom = Math.max(scrollTop + rangeHeight, finalScrollTop + rangeHeight);
+    revealFromShift = clamped - desired;
+    revealCenterShift = clamped - finalScrollTop;
+    // The surface has its final layout size from the first animation frame and is progressively
+    // revealed. Seed enough rows for that whole size so the clip never uncovers an empty spacer,
+    // and pre-mount what the final centred position needs too: animationend can then change only
+    // scrollTop and remove surplus rows; it never has to create another band during hand-off.
+    const rangeHeight = Math.max(expandedViewportEstimate(), finalHeight);
+    const rangeTop = Math.min(desired, finalScrollTop);
+    const rangeBottom = Math.max(desired + rangeHeight, finalScrollTop + rangeHeight);
     setVirtualRange(rangeTop, rangeBottom - rangeTop);
-    return scrollTop;
+    return clamped;
   }
 
   function centerOnCurrentFrame(
-    viewportHeight = scrollElement?.clientHeight || revealViewportHeight(),
+    viewportHeight = scrollElement?.clientHeight || expandedViewportEstimate(),
     rangeViewportHeight = scrollElement?.clientHeight || viewportHeight
   ) {
     const index = playerControlsStore.currentGlobalChunkIndex;
@@ -465,9 +485,10 @@
         ? paintedHeight
         : (cardElement?.clientHeight ?? 0);
     measureVirtualMetrics();
-    const revealHeight = revealViewportHeight();
-    prepareVirtualWindowForCurrentFrame(revealHeight, expandedViewportEstimate());
+    //before the prepare call: anchorToPage defaults on this flag, and a previous open completed
+    //with it true - the reveal must anchor to the page again, not re-centre
     hasCenteredThisOpen = false;
+    prepareVirtualWindowForCurrentFrame(expandedViewportEstimate());
     collapseAfterReveal = false;
     centeredPages = pages;
     popover = null;
@@ -479,7 +500,7 @@
     // `100vh` and `innerHeight` are not guaranteed to match on mobile. Now that final geometry is
     // measurable, enlarge the seeded band if needed and flush it before the first paint.
     const finalViewportHeight = scrollElement?.clientHeight || expandedViewportEstimate();
-    const initialScrollTop = prepareVirtualWindowForCurrentFrame(revealHeight, finalViewportHeight);
+    const initialScrollTop = prepareVirtualWindowForCurrentFrame(finalViewportHeight);
     await tick();
     if (fullscreenPhase !== 'open') return;
     if (scrollElement) scrollElement.scrollTop = initialScrollTop;
@@ -511,6 +532,7 @@
     if (fullscreenPhase !== 'closing') return;
     clearAnimationFallback();
     fullscreenPhase = 'closed';
+    revealFromShift = 0;
     revealCenterShift = 0;
     revealFinalScrollTop = 0;
     resizeRevision++;
@@ -550,9 +572,9 @@
       finishCollapse();
       return;
     }
-    // Opening moves the current frame from the collapsed viewport's centre to the final one.
-    // `finishReveal` swaps that visual translation for the equivalent scroll offset, after which
-    // the highlight moves on but the view deliberately does not.
+    // Opening moves the page's rows from exactly where the inline card showed them to the final
+    // centred position. `finishReveal` swaps that visual translation for the equivalent scroll
+    // offset, after which the highlight moves on but the view deliberately does not.
     finishReveal();
   }
 
@@ -617,7 +639,7 @@
       fullscreenPhase === 'closing' && 'player-sheet-card-closing',
     ]}
     style={showsAllFrames
-      ? `--sheet-collapsed-height:${collapsedHeight}px;--sheet-center-shift:${revealCenterShift}px`
+      ? `--sheet-collapsed-height:${collapsedHeight}px;--sheet-reveal-from:${revealFromShift}px;--sheet-center-shift:${revealCenterShift}px`
       : ''}
   >
     <div
@@ -805,9 +827,11 @@
     }
   }
 
+  /* From is not always 0: near the song's tail the in-place start position exceeds the scroll
+     range, and the overflow rides here instead (see revealFromShift). */
   @keyframes sheetCurrentFrameReveal {
     from {
-      transform: translateY(0);
+      transform: translateY(var(--sheet-reveal-from, 0px));
     }
     to {
       transform: translateY(var(--sheet-center-shift, 0px));

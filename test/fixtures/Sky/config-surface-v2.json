@@ -26,6 +26,7 @@
     "ToyUkulele",
     "Drum",
     "FortuneDrum",
+    "Cymbals",
     "Bells",
     "SmallBell",
     "DunDun",
@@ -41,7 +42,8 @@
     "SFX_SpiritMantaCall",
     "SFX_JellyCall",
     "SFX_MantaCall",
-    "SFX_MothCall"
+    "SFX_MothCall",
+    "SFX_KrillHorn"
   ],
   "instrumentsData": {
     "Aurora": {
@@ -575,6 +577,47 @@
         }
       ]
     },
+    "Cymbals": {
+      "name": "Cymbals",
+      "displayName": "Cymbals",
+      "family": "percussive",
+      "midiName": "reverse cymbal",
+      "shape": "sky-2x2",
+      "notes": [
+        {
+          "file": "0.mp3",
+          "midi": 60,
+          "baseNote": "C",
+          "pitched": false,
+          "sounding": 60,
+          "icon": "cr"
+        },
+        {
+          "file": "1.mp3",
+          "midi": 62,
+          "baseNote": "D",
+          "pitched": false,
+          "sounding": 62,
+          "icon": "dm"
+        },
+        {
+          "file": "2.mp3",
+          "midi": 64,
+          "baseNote": "E",
+          "pitched": false,
+          "sounding": 64,
+          "icon": "cr"
+        },
+        {
+          "file": "3.mp3",
+          "midi": 65,
+          "baseNote": "F",
+          "pitched": false,
+          "sounding": 65,
+          "icon": "dm"
+        }
+      ]
+    },
     "Drum": {
       "name": "Drum",
       "displayName": "Drum",
@@ -855,7 +898,7 @@
       "displayName": "Fortune drum",
       "family": "percussive",
       "midiName": "taiko drum",
-      "shape": "sky-1x4",
+      "shape": "sky-2x2",
       "notes": [
         {
           "file": "0.mp3",
@@ -3241,6 +3284,23 @@
         }
       ]
     },
+    "SFX_KrillHorn": {
+      "name": "SFX_KrillHorn",
+      "displayName": "Krill Horn",
+      "family": "percussive",
+      "midiName": "synth drum",
+      "shape": "sky-1x1",
+      "notes": [
+        {
+          "file": "0.mp3",
+          "midi": 60,
+          "baseNote": "C",
+          "pitched": false,
+          "sounding": 60,
+          "icon": "cr"
+        }
+      ]
+    },
     "SFX_MantaCall": {
       "name": "SFX_MantaCall",
       "displayName": "Manta Call",
@@ -4975,40 +5035,66 @@
         "cornerRatio": 0.21
       }
     },
-    "sky-1x4": {
-      "id": "sky-1x4",
+    "sky-1x1": {
+      "id": "sky-1x1",
+      "capacity": 1,
+      "columns": 1,
+      "labels": {
+        "keyboard": [
+          "Q"
+        ],
+        "abc": [
+          "A1"
+        ],
+        "number": [
+          "1"
+        ],
+        "playstation": [
+          "⟰"
+        ],
+        "switch": [
+          "⟰"
+        ]
+      },
+      "noteShape": {
+        "kind": "rounded-rect",
+        "cornerRatio": 0.21
+      }
+    },
+    "sky-2x2": {
+      "id": "sky-2x2",
       "capacity": 4,
-      "columns": 4,
+      "columns": 2,
       "labels": {
         "keyboard": [
           "Q",
           "W",
-          "E",
-          "R"
+          "A",
+          "S"
         ],
         "abc": [
           "A1",
           "A2",
-          "A3",
-          "A4"
+          "B1",
+          "B2"
         ],
         "number": [
           "1",
           "2",
-          "3",
-          "4"
+          "1̣",
+          "2̣"
         ],
         "playstation": [
           "⟰",
           "▲",
-          "⭅",
-          "◼"
+          "⟱",
+          "X"
         ],
         "switch": [
           "⟰",
           "X",
-          "⭅",
-          "Y"
+          "⟱",
+          "B"
         ]
       },
       "noteShape": {

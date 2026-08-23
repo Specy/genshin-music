@@ -67,6 +67,11 @@
     position: relative;
   }
 
+  /* NO content-visibility here, deliberately: the fullscreen view mounts only a real row window
+     (PlayerSheetCard), so auto would only ever apply to the small inline page - where a freshly
+     recreated frame is SKIPPED for one frame and laid out at the contain-intrinsic-size
+     placeholder instead of its real aspect height. That one frame shrank the whole card ~25%
+     at the end of every fullscreen collapse (the inline branch is recreated there). */
   .sheet-frame-target {
     display: block;
     width: 100%;
@@ -76,11 +81,6 @@
     background: none;
     color: inherit;
     cursor: pointer;
-    content-visibility: auto;
-    /* height ≈ width × 0.49 (the frame aspect); ~4rem at the default 5-column card width.
-       `auto` makes the browser remember the real size after first layout, so the estimate
-       only affects never-seen frames' scroll math. */
-    contain-intrinsic-size: auto 4rem;
   }
 
   .sheet-frame-dimmed {

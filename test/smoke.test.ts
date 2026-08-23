@@ -12,7 +12,9 @@ describe('environment smoke test', () => {
         // it was only ever a stress test for the sustain engine, and the real sustaining
         // Instruments that landed with the Sky additions retired it. The `test_sustain`
         // dummy it had itself replaced (2026-08-04) is likewise long gone.
-        expect(INSTRUMENTS.length).toBe(APP_NAME === 'Genshin' ? 11 : 41)
+        // Sky +2 on 2026-08-23: SFX_KrillHorn (in-game capture, one-button krill roar)
+        // and Cymbals (Season of Radiance, 4 sounds on a 2x2 pad, in-game capture)
+        expect(INSTRUMENTS.length).toBe(APP_NAME === 'Genshin' ? 11 : 43)
     })
 
     it('NoteLayer bit operations work', () => {

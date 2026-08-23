@@ -157,16 +157,29 @@ export const DRUMS_8_LABELS: ShapeLabels = {
 };
 
 /**
- * The 1×4 drum keyboard (4 buttons) — Sky's Fortune Drum, the one Instrument in
- * either game with four sounds. Sliced from the 2×4 so its keys and number marks
- * stay byte-identical with the drums' canonical top row.
+ * The 2×2 drum keyboard (4 buttons) — Sky's Fortune Drum, the one Instrument in
+ * either game with four sounds. Sliced from the 2×4's left 2 columns so its keys
+ * and number marks stay byte-identical with the drums' canonical rows.
  */
 export const DRUMS_4_LABELS: ShapeLabels = {
-  keyboard: DRUMS_8_LABELS.keyboard.slice(0, 4),
-  abc: DRUMS_8_LABELS.abc.slice(0, 4),
-  number: DRUMS_8_LABELS.number.slice(0, 4),
-  playstation: DRUMS_8_LABELS.playstation.slice(0, 4),
-  switch: DRUMS_8_LABELS.switch.slice(0, 4),
+  keyboard: [...DRUMS_8_LABELS.keyboard.slice(0, 2), ...DRUMS_8_LABELS.keyboard.slice(4, 6)],
+  abc: [...DRUMS_8_LABELS.abc.slice(0, 2), ...DRUMS_8_LABELS.abc.slice(4, 6)],
+  number: [...DRUMS_8_LABELS.number.slice(0, 2), ...DRUMS_8_LABELS.number.slice(4, 6)],
+  playstation: [...DRUMS_8_LABELS.playstation.slice(0, 2), ...DRUMS_8_LABELS.playstation.slice(4, 6)],
+  switch: [...DRUMS_8_LABELS.switch.slice(0, 2), ...DRUMS_8_LABELS.switch.slice(4, 6)],
+};
+
+/**
+ * The single-button keyboard — Sky's Krill Horn (one unpitched call), the only
+ * 1-button Instrument in either game. Key/label choices follow every other
+ * set's first Button.
+ */
+export const SFX_1_LABELS: ShapeLabels = {
+  keyboard: ['Q'],
+  abc: ['A1'],
+  number: ['1'],
+  playstation: ['⟰'],
+  switch: ['⟰'],
 };
 
 /** The 2×3 SFX keyboard (6 buttons). */

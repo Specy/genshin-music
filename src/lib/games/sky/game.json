@@ -79,6 +79,7 @@
       "ToyUkulele",
       "Drum",
       "FortuneDrum",
+      "Cymbals",
       "Bells",
       "SmallBell",
       "DunDun",
@@ -94,7 +95,8 @@
       "SFX_SpiritMantaCall",
       "SFX_JellyCall",
       "SFX_MantaCall",
-      "SFX_MothCall"
+      "SFX_MothCall",
+      "SFX_KrillHorn"
     ],
     "defaultVolume": 100
   },

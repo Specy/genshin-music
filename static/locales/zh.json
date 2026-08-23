@@ -779,6 +779,7 @@
         "ToyUkulele": "玩具尤克里里",
         "Drum": "鼓组",
         "FortuneDrum": "福鼓",
+        "Cymbals": "Cymbals",
         "Bells": "铃铛",
         "SmallBell": "小铃铛",
         "HandPan": "手碟",
@@ -793,7 +794,8 @@
         "SFX_SpiritMantaCall": "光鲲之声",
         "SFX_JellyCall": "水母之声",
         "SFX_MantaCall": "遥鲲之声",
-        "SFX_MothCall": "幼童之声"
+        "SFX_MothCall": "幼童之声",
+        "SFX_KrillHorn": "Krill Horn"
     },
     "versions": {
         "4-0-0": {
