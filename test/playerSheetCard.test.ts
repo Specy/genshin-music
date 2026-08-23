@@ -162,6 +162,9 @@ describe('Sheet Card', () => {
     })
 
     it('shows the whole short song throughout reveal and collapse, then returns inline', async () => {
+        // The reveal/hide are Web Animations; jsdom has no Element.animate, so the component's
+        // 250ms fallback timers drive its phase machine here.
+        vi.useFakeTimers()
         threeFramesOverTwoPages()
         playerControlsStore.setState({size: 5, position: 0, end: 5, current: 0})
         render()
@@ -182,24 +185,19 @@ describe('Sheet Card', () => {
         expect(frames()[2].querySelector('.sheet-frame-bracket-end')).not.toBeNull()
         expect(target.querySelector('.player-sheet-card-expanded')).not.toBeNull()
 
-        const surface = target.querySelector('.player-sheet-surface')!
-        surface.firstElementChild!.dispatchEvent(new Event('animationend', {bubbles: true}))
-        flushSync()
-        // A descendant's animation must not drive the card's own phase machine.
-        expect(target.querySelector('.player-sheet-card-expanded')).not.toBeNull()
-
-        // Reversing mid-reveal waits for its end instead of jumping to a fully-open hide keyframe.
+        // Reversing mid-reveal waits for its end instead of jumping to a fully-open hide clip.
         window.dispatchEvent(new KeyboardEvent('keydown', {code: 'Escape'}))
         flushSync()
         expect(target.querySelector('.player-sheet-card-closing')).toBeNull()
         expect(frames().map(f => f.dataset.frameIndex)).toEqual(['0', '1', '2'])
 
-        surface.dispatchEvent(new Event('animationend'))
+        // the reveal ends: the queued reversal starts the hide, still showing every frame
+        vi.advanceTimersByTime(251)
         flushSync()
         expect(target.querySelector('.player-sheet-card-closing')).not.toBeNull()
         expect(frames().map(f => f.dataset.frameIndex)).toEqual(['0', '1', '2'])
 
-        surface.dispatchEvent(new Event('animationend'))
+        vi.advanceTimersByTime(251)
         flushSync()
         expect(target.querySelector('.player-sheet-card-expanded')).toBeNull()
         expect(target.querySelector('.player-sheet-card-closing')).toBeNull()
@@ -210,7 +208,7 @@ describe('Sheet Card', () => {
         expect(target.querySelector('.player-sheet-card')).toBeNull()
     })
 
-    it('finishes both phases when CSS animation events do not fire', async () => {
+    it('finishes both phases on the fallback timers when no Web Animation runs', async () => {
         vi.useFakeTimers()
         threeFramesOverTwoPages()
         playerControlsStore.setState({size: 5, position: 0, end: 5, current: 0})
@@ -233,6 +231,8 @@ describe('Sheet Card', () => {
     })
 
     it('windows a long song by whole-song row and drops a popover whose row unmounts', async () => {
+        //fake timers so the 250ms fallback can stand in for the reveal Web Animation's finish
+        vi.useFakeTimers()
         manyFrames(503)
         playerControlsStore.setState({size: 503, position: 0, end: 503, current: 250})
         render()
@@ -264,11 +264,11 @@ describe('Sheet Card', () => {
         expect(target.querySelector('.player-chunks-window')).not.toBeNull()
         expect(target.querySelector('.player-sheet-card-revealing')).not.toBeNull()
         // Browsers emit this after the opening code's programmatic scrollTop write. It must not
-        // shrink the pre-seeded reveal/final union and force fresh mounts at animationend.
+        // shrink the pre-seeded reveal/final union and force fresh mounts at the reveal's end.
         scroll.dispatchEvent(new Event('scroll'))
         flushSync()
         expect(frames().map(f => Number(f.dataset.frameIndex))).toEqual(revealIndices)
-        surface.dispatchEvent(new Event('animationend'))
+        vi.advanceTimersByTime(251)
         flushSync()
         const initialIndices = frames().map(f => Number(f.dataset.frameIndex))
         expect(initialIndices.length).toBeGreaterThan(1)
@@ -279,7 +279,7 @@ describe('Sheet Card', () => {
         expect(initialIndices.every((index, i) => i === 0 || index === initialIndices[i - 1] + 1))
             .toBe(true)
         expect(scroll.scrollTop).toBeGreaterThan(0)
-        // The CSS translation reaches this exact delta; swapping it for scrollTop at animationend
+        // The reveal's translation reaches this exact delta; swapping it for scrollTop at its end
         // therefore leaves the selected frame on the same pixel instead of jumping into centre.
         expect(scroll.scrollTop).toBeCloseTo(revealScrollTop - revealCenterShift, 5)
         expect(frames().find(frame => frame.dataset.frameIndex === '250')).toBe(revealCurrentFrame)

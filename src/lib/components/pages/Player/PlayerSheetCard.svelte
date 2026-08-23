@@ -57,6 +57,17 @@
    */
   let revealFromShift = $state(0);
   let revealFinalScrollTop = 0;
+  /**
+   * The reveal/hide are Web Animations with CONCRETE PIXEL keyframes, never CSS keyframes
+   * reading var(): Chrome runs clip-path/transform animations on its compositor thread, and at
+   * the animation's edges the compositor resolved `var(--sheet-collapsed-height, 8rem)` to the
+   * 8rem FALLBACK for a few frames - the card visibly clipped ~30px short at the start of every
+   * reveal and the end of every hide (Chrome-only; Edge/Firefox showed nothing). Values are
+   * computed here at start time, so there is nothing left for the compositor to mis-resolve.
+   * jsdom has no Element.animate; there the 250ms fallback timers drive the phase machine alone.
+   */
+  let revealAnimations: Animation[] = [];
+  let hideAnimation: Animation | null = null;
   let hasCenteredThisOpen = $state(false);
   let collapseAfterReveal = false;
   let resizeRevision = 0;
@@ -84,6 +95,71 @@
     if (animationFallback === undefined) return;
     clearTimeout(animationFallback);
     animationFallback = undefined;
+  }
+
+  function cancelRevealAnimations() {
+    for (const animation of revealAnimations) animation.cancel();
+    revealAnimations = [];
+  }
+
+  /** Clip the surface to the collapsed height and grow it open; slide the mounted rows along. */
+  function animateReveal() {
+    cancelRevealAnimations();
+    if (!surfaceElement || typeof surfaceElement.animate !== 'function') return;
+    const surfaceHeight = surfaceElement.getBoundingClientRect().height;
+    const inset = Math.max(0, surfaceHeight - collapsedHeight);
+    //`fill: both` so the from-state holds from creation (this runs before the phase flip's first
+    //paint) and the end-state holds until finishReveal swaps it for the equivalent scroll offset
+    const options: KeyframeAnimationOptions = { duration: 150, easing: 'ease-out', fill: 'both' };
+    const surfaceAnimation = surfaceElement.animate(
+      [
+        { clipPath: `inset(0 0 ${inset}px 0 round 0.5rem)` },
+        { clipPath: 'inset(0 0 0 0 round 0.5rem)' },
+      ],
+      options
+    );
+    revealAnimations = [surfaceAnimation];
+    const windowElement = scrollElement?.querySelector('.player-chunks-window');
+    if (windowElement) {
+      revealAnimations.push(
+        windowElement.animate(
+          [
+            { transform: `translateY(${revealFromShift}px)` },
+            { transform: `translateY(${revealCenterShift}px)` },
+          ],
+          options
+        )
+      );
+    }
+    surfaceAnimation.finished.then(
+      //a cancelled animation (fallback fired first, or a re-anchor replaced this one) must not
+      //drive the phase machine a second time
+      () => {
+        if (revealAnimations.includes(surfaceAnimation)) finishReveal();
+      },
+      () => {}
+    );
+  }
+
+  /** The reverse clip, held at the collapsed height until finishCollapse swaps the layout in. */
+  function animateHide() {
+    if (!surfaceElement || typeof surfaceElement.animate !== 'function') return;
+    const surfaceHeight = surfaceElement.getBoundingClientRect().height;
+    const inset = Math.max(0, surfaceHeight - collapsedHeight);
+    const animation = surfaceElement.animate(
+      [
+        { clipPath: 'inset(0 0 0 0 round 0.5rem)' },
+        { clipPath: `inset(0 0 ${inset}px 0 round 0.5rem)` },
+      ],
+      { duration: 150, easing: 'ease-in', fill: 'both' }
+    );
+    hideAnimation = animation;
+    animation.finished.then(
+      () => {
+        if (hideAnimation === animation) finishCollapse();
+      },
+      () => {}
+    );
   }
 
   function scheduleAnimationFallback(animation: 'reveal' | 'hide') {
@@ -122,6 +198,9 @@
   $effect(() => {
     if (playerStore.eventType === 'stop') {
       clearAnimationFallback();
+      cancelRevealAnimations();
+      hideAnimation?.cancel();
+      hideAnimation = null;
       fullscreenPhase = 'closed';
       hasCenteredThisOpen = false;
       collapseAfterReveal = false;
@@ -148,8 +227,14 @@
     const revealScrollTop = prepareVirtualWindowForCurrentFrame(finalViewportHeight);
     tick().then(() => {
       if (fullscreenPhase !== 'open' || pages !== pageSet || centeredPages !== pageSet) return;
-      if (hasCenteredThisOpen) centerOnCurrentFrame();
-      else if (scrollElement) scrollElement.scrollTop = revealScrollTop;
+      if (hasCenteredThisOpen) {
+        centerOnCurrentFrame();
+      } else {
+        if (scrollElement) scrollElement.scrollTop = revealScrollTop;
+        //the running reveal's keyframes captured the PREVIOUS page set's shifts; re-anchor it on
+        //the fresh values or the animationend hand-off would jump by their difference
+        animateReveal();
+      }
       updateScrollThumb();
     });
   });
@@ -504,6 +589,9 @@
     await tick();
     if (fullscreenPhase !== 'open') return;
     if (scrollElement) scrollElement.scrollTop = initialScrollTop;
+    //still inside the click's task: the animation's from-state (fill both) is committed with the
+    //same paint that first shows the expanded layout, so an unclipped card is never painted
+    animateReveal();
     updateScrollThumb();
   }
 
@@ -524,6 +612,7 @@
     fullscreenPhase = 'closing';
     resizeRevision++;
     scheduleAnimationFallback('hide');
+    animateHide();
     //the indicator leaves with the interactive view, not 150ms after it
     updateScrollThumb();
   }
@@ -531,6 +620,10 @@
   function finishCollapse() {
     if (fullscreenPhase !== 'closing') return;
     clearAnimationFallback();
+    //cancelled in the same task as the phase flip: the held end clip and the inline layout that
+    //replaces it land in one paint
+    hideAnimation?.cancel();
+    hideAnimation = null;
     fullscreenPhase = 'closed';
     revealFromShift = 0;
     revealCenterShift = 0;
@@ -552,8 +645,9 @@
       setVirtualRange(revealFinalScrollTop, viewportHeight);
       scrollElement.scrollTop = revealFinalScrollTop;
     }
-    // Removing the transient reveal class also removes the held transform. Svelte flushes that
-    // class change before paint, after the equivalent scroll offset above has taken its place.
+    // Cancelling the reveal drops its held transform in the same task, after the equivalent
+    // scroll offset above has taken its place - the hand-off stays pixel-continuous.
+    cancelRevealAnimations();
     hasCenteredThisOpen = true;
     if (collapseAfterReveal) {
       collapseAfterReveal = false;
@@ -561,21 +655,6 @@
       return;
     }
     updateScrollThumb();
-  }
-
-  function handleCardAnimationEnd(e: AnimationEvent) {
-    //animationend BUBBLES: only the surface's own animations may drive the phase machine - a child's
-    //ending mid-collapse would otherwise cut the closing animation short
-    if (e.target !== surfaceElement) return;
-    //the collapse's end is what actually returns the card to the inline layout
-    if (fullscreenPhase === 'closing') {
-      finishCollapse();
-      return;
-    }
-    // Opening moves the page's rows from exactly where the inline card showed them to the final
-    // centred position. `finishReveal` swaps that visual translation for the equivalent scroll
-    // offset, after which the highlight moves on but the view deliberately does not.
-    finishReveal();
   }
 
   function handleKeyDown(e: KeyboardEvent) {
@@ -642,11 +721,9 @@
       ? `--sheet-collapsed-height:${collapsedHeight}px;--sheet-reveal-from:${revealFromShift}px;--sheet-center-shift:${revealCenterShift}px`
       : ''}
   >
-    <div
-      class="player-sheet-surface"
-      bind:this={surfaceElement}
-      onanimationend={handleCardAnimationEnd}
-    >
+    <!-- The reveal/hide clips are Web Animations created in the script (see animateReveal); the
+         style vars above are the same values, kept for tests and debugging. -->
+    <div class="player-sheet-surface" bind:this={surfaceElement}>
       <div class="player-sheet-scroll" bind:this={scrollElement} onscroll={handleSheetScroll}>
         <PlayerPagesRenderer
           chunks={visibleChunks}
@@ -758,21 +835,11 @@
     flex-direction: column;
   }
 
-  .player-sheet-card-revealing .player-sheet-surface {
-    animation: sheetCardReveal 0.15s ease-out both;
-  }
-
-  /* Only the real, mounted rows move - not the tall spacer that represents the rest of the song.
-     At animationend the same distance is committed to scrollTop and this transform disappears. */
-  .player-sheet-card-revealing .player-sheet-scroll :global(.player-chunks-window) {
-    animation: sheetCurrentFrameReveal 0.15s ease-out both;
-  }
-
-  /* forwards: the clipped surface must hold until animationend flips the phase, or it flashes
-     back to full for the one frame between the animation ending and the class leaving. */
-  .player-sheet-card-closing .player-sheet-surface {
-    animation: sheetCardHide 0.15s ease-in forwards;
-  }
+  /* NO reveal/hide keyframes here, deliberately: the clip and row-slide animations are Web
+     Animations with concrete pixel values (animateReveal/animateHide in the script). As CSS
+     keyframes they read var(--sheet-collapsed-height), and Chrome's compositor resolved that
+     var's 8rem fallback at the animation's edges - the card clipped visibly short for a few
+     frames at every reveal start and hide end. Do not move them back into CSS keyframes. */
 
   /* The NATIVE scrollbar stays hidden: a classic one takes its width out of the content box, so
      the expanded frames rendered narrower than the same frames inline - a layout shift on every
@@ -801,41 +868,6 @@
     opacity: 0.8;
     pointer-events: none;
     z-index: 1;
-  }
-
-  /* Clip-path changes paint/compositing, not the scroll box's layout. The expanded card carries no
-     backdrop-filter: what sits under it is separated by the translucent background alone. */
-  @keyframes sheetCardReveal {
-    from {
-      clip-path: inset(
-        0 0 max(0px, calc(100% - var(--sheet-collapsed-height, 8rem))) 0 round 0.5rem
-      );
-    }
-    to {
-      clip-path: inset(0 0 0 0 round 0.5rem);
-    }
-  }
-
-  @keyframes sheetCardHide {
-    from {
-      clip-path: inset(0 0 0 0 round 0.5rem);
-    }
-    to {
-      clip-path: inset(
-        0 0 max(0px, calc(100% - var(--sheet-collapsed-height, 8rem))) 0 round 0.5rem
-      );
-    }
-  }
-
-  /* From is not always 0: near the song's tail the in-place start position exceeds the scroll
-     range, and the overflow rides here instead (see revealFromShift). */
-  @keyframes sheetCurrentFrameReveal {
-    from {
-      transform: translateY(var(--sheet-reveal-from, 0px));
-    }
-    to {
-      transform: translateY(var(--sheet-center-shift, 0px));
-    }
   }
 
   .player-sheet-expand {
