@@ -22,6 +22,7 @@
         "error_importing_invalid_format": "Terjadi kesalahan mengimpor file, format tidak valid",
         "song_backup_downloaded": "Cadangan lagu terunduh",
         "old_format_export_dropped_notes": "{{count}} note tidak dapat disertakan dalam file format lama (note tersebut tidak memiliki posisi pada instrumen default)",
+        "converted_song_stranded_notes": "Beberapa nada mungkin tidak dimainkan karena tidak didukung oleh beberapa instrumen",
         "no_songs_to_backup": "Tidak ada lagu untuk dicadangkan",
         "no_empty_name": "Harap tulis nama yang tidak kosong",
         "cloned_song": "Lagu terkloning: \"{{song_name}}\"",
@@ -114,7 +115,9 @@
         "circle": "Lingkaran",
         "add_new_instrument": "Tambahkan instrumen baru",
         "reset": "Atur ulang",
-        "new": "Baru"
+        "new": "Baru",
+        "increment": "Tambah",
+        "decrement": "Kurangi"
     },
     "home": {
         "app_description": "Aplikasi tempat Anda dapat membuat, berlatih, dan memutar lagu untuk {{APP_NAME}}",
@@ -250,8 +253,6 @@
             "player_pitch_description": "Nada Pitch pemain, juga akan disimpan dalam lagu yang Anda rekam",
             "player_bpm": "Bpm",
             "player_bpm_description": "Ketukan per menit, digunakan oleh metronom dan akan digunakan saat mengonversi lagu dengan komposer",
-            "player_sync_song_data": "Sinkronkan instrumen dan nada lagu secara otomatis",
-            "player_sync_song_data_description": "Setiap kali Anda memuat lagu, instrumen dan nada lagu tersebut juga akan dimuat",
             "player_metronome_beats": "Ketukan metronom",
             "player_metronome_beats_description": "Setelah berapa kali ketukan yang lebih kuat dimainkan",
             "player_metronome_volume": "Volume metronom",
@@ -438,7 +439,13 @@
         "loop": "Putar ulang",
         "loop_tooltip": "Putar ulang lagu",
         "hide_practice_notes": "Sembunyikan note dalam mode latihan",
-        "hide_practice_notes_only_in_practice": "Hanya berpengaruh pada mode latihan"
+        "hide_practice_notes_only_in_practice": "Hanya berpengaruh pada mode latihan",
+        "sheet_frame_options": "Opsi bingkai",
+        "section_starts_here": "Bagian dimulai di sini",
+        "section_ends_here": "Bagian berakhir di sini",
+        "go_to_here": "Pergi ke sini",
+        "expand_sheet": "Perluas lembar",
+        "collapse_sheet": "Ciutkan lembar"
     },
     "keybinds": {
         "already_used_keybind": "Tata keyboard ini sudah digunakan oleh note \"{{note_name}}\"",
@@ -599,11 +606,12 @@
             "copy_notes": "Salin semua note"
         },
         "midi_parser": {
-            "out_of_range": "Di luar jangkauan",
-            "accidentals": "Kecelakaan",
-            "total_notes": "Total nada",
-            "select_midi_tracks": "Pilih trek MIDI",
-            "ignore_empty_tracks": "Abaikan trek kosong",
+            "import_settings": "Pengaturan impor",
+            "track_settings": "Pengaturan trek",
+            "tempo_bpm": "Tempo (BPM)",
+            "base_pitch": "Nada dasar",
+            "of_which_dont_fit": "Di antaranya tidak cocok dengan instrumen",
+            "of_which_out_of_range": "Di antaranya di luar jangkauan",
             "include_accidentals": "Sertakan kecelakaan",
             "global_note_offset": "Offset note global",
             "global_note_offset_description": "Indeks setiap nada akan didorong ke atas/bawah sejumlah ini, Anda bisa menggunakannya untuk membuat\n                        lagu cocok dengan jangkauan aplikasi. Anda juga bisa mengubah offset setiap lapisan.",
@@ -612,10 +620,13 @@
             "suggested_offset": "Offset {{offset}}: {{accidentals}} tanda aksidental, {{stranded}} nada yang tidak dapat dimainkan instrumen",
             "local_note_offset": "Offset note trek lokal",
             "local_note_offset_description": " Mengubah indeks setiap nada sejumlah ini.",
+            "no_offset": "Tanpa offset",
+            "no_scaling": "Tanpa penskalaan",
             "max_octave_scaling": "Penskalaan oktaf note maksimal",
             "max_octave_scaling_description": " Turunkan/naikkan nada yang berada di luar skala dengan oktaf ini.",
             "number_of_notes": "Jumlah note",
             "open_midi_audio_file": "Buka file MIDI/Audio/Video",
+            "no_file_selected": "pilih file",
             "there_are_no_notes": "Tidak ada note",
             "error_is_file_midi": "Ada kesalahan dalam mengimpor file ini, apakah ini file .mid?",
             "converting_audio_to_midi": "Mengonversi audio ke midi (mungkin membutuhkan waktu)..",
@@ -623,8 +634,6 @@
             "loading_converter": "Memuat konverter",
             "audio_conversion_warning": "🔬 Fitur ini eksperimental, mungkin tidak berfungsi atau stuck. \nKonversi audio dan video kurang akurat daripada MIDI, jika bisa, lebih baik gunakan MIDI atau komposisi secara manual. \nGunakan audio dan video yang hanya memiliki satu instrumen yang dimainkan."
         },
-        "warning_opening_midi_importer": "Membuka pengimpor midi untuk mengimpor file MIDI, silakan pilih ulang file",
-        "warning_opening_audio_importer": "Membuka pengimpor midi untuk mengimpor file video/audio... Silakan pilih ulang file. konversi video/audio tidak sangat akurat",
         "error_importing_file_invalid_format": "Kesalahan mengimpor file, format tidak valid",
         "error_importing_file_invalid_format_audio_video": "Kesalahan mengimpor file, format tidak valid, jika ini file MIDI,Video atau audio, gunakan tombol \"Buat dari MIDI\"",
         "ask_download_of_current_song": "Anda sedang mengedit lagu ini (\"{{song_name}}\"), apakah Anda ingin menyimpannya sebelum mengunduh?"

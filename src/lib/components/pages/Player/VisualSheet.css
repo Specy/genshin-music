@@ -10,6 +10,24 @@
   gap: 0.2rem;
 }
 
+/* The virtual page's padding is the logical full-song height. Its child is only the mounted row
+   window, which stays cheap to translate during the opening reveal. */
+.player-chunks-page.player-chunks-page-virtual {
+  display: block;
+}
+
+.player-chunks-window {
+  display: grid;
+  gap: 0.2rem;
+}
+
+/* A virtual window already contains only the viewport and two overscan rows. Laying those real
+   rows out is both cheap and necessary: an intrinsic-size estimate in an overscan row would make
+   its spacer pitch disagree with the visible rows and slowly skew the scrollbar. */
+.player-chunks-page.player-chunks-page-virtual .sheet-frame-target {
+  content-visibility: visible;
+}
+
 .player-controls {
   position: absolute;
   align-items: flex-end;

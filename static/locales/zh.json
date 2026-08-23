@@ -21,6 +21,7 @@
         "error_importing_invalid_format": "文件导入失败, 文件格式错误",
         "song_backup_downloaded": "已下载歌曲备份",
         "old_format_export_dropped_notes": "有 {{count}} 个音符无法写入旧格式文件（它们在默认乐器上没有对应的位置）",
+        "converted_song_stranded_notes": "某些音符可能无法播放，因为某些乐器不支持它们",
         "no_songs_to_backup": "没有要备份的歌曲",
         "no_empty_name": "请填写一个非空白的名称",
         "cloned_song": "复制歌曲：“{{song_name}}”",
@@ -114,7 +115,9 @@
         "circle": "圆形",
         "add_new_instrument": "添加新乐器",
         "reset": "重置",
-        "new": "新"
+        "new": "新",
+        "increment": "增加",
+        "decrement": "减少"
     },
     "home": {
         "app_description": "一款可以为 {{APP_NAME}} 创建、练习和播放歌曲的应用。",
@@ -250,8 +253,6 @@
             "player_pitch_description": "播放器的曲调，也将保存在您录制的歌曲中。",
             "player_bpm": "BPM",
             "player_bpm_description": "每分钟节拍数，由节拍器使用，并在和编曲器转换歌曲时使用。",
-            "player_sync_song_data": "自动同步歌曲的乐器和音高",
-            "player_sync_song_data_description": "每当您加载歌曲时，该歌曲的乐器和音高也会被加载。",
             "player_metronome_beats": "节拍器节拍",
             "player_metronome_beats_description": "经过多少拍数后播放更强的节拍",
             "player_metronome_volume": "节拍器音量",
@@ -438,7 +439,13 @@
         "loop": "循环",
         "loop_tooltip": "循环播放歌曲",
         "hide_practice_notes": "在练习模式下隐藏文字",
-        "hide_practice_notes_only_in_practice": "仅在练习模式下生效"
+        "hide_practice_notes_only_in_practice": "仅在练习模式下生效",
+        "sheet_frame_options": "框架选项",
+        "section_starts_here": "小节从这里开始",
+        "section_ends_here": "小节在这里结束",
+        "go_to_here": "前往这里",
+        "expand_sheet": "展开乐谱",
+        "collapse_sheet": "收起乐谱"
     },
     "keybinds": {
         "already_used_keybind": "这个按键绑定已经被音符“{{note_name}}”使用。",
@@ -599,11 +606,12 @@
             "copy_notes": "复制所有音符"
         },
         "midi_parser": {
-            "out_of_range": "超出范围",
-            "accidentals": "变音记号",
-            "total_notes": "总音符",
-            "select_midi_tracks": "选择 MIDI 轨道",
-            "ignore_empty_tracks": "忽略空轨道",
+            "import_settings": "导入设置",
+            "track_settings": "音轨设置",
+            "tempo_bpm": "节奏（BPM）",
+            "base_pitch": "基本音高",
+            "of_which_dont_fit": "其中不适合该乐器",
+            "of_which_out_of_range": "其中超出范围",
             "include_accidentals": "包括临时记号",
             "global_note_offset": "全局音符偏移量",
             "global_note_offset_description": "每个音符的索引将被上推/下推这个量，您可以使用它来使歌曲适合应用的音域。您还可以更改每个图层的偏移量。",
@@ -612,10 +620,13 @@
             "suggested_offset": "偏移 {{offset}}：{{accidentals}} 个变音记号，{{stranded}} 个乐器无法演奏的音符",
             "local_note_offset": "局部轨道音符偏移量",
             "local_note_offset_description": "按此数量更改每个音符的索引。",
+            "no_offset": "无偏移",
+            "no_scaling": "无缩放",
             "max_octave_scaling": "最大音符八度缩放",
             "max_octave_scaling_description": " 缩小/放大超出这些八度音阶的音符。",
             "number_of_notes": "音符数量",
             "open_midi_audio_file": "打开 MIDI/音频/视频文件",
+            "no_file_selected": "选择文件",
             "there_are_no_notes": "没有音符",
             "error_is_file_midi": "导入此文件时出错，它是 .mid 文件吗？",
             "converting_audio_to_midi": "正在将音频转换为 midi（可能需要一段时间）...",
@@ -623,8 +634,6 @@
             "loading_converter": "正在加载转换器",
             "audio_conversion_warning": "`🔬 此功能是实验性的，它可能无法工作或卡住 \n音频和视频转换不如 MIDI 准确，如果可以，最好使用 MIDI 或手动编写 \n使用只有一个乐器演奏的音频和视频。"
         },
-        "warning_opening_midi_importer": "打开MIDI导入器导入MIDI文件，请重新选择文件",
-        "warning_opening_audio_importer": "正在打开 midi 导入器以导入视频/音频文件...请重新选择文件。视频/音频转换不是很准确。",
         "error_importing_file_invalid_format": "导入文件时出错，格式错误",
         "error_importing_file_invalid_format_audio_video": "导入文件时出错，格式错误。如果是 MIDI、视频或音频文件，请使用“从 MIDI 创建”按钮。",
         "ask_download_of_current_song": "您当前正在编辑这首歌曲（“{{song_name}}”），是否要在下载前保存它？"
@@ -733,14 +742,6 @@
             "pro_zoom_description": "缩放 Pro 视图的行（也可使用触控板双指缩放）"
         }
     },
-    "composer_note_name_type": {
-        "Note_name": "音名",
-        "Keyboard_layout": "键盘布局",
-        "Your_Keyboard_layout": "你键盘的布局",
-        "Do_Re_Mi": "哆 来 咪",
-        "ABC": "ABC",
-        "No_Text": "无文本"
-    },
     "instruments": {
         "Lyre": "风物之诗琴",
         "Vintage-Lyre": "老旧的诗琴",
@@ -753,7 +754,6 @@
         "LeapingSpiritPiano": "跃律琴",
         "HarmonicKey": "谐律键琴",
         "Piano": "钢琴",
-        "Grand Piano": "大钢琴",
         "GrandPiano": "大钢琴",
         "Contrabass": "屁琴",
         "Cello": "大提琴",
@@ -817,8 +817,6 @@
         "3-6-4": {
             "title": "翻译文本更新",
             "change-1": "新增中国台湾地区与中国香港特别行政区的繁体中文翻译",
-            "change-2": "新增韩语翻译，并修复一些其他翻译的错误",
-            "change-3": "新增日语翻译 (之前大更新时丢失了已被寻回)",
             "chance-2": "改进了土耳其语翻译"
         },
         "3-6-3": {

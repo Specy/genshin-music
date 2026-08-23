@@ -5,8 +5,8 @@
   import PlayerSheetFrame from './PlayerSheetFrame.svelte';
   import './VisualSheet.css';
 
-  // One grid of Sheet Frames. The inline card feeds it the current page and the fullscreen card
-  // feeds it every frame of the song, so the frames are addressed by their WHOLE-SONG index
+  // One grid of Sheet Frames. The inline card feeds it the current page and the fullscreen card a
+  // row window into the full song, so the frames are addressed by their WHOLE-SONG index
   // (`indexOffset` + the each-index) - the Section markers and the playback cursor are both
   // computed in that space and would otherwise disagree between the two views.
   let {
@@ -17,6 +17,7 @@
     sectionLastIndex,
     openFrameIndex,
     onFrameSelect,
+    virtualLayout,
   }: {
     chunks: Chunk[];
     columns: number;
@@ -26,19 +27,20 @@
     sectionLastIndex: number;
     openFrameIndex: number;
     onFrameSelect: (element: HTMLElement, chunk: Chunk, index: number) => void;
+    /** Spacer geometry for the fullscreen row window; absent for the ordinary inline page. */
+    virtualLayout?: { paddingTop: number; paddingBottom: number };
   } = $props();
 
   const layoutType = game.settings.defaultNoteNameType.sheetVisualizer;
   const dotColor = $derived(theme.layer('primary', 0.2).toString());
 </script>
 
-<div
-  class="player-chunks-page"
-  style="grid-template-columns:repeat({columns}, 1fr);--sheet-cols:{game.notes
-    .perRow};--sheet-dot-color:{dotColor}"
->
-  <!-- QUIRK: keyed by index on purpose — old reconciled on the array index, and chunks carry no stable id. Switching to a content key changes re-render behaviour, so this is the one place the "never key by index" rule does not apply. -->
-  {#each chunks as chunk, i (i)}
+{#snippet frames()}
+  <!-- QUIRK: keyed by POSITION on purpose — chunks carry no stable id. Inline keeps the old
+       page-local index reconciliation; the virtual window uses the whole-song index so rows that
+       remain mounted are not rebuilt when an overscan row enters or leaves. This is the one place
+       the "never key by index" rule does not apply. -->
+  {#each chunks as chunk, i (virtualLayout ? indexOffset + i : i)}
     {@const index = indexOffset + i}
     <PlayerSheetFrame
       {chunk}
@@ -51,4 +53,18 @@
       onSelect={onFrameSelect}
     />
   {/each}
+{/snippet}
+
+<div
+  class={['player-chunks-page', virtualLayout && 'player-chunks-page-virtual']}
+  style={`grid-template-columns:repeat(${columns}, 1fr);--sheet-cols:${game.notes.perRow};--sheet-dot-color:${dotColor}${virtualLayout ? `;padding-top:${virtualLayout.paddingTop}px;padding-bottom:${virtualLayout.paddingBottom}px` : ''}`}
+>
+  {#if virtualLayout}
+    <!-- Kept separate from the tall spacer so opening can animate this small mounted band only. -->
+    <div class="player-chunks-window" style="grid-template-columns:repeat({columns}, 1fr)">
+      {@render frames()}
+    </div>
+  {:else}
+    {@render frames()}
+  {/if}
 </div>

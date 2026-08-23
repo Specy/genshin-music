@@ -21,6 +21,7 @@
         "error_importing_invalid_format": "檔案匯入失敗，檔案格式錯誤",
         "song_backup_downloaded": "已下載歌曲備份",
         "old_format_export_dropped_notes": "有 {{count}} 個音符未能加入舊格式檔案（它們在預設樂器上沒有對應位置）",
+        "converted_song_stranded_notes": "部分音符可能無法播放，因為某些樂器不支援它們",
         "no_songs_to_backup": "沒有要備份的歌曲",
         "no_empty_name": "請填寫一個非空白的名稱",
         "cloned_song": "複製歌曲：「{{song_name}}」",
@@ -114,7 +115,9 @@
         "circle": "圓形",
         "add_new_instrument": "新增新樂器",
         "reset": "重設",
-        "new": "新"
+        "new": "新",
+        "increment": "增加",
+        "decrement": "減少"
     },
     "home": {
         "app_description": "一款可以為 {{APP_NAME}} 創建、練習和播放歌曲的應用程式。",
@@ -250,8 +253,6 @@
             "player_pitch_description": "演奏器的音調，也將儲存在您錄製的歌曲中。",
             "player_bpm": "BPM",
             "player_bpm_description": "每分鐘節拍數，由節拍器使用，並在和編曲器轉換歌曲時使用。",
-            "player_sync_song_data": "自動同步歌曲的樂器和音高",
-            "player_sync_song_data_description": "每當您載入歌曲時，該歌曲的樂器和音高也會被載入。",
             "player_metronome_beats": "節拍器節拍",
             "player_metronome_beats_description": "經過多少拍數後播放更強的節拍",
             "player_metronome_volume": "節拍器音量",
@@ -438,7 +439,13 @@
         "loop": "循環",
         "loop_tooltip": "循環播放歌曲",
         "hide_practice_notes": "在練習模式下隱藏文字",
-        "hide_practice_notes_only_in_practice": "僅在練習模式下生效"
+        "hide_practice_notes_only_in_practice": "僅在練習模式下生效",
+        "sheet_frame_options": "框架選項",
+        "section_starts_here": "部分從這裡開始",
+        "section_ends_here": "部分在這裡結束",
+        "go_to_here": "前往這裡",
+        "expand_sheet": "展開樂譜",
+        "collapse_sheet": "收合樂譜"
     },
     "keybinds": {
         "already_used_keybind": "這個按鍵綁定已經被音符「{{note_name}}」使用。",
@@ -599,11 +606,12 @@
             "copy_notes": "複製所有音符"
         },
         "midi_parser": {
-            "out_of_range": "超出範圍",
-            "accidentals": "變音記號",
-            "total_notes": "總音符",
-            "select_midi_tracks": "選擇 MIDI 軌道",
-            "ignore_empty_tracks": "忽略空軌道",
+            "import_settings": "匯入設定",
+            "track_settings": "軌道設定",
+            "tempo_bpm": "節奏（BPM）",
+            "base_pitch": "基本音高",
+            "of_which_dont_fit": "其中不適合該樂器",
+            "of_which_out_of_range": "其中超出範圍",
             "include_accidentals": "包括臨時記號",
             "global_note_offset": "全局音符偏移量",
             "global_note_offset_description": "每個音符的索引將被上推/下推這個量，您可以使用它來使歌曲適合應用的音域。您還可以更改每個圖層的偏移量。",
@@ -612,10 +620,13 @@
             "suggested_offset": "偏移 {{offset}}：{{accidentals}} 個變音記號，{{stranded}} 個樂器無法演奏的音符",
             "local_note_offset": "局部軌道音符偏移量",
             "local_note_offset_description": "按此數量更改每個音符的索引。",
+            "no_offset": "沒有偏移",
+            "no_scaling": "沒有縮放",
             "max_octave_scaling": "最大音符八度縮放",
             "max_octave_scaling_description": " 縮小/放大超出這些八度音階的音符。",
             "number_of_notes": "音符數量",
             "open_midi_audio_file": "開啟 MIDI/音訊/影片檔案",
+            "no_file_selected": "選擇檔案",
             "there_are_no_notes": "沒有音符",
             "error_is_file_midi": "匯入此檔案時出錯，它是 .mid 檔案嗎？",
             "converting_audio_to_midi": "正在將音訊轉換為 midi（可能需要一段時間）...",
@@ -623,8 +634,6 @@
             "loading_converter": "正在載入轉換器",
             "audio_conversion_warning": "`🔬 此功能是實驗性的，它可能無法工作或卡住 \n音訊和影片轉換不如 MIDI 準確，如果可以，最好使用 MIDI 或手動編寫 \n使用只有一個樂器演奏的音訊和影片。"
         },
-        "warning_opening_midi_importer": "開啟MIDI匯入器匯入MIDI檔案，請重新選擇檔案",
-        "warning_opening_audio_importer": "正在開啟 midi 匯入器以匯入影片/音訊檔案...請重新選擇檔案。影片/音訊轉換不是很準確。",
         "error_importing_file_invalid_format": "匯入檔案時出錯，格式錯誤",
         "error_importing_file_invalid_format_audio_video": "匯入檔案時出錯，格式錯誤。如果是 MIDI、影片或音訊檔案，請使用「從 MIDI 建立」按鈕。",
         "ask_download_of_current_song": "您當前正在編輯這首歌曲（「{{song_name}}」），是否要在下載前儲存它？"
@@ -743,9 +752,7 @@
         "DjemDjemDrum": "聚聚鼓",
         "LingeringEuphonia": "餘音",
         "LeapingSpiritPiano": "躍律琴",
-        "Harmonic Key": "諧律鍵琴",
         "Piano": "鋼琴",
-        "Grand Piano": "大鋼琴",
         "Contrabass": "屁琴",
         "Cello": "大提琴",
         "Violin": "小提琴",
@@ -810,7 +817,6 @@
         "3-6-4": {
             "title": "更新翻譯檔案",
             "change-1": "新增台灣、香港的繁體中文翻譯",
-            "change-2": "新增韓文翻譯，並修正部分翻譯錯誤",
             "chance-2": "改進了土耳其文翻譯"
         },
         "3-6-3": {

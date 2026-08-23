@@ -23,6 +23,7 @@
         "error_importing_invalid_format": "Ошибка при импорте файла, недопустимый формат",
         "song_backup_downloaded": "Резервная копия мелодии загружена",
         "old_format_export_dropped_notes": "Количество нот, которые не удалось включить в файл старого формата: {{count}} (у них нет позиции на инструменте по умолчанию)",
+        "converted_song_stranded_notes": "Некоторые ноты могут не воспроизводиться, поскольку не поддерживаются некоторыми инструментами",
         "no_songs_to_backup": "Мелодий для резервного копирования нет",
         "no_empty_name": "Пожалуйста, введите непустое имя",
         "cloned_song": "Клонированная мелодия: \"{{song_name}}\"",
@@ -114,7 +115,9 @@
         "circle": "Круг",
         "reset": "Сброс",
         "add_new_instrument": "Добавить инструмент",
-        "new": "Новое"
+        "new": "Новое",
+        "increment": "Увеличить",
+        "decrement": "Уменьшить"
     },
     "home": {
         "app_description": "Приложение, в котором можно создавать, разучивать и играть мелодии для {{APP_NAME}}",
@@ -249,8 +252,6 @@
             "player_pitch_description": "Высота нот инструмента, которая так же будет использована при записи мелодии",
             "player_bpm": "Ударов/мин.",
             "player_bpm_description": "Количество ударов в минуту метронома, которая так же будет использована при конвертировании мелодии в секвенсоре",
-            "player_sync_song_data": "Автоматически синхронизировать высоту нот и инструмент в мелодии",
-            "player_sync_song_data_description": "Высота нот и инструмент будет автоматически установлен в соответствии с мелодией, которую вы загружаете",
             "player_metronome_beats": "Сильная доля метронома",
             "player_metronome_beats_description": "После скольки ударов метронома проигрывается сильная доля (удар с акцентом)",
             "player_metronome_volume": "Громкость метронома",
@@ -438,7 +439,13 @@
         "loop": "Повтор",
         "loop_tooltip": "Повторять мелодию",
         "hide_practice_notes": "Скрыть ноты в режиме практики",
-        "hide_practice_notes_only_in_practice": "Действует только в режиме практики"
+        "hide_practice_notes_only_in_practice": "Действует только в режиме практики",
+        "sheet_frame_options": "Параметры рамки",
+        "section_starts_here": "Раздел начинается здесь",
+        "section_ends_here": "Раздел заканчивается здесь",
+        "go_to_here": "Перейти сюда",
+        "expand_sheet": "Развернуть партитуру",
+        "collapse_sheet": "Свернуть партитуру"
     },
     "keybinds": {
         "already_used_keybind": "Эта горячая клавиша уже используется нотой \"{{note_name}}\"",
@@ -599,11 +606,12 @@
             "copy_notes": "Copy all notes"
         },
         "midi_parser": {
-            "out_of_range": "Out of range",
-            "accidentals": "Accidentals",
-            "total_notes": "Total notes",
-            "select_midi_tracks": "Select MIDI tracks",
-            "ignore_empty_tracks": "Ignore empty tracks",
+            "import_settings": "Настройки импорта",
+            "track_settings": "Настройки трека",
+            "tempo_bpm": "Темп (BPM)",
+            "base_pitch": "Основная высота тона",
+            "of_which_dont_fit": "Из них не подходят инструменту",
+            "of_which_out_of_range": "Из них находятся вне диапазона",
             "include_accidentals": "Include accidentals",
             "global_note_offset": "Global note offset",
             "global_note_offset_description": "The index of each note will be pushed up/down by this amount, you can use it to make\n                            the song fit into the app range. You can also change the offset of each layer.",
@@ -612,10 +620,13 @@
             "suggested_offset": "Смещение {{offset}}: {{accidentals}} знаков альтерации, {{stranded}} нот, которые инструмент не может сыграть",
             "local_note_offset": "Local track notes offset",
             "local_note_offset_description": " Changes the index of each note by this amount.",
+            "no_offset": "Без смещения",
+            "no_scaling": "Без масштабирования",
             "max_octave_scaling": "Max notes octave scaling",
             "max_octave_scaling_description": " Scale down/up the notes which are out of scale by theose octaves.",
             "number_of_notes": "Number of notes",
             "open_midi_audio_file": "Open MIDI/Audio/Video file",
+            "no_file_selected": "выберите файл",
             "there_are_no_notes": "There are no notes",
             "error_is_file_midi": "There was an error importing this file, is it a .mid file?",
             "converting_audio_to_midi": "Converting audio to midi (might take a while)..",
@@ -623,8 +634,6 @@
             "loading_converter": "Loading converter",
             "audio_conversion_warning": "🔬 This feature is experimental, it might not work or get stuck. \nAudio and video conversion is less accurate than MIDI, if you can, it's better to use MIDI or compose manually. \nUse audio and videos that have only one instrument playing."
         },
-        "warning_opening_midi_importer": "Opening the midi importer to import a MIDI file, please reselect the file",
-        "warning_opening_audio_importer": "Opening the midi importer to import a video/audio file... Please reselect the file. video/audio conversion is not very accurate",
         "error_importing_file_invalid_format": "Error importing file, invalid format",
         "error_importing_file_invalid_format_audio_video": "Error importing file, invalid format, if it's a MIDI,Video or audio file, use the \"Create from MIDI\" button",
         "ask_download_of_current_song": "You are currently editing this song (\"{{song_name}}\"), do you want to save it before downloading?"

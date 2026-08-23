@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { tick } from 'svelte';
+  import { onDestroy, tick } from 'svelte';
   import type { Chunk } from '$core/Songs/RecordedSong';
   import { chunkIndexAt } from '$core/Songs/sectionChunks';
   import { playerControlsStore } from '$stores/PlayerControlsStore.svelte';
@@ -25,6 +25,15 @@
     onSectionChange: () => void;
   } = $props();
 
+  type VirtualMetrics = {
+    rowHeight: number;
+    rowGap: number;
+    marginTop: number;
+    marginBottom: number;
+  };
+
+  type VirtualRange = { startRow: number; endRow: number };
+
   type OpenPopover = {
     element: HTMLElement;
     chunk: Chunk;
@@ -36,23 +45,57 @@
   };
 
   let cardElement: HTMLDivElement | undefined = $state();
+  let surfaceElement: HTMLDivElement | undefined = $state();
   let scrollElement: HTMLDivElement | undefined = $state();
   let collapsedHeight = $state(0);
-  let hasCenteredThisOpen = false;
+  let revealCenterShift = $state(0);
+  let revealFinalScrollTop = 0;
+  let hasCenteredThisOpen = $state(false);
+  let collapseAfterReveal = false;
+  let resizeRevision = 0;
+  const ANIMATION_FALLBACK_MS = 250;
+  let animationFallback: ReturnType<typeof setTimeout> | undefined;
+  const VIRTUAL_OVERSCAN_ROWS = 2;
+  // Browser layout replaces these before fullscreen opens. They are also deliberate zero-layout
+  // fallbacks for tests and for the unlikely first frame whose intrinsic content has not resolved.
+  let virtualMetrics = $state<VirtualMetrics>({
+    rowHeight: 64,
+    rowGap: 3.2,
+    marginTop: 6.4,
+    marginBottom: 6.4,
+  });
+  let virtualRange = $state<VirtualRange>({ startRow: 0, endRow: 1 });
   /**
-   * The fullscreen view is a three-state machine, because BOTH directions animate: `closing` keeps
-   * the expanded box (and every frame in it) on screen while the collapse animation shrinks it, and
-   * only its animationend hands the card back to the inline layout.
+   * The fullscreen view is a three-state machine, because BOTH directions animate: `closing`
+   * keeps the full-song scroll surface in place while the hide animation masks it, and only its
+   * animationend hands the card back to the inline layout.
    */
   let fullscreenPhase: 'closed' | 'open' | 'closing' = $state('closed');
   let popover = $state<OpenPopover | null>(null);
+
+  function clearAnimationFallback() {
+    if (animationFallback === undefined) return;
+    clearTimeout(animationFallback);
+    animationFallback = undefined;
+  }
+
+  function scheduleAnimationFallback(animation: 'reveal' | 'hide') {
+    clearAnimationFallback();
+    animationFallback = setTimeout(() => {
+      animationFallback = undefined;
+      if (animation === 'reveal') finishReveal();
+      else finishCollapse();
+    }, ANIMATION_FALLBACK_MS);
+  }
+
+  onDestroy(clearAnimationFallback);
 
   const pages = $derived(playerControlsStore.pagesState.pages);
   //$derived.by, not $derived: the plain form checks inline, where TS has flow-narrowed the just
   //initialized `let` to 'closed' and rejects the comparison as overlap-free
   const isFullscreen = $derived.by(() => fullscreenPhase === 'open');
-  //while closing, the card still shows ALL frames - the shrink clips over the content the user was
-  //scrolling instead of snapping to one page mid-flight
+  //while closing, the card still shows the full-song virtual surface - the shrink clips over the
+  //content the user was scrolling instead of snapping to one page mid-flight
   const showsAllFrames = $derived(fullscreenPhase !== 'closed');
   // The card STAYS MOUNTED through a fullscreen run transition: every restart empties the pages
   // for a moment (stopSong clears, the mode repopulates), and unmounting on that made "Go to here"
@@ -71,9 +114,16 @@
   let centeredPages: Chunk[][] | null = null;
   $effect(() => {
     if (playerStore.eventType === 'stop') {
+      clearAnimationFallback();
       fullscreenPhase = 'closed';
       hasCenteredThisOpen = false;
+      collapseAfterReveal = false;
+      revealCenterShift = 0;
+      revealFinalScrollTop = 0;
+      resizeRevision++;
       centeredPages = null;
+      virtualRange = { startRow: 0, endRow: 1 };
+      popover = null;
     }
   });
 
@@ -84,21 +134,45 @@
   // the user has already scrolled.
   $effect(() => {
     if (fullscreenPhase !== 'open' || pages.length === 0 || centeredPages === pages) return;
-    centeredPages = pages;
-    hasCenteredThisOpen = false;
+    const pageSet = pages;
+    centeredPages = pageSet;
+    const finalViewportHeight = scrollElement?.clientHeight || expandedViewportEstimate();
+    const revealScrollTop = prepareVirtualWindowForCurrentFrame(
+      hasCenteredThisOpen ? finalViewportHeight : revealViewportHeight(),
+      finalViewportHeight
+    );
     tick().then(() => {
-      centerOnCurrentFrame();
+      if (fullscreenPhase !== 'open' || pages !== pageSet || centeredPages !== pageSet) return;
+      if (hasCenteredThisOpen) centerOnCurrentFrame();
+      else if (scrollElement) scrollElement.scrollTop = revealScrollTop;
       updateScrollThumb();
     });
   });
   const allChunks = $derived(pages.flat());
+  const safeColumns = $derived(Math.max(1, columns));
+  const totalRows = $derived(Math.ceil(allChunks.length / safeColumns));
+  const mountedStartRow = $derived(Math.min(totalRows, virtualRange.startRow));
+  const mountedEndRow = $derived(
+    Math.max(mountedStartRow, Math.min(totalRows, virtualRange.endRow))
+  );
+  const virtualStartIndex = $derived(Math.min(allChunks.length, mountedStartRow * safeColumns));
+  const virtualEndIndex = $derived(Math.min(allChunks.length, mountedEndRow * safeColumns));
+  const virtualChunks = $derived(allChunks.slice(virtualStartIndex, virtualEndIndex));
+  const virtualLayout = $derived.by(() => {
+    if (!showsAllFrames) return undefined;
+    const pitch = virtualMetrics.rowHeight + virtualMetrics.rowGap;
+    return {
+      paddingTop: mountedStartRow * pitch,
+      paddingBottom: Math.max(0, totalRows - mountedEndRow) * pitch,
+    };
+  });
   const pageIndexOffset = $derived.by(() => {
     let offset = 0;
     for (let i = 0; i < playerControlsStore.currentPageIndex; i++) offset += pages[i].length;
     return offset;
   });
-  const visibleChunks = $derived(showsAllFrames ? allChunks : playerControlsStore.currentPage);
-  const indexOffset = $derived(showsAllFrames ? 0 : pageIndexOffset);
+  const visibleChunks = $derived(showsAllFrames ? virtualChunks : playerControlsStore.currentPage);
+  const indexOffset = $derived(showsAllFrames ? virtualStartIndex : pageIndexOffset);
 
   /**
    * The two frames the Section's markers go on: the first and the last frame its note range
@@ -127,12 +201,15 @@
    * An open popover is anchored to a frame ELEMENT, and the frames are keyed by position: a page
    * flip under the inline card leaves that anchor showing a different chunk, and a new run or a
    * fullscreen toggle replaces the element outright. Rather than closing it from an effect, the
-   * open state carries what it was opened against and simply stops matching. Fullscreen holds every
-   * frame at once, so a page flip there moves nothing and is not a reason to close.
+   * open state carries what it was opened against and simply stops matching. Fullscreen addresses
+   * frames in whole-song space, so a page flip there moves nothing and is not a reason to close;
+   * scrolling the anchor outside the mounted row window explicitly clears it below.
    */
   const activePopover = $derived.by(() => {
     if (!popover || popover.pages !== pages || popover.fullscreen !== isFullscreen) return null;
     if (!isFullscreen && popover.pageIndex !== playerControlsStore.currentPageIndex) return null;
+    if (isFullscreen && (popover.index < virtualStartIndex || popover.index >= virtualEndIndex))
+      return null;
     return popover;
   });
 
@@ -175,13 +252,137 @@
     withPopoverChunk((chunk) => onSeek(chunk.firstNoteIndex));
   }
 
-  function centerOnCurrentFrame() {
+  function cssPixels(value: string, fallback: number, element: HTMLElement) {
+    const parsed = Number.parseFloat(value);
+    if (!Number.isFinite(parsed)) return fallback;
+    if (value.endsWith('rem')) {
+      const rootSize = Number.parseFloat(getComputedStyle(document.documentElement).fontSize);
+      return parsed * (Number.isFinite(rootSize) ? rootSize : 16);
+    }
+    if (value.endsWith('em')) {
+      const fontSize = Number.parseFloat(getComputedStyle(element).fontSize);
+      return parsed * (Number.isFinite(fontSize) ? fontSize : 16);
+    }
+    return parsed;
+  }
+
+  /**
+   * Every frame has the same responsive aspect and every grid row therefore has one pitch. Read it
+   * from the already-mounted inline page BEFORE opening; fullscreen can then represent the other
+   * hundreds of rows with padding instead of creating their DOM.
+   */
+  function measureVirtualMetrics() {
+    const grid = scrollElement?.querySelector<HTMLElement>('.player-chunks-page');
+    const frame = grid?.querySelector<HTMLElement>('.player-sheet-frame');
+    if (!grid || !frame) return;
+    const styles = getComputedStyle(grid);
+    const rectHeight = frame.getBoundingClientRect().height;
+    const measuredHeight = rectHeight > 0 ? rectHeight : frame.offsetHeight;
+    virtualMetrics = {
+      rowHeight: measuredHeight > 0 ? measuredHeight : virtualMetrics.rowHeight,
+      rowGap: cssPixels(styles.rowGap, virtualMetrics.rowGap, grid),
+      marginTop: cssPixels(styles.marginTop, virtualMetrics.marginTop, grid),
+      marginBottom: cssPixels(styles.marginBottom, virtualMetrics.marginBottom, grid),
+    };
+  }
+
+  function virtualContentHeight() {
+    if (totalRows === 0) return 0;
+    return (
+      virtualMetrics.marginTop +
+      virtualMetrics.marginBottom +
+      totalRows * virtualMetrics.rowHeight +
+      (totalRows - 1) * virtualMetrics.rowGap
+    );
+  }
+
+  function clampScrollTop(scrollTop: number, viewportHeight: number) {
+    return Math.max(0, Math.min(scrollTop, virtualContentHeight() - viewportHeight));
+  }
+
+  function centeredScrollTop(index: number, viewportHeight: number) {
+    const row = Math.floor(index / safeColumns);
+    const pitch = virtualMetrics.rowHeight + virtualMetrics.rowGap;
+    const rowCenter = virtualMetrics.marginTop + row * pitch + virtualMetrics.rowHeight / 2;
+    return clampScrollTop(rowCenter - viewportHeight / 2, viewportHeight);
+  }
+
+  function rangeAtScrollTop(scrollTop: number, viewportHeight: number): VirtualRange {
+    if (totalRows === 0) return { startRow: 0, endRow: 0 };
+    const pitch = Math.max(1, virtualMetrics.rowHeight + virtualMetrics.rowGap);
+    const visibleHeight = Math.max(virtualMetrics.rowHeight, viewportHeight);
+    const firstVisibleRow = Math.min(
+      totalRows - 1,
+      Math.floor(Math.max(0, scrollTop - virtualMetrics.marginTop) / pitch)
+    );
+    const lastVisibleRow = Math.min(
+      totalRows - 1,
+      Math.floor(Math.max(0, scrollTop + visibleHeight - virtualMetrics.marginTop) / pitch)
+    );
+    return {
+      startRow: Math.max(0, firstVisibleRow - VIRTUAL_OVERSCAN_ROWS),
+      endRow: Math.min(totalRows, lastVisibleRow + 1 + VIRTUAL_OVERSCAN_ROWS),
+    };
+  }
+
+  function setVirtualRange(scrollTop: number, viewportHeight: number) {
+    const next = rangeAtScrollTop(scrollTop, viewportHeight);
+    if (next.startRow === virtualRange.startRow && next.endRow === virtualRange.endRow) return;
+    const startIndex = next.startRow * safeColumns;
+    const endIndex = Math.min(allChunks.length, next.endRow * safeColumns);
+    // IntersectionObserver normally dismisses this too, but a jump can unmount the anchor before
+    // its callback. Never leave a popover holding a detached, later-revivable element.
+    if (popover?.fullscreen && (popover.index < startIndex || popover.index >= endIndex))
+      popover = null;
+    virtualRange = next;
+  }
+
+  function expandedViewportEstimate() {
+    const rootSize = Number.parseFloat(getComputedStyle(document.documentElement).fontSize);
+    const cardInset = (Number.isFinite(rootSize) ? rootSize : 16) * 1.6;
+    return Math.max(virtualMetrics.rowHeight, window.innerHeight - cardInset);
+  }
+
+  function revealViewportHeight() {
+    return Math.max(virtualMetrics.rowHeight, collapsedHeight || scrollElement?.clientHeight || 0);
+  }
+
+  function prepareVirtualWindowForCurrentFrame(
+    centerViewportHeight = revealViewportHeight(),
+    finalViewportHeight = expandedViewportEstimate()
+  ) {
+    const index = playerControlsStore.currentGlobalChunkIndex;
+    if (index < 0) {
+      revealCenterShift = 0;
+      revealFinalScrollTop = 0;
+      return 0;
+    }
+    const scrollTop = centeredScrollTop(index, centerViewportHeight);
+    // The surface has its final layout size from the first animation frame and is progressively
+    // revealed. Seed enough rows for that whole size so the clip never uncovers an empty spacer.
+    const finalHeight = Math.max(virtualMetrics.rowHeight, finalViewportHeight);
+    const rangeHeight = Math.max(expandedViewportEstimate(), finalHeight);
+    // Also pre-mount what the final centred position needs. Animationend can then change only
+    // scrollTop and remove surplus rows; it never has to create another band during hand-off.
+    const finalScrollTop = centeredScrollTop(index, finalHeight);
+    revealFinalScrollTop = finalScrollTop;
+    revealCenterShift = scrollTop - finalScrollTop;
+    const rangeTop = Math.min(scrollTop, finalScrollTop);
+    const rangeBottom = Math.max(scrollTop + rangeHeight, finalScrollTop + rangeHeight);
+    setVirtualRange(rangeTop, rangeBottom - rangeTop);
+    return scrollTop;
+  }
+
+  function centerOnCurrentFrame(
+    viewportHeight = scrollElement?.clientHeight || revealViewportHeight(),
+    rangeViewportHeight = scrollElement?.clientHeight || viewportHeight
+  ) {
     const index = playerControlsStore.currentGlobalChunkIndex;
     if (index < 0 || !scrollElement) return;
-    const frame = scrollElement.querySelector<HTMLElement>(`[data-frame-index="${index}"]`);
-    if (!frame) return;
-    scrollElement.scrollTop =
-      frame.offsetTop + frame.offsetHeight / 2 - scrollElement.clientHeight / 2;
+    const height = Math.max(virtualMetrics.rowHeight, viewportHeight);
+    const scrollTop = centeredScrollTop(index, height);
+    setVirtualRange(scrollTop, Math.max(height, rangeViewportHeight));
+    scrollElement.scrollTop = scrollTop;
   }
 
   /**
@@ -212,42 +413,147 @@
     scrollThumb = { top: el.offsetTop + progress * travel, height, visible: true };
   }
 
+  function handleSheetScroll() {
+    // The first programmatic scroll fires a native event. Until reveal ends, keep the deliberately
+    // larger union band that already covers both initial and final centring positions; shrinking
+    // it here would make animationend remount the missing upper rows at the hand-off.
+    if (showsAllFrames && scrollElement && hasCenteredThisOpen) {
+      setVirtualRange(scrollElement.scrollTop, scrollElement.clientHeight);
+    }
+    updateScrollThumb();
+  }
+
+  async function handleWindowResize() {
+    const el = scrollElement;
+    if (fullscreenPhase !== 'open' || !el) {
+      updateScrollThumb();
+      return;
+    }
+    const revision = ++resizeRevision;
+    // Preserve the logical row under the viewport centre while responsive width changes alter the
+    // frame aspect's pixel height. Keeping raw scrollTop would drift to a different chunk.
+    const oldPitch = Math.max(1, virtualMetrics.rowHeight + virtualMetrics.rowGap);
+    const anchorRow = (el.scrollTop + el.clientHeight / 2 - virtualMetrics.marginTop) / oldPitch;
+    await tick();
+    if (revision !== resizeRevision || fullscreenPhase !== 'open' || !scrollElement) return;
+    measureVirtualMetrics();
+    const newPitch = virtualMetrics.rowHeight + virtualMetrics.rowGap;
+    const nextScrollTop = clampScrollTop(
+      virtualMetrics.marginTop + anchorRow * newPitch - scrollElement.clientHeight / 2,
+      scrollElement.clientHeight
+    );
+    setVirtualRange(nextScrollTop, scrollElement.clientHeight);
+    // Spacer padding is reactive. Let it establish the new scrollHeight before assigning a larger
+    // scrollTop, or the browser can clamp that write against the previous, shorter geometry.
+    await tick();
+    if (revision !== resizeRevision || fullscreenPhase !== 'open' || !scrollElement) return;
+    scrollElement.scrollTop = nextScrollTop;
+    updateScrollThumb();
+  }
+
   async function openFullscreen() {
     //guarded on closed: mid-collapse the card's height is whatever the animation reached, and
     //measuring THAT as the collapsed height would seed the next open with a moving target
     if (fullscreenPhase !== 'closed') return;
     //measured BEFORE the phase flips: it is where the growth animation starts from, and where the
     //collapse animation returns to
-    collapsedHeight = cardElement?.clientHeight ?? 0;
+    // clientHeight is integer-rounded. The responsive frame grid commonly gives the closed surface
+    // a fractional height, and losing that fraction makes both clip endpoints visibly undershoot.
+    const paintedHeight = surfaceElement?.getBoundingClientRect().height ?? 0;
+    collapsedHeight =
+      Number.isFinite(paintedHeight) && paintedHeight > 0
+        ? paintedHeight
+        : (cardElement?.clientHeight ?? 0);
+    measureVirtualMetrics();
+    const revealHeight = revealViewportHeight();
+    prepareVirtualWindowForCurrentFrame(revealHeight, expandedViewportEstimate());
     hasCenteredThisOpen = false;
+    collapseAfterReveal = false;
+    centeredPages = pages;
+    popover = null;
     fullscreenPhase = 'open';
+    resizeRevision++;
+    scheduleAnimationFallback('reveal');
     await tick();
-    centerOnCurrentFrame();
+    if (fullscreenPhase !== 'open') return;
+    // `100vh` and `innerHeight` are not guaranteed to match on mobile. Now that final geometry is
+    // measurable, enlarge the seeded band if needed and flush it before the first paint.
+    const finalViewportHeight = scrollElement?.clientHeight || expandedViewportEstimate();
+    const initialScrollTop = prepareVirtualWindowForCurrentFrame(revealHeight, finalViewportHeight);
+    await tick();
+    if (fullscreenPhase !== 'open') return;
+    if (scrollElement) scrollElement.scrollTop = initialScrollTop;
     updateScrollThumb();
   }
 
   function collapseFullscreen() {
     if (fullscreenPhase !== 'open') return;
+    popover = null;
+    // Replacing the in-progress reveal keyframe with a hide keyframe would jump to the latter's
+    // fully-open `from` frame. Queue the reversal for the reveal's end instead (at most 150ms).
+    if (!hasCenteredThisOpen) {
+      collapseAfterReveal = true;
+      return;
+    }
+    startClosing();
+  }
+
+  function startClosing() {
+    if (fullscreenPhase !== 'open') return;
     fullscreenPhase = 'closing';
+    resizeRevision++;
+    scheduleAnimationFallback('hide');
     //the indicator leaves with the interactive view, not 150ms after it
     updateScrollThumb();
   }
 
-  function handleCardAnimationEnd(e: AnimationEvent) {
-    //animationend BUBBLES: only the card's own animations may drive the phase machine - a child's
-    //ending mid-collapse would otherwise cut the closing animation short
-    if (e.target !== cardElement) return;
-    //the collapse's end is what actually returns the card to the inline layout
-    if (fullscreenPhase === 'closing') {
-      fullscreenPhase = 'closed';
+  function finishCollapse() {
+    if (fullscreenPhase !== 'closing') return;
+    clearAnimationFallback();
+    fullscreenPhase = 'closed';
+    revealCenterShift = 0;
+    revealFinalScrollTop = 0;
+    resizeRevision++;
+    virtualRange = { startRow: 0, endRow: 1 };
+    tick().then(() => {
+      if (fullscreenPhase === 'closed' && scrollElement) scrollElement.scrollTop = 0;
+    });
+  }
+
+  function finishReveal() {
+    if (!isFullscreen || hasCenteredThisOpen) return;
+    clearAnimationFallback();
+    if (scrollElement) {
+      const viewportHeight = scrollElement.clientHeight || expandedViewportEstimate();
+      // The mounted-row wrapper has just finished moving by `initial - final`. Moving scrollTop by
+      // that same delta while the transform drops away makes the hand-off pixel-continuous.
+      setVirtualRange(revealFinalScrollTop, viewportHeight);
+      scrollElement.scrollTop = revealFinalScrollTop;
+    }
+    // Removing the transient reveal class also removes the held transform. Svelte flushes that
+    // class change before paint, after the equivalent scroll offset above has taken its place.
+    hasCenteredThisOpen = true;
+    if (collapseAfterReveal) {
+      collapseAfterReveal = false;
+      startClosing();
       return;
     }
-    // Centred once more when the growth finishes, because the scroll box was still short while it
-    // animated - and then never again. The highlight moves on, the view deliberately does not.
-    if (!isFullscreen || hasCenteredThisOpen) return;
-    hasCenteredThisOpen = true;
-    centerOnCurrentFrame();
     updateScrollThumb();
+  }
+
+  function handleCardAnimationEnd(e: AnimationEvent) {
+    //animationend BUBBLES: only the surface's own animations may drive the phase machine - a child's
+    //ending mid-collapse would otherwise cut the closing animation short
+    if (e.target !== surfaceElement) return;
+    //the collapse's end is what actually returns the card to the inline layout
+    if (fullscreenPhase === 'closing') {
+      finishCollapse();
+      return;
+    }
+    // Opening moves the current frame from the collapsed viewport's centre to the final one.
+    // `finishReveal` swaps that visual translation for the equivalent scroll offset, after which
+    // the highlight moves on but the view deliberately does not.
+    finishReveal();
   }
 
   function handleKeyDown(e: KeyboardEvent) {
@@ -268,7 +574,7 @@
 <svelte:window
   onkeydown={handleKeyDown}
   onpointerdown={handleWindowPointerDown}
-  onresize={updateScrollThumb}
+  onresize={handleWindowResize}
 />
 
 {#snippet expandIcon()}
@@ -307,30 +613,39 @@
     class={[
       'player-sheet-card',
       isFullscreen && 'player-sheet-card-expanded',
+      isFullscreen && !hasCenteredThisOpen && 'player-sheet-card-revealing',
       fullscreenPhase === 'closing' && 'player-sheet-card-closing',
     ]}
-    style={showsAllFrames ? `--sheet-collapsed-height:${collapsedHeight}px` : ''}
-    onanimationend={handleCardAnimationEnd}
+    style={showsAllFrames
+      ? `--sheet-collapsed-height:${collapsedHeight}px;--sheet-center-shift:${revealCenterShift}px`
+      : ''}
   >
-    <div class="player-sheet-scroll" bind:this={scrollElement} onscroll={updateScrollThumb}>
-      <PlayerPagesRenderer
-        chunks={visibleChunks}
-        {columns}
-        {indexOffset}
-        sectionFirstIndex={sectionFrames.first}
-        sectionLastIndex={sectionFrames.last}
-        openFrameIndex={activePopover?.index ?? -1}
-        onFrameSelect={toggleFramePopover}
-      />
+    <div
+      class="player-sheet-surface"
+      bind:this={surfaceElement}
+      onanimationend={handleCardAnimationEnd}
+    >
+      <div class="player-sheet-scroll" bind:this={scrollElement} onscroll={handleSheetScroll}>
+        <PlayerPagesRenderer
+          chunks={visibleChunks}
+          {columns}
+          {indexOffset}
+          {virtualLayout}
+          sectionFirstIndex={sectionFrames.first}
+          sectionLastIndex={sectionFrames.last}
+          openFrameIndex={activePopover?.index ?? -1}
+          onFrameSelect={toggleFramePopover}
+        />
+      </div>
+      {#if scrollThumb.visible}
+        <!-- A sibling of the scroll box, not a child: an absolutely-positioned descendant of a
+             scrolling box lives in its scroll layer and would ride away with the content. -->
+        <div
+          class="player-sheet-scroll-thumb"
+          style="top:{scrollThumb.top}px;height:{scrollThumb.height}px"
+        ></div>
+      {/if}
     </div>
-    {#if scrollThumb.visible}
-      <!-- A sibling of the scroll box, not a child: an absolutely-positioned descendant of a
-           scrolling box lives in its scroll layer and would ride away with the content. -->
-      <div
-        class="player-sheet-scroll-thumb"
-        style="top:{scrollThumb.top}px;height:{scrollThumb.height}px"
-      ></div>
-    {/if}
     <!-- Outside the card's own box on purpose: anywhere inside it would sit on top of a frame. -->
     <div class="player-sheet-expand">
       <IconButton
@@ -371,8 +686,17 @@
     max-width: 45rem;
     margin-left: auto;
     margin-right: auto;
-    border-radius: 0.5rem;
+    /* Expanded, this shell already has its final height while only part of its surface is painted.
+       Let clicks in the still-clipped transparent area reach what is visibly underneath. */
+    pointer-events: none;
+  }
+
+  .player-sheet-surface {
+    position: relative;
+    display: flow-root;
+    border-radius: 0.7rem;
     background-color: var(--background-layer-15);
+    pointer-events: auto;
   }
 
   /* The card's inset lives on the GRID as margin, never on the card as padding: expanded, the
@@ -391,31 +715,41 @@
   }
 
   .player-sheet-scroll {
-    /* the offsetParent the fullscreen centring measures frame positions against */
+    /* Keep the virtual grid in a stable, local scroll-layer containing block. */
     position: relative;
   }
 
-  /* Vertical growth ONLY: width, inset, column count and frame size are all untouched, which is
-     what lets the user find the frame they were looking at. Above the keyboard (10), the hold ring
-     (11) and the menu column (11); below Home (100), the logger and prompts. The closing card
-     keeps the same box - only its animation runs the other way, and its end is what hands the
-     card back to the inline layout (see handleCardAnimationEnd). */
+  /* Final geometry is installed immediately: width, inset, column count and frame size are all
+     untouched, which lets the user find the frame they were looking at. The visual surface is
+     revealed below without changing layout on every animation frame. Above the keyboard (10), the
+     hold ring (11) and the menu column (11); below Home (100), the logger and prompts. */
   .player-sheet-card-expanded,
   .player-sheet-card-closing {
     height: calc(100vh - 1.6rem);
     z-index: 40;
+  }
+
+  .player-sheet-card-expanded .player-sheet-surface,
+  .player-sheet-card-closing .player-sheet-surface {
+    height: 100%;
     display: flex;
     flex-direction: column;
   }
 
-  .player-sheet-card-expanded {
-    animation: sheetCardExpand 0.15s ease-out;
+  .player-sheet-card-revealing .player-sheet-surface {
+    animation: sheetCardReveal 0.15s ease-out both;
   }
 
-  /* forwards: the shrunken height must hold until animationend flips the phase, or the card
-     snaps back to full for the one frame between the animation ending and the class leaving */
-  .player-sheet-card-closing {
-    animation: sheetCardCollapse 0.15s ease-in forwards;
+  /* Only the real, mounted rows move - not the tall spacer that represents the rest of the song.
+     At animationend the same distance is committed to scrollTop and this transform disappears. */
+  .player-sheet-card-revealing .player-sheet-scroll :global(.player-chunks-window) {
+    animation: sheetCurrentFrameReveal 0.15s ease-out both;
+  }
+
+  /* forwards: the clipped surface must hold until animationend flips the phase, or it flashes
+     back to full for the one frame between the animation ending and the class leaving. */
+  .player-sheet-card-closing .player-sheet-surface {
+    animation: sheetCardHide 0.15s ease-in forwards;
   }
 
   /* The NATIVE scrollbar stays hidden: a classic one takes its width out of the content box, so
@@ -441,29 +775,42 @@
     right: 0.05rem;
     width: 0.3rem;
     border-radius: 1rem;
-    background-color: var(--secondary);
+    background-color: var(--accent);
     opacity: 0.8;
     pointer-events: none;
     z-index: 1;
   }
 
-  /* Height is the only property that animates, and the expanded card carries no backdrop-filter:
-     what sits under it is separated by the translucent background alone. */
-  @keyframes sheetCardExpand {
+  /* Clip-path changes paint/compositing, not the scroll box's layout. The expanded card carries no
+     backdrop-filter: what sits under it is separated by the translucent background alone. */
+  @keyframes sheetCardReveal {
     from {
-      height: var(--sheet-collapsed-height, 8rem);
+      clip-path: inset(
+        0 0 max(0px, calc(100% - var(--sheet-collapsed-height, 8rem))) 0 round 0.5rem
+      );
     }
     to {
-      height: calc(100vh - 1.6rem);
+      clip-path: inset(0 0 0 0 round 0.5rem);
     }
   }
 
-  @keyframes sheetCardCollapse {
+  @keyframes sheetCardHide {
     from {
-      height: calc(100vh - 1.6rem);
+      clip-path: inset(0 0 0 0 round 0.5rem);
     }
     to {
-      height: var(--sheet-collapsed-height, 8rem);
+      clip-path: inset(
+        0 0 max(0px, calc(100% - var(--sheet-collapsed-height, 8rem))) 0 round 0.5rem
+      );
+    }
+  }
+
+  @keyframes sheetCurrentFrameReveal {
+    from {
+      transform: translateY(0);
+    }
+    to {
+      transform: translateY(var(--sheet-center-shift, 0px));
     }
   }
 
@@ -471,5 +818,6 @@
     position: absolute;
     top: 0.4rem;
     right: -1.9rem;
+    pointer-events: auto;
   }
 </style>

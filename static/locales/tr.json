@@ -23,6 +23,7 @@
         "error_importing_invalid_format": "Dosya içe aktarılırken hata oluştu, hatalı format",
         "song_backup_downloaded": "Yedeklenen şarkılar indirildi",
         "old_format_export_dropped_notes": "{{count}} nota eski format dosyaya dahil edilemedi (varsayılan enstrümanda konumları yok)",
+        "converted_song_stranded_notes": "Bazı notalar bazı enstrümanlar tarafından desteklenmediği için çalınmayabilir",
         "no_songs_to_backup": "Yedeklenecek şarkı yok",
         "no_empty_name": "Lütfen isim alanını boş bırakmayın",
         "cloned_song": "\"{{song_name}}\" adlı şarkı klonlandı.",
@@ -114,7 +115,9 @@
         "circle": "Daire",
         "reset": "Sıfırla",
         "add_new_instrument": "Yeni enstrüman ekle",
-        "new": "Yeni"
+        "new": "Yeni",
+        "increment": "Artır",
+        "decrement": "Azalt"
     },
     "home": {
         "app_description": "{{APP_NAME}} için şarkılar oluşturabileceğiniz, pratik yapabileceğiniz ve şarkıları çalabileceğiniz bir uygulama.",
@@ -249,8 +252,6 @@
             "player_pitch_description": "Oynatıcı akordu, kaydettiğiniz şarkıya da kaydedilecektir",
             "player_bpm": "BPM (dakikadaki vuruş sayısı)",
             "player_bpm_description": "Metronom ve besteleyici tarafından kullanılacak dakikadaki vuruş sayısı (BPM)",
-            "player_sync_song_data": "Şarkının enstrümanlarını ve akordunu otomatik olarak senkronize et",
-            "player_sync_song_data_description": "Bir şarkı yüklediğinde, o şarkının enstrümanları ve akordu da yüklenecektir",
             "player_metronome_beats": "Metronom vuruşları",
             "player_metronome_beats_description": "Daha güçlü bir vuruşun ne kadar sıklıkla çalınacağı",
             "player_metronome_volume": "Metronom sesi",
@@ -438,7 +439,13 @@
         "loop": "Döngü",
         "loop_tooltip": "Şarkıyı döngüye al",
         "hide_practice_notes": "Pratik modunda notaları gizle",
-        "hide_practice_notes_only_in_practice": "Yalnızca pratik modunu etkiler"
+        "hide_practice_notes_only_in_practice": "Yalnızca pratik modunu etkiler",
+        "sheet_frame_options": "Çerçeve seçenekleri",
+        "section_starts_here": "Bölüm burada başlıyor",
+        "section_ends_here": "Bölüm burada bitiyor",
+        "go_to_here": "Buraya git",
+        "expand_sheet": "Sayfayı genişlet",
+        "collapse_sheet": "Sayfayı daralt"
     },
     "keybinds": {
         "already_used_keybind": "Bu tuş düzeni zaten \"{{note_name}}\" notasında kullanılıyor",
@@ -599,11 +606,12 @@
             "copy_notes": "Tüm notaları kopyala"
         },
         "midi_parser": {
-            "out_of_range": "Menzil dışında",
-            "accidentals": "Arızalar",
-            "total_notes": "Toplam notalar",
-            "select_midi_tracks": "MIDI parçalarını seçin",
-            "ignore_empty_tracks": "Boş parçaları görmezden gel",
+            "import_settings": "İçe aktarma ayarları",
+            "track_settings": "Parça ayarları",
+            "tempo_bpm": "Tempo (BPM)",
+            "base_pitch": "Temel akort",
+            "of_which_dont_fit": "Bunlardan bazıları enstrümana uymaz",
+            "of_which_out_of_range": "Bunlardan bazıları menzil dışında",
             "include_accidentals": "Arızaları dahil et",
             "global_note_offset": "Global nota kaydırma",
             "global_note_offset_description": "Her notanın dizini bu miktarla yukarı/aşağı taşınacak. Şarkının uygulama menziline sığmasını sağlamak için kullanabilirsiniz. \n  Ayrıca, her katmanın kaydırmasını değiştirebilirsiniz.",
@@ -612,10 +620,13 @@
             "suggested_offset": "Kaydırma {{offset}}: {{accidentals}} değiştirici işaret, enstrümanın çalamadığı {{stranded}} nota",
             "local_note_offset": "Yerel parça nota kaydırma",
             "local_note_offset_description": "Her notanın dizinini bu miktarla değiştirir.",
+            "no_offset": "Kaydırma yok",
+            "no_scaling": "Ölçekleme yok",
             "max_octave_scaling": "Maksimum oktav ölçekleme",
             "max_octave_scaling_description": "Menzil dışındaki notaları bu oktavlarla aşağı/yukarı ölçekleyin.",
             "number_of_notes": "Nota sayısı",
             "open_midi_audio_file": "MIDI/ses/video dosyasını aç",
+            "no_file_selected": "bir dosya seçin",
             "there_are_no_notes": "Burada nota yok",
             "error_is_file_midi": "Dosyayı içe aktarırken bir sorun oluştu, bu dosyanın uzantısının .mid olduğundan emin ol",
             "converting_audio_to_midi": "Ses midiye dönüştürülüyor (Bu biraz sürebilir...)",
@@ -623,8 +634,6 @@
             "loading_converter": "Dönüştürücü yükleniyor",
             "audio_conversion_warning": "🔬 Bu özellik deneyseldir; çalışmayabilir veya takılabilir.\n\n   Ses ve video dönüştürme, MIDI'den daha az doğrudur; eğer mümkünse, MIDI kullanmak veya manuel olarak bestelemek daha iyidir.\n\n  Sadece tek bir enstrümanın çaldığı ses ve videoları kullanın."
         },
-        "warning_opening_midi_importer": "MIDI dosyasını içe aktarmak için MIDI içe aktarıcıyı açılıyor, lütfen dosyayı tekrar seçin.",
-        "warning_opening_audio_importer": "Video/ses dosyasını içe aktarmak için MIDI içe aktarıcıyı açılıyor... Lütfen dosyayı tekrar seçin. Video/ses dönüştürme genellikle tam doğru değildir.",
         "error_importing_file_invalid_format": "İçe aktarma hatası, geçersiz dosya biçimi",
         "error_importing_file_invalid_format_audio_video": "İçe aktarma hatası, geçersiz dosya biçimi. Eğer bu bir MIDI, video veya ses dosyasıysa \"Midi den oluştur\" butonunu kullan",
         "ask_download_of_current_song": "Şu anda \"{{song_name}}\" isimli şarkıyı düzenliyorsunuz, indirmeden önce kaydetmek ister misiniz?"
@@ -783,7 +792,6 @@
         "SFX_MothCall": "Kelebek sesi",
         "GrandPiano": "Kuyruklu Piyano",
         "LingeringEuphonia": "Hiç Bitmeyen Ezgi",
-        "Harmonic Key": "Harmonik Klavye",
         "LeapingSpiritPiano": "Sıçrayan Ruh Piyanosu",
         "HarmonicKey": "Harmonik Klavye"
     },

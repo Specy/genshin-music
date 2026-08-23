@@ -93,6 +93,11 @@
   color: var(--primary-text);
 }
 
+.slider-wrapper .practice-mode-control:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
 .slider-wrapper {
   height: 100%;
   align-self: center;

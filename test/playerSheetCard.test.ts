@@ -1,4 +1,4 @@
-import {flushSync, mount, unmount} from 'svelte'
+import {flushSync, mount, tick, unmount} from 'svelte'
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest'
 import PlayerSheetCard from '../src/lib/components/pages/Player/PlayerSheetCard.svelte'
 import {playerControlsStore} from '../src/lib/stores/PlayerControlsStore.svelte'
@@ -18,6 +18,13 @@ function frameChunk(firstNoteIndex: number, lastNoteIndex: number) {
 function threeFramesOverTwoPages() {
     const chunks = [frameChunk(0, 0), frameChunk(1, 3), frameChunk(4, 4)]
     playerControlsStore.setPages([[chunks[0], chunks[1]], [chunks[2]]])
+}
+
+function manyFrames(count: number, pageSize = 1) {
+    const chunks = Array.from({length: count}, (_, i) => frameChunk(i, i))
+    const pages: Chunk[][] = []
+    for (let i = 0; i < chunks.length; i += pageSize) pages.push(chunks.slice(i, i + pageSize))
+    playerControlsStore.setPages(pages)
 }
 
 describe('Sheet Card', () => {
@@ -40,6 +47,7 @@ describe('Sheet Card', () => {
         component = null
         target.remove()
         playerControlsStore.clearPages()
+        vi.useRealTimers()
     })
 
     function render() {
@@ -153,21 +161,167 @@ describe('Sheet Card', () => {
         expect(document.querySelector('.frame-popover')).toBeNull()
     })
 
-    it('shows every frame of the song when expanded, and none when the sheet is cleared', async () => {
+    it('shows the whole short song throughout reveal and collapse, then returns inline', async () => {
         threeFramesOverTwoPages()
         playerControlsStore.setState({size: 5, position: 0, end: 5, current: 0})
         render()
         expect(frames().length).toBe(2)
 
         target.querySelector<HTMLButtonElement>('.player-sheet-expand button')!.click()
-        await Promise.resolve()
+        await tick()
+        await tick()
         flushSync()
         expect(frames().map(f => f.dataset.frameIndex)).toEqual(['0', '1', '2'])
+        expect(
+            Number.parseFloat(
+                target.querySelector<HTMLElement>('.player-sheet-card')!.style
+                    .getPropertyValue('--sheet-center-shift')
+            )
+        ).toBe(0)
         expect(frames()[0].querySelector('.sheet-frame-bracket-start')).not.toBeNull()
         expect(frames()[2].querySelector('.sheet-frame-bracket-end')).not.toBeNull()
+        expect(target.querySelector('.player-sheet-card-expanded')).not.toBeNull()
+
+        const surface = target.querySelector('.player-sheet-surface')!
+        surface.firstElementChild!.dispatchEvent(new Event('animationend', {bubbles: true}))
+        flushSync()
+        // A descendant's animation must not drive the card's own phase machine.
+        expect(target.querySelector('.player-sheet-card-expanded')).not.toBeNull()
+
+        // Reversing mid-reveal waits for its end instead of jumping to a fully-open hide keyframe.
+        window.dispatchEvent(new KeyboardEvent('keydown', {code: 'Escape'}))
+        flushSync()
+        expect(target.querySelector('.player-sheet-card-closing')).toBeNull()
+        expect(frames().map(f => f.dataset.frameIndex)).toEqual(['0', '1', '2'])
+
+        surface.dispatchEvent(new Event('animationend'))
+        flushSync()
+        expect(target.querySelector('.player-sheet-card-closing')).not.toBeNull()
+        expect(frames().map(f => f.dataset.frameIndex)).toEqual(['0', '1', '2'])
+
+        surface.dispatchEvent(new Event('animationend'))
+        flushSync()
+        expect(target.querySelector('.player-sheet-card-expanded')).toBeNull()
+        expect(target.querySelector('.player-sheet-card-closing')).toBeNull()
+        expect(frames().map(f => f.dataset.frameIndex)).toEqual(['0', '1'])
 
         playerControlsStore.clearPages()
         flushSync()
         expect(target.querySelector('.player-sheet-card')).toBeNull()
+    })
+
+    it('finishes both phases when CSS animation events do not fire', async () => {
+        vi.useFakeTimers()
+        threeFramesOverTwoPages()
+        playerControlsStore.setState({size: 5, position: 0, end: 5, current: 0})
+        render()
+
+        target.querySelector<HTMLButtonElement>('.player-sheet-expand button')!.click()
+        await tick()
+        await tick()
+        vi.advanceTimersByTime(251)
+        flushSync()
+
+        window.dispatchEvent(new KeyboardEvent('keydown', {code: 'Escape'}))
+        flushSync()
+        expect(target.querySelector('.player-sheet-card-closing')).not.toBeNull()
+
+        vi.advanceTimersByTime(251)
+        flushSync()
+        expect(target.querySelector('.player-sheet-card-closing')).toBeNull()
+        expect(frames().map(f => f.dataset.frameIndex)).toEqual(['0', '1'])
+    })
+
+    it('windows a long song by whole-song row and drops a popover whose row unmounts', async () => {
+        manyFrames(503)
+        playerControlsStore.setState({size: 503, position: 0, end: 503, current: 250})
+        render()
+        expect(frames().map(f => f.dataset.frameIndex)).toEqual(['250'])
+
+        const card = target.querySelector<HTMLElement>('.player-sheet-card')!
+        const surface = target.querySelector<HTMLElement>('.player-sheet-surface')!
+        const scroll = target.querySelector<HTMLElement>('.player-sheet-scroll')!
+        Object.defineProperty(card, 'clientHeight', {configurable: true, value: 100})
+        vi.spyOn(surface, 'getBoundingClientRect').mockReturnValue(new DOMRect(0, 0, 0, 100.25))
+        Object.defineProperty(scroll, 'clientHeight', {configurable: true, value: 320})
+        Object.defineProperty(scroll, 'scrollTop', {configurable: true, writable: true, value: 0})
+        Object.defineProperty(frames()[0], 'offsetHeight', {configurable: true, value: 48})
+
+        target.querySelector<HTMLButtonElement>('.player-sheet-expand button')!.click()
+        await tick()
+        await tick()
+        await tick()
+        flushSync()
+
+        const revealIndices = frames().map(f => Number(f.dataset.frameIndex))
+        expect(card.style.getPropertyValue('--sheet-collapsed-height')).toBe('100.25px')
+        const revealCenterShift = Number.parseFloat(
+            card.style.getPropertyValue('--sheet-center-shift')
+        )
+        const revealScrollTop = scroll.scrollTop
+        const revealCurrentFrame = frames().find(frame => frame.dataset.frameIndex === '250')
+        expect(revealCenterShift).toBeGreaterThan(0)
+        expect(target.querySelector('.player-chunks-window')).not.toBeNull()
+        expect(target.querySelector('.player-sheet-card-revealing')).not.toBeNull()
+        // Browsers emit this after the opening code's programmatic scrollTop write. It must not
+        // shrink the pre-seeded reveal/final union and force fresh mounts at animationend.
+        scroll.dispatchEvent(new Event('scroll'))
+        flushSync()
+        expect(frames().map(f => Number(f.dataset.frameIndex))).toEqual(revealIndices)
+        surface.dispatchEvent(new Event('animationend'))
+        flushSync()
+        const initialIndices = frames().map(f => Number(f.dataset.frameIndex))
+        expect(initialIndices.length).toBeGreaterThan(1)
+        expect(initialIndices.length).toBeLessThan(200)
+        expect(initialIndices).toContain(250)
+        expect(initialIndices.every(index => revealIndices.includes(index))).toBe(true)
+        expect(initialIndices[0] % 5).toBe(0)
+        expect(initialIndices.every((index, i) => i === 0 || index === initialIndices[i - 1] + 1))
+            .toBe(true)
+        expect(scroll.scrollTop).toBeGreaterThan(0)
+        // The CSS translation reaches this exact delta; swapping it for scrollTop at animationend
+        // therefore leaves the selected frame on the same pixel instead of jumping into centre.
+        expect(scroll.scrollTop).toBeCloseTo(revealScrollTop - revealCenterShift, 5)
+        expect(frames().find(frame => frame.dataset.frameIndex === '250')).toBe(revealCurrentFrame)
+        expect(target.querySelector('.player-sheet-card-revealing')).toBeNull()
+
+        // The slice's data and its global index must stay paired; local index 0 is not chunk 0.
+        const actionIndex = initialIndices.find(index => index !== 250)!
+        frames().find(frame => Number(frame.dataset.frameIndex) === actionIndex)!
+            .querySelector('button')!
+            .click()
+        flushSync()
+        popoverItems()[2].click()
+        flushSync()
+        expect(onSeek).toHaveBeenCalledWith(actionIndex)
+
+        const oldFirstIndex = initialIndices[0]
+        frames()[0].querySelector('button')!.click()
+        flushSync()
+        expect(document.querySelector('.frame-popover')).not.toBeNull()
+
+        scroll.scrollTop = 5000
+        scroll.dispatchEvent(new Event('scroll'))
+        flushSync()
+        const laterIndices = frames().map(f => Number(f.dataset.frameIndex))
+        expect(laterIndices.length).toBeLessThan(100)
+        expect(laterIndices[0]).toBeGreaterThan(oldFirstIndex)
+        expect(laterIndices).not.toContain(oldFirstIndex)
+        expect(laterIndices).toContain(502)
+        expect(laterIndices.every((index, i) => i === 0 || index === laterIndices[i - 1] + 1))
+            .toBe(true)
+        expect(document.querySelector('.frame-popover')).toBeNull()
+
+        playerControlsStore.setCurrent(375)
+        manyFrames(503)
+        flushSync()
+        await tick()
+        await tick()
+        flushSync()
+        const replacementIndices = frames().map(f => Number(f.dataset.frameIndex))
+        expect(target.querySelector('.player-sheet-card-expanded')).not.toBeNull()
+        expect(replacementIndices.length).toBeLessThan(100)
+        expect(replacementIndices).toContain(375)
+        expect(scroll.scrollTop).toBeLessThan(5000)
     })
 })

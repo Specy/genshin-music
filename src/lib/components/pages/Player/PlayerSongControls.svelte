@@ -73,6 +73,7 @@
   const hasActiveSong = $derived(songData.eventType !== 'stop');
   // Audio recording stays available while a song plays; practice and approaching hide it.
   const canRecordAudio = $derived(songData.eventType === 'stop' || songData.eventType === 'play');
+  const canChangeSpeed = $derived(songData.eventType !== 'practice');
 </script>
 
 {#snippet faEyeIcon()}
@@ -189,12 +190,9 @@
   <div class="column slider-wrapper" style={!hasActiveSong ? 'display:none' : ''}>
     <div class="row" style="width:100%;gap:0.4rem">
       {#if hidePracticeNotes !== undefined}
-        <!-- The greying is inline rather than left to `.app-button:disabled` (opacity .8): a
-             toggled-on eye keeps its accent background, which on its own still reads as live. -->
         <IconButton
-          style={canHidePracticeNotes
-            ? 'width:2.4rem'
-            : 'width:2.4rem;opacity:0.5;filter:grayscale(1)'}
+          class="practice-mode-control"
+          style="width:2.4rem"
           disabled={!canHidePracticeNotes}
           onclick={() => setHidePracticeNotes(!hidePracticeNotes)}
           tooltip={canHidePracticeNotes
@@ -225,10 +223,11 @@
                      applies its own .select class and background-image arrow, which this one
                      explicitly cancels via background-image:none. -->
         <select
-          class="slider-select"
+          class="slider-select practice-mode-control"
           onchange={onRawSpeedChange}
           value={speedChanger.name}
           style="background-image:none"
+          disabled={!canChangeSpeed}
         >
           <!-- QUIRK: hardcoded English — old never ran this label through t(). Translating it is a behaviour change, not a fix. -->
           <option disabled>Speed</option>

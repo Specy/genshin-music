@@ -21,6 +21,7 @@
         "error_importing_invalid_format": "ファイルのインポート中にエラーが発生しました。無効な形式です",
         "song_backup_downloaded": "曲のバックアップがダウンロードされました",
         "old_format_export_dropped_notes": "{{count}} 個のノートを旧形式のファイルに含めることができませんでした（デフォルトの楽器に対応する位置がありません）",
+        "converted_song_stranded_notes": "一部のノートは、一部の楽器に対応していないため再生されない場合があります",
         "no_songs_to_backup": "バックアップする曲がありません",
         "no_empty_name": "空白でない名前を入力してください",
         "cloned_song": "クローン曲: \"{{song_name}}\"",
@@ -114,7 +115,9 @@
         "circle": "円",
         "add_new_instrument": "新しい楽器を追加",
         "reset": "リセット",
-        "new": "新規"
+        "new": "新規",
+        "increment": "増加",
+        "decrement": "減少"
     },
     "home": {
         "app_description": "{{APP_NAME}}のために音楽を作成、練習、演奏できるアプリです",
@@ -250,8 +253,6 @@
             "player_pitch_description": "プレイヤーのピッチ。録音した曲にも保存されます。",
             "player_bpm": "BPM",
             "player_bpm_description": "メトロノームで使用され、コンポーザーと曲を変換する際に使用される1分あたりの拍数。",
-            "player_sync_song_data": "曲の楽器とピッチを自動的に同期",
-            "player_sync_song_data_description": "曲を読み込むたびに、その曲の楽器とピッチも読み込まれます。",
             "player_metronome_beats": "メトロノーム拍数",
             "player_metronome_beats_description": "何拍経過した後に強い拍を再生するか",
             "player_metronome_volume": "メトロノーム音量",
@@ -438,7 +439,13 @@
         "loop": "ループ",
         "loop_tooltip": "曲をループ再生",
         "hide_practice_notes": "プラクティスモードでテキストを非表示",
-        "hide_practice_notes_only_in_practice": "プラクティスモードでのみ有効です"
+        "hide_practice_notes_only_in_practice": "プラクティスモードでのみ有効です",
+        "sheet_frame_options": "フレームオプション",
+        "section_starts_here": "セクションはここから始まります",
+        "section_ends_here": "セクションはここで終わります",
+        "go_to_here": "ここへ移動",
+        "expand_sheet": "楽譜を展開",
+        "collapse_sheet": "楽譜を折りたたむ"
     },
     "keybinds": {
         "already_used_keybind": "このキーバインドはすでにノート \"{{note_name}}\" で使用されています。",
@@ -599,11 +606,12 @@
             "copy_notes": "すべてのノートをコピー"
         },
         "midi_parser": {
-            "out_of_range": "範囲外",
-            "accidentals": "臨時記号",
-            "total_notes": "総ノート数",
-            "select_midi_tracks": "MIDIトラックを選択",
-            "ignore_empty_tracks": "空のトラックを無視",
+            "import_settings": "インポート設定",
+            "track_settings": "トラック設定",
+            "tempo_bpm": "テンポ（BPM）",
+            "base_pitch": "基本ピッチ",
+            "of_which_dont_fit": "そのうち楽器に合わないもの",
+            "of_which_out_of_range": "そのうち音域外のもの",
             "include_accidentals": "臨時記号を含める",
             "global_note_offset": "グローバルノートオフセット",
             "global_note_offset_description": "各ノートのインデックスがこの量だけ上/下に押し上げ/下げられます。これを使用して、曲をアプリの音域に合わせることができます。各レイヤーのオフセットも変更できます。",
@@ -612,10 +620,13 @@
             "suggested_offset": "オフセット {{offset}}：臨時記号 {{accidentals}} 個、楽器で演奏できないノート {{stranded}} 個",
             "local_note_offset": "ローカルトラックノートオフセット",
             "local_note_offset_description": "この量だけ各ノートのインデックスを変更します。",
+            "no_offset": "オフセットなし",
+            "no_scaling": "スケーリングなし",
             "max_octave_scaling": "最大ノートオクターブスケーリング",
             "max_octave_scaling_description": " これらのオクターブを超えるノートを縮小/拡大します。",
             "number_of_notes": "ノート数",
             "open_midi_audio_file": "MIDI/オーディオ/ビデオファイルを開く",
+            "no_file_selected": "ファイルを選択",
             "there_are_no_notes": "ノートがありません",
             "error_is_file_midi": "このファイルのインポート中にエラーが発生しました。.mid ファイルですか？",
             "converting_audio_to_midi": "オーディオをmidiに変換中です（時間がかかる場合があります）...",
@@ -623,8 +634,6 @@
             "loading_converter": "コンバーターを読み込み中",
             "audio_conversion_warning": "🔬 この機能は実験的であり、動作しないかフリーズする可能性があります \nオーディオとビデオの変換はMIDIほど正確ではありません。可能であれば、MIDIまたは手動作曲を使用することをお勧めします \n単一の楽器が演奏されているオーディオとビデオを使用してください。"
         },
-        "warning_opening_midi_importer": "MIDIインポーターを開いてMIDIファイルをインポートしています。ファイルを再選択してください",
-        "warning_opening_audio_importer": "ビデオ/オーディオファイルをインポートするためにMIDIインポーターを開いています...ファイルを再選択してください。ビデオ/オーディオ変換はあまり正確ではありません。",
         "error_importing_file_invalid_format": "ファイルのインポート中にエラーが発生しました。形式が無効です",
         "error_importing_file_invalid_format_audio_video": "ファイルのインポート中にエラーが発生しました。形式が無効です。MIDI、ビデオ、またはオーディオファイルの場合は、「MIDIから作成」ボタンを使用してください。",
         "ask_download_of_current_song": "現在この曲（\"{{song_name}}\"）を編集中です。ダウンロード前に保存しますか？"
@@ -743,9 +752,7 @@
         "DjemDjemDrum": "ジャンベ",
         "LingeringEuphonia": "「余韻」",
         "LeapingSpiritPiano": "ホッピングピアノ",
-        "Harmonic Key": "諧律のチェンバロ",
         "Piano": "ピアノ",
-        "Grand Piano": "グランドピアノ",
         "Contrabass": "コントラバス",
         "Cello": "チェロ",
         "Violin": "ヴァイオリン",
@@ -810,8 +817,6 @@
         "3-6-4": {
             "title": "翻訳テキスト更新",
             "change-1": "中国の台湾地区と中国の香港特別行政区の繁体字中国語翻訳を追加",
-            "change-2": "韓国語翻訳を追加し、その他の翻訳の誤りを一部修正",
-            "change-3": "日本語翻訳を追加（以前の大規模更新時に紛失していたものを復元）",
             "chance-2": "トルコ語翻訳を改善しました"
         },
         "3-6-3": {

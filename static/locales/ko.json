@@ -23,6 +23,7 @@
     "error_importing_invalid_format": "파일을 불러오는데 에러가 있습니다: 지원되지 않는 형식의 파일",
     "song_backup_downloaded": "노래 백업 파일이 다운로드 되었습니다.",
     "old_format_export_dropped_notes": "{{count}}개의 노트를 이전 형식의 파일에 포함할 수 없었습니다 (기본 악기에 해당하는 위치가 없습니다)",
+    "converted_song_stranded_notes": "일부 악기에서 지원하지 않는 음표는 재생되지 않을 수 있습니다",
     "no_songs_to_backup": "백업 할 노래가 없습니다",
     "no_empty_name": "이름을 채워서 적어주세요",
     "cloned_song": "노래: \"{{song_name}}\"를 복제하였습니다",
@@ -114,7 +115,9 @@
     "circle": "원",
     "reset": "초기화",
     "add_new_instrument": "새로운 악기를 추가하기",
-    "new": "새로 만들기"
+    "new": "새로 만들기",
+    "increment": "증가",
+    "decrement": "감소"
   },
   "home": {
     "app_description": "곡을 만들고,연습하고,재생할 수 있는 앱 for {{APP_NAME}}",
@@ -249,8 +252,6 @@
       "player_pitch_description": "플레이어의 음높이. 악기와 마찬가지로 곡을 녹음할 때 저장이 됩니다",
       "player_bpm": "Bpm",
       "player_bpm_description": "1분동안의 비트의 횟수. 메트로놈에 사용되며, 곡을 작곡모드로 전환할 때도 사용됩니다",
-      "player_sync_song_data": "노래의 악기와 음놓이를 자동 동기화하기",
-      "player_sync_song_data_description": "언제든지 노래를 불러올 때 마다, 노래의 악기와 음높이 또한 불러옵니다",
       "player_metronome_beats": "메트로놈 박자",
       "player_metronome_beats_description": "메트로놈에서 몇번 후에 센 박자를 칠지 설정합니다",
       "player_metronome_volume": "메트로놈 볼륨",
@@ -438,7 +439,13 @@
     "loop": "반복",
     "loop_tooltip": "곡을 반복 재생합니다",
     "hide_practice_notes": "연습 모드에서 노트를 숨깁니다",
-    "hide_practice_notes_only_in_practice": "연습 모드에서만 적용됩니다"
+    "hide_practice_notes_only_in_practice": "연습 모드에서만 적용됩니다",
+    "sheet_frame_options": "프레임 옵션",
+    "section_starts_here": "섹션이 여기서 시작됩니다",
+    "section_ends_here": "섹션이 여기서 끝납니다",
+    "go_to_here": "여기로 이동",
+    "expand_sheet": "악보 펼치기",
+    "collapse_sheet": "악보 접기"
   },
   "keybinds": {
     "already_used_keybind": "이 키는 이미 노트: \"{{note_name}}\"에서 사용중인 키입니다",
@@ -599,11 +606,12 @@
       "copy_notes": "모든 노트 복제하기"
     },
     "midi_parser": {
-      "out_of_range": "유효범위를 넘어갔습니다",
-      "accidentals": "임시표",
-      "total_notes": "모든 노트",
-      "select_midi_tracks": "MIDI 트랙 모두 선택하기",
-      "ignore_empty_tracks": "비어있는 트랙 모두 무시하기",
+      "import_settings": "가져오기 설정",
+      "track_settings": "트랙 설정",
+      "tempo_bpm": "템포 (BPM)",
+      "base_pitch": "기본 음높이",
+      "of_which_dont_fit": "그중 악기에 맞지 않는 음표",
+      "of_which_out_of_range": "그중 음역을 벗어난 음표",
       "include_accidentals": "임시표 포함하기",
       "global_note_offset": "전역 노트 오프셋",
       "global_note_offset_description": "노트들의 위치가 각각 이 값만큼 움직입니다. 사용자는 곡이 앱의 음역대에 맞도록 사용할 수 있습니다. \n            또한 각각의 레이어에 다른 값을 지정할 수 있습니다.",
@@ -612,10 +620,13 @@
       "suggested_offset": "오프셋 {{offset}}: 임시표 {{accidentals}}개, 악기로 연주할 수 없는 노트 {{stranded}}개",
       "local_note_offset": "레이어 노트 오프셋",
       "local_note_offset_description": "노트들을 각각 이 값만큼 움직입니다.",
+      "no_offset": "오프셋 없음",
+      "no_scaling": "스케일링 없음",
       "max_octave_scaling": "노트 옥타브 옮기기",
       "max_octave_scaling_description": "노트의 옥타브를 높이거나 줄여 음역대에 맞도록 사용할 수 있습니다.",
       "number_of_notes": "노트의 개수",
       "open_midi_audio_file": "MIDI/오디오/비디오 파일 열기",
+      "no_file_selected": "파일 선택",
       "there_are_no_notes": "노트가 없습니다",
       "error_is_file_midi": "이 파일을 불러오는데 오류가 발생했습니다. 해당 파일이 .mid 확장자를 가진 파일인지 확인해주세요.",
       "converting_audio_to_midi": "오디오를 MIDI로 변환하는중 (시간이 걸릴 수 있습니다)..",
@@ -623,8 +634,6 @@
       "loading_converter": "변환기 불러오는중",
       "audio_conversion_warning": "🔬 이 기능은 실험적인 기능입니다. 그렇기에 작동을 하지 않거나, 문제가 생길 수 있습니다. \n오디오와 비디오 변환을 하는 것은 MIDI보다 정확도가 낮습니다. 가능하다면, MIDI를 사용하거나 직접 작곡하는것을 추천드립니다. \n오디오나 비디오는 한가지의 악기로만 연주한 파일을 사용해주세요."
     },
-    "warning_opening_midi_importer": "MIDI 파일을 불러오기 위해 MIDI 프로그램을 준비하는 중입니다. 파일을 다시 선택해주세요.",
-    "warning_opening_audio_importer": "오디오/비디오 파일을 불러오기 위해 MIDI 프로그램을 준비하는 중입니다. 파일을 다시 선택해주세요. 추가로, 오디오/비디오 변환은 정확도가 높지 않습니다.",
     "error_importing_file_invalid_format": "파일을 불러오는데 오류가 발생했습니다: 파일 형식이 맞지 않습니다.",
     "error_importing_file_invalid_format_audio_video": "파일을 불러오는데 오류가 발생했습니다: 파일 형식이 맞지 않습니다. 만약 파일이 MIDI, 오디오/비디오 파일이 아니라면, \"MIDI 형식으로 만들기\" 버튼을 사용해주세요.",
     "ask_download_of_current_song": "현재 곡: \"{{song_name}}\"를 수정중인 상태입니다. 이 곡을 다운로드 하기 전에 변경사항을 저장하고 싶으십니까?"
@@ -784,8 +793,7 @@
     "GrandPiano": "그랜드 피아노",
     "LingeringEuphonia": "여음",
     "LeapingSpiritPiano": "리듬 건반",
-    "HarmonicKey": "화음 건반",
-    "Harmonic Key": "화음 건반"
+    "HarmonicKey": "화음 건반"
   },
   "versions": {
     "4-0-0": {

@@ -23,6 +23,7 @@
     "error_importing_invalid_format": "Erro ao importar o arquivo, formato inválido",
     "song_backup_downloaded": "Backup da música baixado",
     "old_format_export_dropped_notes": "{{count}} nota(s) não puderam ser incluídas no arquivo de formato antigo (elas não têm posição no instrumento padrão)",
+    "converted_song_stranded_notes": "Algumas notas podem não tocar porque não são compatíveis com alguns instrumentos",
     "no_songs_to_backup": "Não há músicas para backup",
     "no_empty_name": "Por favor, escreva um nome não vazio",
     "cloned_song": "Música clonada: \"{{song_name}}\"",
@@ -114,7 +115,9 @@
     "circle": "Círculo",
     "reset": "Redefinir",
     "add_new_instrument": "Adicionar novo instrumento",
-    "new": "Novo"
+    "new": "Novo",
+    "increment": "Incrementar",
+    "decrement": "Diminuir"
   },
   "home": {
     "app_description": "Um aplicativo onde você pode criar, praticar e tocar músicas para o {{APP_NAME}}",
@@ -249,8 +252,6 @@
       "player_pitch_description": "A tonalidade do reprodutor. Também será salvo na música que você gravar",
       "player_bpm": "Bpm",
       "player_bpm_description": "Batidas por minuto, usado pelo metrônomo e será usado ao converter a música com o compositor",
-      "player_sync_song_data": "Sincronizar automaticamente os instrumentos e tonalidade da música",
-      "player_sync_song_data_description": "Sempre que você carregar uma música, os instrumentos e a tonalidade dessa música também serão carregados",
       "player_metronome_beats": "Batidas do metrônomo",
       "player_metronome_beats_description": "Após quantas vezes uma batida mais forte é tocada",
       "player_metronome_volume": "Volume do metrônomo",
@@ -438,7 +439,13 @@
     "loop": "Repetir",
     "loop_tooltip": "Repetir a música",
     "hide_practice_notes": "Ocultar notas no modo de prática",
-    "hide_practice_notes_only_in_practice": "Afeta apenas o modo de prática"
+    "hide_practice_notes_only_in_practice": "Afeta apenas o modo de prática",
+    "sheet_frame_options": "Opções de quadro",
+    "section_starts_here": "A seção começa aqui",
+    "section_ends_here": "A seção termina aqui",
+    "go_to_here": "Ir para aqui",
+    "expand_sheet": "Expandir partitura",
+    "collapse_sheet": "Recolher partitura"
   },
   "keybinds": {
     "already_used_keybind": "Este atalho já está sendo usado pela nota \"{{note_name}}\"",
@@ -599,11 +606,12 @@
       "copy_notes": "Copiar todas as notas"
     },
     "midi_parser": {
-      "out_of_range": "Fora do alcance",
-      "accidentals": "Acidentais",
-      "total_notes": "Total de notas",
-      "select_midi_tracks": "Selecionar faixas MIDI",
-      "ignore_empty_tracks": "Ignorar faixas vazias",
+      "import_settings": "Configurações de importação",
+      "track_settings": "Configurações da faixa",
+      "tempo_bpm": "Tempo (BPM)",
+      "base_pitch": "Tonalidade base",
+      "of_which_dont_fit": "Das quais não se encaixam no instrumento",
+      "of_which_out_of_range": "Das quais estão fora do alcance",
       "include_accidentals": "Incluir acidentais",
       "global_note_offset": "Deslocamento global de notas",
       "global_note_offset_description": "O índice de cada nota será empurrado para cima/baixo por essa quantidade, você pode usar isso para ajustar\n                            a música ao alcance do aplicativo. Você também pode alterar o deslocamento de cada camada.",
@@ -612,10 +620,13 @@
       "suggested_offset": "Deslocamento {{offset}}: {{accidentals}} acidentes, {{stranded}} notas que o instrumento não pode tocar",
       "local_note_offset": "Deslocamento local de notas da faixa",
       "local_note_offset_description": "Altera o índice de cada nota por essa quantidade.",
+      "no_offset": "Sem deslocamento",
+      "no_scaling": "Sem escala",
       "max_octave_scaling": "Escala máxima de oitavas das notas",
       "max_octave_scaling_description": "Escala para cima/baixo as notas que estão fora da escala por essas oitavas.",
       "number_of_notes": "Número de notas",
       "open_midi_audio_file": "Abrir arquivo MIDI/Áudio/Vídeo",
+      "no_file_selected": "selecione um arquivo",
       "there_are_no_notes": "Não há notas",
       "error_is_file_midi": "Houve um erro ao importar este arquivo, este é um arquivo .mid?",
       "converting_audio_to_midi": "Convertendo áudio para midi (pode levar um tempo)..",
@@ -623,8 +634,6 @@
       "loading_converter": "Carregando conversor",
       "audio_conversion_warning": "🔬 Esta funcionalidade é experimental, pode não funcionar ou travar. \nA conversão de áudio e vídeo é menos precisa do que MIDI, se possível, é melhor usar MIDI ou compor manualmente. \nUse áudios e vídeos que tenham apenas um instrumento tocando."
     },
-    "warning_opening_midi_importer": "Abrindo o importador de midi para importar um arquivo MIDI, por favor, selecione novamente o arquivo",
-    "warning_opening_audio_importer": "Abrindo o importador de midi para importar um arquivo de vídeo/áudio... Por favor, selecione novamente o arquivo. a conversão de vídeo/áudio não é muito precisa",
     "error_importing_file_invalid_format": "Erro ao importar arquivo, formato inválido",
     "error_importing_file_invalid_format_audio_video": "Erro ao importar arquivo, formato inválido, se for um arquivo MIDI, Vídeo ou áudio, use o botão \"Criar a partir de MIDI\"",
     "ask_download_of_current_song": "Você está editando esta música (\"{{song_name}}\"), deseja salvá-la antes de baixar?"

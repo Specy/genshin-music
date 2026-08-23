@@ -23,6 +23,7 @@
     "error_importing_invalid_format": "Errore durante l'importazione del file: formato non valido",
     "song_backup_downloaded": "Backup del brano scaricato",
     "old_format_export_dropped_notes": "Non è stato possibile includere {{count}} nota/e nel file nel vecchio formato (non hanno una posizione sullo strumento predefinito)",
+    "converted_song_stranded_notes": "Alcune note potrebbero non essere riprodotte perché non sono supportate da alcuni strumenti",
     "no_songs_to_backup": "Non ci sono brani di cui eseguire il backup",
     "no_empty_name": "Inserisci un nome non vuoto",
     "cloned_song": "Brano duplicato: \"{{song_name}}\"",
@@ -114,7 +115,9 @@
     "circle": "Cerchio",
     "reset": "Reimposta",
     "add_new_instrument": "Aggiungi un nuovo strumento",
-    "new": "Nuovo"
+    "new": "Nuovo",
+    "increment": "Incrementa",
+    "decrement": "Decrementa"
   },
   "home": {
     "app_description": "Un'app in cui creare, esercitarsi e suonare brani per {{APP_NAME}}",
@@ -436,7 +439,13 @@
     "loop": "Ripeti",
     "loop_tooltip": "Ripeti il brano",
     "hide_practice_notes": "Nascondi le note in modalità Esercitazione",
-    "hide_practice_notes_only_in_practice": "Ha effetto solo in modalità Esercitazione"
+    "hide_practice_notes_only_in_practice": "Ha effetto solo in modalità Esercitazione",
+    "sheet_frame_options": "Opzioni cornice",
+    "section_starts_here": "La sezione inizia qui",
+    "section_ends_here": "La sezione finisce qui",
+    "go_to_here": "Vai qui",
+    "expand_sheet": "Espandi spartito",
+    "collapse_sheet": "Comprimi spartito"
   },
   "keybinds": {
     "already_used_keybind": "Questo tasto è già associato alla nota \"{{note_name}}\"",
@@ -597,11 +606,12 @@
       "copy_notes": "Copia tutte le note"
     },
     "midi_parser": {
-      "out_of_range": "Fuori estensione",
-      "accidentals": "Alterazioni",
-      "total_notes": "Note totali",
-      "select_midi_tracks": "Seleziona tracce MIDI",
-      "ignore_empty_tracks": "Ignora le tracce vuote",
+      "import_settings": "Impostazioni di importazione",
+      "track_settings": "Impostazioni della traccia",
+      "tempo_bpm": "Tempo (BPM)",
+      "base_pitch": "Tonalità di base",
+      "of_which_dont_fit": "Di cui non adatte allo strumento",
+      "of_which_out_of_range": "Di cui fuori estensione",
       "include_accidentals": "Includi le alterazioni",
       "global_note_offset": "Trasposizione globale delle note",
       "global_note_offset_description": "L'indice di ogni nota verrà spostato verso l'alto o il basso di questa quantità. Puoi usarlo per far rientrare il brano nell'estensione dell'app. Puoi anche modificare la trasposizione di ogni livello.",
@@ -610,10 +620,13 @@
       "suggested_offset": "Trasposizione {{offset}}: {{accidentals}} alterazioni, {{stranded}} note non riproducibili dallo strumento",
       "local_note_offset": "Trasposizione delle note della traccia",
       "local_note_offset_description": "Modifica l'indice di ogni nota di questa quantità.",
+      "no_offset": "Nessuna trasposizione",
+      "no_scaling": "Nessun adattamento",
       "max_octave_scaling": "Adattamento massimo per ottave",
       "max_octave_scaling_description": "Abbassa o alza di queste ottave le note che non rientrano nella scala.",
       "number_of_notes": "Numero di note",
       "open_midi_audio_file": "Apri file MIDI/audio/video",
+      "no_file_selected": "seleziona un file",
       "there_are_no_notes": "Non ci sono note",
       "error_is_file_midi": "Si è verificato un errore durante l'importazione. È un file .mid?",
       "converting_audio_to_midi": "Conversione dell'audio in MIDI (potrebbe richiedere tempo)...",
@@ -621,8 +634,6 @@
       "loading_converter": "Caricamento del convertitore",
       "audio_conversion_warning": "🔬 Questa funzione è sperimentale: potrebbe non funzionare o bloccarsi.\nLa conversione di audio e video è meno precisa del MIDI; se possibile, è meglio usare un file MIDI o comporre manualmente.\nUsa audio e video in cui suona un solo strumento."
     },
-    "warning_opening_midi_importer": "Apertura dello strumento di importazione MIDI. Seleziona nuovamente il file",
-    "warning_opening_audio_importer": "Apertura dello strumento di importazione MIDI per un file video/audio. Seleziona nuovamente il file. La conversione di video e audio non è molto precisa",
     "error_importing_file_invalid_format": "Errore durante l'importazione del file: formato non valido",
     "error_importing_file_invalid_format_audio_video": "Errore durante l'importazione del file: formato non valido. Se è un file MIDI, video o audio, usa il pulsante \"Crea da MIDI\"",
     "ask_download_of_current_song": "Stai modificando questo brano (\"{{song_name}}\"). Vuoi salvarlo prima di scaricarlo?"
