@@ -87,12 +87,12 @@ _Avoid_: exclusive solo (soloing one track never un-solos another)
 ### Composer Views
 
 **Pro View**:
-The composer canvas mode that renders the absolute Note Number axis directly: one row per semitone, every track's notes visible at their true numbers, notes editable by tapping the canvas itself. A per-user choice, never a property of the song — any song opens identically in either view.
-_Avoid_: pro composer (it is a view of the one composer, not a second composer), piano roll (no key column; columns, not free time), expanded/pure view
+The composer canvas mode that renders the absolute Note Number axis directly: one row per semitone, every track's notes visible at their true numbers, notes editable by tapping the canvas itself. A per-user choice, never a property of the song — any song opens identically in either view. Surfaced to users as "PRO composer"; Pro View stays the canonical term in code and docs.
+_Avoid_: piano roll (no key column; columns, not free time), expanded/pure view
 
 **Compressed View**:
-The composer canvas' default mode: the Song Grid's rows only, every note folded onto its grid row (off-scale numbers nearest-row with an accidental hint). The only view that existed before the Pro View.
-_Avoid_: normal/classic view
+The composer canvas' default mode: the Song Grid's rows only, every note folded onto its grid row (off-scale numbers nearest-row with an accidental hint). The only view that existed before the Pro View. Surfaced to users as "Normal composer"; Compressed View stays the canonical term in code and docs.
+_Avoid_: normal/classic view (as internal terms — "Normal composer" is only the label)
 
 **Editable Zone**:
 The band of Note Numbers the current track can voice at its effective Basepoint, from lowest to highest addable number. A property of (instrument, Basepoint) — it moves with Basepoint changes and instrument swaps, never with the song's content. Rows inside it that map to no button belong to the zone but accept no notes.
@@ -154,3 +154,9 @@ _Avoid_: scheduled (says when it was decided, not whether it can still be taken 
 **Audition**:
 Pressing or selecting a track sounds that track's notes in the selected column, as taps — regardless of Mute and Solo, and silent while the song is playing.
 _Avoid_: preview (the column's own, which is every track at once and obeys Mute/Solo)
+
+### Shell
+
+**Home**:
+The app's front door: the screen listing every page (the big Composer and Player cards, the smaller page links, first-visit welcome). It lives at the site root and is where the home button leads; it works in any orientation. It was an overlay popup before it became a page — "Home popup" names that dormant variant.
+_Avoid_: main page (the player was historically the "Main" page; Home is not the player), home menu (it no longer opens over a page)
