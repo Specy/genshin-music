@@ -2317,10 +2317,15 @@ function expectedTimeline(context: Context, geometry: Geometry): PaintedScene['t
  * strip - centred on the canvas' horizontal middle, at the stage origin and never moved - and SHOWN ONLY WITH SMOOTH SCROLLING ON, which is
  * the other half of the mutual exclusion expectedWindow's overlay rule states.
  *
- * The DRAWING is the same in both modes and this says so: the rectangle is drawn once at init and
+ * The DRAWING is the same in both SCROLL modes and this says so: the mark is drawn at init and
  * again on every resize, and the mode is carried by `visible` alone. A hidden line that had also
  * been cleared would read the same here as one that was never drawn, and a renderer that toggled
  * the geometry instead of the flag would pay a GraphicsContext rebuild per click.
+ *
+ * WHICH mark it is, on the other hand, is not the same in both TRANSPORT states: the Compressed
+ * View draws the rectangle at standby and the arrowheaded bar while the transport runs
+ * (COMPOSER_PLAYHEAD_CONFIG), so this reads the table with `isPlaying` rather than assuming either
+ * one. Both shapes are spelled out below because the scenes this feeds are compared at both.
  *
  * `isRecordingAudio` hides it too, and has to: the line is a SIBLING of the columns container
  * rather than a child, so hiding the columns for a recording leaves it standing on an empty
@@ -2350,7 +2355,11 @@ function expectedPlayhead(
 ): PaintedTimelineChild {
     const {canvasWidth, columnWidth, height} = geometry
     const centre = canvasWidth / 2
-    const ops = COMPOSER_PLAYHEAD_CONFIG.variant.compressed === 'rectangle'
+    const variant =
+        COMPOSER_PLAYHEAD_CONFIG.variant.compressed[
+            context.props.isPlaying ? 'playing' : 'standby'
+        ]
+    const ops = variant === 'rectangle'
         ? [
             [
                 'roundRect',
@@ -2440,8 +2449,10 @@ const REPAINTS: RepaintCase[] = [
         timelineRebuilds: 0,
     },
     {
-        //isPlaying flips on every play/stop and changes no pixel here; it is on the state object
-        //only because the canvas needs it for its own DOM
+        //isPlaying flips on every play/stop and repaints no COLUMN, which is what this table
+        //measures. It does swap the playhead's shape (COMPOSER_PLAYHEAD_CONFIG) - but this table
+        //runs in snap mode with the mark hidden, so that redraw reaches no screen and asks for no
+        //render; the swap is pinned in the playhead-variant part at the bottom of this file.
         what: 'only isPlaying changed',
         change: context => {
             context.props.isPlaying = false
@@ -4655,15 +4666,20 @@ describe('the smooth scroll', () => {
     })
 
     /**
-     * The POSITIVE half of R1's mode gate. Everything else states where the line is NOT: the scene
+     * The POSITIVE half of R1's mode gate. Everything else states where the mark is NOT: the scene
      * comparisons run in snap mode and expect it hidden, and the row above expects no overlay. A
-     * renderer that hid the line in both modes would satisfy all of them and leave the composer
+     * renderer that hid the mark in both modes would satisfy all of them and leave the composer
      * with no mark at all while gliding.
      *
      * The recording flag is here rather than in the repaint table because the table runs in snap
-     * mode, where the line is already hidden and the second term changes nothing.
+     * mode, where the mark is already hidden and the second term changes nothing.
+     *
+     * This harness has not pressed play yet (mountGliding), so what is on screen is the STANDBY
+     * mark - the rectangle in this view. Which one it is comes off COMPOSER_PLAYHEAD_CONFIG keyed
+     * on the same `isPlaying` the renderer reads; the transport swap itself is pinned in the
+     * playhead-variant part at the bottom of this file, not here.
      */
-    it('draws the line at the canvas centre, and hides it with the stage while audio records', async () => {
+    it('draws the mark at the canvas centre, and hides it with the stage while audio records', async () => {
         const harness = await mountGliding()
         try {
             const {canvasWidth, columnWidth, height} = harness.geometry()
@@ -4671,9 +4687,12 @@ describe('the smooth scroll', () => {
             const drawn = () => harness.paintedScene().notes.playhead
             expect(drawn().visible).toBe(true)
             //AT THE CENTRE, which is what makes it agree with the container offset: the offset puts
-            //the start of the scrolled-to column here, so a line drawn anywhere else marks a column
+            //the start of the scrolled-to column here, so a mark drawn anywhere else marks a column
             //the composer is not on while every other value in the scene stays right.
-            const expectedOps = COMPOSER_PLAYHEAD_CONFIG.variant.compressed === 'rectangle'
+            const variant = COMPOSER_PLAYHEAD_CONFIG.variant.compressed[
+                harness.context.props.isPlaying ? 'playing' : 'standby'
+            ]
+            const expectedOps = variant === 'rectangle'
                 ? [
                     [
                         'roundRect',
@@ -4695,9 +4714,9 @@ describe('the smooth scroll', () => {
 
             harness.context.props.isRecordingAudio = true
             harness.push()
-            //The line is a SIBLING of the columns container, so hiding the columns for a recording
+            //The mark is a SIBLING of the columns container, so hiding the columns for a recording
             //has no reach over it - without a term of its own the recording shows an empty
-            //background with a red line standing in the middle of it, and a still one at that,
+            //background with a red mark standing in the middle of it, and a still one at that,
             //since applyScrollPosition returns before touching anything while that flag is set.
             expect(drawn().visible).toBe(false)
             //hidden, not cleared: the drawing survives, so bringing the stage back costs no
@@ -7253,15 +7272,23 @@ describe('Playhead variant config', () => {
         COMPOSER_PLAYHEAD_CONFIG.variant = {...originalVariant}
     })
 
-    //ONE VARIANT PER VIEW (spec §6): the Compressed View ships the rectangle around the sounding
-    //column and the Pro View the line - see PART NINE for the pro side. These two drive the
-    //compressed harness through both settings, because the drawing itself is shared.
-    it('ships the rectangle in the Compressed View and the line in the Pro View', () => {
-        expect(COMPOSER_PLAYHEAD_CONFIG.variant).toEqual({compressed: 'rectangle', pro: 'line'})
+    //ONE VARIANT PER VIEW PER TRANSPORT STATE (spec §6): the Compressed View ships the rectangle
+    //around the column it is on at STANDBY and the arrowheaded bar while the transport runs, and
+    //the Pro View ships the bar in both - see PART NINE for the pro side. The two drawing rows
+    //below drive the compressed harness through both shapes, because the drawing itself is shared;
+    //they each set BOTH cells so the shape under test does not depend on the harness' transport.
+    it('ships the rectangle at standby and the line while playing in the Compressed View, and the line throughout in the Pro View', () => {
+        expect(COMPOSER_PLAYHEAD_CONFIG.variant).toEqual({
+            compressed: {playing: 'line', standby: 'rectangle'},
+            pro: {playing: 'line', standby: 'line'},
+        })
     })
 
     it('draws a rectangle wrapping the whole column when variant is rectangle', async () => {
-        COMPOSER_PLAYHEAD_CONFIG.variant = {...originalVariant, compressed: 'rectangle'}
+        COMPOSER_PLAYHEAD_CONFIG.variant = {
+            ...originalVariant,
+            compressed: {playing: 'rectangle', standby: 'rectangle'},
+        }
         const harness = await mount()
         try {
             const {canvasWidth, columnWidth, height} = harness.geometry()
@@ -7277,7 +7304,10 @@ describe('Playhead variant config', () => {
     })
 
     it('draws a line with arrows when variant is line', async () => {
-        COMPOSER_PLAYHEAD_CONFIG.variant = {...originalVariant, compressed: 'line'}
+        COMPOSER_PLAYHEAD_CONFIG.variant = {
+            ...originalVariant,
+            compressed: {playing: 'line', standby: 'line'},
+        }
         const harness = await mount()
         try {
             const {canvasWidth, height} = harness.geometry()
@@ -7289,6 +7319,64 @@ describe('Playhead variant config', () => {
                 ['poly', [centre - 6, height, centre + 6, height, centre, height - 8]],
                 ['fill', {color: ThemeProvider.get('accent').rgbNumber(), alpha: 0.9}],
             ])
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    /**
+     * THE SWAP ITSELF, on the SHIPPED table rather than on a table this test wrote - the two rows
+     * above pin each shape with both cells forced, which is exactly the arrangement that cannot
+     * see the transport axis at all. A renderer that read `standby` unconditionally would satisfy
+     * every other expectation in this file (the scene comparisons and the glide row all run
+     * stopped) and leave the composer showing a box parked over the notes for the whole of
+     * playback.
+     *
+     * It runs in SNAP mode, where the mark is hidden, for two reasons: the geometry is drawn
+     * either way (`visible` is the only thing the mode carries - see expectedPlayhead), and with
+     * nothing on screen to show, the flip must cost NO render. That is the same claim the repaint
+     * table's `only isPlaying changed` row makes, stated here where the drawing that happens
+     * underneath it is also read.
+     */
+    it('swaps the mark on the transport flip, in both directions and without a render', async () => {
+        const harness = await mount()
+        try {
+            const {canvasWidth, columnWidth, height} = harness.geometry()
+            const centre = canvasWidth / 2
+            const accent = ThemeProvider.get('accent').rgbNumber()
+            const line = [
+                ['rect', centre - 1.5, 0, 3, height],
+                ['poly', [centre - 6, 0, centre + 6, 0, centre, 8]],
+                ['poly', [centre - 6, height, centre + 6, height, centre, height - 8]],
+                ['fill', {color: accent, alpha: 0.9}],
+            ]
+            const rectangle = [
+                ['roundRect', centre, 1.5, columnWidth, height - 3, 4],
+                ['stroke', {width: 3, color: accent, alpha: 0.9}],
+            ]
+            const drawn = () => harness.paintedScene().notes.playhead.ops
+
+            //the harness mounts PLAYING, so init drew the running mark
+            expect(harness.context.props.isPlaying).toBe(true)
+            expect(drawn()).toEqual(line)
+
+            const beforeStop = harness.renders()
+            harness.context.props.isPlaying = false
+            harness.push()
+            expect(drawn()).toEqual(rectangle)
+            expect(harness.renders()).toBe(beforeStop)
+
+            const beforePlay = harness.renders()
+            harness.context.props.isPlaying = true
+            harness.push()
+            expect(drawn()).toEqual(line)
+            expect(harness.renders()).toBe(beforePlay)
+
+            //...and an update that moves no transport redraws nothing: the guard, which is what
+            //keeps a GraphicsContext rebuild off every playback tick
+            harness.push()
+            expect(drawn()).toEqual(line)
+            expect(harness.renders()).toBe(beforePlay)
         } finally {
             harness.destroy()
         }

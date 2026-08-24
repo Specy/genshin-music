@@ -122,26 +122,52 @@ import { observeWebGLContext, pixiResolution } from '$cmp/pixiContextRecovery';
 
 export type ComposerPlayheadVariant = 'line' | 'rectangle';
 
+/**
+ * The two transport states the table below distinguishes. `isPlaying` is the whole test: a pause
+ * mid-song and a full stop are the same thing to someone reading a canvas that is standing still,
+ * so both are `standby`.
+ */
+export type ComposerPlayheadTransportState = 'playing' | 'standby';
+
 export interface ComposerPlayheadConfig {
-  /** One variant per view - see the constant below. */
-  variant: Record<'compressed' | 'pro', ComposerPlayheadVariant>;
+  /** One variant per view PER TRANSPORT STATE - see the constant below. */
+  variant: Record<
+    'compressed' | 'pro',
+    Record<ComposerPlayheadTransportState, ComposerPlayheadVariant>
+  >;
   borderRadius?: number;
 }
 
 /**
  * Source-level configuration for the composer playhead variant.
  * 'line' draws a vertical bar with arrowheads at the canvas' top and bottom.
- * 'rectangle' wraps the currently playing column from the playhead to the column's right edge.
+ * 'rectangle' wraps the column the composer is ON, from the playhead to that column's right edge -
+ * which while the transport runs is the sounding column and at standby is `selected`.
  *
- * A VARIANT PER VIEW, stated the way PLAYHEAD_X_FRACTION states the two views' positions: the
- * Compressed View's canvas is a readout of whole columns and the rectangle around the sounding one
- * is what marks it, while the Pro View's is an editing surface a bar deep - a rectangle one column
- * wide over 38 rows of chromatic axis reads as a box drawn around some notes rather than as a
- * position. Both are here rather than one being a branch at the draw site, so changing either is
- * changing this line and nothing else.
+ * A VARIANT PER VIEW PER TRANSPORT STATE - one axis more than PLAYHEAD_X_FRACTION's pair of
+ * positions needs, because the mark wants to be a different KIND of thing at rest than in motion,
+ * and the two views disagree about that:
+ *
+ *  - the COMPRESSED View's canvas is a readout of whole columns. Standing still, the question it
+ *    answers is "which column am I on", and the rectangle around the sounding one is what answers
+ *    it - a bare line falls BETWEEN two columns and leaves the eye to decide which side it belongs
+ *    to. Once the grid is moving that question answers itself: the column under the mark is the one
+ *    arriving, and a box travelling over the notes starts reading as a box drawn AROUND them, so
+ *    playback swaps to the thin line and stopping (or pausing mid-song) swaps back.
+ *  - the PRO View's is an editing surface a bar deep, where the rectangle never made sense in
+ *    either state: one column wide over 38 rows of chromatic axis, it reads as a box drawn around
+ *    some notes rather than as a position. It is the line throughout, which is why its row has the
+ *    same value twice rather than being absent.
+ *
+ * THE WHOLE TABLE IS HERE and neither axis is a branch at the draw site, so changing any of the
+ * four cells is changing this table and nothing else. playheadVariant() is the only reader;
+ * update() redraws on the flip through syncPlayheadVariant.
  */
 export const COMPOSER_PLAYHEAD_CONFIG: ComposerPlayheadConfig = {
-  variant: { compressed: 'rectangle', pro: 'line' },
+  variant: {
+    compressed: { playing: 'line', standby: 'rectangle' },
+    pro: { playing: 'line', standby: 'line' },
+  },
   borderRadius: 4,
 };
 
@@ -162,7 +188,7 @@ const COMPOSER_NOTE_POSITIONS = game.notes.composerPositions;
  * the column being played sat left of the middle - that is the change this coordinate system made,
  * and it applies whether or not the line is drawn.
  *
- * WHETHER THE LINE IS ON SCREEN is playheadIsVisible, written onto playheadGraphics.visible by
+ * WHETHER THE MARK IS ON SCREEN is playheadIsVisible, written onto playheadGraphics.visible by
  * init() and by update() - see overlayColumn for the overlay it is mutually exclusive with.
  *
  * WHAT IS DRAWN is a bar spanning the NOTES REGION's height plus a triangle at each end pointing
@@ -174,8 +200,13 @@ const COMPOSER_NOTE_POSITIONS = game.notes.composerPositions;
  * what make it findable at a glance without widening the bar enough to hide the notes beside it.
  *
  * The colour is the theme's `accent` and comes through ComposerRendererTheme.playhead rather than
- * being read here - see that field, and note that the whole line is redrawn only by drawPlayhead's
- * two callers, so it trails a theme edit by the same debounce the textures do.
+ * being read here - see that field, and note that the mark is redrawn only by drawPlayhead's three
+ * callers, of which the resize/theme one is what normally makes it trail a theme edit by the same
+ * debounce the textures do.
+ *
+ * WHICH OF THE TWO MARKS IS DRAWN is COMPOSER_PLAYHEAD_CONFIG's business - the arrowheaded bar
+ * described above is the Compressed View's playing mark and the Pro View's only one; standing still
+ * the Compressed View draws the rectangle instead.
  */
 const PLAYHEAD_WIDTH = 3;
 const PLAYHEAD_ALPHA = 0.9;
@@ -458,9 +489,12 @@ interface ComposerRendererTheme {
    * It is the SAME theme key as tailAccent - `accent`, which is what the current layer's span tails
    * are drawn in - so the line matches the layer being edited rather than being a colour of its
    * own. They are separate fields because tailAccent has a second copy that moves at a different
-   * moment (paintTailAccent), and this one does not: drawPlayhead's callers are init() and
-   * recalculateCacheAndSizes, and the second of those is the theme path, so the line and the pool
-   * are recoloured by the same call.
+   * moment (paintTailAccent), and this one does not: of drawPlayhead's three callers - init(),
+   * recalculateCacheAndSizes and syncPlayheadVariant - the second is the theme path, so the usual
+   * story is that the line and the pool are recoloured by the same call. The exception is a
+   * TRANSPORT FLIP landing inside that debounce: handleThemeChange replaces this.theme
+   * synchronously, so a play press in those 50ms redraws the mark in the new colour a moment before
+   * the pool catches up. Harmless, and worth having stated rather than looking like a bug.
    */
   playhead: number;
   /** Flat colours used by the tiny raster marks; alpha is applied per head/tail by the builder. */
@@ -540,9 +574,11 @@ export interface ComposerRendererState {
    * "the transport owns the scroll position" - that syncScrollSchedule and handleWheel both gate
    * on. It used to be read nowhere in this class and was excluded from the repaint diff on the
    * grounds that it changed no pixel - true while the scroll snapped. It decides whether a moved
-   * `selected` is a glide or a jump now, so syncScrollSchedule reads it on every update; it is
-   * still not in needsUnconditionalRepaint, because what it changes is the SCHEDULE rather than any
-   * column's appearance.
+   * `selected` is a glide or a jump now, so syncScrollSchedule reads it on every update, and since
+   * the playhead swap it also decides WHICH mark the playhead is (COMPOSER_PLAYHEAD_CONFIG). It is
+   * still not in needsUnconditionalRepaint: neither of those is a COLUMN's appearance, and the
+   * playhead has its own redraw-on-the-flip path rather than riding a full repaint - see
+   * syncPlayheadVariant.
    */
   isPlaying: boolean;
   /**
@@ -666,7 +702,7 @@ export interface ComposerRendererState {
    * where the composer is - and, since it also gates manual motion, between a canvas that moves
    * continuously and one that moves in whole columns. It decides six things:
    *  - whether a playback tick GLIDES through its column or snaps to it (syncScrollSchedule);
-   *  - whether the playhead line is on screen (playheadIsVisible, which also gates it on the
+   *  - whether the playhead is on screen at all (playheadIsVisible, which also gates it on the
    *    recording flag, written onto playheadGraphics.visible by init() and update());
    *  - whether the SELECTED-column overlay exists at all (overlayColumn, which is
    *    NO_OVERLAY_COLUMN while this is on);
@@ -683,7 +719,10 @@ export interface ComposerRendererState {
    * under the canvas centre in both modes, so the two are comparable at one layout.
    *
    * It is keyed on the SETTING and not on `isPlaying`, so a stopped composer with this on shows the
-   * line and no overlay. needsUnconditionalRepaint compares it, because a toggle changes pixels on
+   * playhead and no overlay - the standby MARK, which in the Compressed View is the rectangle
+   * around the column rather than the line (COMPOSER_PLAYHEAD_CONFIG); `isPlaying` chooses between
+   * the two marks and never between the playhead and the overlay, which stays this setting's
+   * question alone. needsUnconditionalRepaint compares it, because a toggle changes pixels on
    * columns whose own `version` counter did not move.
    */
   smoothScroll: boolean;
@@ -1321,10 +1360,14 @@ export class ComposerRenderer {
    */
   private readonly viewportClip = new Graphics();
   /**
-   * The playhead line. A sibling of notesColumnsContainer on the notes stage, added AFTER it so it
+   * The playhead. A sibling of notesColumnsContainer on the notes stage, added AFTER it so it
    * renders on top, and never moved: it is the fixed thing in this coordinate system and the
-   * columns are what scroll. Only a resize redraws it (its height is the canvas'), which is why
-   * drawPlayhead is called from init and from recalculateCacheAndSizes and nowhere else.
+   * columns are what scroll. Two things redraw it - a RESIZE, because its height is the canvas',
+   * and a TRANSPORT FLIP, because which of the two marks it is depends on `isPlaying` in the
+   * Compressed View (COMPOSER_PLAYHEAD_CONFIG) - which is why drawPlayhead is called from init,
+   * from recalculateCacheAndSizes and from syncPlayheadVariant, and nowhere else. Neither of those
+   * is a per-frame or a per-update event; see syncPlayheadVariant for what keeps the second one off
+   * the update path.
    *
    * SHOWN AND HIDDEN through `visible`, written from playheadIsVisible by init() and by update().
    * Not by skipping the drawing: `clear()` dirties the GraphicsContext, so a draw/clear toggle pays
@@ -1332,6 +1375,15 @@ export class ComposerRenderer {
    * invisible container's whole subtree at render time.
    */
   private readonly playheadGraphics = new Graphics();
+  /**
+   * The variant playheadGraphics is CURRENTLY HOLDING, which is the whole mechanism that makes the
+   * transport swap cost a redraw on the flip and nothing on the thousands of updates around it -
+   * see syncPlayheadVariant. `null` until init() draws the first mark.
+   *
+   * Written by drawPlayhead itself rather than by its callers, so the resize/theme path keeps it
+   * true without having to remember that it exists.
+   */
+  private drawnPlayheadVariant: ComposerPlayheadVariant | null = null;
 
   // ── the Pro View's own scene (CONTEXT.md: Pro View, Editable Zone) ────────────────────────────
   //
@@ -1584,7 +1636,7 @@ export class ComposerRenderer {
    *
    * It is `state.smoothScroll ? NO_OVERLAY_COLUMN : state.selected` - R1's mutual exclusion, keyed
    * on the setting and not on whether the song is playing. In snap mode that is the rule the class
-   * had before the playhead existed; in glide mode there is no overlay for the line to disagree
+   * had before the playhead existed; in glide mode there is no overlay for the playhead to disagree
    * with, which is what retired the "follow the playhead, not `selected`" rule this field used to
    * implement.
    */
@@ -2891,7 +2943,10 @@ export class ComposerRenderer {
   }
 
   /**
-   * WHETHER THE LINE IS ON SCREEN. `smoothScroll` is the mode gate R1 states; `isRecordingAudio` is
+   * WHETHER THE MARK IS ON SCREEN, whichever of the two it currently is - this asks nothing about
+   * the variant, and `isPlaying` reaches the playhead through playheadVariant alone.
+   *
+   * `smoothScroll` is the mode gate R1 states; `isRecordingAudio` is
    * there because the playhead is a SIBLING of notesColumnsContainer rather than a child of it, so
    * drawNotesStage hiding the columns for a recording has no reach over it - without this the
    * recording shows an empty background with a red line standing still in the middle of it, still
@@ -2902,6 +2957,41 @@ export class ComposerRenderer {
   }
 
   /**
+   * WHICH MARK THIS STATE ASKS FOR: the view's row of COMPOSER_PLAYHEAD_CONFIG, then the transport
+   * state's cell of that row. Read from the table the way playheadX() reads its fraction from
+   * PLAYHEAD_X_FRACTION - nothing here decides anything, and in particular nothing branches on
+   * `isPlaying` by itself, so a table saying "the Pro View is the line in both states" produces no
+   * redraw when the transport moves rather than producing one that draws the same shape again.
+   */
+  private playheadVariant(state: ComposerRendererState): ComposerPlayheadVariant {
+    const view = COMPOSER_PLAYHEAD_CONFIG.variant[state.proView ? 'pro' : 'compressed'];
+    return view[state.isPlaying ? 'playing' : 'standby'];
+  }
+
+  /**
+   * THE TRANSPORT SWAP, on the flip and not on the frame.
+   *
+   * drawPlayhead clears and refills a GraphicsContext, which is a geometry rebuild - the same cost
+   * the `visible` toggle beside it exists to avoid paying per click. So it must not run once per
+   * update, and an update lands on every playback tick: drawnPlayheadVariant is what makes this a
+   * no-op for the whole of playback and for every update that did not move the transport, in both
+   * views.
+   *
+   * IT RENDERS ITSELF when the mark is on screen, because nothing else in the update is guaranteed
+   * to. The graphics is a sibling of the columns rather than a child, so a play press that finds
+   * the scroll position already where the transport wants it reaches update()'s resting tail and
+   * returns without a render, and a swap the user only sees when something else next moves the
+   * canvas is not a swap on the flip. When the playhead is hidden - snap mode, or a recording -
+   * there is nothing to show yet, and whatever makes it visible again renders then.
+   */
+  private syncPlayheadVariant(state: ComposerRendererState): void {
+    if (this.playheadVariant(state) === this.drawnPlayheadVariant) return;
+    this.drawPlayhead();
+    if (this.contextLost || this.replacingLostRenderer) return;
+    if (this.playheadIsVisible(state)) this.notesApp?.render();
+  }
+
+  /**
    * The bar and its two arrowheads, in ONE fill: three shapes queued against the same Graphics and
    * filled together, so the colour and alpha cannot drift apart between them.
    *
@@ -2909,13 +2999,17 @@ export class ComposerRenderer {
    * bottom one up - with its base flush against the canvas edge, so nothing is drawn outside the
    * canvas and neither arrow needs clipping. Both are centred on the same x the bar is, which is
    * what makes the whole mark read as one object rather than three.
+   *
+   * The rectangle is the other half of the same method rather than a method of its own, so the two
+   * marks cannot drift apart in colour, alpha or centre - and so that recording which one is on
+   * screen is one write in one place (see drawnPlayheadVariant).
    */
   private drawPlayhead(): void {
     const centre = this.playheadX();
     const bottom = this.height;
     this.playheadGraphics.clear();
-    //the view's own variant, read from the pair the way playheadX() reads its fraction
-    const variant = COMPOSER_PLAYHEAD_CONFIG.variant[this.state.proView ? 'pro' : 'compressed'];
+    const variant = this.playheadVariant(this.state);
+    this.drawnPlayheadVariant = variant;
     if (variant === 'rectangle') {
       const strokeWidth = PLAYHEAD_WIDTH;
       const halfStroke = strokeWidth / 2;
@@ -2999,8 +3093,9 @@ export class ComposerRenderer {
       //The cache received this exact Color instance above; its notes-canvas marker and the timeline
       //line therefore change to the same colour in the same repaint.
       this.paintBreakpointColor = breakpointColor.rgb().rgbNumber();
-      //the line spans the notes region's height and sits at its horizontal centre, so both of its
-      //inputs just moved
+      //either mark spans the notes region's height and is placed from its horizontal centre (the
+      //rectangle is a column wide from there, so it takes the column width too), so every input
+      //drawPlayhead reads just moved
       this.drawPlayhead();
       this.notifyGeometry();
       // draw() rebuilds and explicitly repaints the static scenes after cache regeneration.
@@ -5061,6 +5156,12 @@ export class ComposerRenderer {
     // writes properties the object already holds.
     this.overlayColumn = state.smoothScroll ? NO_OVERLAY_COLUMN : state.selected;
     this.playheadGraphics.visible = this.playheadIsVisible(state);
+    // ...and WHICH mark that is, beside the question of whether it is on screen. Here rather than
+    // further down for the same reason `visible` is: every early return below leaves the playhead
+    // as this update found it, and a transport flip is exactly the update most likely to take one
+    // (the position is often already where the transport wants it). Guarded on the flip inside, so
+    // this costs a comparison on the playback ticks it also sees.
+    this.syncPlayheadVariant(state);
     const previousScrollPosition = this.scrollPosition;
     //the LAST UPDATE, not the last paint - see the field for why the schedule needs the other one
     const previousUpdate = this.previousState;
@@ -5208,8 +5309,11 @@ export class ComposerRenderer {
    * which the previous song may too). Neither alone is sufficient.
    *
    * Not compared, and why. `isPlaying` IS read now - syncScrollSchedule and handleWheel both take
-   * it - but what it changes is the SCHEDULE rather than any column's appearance, so it stays out
-   * of here; see its field. `bpm` is the same shape of thing. `inPreview`,
+   * it, and the playhead's variant is a function of it - but neither is a COLUMN's appearance: the
+   * first changes the schedule, and the second is one Graphics with its own redraw-on-the-flip path
+   * (syncPlayheadVariant) that repaints no column at all, so putting it here would buy a full
+   * window repaint per play press and nothing else. See its field. `bpm` is the same shape of
+   * thing. `inPreview`,
    * `columnsPerCanvas` and `proView` all decide geometry, and `inPreview` decides a great deal of it
    * (it scales both canvas dimensions in computeCanvasSize, so it moves every column's x, every
    * note's y and the size of both canvases) - but none of them reaches update() as a CHANGE:

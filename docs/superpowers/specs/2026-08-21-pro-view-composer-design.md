@@ -220,12 +220,17 @@ scalar (read in ComposerCanvas.svelte's $effect object, per that file's dependen
   As built it is one constant PAIR, `PLAYHEAD_X_FRACTION = {compressed: 0.5, pro: 0.25}`,
   so the Compressed View's centre is written down in the same place as the Pro View's
   quarter rather than staying an unnamed 0.5 the pro branch is compared against.
-  ITS VARIANT IS A PAIR TOO (user revision, 2026-08-21): `COMPOSER_PLAYHEAD_CONFIG.variant`
-  becomes `{compressed: 'rectangle', pro: 'line'}` rather than one setting with a branch at
-  the draw site. The rectangle wraps the sounding COLUMN, which is what the Compressed
-  View's canvas is a readout of; over 38 rows of chromatic axis it reads as a box drawn
-  around some notes rather than as a position, so the Pro View takes the bar with its two
-  arrowheads.
+  ITS VARIANT IS A TABLE (user revision, 2026-08-21, widened 2026-08-24):
+  `COMPOSER_PLAYHEAD_CONFIG.variant` becomes
+  `{compressed: {playing: 'line', standby: 'rectangle'}, pro: {playing: 'line', standby: 'line'}}`
+  rather than one setting with a branch at the draw site. The rectangle wraps the COLUMN
+  the composer is on, which is what the Compressed View's canvas is a readout of, and it is
+  the answer to "which column am I on" only while the grid stands still - once it is moving
+  the column under the mark answers that by itself and a travelling box starts reading as a
+  box drawn AROUND the notes, so playback swaps that view to the bar and stopping (or
+  pausing mid-song) swaps back. Over 38 rows of chromatic axis the box never reads as a
+  position at all, so the Pro View takes the bar with its two arrowheads in both states -
+  its row holds the same value twice rather than being absent.
 - **Canvas height** in pro: the notes region fills the viewport height left over by the
   top strip inside `.top-panel-composer` (body height − composer paddings − strip), via a
   pro branch in composerCanvasSize/composerCanvasCssSize (the placeholder must not jump,
