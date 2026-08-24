@@ -141,25 +141,20 @@
     return () => window.removeEventListener('blur', handleBlur);
   });
 
-  // Initial homeStore state from the two localStorage flags below (blog
-  // pages never show the welcome overlay), mobile detection for the
-  // rotate-screen markup, exposing services via linkServices(), and the
-  // backup-warning nudge.
+  // Persistent-storage capability probe (the first-visit welcome offers the prompt only where the
+  // browser has one), mobile detection for the rotate-screen markup, exposing services via
+  // linkServices(), and the backup-warning nudge.
+  //
+  // THE HOME AUTO-OPEN THAT USED TO LEAD THIS BLOCK IS GONE. Home is a page now
+  // (routes/+page.svelte -> HomePage.svelte); nothing opens the old popup, so nothing seeds it.
+  // What was removed, if the popup is ever restored (see HomeContent.svelte's header for the rest
+  // of the revert): read APP_NAME + '_ShowHome' from localStorage, defaulting a missing value to
+  // 'true', AND it with `!window.location.pathname.startsWith('/blog')` (raw pathname, not
+  // appPathname() - the one deliberate exception to that convention, and a latent no-root bug that
+  // let the overlay show on blog pages behind a base prefix), then setState canShow/visible to that
+  // result with isInPosition: false.
   onMount(() => {
-    let canShowHomeStorage = localStorage.getItem(APP_NAME + '_ShowHome');
-    canShowHomeStorage = canShowHomeStorage === null ? 'true' : canShowHomeStorage;
-    // QUIRK: raw window.location.pathname.startsWith('/blog'), not
-    // appPathname() (used just above in this file for the same kind of
-    // check) - the one deliberate exception to that convention. Latent
-    // no-root bug: on a no-root deployment the base prefix means this
-    // never matches on a blog page, so the home overlay can incorrectly
-    // show there. Not fixed here - fixing it is a behavior change.
-    const canShowHome =
-      canShowHomeStorage === 'true' && !window.location.pathname.startsWith('/blog');
     homeStore.setState({
-      canShow: canShowHome,
-      visible: canShowHome,
-      isInPosition: false,
       hasPersistentStorage: Boolean(navigator.storage && navigator.storage.persist),
     });
     isOnMobile = 'ontouchstart' in window || isMobile();

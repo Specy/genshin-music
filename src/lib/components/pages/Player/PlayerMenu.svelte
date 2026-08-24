@@ -6,7 +6,6 @@
   import { APP_NAME } from '$core/legacyConfig';
   import Analytics from '$core/Analytics';
   import { playerStore } from '$stores/PlayerStore.svelte';
-  import { homeStore } from '$stores/HomeStore.svelte';
   import { logger } from '$stores/LoggerStore.svelte';
   import { songsStore } from '$stores/SongsStore.svelte';
   import { folderStore } from '$stores/FoldersStore.svelte';
@@ -457,8 +456,10 @@
   <MenuItem id="Settings" ariaLabel={t('menu:open_settings_menu')}>
     {@render faCogIcon()}
   </MenuItem>
+  <!-- Navigates to '/' (the home page) rather than opening the old home overlay - see
+       HomeContent.svelte's header. -->
   <MenuButton
-    onclick={homeStore.open}
+    onclick={() => goto(resolve('/'))}
     ariaLabel={t('menu:open_home_menu')}
     style="border:solid 0.1rem var(--secondary)"
   >

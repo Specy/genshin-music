@@ -3,8 +3,9 @@
   import type { ClassValue } from 'svelte/elements';
   import MenuSidebar from '../menu/MenuSidebar.svelte';
   import MenuButton from '../menu/MenuButton.svelte';
+  import { goto } from '$app/navigation';
+  import { resolve } from '$app/paths';
   import { browserHistoryStore } from '$stores/BrowserHistoryStore';
-  import { homeStore } from '$stores/HomeStore.svelte';
   import { asyncConfirm } from '$stores/AsyncPromptStore.svelte';
   import { t } from '$i18n/binding.svelte';
 
@@ -99,8 +100,12 @@
       {@render faDiscordIcon()}
     </MenuButton>
   </a>
+  <!-- Navigates to '/' (the home page) rather than opening the old home overlay - see
+       HomeContent.svelte's header. goto()/resolve() and not an <a>, so the button keeps the exact
+       markup and styling every other menu item has; the leave-guard in the root layout covers a
+       goto() the same way it covers a link. -->
   <MenuButton
-    onclick={homeStore.open}
+    onclick={() => goto(resolve('/'))}
     ariaLabel={t('menu:open_home_menu')}
     style="border:solid 0.1rem var(--secondary)"
   >

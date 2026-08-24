@@ -72,7 +72,7 @@
   <!-- QUIRK: both Home and Player link to "/" - a preserved duplicate-href bug, reproduced
          exactly. -->
   <AppLink href="/">Home</AppLink>
-  <AppLink href="/">Player</AppLink>
+  <AppLink href="/player">Player</AppLink>
   <AppLink href="/composer">Composer</AppLink>
 {/snippet}
 

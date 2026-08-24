@@ -18,8 +18,9 @@
   import { t } from '$i18n/binding.svelte';
 
   // BodyDropper is a leaf primitive with no children slot of its own, so it and the rest of the
-  // provider stack sit as siblings inside ThemeVars rather than nested further. Home is the
-  // always-mounted welcome/launcher overlay, regardless of route.
+  // provider stack sit as siblings inside ThemeVars rather than nested further. Home here is the
+  // DORMANT popup variant (never auto-opened since the '/' home page took over — see the revert
+  // note in HomeContent.svelte); it stays mounted only so the popup path keeps compiling.
   let { children } = $props();
 
   // AppLink leave-guard, wired at the shell level. SvelteKit's beforeNavigate fires for a

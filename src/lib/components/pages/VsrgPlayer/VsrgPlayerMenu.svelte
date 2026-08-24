@@ -1,5 +1,6 @@
 <script lang="ts">
-  import { homeStore } from '$stores/HomeStore.svelte';
+  import { goto } from '$app/navigation';
+  import { resolve } from '$app/paths';
   import { folderStore } from '$stores/FoldersStore.svelte';
   import { songsStore } from '$stores/SongsStore.svelte';
   import { vsrgPlayerStore } from '$stores/VsrgPlayerStore.svelte';
@@ -188,8 +189,10 @@
   <MenuItem id="Settings" ariaLabel={t('menu:settings_menu')}>
     {@render faCogIcon()}
   </MenuItem>
+  <!-- Navigates to '/' (the home page) rather than opening the old home overlay - see
+       HomeContent.svelte's header. -->
   <MenuButton
-    onclick={homeStore.open}
+    onclick={() => goto(resolve('/'))}
     ariaLabel={t('menu:open_home_menu')}
     style="border:solid 0.1rem var(--secondary)"
   >

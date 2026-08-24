@@ -76,7 +76,7 @@
 
 {#snippet navChildren()}
   <AppLink href="/blog">Posts</AppLink>
-  <AppLink href="/">Player</AppLink>
+  <AppLink href="/player">Player</AppLink>
   <AppLink href="/composer">Composer</AppLink>
 {/snippet}
 

@@ -3,8 +3,9 @@
   import type { SheetVisualizerSettingsDataType } from '$core/BaseSettings';
   import type { SettingUpdate } from '$core/types/SettingsPropriety';
   import { songsStore } from '$stores/SongsStore.svelte';
+  import { goto } from '$app/navigation';
+  import { resolve } from '$app/paths';
   import { browserHistoryStore } from '$stores/BrowserHistoryStore';
-  import { homeStore } from '$stores/HomeStore.svelte';
   import type { ClassValue } from 'svelte/elements';
   import { clickOutside } from '$lib/utils/clickOutside';
   import { t } from '$i18n/binding.svelte';
@@ -173,8 +174,10 @@
   <MenuItem id="Settings" ariaLabel={t('menu:settings_menu')}>
     {@render faCogIcon()}
   </MenuItem>
+  <!-- Navigates to '/' (the home page) rather than opening the old home overlay - see
+       HomeContent.svelte's header. -->
   <MenuButton
-    onclick={homeStore.open}
+    onclick={() => goto(resolve('/'))}
     ariaLabel={t('menu:open_home_menu')}
     style="border:solid 0.1rem var(--secondary)"
   >
