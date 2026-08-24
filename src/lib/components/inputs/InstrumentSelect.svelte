@@ -4,27 +4,30 @@
   // Read from `game.instruments.list` directly (not `$core/legacyConfig`'s
   // `INSTRUMENTS` re-export, reserved for CORE files) per the two-tier rule.
   //
-  // This grouping lives in `<script module>` (computed once at module load,
-  // shared across every instance) rather than the instance script below,
-  // since `$game` is a build-time-static import and the grouping never
-  // changes per-instance.
+  // Only group *membership* is frozen in `<script module>` (computed once at
+  // module load, shared across every instance): `$game` is a build-time-static
+  // import, so which instrument lands in which prefix group never changes.
+  // The display *order* deliberately does NOT live here - options show
+  // `tInstrument(name)`, which is localized, so the alphabetical order differs
+  // per language and is re-derived per instance below.
+  const UNGROUPED = 'instruments';
   const prefixes = new Set<string>(
     game.instruments.list.filter((ins) => ins.includes('_')).map((ins) => ins.split('_')[0])
   );
   const instrumentGroups: Record<string, readonly string[]> = {
-    instruments: game.instruments.list.filter((ins) => !ins.includes('_')),
+    [UNGROUPED]: game.instruments.list.filter((ins) => !ins.includes('_')),
   };
   for (const prefix of prefixes) {
     instrumentGroups[prefix] = game.instruments.list.filter((ins) => ins.startsWith(prefix));
   }
-  const entries = Object.entries(instrumentGroups);
+  const groupEntries = Object.entries(instrumentGroups);
 </script>
 
 <script lang="ts">
   import type { ClassValue } from 'svelte/elements';
   import { ThemeProvider as theme } from '$core/theme/ThemeProvider.svelte';
   import { capitalize } from '$core/utils/Utilities';
-  import { tInstrument } from '$i18n/binding.svelte';
+  import { language, tInstrument } from '$i18n/binding.svelte';
   import type { InstrumentName } from '$core/types';
 
   let {
@@ -46,6 +49,31 @@
     e.currentTarget.blur();
   }
 
+  // Alphabetical by what the user actually reads (`tInstrument`, localized -
+  // "Lyre" is "Lira" in it, and Chinese names in zh), so both the collator and
+  // the labels have to come from the active language. `language()` (not raw
+  // `i18n.language`) reads the i18n binding's reactive tick, so switching
+  // language re-runs this and re-sorts. `numeric` is future-proofing (nothing
+  // is numbered today, but a "Drum 2"/"Drum 10" family would otherwise sort
+  // digit-by-digit); `sensitivity: 'base'` keeps casing/accents from
+  // outranking letters, at the cost of names differing only in those comparing
+  // equal - `sort` is stable, so they keep config order.
+  const sortedGroups = $derived.by(() => {
+    const collator = new Intl.Collator(language(), { numeric: true, sensitivity: 'base' });
+    const groups = groupEntries.map(([prefix, names]) => {
+      const sorted = [...names].sort((a, b) => collator.compare(tInstrument(a), tInstrument(b)));
+      return [prefix, sorted] as const;
+    });
+    // The ungrouped group is the game's plain instruments and stays first,
+    // whatever it sorts as; the prefix groups follow A-Z by the label the
+    // <optgroup> displays.
+    return groups.sort(([a], [b]) => {
+      if (a === UNGROUPED) return -1;
+      if (b === UNGROUPED) return 1;
+      return collator.compare(capitalize(a), capitalize(b));
+    });
+  });
+
   // Same inline-SVG-chevron-from-theme-text-color mechanism as
   // inputs/Select.svelte and settings/SettingsSelect.svelte - keep them in
   // sync if this changes.
@@ -61,12 +89,12 @@
   value={selected}
   {disabled}
 >
-  {#if entries.length === 1}
-    {#each instrumentGroups.instruments as ins (ins)}
+  {#if sortedGroups.length === 1}
+    {#each sortedGroups[0][1] as ins (ins)}
       <option value={ins}>{tInstrument(ins)}</option>
     {/each}
   {:else}
-    {#each entries as [prefix, ins] (prefix)}
+    {#each sortedGroups as [prefix, ins] (prefix)}
       <optgroup label={capitalize(prefix)}>
         {#each ins as instrumentName (instrumentName)}
           <option value={instrumentName}>{tInstrument(instrumentName)}</option>
