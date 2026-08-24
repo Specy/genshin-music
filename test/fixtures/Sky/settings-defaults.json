@@ -139,7 +139,7 @@
   },
   "player": {
     "other": {
-      "settingVersion": "Sky89"
+      "settingVersion": "Sky90"
     },
     "data": {
       "instrument": {
@@ -159,6 +159,7 @@
           "LightGuitar",
           "Harp",
           "Horn",
+          "KrillHorn",
           "Trumpet",
           "Saxophone",
           "Pipa",
@@ -697,7 +698,7 @@
   },
   "zenKeyboard": {
     "other": {
-      "settingVersion": "Sky33"
+      "settingVersion": "Sky34"
     },
     "data": {
       "instrument": {
@@ -717,6 +718,7 @@
           "LightGuitar",
           "Harp",
           "Horn",
+          "KrillHorn",
           "Trumpet",
           "Saxophone",
           "Pipa",

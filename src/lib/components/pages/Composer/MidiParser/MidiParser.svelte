@@ -461,10 +461,7 @@
           <Row justify="between" align="center" gap="1rem">
             <div class="row flex-centered" style="gap: 0.5rem">
               <span>{t('composer:midi_parser.include_out_of_range_notes')}:</span>
-              <HelpTooltip
-                  position="left"
-                  buttonStyle="width:1.2rem;height:1.2rem"
-              >
+              <HelpTooltip position="left" buttonStyle="width:1.2rem;height:1.2rem">
                 {t('composer:midi_parser.include_out_of_range_notes_description')}
               </HelpTooltip>
             </div>

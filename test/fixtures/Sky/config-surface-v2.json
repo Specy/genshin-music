@@ -10,6 +10,7 @@
     "LightGuitar",
     "Harp",
     "Horn",
+    "KrillHorn",
     "Trumpet",
     "Saxophone",
     "Pipa",
@@ -1784,6 +1785,84 @@
           "pitched": true,
           "sounding": 84,
           "icon": "dmcr"
+        }
+      ]
+    },
+    "KrillHorn": {
+      "name": "KrillHorn",
+      "displayName": "Tuned Krill Horn",
+      "family": "brass",
+      "midiName": "french horn",
+      "shape": "sky-2x4",
+      "sustain": {
+        "release": 0.3,
+        "minLength": 0.1,
+        "loopMode": "loop-continuous"
+      },
+      "notes": [
+        {
+          "file": "0.mp3",
+          "midi": 65,
+          "baseNote": "F",
+          "pitched": true,
+          "sounding": 65,
+          "icon": "dm"
+        },
+        {
+          "file": "1.mp3",
+          "midi": 67,
+          "baseNote": "G",
+          "pitched": true,
+          "sounding": 67,
+          "icon": "cr"
+        },
+        {
+          "file": "2.mp3",
+          "midi": 69,
+          "baseNote": "A",
+          "pitched": true,
+          "sounding": 69,
+          "icon": "cr"
+        },
+        {
+          "file": "3.mp3",
+          "midi": 71,
+          "baseNote": "B",
+          "pitched": true,
+          "sounding": 71,
+          "icon": "dm"
+        },
+        {
+          "file": "4.mp3",
+          "midi": 72,
+          "baseNote": "C",
+          "pitched": true,
+          "sounding": 72,
+          "icon": "dmcr"
+        },
+        {
+          "file": "5.mp3",
+          "midi": 74,
+          "baseNote": "D",
+          "pitched": true,
+          "sounding": 74,
+          "icon": "dm"
+        },
+        {
+          "file": "6.mp3",
+          "midi": 76,
+          "baseNote": "E",
+          "pitched": true,
+          "sounding": 76,
+          "icon": "cr"
+        },
+        {
+          "file": "7.mp3",
+          "midi": 77,
+          "baseNote": "F",
+          "pitched": true,
+          "sounding": 77,
+          "icon": "cr"
         }
       ]
     },

@@ -2,6 +2,7 @@
   // The live home screen: the '/' route's whole body. Home.svelte is the same content in the old
   // floating-popup wrapper, kept dormant - see HomeContent.svelte's header for the revert steps.
   import { afterNavigate } from '$app/navigation';
+  import { browserHistoryStore } from '$stores/BrowserHistoryStore';
   import { ThemeProvider } from '$core/theme/ThemeProvider.svelte';
   import { APP_NAME } from '$core/legacyConfig';
   import { game } from '$game';
@@ -31,6 +32,21 @@
     arrivedInApp = navigation.from !== null && navigation.type !== 'popstate';
   });
 
+  // ARRIVING FROM ANOTHER PAGE ANIMATES; LANDING HERE COLD DOES NOT. A cold load already has its
+  // own arrival - the browser's - and fading the first paint of the app on top of that reads as
+  // slowness, so the animation is reserved for the in-app hop where '/' replaces a page that was
+  // already on screen.
+  //
+  // READ AT INIT, NOT IN afterNavigate, and that ordering IS the mechanism: every afterNavigate
+  // callback runs only once the new page's components exist, so the flag still describes the
+  // PREVIOUS navigation while this component is initialising - false on the initial load, true on
+  // every navigation after it. Deciding in afterNavigate instead would mean rendering the page at
+  // its natural opacity first and only then asking it to animate in from nothing.
+  //
+  // A plain const, not $state: which navigation created this instance cannot change during its
+  // life, and SvelteKit builds a fresh HomePage for every arrival at '/'.
+  const animateEntry = browserHistoryStore.hasSettledFirstNavigation;
+
   // Same fade the popup used over the page it covered: here it lets AppBackground's image read
   // through the page's own ground instead of a flat fill.
   const backgroundColor = $derived(ThemeProvider.get('background').fade(0.1).toString());
@@ -45,7 +61,14 @@
      body rather than a child of the scroller below. -->
 <SimpleMenu showBack={arrivedInApp} />
 
-<div class="home-page column" style="background-color:{backgroundColor}">
+<!-- Only the page body animates, never the rail above it: SimpleMenu is the shell every route
+     shares, and the whole point of it being a sibling here is that it does NOT come and go with
+     the page under it. Fading it in on arrival would make the one fixed thing on screen blink. -->
+<div
+  class="home-page column"
+  class:animate-entry={animateEntry}
+  style="background-color:{backgroundColor}"
+>
   <HomeContent alwaysShowTitle />
 </div>
 
@@ -69,6 +92,49 @@
     overflow-y: auto;
     overflow-x: hidden;
     color: var(--background-text);
+  }
+
+  /* THE IN-APP ARRIVAL, gated in the script - see `animateEntry` for why a cold load is excluded.
+     Drops in from 0.5rem above rather than rising from below, so the motion agrees with the page
+     arriving over the one it replaced instead of scrolling up into view.
+
+     Concrete lengths in the keyframes, never a var(): Chrome composites transform/opacity
+     animations and reads a var()-valued keyframe as its FALLBACK at the animation's edges, which
+     snaps the first and last frame somewhere else entirely. `.home-page` is `position: relative`
+     and holds no fixed descendants, so the transform is free to make it a containing block for
+     the quarter-second it runs. */
+  .home-page.animate-entry {
+    animation: home-page-enter 0.25s ease-out;
+  }
+
+  @keyframes home-page-enter {
+    from {
+      opacity: 0;
+      transform: translateY(-0.5rem);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Keep the fade, drop the travel - the same split the App.css press and hold-ring rules make.
+     The opacity half is what signals "this is a new page"; the 0.5rem is the decorative half, and
+     it is the half that costs a motion-sensitive user something. Swapping animation-name rather
+     than setting `animation: none` so the page still cannot flash in at full opacity. */
+  @media (prefers-reduced-motion: reduce) {
+    .home-page.animate-entry {
+      animation-name: home-page-enter-fade;
+    }
+  }
+
+  @keyframes home-page-enter-fade {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
   }
 
   /* The bottom bar sits at the bottom of a SHORT page and directly under the content of a tall one.

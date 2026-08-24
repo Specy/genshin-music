@@ -1166,8 +1166,18 @@ a {
   align-items: center;
 }
 
-.menu-item:hover {
+.menu-item:hover:not(:disabled) {
   background-color: var(--primary-layer-15);
+}
+
+/* A disabled menu item is the rail's home button sitting on the home page (SimpleMenu.svelte): it
+   stays in place because the rail is recognised by it, so it must stop reading as pressable rather
+   than disappear. `:hover` still MATCHES a disabled button - the pointer events the button ignores
+   are clicks, not hover - hence excluding it from the rule above rather than relying on `disabled`
+   alone. Kept at full opacity: this is "you are already here", not "this is unavailable", and the
+   rail has too few items for a greyed-out one to read as anything but broken. */
+.menu-item:disabled {
+  cursor: default;
 }
 
 .menu-item-active {
@@ -1784,11 +1794,12 @@ a {
   .rotate-screen {
     display: flex;
   }
-  .home-content, .middle-size-pages-wrapper {
-      gap: 0.5rem;
+  .home-content,
+  .middle-size-pages-wrapper {
+    gap: 0.5rem;
   }
   .middle-size-pages-wrapper {
-      margin-top: 0.5rem;
+    margin-top: 0.5rem;
   }
 }
 

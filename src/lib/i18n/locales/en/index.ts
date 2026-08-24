@@ -174,8 +174,7 @@ export const i18n_en = {
     changelog_name: 'Changelog',
     other_apps_name: 'Other Apps',
     scale: 'Scale',
-    rights:
-      '© All rights reserved by {{company_name}}. Other properties belong to their respective owners.',
+    rights: '© 2026 Specy. {{company_name}} content belongs to {{company_name}}.',
     hide_on_open: 'Hide on open',
     beta: 'Beta',
     about_to_leave_warning: `You are about to leave the app to go to "{{to}}", do you want to continue?`,
@@ -899,6 +898,7 @@ export const i18n_en = {
     LightGuitar: 'Light Guitar',
     Harp: 'Harp',
     Horn: 'Horn',
+    KrillHorn: 'Tuned Krill Horn', //the SFX_KrillHorn roar pitch-shifted across 8 tuned buttons
     Trumpet: 'Trumpet',
     Saxophone: 'Saxophone',
     Pipa: 'Pipa',

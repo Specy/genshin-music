@@ -137,7 +137,7 @@
   },
   "player": {
     "other": {
-      "settingVersion": "Genshin89"
+      "settingVersion": "Genshin90"
     },
     "data": {
       "instrument": {
@@ -660,7 +660,7 @@
   },
   "zenKeyboard": {
     "other": {
-      "settingVersion": "Genshin33"
+      "settingVersion": "Genshin34"
     },
     "data": {
       "instrument": {

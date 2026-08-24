@@ -16,7 +16,9 @@ describe('environment smoke test', () => {
         // and Cymbals (Season of Radiance, 4 sounds on a 2x2 pad, in-game capture)
         // Sky +1 on 2026-08-24: TriumphHandPan (Season of Performance, the Sanctuary
         // Handpan reimagined — same 8 notes as HandPan, hollower shell, in-game capture)
-        expect(INSTRUMENTS.length).toBe(APP_NAME === 'Genshin' ? 11 : 44)
+        // Sky +1 on 2026-08-24: KrillHorn — the SFX_KrillHorn roar pitch-shifted onto a
+        // tuned 2x4 octave. The one-button SFX_KrillHorn stays exactly as it was.
+        expect(INSTRUMENTS.length).toBe(APP_NAME === 'Genshin' ? 11 : 45)
     })
 
     it('NoteLayer bit operations work', () => {

@@ -11,16 +11,16 @@ Both handpans sound **D3 A3 C4 D4 F4 G4 A4 C5** (D minor), which is why this fol
 and `HandPan/` share the `handpan-8` Note Preset rather than restating the layout.
 Measured fundamentals of this capture, from the 1:2:3 partial series:
 
-| Button | Sounded | Measured   | Dev  | Authored Note Id |
-| -----: | ------- | ---------- | ---- | ---------------- |
-|      0 | D3      | 148.00 Hz  | +14c | 62 (D4)          |
-|      1 | A3      | 219.54 Hz  | −4c  | 69 (A4)          |
-|      2 | C4      | 262.41 Hz  | +5c  | 72 (C5)          |
-|      3 | D4      | 297.37 Hz  | +22c | 74 (D5)          |
-|      4 | F4      | 350.25 Hz  | +5c  | 77 (F5)          |
-|      5 | G4      | 394.07 Hz  | +9c  | 79 (G5)          |
-|      6 | A4      | 442.62 Hz  | +10c | 81 (A5)          |
-|      7 | C5      | 521.94 Hz  | ±0c  | 84 (C6)          |
+| Button | Sounded | Measured  | Dev  | Authored Note Id |
+| -----: | ------- | --------- | ---- | ---------------- |
+|      0 | D3      | 148.00 Hz | +14c | 62 (D4)          |
+|      1 | A3      | 219.54 Hz | −4c  | 69 (A4)          |
+|      2 | C4      | 262.41 Hz | +5c  | 72 (C5)          |
+|      3 | D4      | 297.37 Hz | +22c | 74 (D5)          |
+|      4 | F4      | 350.25 Hz | +5c  | 77 (F5)          |
+|      5 | G4      | 394.07 Hz | +9c  | 79 (G5)          |
+|      6 | A4      | 442.62 Hz | +10c | 81 (A5)          |
+|      7 | C5      | 521.94 Hz | ±0c  | 84 (C6)          |
 
 **The authored Note Ids sit one octave above the sounded pitch.** That is not an
 error and not new: `HandPan` has always been authored this way, because Sky's Song

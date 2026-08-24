@@ -50,6 +50,7 @@ export const SIMILAR_INSTRUMENTS = {
         'Cymbals': {Genshin: 'DjemDjemDrum'},
         'DunDun': {Genshin: 'DunDun'},
         'Horn': {Genshin: 'NightwindHorn'},
+        'KrillHorn': {Genshin: 'NightwindHorn'},
         'Trumpet': {Genshin: 'NightwindHorn'},
         'Saxophone': {Genshin: 'NightwindHorn'},
         'Harmonica': {Genshin: 'NightwindHorn'},

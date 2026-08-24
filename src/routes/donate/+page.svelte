@@ -20,7 +20,7 @@
     description={`Help the development of ${game.id} with a donation.`}
   />
   <Header style="margin-bottom: 1rem;">
-      {t('common:donate')}
+    {t('common:donate')}
   </Header>
   <div class="donate-text">
     {t('donate:donate_message')}

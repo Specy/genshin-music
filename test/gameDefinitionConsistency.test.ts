@@ -73,6 +73,8 @@ describe('frozen legacy note tables match the live instrument data (transcriptio
             //the frozen SKY_HANDPAN one — but a post-freeze instrument never joins the
             //freeze, and adding it there would invent a legacy song that cannot exist.
             'TriumphHandPan',
+            //Sky, 2026-08-24: the SFX_KrillHorn roar pitch-shifted to 8 tuned buttons
+            'KrillHorn',
         ])
         for (const name of INSTRUMENTS) {
             if (POST_FREEZE_INSTRUMENTS.has(name)) continue

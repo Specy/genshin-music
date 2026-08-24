@@ -4,7 +4,9 @@
   import MenuSidebar from '../menu/MenuSidebar.svelte';
   import MenuButton from '../menu/MenuButton.svelte';
   import { goto } from '$app/navigation';
+  import { page } from '$app/state';
   import { resolve } from '$app/paths';
+  import { appPathname } from '$lib/utils/appPathname';
   import { asyncConfirm } from '$stores/AsyncPromptStore.svelte';
   import { t } from '$i18n/binding.svelte';
 
@@ -27,6 +29,15 @@
     class?: ClassValue;
     style?: string;
   } = $props();
+
+  // '/' is already here, so the home button has nowhere to send anyone. Left visible on purpose -
+  // it is the anchor the rail is recognised by (see HomePage.svelte) - but inert, and inert rather
+  // than merely pointless: goto('/') from '/' is still a navigation, which would rebuild the page
+  // and replay HomePage's entry animation for a button press that changed nothing.
+  //
+  // appPathname() and not a raw pathname compare: no-root builds serve the app under a base prefix,
+  // where the home page's own pathname is that prefix and never the literal '/'.
+  const isOnHomePage = $derived(appPathname(page.url.pathname) === '/');
 
   async function handleDiscordClick(e: MouseEvent) {
     e.preventDefault();
@@ -112,6 +123,7 @@
        goto() the same way it covers a link. -->
   <MenuButton
     onclick={() => goto(resolve('/'))}
+    disabled={isOnHomePage}
     ariaLabel={t('menu:open_home_menu')}
     style="border:solid 0.1rem var(--secondary)"
   >

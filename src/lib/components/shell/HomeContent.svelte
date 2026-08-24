@@ -66,7 +66,17 @@
   // shared store: nothing else in the app reads them (AppInit.svelte owns
   // every other piece of shared init state - homeStore's hasPersistentStorage,
   // update-check, language detection).
-  let hasVisited = $state(false);
+  // DEFAULTS TO VISITED, i.e. to the returning user. This value is only truthful once onMount has
+  // read localStorage, so whatever it starts as is what the prerendered HTML and the first paint
+  // commit to. Two blocks below swing on it in opposite directions - the welcome card
+  // ({#if !hasVisited}) and the PromotionCard ({#if hasVisited}) - so starting at false shipped
+  // every load a tall welcome card that then vanished and a promotion card that then appeared,
+  // shoving the card grid twice. Measured on the dev server: CLS 0.074 before, 0.0005 after.
+  //
+  // Guessing wrong now costs a first-time visitor one shift, once, on the only load where they
+  // have never seen the app anyway. Guessing wrong the other way cost every returning user a
+  // shift on every load.
+  let hasVisited = $state(true);
   let isTwa = $state(false);
   let breakpoint = $state(false);
   let appScale = $state(100);

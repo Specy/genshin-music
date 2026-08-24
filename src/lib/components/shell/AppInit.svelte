@@ -313,9 +313,10 @@
   });
 
   // pageView fires unconditionally on every navigation (including the
-  // first); addPage is deliberately gated by hasTrackedInitialPage so the
-  // very first (already-current) page isn't added to history again.
-  let hasTrackedInitialPage = false;
+  // first); addPage is deliberately gated by hasSettledFirstNavigation so the
+  // very first (already-current) page isn't added to history again. That flag
+  // lives on the store rather than here because HomePage.svelte reads it too,
+  // to tell an in-app arrival from a cold load - see its `animateEntry`.
   afterNavigate((navigation) => {
     const url = navigation.to?.url;
     if (url) {
@@ -324,11 +325,11 @@
       // a route comparison, so base-path-stripping doesn't apply here.
       const pagePath = `${url.pathname}${url.search}`;
       Analytics.pageView({ page_title: pagePath });
-      if (hasTrackedInitialPage) {
+      if (browserHistoryStore.hasSettledFirstNavigation) {
         browserHistoryStore.addPage(pagePath);
       }
     }
-    hasTrackedInitialPage = true;
+    browserHistoryStore.hasSettledFirstNavigation = true;
   });
 
   // The returned cleanup below never runs in practice - this component

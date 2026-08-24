@@ -238,6 +238,8 @@ describe('game config surface', () => {
             'Cymbals',
             //Sky, 2026-08-24: Season of Performance handpan, in-game capture
             'TriumphHandPan',
+            //Sky, 2026-08-24: the SFX_KrillHorn roar pitch-shifted to 8 tuned buttons
+            'KrillHorn',
         ])
 
         const derivedInstrumentsData = Object.fromEntries(
