@@ -6,10 +6,12 @@
     children,
     onclick,
     style = '',
+    disabled = false,
   }: {
     children: Snippet;
     onclick?: () => void;
     style?: string;
+    disabled?: boolean;
   } = $props();
 </script>
 
@@ -18,6 +20,7 @@
   class="row row-centered"
   style="padding:0.4rem;min-width:unset;{style}"
   {onclick}
+  {disabled}
 >
   {@render children()}
 </AppButton>

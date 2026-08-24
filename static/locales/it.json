@@ -443,6 +443,8 @@
     "sheet_frame_options": "Opzioni cornice",
     "section_starts_here": "La sezione inizia qui",
     "section_ends_here": "La sezione finisce qui",
+    "remove_section_start": "Rimuovi inizio sezione",
+    "remove_section_end": "Rimuovi fine sezione",
     "go_to_here": "Vai qui",
     "expand_sheet": "Espandi spartito",
     "collapse_sheet": "Comprimi spartito"

@@ -84,10 +84,12 @@ describe('Player metronome transport synchronization', () => {
     beforeEach(() => {
         localStorage.clear()
         // getPlayerSettings() returns the base object directly when storage is empty. Restore the
-        // two fields these cases deliberately mutate so test order cannot leak through that object.
+        // fields these cases deliberately mutate so test order cannot leak through that object.
         const defaults = settingsService.getDefaultPlayerSettings()
         defaults.loopPractice.value = false
         defaults.bpm.value = 220
+        defaults.numberOfVisualRows.value = 2
+        defaults.numberOfVisualColumns.value = 5
         mocks.pendingDelays.splice(0)
         mocks.delay.mockClear()
         playerStore.resetSong()
@@ -126,6 +128,28 @@ describe('Player metronome transport synchronization', () => {
         if (!button) throw new Error('Player note-recording button was not rendered')
         button.click()
         flushSync()
+    }
+
+    function changeSheetDimension(label: string, value: number) {
+        const row = [...target.querySelectorAll<HTMLElement>('.settings-row')]
+            .find(element => element.textContent?.includes(label))
+        const select = row?.querySelector<HTMLSelectElement>('select')
+        if (!select) throw new Error(`Player setting was not rendered: ${label}`)
+        select.value = String(value)
+        select.dispatchEvent(new Event('change', {bubbles: true}))
+        flushSync()
+    }
+
+    function buildPagedRecordedSong() {
+        const song = buildRecordedSong()
+        const template = song.notes[0]
+        song.notes = Array.from({length: 12}, (_, index) => {
+            const note = template.clone()
+            // More than the 50ms merge window: every note becomes its own sheet frame.
+            note.time = 100 + index * 100
+            return note
+        })
+        return song
     }
 
     it('restarts only on the start edge of a note recording, at the player BPM', () => {
@@ -203,6 +227,48 @@ describe('Player metronome transport synchronization', () => {
         playerStore.resetSong()
 
         await vi.waitFor(() => expect(metronome.bpm).toBe(220))
+    })
+
+    it.each([
+        ['Number of rows in visual sheet', 3, [12]],
+        ['Number of columns in visual sheet', 4, [8, 4]],
+    ])('re-dispatches an unfinished run at its cursor when changing %s', async (label, value, pageSizes) => {
+        const song = buildPagedRecordedSong()
+        playerStore.practice(song, 1, 11)
+        await vi.waitFor(() => {
+            expect(playerControlsStore.state.runEnd).toBe(11)
+            expect(playerControlsStore.pagesState.pages.map(page => page.length)).toEqual([10, 2])
+        })
+        playerControlsStore.setCurrent(2)
+        const pagesBefore = playerControlsStore.pagesState.pages
+        const seek = vi.spyOn(playerStore, 'seek')
+
+        changeSheetDimension(label, value)
+
+        expect(seek).toHaveBeenCalledOnce()
+        expect(seek).toHaveBeenCalledWith(2, 11)
+        expect(playerStore.state.preservesSection).toBe(true)
+        await vi.waitFor(() => {
+            expect(playerControlsStore.pagesState.pages).not.toBe(pagesBefore)
+            expect(playerControlsStore.pagesState.pages.map(page => page.length)).toEqual(pageSizes)
+            expect(playerControlsStore.position).toBe(1)
+            expect(playerControlsStore.end).toBe(11)
+        })
+    })
+
+    it('rebuilds a finished run from its Section when the sheet dimensions change', async () => {
+        const song = buildRecordedSong()
+        playerStore.practice(song, 1, 4)
+        await vi.waitFor(() => expect(playerControlsStore.state.runEnd).toBe(4))
+        playerControlsStore.setCurrent(4)
+        const seek = vi.spyOn(playerStore, 'seek')
+        const restartSong = vi.spyOn(playerStore, 'restartSong')
+
+        changeSheetDimension('Number of rows in visual sheet', 3)
+
+        expect(seek).not.toHaveBeenCalled()
+        expect(restartSong).toHaveBeenCalledOnce()
+        expect(restartSong).toHaveBeenCalledWith(1, 4)
     })
 })
 

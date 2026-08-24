@@ -60,6 +60,7 @@
   }
 
   function handleHeaderKeydown(e: KeyboardEvent) {
+    if (e.target !== e.currentTarget) return;
     if (e.key !== 'Enter' && e.key !== ' ') return;
     e.preventDefault();
     toggleExpanded();

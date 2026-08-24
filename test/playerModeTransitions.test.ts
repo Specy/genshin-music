@@ -11,7 +11,7 @@ const mocks = vi.hoisted(() => {
 })
 
 // PlayerKeyboard's real delay uses worker-timers (which jsdom cannot run). Keeping each promise
-// pending also gives the test direct control over an old approach run's two-second preparation.
+// pending also gives the test direct control over every phase of an approach run's preparation.
 vi.mock('$core/utils/Utilities', async importOriginal => ({
     ...(await importOriginal<typeof import('../src/lib/core/utils/Utilities')>()),
     delay: mocks.delay,
@@ -70,6 +70,8 @@ import {buildRecordedSong} from './builders'
 import {INSTRUMENTS} from './imports'
 
 type Mounted = ReturnType<typeof mount>
+const approachCountdown = [3, 2, 1] as const
+const approachCountdownStepMs = 2000 / approachCountdown.length
 
 describe('Player mode transition ownership', () => {
     let target: HTMLDivElement
@@ -196,8 +198,27 @@ describe('Player mode transition ownership', () => {
         const song = buildRecordedSong()
         playerStore.approaching(song, start, end ?? song.notes.length)
         await vi.waitFor(() =>
-            expect(mocks.pendingDelays.some(({ms}) => ms === 2000)).toBe(true))
+            expect(mocks.pendingDelays.some(({ms}) => ms === approachCountdownStepMs)).toBe(true))
         return song
+    }
+
+    async function finishApproachCountdown(beforeRunStarts?: () => void) {
+        const durations: number[] = []
+        for (const count of approachCountdown) {
+            await vi.waitFor(() =>
+                expect(target.querySelector('.approach-countdown')?.textContent?.trim())
+                    .toBe(String(count)))
+            const phase = takePendingDelay(approachCountdownStepMs)
+            durations.push(phase.ms)
+            if (count === 1) beforeRunStarts?.()
+            phase.resolve()
+            await Promise.resolve()
+            await Promise.resolve()
+            flushSync()
+        }
+        flushSync()
+        expect(target.querySelector('.approach-countdown')).toBeNull()
+        return durations
     }
 
     /** The absolute span of every frame on the sheet, in page order. */
@@ -220,7 +241,7 @@ describe('Player mode transition ownership', () => {
     }
 
     function takePendingDelay(ms: number) {
-        const index = mocks.pendingDelays.findIndex(delay => delay.ms === ms)
+        const index = mocks.pendingDelays.findIndex(delay => Math.abs(delay.ms - ms) < 0.001)
         if (index === -1) throw new Error(`No pending ${ms}ms player delay`)
         return mocks.pendingDelays.splice(index, 1)[0]
     }
@@ -313,7 +334,48 @@ describe('Player mode transition ownership', () => {
 
         await vi.waitFor(() => expect(playerControlsStore.pagesState.pages).toEqual([]))
         expect(playerControlsStore.score).toEqual({correct: 1, wrong: 1, score: 0, combo: 0})
-        expect(mocks.pendingDelays.some(({ms}) => ms === 2000)).toBe(true)
+        expect(mocks.pendingDelays.some(({ms}) => ms === approachCountdownStepMs)).toBe(true)
+        expect(target.querySelector('.approach-countdown')?.textContent?.trim()).toBe('3')
+    })
+
+    it('shows 3, 2, 1 across an exactly two-second approach preparation', async () => {
+        await beginApproach()
+
+        const durations = await finishApproachCountdown()
+
+        expect(durations).toHaveLength(3)
+        expect(durations.reduce((total, duration) => total + duration, 0)).toBeCloseTo(2000, 6)
+        expect(playerControlsStore.pagesState.pages.length).toBeGreaterThan(0)
+    })
+
+    it('does not let an old approach phase change the replacement run countdown', async () => {
+        const song = await beginApproach()
+        const stalePhase = takePendingDelay(approachCountdownStepMs)
+
+        playerStore.approaching(song, 1, song.notes.length)
+        await vi.waitFor(() => {
+            expect(mocks.pendingDelays).toHaveLength(1)
+            expect(target.querySelector('.approach-countdown')?.textContent?.trim()).toBe('3')
+        })
+        const replacementPhase = mocks.pendingDelays[0]
+
+        stalePhase.resolve()
+        await Promise.resolve()
+        await Promise.resolve()
+        flushSync()
+
+        expect(target.querySelector('.approach-countdown')?.textContent?.trim()).toBe('3')
+        expect(mocks.pendingDelays).toEqual([replacementPhase])
+        await finishApproachCountdown()
+    })
+
+    it('removes the approach countdown when the run is stopped', async () => {
+        await beginApproach()
+        expect(target.querySelector('.approach-countdown')?.textContent?.trim()).toBe('3')
+
+        playerStore.resetSong()
+
+        await vi.waitFor(() => expect(target.querySelector('.approach-countdown')).toBeNull())
     })
 
     // ADR-0010: the sheet is the WHOLE song in every mode - approaching included, which built no
@@ -443,13 +505,7 @@ describe('Player mode transition ownership', () => {
 
     it('advances the approaching cursor by the circles that resolve, and lands it on the last frame', async () => {
         await beginApproach()
-        const preparation = takePendingDelay(2000)
-
-        vi.useFakeTimers()
-        preparation.resolve()
-        await Promise.resolve()
-        await Promise.resolve()
-        flushSync()
+        await finishApproachCountdown(() => vi.useFakeTimers())
 
         const frames = playerControlsStore.pagesState.pages.flat()
         expect(frames.length).toBeGreaterThan(1)
@@ -475,7 +531,7 @@ describe('Player mode transition ownership', () => {
 
     it('keeps the approaching sheet whole-song while the circles stay Section-bounded', async () => {
         await beginApproach()
-        takePendingDelay(2000).resolve()
+        await finishApproachCountdown()
         await vi.waitFor(() =>
             expect(playerControlsStore.pagesState.pages.length).toBeGreaterThan(0))
         const wholeSong = sheetSpans()
@@ -485,7 +541,7 @@ describe('Player mode transition ownership', () => {
         // the pages stay empty for the whole preparation window, so a stale run cannot install
         // them over a newer mode's
         expect(playerControlsStore.pagesState.pages).toEqual([])
-        takePendingDelay(2000).resolve()
+        await finishApproachCountdown()
         await vi.waitFor(() =>
             expect(playerControlsStore.pagesState.pages.length).toBeGreaterThan(0))
 
@@ -496,12 +552,13 @@ describe('Player mode transition ownership', () => {
         'does not let a stale approach initializer overwrite a newer %s run',
         async destination => {
             const song = await beginApproach()
-            const staleApproach = takePendingDelay(2000)
+            const staleApproach = takePendingDelay(approachCountdownStepMs)
 
             if (destination === 'practice') playerStore.practice(song, 0, song.notes.length)
             else playerStore.play(song, 0, song.notes.length)
             await vi.waitFor(() =>
                 expect(playerControlsStore.pagesState.pages.length).toBeGreaterThan(0))
+            expect(target.querySelector('.approach-countdown')).toBeNull()
             playerControlsStore.increaseScore(true)
             const pagesBefore = playerControlsStore.pagesState.pages.map(page =>
                 page.map(chunk => chunk.clone()))
@@ -513,6 +570,7 @@ describe('Player mode transition ownership', () => {
             flushSync()
 
             expect(playerStore.eventType).toBe(destination)
+            expect(target.querySelector('.approach-countdown')).toBeNull()
             expect(playerControlsStore.pagesState.pages).toEqual(pagesBefore)
             expect(playerControlsStore.score).toEqual(scoreBefore)
         },
@@ -556,14 +614,8 @@ describe('Player mode transition ownership', () => {
         // onto the grid at 1450ms, then thirty more take it just below zero.
         playerStore.approaching(song, 0, 1)
         await vi.waitFor(() =>
-            expect(mocks.pendingDelays.some(({ms}) => ms === 2000)).toBe(true))
-        const preparation = takePendingDelay(2000)
-
-        vi.useFakeTimers()
-        preparation.resolve()
-        await Promise.resolve()
-        await Promise.resolve()
-        flushSync()
+            expect(mocks.pendingDelays.some(({ms}) => ms === approachCountdownStepMs)).toBe(true))
+        await finishApproachCountdown(() => vi.useFakeTimers())
 
         // Leave the old queue exactly one tick from completion, then place the transition 1ms
         // before that tick. PlayerKeyboard intentionally tears transitions down on a 4ms debounce,

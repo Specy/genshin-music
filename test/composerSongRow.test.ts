@@ -98,6 +98,26 @@ describe('ComposerSongRow focus handoff', () => {
         return button
     }
 
+    function startRenaming(): HTMLInputElement {
+        const dropdownToggle = target.querySelector<HTMLButtonElement>(
+            '.floating-dropdown > .song-button'
+        )
+        if (!dropdownToggle) throw new Error('composer song dropdown toggle was not rendered')
+        dropdownToggle.click()
+        flushSync()
+
+        const renameButton = target.querySelector<HTMLButtonElement>(
+            '.floating-dropdown-children .app-button'
+        )
+        if (!renameButton) throw new Error('composer song rename button was not rendered')
+        renameButton.click()
+        flushSync()
+
+        const input = target.querySelector<HTMLInputElement>('.song-rename')
+        if (!input) throw new Error('composer song rename input was not rendered')
+        return input
+    }
+
     it('blurs the activated song row synchronously on pointer selection', async () => {
         const button = songButton()
         button.focus()
@@ -132,6 +152,18 @@ describe('ComposerSongRow focus handoff', () => {
 
         expect(event.defaultPrevented).toBe(false)
         expect(document.activeElement).toBe(button)
+        expect(mocks.getOneSerializedFromStorable).not.toHaveBeenCalled()
+        expect(loadSong).not.toHaveBeenCalled()
+    })
+
+    it.each(['Enter', ' '])('leaves %j to the nested rename input', key => {
+        const input = startRenaming()
+        const event = new KeyboardEvent('keydown', {key, bubbles: true, cancelable: true})
+
+        expect(input.dispatchEvent(event)).toBe(true)
+
+        expect(event.defaultPrevented).toBe(false)
+        expect(document.activeElement).toBe(input)
         expect(mocks.getOneSerializedFromStorable).not.toHaveBeenCalled()
         expect(loadSong).not.toHaveBeenCalled()
     })

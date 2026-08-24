@@ -51,6 +51,7 @@
   // role/tabindex/onkeydown below make this keyboard-operable - an accessibility addition, not
   // present in old.
   function handleNameKeydown(e: KeyboardEvent) {
+    if (e.target !== e.currentTarget) return;
     if (e.key !== 'Enter' && e.key !== ' ') return;
     e.preventDefault();
     openSong();

@@ -83,6 +83,9 @@
   } = $props();
 
   let approachRate = $state(1500);
+  const approachPreparationMs = 2000;
+  const approachCountdownValues = [3, 2, 1] as const;
+  let approachCountdown: (typeof approachCountdownValues)[number] | null = $state(null);
   let approachingNotesList: ApproachingNote[] = [];
   // QUIRK: written but never read - dead field, preserved rather than removed.
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -260,12 +263,20 @@
     pageChunks.forEach((chunk) => {
       chunk.notes = dedupeChunkNotes(chunk.notes, sustainingTracks);
     });
-    await delay(2000); //add an initial delay to let the user prepare
+    // Keep the existing two-second preparation window, but make all of it visible. Ownership is
+    // checked BEFORE every write: an old async initializer may wake after a replacement run has
+    // already put its own number on screen, and must neither replace nor clear that number.
+    for (const count of approachCountdownValues) {
+      if (!isCurrentRun(runKey, 'approaching')) return;
+      approachCountdown = count;
+      await delay(approachPreparationMs / approachCountdownValues.length);
+    }
     // A mode change during the preparation delay owns the surface now. Without this guard, the
     // old approach run wakes up two seconds later and clears/replaces the newer mode's pages,
     // score and queues. `key` is monotonic across every transition (including stop), unlike
     // playId, which resetSong() sets back to zero.
     if (!isCurrentRun(runKey, 'approaching')) return;
+    approachCountdown = null;
     // QUIRK: playerControlsStore.setSong(song) is intentionally left commented out - nothing
     // reads the stored song, kept as-is rather than deleted or reinstated.
     //playerControlsStore.setSong(song)
@@ -665,6 +676,7 @@
     setTicker(false);
     mode = undefined;
     activeRunKey = undefined;
+    approachCountdown = null;
     songTimestamp = 0;
     timeouts.forEach((timeout) => clearTimeout(timeout));
     timeouts.clear();
@@ -1102,3 +1114,50 @@
     {/snippet}
   </ShapeKeyboard>
 {/if}
+
+{#if approachCountdown !== null}
+  <div class="approach-countdown" role="status" aria-live="polite" aria-atomic="true">
+    {#key approachCountdown}
+      <span>{approachCountdown}</span>
+    {/key}
+  </div>
+{/if}
+
+<style>
+  :global(.keyboard-wrapper) {
+    position: relative;
+  }
+
+  .approach-countdown {
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    display: grid;
+    place-items: center;
+    pointer-events: none;
+    color: var(--accent);
+  }
+
+  .approach-countdown span {
+    font-size: clamp(5rem, 18vmin, 10rem);
+    font-weight: bold;
+    line-height: 1;
+    text-shadow:
+      0 0 0.3rem var(--background),
+      0 0 1rem var(--background);
+    animation: approach-countdown-pulse 0.35s ease-out;
+  }
+
+  @keyframes approach-countdown-pulse {
+    from {
+      opacity: 0;
+      transform: scale(1.35);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .approach-countdown span {
+      animation: none;
+    }
+  }
+</style>

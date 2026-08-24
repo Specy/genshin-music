@@ -5,6 +5,7 @@
   import IconBackwardStep from '~icons/fa6-solid/backward-step';
   import IconForwardStep from '~icons/fa6-solid/forward-step';
   import IconPlay from '~icons/fa6-solid/play';
+  import IconXmark from '~icons/fa6-solid/xmark';
 
   // Anchored to one Sheet Frame. Neither FloatingDropdown nor FloatingSelection fits: both are flow
   // siblings of their own trigger button, and this one is opened by whichever of dozens of frames
@@ -18,14 +19,26 @@
   // offset every position computed here by the card's own box.
   let {
     anchor,
+    isSectionStart,
+    isSectionEnd,
+    canRemoveSectionStart,
+    canRemoveSectionEnd,
     onSectionStart,
     onSectionEnd,
+    onRemoveSectionStart,
+    onRemoveSectionEnd,
     onGoTo,
     onClose,
   }: {
     anchor: HTMLElement;
+    isSectionStart: boolean;
+    isSectionEnd: boolean;
+    canRemoveSectionStart: boolean;
+    canRemoveSectionEnd: boolean;
     onSectionStart: () => void;
     onSectionEnd: () => void;
+    onRemoveSectionStart: () => void;
+    onRemoveSectionEnd: () => void;
     onGoTo: () => void;
     onClose: () => void;
   } = $props();
@@ -126,14 +139,28 @@
     ? 'visible'
     : 'hidden'}"
 >
-  <FloatingDropdownRow onclick={onSectionStart}>
-    <IconBackwardStep style="margin-right:0.4rem" />
-    <FloatingDropdownText text={t('player:section_starts_here')} />
-  </FloatingDropdownRow>
-  <FloatingDropdownRow onclick={onSectionEnd}>
-    <IconForwardStep style="margin-right:0.4rem" />
-    <FloatingDropdownText text={t('player:section_ends_here')} />
-  </FloatingDropdownRow>
+  {#if isSectionStart && canRemoveSectionStart}
+    <FloatingDropdownRow onclick={onRemoveSectionStart}>
+      <IconXmark style="margin-right:0.4rem" />
+      <FloatingDropdownText text={t('player:remove_section_start')} />
+    </FloatingDropdownRow>
+  {:else}
+    <FloatingDropdownRow onclick={onSectionStart} disabled={isSectionStart}>
+      <IconBackwardStep style="margin-right:0.4rem" />
+      <FloatingDropdownText text={t('player:section_starts_here')} />
+    </FloatingDropdownRow>
+  {/if}
+  {#if isSectionEnd && canRemoveSectionEnd}
+    <FloatingDropdownRow onclick={onRemoveSectionEnd}>
+      <IconXmark style="margin-right:0.4rem" />
+      <FloatingDropdownText text={t('player:remove_section_end')} />
+    </FloatingDropdownRow>
+  {:else}
+    <FloatingDropdownRow onclick={onSectionEnd} disabled={isSectionEnd}>
+      <IconForwardStep style="margin-right:0.4rem" />
+      <FloatingDropdownText text={t('player:section_ends_here')} />
+    </FloatingDropdownRow>
+  {/if}
   <FloatingDropdownRow onclick={onGoTo}>
     <IconPlay style="margin-right:0.4rem" />
     <FloatingDropdownText text={t('player:go_to_here')} />

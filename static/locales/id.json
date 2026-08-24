@@ -443,6 +443,8 @@
         "sheet_frame_options": "Opsi bingkai",
         "section_starts_here": "Bagian dimulai di sini",
         "section_ends_here": "Bagian berakhir di sini",
+        "remove_section_start": "Hapus awal bagian",
+        "remove_section_end": "Hapus akhir bagian",
         "go_to_here": "Pergi ke sini",
         "expand_sheet": "Perluas lembar",
         "collapse_sheet": "Ciutkan lembar"

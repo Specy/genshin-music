@@ -443,6 +443,8 @@
         "sheet_frame_options": "Çerçeve seçenekleri",
         "section_starts_here": "Bölüm burada başlıyor",
         "section_ends_here": "Bölüm burada bitiyor",
+        "remove_section_start": "Bölüm başlangıcını kaldır",
+        "remove_section_end": "Bölüm sonunu kaldır",
         "go_to_here": "Buraya git",
         "expand_sheet": "Sayfayı genişlet",
         "collapse_sheet": "Sayfayı daralt"

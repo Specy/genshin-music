@@ -91,7 +91,7 @@ describe('Sheet Card', () => {
         expect(frames()[0].querySelector('.sheet-frame-dimmed')).not.toBeNull()
     })
 
-    it('sets a bound from a frame without restarting, and pushes the partner it would cross', () => {
+    it('sets a bound, reports the change, and pushes the partner it would cross', () => {
         threeFramesOverTwoPages()
         playerControlsStore.setState({size: 5, position: 0, end: 1, current: 0})
         render()
@@ -106,7 +106,8 @@ describe('Sheet Card', () => {
         flushSync()
         expect(playerControlsStore.position).toBe(1)
         expect(playerControlsStore.end).toBe(5)
-        // the run is untouched; only the restart hint is asked to light
+        // The card owns only the bound mutation; its parent decides whether this callback lights a
+        // hint or immediately restarts an active run.
         expect(playerControlsStore.current).toBe(0)
         expect(onSectionChange).toHaveBeenCalledTimes(1)
         expect(onSeek).not.toHaveBeenCalled()
@@ -119,6 +120,50 @@ describe('Sheet Card', () => {
         flushSync()
         expect(playerControlsStore.end).toBe(1)
         expect(playerControlsStore.position).toBe(0)
+    })
+
+    it('removes a bound from its marked frame and disables the full-song boundary actions', () => {
+        const chunks = [frameChunk(0, 0), frameChunk(1, 3), frameChunk(4, 4)]
+        playerControlsStore.setPages([chunks])
+        playerControlsStore.setState({size: 5, position: 1, end: 4, current: 1})
+        render()
+
+        // This one frame carries both brackets, so both rows become removal actions.
+        frames()[1].querySelector('button')!.click()
+        flushSync()
+        expect(popoverItems().map(item => item.textContent?.trim()))
+            .toEqual(['Remove section start', 'Remove section end', 'Go to here'])
+        expect(popoverItems().slice(0, 2).every(item => !item.disabled)).toBe(true)
+
+        popoverItems()[0].click()
+        flushSync()
+        expect(playerControlsStore.position).toBe(0)
+        expect(playerControlsStore.end).toBe(4)
+        expect(onSectionChange).toHaveBeenCalledTimes(1)
+
+        // The start marker moved to frame 0, while frame 1 still owns the removable end marker.
+        frames()[1].querySelector('button')!.click()
+        flushSync()
+        expect(popoverItems().map(item => item.textContent?.trim()))
+            .toEqual(['Section starts here', 'Remove section end', 'Go to here'])
+        popoverItems()[1].click()
+        flushSync()
+        expect(playerControlsStore.end).toBe(5)
+        expect(onSectionChange).toHaveBeenCalledTimes(2)
+
+        // At the song extremes there is no narrower bound to remove. Keep the actions visible so
+        // the menu is stable, but disable the row that would be a no-op.
+        frames()[0].querySelector('button')!.click()
+        flushSync()
+        expect(popoverItems()[0].textContent?.trim()).toBe('Section starts here')
+        expect(popoverItems()[0].disabled).toBe(true)
+        frames()[0].querySelector('button')!.click()
+        flushSync()
+
+        frames()[2].querySelector('button')!.click()
+        flushSync()
+        expect(popoverItems()[1].textContent?.trim()).toBe('Section ends here')
+        expect(popoverItems()[1].disabled).toBe(true)
     })
 
     it('seeks to the frame first note, and keeps at most one popover open', () => {

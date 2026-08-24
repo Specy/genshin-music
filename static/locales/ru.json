@@ -443,6 +443,8 @@
         "sheet_frame_options": "Параметры рамки",
         "section_starts_here": "Раздел начинается здесь",
         "section_ends_here": "Раздел заканчивается здесь",
+        "remove_section_start": "Удалить начало раздела",
+        "remove_section_end": "Удалить конец раздела",
         "go_to_here": "Перейти сюда",
         "expand_sheet": "Развернуть партитуру",
         "collapse_sheet": "Свернуть партитуру"

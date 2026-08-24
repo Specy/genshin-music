@@ -181,7 +181,8 @@ class PlayerControlsStore {
    * start -> 0); the slider's thumbs clamp against each other instead, and the difference is
    * deliberate - a thumb is dragged against a visible partner, while a click on a distant frame
    * that silently did nothing reads as breakage, and two clicks must be enough to move the Section
-   * anywhere on the sheet. Neither touches `current`: setting a bound never restarts the run.
+   * anywhere on the sheet. Neither touches `current`: the caller decides whether the changed bound
+   * should restart an active run.
    */
   setSectionStart = (position: number) => {
     const start = clamp(position, 0, this.size);

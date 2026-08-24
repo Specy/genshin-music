@@ -61,6 +61,11 @@
     needsRefresh = true;
   }
 
+  function handleSectionChange() {
+    if (hasActiveSong) onRestart();
+    else toggleNeedsRefresh();
+  }
+
   // The hide-notes flag is only ever read in practice mode (PlayerKeyboard applies it as
   // `hideNotesInPracticeMode && mode === 'practice'`), so outside it the eye is shown disabled
   // rather than removed: the row's other controls must not shift every time the mode changes.
@@ -71,8 +76,8 @@
   // flips it a debounced tick after eventType changes, and that lag painted the button one frame
   // before the sliders vanished - a visible layout shift on leaving approaching mode.
   const hasActiveSong = $derived(songData.eventType !== 'stop');
-  // Audio recording stays available while a song plays; practice and approaching hide it.
-  const canRecordAudio = $derived(songData.eventType === 'stop' || songData.eventType === 'play');
+  // Song playback owns the audio graph; offer recording only in free-play/recording mode.
+  const canRecordAudio = $derived(songData.eventType === 'stop');
   const canChangeSpeed = $derived(songData.eventType !== 'practice');
 </script>
 
@@ -276,5 +281,5 @@
   </IconButton>
 </div>
 {#if isVisualSheetVisible}
-  <PlayerSheetCard columns={visualSheetColumns} {onSeek} onSectionChange={toggleNeedsRefresh} />
+  <PlayerSheetCard columns={visualSheetColumns} {onSeek} onSectionChange={handleSectionChange} />
 {/if}

@@ -443,6 +443,8 @@
     "sheet_frame_options": "Opciones del marco",
     "section_starts_here": "La sección comienza aquí",
     "section_ends_here": "La sección termina aquí",
+    "remove_section_start": "Eliminar inicio de sección",
+    "remove_section_end": "Eliminar final de sección",
     "go_to_here": "Ir aquí",
     "expand_sheet": "Expandir partitura",
     "collapse_sheet": "Contraer partitura"

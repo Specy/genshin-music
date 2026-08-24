@@ -443,6 +443,8 @@
     "sheet_frame_options": "프레임 옵션",
     "section_starts_here": "섹션이 여기서 시작됩니다",
     "section_ends_here": "섹션이 여기서 끝납니다",
+    "remove_section_start": "섹션 시작 지점 제거",
+    "remove_section_end": "섹션 끝 지점 제거",
     "go_to_here": "여기로 이동",
     "expand_sheet": "악보 펼치기",
     "collapse_sheet": "악보 접기"

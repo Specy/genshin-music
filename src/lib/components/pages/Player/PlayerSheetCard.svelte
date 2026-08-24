@@ -21,7 +21,7 @@
     columns: number;
     /** Restart the run at an absolute note index; the Section is left alone. */
     onSeek: (noteIndex: number) => void;
-    /** Light the restart hint, exactly as a slider thumb does. */
+    /** Apply a changed Section; the parent may restart an active run immediately. */
     onSectionChange: () => void;
   } = $props();
 
@@ -334,6 +334,20 @@
     withPopoverChunk((chunk) => {
       //the frame is INCLUDED: `end` is exclusive, so it lands one past the frame's last note
       playerControlsStore.setSectionEnd(chunk.lastNoteIndex + 1);
+      onSectionChange();
+    });
+  }
+
+  function removeSectionStart() {
+    withPopoverChunk(() => {
+      playerControlsStore.setSectionStart(0);
+      onSectionChange();
+    });
+  }
+
+  function removeSectionEnd() {
+    withPopoverChunk(() => {
+      playerControlsStore.setSectionEnd(playerControlsStore.size);
       onSectionChange();
     });
   }
@@ -767,8 +781,14 @@
 {#if activePopover}
   <PlayerFramePopover
     anchor={activePopover.element}
+    isSectionStart={activePopover.index === sectionFrames.first}
+    isSectionEnd={activePopover.index === sectionFrames.last}
+    canRemoveSectionStart={playerControlsStore.position > 0}
+    canRemoveSectionEnd={playerControlsStore.end < playerControlsStore.size}
     onSectionStart={setSectionStart}
     onSectionEnd={setSectionEnd}
+    onRemoveSectionStart={removeSectionStart}
+    onRemoveSectionEnd={removeSectionEnd}
     onGoTo={goToFrame}
     onClose={() => (popover = null)}
   />

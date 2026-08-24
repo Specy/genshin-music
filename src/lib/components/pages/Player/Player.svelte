@@ -489,6 +489,18 @@
     //transposed by moving the player's Basepoint, only silenced. The user's choice is not lost -
     //it is kept in settingsBeforeSong above and takes effect when the song is stopped.
     if (setting.key === 'pitch' && isPlayingSong()) restartSong();
+    if (
+      (setting.key === 'numberOfVisualRows' || setting.key === 'numberOfVisualColumns') &&
+      isPlayingSong()
+    ) {
+      // Page grouping is captured when a run is dispatched. While it is still running, seek from
+      // the next note so the rebuilt pages use the new dimensions without moving the Section the
+      // user drew. A completed run has no remaining range to seek through, so rebuild it from its
+      // Section instead.
+      const { current, runEnd } = playerControlsStore.state;
+      if (runEnd > 0 && current < runEnd) seekToNote(current);
+      else restartSong();
+    }
   }
 
   /** Is a song loaded AND running - i.e. is there a resolved note queue a change could invalidate? */

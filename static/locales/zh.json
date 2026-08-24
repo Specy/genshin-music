@@ -443,6 +443,8 @@
         "sheet_frame_options": "框架选项",
         "section_starts_here": "小节从这里开始",
         "section_ends_here": "小节在这里结束",
+        "remove_section_start": "移除小节起点",
+        "remove_section_end": "移除小节终点",
         "go_to_here": "前往这里",
         "expand_sheet": "展开乐谱",
         "collapse_sheet": "收起乐谱"

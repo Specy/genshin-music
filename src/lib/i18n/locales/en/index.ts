@@ -526,6 +526,8 @@ export const i18n_en = {
     sheet_frame_options: 'Frame options',
     section_starts_here: 'Section starts here',
     section_ends_here: 'Section ends here',
+    remove_section_start: 'Remove section start',
+    remove_section_end: 'Remove section end',
     go_to_here: 'Go to here',
     expand_sheet: 'Expand sheet',
     collapse_sheet: 'Collapse sheet',

@@ -443,6 +443,8 @@
         "sheet_frame_options": "フレームオプション",
         "section_starts_here": "セクションはここから始まります",
         "section_ends_here": "セクションはここで終わります",
+        "remove_section_start": "セクションの開始位置を削除",
+        "remove_section_end": "セクションの終了位置を削除",
         "go_to_here": "ここへ移動",
         "expand_sheet": "楽譜を展開",
         "collapse_sheet": "楽譜を折りたたむ"
