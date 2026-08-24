@@ -100,6 +100,10 @@
   .multiple-option-slider button {
     height: 100%;
     padding: 0 1.4rem;
+    /* Labels are localized and can run long ('Compositore normale', 'Обычный секвенсор');
+       hosts pin the row's height (e.g. .composer-view-selector at 2.5rem), so a wrapped
+       label would clip rather than grow the row. */
+    white-space: nowrap;
     color: var(--primary-text);
     transition: color 0.2s;
     z-index: 2;

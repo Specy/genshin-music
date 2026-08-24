@@ -127,7 +127,7 @@ export const i18n_en = {
     download: 'Download',
     download_midi: 'Download MIDI',
     pitch: 'Pitch', //audio pitch
-    bpm: 'bpm',
+    bpm: 'Tempo (BPM)',
     connect: 'Connect',
     import: 'Import',
     border: 'Border',
@@ -277,7 +277,7 @@ export const i18n_en = {
       composer_sync_tabs: 'Autoplay in all tabs (pc only)',
       composer_sync_tabs_description:
         'Advanced feature, it syncs other browser tabs to all play at the same time',
-      composer_pro_view: 'Pro view',
+      composer_pro_view: 'PRO composer',
       composer_pro_view_description:
         'Shows every semitone as its own row, with all the notes at their real pitch, and lets you add or remove them by tapping the canvas itself',
       sheet_visualizer_note_names: 'Show note names',
@@ -301,7 +301,7 @@ export const i18n_en = {
       player_pitch: 'Pitch',
       player_pitch_description:
         'The pitch of the player, will also be saved in the song you record',
-      player_bpm: 'Bpm',
+      player_bpm: 'Tempo (BPM)',
       player_bpm_description:
         'Beats per minute, used by the metronome and will be used when converting the song with the composer',
       player_metronome_beats: 'Metronome beats',
@@ -343,7 +343,7 @@ export const i18n_en = {
       vsrg_composer_keys: 'Keys',
       vsrg_composer_keys_description:
         'How many keys the song has, reducing this value will delete the notes in the extra keys',
-      vsrg_composer_bpm: 'Bpm',
+      vsrg_composer_bpm: 'Tempo (BPM)',
       vsrg_composer_bpm_description: 'Beats per minute, the speed of the song',
       vsrg_composer_pitch: 'Base pitch',
       vsrg_composer_pitch_description: 'The main pitch of the song',
@@ -384,7 +384,7 @@ export const i18n_en = {
       zen_metronome_beats_description: 'After how many times a stronger beat is played',
       zen_metronome_volume: 'Metronome volume',
       zen_metronome_volume_description: 'The volume of the metronome',
-      zen_metronome_bpm: 'Metronome bpm',
+      zen_metronome_bpm: 'Metronome tempo (BPM)',
       zen_metronome_bpm_description: 'The bpm of the metronome',
       zen_reverb: 'Reverb (cave mode)',
       zen_reverb_description: 'Makes it sound like you are in a cave',
@@ -675,8 +675,8 @@ export const i18n_en = {
     delete_themes: 'Delete themes',
   },
   composer: {
-    normal_view: 'Normal view',
-    pro_view: 'PRO view',
+    normal_view: 'Normal composer',
+    pro_view: 'PRO composer',
     add_new_page: 'Add new page',
     remove_column: 'Remove column',
     add_column: 'Add column',

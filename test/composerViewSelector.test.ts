@@ -34,11 +34,11 @@ describe('the Composer view selector', () => {
 
     const buttons = [...target.querySelectorAll<HTMLButtonElement>('.multiple-option-slider button')];
     expect(buttons.map((button) => button.textContent?.trim())).toEqual([
-      'Normal view',
-      'PRO view',
+      'Normal composer',
+      'PRO composer',
     ]);
     expect(target.querySelector('.multiple-options-selected')?.textContent?.trim()).toBe(
-      'Normal view'
+      'Normal composer'
     );
 
     buttons[1].click();
@@ -50,7 +50,7 @@ describe('the Composer view selector', () => {
     props.setting = { ...props.setting, value: true };
     flushSync();
     expect(target.querySelector('.multiple-options-selected')?.textContent?.trim()).toBe(
-      'PRO view'
+      'PRO composer'
     );
 
     buttons[0].click();
@@ -71,7 +71,9 @@ describe('the Composer view selector', () => {
     });
     flushSync();
 
-    expect(target.textContent).not.toContain('Pro view');
+    //the generic row's own label, which is settings.props.composer_pro_view - not the selector's
+    //button text, which reads the same words out of composer.pro_view and IS expected on screen
+    expect(target.textContent).not.toContain('PRO composer');
     expect(target.textContent).not.toContain('Autoplay in all tabs');
     expect(target.textContent).toContain('Smooth scrolling');
   });
