@@ -1,7 +1,6 @@
 <script lang="ts">
   import { onDestroy, tick } from 'svelte';
   import type { Chunk } from '$core/Songs/RecordedSong';
-  import { chunkIndexAt } from '$core/Songs/sectionChunks';
   import { playerControlsStore } from '$stores/PlayerControlsStore.svelte';
   import { playerStore } from '$stores/PlayerStore.svelte';
   import IconButton from '$cmp/inputs/IconButton.svelte';
@@ -270,22 +269,7 @@
    * the dimming from disagreeing - the markers always enclose exactly the undimmed run, however
    * many absolute indices the mode's playability filter left with no frame of their own.
    */
-  const sectionFrames = $derived.by(() => {
-    const { position, end } = playerControlsStore.state;
-    let first = -1;
-    let last = -1;
-    allChunks.forEach((chunk, i) => {
-      if (chunk.lastNoteIndex < position || chunk.firstNoteIndex >= end) return;
-      if (first < 0) first = i;
-      last = i;
-    });
-    //a Section that touches no frame at all still shows where it sits rather than losing its markers
-    if (first < 0) {
-      const fallback = chunkIndexAt(allChunks, position);
-      return { first: fallback, last: fallback };
-    }
-    return { first, last };
-  });
+  const sectionFrames = $derived(playerControlsStore.sectionFrames);
 
   /**
    * An open popover is anchored to a frame ELEMENT, and the frames are keyed by position: a page

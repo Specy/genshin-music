@@ -71,7 +71,8 @@ import {INSTRUMENTS} from './imports'
 
 type Mounted = ReturnType<typeof mount>
 const approachCountdown = [3, 2, 1] as const
-const approachCountdownStepMs = 2000 / approachCountdown.length
+const approachPreparationMs = 2000 * 0.65
+const approachCountdownStepMs = approachPreparationMs / approachCountdown.length
 
 describe('Player mode transition ownership', () => {
     let target: HTMLDivElement
@@ -297,8 +298,8 @@ describe('Player mode transition ownership', () => {
         expect(commitSongNote).toHaveBeenCalledTimes(song.notes.length)
         //every note reached the ear, and the recording hook was handed the sounding note's own id
         expect(recordSoundedNote.mock.calls.map(([id]) => id)).toEqual(song.notes.map(n => n.id))
-        //the cursor ends ON the run's exclusive end, which is what the slider's progress line
-        //divides by `size`; keeping the highlight off that end is the store's `runEnd` clamp
+        //the cursor ends ON the run's exclusive end; the frame-based slider turns that into the
+        //boundary after the final frame, while `runEnd` keeps the sheet highlight on that frame
         expect(playerControlsStore.current).toBe(song.notes.length)
         expect(playerControlsStore.currentGlobalChunkIndex)
             .toBe(playerControlsStore.pagesState.pages.flat().length - 1)
@@ -338,13 +339,14 @@ describe('Player mode transition ownership', () => {
         expect(target.querySelector('.approach-countdown')?.textContent?.trim()).toBe('3')
     })
 
-    it('shows 3, 2, 1 across an exactly two-second approach preparation', async () => {
+    it('shows 3, 2, 1 across the 35%-shorter approach preparation', async () => {
         await beginApproach()
 
         const durations = await finishApproachCountdown()
 
         expect(durations).toHaveLength(3)
-        expect(durations.reduce((total, duration) => total + duration, 0)).toBeCloseTo(2000, 6)
+        expect(durations.reduce((total, duration) => total + duration, 0))
+            .toBeCloseTo(approachPreparationMs, 6)
         expect(playerControlsStore.pagesState.pages.length).toBeGreaterThan(0)
     })
 
@@ -586,6 +588,57 @@ describe('Player mode transition ownership', () => {
         expect(playerControlsStore.pagesState.pages).toEqual([])
         expect(playerControlsStore.score).toEqual({correct: 1, wrong: 1, score: 0, combo: 0})
         expect(playerStore.keyboard.every(note => note.status === '')).toBe(true)
+    })
+
+    it.each(['play', 'practice', 'approaching', 'stop', 'restart', 'seek'] as const)(
+        'synchronously resets every outgoing note UI field before a %s transition',
+        transition => {
+            const song = buildRecordedSong()
+            const note = playerStore.keyboard[0]
+            note.setState({
+                status: 'toClickNext',
+                delay: 123,
+                animationId: 456,
+                holdMs: 789,
+                holdTimerMs: 321,
+            })
+            const previousHoldTimerId = note.data.holdTimerId
+
+            if (transition === 'play') playerStore.play(song, 0, song.notes.length)
+            if (transition === 'practice') playerStore.practice(song, 0, song.notes.length)
+            if (transition === 'approaching') playerStore.approaching(song, 0, song.notes.length)
+            if (transition === 'stop') playerStore.resetSong()
+            if (transition === 'restart') playerStore.restartSong(0, song.notes.length)
+            if (transition === 'seek') playerStore.seek(0, song.notes.length)
+
+            expect(note.data).toMatchObject({
+                status: '',
+                animationId: 0,
+                holdMs: 0,
+                holdTimerMs: 0,
+                holdTimerId: previousHoldTimerId + 1,
+            })
+        },
+    )
+
+    it('does not carry practice hints through a stop immediately followed by playback', async () => {
+        const song = await enterPractice()
+        const outgoingKeyboard = [...playerStore.keyboard]
+        expect(outgoingKeyboard.some(note => note.status === 'toClick')).toBe(true)
+        expect(outgoingKeyboard.some(note =>
+            note.status === 'toClickNext' || note.status === 'toClickAndNext')).toBe(true)
+
+        // This is deliberately back-to-back: the old debounced teardown has not had an
+        // opportunity to run before the replacement command arrives.
+        playerStore.resetSong()
+        playerStore.play(song, 0, song.notes.length)
+
+        expect(outgoingKeyboard.every(note => note.status === '')).toBe(true)
+        await vi.waitFor(() => expect(playerStore.eventType).toBe('play'))
+        await vi.waitFor(() =>
+            expect(playerControlsStore.pagesState.pages.length).toBeGreaterThan(0))
+        expect(playerStore.keyboard.every(note =>
+            !['toClick', 'toClickNext', 'toClickAndNext'].includes(note.status))).toBe(true)
     })
 
     it('does not apply an old practice click to a newer same-mode run during teardown', async () => {

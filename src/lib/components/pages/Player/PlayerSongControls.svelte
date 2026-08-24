@@ -260,7 +260,7 @@
       </IconButton>
     </div>
 
-    <PlayerSlider onChange={toggleNeedsRefresh} />
+    <PlayerSlider onChange={toggleNeedsRefresh} onCommit={handleSectionChange} />
     <IconButton
       toggled={needsRefresh}
       onclick={onRestart}

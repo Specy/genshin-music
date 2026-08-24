@@ -437,8 +437,8 @@
             onChange={changePitch}
           />
         </Row>
-        <Row gap="1rem" align="center" style="width:100%">
-          <Row flex1 justify="between" align="center" gap="0.4rem">
+        <Row gap="1rem" align="center" justify="between" style="width:100%">
+          <Row justify="between" align="center" gap="1rem">
             <div>{t('composer:midi_parser.include_accidentals')}:</div>
             <Switch
               checked={includeAccidentals}
@@ -446,8 +446,8 @@
               styleOuter={midiInputsStyle}
             />
           </Row>
-          <Row flex1 justify="between" align="center" gap="0.4rem">
-            <div class="row flex-centered">
+          <Row justify="between" align="center" gap="1rem">
+            <div class="row flex-centered" style="gap: 0.5rem">
               <span>{t('composer:midi_parser.include_out_of_range_notes')}:</span>
               <HelpTooltip buttonStyle="width:1.2rem;height:1.2rem">
                 {t('composer:midi_parser.include_out_of_range_notes_description')}
@@ -472,12 +472,6 @@
         </Column>
       </fieldset>
       <MidiStatsTable notes={totalNotes} {accidentals} {outOfRange} />
-      {#if merged > 0}
-        <Row justify="between" align="center" style="width:100%">
-          <div>{t('composer:midi_parser.merged_notes')}:</div>
-          <div>{merged}</div>
-        </Row>
-      {/if}
     {/if}
   </Column>
 </DecoratedCard>
@@ -501,6 +495,7 @@
 
   .midi-lock-notice {
     opacity: 0.85;
+    text-align: center;
   }
 
   /* No file yet: the settings are inert, and they LOOK it. The cursor lives on the fieldset -

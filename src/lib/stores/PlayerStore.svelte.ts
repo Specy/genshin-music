@@ -72,8 +72,12 @@ class PlayerStore {
       note.setState({
         status: '',
         delay: NOTE_ANIMATION_DELAY_MS,
+        animationId: 0,
         holdMs: 0,
         holdTimerMs: 0,
+        // Invalidate a release ring which the browser may still have in flight while this state
+        // reset and the next run are painted in the same frame.
+        holdTimerId: note.data.holdTimerId + 1,
       })
     );
   };
@@ -93,7 +97,18 @@ class PlayerStore {
   setState = (state: Partial<PlayerStoreState>) => {
     Object.assign(this.state, state);
   };
+  /**
+   * A transport command is also a keyboard-UI boundary. Clear the CURRENTLY published layout
+   * synchronously, before changing the event state: Player.svelte may replace that layout in its
+   * reaction to the new song, and the debounced PlayerKeyboard teardown would then only see the
+   * replacement. Clearing here prevents practice hints, held rings and click animations from
+   * being stranded on the outgoing layout and resurfacing in a later mode/song combination.
+   */
+  prepareTransition = () => {
+    this.resetKeyboardLayout();
+  };
   play = (song: SongTypesNonNull, start: number = 0, end?: number) => {
+    this.prepareTransition();
     this.setState({
       song,
       start,
@@ -105,6 +120,7 @@ class PlayerStore {
     });
   };
   practice = (song: SongTypesNonNull, start: number = 0, end: number) => {
+    this.prepareTransition();
     this.setState({
       song,
       start,
@@ -116,6 +132,7 @@ class PlayerStore {
     });
   };
   approaching = (song: SongTypesNonNull, start: number = 0, end: number) => {
+    this.prepareTransition();
     this.setState({
       song,
       start,
@@ -127,6 +144,7 @@ class PlayerStore {
     });
   };
   resetSong = () => {
+    this.prepareTransition();
     this.setState({
       song: null,
       eventType: 'stop',
@@ -138,6 +156,7 @@ class PlayerStore {
     });
   };
   restartSong = (start: number, end: number) => {
+    this.prepareTransition();
     this.setState({
       start,
       end,
@@ -151,6 +170,7 @@ class PlayerStore {
    * `preservesSection`. The mode is whatever is already running.
    */
   seek = (start: number, end: number) => {
+    this.prepareTransition();
     this.setState({
       start,
       end,

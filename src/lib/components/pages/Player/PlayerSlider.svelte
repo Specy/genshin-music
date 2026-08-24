@@ -5,14 +5,18 @@
   import { playerControlsStore } from '$stores/PlayerControlsStore.svelte';
   import './Slider.css';
 
-  // QUIRK: the .slider-current transform below divides by playerControlsStore.state.size with
-  // no zero-guard (unlike the start/end $derived values further down, which do check size !== 0)
-  // - when no song is loaded (size === 0) this evaluates to translateY(NaN%). Harmless only
-  // because PlayerSongControls.svelte hides this component's wrapper via display:none whenever
-  // there is no song - don't remove that hiding without also guarding this.
-  let { onChange }: { onChange?: (start: number, end: number) => void } = $props();
+  let {
+    onChange,
+    onCommit,
+  }: {
+    /** Live Section feedback while a thumb moves or a frame number is typed. */
+    onChange?: (start: number, end: number) => void;
+    /** One completed selector gesture; active playback restarts from the new Section here. */
+    onCommit?: (start: number, end: number) => void;
+  } = $props();
 
   let selectedThumb: 'start' | 'end' | null = $state(null);
+  let selectionChanged = false;
   let inputDimension: DOMRect = $state(DEFAULT_DOM_RECT);
   let inputsEnabled = $state(true);
   let thumb1: HTMLDivElement | undefined;
@@ -23,29 +27,55 @@
     //TODO remove the dependency and instead use the callback for the set state
     if (selectedThumb === null) return;
 
-    function resetSelection() {
-      if (selectedThumb !== null) selectedThumb = null;
-    }
-
-    window.addEventListener('pointerup', resetSelection);
-    window.addEventListener('blur', resetSelection);
+    window.addEventListener('pointerup', finishSelection);
+    window.addEventListener('pointercancel', finishSelection);
+    window.addEventListener('blur', finishSelection);
     return () => {
-      window.removeEventListener('pointerup', resetSelection);
-      window.removeEventListener('blur', resetSelection);
+      window.removeEventListener('pointerup', finishSelection);
+      window.removeEventListener('pointercancel', finishSelection);
+      window.removeEventListener('blur', finishSelection);
     };
   });
 
-  function handleSelectChange(val: number, type: 'start' | 'end') {
-    const state = playerControlsStore.state;
+  function publishChange(beforePosition: number, beforeEnd: number) {
+    if (beforePosition === playerControlsStore.position && beforeEnd === playerControlsStore.end)
+      return;
+    selectionChanged = true;
+    onChange?.(playerControlsStore.position, playerControlsStore.end);
+  }
+
+  /**
+   * Slider coordinates are FRAME BOUNDARIES: start 0 is before frame one, end N is after frame N.
+   * Converting only here keeps the store's playback bounds in their native absolute-note space.
+   */
+  function setFrameBoundary(value: number, type: 'start' | 'end') {
+    const count = frames.length;
+    if (count === 0) return;
+    const beforePosition = playerControlsStore.position;
+    const beforeEnd = playerControlsStore.end;
     if (type === 'start') {
-      playerControlsStore.setPosition(Math.max(0, Math.min(val, state.end)));
+      const lastAllowed = Math.max(0, sectionFrames.last);
+      const frameIndex = clamp(Math.round(value), 0, lastAllowed);
+      playerControlsStore.setSectionStart(frames[frameIndex].firstNoteIndex);
     } else {
-      playerControlsStore.setState({ end: Math.min(state.size, Math.max(val, state.position)) });
+      const firstAllowed = Math.max(0, sectionFrames.first);
+      const boundary = clamp(Math.round(value), firstAllowed + 1, count);
+      playerControlsStore.setSectionEnd(frames[boundary - 1].lastNoteIndex + 1);
     }
-    onChange?.(playerControlsStore.current, playerControlsStore.end);
+    publishChange(beforePosition, beforeEnd);
+  }
+
+  function handleSelectChange(val: number, type: 'start' | 'end') {
+    // Inputs show human-facing frame ordinals (1..N); only the start needs converting to its
+    // zero-based boundary. The end ordinal already equals the boundary after that frame.
+    setFrameBoundary(type === 'start' ? val - 1 : val, type);
   }
 
   function handleSliderClick(event: PointerEvent) {
+    // The frame-number fields sit beside the thumbs but are descendants of this hit area. Let a
+    // press in one edit/focus that field; treating its off-track coordinate as a drag would move
+    // the Section before the user had typed anything.
+    if ((event.target as Element | null)?.closest('.slider-input')) return;
     if (slider && thumb1 && thumb2) {
       const size = slider.getBoundingClientRect();
       const offset = event.clientY;
@@ -55,13 +85,25 @@
       const right = Math.abs(thumb2Position - offset);
       inputDimension = size;
       const currentThumb = left >= right ? 'end' : 'start';
-      selectedThumb = left >= right ? 'end' : 'start';
+      selectedThumb = currentThumb;
+      selectionChanged = false;
+      slider.setPointerCapture?.(event.pointerId);
       handleSliderMove(event, currentThumb);
     }
   }
 
-  function handleSliderLeave() {
+  function finishSelection() {
+    if (selectedThumb === null) return;
     selectedThumb = null;
+    if (!selectionChanged) return;
+    selectionChanged = false;
+    onCommit?.(playerControlsStore.position, playerControlsStore.end);
+  }
+
+  function commitInputChange() {
+    if (!selectionChanged) return;
+    selectionChanged = false;
+    onCommit?.(playerControlsStore.position, playerControlsStore.end);
   }
 
   function enableInputs(e: MouseEvent) {
@@ -76,35 +118,29 @@
   }
 
   function handleSliderMove(event: PointerEvent, override?: 'start' | 'end') {
-    if (selectedThumb === null && !override) return;
-    const currentThumb = override || selectedThumb;
+    const currentThumb = override ?? selectedThumb;
+    if (currentThumb === null) return;
     const sliderSize = inputDimension.height;
     const sliderOffset = inputDimension.y;
     const eventPosition = event.clientY - sliderOffset;
     //reverse the order from top to bottom
+    if (sliderSize <= 0 || frames.length === 0) return;
     const value = clamp(
-      Math.round((1 - eventPosition / sliderSize) * playerControlsStore.state.size),
+      Math.round((1 - eventPosition / sliderSize) * frames.length),
       0,
-      playerControlsStore.state.size
+      frames.length
     );
-    if (currentThumb === 'start') {
-      if (value - playerControlsStore.state.end < -1) playerControlsStore.setPosition(value);
-    } else {
-      if (value - playerControlsStore.state.position > 1)
-        playerControlsStore.setState({ end: value });
-    }
-    onChange?.(playerControlsStore.current, playerControlsStore.end);
+    setFrameBoundary(value, currentThumb);
   }
 
-  const start = $derived(
-    playerControlsStore.state.size !== 0
-      ? (playerControlsStore.state.position / playerControlsStore.state.size) * 100
-      : 0
-  );
-  const end = $derived(
-    playerControlsStore.state.size !== 0
-      ? (playerControlsStore.state.end / playerControlsStore.state.size) * 100
-      : 100
+  const frames = $derived(playerControlsStore.frames);
+  const sectionFrames = $derived(playerControlsStore.sectionFrames);
+  const startBoundary = $derived(sectionFrames.first < 0 ? 0 : sectionFrames.first);
+  const endBoundary = $derived(sectionFrames.last < 0 ? 0 : sectionFrames.last + 1);
+  const start = $derived(frames.length > 0 ? (startBoundary / frames.length) * 100 : 0);
+  const end = $derived(frames.length > 0 ? (endBoundary / frames.length) * 100 : 100);
+  const current = $derived(
+    frames.length > 0 ? (playerControlsStore.currentFrameBoundary / frames.length) * 100 : 0
   );
 </script>
 
@@ -113,32 +149,29 @@
 <div
   class="slider-outer"
   bind:this={slider}
-  onpointerup={handleSliderLeave}
+  onpointerup={finishSelection}
+  onpointercancel={finishSelection}
   onpointermove={handleSliderMove}
   onpointerdown={handleSliderClick}
 >
   <div class="slider-full">
-    <div
-      class="slider-current"
-      style="transform:translateY({(
-        100 -
-        (playerControlsStore.state.current / playerControlsStore.state.size) * 100
-      ).toFixed(1)}%)"
-    ></div>
+    <div class="slider-current" style="transform:translateY({(100 - current).toFixed(1)}%)"></div>
   </div>
   <div class="two-way-slider">
     <div class="two-way-slider-thumb" style="bottom:calc({end}% - 18px)" bind:this={thumb2}>
-      <!-- oninput (not onchange) on both thumbs: commits live per keystroke, matching the
-                 drag-thumb's live feedback - onchange would only commit on blur. -->
+      <!-- oninput updates live per keystroke, matching drag feedback; onchange commits once. -->
       <input
         type="number"
         class="slider-input"
         style="font-size:0.8rem"
-        value={playerControlsStore.state.end}
+        value={endBoundary}
+        min={Math.max(1, startBoundary + 1)}
+        max={frames.length}
         onclick={enableInputs}
         readonly={!inputsEnabled}
         onblur={disableInputs}
         oninput={(e) => handleSelectChange(+e.currentTarget.value, 'end')}
+        onchange={commitInputChange}
       />
       <svg
         stroke="currentColor"
@@ -160,11 +193,14 @@
         type="number"
         class="slider-input"
         style="font-size:0.8rem"
-        value={playerControlsStore.state.position}
+        value={startBoundary + 1}
+        min={1}
+        max={Math.max(1, endBoundary)}
         onclick={enableInputs}
         readonly={!inputsEnabled}
         onblur={disableInputs}
         oninput={(e) => handleSelectChange(+e.currentTarget.value, 'start')}
+        onchange={commitInputChange}
       />
       <svg
         stroke="currentColor"

@@ -3711,6 +3711,11 @@ select {
     min-height: 2.6rem;
   }
 
+  .instrument-button-with-solo {
+    height: 3.8rem;
+    min-height: 3.8rem;
+  }
+
   .instrument-button-selected {
     height: 4.5rem;
     min-height: 4.5rem;

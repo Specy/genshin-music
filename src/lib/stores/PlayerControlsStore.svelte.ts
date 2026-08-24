@@ -108,6 +108,50 @@ class PlayerControlsStore {
     return this.currentPage[this.cursor.chunkIndex];
   }
 
+  /** Every Sheet Frame in whole-song order, independent of page breaks. */
+  get frames(): Chunk[] {
+    return this.pagesState.pages.flat();
+  }
+
+  /**
+   * The inclusive Sheet Frame indexes touched by the Section. Both the Sheet Card and the right
+   * selector consume this one answer so their brackets/thumbs cannot round note bounds into
+   * different frames. A Section inside a mode-filtered gap parks both bounds on the same forward
+   * frame, matching the cursor's `chunkIndexAt` rule.
+   */
+  get sectionFrames(): { first: number; last: number } {
+    const frames = this.frames;
+    const { position, end } = this.state;
+    let first = -1;
+    let last = -1;
+    frames.forEach((chunk, index) => {
+      if (chunk.lastNoteIndex < position || chunk.firstNoteIndex >= end) return;
+      if (first < 0) first = index;
+      last = index;
+    });
+    if (first >= 0) return { first, last };
+    const fallback = chunkIndexAt(frames, position);
+    return { first: fallback, last: fallback };
+  }
+
+  /**
+   * The cursor as a boundary between Sheet Frames: 0 is before frame one and `frames.length` is
+   * after the last frame. It stays fixed while notes inside one frame resolve, then advances once
+   * to the next frame. Finishing a run advances past its last selected frame even when the
+   * Section cuts through the middle of that frame.
+   */
+  get currentFrameBoundary(): number {
+    const index = this.currentGlobalChunkIndex;
+    if (index < 0) return 0;
+    const chunk = this.frames[index];
+    if (
+      (this.state.runEnd > 0 && this.current >= this.state.runEnd) ||
+      (chunk && this.current > chunk.lastNoteIndex)
+    )
+      return index + 1;
+    return index;
+  }
+
   get position(): number {
     return this.state.position;
   }
@@ -178,11 +222,11 @@ class PlayerControlsStore {
   /**
    * SECTION BOUNDS, CHOSEN-BOUND-WINS (ADR-0010). A bound set from a Sheet Frame lands where it was
    * asked to and pushes its partner to the extreme it would have crossed (end -> song length,
-   * start -> 0); the slider's thumbs clamp against each other instead, and the difference is
-   * deliberate - a thumb is dragged against a visible partner, while a click on a distant frame
-   * that silently did nothing reads as breakage, and two clicks must be enough to move the Section
-   * anywhere on the sheet. Neither touches `current`: the caller decides whether the changed bound
-   * should restart an active run.
+   * start -> 0); the right selector's frame thumbs clamp against each other instead, and the
+   * difference is deliberate - a thumb is dragged against a visible partner, while a click on a
+   * distant frame that silently did nothing reads as breakage, and two clicks must be enough to
+   * move the Section anywhere on the sheet. Neither touches `current`: the caller decides whether
+   * the changed bound should restart an active run.
    */
   setSectionStart = (position: number) => {
     const start = clamp(position, 0, this.size);

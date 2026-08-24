@@ -118,4 +118,93 @@ describe('Player song controls', () => {
         expect(playerControlsStore.position).toBe(0)
         expect(onRestart).toHaveBeenCalledTimes(2)
     })
+
+    it('shows and advances the right selector in Sheet Frames instead of notes', () => {
+        const frame = (first: number, last: number) => {
+            const recorded = new RecordedNote(0, first * 100)
+            recorded.displayButton = 0
+            return new Chunk([recorded], 0, first, last)
+        }
+        playerControlsStore.setPages([[frame(0, 2), frame(3, 4), frame(5, 8)]])
+        playerControlsStore.setState({position: 0, current: 0, size: 9, end: 9, runEnd: 9})
+        playerStore.setState({eventType: 'play'})
+        flushSync()
+
+        const inputs = target.querySelectorAll<HTMLInputElement>('.slider-input')
+        const endInput = inputs[0]
+        const startInput = inputs[1]
+        expect(startInput.value).toBe('1')
+        expect(endInput.value).toBe('3')
+
+        startInput.value = '2'
+        startInput.dispatchEvent(new Event('input', {bubbles: true}))
+        flushSync()
+        // Frame two begins at absolute note 3; raw note 2 is inside frame one.
+        expect(playerControlsStore.position).toBe(3)
+
+        endInput.value = '2'
+        endInput.dispatchEvent(new Event('input', {bubbles: true}))
+        flushSync()
+        // Frame two ends at absolute note 4, so the playback end remains exclusive at 5.
+        expect(playerControlsStore.end).toBe(5)
+
+        playerControlsStore.setState({position: 0, current: 0, end: 9, runEnd: 9})
+        flushSync()
+        const progress = target.querySelector<HTMLElement>('.slider-current')!
+        expect(progress.style.transform).toBe('translateY(100.0%)')
+        playerControlsStore.setCurrent(3)
+        flushSync()
+        expect(progress.style.transform).toBe('translateY(66.7%)')
+        // A second note inside the same frame does not move a frame-based cursor.
+        playerControlsStore.setCurrent(4)
+        flushSync()
+        expect(progress.style.transform).toBe('translateY(66.7%)')
+        playerControlsStore.setCurrent(9)
+        flushSync()
+        expect(progress.style.transform).toBe('translateY(0.0%)')
+    })
+
+    it('restarts an active run once when a frame-selector drag is released', () => {
+        const frame = (first: number, last: number) => {
+            const recorded = new RecordedNote(0, first * 100)
+            recorded.displayButton = 0
+            return new Chunk([recorded], 0, first, last)
+        }
+        playerControlsStore.setPages([[frame(0, 2), frame(3, 4), frame(5, 8)]])
+        playerControlsStore.setState({position: 0, current: 0, size: 9, end: 9, runEnd: 9})
+        playerStore.setState({eventType: 'play'})
+        flushSync()
+
+        const slider = target.querySelector<HTMLElement>('.slider-outer')!
+        const thumbs = target.querySelectorAll<HTMLElement>('.two-way-slider-thumb')
+        slider.getBoundingClientRect = () => ({
+            x: 0, y: 0, width: 16, height: 100, top: 0, right: 16, bottom: 100, left: 0,
+            toJSON: () => ({}),
+        })
+        thumbs[0].getBoundingClientRect = () => ({
+            x: 0, y: 0, width: 16, height: 16, top: 0, right: 16, bottom: 16, left: 0,
+            toJSON: () => ({}),
+        })
+        thumbs[1].getBoundingClientRect = () => ({
+            x: 0, y: 100, width: 16, height: 16, top: 100, right: 16, bottom: 116, left: 0,
+            toJSON: () => ({}),
+        })
+        const press = new Event('pointerdown', {bubbles: true, cancelable: true})
+        Object.defineProperties(press, {
+            clientY: {value: 65},
+            pointerId: {value: 7},
+        })
+        slider.dispatchEvent(press)
+        flushSync()
+
+        expect(playerControlsStore.position).toBe(3)
+        expect(onRestart).not.toHaveBeenCalled()
+
+        window.dispatchEvent(new Event('pointerup'))
+        flushSync()
+        expect(onRestart).toHaveBeenCalledTimes(1)
+        window.dispatchEvent(new Event('pointerup'))
+        flushSync()
+        expect(onRestart).toHaveBeenCalledTimes(1)
+    })
 })

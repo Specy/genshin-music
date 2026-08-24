@@ -83,7 +83,8 @@
   } = $props();
 
   let approachRate = $state(1500);
-  const approachPreparationMs = 2000;
+  // 35% shorter than the original two-second preparation, while retaining three equal beats.
+  const approachPreparationMs = 2000 * 0.65;
   const approachCountdownValues = [3, 2, 1] as const;
   let approachCountdown: (typeof approachCountdownValues)[number] | null = $state(null);
   let approachingNotesList: ApproachingNote[] = [];
@@ -345,8 +346,8 @@
     if (!hasChanges) return;
     // Finished when the approach queue is EMPTY, asked of the queue directly rather than inferred
     // from note indices. The previous test was `current + removed === size`: `removed` counts only
-    // notes that actually reached a row, while `size` is the song's full note count - PlayerSlider
-    // divides `position` and `end` by it, so `size` has to stay the song's length. The two meet
+    // notes that actually reached a row, while `size` is the song's full note count and the
+    // Section/run bounds remain absolute note indexes. The two meet
     // only when every note of the song reaches the grid, so anything that drops a note stalls the
     // test one short forever: a user-selected `end` below the song's length, and now also a note
     // the out-of-grid filter above skips because a wider track put it on a row this grid lacks.
@@ -1129,13 +1130,13 @@
   }
 
   .approach-countdown {
-    position: absolute;
-    inset: 0;
-    z-index: 3;
-    display: grid;
-    place-items: center;
+    position: fixed;
+    inset: max(1rem, env(safe-area-inset-top)) 0 auto;
+    z-index: 42;
+    display: flex;
+    justify-content: center;
     pointer-events: none;
-    color: var(--accent);
+    color: var(--background-text);
   }
 
   .approach-countdown span {
@@ -1145,7 +1146,7 @@
     text-shadow:
       0 0 0.3rem var(--background),
       0 0 1rem var(--background);
-    animation: approach-countdown-pulse 0.35s ease-out;
+    animation: approach-countdown-pulse 0.23s ease-out;
   }
 
   @keyframes approach-countdown-pulse {

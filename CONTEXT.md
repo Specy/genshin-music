@@ -123,7 +123,7 @@ _Avoid_: drag-to-resize (suggests grabbing the tail and snapping it to a positio
 ### Player
 
 **Section**:
-The contiguous stretch of a song a player run performs — play, practice and approaching all bound themselves to it. Note-granular (start inclusive, end exclusive), settable from the slider or frame-by-frame from the Sheet Card, and independent of Loop, which only auto-restarts the Section when a run finishes.
+The contiguous stretch of Sheet Frames a player run performs — play, practice and approaching all share its frame-snapped bounds. It is independent of Loop, which only auto-restarts the Section when a run finishes.
 _Avoid_: loop range (Loop is the repeat toggle, not the bounds), range (overloaded — see Editable Zone), selection
 
 **Chunk**:

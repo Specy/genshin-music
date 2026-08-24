@@ -152,7 +152,7 @@ describe('derived chunk/page cursor', () => {
     })
 
     // A finished run parks `current` ON its exclusive end so the slider's progress line reaches the
-    // end (PlayerSlider divides current/size). The frame lookup is the other consumer of the same
+    // end. PlayerSlider maps it to the boundary after the frame; the sheet highlight is the other consumer of the same
     // number and must NOT overshoot, so it is taken one note inside `runEnd`.
     it('derives the run\'s LAST frame when `current` lands on the run end, not the one after it', () => {
         playerControlsStore.setPages([wholeSong()])
