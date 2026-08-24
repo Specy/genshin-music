@@ -414,7 +414,7 @@
         "merge_empty_spaces": "Fazla boşlukları birleştir",
         "no_song_selected": "Müzik seçilmedi",
         "print_as_pdf": "PDF olarak yazdır",
-        "sheet_visualizer_instructions": "Soldaki menüden şarkı seç\n Buradan bir şarkıyı interaktif olarak öğrenebileceğini unutma\n Pratik aracı oynatma menüsünde",
+        "sheet_visualizer_instructions": "Menüden şarkı seç\n Buradan bir şarkıyı interaktif olarak öğrenebileceğini unutma\n Pratik aracı oynatma menüsünde",
         "different_color_rows": "Renkli satırlar",
         "per_row": "Satır sayısı",
         "invalid_song_to_visualize": "Geçersiz şarkı, bu şarkı bestelenmedi ya da kaydedilmedi",

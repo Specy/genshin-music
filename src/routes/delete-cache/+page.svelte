@@ -55,9 +55,32 @@
 
 <DefaultPage>
   <PageMetadata text={game.meta.title} />
-  <Column gap="1rem">
+  <Column class="cache-column" gap="1rem">
     <Header>{t('cache:reset_cache')}</Header>
-    <div>{t('cache:reset_cache_message')}</div>
+    <div class="cache-message">{t('cache:reset_cache_message')}</div>
     <AppButton onclick={clearCache}>{t('cache:clear_cache')}</AppButton>
   </Column>
 </DefaultPage>
+
+<style>
+  /* PORTRAIT ONLY - the landscape layout is untouched.
+     The one button on the page is the manual fallback for the automatic clear that runs on
+     mount, so it has to be comfortably pressable with a thumb: the shared `.app-button` is
+     32px tall, which is under every touch-target guideline. The paragraph above it gets the
+     leading a narrow column wants.
+
+     :global() with a page-unique class as the anchor, the same idiom the transfer page uses:
+     "cache-column" is handed to Column's class prop and lands on Column's OWN root element
+     (carrying that component's scoping hash, not this page's), and `.app-button` is defined
+     in the global App.css and rendered from inside AppButton - neither one can be reached by
+     a rule carrying this file's hash. The unique class name is what keeps it from leaking. */
+  @media (orientation: portrait) {
+    :global(.cache-column .app-button) {
+      min-height: 2.75rem;
+    }
+
+    .cache-message {
+      line-height: 1.5;
+    }
+  }
+</style>

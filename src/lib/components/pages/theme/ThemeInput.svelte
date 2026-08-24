@@ -32,7 +32,6 @@
   </div>
   <input
     class="theme-input"
-    style="width:9rem"
     placeholder="Write here"
     {disabled}
     {value}
@@ -43,3 +42,30 @@
     oninput={(e) => onChange(e.currentTarget.value)}
   />
 </div>
+
+<style>
+  /* The 9rem width used to be an inline `style` on the input. It is a scoped rule now purely so
+     the portrait block below can widen the field without having to out-shout an inline
+     declaration with !important - the landscape width is the same 9rem it always was. */
+  .theme-input {
+    width: 9rem;
+  }
+
+  /* PORTRAIT: side by side, a label that wraps to three lines ("Composer Background image (URL)")
+     sits next to a 144px box showing about a dozen characters of a URL, with the gutter between
+     them empty. Stacked, the label gets the row's full width and the field becomes a full-width,
+     thumb-height target. */
+  @media (orientation: portrait) {
+    .theme-row {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 0.4rem;
+      padding: 0.6rem;
+    }
+
+    .theme-input {
+      width: 100%;
+      padding: 0.7rem 1rem;
+    }
+  }
+</style>

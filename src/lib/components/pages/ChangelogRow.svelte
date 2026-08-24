@@ -95,4 +95,30 @@
     margin-top: 0.2rem;
     margin-left: 1rem;
   }
+
+  /* PORTRAIT. Width-tiered as well as orientation-keyed to match App.css's own
+     `max-width: 920px and (orientation: portrait)` block - a portrait tablet is a wide window that
+     keeps the desktop margins and does not need any of this. */
+  @media screen and (orientation: portrait) and (max-width: 920px) {
+    /* THE INDENT WAS THE WHOLE PROBLEM: 2.5rem of margin + 2rem of left padding + the list's own
+       ~40px marker gutter is 112px, nearly a third of a 393px screen, and the changes are long
+       sentences. The timeline rail stays - it is what makes this read as a changelog - it just
+       costs a quarter of what it did, which buys the text back about 23% of its line length.
+       The route's `.changelog-ending` repeats this margin so the dashed tail still lines up. */
+    .changelog-list {
+      margin-left: 1.25rem;
+      padding: 0.85rem 0 0.85rem 1rem;
+    }
+
+    .changelog-list ul {
+      padding-left: 1.2rem;
+    }
+
+    /* Release titles run long ("New app, sustained notes, smooth scrolling, new instruments"), and
+       at 1.5rem the newest one spent three lines of a 393px screen saying so before a single
+       change was visible. Still clearly the heading of its block, just not the whole first screen. */
+    .cll-1 {
+      font-size: 1.25rem;
+    }
+  }
 </style>

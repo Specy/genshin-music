@@ -110,6 +110,36 @@
     }
   }
 
+  /* PORTRAIT: 50vw of a phone is ~200px, which the shrink-to-fit width above then turns into a
+     ragged column of rows each as wide as its own label happened to be, with the key button
+     landing in a different place on every line. One full-width row per shortcut instead - the
+     label reads on the left, every key button lines up on the right edge, and long labels wrap
+     inside the row rather than widening it. Must stay AFTER the max-width block above, which it
+     overrides at equal specificity. */
+  @media (orientation: portrait) {
+    .shortcut-element {
+      width: 100%;
+      min-width: 0;
+    }
+  }
+
+  /* SMALLEST PHONES ONLY. The label half is a <Row>, i.e. a nested flex box, so its min-content
+     floor is the label AND the "(Holdable)" chip side by side, and it refuses to shrink below
+     that. Under ~353px that floor plus the widest key badge stops fitting the line and the badge
+     is pushed clean out of the row's rounded background - by 35px at 320px, where it also takes
+     2px past the right edge of the document and gives the whole page a sideways scroll (worst
+     rows: "Previous/Next breakpoint" with ArrowLeft/ArrowRight). Letting the label wrap fixes it,
+     but wrapping also RE-BREAKS labels at widths where they already fit, so this is capped to the
+     sub-360px tier rather than applied to all of portrait: 360px and up keeps exactly the line
+     breaks the rest of this page was laid out around (verified pixel-identical at 360, 393 and
+     852). :global is required because Row writes the .row class onto markup of its own. */
+  @media (orientation: portrait) and (max-width: 359px) {
+    .shortcut-element > :global(.row:first-child) {
+      min-width: 0;
+      flex-wrap: wrap;
+    }
+  }
+
   .shortcut-element-selected {
     outline: solid 0.1rem var(--accent);
   }

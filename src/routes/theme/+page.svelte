@@ -264,3 +264,29 @@
     />
   {/key}
 </DefaultPage>
+
+<style>
+  /* PORTRAIT. The page is already a single scrolling column, so nothing here has to be
+     un-stacked - what breaks on a phone is density. Both fixes live in this scoped block rather
+     than in Theme.css because that file is loaded globally and its `.color-picker-*` rules are
+     shared with the Settings pane's picker; a scoped rule on markup this file owns also outranks
+     the global one on specificity alone, so source order between the two files stops mattering. */
+  @media (orientation: portrait) {
+    /* Four cards across 361px leaves ~80px each and every name ellipses down to "Rai. . .".
+       auto-fill rather than a hard `repeat(2, ...)` so a portrait TABLET, which is wide enough
+       for three or four, still fills its row instead of showing two enormous tiles. */
+    .theme-preview-wrapper {
+      grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr));
+    }
+
+    /* Theme.css's phone tier sizes this box at `100vh - 3rem`, which in portrait is taller than
+       the screen minus the shell's bottom bar: the box's own bottom edge - and the mini-app's
+       menu, which `inPreview` parks at the bottom of it - end up underneath that bar. Reserving
+       the bar plus the "Preview" heading brings the whole preview into one screen, and the cap
+       keeps a tall tablet from turning it into a page of its own. svh, not vh, so a mobile
+       browser's collapsing toolbar cannot push the bottom edge back under the bar. */
+    .theme-app-preview {
+      height: min(calc(100svh - var(--menu-size) - 6rem), 40rem);
+    }
+  }
+</style>

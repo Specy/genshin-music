@@ -85,7 +85,11 @@
   });
 </script>
 
-<DefaultPage>
+<!-- `keybinds-page` is a scoping handle, not a style: it rides DefaultPage's own class prop onto
+     the page root so the :global() overrides at the bottom of this file (classes that live in
+     App.css, or on elements child components write) can be confined to this page's subtree
+     instead of leaking to every page that uses the same class. -->
+<DefaultPage class="keybinds-page">
   <PageMetadata
     text={t('home:keybinds_or_midi_name')}
     description="Change the app keyboard keybinds and MIDI input keys"
@@ -113,7 +117,7 @@
           <ShapeKeyboard
             shape={baseInstrument.shape}
             notes={baseInstrument.notes}
-            class="keyboard"
+            class="keyboard keybinds-keyboard"
             style="margin:1rem 0"
           >
             {#snippet button(note)}
@@ -147,8 +151,13 @@
           }}
         />
         <!-- Wheel gestures listed with the shortcuts they live beside, but not through the
-             editor: they are not key combos and cannot be rebound (see COMPOSER_WHEEL_SHORTCUTS). -->
-        {@render fixedShortcutsTable(COMPOSER_WHEEL_SHORTCUTS)}
+             editor: they are not key combos and cannot be rebound (see COMPOSER_WHEEL_SHORTCUTS).
+             The wrapper is `display:contents` outside portrait (see the style block) so it is not
+             a box at all there and the table stays the card's own flex child, exactly as before;
+             in portrait it becomes the table's own scroll container. -->
+        <div class="table-scroller">
+          {@render fixedShortcutsTable(COMPOSER_WHEEL_SHORTCUTS)}
+        </div>
       </Card>
 
       <Card background="none" border="secondary" gap="0.8rem">
@@ -220,7 +229,7 @@
   <Header type="h4">
     {keys.length} keys
   </Header>
-  <div class="row">
+  <div class="row vsrg-key-row">
     {#each keys as key, i (i)}
       <VsrgKey
         letter={key}
@@ -233,3 +242,65 @@
     {/each}
   </div>
 {/snippet}
+
+<style>
+  /* Outside portrait this element must not exist as far as layout is concerned: the table it
+     wraps was a direct flex child of its Card, and `display:contents` keeps it one. */
+  .table-scroller {
+    display: contents;
+  }
+
+  /* PORTRAIT. Nothing on this page is side-by-side by nature - it is a stack of cards holding
+     label/control pairs - so adapting it is mostly a matter of letting each of those pairs use
+     the full ~330px a phone gives instead of a width that was picked for a desktop window.
+     Landscape (and every window wider than it is tall) is untouched by design. */
+  @media (orientation: portrait) {
+    /* Where the wrapper turns into a real box: if the table ever does outgrow the card (a long
+       key combo in some locale), it scrolls here rather than widening the page. */
+    .table-scroller {
+      display: block;
+      max-width: 100%;
+      overflow-x: auto;
+    }
+
+    /* The wheel-gesture table's key badge is a fixed 10rem in App.css, which left its
+       description column ~150px and four lines tall. Sized to its content it gives that space
+       back; nowrap because a flex row shrank the badge until the combo itself wrapped instead.
+       The badge keeps App.css's own min-width, so short keys stay aligned. */
+    :global(.keybinds-page .keyboard-key) {
+      width: auto;
+      white-space: nowrap;
+    }
+
+    /* Same reasoning as MidiSetup's own note grid: `.note` is sized in vw, so it gets SMALLER
+       as the viewport narrows - backwards for a touch target. The grid is repeat(columns, 1fr),
+       so giving it the card's width is enough for the cells to divide it evenly whatever the
+       Shape's column count is, and the note is addressed as the hitbox's only child rather than
+       by the game-config-supplied class name it carries. The 26rem ceiling is for the wide kind
+       of portrait viewport (rotated monitor, portrait tablet), where filling the card would blow
+       each button up to something absurd. */
+    :global(.keyboard.keybinds-keyboard) {
+      width: min(100%, 26rem);
+    }
+
+    :global(.keybinds-keyboard .button-hitbox-bigger) {
+      width: 100%;
+    }
+
+    :global(.keybinds-keyboard .button-hitbox-bigger > div) {
+      width: 100%;
+      height: auto;
+      aspect-ratio: 1;
+    }
+
+    /* Six 3.5rem circles do not fit across a phone, and a flex row's default shrink squashed
+       them into ellipses rather than overflowing. They wrap instead, at full size. */
+    .vsrg-key-row {
+      flex-wrap: wrap;
+    }
+
+    .vsrg-key-row :global(.vsrg-player-key-circle) {
+      flex-shrink: 0;
+    }
+  }
+</style>

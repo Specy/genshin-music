@@ -414,7 +414,7 @@
         "merge_empty_spaces": "Merge empty spaces",
         "no_song_selected": "No song selected",
         "print_as_pdf": "Print as PDF",
-        "sheet_visualizer_instructions": "Select a song from the menu on the left.\n                    Remember that you can learn a song with the interactive\n                    practice tool in the Player",
+        "sheet_visualizer_instructions": "Select a song from the menu.\n                    Remember that you can learn a song with the interactive\n                    practice tool in the Player",
         "different_color_rows": "Чередовать цвета строк",
         "per_row": "Per row",
         "invalid_song_to_visualize": "Invalid song, it is not composed or recorded",

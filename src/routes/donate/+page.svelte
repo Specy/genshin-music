@@ -62,4 +62,39 @@
     background-color: white;
     padding: 0.5rem 1rem;
   }
+
+  /* PORTRAIT: the row above puts the two badges at opposite ends of a ~360px line, each a
+     narrow island with a gulf of empty page between them. Stacked full-width cards read as a
+     deliberate pair of buttons instead, and hand the thumb the whole width of the screen.
+     The text loses its own 1rem side margin too - the page wrapper already insets it that
+     much in portrait, and doubling it squeezed the paragraph to ~329px of measure. */
+  @media (orientation: portrait) {
+    .donate-text {
+      margin: 0;
+    }
+
+    .donation-wrapper {
+      flex-direction: column;
+      flex-wrap: nowrap;
+      align-items: stretch;
+      gap: 0.75rem;
+      margin-top: 1.5rem;
+    }
+
+    .donation-wrapper a {
+      margin-top: 0;
+    }
+
+    .paypal,
+    .kofi {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      /* height gives way to the padding: the badge images keep their own inline heights
+         (3rem / 2rem) and the card grows around them to one consistent size. */
+      height: auto;
+      min-height: 4rem;
+      padding: 0.5rem 1rem;
+    }
+  }
 </style>

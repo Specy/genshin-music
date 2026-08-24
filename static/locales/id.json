@@ -414,7 +414,7 @@
         "merge_empty_spaces": "Gabungkan ruang kosong",
         "no_song_selected": "Tidak ada lagu yang dipilih",
         "print_as_pdf": "Cetak sebagai PDF",
-        "sheet_visualizer_instructions": "Pilih lagu dari menu di sebelah kiri.\n                    Ingatlah bahwa Anda dapat mempelajari lagu dengan\n                    alat latihan interaktif di Player",
+        "sheet_visualizer_instructions": "Pilih lagu dari menu.\n                    Ingatlah bahwa Anda dapat mempelajari lagu dengan\n                    alat latihan interaktif di Player",
         "per_row": "Per baris",
         "invalid_song_to_visualize": "Lagu tidak valid, tidak disusun atau direkam",
         "error_converting_to_visual_song_try_convert_in_recorded": "Terjadi kesalahan saat mengonversi lagu ke lagu visual, mencoba mengonversi ke lagu yang direkam terlebih dahulu...",

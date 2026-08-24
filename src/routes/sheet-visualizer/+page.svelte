@@ -53,6 +53,9 @@
     // wide each one ends up is a measurement rather than something a threshold can express. This
     // is the guard the old +/- buttons carried - asking for more frames does nothing once the ones
     // on screen are already under 50px - kept here because it is the only place that can see them.
+    // In portrait the stylesheet holds its own floor (7rem a frame), so the measurement below
+    // never falls that far there and this guard simply never fires; the CSS clamp is what stops
+    // the frames shrinking instead.
     if (key === 'framesPerRow' && ref) {
       const requested = data.value as number;
       const frame = ref.children[0]?.children[0] as HTMLDivElement | undefined;
@@ -132,15 +135,15 @@
       {currentSong ? currentSong?.name : ''}
     </h1>
     <div style="width:100%" class="noprint">
-      <div style="display:flex;justify-content:space-between;align-items:center">
-        <h2 class="text-ellipsis" style="margin-top:0.8rem">
+      <div class="sheet-header">
+        <h2 class="sheet-title text-ellipsis" style="margin-top:0.8rem">
           {currentSong ? currentSong.name : t('sheet_visualizer:no_song_selected')}
         </h2>
         {#if currentSong}
-          <AppButton
-            onclick={() => window.print()}
-            style="min-width:fit-content;margin-left:0.4rem"
-          >
+          <!-- The 0.4rem that used to be an inline margin-left is the .sheet-header gap now:
+               identical spacing between the two while they sit side by side, and nothing inline
+               for the portrait rule (which stacks them) to have to fight with !important. -->
+          <AppButton onclick={() => window.print()} style="min-width:fit-content">
             {t('sheet_visualizer:print_as_pdf')}
           </AppButton>
         {/if}
@@ -149,9 +152,12 @@
         {t('sheet_visualizer:sheet_visualizer_instructions')}
       </div>
     </div>
+    <!-- framesPerRow rides in as a custom property rather than as an inline grid-template-columns,
+         so the portrait rule below can restate the track list (clamping how narrow a frame may get)
+         from the stylesheet instead of having to outrank an inline declaration. -->
     <div
       class="visualizer-frame-wrapper"
-      style="grid-template-columns:repeat({framesPerRow},1fr);--sheet-cols:{game.notes
+      style="--frames-per-row:{framesPerRow};--sheet-cols:{game.notes
         .perRow};--sheet-dot-color:{dotColor};--sheet-row-color-0:{rowColors[0]};--sheet-row-color-1:{rowColors[1]};--sheet-row-color-2:{rowColors[2]}"
       bind:this={ref}
     >
@@ -171,8 +177,17 @@
   /* :global() is required for .page-no-print/.no-print - both are applied via a class prop
        forwarded into CHILD components' own elements (DefaultPage's outer div, and two layers
        deeper, SheetVisualizerMenu -> MenuSidebar's outer div), not elements this file's own
-       template renders directly. The other selectors below target elements this file authors
-       directly, so they keep normal Svelte scoping. */
+       template renders directly. The portrait block further down needs it for the same reason on
+       two more selectors (AppButton's <button>, SheetFrame2's note squares), each descended from
+       a wrapper this file does author so the reach stays inside this page. Everything else here
+       targets elements from this file's own template and keeps normal Svelte scoping. */
+  .sheet-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.4rem;
+  }
+
   .visualizer-frame-wrapper {
     width: 100%;
     margin-top: 1rem;
@@ -180,7 +195,7 @@
     justify-items: center;
     row-gap: 0.2rem;
     padding-top: 1rem;
-    grid-template-columns: repeat(5, 1fr);
+    grid-template-columns: repeat(var(--frames-per-row, 5), 1fr);
     justify-content: center;
   }
 
@@ -196,6 +211,63 @@
     user-select: text;
     cursor: text;
     margin-top: 2rem;
+  }
+
+  /* PORTRAIT. A phone held upright is roughly a third as wide as the layout this page was drawn
+     for, and the sheet is the page - so the frames are what the rules below are about. Keyed on
+     orientation to match the shared shell (which puts the menu on the bottom edge here), not on a
+     width: a landscape phone is narrow too but keeps the wide layout. */
+  @media screen and (orientation: portrait) {
+    /* Title and print button stop competing for one line: the song name gets the full width and
+       wraps instead of being cut to "new-format-com...", and the button drops under it. Left
+       aligned rather than stretched - printing is a side errand, not the page's main action - and
+       grown to a 2.75rem thumb target, since at its natural size it is only 32px tall. */
+    .sheet-header {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .sheet-title {
+      white-space: normal;
+      overflow: visible;
+      overflow-wrap: anywhere;
+    }
+
+    /* :global() because the element is AppButton's own <button>, not one this file renders. */
+    .sheet-header :global(.app-button) {
+      min-height: 2.75rem;
+      padding-inline: 1.4rem;
+    }
+
+    /* THE FRAME-WIDTH FLOOR. `framesPerRow` is a count, and a count is the wrong unit once the
+       row it divides is 361px wide: the default 7 lands each frame at ~50px, where the 7x3 dot
+       grid inside it is a smudge and the note names overlap each other. The track list keeps
+       asking for the user's count (100% / --frames-per-row) but refuses to go under 7rem, which
+       is where a 7-column grid still reads and a note name still fits its dot; auto-fit then
+       fits as many of those as the row has room for, so the setting still does something in
+       portrait (fewer frames per row = bigger ones) and only its top end is clamped away.
+       The outer min(100%, ...) is the guard for a viewport narrower than the floor itself - a
+       track wider than the grid would overflow the page sideways. */
+    .visualizer-frame-wrapper {
+      grid-template-columns: repeat(
+        auto-fit,
+        minmax(min(100%, max(7rem, calc(100% / var(--frames-per-row, 5)))), 1fr)
+      );
+    }
+
+    /* The note names are sized for a desktop frame; the portrait ones are wider than that, and
+       the text is what a phone reads the sheet by. :global() for the same reason as above - the
+       element belongs to SheetFrame2. */
+    .visualizer-frame-wrapper :global(.frame-note-s) {
+      font-size: 0.7rem;
+    }
+
+    /* The text notation wraps on spaces, so it normally fits; a single unbroken run of notes
+       longer than the viewport would not, and it scrolls inside its own box rather than taking
+       the page sideways with it. */
+    .text-notation-wrapper {
+      overflow-x: auto;
+    }
   }
 
   @media print {

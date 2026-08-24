@@ -158,3 +158,48 @@
     {/if}
   </div>
 </div>
+
+<style>
+  /* PORTRAIT. The label/swatch row survives a phone as-is - the swatch is already a 5x3rem
+     target - so only the space around it gives ground, and only the picker's own controls, which
+     were sized for a mouse, grow. Everything is scoped under `.color-input-wrapper` on purpose:
+     Theme.css's `.color-picker-*` rules are shared with `inputs/ColorPicker.svelte` (Settings,
+     the VSRG composer), and those instances must not inherit this page's phone sizing. */
+  @media (orientation: portrait) {
+    /* 2rem of empty gutter is a luxury a 361px row cannot pay for: with it, "Composer secondary
+       layer" wraps to two lines while the gutter sits empty. flex-shrink keeps the swatch (and,
+       when a theme is editable, the reset chip) at full size as the label takes the slack. */
+    .color-input-wrapper {
+      margin-left: 0.75rem;
+      flex-shrink: 0;
+    }
+
+    /* Same reason, on the chip that only appears for a modified key on an editable theme: its
+       5rem box plus a 1rem margin is a third of the row. */
+    .color-input-wrapper :global(.theme-reset) {
+      width: auto;
+      margin-right: 0.5rem;
+    }
+
+    /* The picker opens leftwards from the wrapper's right edge, so it can only run out of room on
+       a phone narrower than about 330px - this is the guard for that, not a resize. */
+    .color-input-wrapper :global(.color-picker-wrapper) {
+      max-width: calc(100vw - 3rem);
+    }
+
+    /* 2rem confirm/cancel buttons are mouse-sized. The hex field's width is stated as "the row
+       minus the two buttons and their margins", so it has to be restated with them. */
+    .color-input-wrapper :global(.color-picker-row) {
+      height: 2.6rem;
+    }
+
+    .color-input-wrapper :global(.color-picker-check) {
+      width: 2.6rem;
+      height: 2.6rem;
+    }
+
+    .color-input-wrapper :global(.color-picker-input) {
+      width: calc(100% - 5.8rem);
+    }
+  }
+</style>

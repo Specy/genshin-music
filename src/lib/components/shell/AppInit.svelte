@@ -43,9 +43,36 @@
   // overlay markup below. Each block is commented with what it does.
 
   let isOnMobile = $state(false);
-  // page.url.pathname includes the SvelteKit base prefix on no-root builds
-  // - appPathname() strips it before the route-literal comparison below.
-  const inBlog = $derived(appPathname(page.url.pathname).startsWith('/blog'));
+
+  // THE ROTATE WARNING IS NOT GLOBAL, and the list below is the whole of what it covers: the
+  // editing/performance surfaces whose layout is landscape-only (a canvas with a keyboard under
+  // it, a scrolling track, a rail of tools). It used to show on EVERY route but /blog, which
+  // meant a phone held upright was refused the donate page, the changelog, the theme picker and
+  // the blog index - pages that are just text and cards and read fine in portrait. Those now
+  // render normally and get the bottom-bar menu instead (App.css' "Portrait shell" block).
+  //
+  // Not to be confused with the '/blog' string in the dormant home-popup wiring further down -
+  // that one gates the OLD home overlay, not this.
+  //
+  // Typed as readonly string[] rather than a const tuple so `.includes()` takes a plain string.
+  const LANDSCAPE_ONLY_ROUTES: readonly string[] = [
+    '/composer',
+    '/player',
+    '/vsrg-composer',
+    '/vsrg-player',
+    '/zen-keyboard',
+  ];
+
+  // Read from $app/state's `page` (not a one-shot at mount) so a client-side navigation between
+  // a warned and a de-warned route flips the overlay without a reload. page.url.pathname carries
+  // the SvelteKit base prefix on no-root builds - appPathname() strips it before the route-literal
+  // comparison - and a trailing slash is normalised away so a `trailingSlash: 'always'` build
+  // still matches. The ORIENTATION half of the condition stays in CSS
+  // (@media (orientation: portrait) on .rotate-screen).
+  const isLandscapeOnlyRoute = $derived.by(() => {
+    const path = appPathname(page.url.pathname).replace(/\/+$/, '');
+    return LANDSCAPE_ONLY_ROUTES.includes(path === '' ? '/' : path);
+  });
 
   // Skipped entirely on localhost (dev convenience - keep the native
   // console.error there).
@@ -373,8 +400,10 @@
   });
 </script>
 
-<!-- CSS (.rotate-screen) lives in global App.css. -->
-{#if !inBlog}
+<!-- CSS (.rotate-screen) lives in global App.css, which supplies the other half of the condition:
+     the overlay is `display: none` until @media (orientation: portrait) matches. This {#if} is the
+     ROUTE half - see LANDSCAPE_ONLY_ROUTES above for which pages earn a warning at all. -->
+{#if isLandscapeOnlyRoute}
   <div class="rotate-screen">
     {#if isOnMobile}
       <img src={rotateImg} alt="icon for the rotating screen" />

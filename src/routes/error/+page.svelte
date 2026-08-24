@@ -69,12 +69,7 @@
   />
   <div style="text-align:center">
     {t('error:error_page_description')}
-    <a
-      href="https://discord.gg/Arsf65YYHq"
-      target="_blank"
-      rel="noreferrer"
-      style="margin:0 0.4rem;color:var(--accent)"
-    >
+    <a href="https://discord.gg/Arsf65YYHq" target="_blank" rel="noreferrer" class="discord-link">
       Discord
     </a>
   </div>
@@ -89,7 +84,7 @@
       componentProps={{ deleteSong, download: downloadSong }}
     />
   </div>
-  <div class="row space-between" style="margin:1rem 0">
+  <div class="row space-between error-logs-header" style="margin:1rem 0">
     <div style="font-size:2rem">{t('error:error_logs')}</div>
     <AppButton onclick={downloadLogs}>{t('error:download_logs')}</AppButton>
   </div>
@@ -121,6 +116,14 @@
     margin-top: 4vh;
   }
 
+  /* Was two inline declarations on the anchor; moved into a class so the portrait query below
+     can grow the app's only "get help" link into a real tap target - an inline declaration
+     outranks any stylesheet rule short of !important. Both values are unchanged. */
+  .discord-link {
+    margin: 0 0.4rem;
+    color: var(--accent);
+  }
+
   .error-logs {
     display: flex;
     flex-direction: column-reverse;
@@ -148,5 +151,96 @@
     display: grid;
     gap: 0.4rem;
     min-height: 3.6rem;
+  }
+
+  /* PORTRAIT ONLY - the landscape layout above is untouched.
+     This is the page someone reaches when the app is already broken, so everything on it has
+     to be readable and pressable on a phone held upright:
+       - a log line is the one piece of content here with no soft break in it (stack frames
+         carry a full URL). At 852px wide that fits; at 393 it painted straight off the right
+         edge of its own box, unreadable and unreachable, because `pre-wrap` only breaks at
+         spaces. Breaking anywhere keeps the whole line on screen, which beats a per-row
+         sideways scroll on a phone.
+       - the two recovery buttons sat at opposite ends of a `space-between` row, 32px tall.
+         An even two-column grid makes them one pair of proper targets.
+       - `padding-top: 10vh` is 85px of nothing at the top of a tall, narrow screen.
+     The `:global()` rules reach controls that come from shared components (the buttons, and
+     the search bar and song rows inside SongMenu). All but one hang off a wrapper this file
+     authors, so the selector still carries this file's scoping hash on its left and cannot
+     leak; the exception is `.error-page` itself, which is DefaultPage's element and is already
+     reached the same bare way by the base rule at the top of this block. */
+  @media (orientation: portrait) {
+    :global(.error-page) {
+      padding-top: 1.5rem;
+    }
+
+    .error-log-row {
+      overflow-wrap: anywhere;
+    }
+
+    /* the one link out of a broken app, so it gets a chip's worth of hit area instead of one
+       62x20 word floating at the end of a centred paragraph */
+    .discord-link {
+      display: inline-block;
+      margin: 0.25rem 0.15rem 0;
+      padding: 0.4rem 0.7rem;
+      border-radius: 0.4rem;
+      background-color: var(--primary);
+    }
+
+    .error-buttons-wrapper {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.5rem;
+      margin-top: 2rem;
+    }
+
+    .error-buttons-wrapper :global(.app-button) {
+      min-height: 2.75rem;
+      justify-content: center;
+      text-align: center;
+    }
+
+    .error-songs-wrapper {
+      margin-top: 2rem;
+    }
+
+    /* SongMenu's search box is a 6rem-capped input sitting in a row of full-width folders -
+       fine next to a sidebar, adrift on a phone. It takes the line, and its icon button (a
+       1rem square) grows into something a fingertip can hit. */
+    .error-songs-wrapper :global(.search) {
+      flex: 1;
+    }
+
+    .error-songs-wrapper :global(.search input) {
+      max-width: none;
+      width: 100%;
+      /* fill the row the (now larger) icon button sets the height of, so the whole bar is the
+         text field's hit area rather than a 31px strip inside it */
+      align-self: stretch;
+    }
+
+    /* !important is load-bearing: IconButton writes its `size` prop straight onto the element
+       as an inline width/height/min-width/min-height, and only !important outranks an inline
+       declaration. The alternative is a new size prop threaded through a shared component for
+       one page's sake. */
+    .error-songs-wrapper :global(.icon-app-button) {
+      width: 2.25rem !important;
+      height: 2.25rem !important;
+      min-width: 2.25rem !important;
+      min-height: 2.25rem !important;
+    }
+
+    .error-songs-wrapper :global(.song-button) {
+      width: 2.5rem;
+      height: 2.5rem;
+    }
+
+    /* the logs header and its download button stop fighting for one line */
+    .error-logs-header {
+      flex-wrap: wrap;
+      gap: 0.5rem 1rem;
+      align-items: center;
+    }
   }
 </style>

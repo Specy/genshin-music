@@ -417,7 +417,11 @@ scalar (read in ComposerCanvas.svelte's $effect object, per that file's dependen
   would stand on the labels; it starts at `proStripWidth(rowHeight)` instead.
   **Portrait is not a Pro View question**: the app covers any portrait viewport with its
   own `.rotate-screen` overlay (`@media screen and (orientation: portrait)`, App.css), in
-  both views and on every route, so the phone case that matters is landscape.
+  both views, so the phone case that matters is landscape. That overlay is no longer
+  app-wide - it is now gated to the landscape-only surfaces listed in AppInit.svelte's
+  `LANDSCAPE_ONLY_ROUTES`, and `/composer` is one of them, so nothing here changes; the
+  reading pages (donate, changelog, theme, blog, ...) render in portrait with a bottom bar
+  instead.
 
 ## 9. Cross-cutting behaviors
 

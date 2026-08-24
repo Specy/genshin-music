@@ -1047,6 +1047,20 @@ a {
   }
 }
 
+/* Both widths above (30vw, and 45vw on a phone) were written when a phone only ever showed this
+   app in landscape: 45vw of an 852px-wide screen is a comfortable 383px box. Held upright the same
+   45vw is 177px, which is narrower than the two buttons inside it - `.prompt-button` alone spends
+   4rem on horizontal padding - so `word-break: break-word` above snapped the labels mid-word and
+   asyncConfirm's Yes/No came out as "Y es" / "N o". Every de-warned page can raise one of these
+   (the bottom bar's Discord button asks for confirmation), so it is fixed here rather than per
+   page. Placed straight after the block it overrides: same specificity, source order decides.
+   `min()` keeps the existing `max-width: 24rem` cap meaningful on a portrait tablet. */
+@media screen and (orientation: portrait) {
+  .floating-prompt {
+    width: min(90vw, 24rem);
+  }
+}
+
 /* ==================================================================================
    Menu system (sidebar + sliding side-panel). Old: src/components/shared/Menu/menu.module.scss.
    Global here (not a scoped <style> block in any one component) because these classes are
@@ -1056,6 +1070,11 @@ a {
    way the old shared CSS Modules import did. Ported verbatim (2-space old indentation reflowed
    to this file's 4-space convention); its own @media block is merged into the combined mobile
    query near the end of this file instead of duplicated here.
+
+   EVERYTHING BELOW DESCRIBES THE LANDSCAPE LAYOUT (column at the left, panel sliding in from the
+   left). In portrait the same classes are re-laid-out as a bottom bar + bottom sheet - see the
+   "PORTRAIT SHELL" block further down, which overrides `.menu-wrapper`, `.menu`, `.menu-visible`,
+   `.side-menu` and `.side-menu-open` and must therefore stay after them in source order.
    ================================================================================== */
 .menu {
   width: var(--menu-size);
@@ -1725,9 +1744,141 @@ a {
   border-radius: 1rem;
 }
 
+/* ONLY THE ORIENTATION HALF OF THE CONDITION LIVES HERE. Which pages get a warning at all is
+   decided in AppInit.svelte (LANDSCAPE_ONLY_ROUTES): the overlay markup is not rendered on any
+   other route, so this rule has nothing to reveal there. It used to be effectively global - every
+   route but /blog - which is why the reading pages (donate, changelog, theme, blog, ...) were
+   refused to a phone held upright; those now render in portrait with the bottom-bar menu below. */
 @media screen and (orientation: portrait) {
   .rotate-screen {
     display: flex;
+  }
+}
+
+/* ==================================================================================
+   PORTRAIT SHELL: the menu rail becomes a bottom bar and its panel a bottom sheet.
+   The landscape layout (icon column at the left, panel sliding in from the left) is the app's
+   primary one and is NOT touched - everything here is inside the portrait query.
+
+   Keyed on ORIENTATION, not width, deliberately: a landscape phone is a small window that still
+   wants the rail on the left (the pages that only work that way are the ones the rotate warning
+   covers), while a portrait tablet is a wide window that still wants its thumb reach at the
+   bottom. This is the same axis the rotate warning above is keyed on, and the two are
+   complementary: on the five warned routes these rules still run, but the overlay covers the page
+   they reshape, so nobody sees the bar there.
+
+   It lands after the two `max-width: 920px` blocks above on purpose - `.menu`'s padding and
+   `.default-page`'s padding are both restated there at this same specificity, so source order is
+   what decides them on a phone.
+   ================================================================================== */
+@media screen and (orientation: portrait) {
+  /* The rail's fixed box is what moves to the bottom edge; the panel inside it is
+     `position: fixed` in its own right and is placed separately below.
+     `height: auto` (against the base rule's 100%/min-height 100%) so the box is exactly the bar it
+     contains - and collapses to nothing when a page menu hides its rail, the way the landscape
+     wrapper collapses to zero width when the column slides out. A fixed var(--menu-size) box would
+     stay behind as an invisible strip swallowing taps along the bottom of the page. */
+  .menu-wrapper {
+    top: auto;
+    bottom: 0;
+    width: 100%;
+    height: auto;
+    min-height: 0;
+  }
+
+  /* Icons in a row, scrolling sideways when there are more of them than the width fits (the
+     composer's rail runs to a dozen items). The landscape column hides itself by sliding LEFT
+     (`margin-left: -4rem`, released by `.menu-visible`); the bar has to hide downward instead, so
+     that lever is neutralised and re-hung on margin-bottom just below. */
+  .menu {
+    width: 100%;
+    height: var(--menu-size);
+    max-height: var(--menu-size);
+    flex-direction: row;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 0 0.4rem;
+    border-left: none;
+    border-right: none;
+    border-top: solid 2px var(--secondary);
+    margin-left: 0;
+    margin-bottom: calc(var(--menu-size) * -1);
+    /* !important IS LOAD-BEARING HERE: every page menu passes `justify-content: flex-end` as an
+       INLINE style (MenuSidebar's `menuStyle` prop), which means "sit at the bottom" in the
+       landscape column and would mean "sit at the right edge" in this row. Only !important
+       outranks an inline declaration, and the alternative is editing each page's menu file -
+       exactly the duplication this shared shell exists to avoid. */
+    justify-content: center !important;
+    /* `safe` so a bar with more icons than width scrolls from its start instead of clipping the
+       leading ones (plain center puts the overflow beyond reach in a scroll container - same
+       reason BlogImage uses it). A separate declaration: browsers without `safe` drop this line
+       and keep the plain center above, rather than falling back to the inline flex-end. */
+    justify-content: safe center !important;
+  }
+
+  .menu-visible {
+    margin-bottom: 0;
+  }
+
+  /* The scrollbar turned with the axis (the base rule sizes a vertical one). */
+  .menu::-webkit-scrollbar {
+    width: auto;
+    height: 3px;
+  }
+
+  /* Same inline-style story as `justify-content` above: `margin-bottom: auto` is how a page menu
+     pushes its back/close button to the TOP of the landscape column, and in a row that would drop
+     the button off the bar's cross axis. Neutralised, so every icon sits on the bar's centre line.
+     `flex-shrink: 0` keeps them at full size once the row overflows into its own scroll. */
+  .menu > * {
+    margin-bottom: 0 !important;
+    flex-shrink: 0;
+  }
+
+  .menu-item {
+    min-width: 2.8rem;
+  }
+
+  /* THE PANEL BECOMES A BOTTOM SHEET, by the landscape trick turned through 90 degrees: landscape
+     parks it one panel-width off the LEFT edge (`left: calc(var(--panel-size) * -1)`) and slides
+     it in by its own width plus the rail's; portrait parks it one full height BELOW the viewport
+     (`top: 100%`, so the sheet's top edge starts on the bottom edge) and slides it up by its own
+     height plus the bar's. Both states are reached through the base rule's `transition: all 0.3s`,
+     so the sheet animates in and out exactly as the side panel does.
+     `height: auto` + a 70vh cap makes the sheet hug short panels instead of always eating most of
+     the screen; `.panel-content-wrapper` (overflow-y: scroll, flex: 1) is what scrolls once the
+     content outgrows the cap. The rounded corners follow the edge it now enters from. */
+  .side-menu {
+    width: 100%;
+    left: 0;
+    right: 0;
+    top: 100%;
+    height: auto;
+    max-height: 70vh;
+    border-radius: 0.5rem 0.5rem 0 0;
+  }
+
+  .side-menu-open {
+    transform: scale(1) translateY(calc(-100% - var(--menu-size)));
+  }
+
+  /* Page content must not end up under the bar. `.default-page` is the wrapper every de-warned
+     route renders through (DefaultPage.svelte, including the blog posts and the blog index), and
+     it is the one place the reserve can be stated once. */
+  .default-page {
+    padding-bottom: calc(var(--menu-size) + 1rem);
+  }
+}
+
+/* The phone tier's `.default-page` padding reserves 5rem on the LEFT for the icon rail
+   (`--left-mobile-padding`, set inline by DefaultPage). In portrait the rail is at the bottom and
+   that reserve is just a gutter down the side of every page, so the two sides go back to even.
+   Its own block rather than a rule in the portrait section above, because it must not touch the
+   wide-window portrait layout (a tablet keeps `.default-page`'s 20vw desktop margins). */
+@media only screen and (max-width: 920px) and (orientation: portrait) {
+  .default-page {
+    padding-left: 1rem;
+    padding-right: 1rem;
   }
 }
 

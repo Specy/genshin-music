@@ -79,10 +79,10 @@
     <div class="import-type">
       {data.type}
     </div>
-    <Row padding="0 0.5rem">
+    <Row padding="0 0.5rem" class="import-row-name">
       {importedRowName(data)}
     </Row>
-    <AppButton cssVar="accent" style="margin-left:auto" onclick={() => onImport(data)}>
+    <AppButton cssVar="accent" class="import-row-button" onclick={() => onImport(data)}>
       {t('common:import')}
     </AppButton>
   </Row>
@@ -95,13 +95,13 @@
   />
   <div class="column">
     <h1>{t('transfer:import_data_from_other_domains_title')}</h1>
-    <p style="margin-left:1rem">
+    <p class="transfer-description">
       {t('transfer:import_data_from_other_domains_description')}
     </p>
     <h2>
       {t('transfer:select_a_website_to_import_data')}
     </h2>
-    <div class="row" style="gap:0.5rem;margin-left:1rem">
+    <div class="row transfer-connect">
       <Select
         value={selectedDomain}
         style="min-width:12rem"
@@ -168,5 +168,69 @@
     min-width: 6rem;
     border-right: solid 0.1rem var(--primary-text);
     padding: 0 0.4rem;
+  }
+
+  /* Both were inline `margin-left:1rem` (plus the row's `gap`) until the portrait query below
+     needed to take that indent back - an inline declaration outranks any stylesheet rule short
+     of !important. Same values, just moved here. */
+  .transfer-description {
+    margin-left: 1rem;
+  }
+
+  .transfer-connect {
+    gap: 0.5rem;
+    margin-left: 1rem;
+  }
+
+  /* Same reason for the button: it carried `style="margin-left:auto"`. */
+  :global(.import-row-button) {
+    margin-left: auto;
+  }
+
+  /* PORTRAIT ONLY - the landscape layout above is untouched.
+     Two things break on a ~360px line. The 1rem indents are a luxury a phone column can't
+     afford, and the import row's three flex children (fixed 6rem type + name + button) squeeze
+     the name down to a four-line sliver. The row becomes a two-line grid instead: type and name
+     share the top line, the Import button takes the full width underneath as one wide target.
+
+     :global() is unavoidable for the two row children - "import-row-name"/"import-row-button"
+     are handed to Row's and AppButton's class props and land on THOSE components' root
+     elements, carrying their scoping hash and not this file's (same story as `.import-row`
+     above). The unique class names are what keep the rules from leaking off this page. */
+  @media (orientation: portrait) {
+    .transfer-description,
+    .transfer-connect {
+      margin-left: 0;
+    }
+
+    /* the domain names are long; let the select take the line and the button drop below it
+       rather than either one shrinking below its label */
+    .transfer-connect {
+      flex-wrap: wrap;
+    }
+
+    .transfer-connect :global(.select) {
+      flex: 1;
+    }
+
+    :global(.import-row) {
+      display: grid;
+      /* minmax(0, ...) rather than a bare 1fr: a track's automatic minimum is min-content, so
+         one long unbreakable file name would otherwise push the row past the screen edge. */
+      grid-template-columns: auto minmax(0, 1fr);
+      row-gap: 0.5rem;
+    }
+
+    :global(.import-row-name) {
+      min-width: 0;
+      overflow-wrap: anywhere;
+    }
+
+    :global(.import-row-button) {
+      grid-column: 1 / -1;
+      margin-left: 0;
+      justify-content: center;
+      min-height: 2.75rem;
+    }
   }
 </style>

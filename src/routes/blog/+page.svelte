@@ -69,8 +69,6 @@
 </script>
 
 {#snippet indexNavChildren()}
-  <!-- QUIRK: both Home and Player link to "/" - a preserved duplicate-href bug, reproduced
-         exactly. -->
   <AppLink href="/">Home</AppLink>
   <AppLink href="/player">Player</AppLink>
   <AppLink href="/composer">Composer</AppLink>
@@ -97,7 +95,9 @@
           {metadata.title}
         </div>
         {#if metadata.author}
-          <div style="position:absolute;top:0.5rem;right:0.5rem">
+          <!-- Corner placed from CSS rather than inline: portrait has to move it out from under
+               the "New!" ribbon, which no stylesheet could do against an inline `right`. -->
+          <div class="blog-card-author">
             {@render blogAuthorRenderer(metadata.author, '2rem', true)}
           </div>
         {/if}
@@ -128,7 +128,10 @@
   />
   {@render blogNavbar(indexNavChildren, 'border-radius:0.5rem;padding:1rem 1.5rem')}
   <Column gap="2rem">
-    <Header style="font-size:2.2rem;text-align:center">
+    <!-- Header writes its size as an inline `font-size`, which no stylesheet can override, so the
+         size portrait shrinks travels as a custom property instead (redefined in the portrait
+         block at the bottom of this file). -->
+    <Header textSize="var(--blog-welcome-size, 2.2rem)" style="text-align:center">
       Welcome to {game.meta.title} blog!
     </Header>
     <PromotionCard alwaysVisible />
@@ -178,22 +181,20 @@
        template, so plain scoped CSS reaches them - only the base (non-hover) .blog-card-image
        rule can skip :global(). */
 
-  /* The sidebar is the app-wide SimpleMenu, and .blog-nav lives in BaseBlogPost's snippet -
-     both foreign elements, hence :global(), and both scoped under .blog-index so this page's
-     rules can't reach the blog POSTS (which show .blog-nav at every width).
-     .blog-index.default-page is a two-class selector on purpose: it has to outrank App.css's
-     own .default-page mobile padding rule regardless of stylesheet order. */
+  /* .blog-nav lives in BaseBlogPost's snippet - a foreign element, hence :global(), and scoped
+     under .blog-index so this page's rules can't reach the blog POSTS (which show .blog-nav at
+     every width). */
   :global(.blog-index .blog-nav) {
     display: none;
   }
 
-  @media (orientation: portrait) and (max-width: 920px) {
-    :global(.blog-index .menu-wrapper) {
-      display: none;
-    }
-    :global(.blog-index.default-page) {
-      padding-left: 1rem;
-    }
+  /* In portrait the app's menu is a bar along the bottom of the screen (App.css, "PORTRAIT
+     SHELL"), which is where this page's own text nav earns its place: the bar is icons only, and
+     "Posts / Player / Composer" is what a reader of the index actually wants next. It used to be
+     an either/or - the rail was a column down the left that this block hid outright, and the
+     page reclaimed its 5rem - but a bottom bar costs the content nothing beyond the padding
+     App.css already reserves under every .default-page, so both now show. */
+  @media (orientation: portrait) {
     :global(.blog-index .blog-nav) {
       display: flex;
     }
@@ -235,6 +236,12 @@
     opacity: 0.9;
   }
 
+  .blog-card-author {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+  }
+
   .blog-card-title-content {
     z-index: 2;
     padding-bottom: 1.3rem;
@@ -263,5 +270,54 @@
     background-position: center;
     mask-image: linear-gradient(0deg, #00000000, rgba(0, 0, 0, 1));
     transition: transform 0.3s;
+  }
+
+  /* ==================================================================================
+     PORTRAIT. One column of full-width cards, so the card's right edge IS the page's right edge
+     and the two things the wide layout let hang past a card - the ribbon's corner and the promo
+     button's line - have nowhere to hang any more.
+     ================================================================================== */
+  @media (orientation: portrait) and (max-width: 920px) {
+    /* Same corner, same angle, 19px further in. `translate(18%, -80%)` reads along the ROTATED
+       axes, where those two percentages resolve to "19px right, 6px up" - fine while a grid
+       gutter was there to absorb the overhang, but at one column the card's right edge IS the
+       page's: the badge pushed the document 3px past the viewport (a body that scrolls sideways)
+       and lost its exclamation mark off the screen edge. -9% / -20% are the same two axes chosen
+       so their sideways components cancel, leaving the 6px lift and nothing else. */
+    :global(.blog-card-new::after) {
+      transform: rotate(45deg) translate(-9%, -20%);
+    }
+
+    /* Pulled inside the card, the ribbon lands on the corner the author's picture sits in, so
+       the picture moves to the other end of the same edge - still over the header image, still
+       out of the way. Every card, not just the ribboned ones: one column of cards reads as a
+       list, and a picture that hops corners down that list would look like a bug. The 1.9rem
+       clears the title strip's own `margin-bottom: -1.5rem`, which pulls the description up
+       under the strip's last 1.5rem - measuring from the strip's edge alone would drop the
+       picture onto the description's first line. */
+    .blog-card-author {
+      top: auto;
+      bottom: 1.9rem;
+    }
+
+    /* The same story from the text's side: at one column the titles are wide enough to run into
+       that corner, which they never were inside a 20rem grid cell. */
+    .blog-card-title-content {
+      padding-right: 2.8rem;
+    }
+
+    /* Three lines of 2.2rem for "Welcome to Genshin Music Nightly blog!" is a whole screenful of
+       greeting before the first post; the clamp brings it back to two. */
+    :global(.blog-index) {
+      --blog-welcome-size: clamp(1.5rem, 6.5vw, 2.2rem);
+    }
+
+    /* The promo card keeps its two columns - stacking them would push its button below the fold
+       of a card that is only there to be tapped - but "Find out more" broke into three stacked
+       words to fit the narrow right column. Held on one line it costs the description column
+       about 30px, which it spends on one more wrapped line. */
+    :global(.blog-index .promotion-card .app-button) {
+      white-space: nowrap;
+    }
   }
 </style>

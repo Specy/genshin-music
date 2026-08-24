@@ -489,8 +489,11 @@ export const i18n_en = {
     merge_empty_spaces: 'Merge empty spaces',
     no_song_selected: 'No song selected',
     print_as_pdf: 'Print as PDF',
+    // No "on the left": the sheet visualizer is one of the pages that renders in portrait now,
+    // and there the shared menu is a bar along the BOTTOM of the screen, not a rail at the side
+    // (App.css' "Portrait shell" block). Kept direction-free so one string is true either way.
     sheet_visualizer_instructions: `Select a song
-                                        from the menu on the left.
+                                        from the menu.
                     Remember that you can learn a song
                                         with the interactive
                                             practice tool in the Player`,

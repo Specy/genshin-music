@@ -15,7 +15,6 @@
   import { Instrument } from '$lib/audio/Instrument.svelte';
   import AppButton from '$cmp/inputs/AppButton.svelte';
   import { asyncConfirm, asyncPrompt } from '$stores/AsyncPromptStore.svelte';
-  import Row from '$cmp/layout/Row.svelte';
   import Column from '$cmp/layout/Column.svelte';
   import Header from '$cmp/header/Header.svelte';
   import Separator from '$cmp/Separator.svelte';
@@ -310,33 +309,35 @@
      splicing it in between changes nothing about the layout. -->
 <div class="midi-setup">
   <Column gap="1rem">
-    <Row justify="between">
+    <!-- These three label/value rows are hand-written `.row`s rather than <Row> components on
+         purpose: <Row> writes justify/align as INLINE styles, which no media query can override,
+         and the portrait rules below have to flip each of them from a side-by-side pair into a
+         stack. The classes carry exactly the declarations the props used to emit, so landscape
+         renders byte-for-byte what it did before. -->
+    <div class="row midi-info-row">
       <div>{t('keybinds:midi_status')}:</div>
       <div>{t(`keybinds:midi_access_${midiAccess.status}`)}</div>
-    </Row>
-    <Row gap="1rem" align="center" justify="between">
+    </div>
+    <div class="row midi-info-row midi-devices-row">
       {t('keybinds:connected_midi_devices')}:
-      <Row gap="0.5rem" style="flex-wrap:wrap">
+      <div class="row midi-sources">
         {#if sources.length > 0}
           {#each sources as source (source.id)}
-            <div
-              style="border-radius:0.3rem;padding:0.2rem 0.4rem;border:solid 0.1rem var(--secondary)"
-            >
+            <div class="midi-source">
               {source.name} - {source.id}
             </div>
           {/each}
         {:else}
           {t('keybinds:no_connected_devices')}
         {/if}
-      </Row>
-    </Row>
+      </div>
+    </div>
     <Separator height="0.1rem" background="var(--secondary)" />
-    <Row justify="between" gap="0.5rem">
+    <div class="row midi-info-row midi-preset-row">
       {t('keybinds:midi_layout_preset')}:
-      <Row gap="0.5rem">
+      <div class="row midi-preset-controls">
         <select
           class="midi-select"
-          style="margin-left:0.5rem"
           value={currentPreset}
           onchange={(e) => loadPreset(e.currentTarget.value)}
         >
@@ -353,18 +354,22 @@
         </select>
         <AppButton
           onclick={() => deletePreset(currentPreset)}
-          class="flex items-center"
+          class="flex items-center midi-preset-button"
           style="gap:0.5rem"
         >
           {@render faTrashIcon()}
           {t('keybinds:delete_midi_preset')}
         </AppButton>
-        <AppButton onclick={createPreset} class="flex items-center" style="gap:0.5rem">
+        <AppButton
+          onclick={createPreset}
+          class="flex items-center midi-preset-button"
+          style="gap:0.5rem"
+        >
           {@render faPlusIcon()}
           {t('keybinds:create_midi_preset')}
         </AppButton>
-      </Row>
-    </Row>
+      </div>
+    </div>
     <div style="margin:0.5rem 0">
       {t('keybinds:midi_note_selection_description')}
     </div>
@@ -382,8 +387,8 @@
     <ShapeKeyboard
       shape={baseInstrument.shape}
       notes={baseInstrument.notes}
-      class="keyboard"
-      style="margin:1.5rem 0;width:fit-content"
+      class="keyboard midi-keyboard"
+      style="margin:1.5rem 0"
     >
       {#snippet button(instrumentNote, button)}
         {@const note = notes[button]}
@@ -440,6 +445,41 @@
     display: flex;
     flex-direction: column;
     gap: 0.8rem;
+  }
+
+  /* The label/value rows. Each declaration below is the one the <Row> props these replaced used
+     to write inline (justify="between", gap, align="center"), moved into CSS so the portrait
+     block at the bottom of this file can restack them. */
+  .midi-info-row {
+    justify-content: space-between;
+  }
+
+  .midi-devices-row {
+    gap: 1rem;
+    align-items: center;
+  }
+
+  .midi-sources {
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  .midi-source {
+    border-radius: 0.3rem;
+    padding: 0.2rem 0.4rem;
+    border: solid 0.1rem var(--secondary);
+  }
+
+  .midi-preset-row {
+    gap: 0.5rem;
+  }
+
+  .midi-preset-controls {
+    gap: 0.5rem;
+  }
+
+  .midi-preset-controls .midi-select {
+    margin-left: 0.5rem;
   }
 
   /* Covers the card's content instead of replacing it: what the click unlocks stays legible
@@ -516,5 +556,70 @@
        into the class string above to "make this work". */
   :global(.midi-shortcut.selected) {
     background-color: var(--accent);
+  }
+
+  /* PORTRAIT. A phone held upright gives this card ~330px of usable width, which is not enough
+     for any of the label/value pairs above to sit side by side - the preset row in particular
+     used to push the "create preset" button clean off the viewport and scroll the body. Every
+     pair stacks instead, the preset controls take the full width, and the note grid stops being
+     sized in vw (which shrinks with the viewport, exactly backwards for a touch target) and
+     instead fills whatever width the card has. */
+  @media (orientation: portrait) {
+    .midi-info-row {
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    /* beats .midi-devices-row's own align-items:center, which would centre the stacked value */
+    .midi-info-row.midi-devices-row {
+      align-items: flex-start;
+      gap: 0.25rem;
+    }
+
+    .midi-preset-controls {
+      width: 100%;
+      flex-wrap: wrap;
+    }
+
+    /* its own line: a 10rem select beside two buttons is what overflowed */
+    .midi-preset-controls .midi-select {
+      flex: 1 1 100%;
+      width: auto;
+      margin-left: 0;
+      height: 2.4rem;
+    }
+
+    /* the two buttons then share the line below it, half the width each */
+    .midi-preset-controls :global(.midi-preset-button) {
+      flex: 1 1 0;
+      min-width: 0;
+      justify-content: center;
+    }
+
+    /* The grid is `repeat(columns, 1fr)` (GridShape), so handing it the card's full width is all
+       it takes for the cells to divide that width evenly, whatever the Shape's column count is.
+       The note itself is the hitbox's only child - addressed structurally rather than by the
+       game's note class name, which is config data (game.notes.cssClasses.note).
+       The 26rem ceiling is for the other portrait viewport, a rotated monitor or a portrait
+       tablet: without it "fill the card" would blow the buttons up to 140px each there. */
+    :global(.keyboard.midi-keyboard) {
+      width: min(100%, 26rem);
+    }
+
+    :global(.midi-keyboard .button-hitbox-bigger) {
+      width: 100%;
+    }
+
+    :global(.midi-keyboard .button-hitbox-bigger > div) {
+      width: 100%;
+      height: auto;
+      aspect-ratio: 1;
+    }
+
+    /* ~2.5rem tall instead of ~1.7rem: these are the only mapping controls a phone user can
+       actually reach, since the keyboard shortcuts below them are desktop-only. */
+    :global(.midi-shortcut) {
+      padding: 0.5rem 0.7rem;
+    }
   }
 </style>

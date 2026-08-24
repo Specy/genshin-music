@@ -55,7 +55,9 @@
     <div class="text-ellipsis" style="z-index:2;padding:0.4rem 0.2rem">
       {theme.other.name}
     </div>
-    <div style="display:flex;margin-left:0.2rem;z-index:2;padding:0.4rem 0.2rem">
+    <!-- The half that used to carry these four declarations inline: they are a class now so the
+         portrait rule below can drop the padding once the icons carry their own. -->
+    <div class="theme-preview-actions">
       {#if downloadable}
         <svg
           onclick={handleDownload}
@@ -98,3 +100,31 @@
     {/each}
   </div>
 </div>
+
+<style>
+  .theme-preview-actions {
+    display: flex;
+    margin-left: 0.2rem;
+    z-index: 2;
+    padding: 0.4rem 0.2rem;
+  }
+
+  /* PORTRAIT: the download and delete glyphs are 18px squares (the `height`/`width` ATTRIBUTES on
+     the svgs, which these rules override) with no padding of their own - a fine mouse target, and
+     well under half of what a thumb needs. The padding is what grows the hit box; the glyph only
+     goes up a couple of pixels, so the name beside it keeps most of the tile it gained when the
+     grid dropped to two columns. */
+  @media (orientation: portrait) {
+    .theme-preview-row svg {
+      width: 1.4rem;
+      height: 1.4rem;
+      padding: 0.4rem;
+    }
+
+    /* The half's own padding would now double up on the icons' side, standing the row taller than
+       the name beside it needs. */
+    .theme-preview-actions {
+      padding: 0;
+    }
+  }
+</style>

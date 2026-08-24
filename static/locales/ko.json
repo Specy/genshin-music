@@ -414,7 +414,7 @@
     "merge_empty_spaces": "빈 공간 합치기",
     "no_song_selected": "노래가 선택되지 않았습니다",
     "print_as_pdf": "PDF 형식으로 인쇄하기",
-    "sheet_visualizer_instructions": "좌측에 있는 메뉴에서 곡을 선택해주세요.\n                                        플레이어에 있는 연습 모드로 노래를 연습할 수 있다는 것을 기억하세요",
+    "sheet_visualizer_instructions": "메뉴에서 곡을 선택해주세요.\n                                        플레이어에 있는 연습 모드로 노래를 연습할 수 있다는 것을 기억하세요",
     "different_color_rows": "열의 색상 다르게 표시하기",
     "per_row": "한 줄에 표시할 요소의 개수",
     "invalid_song_to_visualize": "작곡되거나 녹음되지 않은 존재하지 않는 곡입니다",

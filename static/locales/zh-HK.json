@@ -414,7 +414,7 @@
         "merge_empty_spaces": "合併空格",
         "no_song_selected": "未選擇歌曲",
         "print_as_pdf": "列印為 PDF",
-        "sheet_visualizer_instructions": "從左側選單中選擇一首歌曲，您可以使用演奏器中的互動式練習工具來學習歌曲。",
+        "sheet_visualizer_instructions": "從選單中選擇一首歌曲，您可以使用演奏器中的互動式練習工具來學習歌曲。",
         "per_row": "每行",
         "invalid_song_to_visualize": "無效歌曲，未創作或錄製",
         "error_converting_to_visual_song_try_convert_in_recorded": "將歌曲轉換為視覺歌曲時出錯，嘗試先轉換為錄製的歌曲...",

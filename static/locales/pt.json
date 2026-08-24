@@ -414,7 +414,7 @@
     "merge_empty_spaces": "Unir espaços vazios",
     "no_song_selected": "Nenhuma música selecionada",
     "print_as_pdf": "Imprimir como PDF",
-    "sheet_visualizer_instructions": "Selecione uma música no menu à esquerda.\n                    Lembre-se de que você pode aprender uma música com a ferramenta de prática\n                    interativa no Reprodutor",
+    "sheet_visualizer_instructions": "Selecione uma música no menu.\n                    Lembre-se de que você pode aprender uma música com a ferramenta de prática\n                    interativa no Reprodutor",
     "different_color_rows": "Alternar cores das linhas",
     "per_row": "Por linha",
     "invalid_song_to_visualize": "Música inválida, não está composta ou gravada",

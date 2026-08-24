@@ -414,7 +414,7 @@
         "merge_empty_spaces": "空白を結合",
         "no_song_selected": "曲が選択されていません",
         "print_as_pdf": "PDFとして印刷",
-        "sheet_visualizer_instructions": "左のメニューから曲を選択してください。プレイヤーのインタラクティブな練習ツールを使用して曲を学ぶことができます。",
+        "sheet_visualizer_instructions": "メニューから曲を選択してください。プレイヤーのインタラクティブな練習ツールを使用して曲を学ぶことができます。",
         "per_row": "行ごと",
         "invalid_song_to_visualize": "無効な曲です。作曲または録音されていません。",
         "error_converting_to_visual_song_try_convert_in_recorded": "曲をビジュアル曲に変換中にエラーが発生しました。まず録音済み曲に変換してみてください...",

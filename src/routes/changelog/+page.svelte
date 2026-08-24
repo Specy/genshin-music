@@ -74,28 +74,56 @@
     text={`${t('home:changelog_name')} V${APP_VERSION}`}
     description={`Changelog V${APP_VERSION}\n${CHANGELOG[0]?.changes.join(';')}`}
   />
-  <div class="changelog-page-title">
-    {t('home:changelog_name')}
-    <span style="font-size:1.2rem;margin-left:1rem">v{APP_VERSION}</span>
+  <div class="changelog-page">
+    <div class="changelog-page-title">
+      {t('home:changelog_name')}
+      <span class="changelog-version">v{APP_VERSION}</span>
+    </div>
+    <div class="row changelog-meta">
+      <span class="changelog-cache">{t('cache:cache')}: {cacheVersion || 'DEV'}</span>
+      <AppButton class="changelog-meta-button" onclick={clearCache}>
+        {t('cache:clear_cache')}
+      </AppButton>
+      <AppLink href="/error" class="changelog-meta-link">
+        <AppButton class="changelog-meta-button">{t('changelog:view_error_logs')}</AppButton>
+      </AppLink>
+    </div>
+    <div style="margin-top:2rem"></div>
+    {#each CHANGELOG as data (data.version)}
+      <ChangelogRow version={data.version} date={data.date} changes={data.changes} />
+    {/each}
+    <div class="changelog-ending"></div>
   </div>
-  <div class="row" style="font-size:0.8rem;justify-content:space-between;align-items:center">
-    {t('cache:cache')}: {cacheVersion || 'DEV'}
-    <AppButton onclick={clearCache}>{t('cache:clear_cache')}</AppButton>
-    <AppLink href="/error">
-      <AppButton>{t('changelog:view_error_logs')}</AppButton>
-    </AppLink>
-  </div>
-  <div style="margin-top:2rem"></div>
-  {#each CHANGELOG as data (data.version)}
-    <ChangelogRow version={data.version} date={data.date} changes={data.changes} />
-  {/each}
-  <div class="changelog-ending"></div>
 </DefaultPage>
 
 <style>
+  /* `display: contents` and nothing else: this wrapper exists only so the portrait block at the
+     bottom has an ancestor Svelte can hash, which keeps the `:global()` overrides it needs (the
+     meta row's button and link classes land inside AppButton/AppLink, out of reach of scoped CSS)
+     from leaking to any other page. Every child stays a direct flex item of `.default-content`
+     exactly as it was before the wrapper existed. */
+  .changelog-page {
+    display: contents;
+  }
+
   .changelog-page-title {
     font-size: 2.5rem;
     color: var(--background-text);
+  }
+
+  /* Both of these were inline `style` attributes (on the version span and on the meta row) until
+     portrait needed to restate them, and an inline declaration outranks every rule that isn't
+     `!important`. Same declarations, same rendering - they just live somewhere a media query can
+     reach now. */
+  .changelog-version {
+    font-size: 1.2rem;
+    margin-left: 1rem;
+  }
+
+  .changelog-meta {
+    font-size: 0.8rem;
+    justify-content: space-between;
+    align-items: center;
   }
 
   .changelog-ending {
@@ -104,5 +132,51 @@
     width: 1rem;
     border-left: dashed 2px var(--secondary);
     margin-left: 2.5rem;
+  }
+
+  /* PORTRAIT. Width-tiered as well as orientation-keyed on purpose, matching App.css's own
+     `max-width: 920px and (orientation: portrait)` block: below that tier `.default-page` drops to
+     a 1rem gutter and the page really is phone-narrow, while a portrait TABLET is a wide window
+     that keeps the desktop 20vw margins and wants the desktop row of chip-sized buttons. */
+  @media screen and (orientation: portrait) and (max-width: 920px) {
+    .changelog-page-title {
+      font-size: 2rem;
+      line-height: 1.15;
+    }
+
+    .changelog-version {
+      margin-left: 0.6rem;
+    }
+
+    /* The three-up `space-between` row can't survive 393px: the cache string and both labels wrap
+       onto two lines each and the buttons end up as squashed blocks. Instead the cache version
+       takes a line of its own (`flex-basis: 100%`) and the two buttons split the next one, at a
+       height a thumb can actually hit - the page's only controls, so they earn the space. */
+    .changelog-meta {
+      flex-wrap: wrap;
+      justify-content: flex-start;
+      gap: 0.5rem;
+      font-size: 0.9rem;
+    }
+
+    .changelog-cache {
+      flex: 1 0 100%;
+    }
+
+    .changelog-page :global(.changelog-meta-link) {
+      display: flex;
+      flex: 1 1 0;
+    }
+
+    .changelog-page :global(.changelog-meta-button) {
+      flex: 1 1 0;
+      min-height: 2.75rem;
+    }
+
+    /* Follows ChangelogRow's own portrait `margin-left` so the dashed tail stays on the same
+       vertical line as the timeline rail it continues. Change one, change the other. */
+    .changelog-ending {
+      margin-left: 1.25rem;
+    }
   }
 </style>

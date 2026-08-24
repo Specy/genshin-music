@@ -248,193 +248,285 @@
     text={t('home:backup_name')}
     description="Manage the backups in the app, download or import songs, themes, or all of them"
   />
-  <Column gap="1rem" style="padding-bottom:1rem">
-    <Card background="none" border="secondary" gap="0.8rem">
-      <Header type="h2">
-        {t('backup:transfer_from_other_domain')}
-      </Header>
-      <Row align="center" gap="1rem" style="flex-wrap:wrap">
-        <div>
-          {t('backup:transfer_data_notice')}
-        </div>
-        <AppLink href="/transfer">
-          <AppButton cssVar="accent" style="gap:0.2rem">
-            {t('backup:transfer')}
-          </AppButton>
-        </AppLink>
-      </Row>
-    </Card>
-
-    <Card background="none" border="secondary" gap="0.8rem">
-      <Row align="center" gap="1rem" style="flex-wrap:wrap">
+  <div class="backup-page">
+    <Column gap="1rem" style="padding-bottom:1rem">
+      <Card background="none" border="secondary" gap="0.8rem">
         <Header type="h2">
-          {t('backup:backup_as')}
+          {t('backup:transfer_from_other_domain')}
         </Header>
-        <MultipleOptionSlider
-          options={[
-            {
-              value: 'zip',
-              color: theme.getValue('accent').toString(),
-              text: 'zip',
-            },
-            {
-              value: 'json',
-              color: theme.getValue('accent').toString(),
-              text: 'json',
-            },
-          ]}
-          selected={downloadFormat}
-          onChange={(v) => (downloadFormat = v)}
-        />
-      </Row>
-      <div>
-        {t('backup:backup_advice')}
-      </div>
-      <Row gap="0.5rem" style="flex-wrap:wrap">
-        <AppButton
-          tooltip={t('backup:download_all_backup_tooltip')}
-          class="flex-centered"
-          onclick={async () => {
-            const songs = await validateSongs();
-            if (!songs) return;
-            const folders = await validateFolders();
-            if (!folders) return;
-            const themes = await validateThemes();
-            if (!themes) return;
-            const files = [...songs, ...folders, ...themes];
-            if (files.length === 0) return logger.warn(t('backup:no_items_to_backup'));
-            try {
-              await downloadFiles(files, `${getDateString()}-all.${APP_NAME.toLowerCase()}backup`);
-              logger.success(t('backup:backup_downloaded'));
-              settingsService.setLastBackupWarningTime(Date.now());
-            } catch {
-              // QUIRK: unlike the songs-only/themes-only buttons' catches below, this one
-              // doesn't console.error(e) - old's own asymmetry, reproduced. The binding is
-              // omitted (valid ES2019+ optional catch binding) rather than kept-but-unused.
-              logger.error(t('backup:backup_download_error'));
-            }
-          }}
-        >
-          {@render downloadIcon()}
-          {t('backup:download_all_backup')}
-        </AppButton>
-        <AppButton
-          tooltip={t('backup:download_songs_tooltip')}
-          class="flex-centered"
-          onclick={async () => {
-            const songs = await validateSongs();
-            if (!songs) return;
-            const folders = await validateFolders();
-            if (!folders) return;
-            const files = [...songs, ...folders];
-            if (files.length === 0) return logger.warn(t('logs:no_songs_to_backup'));
-            try {
-              await downloadFiles(
-                files,
-                `${getDateString()}-songs.${APP_NAME.toLowerCase()}backup`
-              );
-              logger.success(t('backup:downloaded_songs_notice'));
-              settingsService.setLastBackupWarningTime(Date.now());
-            } catch (e) {
-              logger.error(t('backup:backup_download_error'));
-              console.error(e);
-            }
-          }}
-        >
-          {@render downloadIcon()}
-          {t('backup:download_songs_backup')}
-        </AppButton>
-        <AppButton
-          tooltip={t('backup:download_themes_tooltip')}
-          class="flex-centered"
-          onclick={async () => {
-            const themes = await validateThemes();
-            if (!themes) return;
-            if (themes.length === 0) return logger.warn(t('backup:no_themes_to_backup'));
-            try {
-              await downloadFiles(
-                themes,
-                `${getDateString()}-themes.${APP_NAME.toLowerCase()}backup`
-              );
-              logger.success(t('backup:downloaded_themes_notice'));
-            } catch (e) {
-              logger.error(t('backup:backup_download_error'));
-              console.error(e);
-            }
-          }}
-        >
-          {@render downloadIcon()}
-          {t('backup:download_themes_backup')}
-        </AppButton>
-      </Row>
-    </Card>
+        <Row class="backup-transfer-row">
+          <div>
+            {t('backup:transfer_data_notice')}
+          </div>
+          <AppLink href="/transfer" class="backup-action-link">
+            <AppButton class="backup-action" cssVar="accent" style="gap:0.2rem">
+              {t('backup:transfer')}
+            </AppButton>
+          </AppLink>
+        </Row>
+      </Card>
 
-    <Card background="none" border="secondary" gap="0.8rem">
-      <Header type="h2">
-        {t('backup:import_backup')}
-      </Header>
-      <div>
-        {t('backup:import_backup_description')}
-      </div>
-      <Row align="center" justify="between" gap="1rem" style="flex-wrap:wrap">
-        <FilePicker
-          onPick={onFilePick}
-          as="json"
-          onError={() => logger.error(t('backup:error_reading_file'))}
-        >
+      <Card background="none" border="secondary" gap="0.8rem">
+        <Row class="backup-format-row">
+          <Header type="h2">
+            {t('backup:backup_as')}
+          </Header>
+          <MultipleOptionSlider
+            options={[
+              {
+                value: 'zip',
+                color: theme.getValue('accent').toString(),
+                text: 'zip',
+              },
+              {
+                value: 'json',
+                color: theme.getValue('accent').toString(),
+                text: 'json',
+              },
+            ]}
+            selected={downloadFormat}
+            onChange={(v) => (downloadFormat = v)}
+          />
+        </Row>
+        <div>
+          {t('backup:backup_advice')}
+        </div>
+        <Row class="backup-actions">
           <AppButton
-            class="flex-centered"
-            cssVar="accent"
-            tooltip={t('backup:import_backup_tooltip')}
-            style="padding:0.8rem"
+            tooltip={t('backup:download_all_backup_tooltip')}
+            class="flex-centered backup-action"
+            onclick={async () => {
+              const songs = await validateSongs();
+              if (!songs) return;
+              const folders = await validateFolders();
+              if (!folders) return;
+              const themes = await validateThemes();
+              if (!themes) return;
+              const files = [...songs, ...folders, ...themes];
+              if (files.length === 0) return logger.warn(t('backup:no_items_to_backup'));
+              try {
+                await downloadFiles(
+                  files,
+                  `${getDateString()}-all.${APP_NAME.toLowerCase()}backup`
+                );
+                logger.success(t('backup:backup_downloaded'));
+                settingsService.setLastBackupWarningTime(Date.now());
+              } catch {
+                // QUIRK: unlike the songs-only/themes-only buttons' catches below, this one
+                // doesn't console.error(e) - old's own asymmetry, reproduced. The binding is
+                // omitted (valid ES2019+ optional catch binding) rather than kept-but-unused.
+                logger.error(t('backup:backup_download_error'));
+              }
+            }}
           >
-            {@render importIcon()}
-            {t('backup:import_backup')}
+            {@render downloadIcon()}
+            {t('backup:download_all_backup')}
           </AppButton>
-        </FilePicker>
-        <Column style="opacity:0.8">
-          <span>
-            {songsStore.songs.length}
-            {t('backup:songs')}
-          </span>
+          <AppButton
+            tooltip={t('backup:download_songs_tooltip')}
+            class="flex-centered backup-action"
+            onclick={async () => {
+              const songs = await validateSongs();
+              if (!songs) return;
+              const folders = await validateFolders();
+              if (!folders) return;
+              const files = [...songs, ...folders];
+              if (files.length === 0) return logger.warn(t('logs:no_songs_to_backup'));
+              try {
+                await downloadFiles(
+                  files,
+                  `${getDateString()}-songs.${APP_NAME.toLowerCase()}backup`
+                );
+                logger.success(t('backup:downloaded_songs_notice'));
+                settingsService.setLastBackupWarningTime(Date.now());
+              } catch (e) {
+                logger.error(t('backup:backup_download_error'));
+                console.error(e);
+              }
+            }}
+          >
+            {@render downloadIcon()}
+            {t('backup:download_songs_backup')}
+          </AppButton>
+          <AppButton
+            tooltip={t('backup:download_themes_tooltip')}
+            class="flex-centered backup-action"
+            onclick={async () => {
+              const themes = await validateThemes();
+              if (!themes) return;
+              if (themes.length === 0) return logger.warn(t('backup:no_themes_to_backup'));
+              try {
+                await downloadFiles(
+                  themes,
+                  `${getDateString()}-themes.${APP_NAME.toLowerCase()}backup`
+                );
+                logger.success(t('backup:downloaded_themes_notice'));
+              } catch (e) {
+                logger.error(t('backup:backup_download_error'));
+                console.error(e);
+              }
+            }}
+          >
+            {@render downloadIcon()}
+            {t('backup:download_themes_backup')}
+          </AppButton>
+        </Row>
+      </Card>
 
-          <span>
-            {themeStore.themes.length}
-            {t('backup:themes')}
-          </span>
-        </Column>
-      </Row>
-    </Card>
+      <Card background="none" border="secondary" gap="0.8rem">
+        <Header type="h2">
+          {t('backup:import_backup')}
+        </Header>
+        <div>
+          {t('backup:import_backup_description')}
+        </div>
+        <Row class="backup-import-row">
+          <div class="backup-import-picker">
+            <FilePicker
+              onPick={onFilePick}
+              as="json"
+              onError={() => logger.error(t('backup:error_reading_file'))}
+            >
+              <AppButton
+                class="flex-centered backup-action"
+                cssVar="accent"
+                tooltip={t('backup:import_backup_tooltip')}
+                style="padding:0.8rem"
+              >
+                {@render importIcon()}
+                {t('backup:import_backup')}
+              </AppButton>
+            </FilePicker>
+          </div>
+          <Column class="backup-counts">
+            <span>
+              {songsStore.songs.length}
+              {t('backup:songs')}
+            </span>
 
-    <Card background="none" border="secondary" gap="0.8rem">
-      <Header type="h2">
-        {t('backup:delete_data')}
-      </Header>
-      <div>
-        {t('backup:delete_data_description')}
-      </div>
-      <Row gap="0.5rem" style="flex-wrap:wrap">
-        <AppButton
-          class="flex-centered"
-          tooltip={t('backup:delete_songs_and_folders_tooltip')}
-          tooltipPosition="top"
-          style="background-color:var(--red-bg);color:var(--red-text)"
-          onclick={deleteAllSongsAndFolders}
-        >
-          {@render trashIcon()}
-          {t('backup:delete_songs_and_folders')}
-        </AppButton>
-        <AppButton
-          class="flex-centered"
-          tooltip={t('backup:delete_themes_tooltip')}
-          tooltipPosition="top"
-          style="background-color:var(--red-bg);color:var(--red-text)"
-          onclick={deleteAllThemes}
-        >
-          {@render trashIcon()}
-          {t('backup:delete_themes')}
-        </AppButton>
-      </Row>
-    </Card>
-  </Column>
+            <span>
+              {themeStore.themes.length}
+              {t('backup:themes')}
+            </span>
+          </Column>
+        </Row>
+      </Card>
+
+      <Card background="none" border="secondary" gap="0.8rem">
+        <Header type="h2">
+          {t('backup:delete_data')}
+        </Header>
+        <div>
+          {t('backup:delete_data_description')}
+        </div>
+        <Row class="backup-actions">
+          <AppButton
+            class="flex-centered backup-action"
+            tooltip={t('backup:delete_songs_and_folders_tooltip')}
+            tooltipPosition="top"
+            style="background-color:var(--red-bg);color:var(--red-text)"
+            onclick={deleteAllSongsAndFolders}
+          >
+            {@render trashIcon()}
+            {t('backup:delete_songs_and_folders')}
+          </AppButton>
+          <AppButton
+            class="flex-centered backup-action"
+            tooltip={t('backup:delete_themes_tooltip')}
+            tooltipPosition="top"
+            style="background-color:var(--red-bg);color:var(--red-text)"
+            onclick={deleteAllThemes}
+          >
+            {@render trashIcon()}
+            {t('backup:delete_themes')}
+          </AppButton>
+        </Row>
+      </Card>
+    </Column>
+  </div>
 </DefaultPage>
+
+<style>
+  /* `display: contents` and nothing else: this wrapper adds no box, so every card keeps the exact
+     layout it had, and it exists purely to give the rules below an ancestor Svelte can hash. Every
+     class they target (the Rows, the Columns, the AppButtons) is rendered by a CHILD component, so
+     scoped CSS can't see it and `:global()` is the only way in - hanging those globals off this
+     wrapper keeps them from reaching any other page's `.row`s and buttons. */
+  .backup-page {
+    display: contents;
+  }
+
+  /* The four action strips used to carry `align`/`justify`/`gap`/`flex-wrap` as Row PROPS, which
+     Row emits as an inline `style` - and an inline declaration outranks every rule that isn't
+     `!important`, so the portrait block could never have restacked them. Same declarations, same
+     landscape rendering; they just live somewhere a media query can reach now. */
+  .backup-page :global(.backup-transfer-row),
+  .backup-page :global(.backup-format-row) {
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+
+  .backup-page :global(.backup-import-row) {
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+
+  .backup-page :global(.backup-actions) {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .backup-page :global(.backup-counts) {
+    opacity: 0.8;
+  }
+
+  /* PORTRAIT. Width-tiered as well as orientation-keyed on purpose, matching App.css's own
+     `max-width: 920px and (orientation: portrait)` block: below that tier `.default-page` drops to
+     a 1rem gutter and the page really is phone-narrow, while a portrait TABLET is a wide window
+     that keeps the desktop 20vw margins and reads fine as the desktop row of chips. */
+  @media screen and (orientation: portrait) and (max-width: 920px) {
+    /* ONE ACTION PER LINE, FULL WIDTH. `flex-wrap` alone already broke these rows onto several
+       lines at 393px, but as a ragged left-aligned stack of differently-sized chips - the wrapping
+       was survival, not a layout. A column of equal, full-width bars is what this page's cards are
+       actually made of: one destination per row, each one a real thumb target. */
+    .backup-page :global(.backup-transfer-row),
+    .backup-page :global(.backup-format-row),
+    .backup-page :global(.backup-import-row),
+    .backup-page :global(.backup-actions) {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 0.6rem;
+    }
+
+    /* `width` and not `flex: 1`: AppLink and FilePicker each wrap their button in a plain element
+       of their own, so the button is not always the flex item the stretch above applies to. */
+    .backup-page :global(.backup-action) {
+      width: 100%;
+      min-height: 2.75rem;
+    }
+
+    .backup-page :global(.backup-action-link) {
+      display: flex;
+    }
+
+    /* MultipleOptionSlider sizes itself `width: fit-content` / `height: 100%`, which in a stretched
+       column would leave a 62x27 pair of options - too small to hit and adrift on a full-width row.
+       Beating its own scoped `.multiple-option-slider` rule needs the extra `div` in the selector;
+       the buttons inside are already `height: 100%`, so they follow this height. */
+    .backup-page :global(div.multiple-option-slider) {
+      width: 100%;
+      height: 2.75rem;
+    }
+
+    /* The two counts stop being a right-hand gutter (there is no right-hand gutter any more) and
+       become a caption under the import button. */
+    .backup-page :global(div.backup-counts) {
+      flex-direction: row;
+      justify-content: center;
+      gap: 1.2rem;
+    }
+  }
+</style>
