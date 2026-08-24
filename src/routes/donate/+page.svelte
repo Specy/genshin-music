@@ -7,6 +7,7 @@
   import { game } from '$game';
   import kofi from '$lib/assets/images/donate/kofi.png';
   import paypalme from '$lib/assets/images/donate/paypalme.png';
+  import Header from '$cmp/header/Header.svelte';
 
   onMount(() => {
     setPageVisited('donate');
@@ -18,6 +19,9 @@
     text={t('home:donate_name')}
     description={`Help the development of ${game.id} with a donation.`}
   />
+  <Header style="margin-bottom: 1rem;">
+      {t('common:donate')}
+  </Header>
   <div class="donate-text">
     {t('donate:donate_message')}
   </div>

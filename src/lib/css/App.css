@@ -1784,6 +1784,12 @@ a {
   .rotate-screen {
     display: flex;
   }
+  .home-content, .middle-size-pages-wrapper {
+      gap: 0.5rem;
+  }
+  .middle-size-pages-wrapper {
+      margin-top: 0.5rem;
+  }
 }
 
 /* ==================================================================================
