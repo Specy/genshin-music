@@ -726,9 +726,13 @@ export const i18n_en = {
       track_settings: 'Track settings',
       tempo_bpm: 'Tempo (BPM)',
       base_pitch: 'Base Pitch',
-      of_which_dont_fit: "Of which don't fit the instrument",
+      of_which_are_accidentals: 'Of which are accidentals',
       of_which_out_of_range: 'Of which are outside of range',
       include_accidentals: 'Include accidentals',
+      include_out_of_range_notes: 'Include out of range notes',
+      include_out_of_range_notes_description:
+        'Keep notes the selected instrument cannot play. Notes outside the addressable span are always excluded.',
+      composer_locked_during_import: 'The composer is read-only while the MIDI importer is open.',
       global_note_offset: 'Global note offset',
       global_note_offset_description: `The index of each note will be pushed up/down by this amount, you can use it to make
                             the song fit into the app range. You can also change the offset of each layer.`,

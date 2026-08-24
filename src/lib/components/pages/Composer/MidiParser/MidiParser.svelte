@@ -7,8 +7,8 @@
   import { logger } from '$stores/LoggerStore.svelte';
   import { ThemeProvider } from '$core/theme/ThemeProvider.svelte';
   import { ComposedSong } from '$core/Songs/ComposedSong.svelte';
-  import { importMidiTracks, playableIdsOf, suggestOffset } from '$core/Songs/midiImport';
-  import { basepointOffset } from '$core/Songs/noteIds';
+  import { importMidiTracks, suggestOffset } from '$core/Songs/midiImport';
+  import { effectiveTrackPitch } from '$core/Songs/noteIds';
   import { decodeMidiMetadata, type MidiMetadata } from '$core/Songs/midiMetadata';
   import { delay, isAudioFormat, isVideoFormat } from '$core/utils/Utilities';
   import { t } from '$i18n/binding.svelte';
@@ -63,6 +63,7 @@
   let importedMetadata: MidiMetadata | null = $state(null);
   let totalNotes = $state(0);
   let includeAccidentals = $state(true);
+  let includeOutOfRange = $state(false);
   let warnedOfExperimental = false;
   // Parsing audio/video can outlive this import session by several seconds. A closed importer must
   // never install that stale result over the song after the lock has gone (or over a newer import).
@@ -227,6 +228,7 @@
     const selectedTracks = tracks.filter((track) => track.selected);
     for (const track of tracks) {
       track.numberOfAccidentals = 0;
+      track.outOfRange = 0;
       track.outOfRangeBounds.lower = 0;
       track.outOfRangeBounds.upper = 0;
     }
@@ -252,6 +254,7 @@
         bpm,
         offset,
         includeAccidentals,
+        includeOutOfRange,
         //the Basepoint the song below is given: the importer takes it off every incoming number
         //and puts it back on every emitted one (ADR-0007), so the two must be the same value
         pitch,
@@ -264,9 +267,17 @@
     selectedTracks.forEach((track, index) => {
       const stats = result.perTrack[index];
       track.numberOfAccidentals = stats.accidentals;
+      track.outOfRange = stats.outOfRange;
       track.outOfRangeBounds.lower = stats.outOfRangeLower;
       track.outOfRangeBounds.upper = stats.outOfRangeUpper;
     });
+    // Publish the accounting before considering whether a preview can be installed. A conversion
+    // whose policies exclude every note still has useful costs to show in the panel, and leaving
+    // the previous file's totals behind makes those controls impossible to reason about.
+    accidentals = result.accidentals;
+    totalNotes = result.totalNotes;
+    outOfRange = result.outOfRange;
+    merged = result.merged;
     const columns = result.columns;
     const song = new ComposedSong('Untitled');
     //initColumnsForConstruction, not a mutator: this song is being BUILT here and is handed to loadSong below,
@@ -285,10 +296,6 @@
     }
     if (!componentAlive) return;
     functions.loadSong(song, { preview: true });
-    accidentals = result.accidentals;
-    totalNotes = result.totalNotes;
-    outOfRange = result.outOfRange;
-    merged = result.merged;
   }
 
   function warnTrackLimit() {
@@ -315,26 +322,19 @@
 
   function suggestGlobalOffset() {
     const selected = tracks.filter((track) => track.selected);
-    const notes = selected.flatMap((track) => track.track.notes.map((n) => ({ midi: n.midi })));
-    if (notes.length === 0) {
+    if (selected.length === 0) {
       //reachable with every track deselected, and a button that does nothing at all reads as
       //broken rather than as "nothing to work on"
       return logger.warn(t('composer:midi_parser.there_are_no_notes'));
     }
-    //score against the instruments the selected tracks actually land on, so a gapped layout
-    //(Sky's Bells, its SFX sets) counts the notes it would strand rather than only the ones
-    //the game-wide map rejects
-    // eslint-disable-next-line svelte/prefer-svelte-reactivity -- transient local accumulator, never UI-observed
-    const playable = new Set<number>();
-    for (const track of selected) {
-      for (const id of playableIdsOf(track.instrument.name)) playable.add(id);
-    }
-    //scored in GRID space, which is where the importer snaps: the Basepoint comes off there
-    //first, so it has to come off here too or the suggestion optimises a shift of the wrong
-    //notes. The offset it answers is still in the file's own space — the reduction cancels.
     const suggestion = suggestOffset(
-      notes.map(({ midi }) => ({ midi: midi - basepointOffset(pitch) })),
-      playable
+      selected.map((track) => ({
+        notes: track.track.notes,
+        instrumentName: track.instrument.name,
+        pitch: effectiveTrackPitch(track.instrument, pitch),
+        localOffset: track.localOffset,
+        maxScaling: track.maxScaling,
+      }))
     );
     changeOffset(suggestion.offset);
     logger.success(
@@ -365,6 +365,11 @@
     if (tracks.length > 0) convertMidi();
   }
 
+  function toggleOutOfRange() {
+    includeOutOfRange = !includeOutOfRange;
+    if (tracks.length > 0) convertMidi();
+  }
+
   function changeBpm(value: number) {
     if (!Number.isInteger(value)) value = 0;
     if (bpm === value) return;
@@ -392,6 +397,10 @@
         {t('common:close')}
       </button>
     </Row>
+
+    <div class="midi-lock-notice">
+      {t('composer:midi_parser.composer_locked_during_import')}
+    </div>
 
     <fieldset class={['midi-section', tracks.length === 0 && 'midi-section-disabled']}>
       <legend>{t('composer:midi_parser.import_settings')}</legend>
@@ -428,13 +437,28 @@
             onChange={changePitch}
           />
         </Row>
-        <Row justify="between" align="center">
-          <div style="margin-right:0.5rem">{t('composer:midi_parser.include_accidentals')}:</div>
-          <Switch
-            checked={includeAccidentals}
-            onchange={toggleAccidentals}
-            styleOuter={midiInputsStyle}
-          />
+        <Row gap="1rem" align="center" style="width:100%">
+          <Row flex1 justify="between" align="center" gap="0.4rem">
+            <div>{t('composer:midi_parser.include_accidentals')}:</div>
+            <Switch
+              checked={includeAccidentals}
+              onchange={toggleAccidentals}
+              styleOuter={midiInputsStyle}
+            />
+          </Row>
+          <Row flex1 justify="between" align="center" gap="0.4rem">
+            <div class="row flex-centered">
+              <span>{t('composer:midi_parser.include_out_of_range_notes')}:</span>
+              <HelpTooltip buttonStyle="width:1.2rem;height:1.2rem">
+                {t('composer:midi_parser.include_out_of_range_notes_description')}
+              </HelpTooltip>
+            </div>
+            <Switch
+              checked={includeOutOfRange}
+              onchange={toggleOutOfRange}
+              styleOuter={midiInputsStyle}
+            />
+          </Row>
         </Row>
       </Column>
     </fieldset>
@@ -473,6 +497,10 @@
   .midi-section legend {
     padding: 0 0.3rem;
     font-weight: bold;
+  }
+
+  .midi-lock-notice {
+    opacity: 0.85;
   }
 
   /* No file yet: the settings are inert, and they LOOK it. The cursor lives on the fieldset -

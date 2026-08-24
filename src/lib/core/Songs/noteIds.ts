@@ -118,7 +118,7 @@ export function songGridSlotForId(id: number): number {
 // eslint-disable-next-line svelte/prefer-svelte-reactivity -- build-time constant cache
 const gridPitchClasses = new Set<number>(CANONICAL_NOTE_IDS.map((id) => ((id % 12) + 12) % 12))
 
-/** A MIDI number is ACCIDENTAL when the grid has no row for its pitch class. By pitch class, so it answers for numbers outside MIDI_BOUNDS too — the importer's offset search scores un-shifted notes. */
+/** A MIDI number is ACCIDENTAL when the grid has no row for its pitch class. Pitch-class based, so it answers outside MIDI_BOUNDS too. */
 export function isAccidentalMidi(midiNote: number): boolean {
     return !gridPitchClasses.has(((midiNote % 12) + 12) % 12)
 }
@@ -151,10 +151,10 @@ export function noteNameForMidi(midiNote: number): string {
 
 /**
  * A foreign MIDI number snapped onto the Song Grid, exactly as the retired table did:
- * - outside MIDI_BOUNDS → `{id: -1, isAccidental: false}`. The bounds ARE the range the table
- *   had keys for, so out-of-range notes come back unmapped and unflagged (the importer counts
- *   them under out-of-range, never under accidentals) — MidiNote.fromMidi's octave-folding
- *   loop is what gives them a second chance first.
+ * - outside MIDI_BOUNDS → `{id: -1, isAccidental: false}`. The bounds ARE the range the retired
+ *   table had keys for, so this bounded compatibility helper leaves them unmapped and unflagged.
+ *   MIDI import uses `snapMidiToGridPeriodically` instead: its discard rules are instrument
+ *   voiceability and the Addressable Span, not the Song Grid's display bounds.
  * - in range → the nearest grid id AT OR BELOW the number, flagged accidental when the number
  *   is not a grid pitch class itself.
  */

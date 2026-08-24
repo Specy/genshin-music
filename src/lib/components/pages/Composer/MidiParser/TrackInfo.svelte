@@ -1,10 +1,12 @@
 <script lang="ts">
+  import type { Pitch } from '$lib/games/types';
   import type { CustomTrack } from './midiTrackRoster';
   import { ThemeProvider } from '$core/theme/ThemeProvider.svelte';
   import { t } from '$i18n/binding.svelte';
   import Row from '$cmp/layout/Row.svelte';
   import Column from '$cmp/layout/Column.svelte';
   import InstrumentSelect from '$cmp/inputs/InstrumentSelect.svelte';
+  import PitchSelect from '$cmp/inputs/PitchSelect.svelte';
   import Tooltip from '$cmp/utility/Tooltip.svelte';
   import { hasTooltip } from '$cmp/utility/tooltip';
   import NumericalInput from './NumericalInput.svelte';
@@ -114,10 +116,23 @@
       <div>{t('common:instrument')}</div>
       <div>{data.track.instrument.name}</div>
     </Row>
+    <Row align="center" justify="between">
+      <div>{t('common:pitch')}</div>
+      <PitchSelect
+        style="width:8rem"
+        selected={data.instrument.pitch as Pitch}
+        onChange={(pitch) =>
+          onChange(index, { instrument: data.instrument.clone().set({ pitch }) })}
+      >
+        <option value="">
+          {t('instrument_settings:use_song_pitch')}
+        </option>
+      </PitchSelect>
+    </Row>
     <MidiStatsTable
       notes={data.track.notes.length}
       accidentals={data.numberOfAccidentals}
-      outOfRange={data.outOfRangeBounds.upper + data.outOfRangeBounds.lower}
+      outOfRange={data.outOfRange}
       outOfRangeBounds={data.outOfRangeBounds}
     />
   </Column>

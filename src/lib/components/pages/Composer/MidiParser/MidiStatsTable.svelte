@@ -22,7 +22,7 @@
   <thead>
     <tr>
       <th scope="col">{t('composer:midi_parser.number_of_notes')}</th>
-      <th scope="col">{t('composer:midi_parser.of_which_dont_fit')}</th>
+      <th scope="col">{t('composer:midi_parser.of_which_are_accidentals')}</th>
       <th scope="col">{t('composer:midi_parser.of_which_out_of_range')}</th>
     </tr>
   </thead>

@@ -1,7 +1,5 @@
-import {APP_NAME, INSTRUMENTS, MIDI_BOUNDS, type Pitch, TEMPO_CHANGERS, type TempoChanger} from "$core/legacyConfig"
+import {APP_NAME, INSTRUMENTS, type Pitch, TEMPO_CHANGERS, type TempoChanger} from "$core/legacyConfig"
 import type {InstrumentName} from "$core/types"
-//value import, and it stays acyclic: noteIds imports this module for TYPES only (erased)
-import {snapMidiToGrid} from "./noteIds"
 // InstrumentNoteIcon used to live in Songs/ComposedSong.svelte.ts (old SongClasses.ts imported it
 // FROM there). Task 5 relocated the canonical definition here instead (needed for
 // InstrumentData/SerializedInstrumentData before ComposedSong was ported). Task 7's
@@ -468,30 +466,4 @@ export class MidiNote {
         this.durationMs = durationMs
     }
 
-    static fromMidi(layer: number, time: number, midiNote: number, octavesScale: number, durationMs: number = 0) {
-        const toReturn = new MidiNote(time, layer, undefined, durationMs)
-        for (let i = 0; i < octavesScale; i++) {
-            //±12 = a real octave. The pre-v4 code shifted by ±8 (a long-preserved bug that
-            //transposed out-of-range notes off-key); fixed deliberately with the format
-            //rewrite — import is lossy authoring, not a serialization-compat surface
-            //(spec 2026-08-03 §7).
-            if (midiNote < MIDI_BOUNDS.lower) {
-                midiNote += 12
-            }
-            if (midiNote > MIDI_BOUNDS.upper) {
-                midiNote -= 12
-            }
-        }
-        //snapMidiToGrid replaces the authored midi.mapToNote table (ADR-0007 phase E): same
-        //answer, derived from the grid instead of restated beside it
-        const snapped = snapMidiToGrid(midiNote)
-        toReturn.data = {
-            id: snapped.id,
-            isAccidental: snapped.isAccidental,
-            outOfRangeBound: 0
-        }
-        if (midiNote > MIDI_BOUNDS.upper) toReturn.data.outOfRangeBound = 1
-        if (midiNote < MIDI_BOUNDS.lower) toReturn.data.outOfRangeBound = -1
-        return toReturn
-    }
 }

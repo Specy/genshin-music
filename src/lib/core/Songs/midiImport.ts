@@ -26,38 +26,100 @@
 import {INSTRUMENTS, INSTRUMENTS_DATA, type Pitch, TEMPO_CHANGERS} from '$core/legacyConfig'
 import {MidiNote, NoteColumn, type ColumnNote} from './SongClasses'
 import {
+    addressableSpan,
     basepointOffset,
     effectiveTrackPitch,
-    getNoteIdTable,
-    isAccidentalMidi,
+    foldNumberIntoRange,
+    getSoundingTable,
     nominalToNumber,
-    snapMidiToGrid,
+    numberToButton,
+    snapMidiToGridPeriodically,
 } from './noteIds'
-
-/**
- * The NOMINAL ids an instrument can sound — the set suggestOffset scores against.
- *
- * Deliberately the nominal axis and not the sounding one: `suggestOffset` chooses a transposition
- * for the SNAPPING stage, which happens entirely in grid space — with the layer's Basepoint already
- * taken off, and before it is put back on — so the two must speak the same axis or the suggestion
- * optimises the wrong thing. The same reason the caller hands `suggestOffset` its notes already
- * reduced by the Basepoint: the shift it returns is in the file's own space either way, because the
- * reduction applies equally to both sides of `midi - offset`.
- */
-export function playableIdsOf(instrumentName: string): ReadonlySet<number> {
-    return new Set(getNoteIdTable(instrumentName))
-}
 
 export type OffsetSuggestion = {
     offset: number
     /** Notes that would land on an accidental and be snapped to a neighbouring key. */
     accidentals: number
-    /** Notes that would produce no sound: off the map, or absent from the instrument. */
+    /** Notes the selected instrument cannot voice, including Addressable Span violations. */
     stranded: number
 }
 
+/** One selected track's complete context for scoring a global offset. */
+export type MidiOffsetSuggestionGroup = {
+    notes: readonly {midi: number}[]
+    instrumentName: string
+    /** The track's effective Basepoint (its override, otherwise the song's). */
+    pitch: Pitch
+    /** A fixed local offset ignores every global candidate, but still contributes its cost. */
+    localOffset: number | null
+    maxScaling: number
+}
+
+type MidiNumberTransform = {
+    /** Final absolute Note Number, or NaN when the input could not be transformed. */
+    number: number
+    isAccidental: boolean
+    voiceable: boolean
+    addressable: boolean
+    /** Instrument-relative direction; gaps and non-finite inputs deliberately have no direction. */
+    outOfRangeBound: -1 | 0 | 1
+}
+
 /**
- * Best transposition for a set of MIDI notes — the automation the Python lyre player calls
+ * The single per-number policy used by both conversion and offset scoring.
+ *
+ * The fold helper speaks the absolute sounding axis and removes/reapplies the Basepoint itself.
+ * At this point the policy has already moved into grid space, so temporarily restoring the same
+ * Basepoint around the call is the coordinate adapter that avoids removing it twice.
+ */
+function transformMidiNumber(
+    midi: number,
+    group: Omit<MidiOffsetSuggestionGroup, 'notes'>,
+    globalOffset: number
+): MidiNumberTransform {
+    const pitchOffset = basepointOffset(group.pitch)
+    const gridNumber = midi - (group.localOffset ?? globalOffset) - pitchOffset
+    const foldedGridNumber = foldNumberIntoRange(
+        group.instrumentName,
+        group.pitch,
+        gridNumber + pitchOffset,
+        group.maxScaling
+    ) - pitchOffset
+    const snapped = snapMidiToGridPeriodically(foldedGridNumber)
+
+    // `-1` can be a legitimate periodic nominal (MIDI -1 is B-2), so invalidity comes from the
+    // pre-snap number, not the bounded helper's historical sentinel. Never lift a non-finite input:
+    // nominalToNumber(-1) would otherwise turn NaN into a plausible finite low note.
+    if (!Number.isFinite(foldedGridNumber)) {
+        return {
+            number: NaN,
+            isAccidental: snapped.isAccidental,
+            voiceable: false,
+            addressable: false,
+            outOfRangeBound: 0,
+        }
+    }
+
+    const number = nominalToNumber(group.instrumentName, group.pitch, snapped.id)
+    const voiceable = numberToButton(group.instrumentName, group.pitch, number) !== -1
+    const sounding = getSoundingTable(group.instrumentName)
+    const min = Math.min(...sounding) + pitchOffset
+    const max = Math.max(...sounding) + pitchOffset
+    const outOfRangeBound = number < min ? -1 : number > max ? 1 : 0
+    const span = addressableSpan()
+
+    return {
+        number,
+        isAccidental: snapped.isAccidental,
+        voiceable,
+        addressable: Number.isFinite(number) && number >= span.min && number <= span.max,
+        // A missing button between the extrema is a gap, not an invented direction.
+        outOfRangeBound: voiceable ? 0 : outOfRangeBound,
+    }
+}
+
+/**
+ * Best global transposition for selected MIDI tracks — the automation the Python lyre player calls
  * find_best_shift, which we had no equivalent of (offset is typed in by hand, and the only
  * feedback is a counter the user minimizes by trial and error).
  *
@@ -66,42 +128,37 @@ export type OffsetSuggestion = {
  * absolute pitch. Picking the semitone first and the octave second is exact, where a single
  * combined scan trades one against the other arbitrarily.
  *
- * Deliberately scored against the TARGET INSTRUMENT's own ids, not just the game-wide grid:
- * instruments with gapped layouts (Sky's 8-note Bells, its 6-note SFX sets) strand notes that
- * the Song Grid calls perfectly playable, and nothing in the UI reports that today.
+ * Deliberately scored against every TARGET INSTRUMENT, not just the game-wide grid: instruments
+ * with gapped layouts (Sky's 8-note Bells, its 6-note SFX sets) strand notes that the Song Grid
+ * calls perfectly playable, and those gaps are real losses for the suggestion to minimize.
  *
  * Ties resolve to the smallest shift, and 0 always wins an outright tie — so running this over
  * a file the app itself exported can never transpose it away from where it started.
  */
-export function suggestOffset(
-    notes: readonly {midi: number}[],
-    playableIds: ReadonlySet<number>
-): OffsetSuggestion {
-    //accidental-ness and the snapped id both come from the Song Grid now (noteIds, ADR-0007
-    //phase E) instead of the retired per-game midi table — same answers, one source
+export function suggestOffset(groups: readonly MidiOffsetSuggestionGroup[]): OffsetSuggestion {
     const score = (offset: number) => {
         let accidental = 0
         let stranded = 0
-        for (const note of notes) {
-            const shifted = note.midi - offset
-            if (isAccidentalMidi(shifted)) accidental++
-            const snapped = snapMidiToGrid(shifted)
-            if (snapped.id === -1 || !playableIds.has(snapped.id)) stranded++
+        for (const group of groups) {
+            for (const note of group.notes) {
+                const transformed = transformMidiNumber(note.midi, group, offset)
+                if (transformed.isAccidental) accidental++
+                if (!transformed.voiceable || !transformed.addressable) stranded++
+            }
         }
         return {accidental, stranded}
     }
-    if (notes.length === 0) return {offset: 0, accidentals: 0, stranded: 0}
+    if (!groups.some(group => group.notes.length > 0)) {
+        return {offset: 0, accidentals: 0, stranded: 0}
+    }
 
     // ---- stage 1: the semitone, judged only on how many notes turn accidental -------------
     let bestSemitone = 0
     let bestAccidentals = Infinity
     for (let semitone = -6; semitone <= 5; semitone++) {
-        let count = 0
-        for (const note of notes) {
-            if (isAccidentalMidi(note.midi - semitone)) count++
-        }
-        //strictly less, and candidates are walked from the outside in ending at +5, so an
-        //equal score never displaces a shift already found closer to zero
+        const count = score(semitone).accidental
+        // Equal costs prefer the smallest absolute shift. The negative candidate is visited first
+        // for a ±n tie, preserving the original search's final tie rule; an outright tie picks 0.
         if (count < bestAccidentals || (count === bestAccidentals && Math.abs(semitone) < Math.abs(bestSemitone))) {
             bestAccidentals = count
             bestSemitone = semitone
@@ -131,7 +188,7 @@ export type MidiImportTrack = {
     layer: number
     /** Per-track transposition; `??` means a track offset of 0 overrides a nonzero global. */
     localOffset: number | null
-    /** How many times an out-of-range note may be folded by an octave. */
+    /** Maximum number of octave moves the best-effort fold may make. */
     maxScaling: number
 }
 
@@ -154,6 +211,8 @@ export type MidiImportOptions = {
     bpm: number
     offset: number
     includeAccidentals: boolean
+    /** Keep instrument-unvoiceable notes as strands. Omitted means the safe sounding default. */
+    includeOutOfRange?: boolean
     /**
      * The Basepoint the imported song will carry (MidiParser's pitch selector, seeded from the
      * file's key signature or our own metadata), per layer through `effectiveTrackPitch`.
@@ -162,8 +221,8 @@ export type MidiImportOptions = {
      * file's midi number is an ABSOLUTE sounding pitch (what `toMidi` writes, and what a DAW means
      * by it), while the snap speaks the grid's NOMINAL axis — so the layer's Basepoint comes off
      * before the number is snapped, and `nominalToNumber` carries the snapped nominal back onto the
-     * absolute axis through that layer's own instrument. The SNAPPING itself is unchanged from the
-     * id-storing generation (ADR-0007 keeps import policy white-key, upgradeable later).
+     * absolute axis through that layer's own instrument. The snap remains white-key as ADR-0007
+     * requires, but repeats periodically now; Song Grid display bounds are no longer a discard rule.
      *
      * Two consequences, both intended:
      *  - our own export re-imports to the same notes at ANY Basepoint on an untuned instrument. It
@@ -193,6 +252,7 @@ export type MidiImportOptions = {
 
 export type MidiTrackStats = {
     accidentals: number
+    /** Non-accidental-gated notes this track's chosen instrument cannot voice. */
     outOfRange: number
     outOfRangeLower: number
     outOfRangeUpper: number
@@ -202,8 +262,9 @@ export type MidiImportResult = {
     columns: NoteColumn[]
     totalNotes: number
     accidentals: number
+    /** Instrument-unvoiceable notes, whether the out-of-range toggle kept or dropped them. */
     outOfRange: number
-    /** Otherwise mapped accidental notes rejected because includeAccidentals was off. */
+    /** Notes rejected at the accidental gate, before voiceability and Addressable Span policy. */
     droppedAccidentals: number
     /**
      * Notes that mapped fine but were absorbed by another: a re-strike of the same number landing
@@ -264,7 +325,7 @@ export function importMidiTracks(
     tracks: readonly MidiImportTrack[],
     options: MidiImportOptions
 ): MidiImportResult {
-    const {bpm, offset, includeAccidentals, layers} = options
+    const {bpm, offset, includeAccidentals, includeOutOfRange = false, layers} = options
     const perTrack: MidiTrackStats[] = tracks.map(() => ({
         accidentals: 0,
         outOfRange: 0,
@@ -298,7 +359,7 @@ export function importMidiTracks(
     const nameOf = (layer: number) => layers[layer]?.name ?? ''
     const canHoldOn = layers.map(layer => layer.sustains ?? instrumentSupportsSustain(layer.name))
 
-    // ---- 1. snap every selected note onto the Song Grid ------------------------------------
+    // ---- 1. apply the complete per-note policy before timing layout --------------------------
     const notes: MidiNote[] = []
     let totalNotes = 0
     let accidentals = 0
@@ -306,32 +367,49 @@ export function importMidiTracks(
     let droppedAccidentals = 0
     tracks.forEach((track, trackIndex) => {
         const stats = perTrack[trackIndex]
+        const instrumentName = nameOf(track.layer)
+        const pitch = pitchOf(track.layer)
         for (const midiNote of track.notes) {
             totalNotes++
-            const note = MidiNote.fromMidi(
-                track.layer,
-                Math.round(midiNote.time * 1000),
-                //INTO GRID SPACE: the file's number is an absolute sounding pitch and the snap
-                //speaks nominals, so this layer's Basepoint comes off first (see `pitch`). The
-                //range check and the octave folding inside fromMidi then judge the note where
-                //the grid actually is, not where the Basepoint moved it.
-                midiNote.midi - (track.localOffset ?? offset) - basepointOffset(pitchOf(track.layer)),
-                track.maxScaling,
-                Math.round(midiNote.duration * 1000)
-            )
-            if (note.data.isAccidental) {
+            const transformed = transformMidiNumber(midiNote.midi, {
+                instrumentName,
+                pitch,
+                localOffset: track.localOffset,
+                maxScaling: track.maxScaling,
+            }, offset)
+            if (transformed.isAccidental) {
                 accidentals++
                 stats.accidentals++
             }
-            if (note.data.id !== -1) {
-                if (includeAccidentals || !note.data.isAccidental) notes.push(note)
-                else droppedAccidentals++
-            } else {
+
+            // The accidental gate is first. Besides matching the visible pipeline, this keeps
+            // droppedAccidentals and outOfRange disjoint so the placed-note accounting is exact.
+            if (!includeAccidentals && transformed.isAccidental) {
+                droppedAccidentals++
+                continue
+            }
+
+            if (!transformed.voiceable) {
                 outOfRange++
                 stats.outOfRange++
-                if (note.data.outOfRangeBound === -1) stats.outOfRangeLower++
-                if (note.data.outOfRangeBound === 1) stats.outOfRangeUpper++
+                if (transformed.outOfRangeBound === -1) stats.outOfRangeLower++
+                if (transformed.outOfRangeBound === 1) stats.outOfRangeUpper++
+                if (!includeOutOfRange) continue
             }
+
+            // No toggle can rescue a Note Number outside the game's Addressable Span.
+            if (!transformed.addressable) continue
+
+            notes.push(new MidiNote(
+                Math.round(midiNote.time * 1000),
+                track.layer,
+                {
+                    id: transformed.number,
+                    isAccidental: transformed.isAccidental,
+                    outOfRangeBound: transformed.outOfRangeBound,
+                },
+                Math.round(midiNote.duration * 1000)
+            ))
         }
     })
     if (notes.length === 0) {
@@ -412,13 +490,12 @@ export function importMidiTracks(
                 while (end < columnStartSlots.length - 1 && columnStartSlots[end] < endSlot) end++
                 span = Math.max(1, end - columnIndex)
             }
-            //back onto the absolute axis THROUGH THIS LAYER'S INSTRUMENT (see `pitch`): a nominal
-            //the instrument has enters as that button's Sounding Pitch, so a tuned button imports
-            //as a note it can actually voice. The bare `nominal + offset` this used to be stranded
-            //8 of genshin's 21 rows on a Vintage-Lyre layer - silent, and dimmed on the canvas.
+            //The policy pass already lifted this through the layer's instrument before deciding
+            //whether it was voiceable and addressable. Keeping that exact number here prevents the
+            //conversion and its counters from asking subtly different questions.
             column.notes.push({
                 trackIndex: note.layer,
-                id: nominalToNumber(nameOf(note.layer), pitchOf(note.layer), note.data.id),
+                id: note.data.id,
                 span,
             } satisfies ColumnNote)
         }

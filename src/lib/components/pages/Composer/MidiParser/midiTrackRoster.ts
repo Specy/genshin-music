@@ -16,6 +16,8 @@ export type CustomTrack = {
   /** The complete layer configuration this track will contribute to the generated roster. */
   instrument: InstrumentData;
   numberOfAccidentals: number;
+  /** Notes the chosen instrument cannot voice, including directionless gaps and invalid values. */
+  outOfRange: number;
   localOffset: number | null;
   maxScaling: number;
   outOfRangeBounds: {
@@ -90,6 +92,7 @@ export function buildMidiTrackRoster(
         name: parsedName.name,
         instrument,
         numberOfAccidentals: 0,
+        outOfRange: 0,
         maxScaling: 0,
         outOfRangeBounds: {
           lower: 0,

@@ -14,13 +14,19 @@ import {CANONICAL_NOTE_IDS, INSTRUMENTS, PITCHES} from './imports'
 import {ComposedSong} from '../src/lib/core/Songs/ComposedSong.svelte'
 import {NoteColumn} from '../src/lib/core/Songs/SongClasses'
 import {Midi} from '../src/lib/core/Songs/midiConstructor'
-import {basepointOffset, isAccidentalMidi, numberToButton} from '../src/lib/core/Songs/noteIds'
+import {
+    basepointOffset,
+    getNoteIdTable,
+    getSoundingTable,
+    isAccidentalMidi,
+    numberToButton,
+} from '../src/lib/core/Songs/noteIds'
 import type {Pitch} from '../src/lib/core/legacyConfig'
 import {
     importMidiTracks,
-    playableIdsOf,
     suggestOffset,
     type MidiImportLayer,
+    type MidiOffsetSuggestionGroup,
     type MidiImportTrack,
 } from '../src/lib/core/Songs/midiImport'
 import {buildMidiTrackRoster} from '../src/lib/components/pages/Composer/MidiParser/midiTrackRoster'
@@ -424,8 +430,20 @@ describe('the Basepoint, on both sides of the pipeline', () => {
 // find_best_shift. Scored two ways on purpose: accidentals (a note snapped to a neighbouring
 // key, i.e. audibly wrong) and stranded notes (no sound at all).
 describe('suggestOffset', () => {
-    const playable = playableIdsOf(INSTRUMENTS[0])
-    const at = (midis: number[]) => suggestOffset(midis.map(midi => ({midi})), playable)
+    const instrumentName = INSTRUMENTS[0]
+    const playable = getNoteIdTable(instrumentName)
+    const group = (
+        midis: readonly number[],
+        overrides: Partial<Omit<MidiOffsetSuggestionGroup, 'notes'>> = {}
+    ): MidiOffsetSuggestionGroup => ({
+        notes: midis.map(midi => ({midi})),
+        instrumentName,
+        pitch: 'C',
+        localOffset: null,
+        maxScaling: 0,
+        ...overrides,
+    })
+    const at = (midis: number[]) => suggestOffset([group(midis)])
 
     it('leaves an already-diatonic song where it is', () => {
         //the round-trip guarantee: running this over the app's own export must never move it
@@ -469,5 +487,48 @@ describe('suggestOffset', () => {
 
     it('handles an empty selection without proposing a shift', () => {
         expect(at([])).toEqual({offset: 0, accidentals: 0, stranded: 0})
+    })
+
+    it('scores each track against its own instrument and effective Basepoint', () => {
+        const otherInstrument = INSTRUMENTS.find(name =>
+            name !== instrumentName &&
+            getSoundingTable(name).every(
+                (number, button) => number === getNoteIdTable(name)[button]
+            )
+        ) ?? instrumentName
+        const otherPitch: Pitch = 'D'
+        const firstNumbers = getSoundingTable(instrumentName).slice(0, 3)
+        const secondNumbers = getSoundingTable(otherInstrument)
+            .slice(0, 3)
+            .map(number => number + basepointOffset(otherPitch))
+
+        const suggestion = suggestOffset([
+            group(firstNumbers),
+            group(secondNumbers, {instrumentName: otherInstrument, pitch: otherPitch}),
+        ])
+
+        expect(suggestion).toEqual({offset: 0, accidentals: 0, stranded: 0})
+    })
+
+    it('does not let a fixed local offset steer the global suggestion', () => {
+        const clean = [...playable].sort((a, b) => a - b).slice(0, 12)
+        const globallyShifted = clean.map(number => number + 1)
+        const globalOnly = suggestOffset([group(globallyShifted)])
+        expect(globalOnly.offset).toBe(1)
+
+        // Repetition gives this track overwhelming weight under the old flat search. Its local
+        // offset fixes its conversion, so every global candidate must see the same added cost.
+        const fixed = Array.from({length: 20}, () => clean).flat()
+        const fixedGroup = group(fixed, {localOffset: 0})
+        const fixedOnly = suggestOffset([fixedGroup])
+        const withFixedTrack = suggestOffset([
+            group(globallyShifted),
+            fixedGroup,
+        ])
+
+        expect(withFixedTrack.offset).toBe(globalOnly.offset)
+        expect(withFixedTrack.accidentals)
+            .toBe(globalOnly.accidentals + fixedOnly.accidentals)
+        expect(withFixedTrack.stranded).toBe(globalOnly.stranded + fixedOnly.stranded)
     })
 })
