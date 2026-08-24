@@ -14,7 +14,9 @@ describe('environment smoke test', () => {
         // dummy it had itself replaced (2026-08-04) is likewise long gone.
         // Sky +2 on 2026-08-23: SFX_KrillHorn (in-game capture, one-button krill roar)
         // and Cymbals (Season of Radiance, 4 sounds on a 2x2 pad, in-game capture)
-        expect(INSTRUMENTS.length).toBe(APP_NAME === 'Genshin' ? 11 : 43)
+        // Sky +1 on 2026-08-24: TriumphHandPan (Season of Performance, the Sanctuary
+        // Handpan reimagined — same 8 notes as HandPan, hollower shell, in-game capture)
+        expect(INSTRUMENTS.length).toBe(APP_NAME === 'Genshin' ? 11 : 44)
     })
 
     it('NoteLayer bit operations work', () => {

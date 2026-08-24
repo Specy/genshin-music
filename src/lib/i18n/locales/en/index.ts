@@ -916,6 +916,7 @@ export const i18n_en = {
     Bells: 'Bells',
     SmallBell: 'Small Bell',
     HandPan: 'HandPan',
+    TriumphHandPan: 'Triumph HandPan', //Season of Performance; the Sanctuary Handpan reimagined, same 8 notes
     SFX_SineSynth: 'Sine Synth',
     SFX_BassSynth: 'Bass Synth',
     SFX_ChimeSynth: 'Chime Synth',

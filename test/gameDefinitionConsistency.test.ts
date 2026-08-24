@@ -68,6 +68,11 @@ describe('frozen legacy note tables match the live instrument data (transcriptio
             'SFX_KrillHorn',
             //Sky, 2026-08-23: Season of Radiance 2x2 cymbals, in-game capture
             'Cymbals',
+            //Sky, 2026-08-24: Season of Performance handpan, in-game capture. Shares the
+            //`handpan-8` Note Preset with the pre-freeze HandPan, so its live table equals
+            //the frozen SKY_HANDPAN one — but a post-freeze instrument never joins the
+            //freeze, and adding it there would invent a legacy song that cannot exist.
+            'TriumphHandPan',
         ])
         for (const name of INSTRUMENTS) {
             if (POST_FREEZE_INSTRUMENTS.has(name)) continue

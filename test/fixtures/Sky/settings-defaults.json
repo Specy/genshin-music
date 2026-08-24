@@ -139,7 +139,7 @@
   },
   "player": {
     "other": {
-      "settingVersion": "Sky88"
+      "settingVersion": "Sky89"
     },
     "data": {
       "instrument": {
@@ -180,6 +180,7 @@
           "SmallBell",
           "DunDun",
           "HandPan",
+          "TriumphHandPan",
           "SFX_SineSynth",
           "SFX_BassSynth",
           "SFX_ChimeSynth",
@@ -696,7 +697,7 @@
   },
   "zenKeyboard": {
     "other": {
-      "settingVersion": "Sky32"
+      "settingVersion": "Sky33"
     },
     "data": {
       "instrument": {
@@ -737,6 +738,7 @@
           "SmallBell",
           "DunDun",
           "HandPan",
+          "TriumphHandPan",
           "SFX_SineSynth",
           "SFX_BassSynth",
           "SFX_ChimeSynth",

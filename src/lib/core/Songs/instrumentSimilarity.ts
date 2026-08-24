@@ -44,6 +44,7 @@ export const SIMILAR_INSTRUMENTS = {
         'Bells': {Genshin: 'HarmonicKey'},
         'SmallBell': {Genshin: 'HarmonicKey'},
         'HandPan': {Genshin: 'DunDun'},
+        'TriumphHandPan': {Genshin: 'DunDun'},
         'Drum': {Genshin: 'DjemDjemDrum'},
         'FortuneDrum': {Genshin: 'DjemDjemDrum'},
         'Cymbals': {Genshin: 'DjemDjemDrum'},

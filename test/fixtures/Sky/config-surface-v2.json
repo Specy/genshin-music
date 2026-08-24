@@ -31,6 +31,7 @@
     "SmallBell",
     "DunDun",
     "HandPan",
+    "TriumphHandPan",
     "SFX_SineSynth",
     "SFX_BassSynth",
     "SFX_ChimeSynth",
@@ -4301,6 +4302,79 @@
           "pitched": true,
           "sounding": 84,
           "icon": "dmcr"
+        }
+      ]
+    },
+    "TriumphHandPan": {
+      "name": "TriumphHandPan",
+      "displayName": "Triumph HandPan",
+      "family": "percussive",
+      "midiName": "steel drums",
+      "shape": "sky-2x4",
+      "notes": [
+        {
+          "file": "0.mp3",
+          "midi": 62,
+          "baseNote": "D",
+          "pitched": true,
+          "sounding": 62,
+          "icon": "cr"
+        },
+        {
+          "file": "1.mp3",
+          "midi": 69,
+          "baseNote": "A",
+          "pitched": true,
+          "sounding": 69,
+          "icon": "dm"
+        },
+        {
+          "file": "2.mp3",
+          "midi": 72,
+          "baseNote": "C",
+          "pitched": true,
+          "sounding": 72,
+          "icon": "cr"
+        },
+        {
+          "file": "3.mp3",
+          "midi": 74,
+          "baseNote": "D",
+          "pitched": true,
+          "sounding": 74,
+          "icon": "dm"
+        },
+        {
+          "file": "4.mp3",
+          "midi": 77,
+          "baseNote": "F",
+          "pitched": true,
+          "sounding": 77,
+          "icon": "cr"
+        },
+        {
+          "file": "5.mp3",
+          "midi": 79,
+          "baseNote": "G",
+          "pitched": true,
+          "sounding": 79,
+          "icon": "dm"
+        },
+        {
+          "file": "6.mp3",
+          "midi": 81,
+          "baseNote": "A",
+          "pitched": true,
+          "sounding": 81,
+          "icon": "cr"
+        },
+        {
+          "file": "7.mp3",
+          "midi": 84,
+          "baseNote": "C",
+          "pitched": true,
+          "sounding": 84,
+          "icon": "dm"
         }
       ]
     },
