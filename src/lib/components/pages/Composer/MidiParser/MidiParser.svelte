@@ -59,7 +59,6 @@
   let pitch: Pitch = $state('C');
   let accidentals = $state(0);
   let outOfRange = $state(0);
-  let merged = $state(0);
   //instrument config recovered from one of our own exports; null for any foreign file
   let importedMetadata: MidiMetadata | null = $state(null);
   let totalNotes = $state(0);
@@ -251,7 +250,6 @@
       accidentals = 0;
       totalNotes = 0;
       outOfRange = 0;
-      merged = 0;
       return logger.warn(t('composer:midi_parser.there_are_no_notes'));
     }
 
@@ -292,7 +290,6 @@
     accidentals = result.accidentals;
     totalNotes = result.totalNotes;
     outOfRange = result.outOfRange;
-    merged = result.merged;
     const columns = result.columns;
     const song = new ComposedSong('Untitled');
     //initColumnsForConstruction, not a mutator: this song is being BUILT here and is handed to loadSong below,
