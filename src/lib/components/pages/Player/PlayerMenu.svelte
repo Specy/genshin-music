@@ -439,12 +439,18 @@
   setOpen={(o) => (isOpen = o)}
   visible={true}
 >
+  <!-- The rail's start slot (`.menu-pinned-start` in App.css) - everything below it is one group at
+       the rail's other end, with the home button last. -->
   {#if isOpen}
-    <MenuButton onclick={toggleMenu} class="close-menu" ariaLabel={t('menu:close_menu')}>
+    <MenuButton
+      onclick={toggleMenu}
+      class="close-menu menu-pinned-start"
+      ariaLabel={t('menu:close_menu')}
+    >
       {@render faTimesCloseIcon()}
     </MenuButton>
   {/if}
-  <MenuItem id="Help" style="margin-top:auto" ariaLabel={t('menu:open_info_menu')}>
+  <MenuItem id="Help" ariaLabel={t('menu:open_info_menu')}>
     {@render faQuestionIcon()}
   </MenuItem>
   <MenuItem id="Library" ariaLabel={t('menu:open_library_menu')}>

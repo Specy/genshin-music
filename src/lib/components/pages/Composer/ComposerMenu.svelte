@@ -331,14 +331,20 @@
       {@render faBarsIcon()}
     </div>
   {/snippet}
-  <MenuButton onclick={() => toggleMenu()} class="close-menu" ariaLabel={t('menu:close_menu')}>
+  <!-- The rail's start slot (`.menu-pinned-start` in App.css) - everything below it is one group at
+       the rail's other end. The desktop block hides this button, and then the group is all there
+       is. -->
+  <MenuButton
+    onclick={() => toggleMenu()}
+    class="close-menu menu-pinned-start"
+    ariaLabel={t('menu:close_menu')}
+  >
     {@render faTimesIcon()}
   </MenuButton>
   <MenuButton
     onclick={functions.updateThisSong}
     class={data.hasChanges ? 'not-saved' : ''}
     ariaLabel="Save"
-    style="margin-top:auto"
   >
     {@render faSaveIcon()}
   </MenuButton>

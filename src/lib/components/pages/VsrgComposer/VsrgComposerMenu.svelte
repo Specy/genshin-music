@@ -225,12 +225,17 @@
       {@render faBarsIcon()}
     </div>
   {/snippet}
-  <MenuButton onclick={() => (isVisible = !isVisible)} class="close-menu" ariaLabel="Close menu">
+  <!-- The rail's start slot (`.menu-pinned-start` in App.css) - everything below it is one group at
+       the rail's other end, with the home button last. -->
+  <MenuButton
+    onclick={() => (isVisible = !isVisible)}
+    class="close-menu menu-pinned-start"
+    ariaLabel="Close menu"
+  >
     {@render faTimesIcon()}
   </MenuButton>
   <MenuButton
     onclick={functions.onSave}
-    style="margin-top:auto"
     class={data.hasChanges ? 'not-saved' : ''}
     ariaLabel={t('common:save')}
   >

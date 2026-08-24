@@ -180,10 +180,16 @@
       {@render faBarsIcon()}
     </div>
   {/snippet}
-  <MenuButton onclick={() => (isVisible = false)} ariaLabel={t('menu:close_menu')}>
+  <!-- The rail's start slot (`.menu-pinned-start` in App.css) - everything below it is one group at
+       the rail's other end, with the home button last. -->
+  <MenuButton
+    onclick={() => (isVisible = false)}
+    class="menu-pinned-start"
+    ariaLabel={t('menu:close_menu')}
+  >
     {@render faTimesIcon()}
   </MenuButton>
-  <MenuItem style="margin-top:auto" id="Songs" ariaLabel={t('menu:song_menu')}>
+  <MenuItem id="Songs" ariaLabel={t('menu:song_menu')}>
     {@render faMusicIcon()}
   </MenuItem>
   <MenuItem id="Settings" ariaLabel={t('menu:settings_menu')}>

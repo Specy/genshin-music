@@ -5,7 +5,6 @@
   import MenuButton from '../menu/MenuButton.svelte';
   import { goto } from '$app/navigation';
   import { resolve } from '$app/paths';
-  import { browserHistoryStore } from '$stores/BrowserHistoryStore';
   import { asyncConfirm } from '$stores/AsyncPromptStore.svelte';
   import { t } from '$i18n/binding.svelte';
 
@@ -14,10 +13,17 @@
   // popstate like any other in-app navigation (same as AppLink.svelte).
   let {
     children,
+    // OFF EVERYWHERE BUT THE HOME PAGE. Every page of this app is reachable from home and shows the
+    // home button below, so a second way back was one button of noise on /theme, /blog, /backup and
+    // the rest; home itself is the one page with nothing behind it to offer, which is why the back
+    // button lives there now (HomePage.svelte, which also decides WHEN there is somewhere to go
+    // back to). The rail's start slot is otherwise the panel-closing X on the pages that have one.
+    showBack = false,
     class: cls = '',
     style = '',
   }: {
     children?: Snippet;
+    showBack?: boolean;
     class?: ClassValue;
     style?: string;
   } = $props();
@@ -78,10 +84,10 @@
   >
 {/snippet}
 
-<MenuSidebar class={cls} {style} menuStyle="justify-content:flex-end">
-  {#if browserHistoryStore.hasNavigated}
+<MenuSidebar class={cls} {style}>
+  {#if showBack}
     <MenuButton
-      style="margin-bottom:auto"
+      class="menu-pinned-start"
       onclick={() => window.history.back()}
       ariaLabel={t('menu:go_back')}
     >

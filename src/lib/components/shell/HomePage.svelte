@@ -2,31 +2,30 @@
   // The live home screen: the '/' route's whole body. Home.svelte is the same content in the old
   // floating-popup wrapper, kept dormant - see HomeContent.svelte's header for the revert steps.
   import { afterNavigate } from '$app/navigation';
-  import IconXmark from '~icons/fa6-solid/xmark';
   import { ThemeProvider } from '$core/theme/ThemeProvider.svelte';
   import { APP_NAME } from '$core/legacyConfig';
   import { game } from '$game';
   import { t } from '$i18n/binding.svelte';
-  import MenuButton from '../menu/MenuButton.svelte';
   import PageMetadata from './PageMetadata.svelte';
+  import SimpleMenu from './SimpleMenu.svelte';
   import HomeContent from './HomeContent.svelte';
 
-  // THE CLOSE BUTTON ONLY EXISTS WHEN THERE IS SOMETHING TO CLOSE BACK TO. As a page, '/' is also
+  // THE BACK BUTTON ONLY EXISTS WHEN THERE IS SOMETHING TO GO BACK TO. As a page, '/' is also
   // where a direct link, a bookmark and an installed PWA all land (manifest start_url is '.'), and
-  // on those there is no in-app page behind this one - a × would either dead-end or walk the user
-  // out of the app. afterNavigate runs once on mount with the navigation that produced the current
-  // page: `from` is null exactly for that first entry (type 'enter'), and non-null for every
-  // client-side navigation that came from another route of this app.
+  // on those there is no in-app page behind this one - a back button would either dead-end or walk
+  // the user out of the app. afterNavigate runs once on mount with the navigation that produced the
+  // current page: `from` is null exactly for that first entry (type 'enter'), and non-null for
+  // every client-side navigation that came from another route of this app.
   //
   // POPSTATE IS EXCLUDED, and `from !== null` alone is NOT enough. Arriving by Back means the
   // entry we land on was pushed earlier, and it can perfectly well be the document's FIRST one:
   // land on '/' directly, open /changelog, press Back, and `from` is /changelog even though
-  // nothing of this app sits behind '/'. Measured before this guard existed: the × appeared and
-  // clicking it left the app entirely (about:blank in a fresh context; whatever preceded the app
-  // in a real tab). SvelteKit gives no way to tell that first entry apart from a deeper one -
+  // nothing of this app sits behind '/'. Measured before this guard existed: the button appeared
+  // and clicking it left the app entirely (about:blank in a fresh context; whatever preceded the
+  // app in a real tab). SvelteKit gives no way to tell that first entry apart from a deeper one -
   // history.state's index is seeded from Date.now() at document load, so its value says nothing
   // on its own - so only a forward navigation, which always pushes an app page behind this one,
-  // earns the ×. A user who arrived by Back still has the browser's own Back to go on with.
+  // earns the button. A user who arrived by Back still has the browser's own Back to go on with.
   let arrivedInApp = $state(false);
   afterNavigate((navigation) => {
     arrivedInApp = navigation.from !== null && navigation.type !== 'popstate';
@@ -39,17 +38,14 @@
 
 <PageMetadata text={game.meta.title} description={t('home:app_description', { APP_NAME })} />
 
+<!-- THE SAME RAIL EVERY OTHER PAGE HAS, so the shell never disappears under the user: the home
+     button at its end (a no-op here, and deliberately still there - it is the anchor the rail is
+     recognised by), the back button in its start slot, which on every other page holds the button
+     that closes the panel. It is `position: fixed` in its own right, hence a sibling of the page
+     body rather than a child of the scroller below. -->
+<SimpleMenu showBack={arrivedInApp} />
+
 <div class="home-page column" style="background-color:{backgroundColor}">
-  {#if arrivedInApp}
-    <div class="home-page-header">
-      <!-- `window.history.back()` needs no leave-guard code of its own: the root layout's
-           `beforeNavigate` intercepts this popstate like any other in-app navigation (same as
-           SimpleMenu's back button and AppLink). -->
-      <MenuButton onclick={() => window.history.back()} ariaLabel={t('menu:go_back')}>
-        <IconXmark />
-      </MenuButton>
-    </div>
-  {/if}
   <HomeContent alwaysShowTitle />
 </div>
 
@@ -60,20 +56,19 @@
      the document instead (measured: an 852x393 window gave a 686px-tall `.app`). `100dvh` is the
      cap that makes this element the scroller, and dvh rather than vh so a phone's collapsing
      browser toolbar takes room from the scroll area instead of hiding the bottom bar under it. */
+  /* The rail is fixed over the page, so the page keeps its own width and pays for the rail in
+     padding - `--menu-size` exactly, since `.menu` is border-box and that variable IS its outer
+     width. `.default-page` does the same for every other route (`--left-mobile-padding`); this page
+     is not a `.default-page` (it owns the whole window and scrolls itself) so it states its own. */
   .home-page {
     position: relative;
     width: 100%;
     height: 100%;
     max-height: 100dvh;
+    padding-left: var(--menu-size);
     overflow-y: auto;
     overflow-x: hidden;
     color: var(--background-text);
-  }
-
-  .home-page-header {
-    display: flex;
-    flex-shrink: 0;
-    padding: 0.5rem 0.5rem 0;
   }
 
   /* The bottom bar sits at the bottom of a SHORT page and directly under the content of a tall one.
@@ -84,10 +79,11 @@
     padding-top: 0.6rem;
   }
 
-  /* App.css's mobile block pads `.home-padded` 3.6rem on its LEFT to clear the popup's close button
-     and the menu rail behind it. This page has neither, and on a phone that missing 3rem of card
-     width is worth more than the asymmetry, which reads as a mistake once the content is the whole
-     window. Same 920px breakpoint as that block, so this lands after it. */
+  /* App.css's mobile block pads `.home-padded` 3.6rem on its LEFT, which is how the popup cleared
+     both its own close button and the rail behind it. The page clears the rail with its own
+     padding-left above, so that inner 3.6rem would only be doubling it - and on a phone the card
+     width it eats is worth more than the asymmetry, which reads as a mistake once the content is
+     the whole window. Same 920px breakpoint as that block, so this lands after it. */
   @media (max-width: 920px) {
     .home-page :global(.home-padded) {
       padding: 0.8rem 0.8rem 0.4rem;
@@ -102,6 +98,14 @@
      window, and there the two-up grid is what fits - stacking by width made an 852x393 window
      scroll for content that used to fit in it. */
   @media (orientation: portrait) {
+    /* The rail is the bottom bar here, so the reserve moves with it - the same swap App.css's
+       PORTRAIT SHELL block makes for `.default-page`. Padding of the scroller and not a margin on
+       the content, so the last row of cards can still scroll up past the bar. */
+    .home-page {
+      padding-left: 0;
+      padding-bottom: var(--menu-size);
+    }
+
     .home-page :global(.home-content) {
       grid-template-columns: 1fr;
     }

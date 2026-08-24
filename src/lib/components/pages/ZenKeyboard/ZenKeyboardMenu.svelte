@@ -197,7 +197,6 @@
 </div>
 <MenuSidebar
   bind:wrapperEl
-  menuStyle="justify-content:flex-end"
   current={selectedPage}
   setCurrent={(c) => (selectedPage = c)}
   open={isOpen}
@@ -212,9 +211,11 @@
       {@render faBarsIcon()}
     </div>
   {/snippet}
+  <!-- The rail's start slot (`.menu-pinned-start` in App.css) - everything below it is one group at
+       the rail's other end, with the home button last. -->
   <MenuButton
     ariaLabel={t('menu:toggle_menu')}
-    style="margin-bottom:auto"
+    class="menu-pinned-start"
     onclick={() => (isVisible = !isVisible)}
   >
     {@render faTimesIcon()}

@@ -3,9 +3,13 @@
   import type { ClassValue } from 'svelte/elements';
   import { setMenuContext, type MenuContextState } from './menuContext';
 
-  // `style` targets the outer `.menu-wrapper` div; `menuStyle` targets the
-  // inner `.menu` div (renamed from `style` since both live in one
-  // component here).
+  // `style` targets the outer `.menu-wrapper` div. A `menuStyle` prop used to
+  // target the inner `.menu` div as well; it carried nothing but
+  // `justify-content: flex-end`, which is now the shared rule for every rail
+  // (App.css, `.menu`), and as an INLINE declaration it was unreachable to the
+  // portrait shell that has to re-lay-out the same rail as a bottom bar - that
+  // block needed !important purely to outrank it. Keep it that way: rail layout
+  // belongs in App.css, not in a per-page prop.
   //
   // `wrapperEl` exposes `.menu-wrapper` via $bindable so a consumer can
   // apply its own `use:clickOutside` (or similar) externally - this
@@ -17,7 +21,6 @@
     wrapperEl = $bindable(),
     class: cls = '',
     style = '',
-    menuStyle = '',
     opacity,
     current,
     setCurrent,
@@ -32,7 +35,6 @@
     wrapperEl?: HTMLDivElement;
     class?: ClassValue;
     style?: string;
-    menuStyle?: string;
     opacity?: string;
   } & Partial<MenuContextState> = $props();
 
@@ -59,7 +61,7 @@
 
 <div class={['menu-wrapper', cls]} {style} bind:this={wrapperEl}>
   {@render hamburger?.()}
-  <div class={['menu', isVisible && 'menu-visible']} style="opacity:{opacity ?? ''};{menuStyle}">
+  <div class={['menu', isVisible && 'menu-visible']} style="opacity:{opacity ?? ''}">
     {@render children?.()}
   </div>
   {@render panel?.()}
