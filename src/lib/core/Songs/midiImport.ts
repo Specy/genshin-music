@@ -127,7 +127,7 @@ export function suggestOffset(
 export type MidiImportTrack = {
     /** Times and durations in SECONDS, as @tonejs/midi reports them. */
     notes: readonly {midi: number; time: number; duration: number}[]
-    /** Index into the composer's instrument list. */
+    /** Index within the selected-track set, and therefore the generated roster. */
     layer: number
     /** Per-track transposition; `??` means a track offset of 0 overrides a nonzero global. */
     localOffset: number | null
@@ -135,7 +135,7 @@ export type MidiImportTrack = {
     maxScaling: number
 }
 
-/** One composer LAYER the tracks land on — the identity that decides what a snapped nominal becomes. */
+/** One generated-roster layer — the identity that decides what a snapped nominal becomes. */
 export type MidiImportLayer = {
     /** Instrument name; an unknown one resolves like `new Instrument(name)` does (default instrument). */
     name: string
@@ -182,26 +182,13 @@ export type MidiImportOptions = {
      */
     pitch: Pitch
     /**
-     * The composer layers tracks land on, in layer order — what each layer's instrument IS. It
+     * The selected tracks' generated roster, in layer order — what each layer's instrument IS. It
      * decides what a snapped nominal sounds (a tuned button's own Sounding Pitch), the Basepoint
      * that instrument is read at, and whether a note's length may become a span. Capability is
      * read from instrument config, never from a game id, so a game gains sustained imports the
      * moment it gains a sustaining instrument.
      */
     layers: readonly MidiImportLayer[]
-}
-
-/**
- * The layer a midi track lands on by default, from its ORIGINAL index in the file.
- *
- * Original and not the index the track has after empty tracks are dropped from the list: the
- * export side deliberately writes one midi track per layer, silent layers included (see
- * RecordedSong.toMidi), so track i of one of our own files IS layer i. Renumbering after the drop
- * would shift every layer past an empty one onto the wrong instrument. The clamp is what absorbs a
- * foreign file carrying more tracks than the open song has layers.
- */
-export function defaultLayerForTrack(originalIndex: number, layerCount: number): number {
-    return Math.min(originalIndex, Math.max(0, layerCount - 1))
 }
 
 export type MidiTrackStats = {

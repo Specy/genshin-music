@@ -17,13 +17,13 @@ import {Midi} from '../src/lib/core/Songs/midiConstructor'
 import {basepointOffset, isAccidentalMidi, numberToButton} from '../src/lib/core/Songs/noteIds'
 import type {Pitch} from '../src/lib/core/legacyConfig'
 import {
-    defaultLayerForTrack,
     importMidiTracks,
     playableIdsOf,
     suggestOffset,
     type MidiImportLayer,
     type MidiImportTrack,
 } from '../src/lib/core/Songs/midiImport'
+import {buildMidiTrackRoster} from '../src/lib/components/pages/Composer/MidiParser/midiTrackRoster'
 
 const TEMPOS = [60, 120, 220, 400]
 
@@ -73,31 +73,35 @@ function buildSong(
  * The tracks of a song's own exported bytes, ready to hand back to the importer.
  *
  * Track selection and layer mapping are the importer screen's, not a shortcut: MidiParser drops
- * every noteless track from the list and reads each survivor's layer off its ORIGINAL index
- * (defaultLayerForTrack). A song with a silent layer exports a silent track, so those two rules
- * are what decides whether it round-trips onto the layers it left from.
+ * every noteless track, seeds each survivor's metadata from its ORIGINAL index, then builds a
+ * compact file-order roster from the selected set.
  */
-function exportedTracks(song: ComposedSong): {bpm: number; tracks: MidiImportTrack[]} {
+function exportedTracks(song: ComposedSong): {
+    bpm: number
+    tracks: MidiImportTrack[]
+    layers: MidiImportLayer[]
+} {
     const encoded = new Uint8Array(song.toMidi().toArray()).buffer as ArrayBuffer
     const midi = new Midi(encoded)
-    const layerCount = song.instruments.length
+    const candidates = buildMidiTrackRoster(midi.tracks, song.instruments)
     return {
         bpm: Math.round((midi.header.tempos[0]?.bpm ?? 55) * 4) || 220,
-        tracks: midi.tracks
-            .map((track, originalIndex) => ({track, originalIndex}))
-            .filter(({track}) => track.notes.length > 0)
-            .map(({track, originalIndex}) => ({
-                notes: track.notes.map(n => ({midi: n.midi, time: n.time, duration: n.duration})),
-                layer: defaultLayerForTrack(originalIndex, layerCount),
-                localOffset: null,
-                maxScaling: 0,
-            })),
+        tracks: candidates.map(({track, localOffset, maxScaling}, layer) => ({
+            notes: track.notes.map(n => ({midi: n.midi, time: n.time, duration: n.duration})),
+            layer,
+            localOffset,
+            maxScaling,
+        })),
+        layers: candidates.map(({instrument}) => ({
+            name: instrument.name,
+            pitch: instrument.pitch,
+        })),
     }
 }
 
 /** The full trip: song -> midi -> bytes -> midi -> columns, exactly as the app does it. */
 function roundTrip(song: ComposedSong, layerSustains: boolean[] = [true, true, true]) {
-    const {bpm, tracks} = exportedTracks(song)
+    const {bpm, tracks, layers} = exportedTracks(song)
     return {
         bpm,
         ...importMidiTracks(tracks, {
@@ -109,7 +113,10 @@ function roundTrip(song: ComposedSong, layerSustains: boolean[] = [true, true, t
             //that Basepoint off before snapping and puts it back after, so the comparison below
             //is against the source song's own numbers at ANY Basepoint, not a shifted copy.
             pitch: song.pitch,
-            layers: layersOf(layerSustains),
+            layers: layers.map((layer, index) => ({
+                ...layer,
+                sustains: layerSustains[index] ?? true,
+            })),
         }),
     }
 }
@@ -180,10 +187,9 @@ describe('midi round trip', () => {
         })
     })
 
-    it('keeps the layers of a song whose middle layer is silent', () => {
-        //toMidi writes one track per layer, silent layers included, so instruments map by index.
-        //The importer never lists the silent one — and must still put layer 2's notes back on
-        //layer 2 rather than renumbering it onto the hole layer 1 left behind.
+    it('compacts a song whose middle layer is silent into the selected-track roster', () => {
+        //toMidi writes one track per layer, silent layers included. The importer reads metadata
+        //using those original indexes, then removes the silent track from the generated roster.
         const song = buildSong(220, [
             [{id: 60, track: 0}],
             null,
@@ -192,8 +198,8 @@ describe('midi round trip', () => {
         expect(song.instruments.length).toBe(3)
         expect(song.toMidi().tracks.length).toBe(3)
         const {tracks} = exportedTracks(song)
-        expect(tracks.map(t => t.layer)).toEqual([0, 2])
-        expect(shape(roundTrip(song).columns)).toEqual({0: ['0:60:1'], 2: ['2:67:1']})
+        expect(tracks.map(t => t.layer)).toEqual([0, 1])
+        expect(shape(roundTrip(song).columns)).toEqual({0: ['0:60:1'], 2: ['1:67:1']})
     })
 
     it('keeps a sustain on a layer that can hold, at every tempo', () => {

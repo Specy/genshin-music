@@ -1,12 +1,10 @@
 <script lang="ts">
-  import type { CustomTrack } from './MidiParser.svelte';
-  import type { InstrumentData } from '$core/Songs/SongClasses';
+  import type { CustomTrack } from './midiTrackRoster';
   import { ThemeProvider } from '$core/theme/ThemeProvider.svelte';
-  import { prettyPrintInstrumentName } from '$core/utils/Utilities';
   import { t } from '$i18n/binding.svelte';
   import Row from '$cmp/layout/Row.svelte';
   import Column from '$cmp/layout/Column.svelte';
-  import Select from '$cmp/inputs/Select.svelte';
+  import InstrumentSelect from '$cmp/inputs/InstrumentSelect.svelte';
   import Tooltip from '$cmp/utility/Tooltip.svelte';
   import { hasTooltip } from '$cmp/utility/tooltip';
   import NumericalInput from './NumericalInput.svelte';
@@ -16,11 +14,9 @@
     data,
     index,
     onChange,
-    instruments,
   }: {
     data: CustomTrack;
     index: number;
-    instruments: InstrumentData[];
     onChange: (index: number, data: Partial<CustomTrack>) => void;
   } = $props();
 
@@ -43,23 +39,23 @@
     <div class="midi-track-center">
       <input
         type="checkbox"
-        onchange={() => onChange(index, { selected: !data.selected })}
+        onchange={(event) => {
+          onChange(index, { selected: !data.selected });
+          // A selection beyond BASE_LAYER_LIMIT is refused synchronously by MidiParser. Restore
+          // the controlled DOM property as well: without a state change Svelte has no reason to
+          // rerender this input, so the browser's native toggle would otherwise look accepted.
+          event.currentTarget.checked = data.selected;
+        }}
         checked={data.selected}
       />
       {`${data.name} (${data.track.notes.length}, ${data.track.instrument.family})`}
     </div>
     <div class="midi-track-center">
-      <Select
-        onchange={(e) => onChange(index, { layer: Number(e.currentTarget.value) })}
-        value={data.layer}
+      <InstrumentSelect
+        onChange={(name) => onChange(index, { instrument: data.instrument.clone().set({ name }) })}
+        selected={data.instrument.name}
         style="margin-left:0.2rem;padding-right:1.5rem"
-      >
-        {#each instruments as ins, i (i)}
-          <option value={i}
-            >{ins.alias || prettyPrintInstrumentName(ins.name)} - Layer {i + 1}</option
-          >
-        {/each}
-      </Select>
+      />
       <!-- This svg is a mouse-only click target (no keyboard equivalent) - an accepted
                  a11y gap, not wrapped in a button. -->
       <!-- svelte-ignore a11y_click_events_have_key_events -->

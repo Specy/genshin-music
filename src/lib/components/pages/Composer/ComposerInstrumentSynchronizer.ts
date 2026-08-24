@@ -31,12 +31,35 @@ export class ComposerInstrumentSynchronizer {
   async sync(toLoad: readonly InstrumentData[]): Promise<void> {
     const requestId = ++this.requestId;
     const layers = this.dependencies.getLayers();
+    const availableByName = this.poolByName(layers);
 
-    const extraInstruments = layers.splice(toLoad.length);
-    extraInstruments.forEach((instrument) => this.dispose(instrument));
+    // Claim the entire destination roster before disposing anything. A track removal or reorder
+    // shifts every later slot, so disposing slot-by-slot would throw away engines which a later
+    // destination can still reuse. Each pool is FIFO to keep duplicate-name reuse deterministic.
+    const claims = toLoad.map((instrumentData) => {
+      const available = availableByName.get(instrumentData.name);
+      const existing = available?.shift();
+      if (available?.length === 0) availableByName.delete(instrumentData.name);
+      return {
+        instrumentData,
+        instrument: existing ?? new Instrument(instrumentData.name),
+        isNew: existing === undefined,
+      };
+    });
+
+    // Publish the provisional ownership into the live array synchronously, before any load can
+    // yield. A newer request can then adopt an in-flight engine by name from its new slot, while
+    // ownsSlot keeps the stale request from connecting or configuring it when the load resolves.
+    layers.splice(0, layers.length, ...claims.map(({ instrument }) => instrument));
+
+    availableByName.forEach((available) => {
+      available.forEach((instrument) => this.dispose(instrument));
+    });
 
     const nextLayers = await Promise.all(
-      toLoad.map((instrumentData, index) => this.syncSlot(layers, instrumentData, index, requestId))
+      claims.map(({ instrumentData, instrument, isNew }, index) =>
+        this.syncClaim(instrument, instrumentData, index, requestId, isNew)
+      )
     );
 
     if (!this.owns(requestId)) return;
@@ -44,39 +67,37 @@ export class ComposerInstrumentSynchronizer {
     this.dependencies.onSynced();
   }
 
-  private async syncSlot(
-    layers: Instrument[],
+  private poolByName(layers: readonly Instrument[]): Map<Instrument['name'], Instrument[]> {
+    const availableByName = new Map<Instrument['name'], Instrument[]>();
+    layers.forEach((instrument) => {
+      const available = availableByName.get(instrument.name);
+      if (available) available.push(instrument);
+      else availableByName.set(instrument.name, [instrument]);
+    });
+    return availableByName;
+  }
+
+  private async syncClaim(
+    instrument: Instrument,
     instrumentData: InstrumentData,
     index: number,
-    requestId: number
+    requestId: number,
+    isNew: boolean
   ): Promise<Instrument> {
-    const existing = layers[index];
-    if (existing?.name === instrumentData.name) {
-      const pendingLoad = this.pendingLoads.get(existing);
-      if (pendingLoad) {
-        const loaded = await pendingLoad;
-        if (!this.ownsSlot(requestId, index, existing)) return existing;
-        if (!loaded) this.dependencies.onLoadError();
-        // The request which created this engine may now be stale. The latest same-name owner is
-        // therefore responsible for making the freshly-loaded node live.
-        AudioProvider.connect(existing.endNode, instrumentData.reverbOverride);
-      } else {
-        if (!this.ownsSlot(requestId, index, existing)) return existing;
-        AudioProvider.setReverbOfNode(existing.endNode, instrumentData.reverbOverride);
-      }
-      existing.changeVolume(instrumentData.volume);
-      return existing;
+    const pendingLoad = isNew ? this.load(instrument) : this.pendingLoads.get(instrument);
+    if (pendingLoad) {
+      const loaded = await pendingLoad;
+      if (!this.ownsSlot(requestId, index, instrument)) return instrument;
+      if (!loaded) this.dependencies.onLoadError();
+      // The request which created this engine may now be stale. The latest same-name owner is
+      // therefore responsible for making the freshly-loaded node live at its new destination.
+      AudioProvider.connect(instrument.endNode, instrumentData.reverbOverride);
+    } else {
+      if (!this.ownsSlot(requestId, index, instrument)) return instrument;
+      AudioProvider.setReverbOfNode(instrument.endNode, instrumentData.reverbOverride);
     }
-
-    if (existing) this.dispose(existing);
-    const replacement = new Instrument(instrumentData.name);
-    layers[index] = replacement;
-    const loaded = await this.load(replacement);
-    if (!this.ownsSlot(requestId, index, replacement)) return replacement;
-    if (!loaded) this.dependencies.onLoadError();
-    AudioProvider.connect(replacement.endNode, instrumentData.reverbOverride);
-    replacement.changeVolume(instrumentData.volume);
-    return replacement;
+    instrument.changeVolume(instrumentData.volume);
+    return instrument;
   }
 
   private load(instrument: Instrument): Promise<boolean> {

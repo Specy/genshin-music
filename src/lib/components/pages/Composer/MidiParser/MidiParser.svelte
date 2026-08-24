@@ -1,37 +1,13 @@
-<script module lang="ts">
-  import type { Track } from '@tonejs/midi';
-
-  export type CustomTrack = {
-    track: Track;
-    selected: boolean;
-    layer: number;
-    name: string;
-    numberOfAccidentals: number;
-    localOffset: number | null;
-    maxScaling: number;
-    outOfRangeBounds: {
-      lower: number;
-      upper: number;
-    };
-  };
-</script>
-
 <script lang="ts">
   import { onDestroy, onMount } from 'svelte';
   import { base } from '$app/paths';
-  import { PITCHES } from '$core/sharedConfig';
+  import { BASE_LAYER_LIMIT, PITCHES } from '$core/sharedConfig';
   import type { Pitch } from '$lib/games/types';
   import { basicPitchLoader } from '$lib/audio/BasicPitchLoader';
   import { logger } from '$stores/LoggerStore.svelte';
   import { ThemeProvider } from '$core/theme/ThemeProvider.svelte';
   import { ComposedSong } from '$core/Songs/ComposedSong.svelte';
-  import { type InstrumentData } from '$core/Songs/SongClasses';
-  import {
-    defaultLayerForTrack,
-    importMidiTracks,
-    playableIdsOf,
-    suggestOffset,
-  } from '$core/Songs/midiImport';
+  import { importMidiTracks, playableIdsOf, suggestOffset } from '$core/Songs/midiImport';
   import { basepointOffset } from '$core/Songs/noteIds';
   import { decodeMidiMetadata, type MidiMetadata } from '$core/Songs/midiMetadata';
   import { delay, isAudioFormat, isVideoFormat } from '$core/utils/Utilities';
@@ -44,6 +20,7 @@
   import Row from '$cmp/layout/Row.svelte';
   import Column from '$cmp/layout/Column.svelte';
   import TrackInfo from './TrackInfo.svelte';
+  import { buildMidiTrackRoster, type CustomTrack } from './midiTrackRoster';
   import NumericalInput from './NumericalInput.svelte';
   import MidiStatsTable from './MidiStatsTable.svelte';
   // Midi/Track stay type-only imports (erased, so nothing to resolve at runtime); the two
@@ -60,7 +37,6 @@
     initialFile = null,
   }: {
     data: {
-      instruments: InstrumentData[];
       selectedColumn: number;
     };
     functions: {
@@ -96,14 +72,6 @@
     componentAlive = false;
     logger.hidePill();
   });
-
-  //the layer roster the tracks land on: the file's own when it is one of our exports, otherwise
-  //the layers the open composer song already has — which is what this screen has always mapped
-  //tracks onto. Derived once so the conversion and the offset suggestion below can never score
-  //against a different roster from the one the import actually uses.
-  //($derived.by, not $derived: read directly here, `importedMetadata` is still flow-narrowed to
-  //the null it was declared with, and `null?.instruments` does not type-check)
-  const layers = $derived.by(() => importedMetadata?.instruments ?? data.instruments);
 
   const midiInputsStyle = $derived(
     `background-color:${ThemeProvider.layer('primary', 0.2).toString()};color:${ThemeProvider.getText('primary').toString()}`
@@ -231,31 +199,7 @@
       //ours. Everything musical below — tempo, placement, note lengths — is still read off the
       //MIDI itself, so importing our own export exercises the same code a foreign file does.
       importedMetadata = decodeMidiMetadata(midi.header.meta ?? []);
-      const layerCount = (importedMetadata?.instruments ?? data.instruments).length;
-      tracks = midi.tracks
-        //a track with no notes has nothing to import and nothing to configure, so it is never
-        //listed. Its INDEX still counts below: dropping it must not renumber the tracks after it.
-        .map((track, originalIndex) => ({ track, originalIndex }))
-        .filter(({ track }) => track.notes.length > 0)
-        .map(({ track, originalIndex }) => {
-          const customtrack: CustomTrack = {
-            track,
-            selected: true,
-            //one track per layer where the song has the layers for it, instead of stacking
-            //everything on layer 0 — two layers sounding the same id in one column used to
-            //collide and lose a note to the dedupe, which is unrecoverable
-            layer: defaultLayerForTrack(originalIndex, layerCount),
-            name: track.name || `Track n.${originalIndex + 1}`,
-            numberOfAccidentals: 0,
-            maxScaling: 0,
-            outOfRangeBounds: {
-              lower: 0,
-              upper: 0,
-            },
-            localOffset: null,
-          };
-          return customtrack;
-        });
+      tracks = buildMidiTrackRoster(midi.tracks, importedMetadata?.instruments ?? null);
       fileName = name;
       //round, not floor: this is the inverse of toMidi's setTempo(bpm / 4), and the tempo
       //survives serialization as an integer microseconds-per-quarter, so the value coming
@@ -271,6 +215,7 @@
       //list and the summary table are gated on `tracks.length` - without this the screen would
       //show the filename and then say nothing at all, which reads as a broken importer
       if (tracks.length === 0) return logger.warn(t('composer:midi_parser.there_are_no_notes'));
+      if (tracks.length > BASE_LAYER_LIMIT) warnTrackLimit();
       convertMidi();
     } catch (e) {
       console.error(e);
@@ -280,10 +225,26 @@
 
   function convertMidi() {
     const selectedTracks = tracks.filter((track) => track.selected);
+    for (const track of tracks) {
+      track.numberOfAccidentals = 0;
+      track.outOfRangeBounds.lower = 0;
+      track.outOfRangeBounds.upper = 0;
+    }
+    if (selectedTracks.length === 0) {
+      accidentals = 0;
+      totalNotes = 0;
+      outOfRange = 0;
+      merged = 0;
+      return logger.warn(t('composer:midi_parser.there_are_no_notes'));
+    }
+
+    // The selected set IS the generated roster. Its file-order position is therefore both the
+    // import layer and the destination song layer; no state from the open composer participates.
+    const layers = selectedTracks.map((track) => track.instrument);
     const result = importMidiTracks(
-      selectedTracks.map((track) => ({
+      selectedTracks.map((track, layer) => ({
         notes: track.track.notes,
-        layer: track.layer,
+        layer,
         localOffset: track.localOffset,
         maxScaling: track.maxScaling,
       })),
@@ -314,7 +275,7 @@
     //enforce the no-overlap Duration invariant over the imported spans
     song.normalizeSpans();
     song.bpm = bpm;
-    song.instruments = layers.map((ins) => ins.clone());
+    song.instruments = layers.map((instrument) => instrument.clone());
     song.pitch = pitch;
     if (importedMetadata) song.reverb = importedMetadata.reverb;
     const lastColumn = data.selectedColumn;
@@ -330,11 +291,25 @@
     merged = result.merged;
   }
 
-  // data here shadows this component's own data prop - fine today since this function only
-  // mutates tracks[index], but code added later that needs the outer prop would silently get
-  // this local instead.
-  function editTrack(index: number, data: Partial<CustomTrack>) {
-    Object.assign(tracks[index], data);
+  function warnTrackLimit() {
+    logger.warn(
+      t('composer:cant_add_more_than_n_layers', {
+        max_layers: BASE_LAYER_LIMIT,
+      })
+    );
+  }
+
+  function editTrack(index: number, update: Partial<CustomTrack>) {
+    const track = tracks[index];
+    if (!track) return;
+    if (
+      update.selected === true &&
+      !track.selected &&
+      tracks.filter((candidate) => candidate.selected).length >= BASE_LAYER_LIMIT
+    ) {
+      return warnTrackLimit();
+    }
+    Object.assign(track, update);
     if (tracks.length > 0) convertMidi();
   }
 
@@ -352,7 +327,7 @@
     // eslint-disable-next-line svelte/prefer-svelte-reactivity -- transient local accumulator, never UI-observed
     const playable = new Set<number>();
     for (const track of selected) {
-      for (const id of playableIdsOf(layers[track.layer]?.name ?? '')) playable.add(id);
+      for (const id of playableIdsOf(track.instrument.name)) playable.add(id);
     }
     //scored in GRID space, which is where the importer snaps: the Basepoint comes off there
     //first, so it has to come off here too or the suggestion optimises a shift of the wrong
@@ -468,7 +443,7 @@
         <legend>{t('composer:midi_parser.track_settings')}</legend>
         <Column style="width:100%">
           {#each tracks as track, i (i)}
-            <TrackInfo data={track} instruments={data.instruments} index={i} onChange={editTrack} />
+            <TrackInfo data={track} index={i} onChange={editTrack} />
           {/each}
         </Column>
       </fieldset>

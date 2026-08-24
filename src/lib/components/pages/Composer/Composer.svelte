@@ -901,11 +901,12 @@
     skipMs?: number
   ) {
     const instrument = layers[layer];
-    if (!instrument) return;
+    const instrumentData = song.instruments[layer];
+    if (!instrument || !instrumentData) return;
     //one gate for both callers, so a live preview on a layer outside the solo set is as silent as
     //one on a muted layer - the rule belongs to the track, not to the path the sound came from
     if (!isTrackAudible(song.instruments, layer)) return;
-    const pitch = song.instruments[layer].pitch || song.pitch;
+    const pitch = instrumentData.pitch || song.pitch;
     if (instrument.getNoteByNumber(number, pitch) === null) return;
     if (durationMs !== undefined && instrument.supportsSustain) {
       //spanned note on a sustaining instrument: hold for its musical length, then release
@@ -926,8 +927,9 @@
    */
   function playAuditionSound(layer: number, number: number) {
     const instrument = layers[layer];
-    if (!instrument) return;
-    const pitch = song.instruments[layer].pitch || song.pitch;
+    const instrumentData = song.instruments[layer];
+    if (!instrument || !instrumentData) return;
+    const pitch = instrumentData.pitch || song.pitch;
     if (instrument.getNoteByNumber(number, pitch) === null) return;
     instrument.play(number, pitch);
   }
@@ -957,9 +959,10 @@
    */
   function playHeldSound(layer: number, number: number) {
     const instrument = layers[layer];
-    if (!instrument) return;
+    const instrumentData = song.instruments[layer];
+    if (!instrument || !instrumentData) return;
     if (!isTrackAudible(song.instruments, layer)) return;
-    const pitch = song.instruments[layer].pitch || song.pitch;
+    const pitch = instrumentData.pitch || song.pitch;
     if (instrument.getNoteByNumber(number, pitch) === null) return;
     instrument.pressNote(number, pitch);
   }
@@ -2580,7 +2583,6 @@
 {#if isMidiVisible}
   <MidiParser
     data={{
-      instruments: song.instruments,
       selectedColumn: song.selected,
     }}
     initialFile={pendingMidiFile}

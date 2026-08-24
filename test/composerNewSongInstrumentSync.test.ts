@@ -141,12 +141,144 @@ describe('Composer new-song instrument synchronization', () => {
         expect(synchronizationPosition).toBeGreaterThan(replacementPosition)
     })
 
+    it('reuses engines by name when removing a track shifts and reorders later slots', async () => {
+        const [firstName, droppedName, lastName] = configuredNames(3)
+        const originalLayers = [
+            new Instrument(firstName),
+            new Instrument(droppedName),
+            new Instrument(lastName),
+        ]
+        const [first, dropped, last] = originalLayers as unknown as FakeInstrumentHandle[]
+        let layers = originalLayers
+        const publish = vi.fn((nextLayers: Instrument[]) => {
+            layers = nextLayers
+        })
+        const onSynced = vi.fn()
+        const synchronizer = new ComposerInstrumentSynchronizer({
+            getLayers: () => layers,
+            setLayers: publish,
+            isMounted: () => true,
+            onLoadError: vi.fn(),
+            onSynced,
+        })
+
+        await synchronizer.sync([
+            new InstrumentData({name: lastName, volume: 31, reverbOverride: true}),
+            new InstrumentData({name: firstName, volume: 72, reverbOverride: false}),
+        ])
+
+        expect(layers as unknown as FakeInstrumentHandle[]).toEqual([last, first])
+        expect(last).toMatchObject({volume: 31, reverbOverride: true, disposed: false})
+        expect(first).toMatchObject({volume: 72, reverbOverride: false, disposed: false})
+        expect(dropped.disposed).toBe(true)
+        expect(AudioProvider.disconnect).toHaveBeenCalledTimes(1)
+        expect(AudioProvider.connect).not.toHaveBeenCalled()
+        expect(AudioProvider.setReverbOfNode).toHaveBeenCalledTimes(2)
+        expect(fakes.instances).toHaveLength(3)
+        expect(fakes.pendingLoads).toHaveLength(0)
+        expect(publish).toHaveBeenCalledTimes(1)
+        expect(onSynced).toHaveBeenCalledTimes(1)
+    })
+
+    it('drains duplicate-name pools in FIFO order without loading or disposing claimed engines', async () => {
+        const [duplicateName, droppedName] = configuredNames(2)
+        const originalLayers = [
+            new Instrument(duplicateName),
+            new Instrument(droppedName),
+            new Instrument(duplicateName),
+        ]
+        const [firstDuplicate, dropped, secondDuplicate] =
+            originalLayers as unknown as FakeInstrumentHandle[]
+        let layers = originalLayers
+        const synchronizer = new ComposerInstrumentSynchronizer({
+            getLayers: () => layers,
+            setLayers: nextLayers => (layers = nextLayers),
+            isMounted: () => true,
+            onLoadError: vi.fn(),
+            onSynced: vi.fn(),
+        })
+
+        await synchronizer.sync([
+            new InstrumentData({name: duplicateName, volume: 14, reverbOverride: false}),
+            new InstrumentData({name: duplicateName, volume: 88, reverbOverride: true}),
+        ])
+
+        expect(layers as unknown as FakeInstrumentHandle[]).toEqual([
+            firstDuplicate,
+            secondDuplicate,
+        ])
+        expect(firstDuplicate).toMatchObject({volume: 14, reverbOverride: false, disposed: false})
+        expect(secondDuplicate).toMatchObject({volume: 88, reverbOverride: true, disposed: false})
+        expect(dropped.disposed).toBe(true)
+        expect(fakes.instances).toHaveLength(3)
+        expect(fakes.pendingLoads).toHaveLength(0)
+        expect(AudioProvider.disconnect).toHaveBeenCalledTimes(1)
+        expect(AudioProvider.connect).not.toHaveBeenCalled()
+        expect(AudioProvider.setReverbOfNode).toHaveBeenCalledTimes(2)
+    })
+
+    it('lets the latest request adopt and reorder duplicate engines which are still loading', async () => {
+        const [duplicateName, otherName] = configuredNames(2)
+        let layers: Instrument[] = []
+        const publish = vi.fn((nextLayers: Instrument[]) => {
+            layers = nextLayers
+        })
+        const onSynced = vi.fn()
+        const synchronizer = new ComposerInstrumentSynchronizer({
+            getLayers: () => layers,
+            setLayers: publish,
+            isMounted: () => true,
+            onLoadError: vi.fn(),
+            onSynced,
+        })
+
+        const olderSync = synchronizer.sync([
+            new InstrumentData({name: duplicateName, volume: 10, reverbOverride: true}),
+            new InstrumentData({name: duplicateName, volume: 20, reverbOverride: true}),
+            new InstrumentData({name: otherName, volume: 30, reverbOverride: true}),
+        ])
+        const [firstDuplicate, secondDuplicate, other] =
+            layers as unknown as FakeInstrumentHandle[]
+
+        const latestSync = synchronizer.sync([
+            new InstrumentData({name: duplicateName, volume: 41, reverbOverride: false}),
+            new InstrumentData({name: otherName, volume: 52, reverbOverride: null}),
+            new InstrumentData({name: duplicateName, volume: 63, reverbOverride: true}),
+        ])
+
+        // The live provisional roster changes before either request yields back from a load. That
+        // makes all three pending engines available for this second request to adopt by name.
+        expect(layers as unknown as FakeInstrumentHandle[]).toEqual([
+            firstDuplicate,
+            other,
+            secondDuplicate,
+        ])
+        expect(fakes.instances).toHaveLength(3)
+        expect(fakes.pendingLoads).toHaveLength(3)
+        for (const instrument of [firstDuplicate, secondDuplicate, other]) resolveLoad(instrument)
+
+        await latestSync
+        await olderSync
+
+        expect(layers as unknown as FakeInstrumentHandle[]).toEqual([
+            firstDuplicate,
+            other,
+            secondDuplicate,
+        ])
+        expect(firstDuplicate).toMatchObject({volume: 41, reverbOverride: false, connected: 1})
+        expect(other).toMatchObject({volume: 52, reverbOverride: null, connected: 1})
+        expect(secondDuplicate).toMatchObject({volume: 63, reverbOverride: true, connected: 1})
+        expect(fakes.instances.every(instrument => !instrument.disposed)).toBe(true)
+        expect(publish).toHaveBeenCalledTimes(1)
+        expect(onSynced).toHaveBeenCalledTimes(1)
+    })
+
     it('keeps new-song defaults when an older async song sync finishes last', async () => {
         const defaultName = INSTRUMENTS[0]
         const oldName = INSTRUMENTS.find(name => name !== defaultName)
         if (!oldName) throw new Error('Instrument sync regression needs two configured instruments')
 
-        let layers: Instrument[] = [new Instrument(defaultName)]
+        let layers: Instrument[] = []
         const publish = vi.fn((nextLayers: Instrument[]) => {
             layers = nextLayers
         })
@@ -160,7 +292,7 @@ describe('Composer new-song instrument synchronization', () => {
         })
 
         // The outgoing song has cold loads in flight. Its middle layer deliberately has the same
-        // name as the new default roster, proving that a newer request can adopt a pending engine
+        // name as the new default roster, proving that a newer request can adopt it across slots
         // and still apply its own settings when the stale creator eventually resumes.
         const olderSync = synchronizer.sync([
             new InstrumentData({name: oldName, volume: 20, reverbOverride: true}),
@@ -213,4 +345,12 @@ function resolveLoad(instrument: FakeInstrumentHandle, loaded = true) {
     const index = fakes.pendingLoads.findIndex(pending => pending.instrument === instrument)
     if (index === -1) throw new Error(`No pending load for ${instrument.name}`)
     fakes.pendingLoads.splice(index, 1)[0].resolve(loaded)
+}
+
+function configuredNames(count: number) {
+    const names = [...new Set(INSTRUMENTS)]
+    if (names.length < count) {
+        throw new Error(`Instrument sync regression needs ${count} configured instruments`)
+    }
+    return names
 }
