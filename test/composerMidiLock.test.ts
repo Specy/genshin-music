@@ -112,6 +112,12 @@ describe('the MIDI import lifecycle has one save boundary', () => {
     expect(visibility).toContain('changes = Math.max(changes, 1)');
   });
 
+  it('treats an installed preview as unsaved when navigation bypasses the close path', () => {
+    expect(functionCode('prepareToLeave')).toContain(
+      'if (changes === 0 && !midiPreviewLoaded) return true'
+    );
+  });
+
   it('closes at explicit menu/new-song call sites, never from the general loader', () => {
     expect(functionCode('loadSongFromMenu')).toContain('changeMidiVisibility(false)');
     expect(functionCode('createNewSong')).toContain('changeMidiVisibility(false)');

@@ -2069,7 +2069,12 @@
   }
 
   async function prepareToLeave(): Promise<boolean> {
-    if (changes === 0) return true;
+    // A preview load deliberately resets `changes`: panel controls replace the live preview song
+    // without making every keystroke look like a separate composer edit. Explicitly closing the
+    // importer promotes that preview to dirty work, but route navigation can unmount the composer
+    // without taking the close path. Treat the installed preview as unsaved here too so Back and
+    // in-app links cannot silently discard it while the panel is still open.
+    if (changes === 0 && !midiPreviewLoaded) return true;
     if (settings.autosave.value) return updateSong(song);
     const shouldSave = await asyncConfirm(
       t('question:unsaved_song_save', { song_name: song.name }),
