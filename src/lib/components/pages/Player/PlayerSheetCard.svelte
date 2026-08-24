@@ -70,6 +70,7 @@
   let hasCenteredThisOpen = $state(false);
   let collapseAfterReveal = false;
   let resizeRevision = 0;
+  const ANIMATION_DURATION_MS = 150;
   const ANIMATION_FALLBACK_MS = 250;
   let animationFallback: ReturnType<typeof setTimeout> | undefined;
   const VIRTUAL_OVERSCAN_ROWS = 2;
@@ -109,7 +110,7 @@
     const inset = Math.max(0, surfaceHeight - collapsedHeight);
     //`fill: both` so the from-state holds from creation (this runs before the phase flip's first
     //paint) and the end-state holds until finishReveal swaps it for the equivalent scroll offset
-    const options = { duration: 150, easing: 'ease-out', fill: 'both' as const };
+    const options = { duration: ANIMATION_DURATION_MS, easing: 'ease-out', fill: 'both' as const };
     const surfaceAnimation = surfaceElement.animate(
       [
         { clipPath: `inset(0 0 ${inset}px 0 round 0.5rem)` },
@@ -150,7 +151,7 @@
         { clipPath: 'inset(0 0 0 0 round 0.5rem)' },
         { clipPath: `inset(0 0 ${inset}px 0 round 0.5rem)` },
       ],
-      { duration: 150, easing: 'ease-in', fill: 'both' }
+      { duration: ANIMATION_DURATION_MS, easing: 'ease-in', fill: 'both' }
     );
     hideAnimation = animation;
     animation.finished.then(
@@ -715,9 +716,11 @@
       isFullscreen && !hasCenteredThisOpen && 'player-sheet-card-revealing',
       fullscreenPhase === 'closing' && 'player-sheet-card-closing',
     ]}
-    style={showsAllFrames
-      ? `--sheet-collapsed-height:${collapsedHeight}px;--sheet-reveal-from:${revealFromShift}px;--sheet-center-shift:${revealCenterShift}px`
-      : ''}
+    style={`--sheet-animation-duration:${ANIMATION_DURATION_MS}ms;${
+      showsAllFrames
+        ? `--sheet-collapsed-height:${collapsedHeight}px;--sheet-reveal-from:${revealFromShift}px;--sheet-center-shift:${revealCenterShift}px`
+        : ''
+    }`}
   >
     <!-- The reveal/hide clips are Web Animations created in the script (see animateReveal); the
          style vars above are the same values, kept for tests and debugging. -->
@@ -798,7 +801,8 @@
     position: relative;
     display: flow-root;
     border-radius: 0.7rem;
-    background-color: var(--background-layer-15);
+    background-color: color-mix(in srgb, var(--background-layer-15) 50%, transparent);
+    transition: background-color var(--sheet-animation-duration);
     pointer-events: auto;
   }
 
@@ -830,6 +834,12 @@
   .player-sheet-card-closing {
     height: calc(100vh - 1.6rem);
     z-index: 40;
+  }
+
+  .player-sheet-card-expanded .player-sheet-surface {
+    background-color: color-mix(in srgb, var(--background-layer-15) 80%, transparent);
+    --backdrop-amount: 4px;
+    animation: delayBackdrop calc(var(--sheet-animation-duration) * 1.2) forwards;
   }
 
   .player-sheet-card-expanded .player-sheet-surface,
