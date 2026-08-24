@@ -562,6 +562,8 @@
         "delete_themes": "Delete themes"
     },
     "composer": {
+        "normal_view": "Обычный вид",
+        "pro_view": "Вид PRO",
         "add_new_page": "Add new page",
         "remove_column": "Remove column",
         "add_column": "Add column",
@@ -612,9 +614,12 @@
             "track_settings": "Настройки трека",
             "tempo_bpm": "Темп (BPM)",
             "base_pitch": "Основная высота тона",
-            "of_which_dont_fit": "Из них не подходят инструменту",
+            "of_which_are_accidentals": "Из них — альтерации",
             "of_which_out_of_range": "Из них находятся вне диапазона",
             "include_accidentals": "Include accidentals",
+            "include_out_of_range_notes": "Включать ноты вне диапазона",
+            "include_out_of_range_notes_description": "Сохранять ноты, которые выбранный инструмент не может сыграть. Ноты за пределами доступного диапазона всегда исключаются.",
+            "composer_locked_during_import": "Во время работы MIDI-импортера композитор доступен только для чтения.",
             "global_note_offset": "Global note offset",
             "global_note_offset_description": "The index of each note will be pushed up/down by this amount, you can use it to make\n                            the song fit into the app range. You can also change the offset of each layer.",
             "merged_notes": "Объединённые повторы",

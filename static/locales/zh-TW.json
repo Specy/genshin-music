@@ -562,6 +562,8 @@
         "delete_themes": "刪除主題"
     },
     "composer": {
+        "normal_view": "一般檢視",
+        "pro_view": "PRO 檢視",
         "add_new_page": "新增新頁面",
         "remove_column": "刪除列",
         "add_column": "新增列",
@@ -612,9 +614,12 @@
             "track_settings": "音軌設定",
             "tempo_bpm": "節奏（BPM）",
             "base_pitch": "基本音高",
-            "of_which_dont_fit": "其中不適合該樂器",
+            "of_which_are_accidentals": "其中帶有臨時記號",
             "of_which_out_of_range": "其中超出範圍",
             "include_accidentals": "包括臨時記號",
+            "include_out_of_range_notes": "包含超出音域的音符",
+            "include_out_of_range_notes_description": "保留所選樂器無法演奏的音符。超出可用音域的音符一律會被排除。",
+            "composer_locked_during_import": "開啟 MIDI 匯入工具時，編曲器為唯讀模式。",
             "global_note_offset": "全域音符偏移量",
             "global_note_offset_description": "每個音符的索引將被上推/下推這個量，您可以使用它來使歌曲適合應用的音域。您還可以變更每個圖層的偏移量。",
             "merged_notes": "已合併的重複音符",

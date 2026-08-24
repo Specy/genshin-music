@@ -386,6 +386,10 @@
   });
 
   async function init(loadedSettings: ComposerSettingsDataType) {
+    // Mount-time song loading owns only the original seed song object. The importer and song menu
+    // are already usable while the initial instrument or IndexedDB request is pending; if either
+    // has installed a newer working song, this delayed route load must not replace it afterward.
+    const initialSong = song;
     await syncInstruments();
     //the teardown above is synchronous, so an unmount during that await would run BEFORE these
     //registrations and leave both listeners behind — one live set per fast mount/unmount
@@ -403,7 +407,7 @@
     try {
       if (!songId) return;
       const loadedSong = await songService.getSongById(songId);
-      if (!loadedSong) return;
+      if (!loadedSong || song !== initialSong) return;
       loadSong(loadedSong);
     } catch (e) {
       console.error('Error loading song');
@@ -1873,9 +1877,7 @@
           if (promptResult === null) return;
           confirm = promptResult;
         }
-        if (confirm) {
-          await updateSong(song);
-        }
+        if (confirm && !(await updateSong(song))) return;
       }
       if (!mounted) return;
       // The confirmation/save awaits above leave the page interactive (and synced-tab messages

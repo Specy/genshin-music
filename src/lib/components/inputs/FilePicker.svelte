@@ -49,7 +49,11 @@
     if (fileList === null) return;
     const files = Array.from(fileList);
     if (as === 'file') {
-      return pick(files.map((file) => ({ data: file, file })));
+      const result = pick(files.map((file) => ({ data: file, file })));
+      // Match the buffered modes below: the same file must be selectable again after a failed or
+      // cancelled import. Reset after the callback has synchronously claimed ownership of it.
+      if (input) input.value = '';
+      return result;
     }
     const promises: Promise<FileElement<string | ArrayBuffer>>[] = files.map(
       (file) =>

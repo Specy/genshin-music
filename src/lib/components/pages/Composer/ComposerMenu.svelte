@@ -26,6 +26,7 @@
   import MenuPanelWrapper from '$cmp/menu/MenuPanelWrapper.svelte';
   import SongMenu from '$cmp/SongMenu.svelte';
   import ComposerSongRow from './ComposerSongRow.svelte';
+  import ComposerViewSelector from './ComposerViewSelector.svelte';
   import SettingsPane from '$cmp/settings/SettingsPane.svelte';
   import Separator from '$cmp/Separator.svelte';
   import LanguageSelector from '$cmp/i18n/LanguageSelector.svelte';
@@ -440,6 +441,11 @@
           onUpdate={functions.handleSettingChange}
           changeVolume={functions.changeVolume}
           songLocked={data.songLocked}
+          hiddenSettings={['proView', 'syncTabs']}
+        />
+        <ComposerViewSelector
+          setting={data.settings.proView}
+          onUpdate={functions.handleSettingChange}
         />
         <Separator background="var(--secondary)" height="0.1rem" verticalMargin="0.5rem" />
         <div class="settings-row-wrap">

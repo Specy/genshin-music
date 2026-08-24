@@ -562,6 +562,8 @@
         "delete_themes": "Temaları sil"
     },
     "composer": {
+        "normal_view": "Normal görünüm",
+        "pro_view": "PRO görünümü",
         "add_new_page": "Yeni sayfa ekle",
         "remove_column": "Sütunu kaldır",
         "add_column": "Sütun ekle",
@@ -612,9 +614,12 @@
             "track_settings": "Parça ayarları",
             "tempo_bpm": "Tempo (BPM)",
             "base_pitch": "Temel akort",
-            "of_which_dont_fit": "Bunlardan bazıları enstrümana uymaz",
+            "of_which_are_accidentals": "Bunlardan arıza içerenler",
             "of_which_out_of_range": "Bunlardan bazıları menzil dışında",
             "include_accidentals": "Arızaları dahil et",
+            "include_out_of_range_notes": "Menzil dışındaki notaları dahil et",
+            "include_out_of_range_notes_description": "Seçili enstrümanın çalamadığı notaları koru. Kullanılabilir aralığın dışındaki notalar her zaman hariç tutulur.",
+            "composer_locked_during_import": "MIDI içe aktarıcısı açıkken besteci yalnızca okunabilir durumdadır.",
             "global_note_offset": "Global nota kaydırma",
             "global_note_offset_description": "Her notanın dizini bu miktarla yukarı/aşağı taşınacak. Şarkının uygulama menziline sığmasını sağlamak için kullanabilirsiniz. \n  Ayrıca, her katmanın kaydırmasını değiştirebilirsiniz.",
             "merged_notes": "Birleştirilmiş tekrarlar",

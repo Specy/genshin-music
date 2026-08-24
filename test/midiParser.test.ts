@@ -10,6 +10,52 @@ import {
 } from '$core/Songs/noteIds'
 import {importMidiTracks, type MidiImportLayer} from '$core/Songs/midiImport'
 import type {Pitch} from '$core/legacyConfig'
+import {Midi as MidiConstructor} from '$core/Songs/midiConstructor'
+import {canonicalMidiPitch} from '$cmp/pages/Composer/MidiParser/midiPitch'
+
+
+/** A format-0 MIDI assembled as bytes so the key-signature byte is unquestionably valid input. */
+function rawMajorKeyMidi(sharpsOrFlats: number, tonic: number): ArrayBuffer {
+    const track = [
+        0x00, 0xff, 0x59, 0x02, sharpsOrFlats & 0xff, 0x00,
+        0x00, 0x90, tonic, 0x40,
+        0x60, 0x80, tonic, 0x00,
+        0x00, 0xff, 0x2f, 0x00,
+    ]
+    const bytes = new Uint8Array([
+        0x4d, 0x54, 0x68, 0x64,
+        0x00, 0x00, 0x00, 0x06,
+        0x00, 0x00,
+        0x00, 0x01,
+        0x00, 0x60,
+        0x4d, 0x54, 0x72, 0x6b,
+        0x00, 0x00, 0x00, track.length,
+        ...track,
+    ])
+    return bytes.buffer as ArrayBuffer
+}
+
+describe('MIDI key-signature Basepoints', () => {
+    it.each([
+        [-7, 'Cb', 'B', 59],
+        [0, 'C', 'C', 60],
+        [6, 'F#', 'Gb', 66],
+        [7, 'C#', 'Db', 61],
+    ] as const)(
+        'normalizes raw major-key event %i (%s) to %s',
+        (keyByte, spelling, expected, tonic) => {
+            const midi = new MidiConstructor(rawMajorKeyMidi(keyByte, tonic))
+            expect(midi.header.keySignatures[0]?.key).toBe(spelling)
+            expect(midi.tracks[0].notes[0].midi).toBe(tonic)
+            expect(canonicalMidiPitch(midi.header.keySignatures[0]?.key)).toBe(expected)
+        }
+    )
+
+    it('leaves absent or unknown keys to metadata and default fallback', () => {
+        expect(canonicalMidiPitch(undefined)).toBeUndefined()
+        expect(canonicalMidiPitch('not-a-key')).toBeUndefined()
+    })
+})
 
 
 // ─── the LIFT: which Note Number a snapped nominal becomes (importMidiTracks) ───────────────

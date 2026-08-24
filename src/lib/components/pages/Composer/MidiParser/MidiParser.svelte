@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onDestroy, onMount } from 'svelte';
   import { base } from '$app/paths';
-  import { BASE_LAYER_LIMIT, PITCHES } from '$core/sharedConfig';
+  import { BASE_LAYER_LIMIT } from '$core/sharedConfig';
   import type { Pitch } from '$lib/games/types';
   import { basicPitchLoader } from '$lib/audio/BasicPitchLoader';
   import { logger } from '$stores/LoggerStore.svelte';
@@ -21,6 +21,7 @@
   import Column from '$cmp/layout/Column.svelte';
   import TrackInfo from './TrackInfo.svelte';
   import { buildMidiTrackRoster, type CustomTrack } from './midiTrackRoster';
+  import { canonicalMidiPitch } from './midiPitch';
   import NumericalInput from './NumericalInput.svelte';
   import MidiStatsTable from './MidiStatsTable.svelte';
   // Midi/Track stay type-only imports (erased, so nothing to resolve at runtime); the two
@@ -68,6 +69,22 @@
   // Parsing audio/video can outlive this import session by several seconds. A closed importer must
   // never install that stale result over the song after the lock has gone (or over a newer import).
   let componentAlive = true;
+  // Every selected file owns one generation. Audio recognition is asynchronous and cannot be
+  // cancelled inside Basic Pitch, so a newer selection revokes the older run's right to publish
+  // progress, state, logger cleanup, or a preview.
+  let fileRequestGeneration = 0;
+
+  function claimFileRequest(): number {
+    const generation = ++fileRequestGeneration;
+    // A previous audio run may have left its spinner visible. The new owner either replaces it
+    // with its own progress shortly or imports MIDI synchronously, in which case it should vanish.
+    logger.hidePill();
+    return generation;
+  }
+
+  function ownsFileRequest(generation: number): boolean {
+    return componentAlive && generation === fileRequestGeneration;
+  }
 
   onDestroy(() => {
     componentAlive = false;
@@ -78,25 +95,31 @@
     `background-color:${ThemeProvider.layer('primary', 0.2).toString()};color:${ThemeProvider.getText('primary').toString()}`
   );
 
-  async function handleFile(files: FileElement<ArrayBuffer>[]) {
+  async function handleFile(files: FileElement<File>[]) {
+    if (files.length === 0) return;
+    // FilePicker's `file` mode calls us at selection time. Reading the bytes here, after claiming
+    // ownership, matters for two quickly selected files: a large older read may finish last.
+    const generation = claimFileRequest();
     try {
-      if (files.length === 0) return;
-      const file = files[0];
-      const name = file.file.name;
+      const pickedFile = files[0];
+      const name = pickedFile.file.name;
+      const data = await pickedFile.data.arrayBuffer();
+      if (!ownsFileRequest(generation)) return;
+      const file = { data, file: pickedFile.file };
       if (isVideoFormat(name)) {
         const audio = await extractAudio(file);
-        if (!componentAlive) return;
-        return await parseAudioToMidi(audio, name);
+        if (!ownsFileRequest(generation)) return;
+        return await parseAudioToMidi(audio, name, generation);
       } else if (isAudioFormat(name)) {
         const audio = await extractAudio(file);
-        if (!componentAlive) return;
-        return await parseAudioToMidi(audio, name);
+        if (!ownsFileRequest(generation)) return;
+        return await parseAudioToMidi(audio, name, generation);
       } else {
-        const midi = new MidiConstructor(file.data as ArrayBuffer);
-        if (componentAlive) return mandleMidiFile(midi, name);
+        const midi = new MidiConstructor(file.data);
+        if (ownsFileRequest(generation)) return mandleMidiFile(midi, name, generation);
       }
     } catch (e) {
-      if (!componentAlive) return;
+      if (!ownsFileRequest(generation)) return;
       console.error(e);
       logger.hidePill();
       logger.error(t('logs:error_opening_file'));
@@ -104,22 +127,12 @@
   }
 
   // The handed-over file goes through handleFile untouched, i.e. the exact path a manual pick
-  // takes: FilePicker(as="buffer") hands over the file's ArrayBuffer plus the File itself, which
-  // is what tells midi from audio from video below (by name, not by content).
+  // takes. The handler owns the byte read as well as parsing, and the File name is what tells MIDI
+  // from audio from video below (not the content).
   onMount(() => {
     const file = initialFile;
     if (!file) return;
-    void (async () => {
-      try {
-        const data = await file.arrayBuffer();
-        if (!componentAlive) return;
-        await handleFile([{ data, file }]);
-      } catch (e) {
-        if (!componentAlive) return;
-        console.error(e);
-        logger.error(t('logs:error_opening_file'));
-      }
-    })();
+    void handleFile([{ data: file, file }]);
   });
 
   async function extractAudio(audio: FileElement<ArrayBuffer>): Promise<AudioBuffer> {
@@ -133,7 +146,8 @@
     return buffer;
   }
 
-  async function parseAudioToMidi(audio: AudioBuffer, name: string) {
+  async function parseAudioToMidi(audio: AudioBuffer, name: string, generation: number) {
+    if (!ownsFileRequest(generation)) return;
     if (!warnedOfExperimental) logger.warn(t('composer:midi_parser.audio_conversion_warning'));
     warnedOfExperimental = true;
     const frames: number[][] = [];
@@ -141,27 +155,28 @@
     const model = `${base}/assets/audio-midi-model.json`;
     logger.showPill(`${t('composer:midi_parser.detecting_notes')}...`, { spinner: true });
     const { BasicPitch, noteFramesToTime, outputToNotesPoly } = await basicPitchLoader();
-    if (!componentAlive) return;
+    if (!ownsFileRequest(generation)) return;
     const basicPitch = new BasicPitch(model);
     const mono = audio.getChannelData(0);
     await basicPitch.evaluateModel(
       mono,
       (f, o) => {
+        if (!ownsFileRequest(generation)) return;
         frames.push(...f);
         onsets.push(...o);
       },
       (progress) => {
-        if (!componentAlive) return;
+        if (!ownsFileRequest(generation)) return;
         logger.showPill(
           `${t('composer:midi_parser.detecting_notes')}: ${Math.floor(progress * 100)}%...`,
           { spinner: true }
         );
       }
     );
-    if (!componentAlive) return;
+    if (!ownsFileRequest(generation)) return;
     logger.showPill(t('composer:midi_parser.converting_audio_to_midi'), { spinner: true });
     await delay(300);
-    if (!componentAlive) return;
+    if (!ownsFileRequest(generation)) return;
     const notes = noteFramesToTime(
       outputToNotesPoly(
         frames, //frames
@@ -185,14 +200,14 @@
         velocity: note.amplitude,
       });
     });
-    if (!componentAlive) return;
+    if (!ownsFileRequest(generation)) return;
     logger.hidePill();
-    mandleMidiFile(midi, name);
+    mandleMidiFile(midi, name, generation);
   }
 
   // QUIRK: mandleMidiFile (not handleMidiFile) is an intentional preserved typo.
-  function mandleMidiFile(midi: Midi, name: string) {
-    if (!componentAlive) return;
+  function mandleMidiFile(midi: Midi, name: string, generation: number) {
+    if (!ownsFileRequest(generation)) return;
     try {
       const midiBpm = midi.header.tempos[0]?.bpm;
       const key = midi.header.keySignatures[0]?.key;
@@ -211,7 +226,7 @@
       //alongside the rest of the instrument config. The key signature is still preferred when a
       //foreign file supplies one. Since ADR-0007 it also decides what the emitted notes ARE (the
       //snapped nominals are lifted by it), which is why convertMidi below is re-run on any change.
-      pitch = PITCHES.find((candidate) => candidate === key) ?? importedMetadata?.pitch ?? 'C';
+      pitch = canonicalMidiPitch(key) ?? importedMetadata?.pitch ?? 'C';
       //a file whose every track was filtered out above has nothing to convert, and both the track
       //list and the summary table are gated on `tracks.length` - without this the screen would
       //show the filename and then say nothing at all, which reads as a broken importer
@@ -381,7 +396,7 @@
 <DecoratedCard class="floating-midi" size="1.2rem" isRelative={false} offset="0.1rem">
   <Column class="floating-midi-content" gap="0.3rem">
     <Row align="center" style="width:100%">
-      <FilePicker onPick={handleFile} as="buffer">
+      <FilePicker onPick={handleFile} as="file">
         <button class="midi-btn" style="{midiInputsStyle};white-space:nowrap">
           {t('composer:midi_parser.open_midi_audio_file')}
         </button>

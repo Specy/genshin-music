@@ -562,6 +562,8 @@
     "delete_themes": "Eliminar temas"
   },
   "composer": {
+    "normal_view": "Vista normal",
+    "pro_view": "Vista PRO",
     "add_new_page": "Agregar nueva página",
     "remove_column": "Quitar columna",
     "add_column": "Agregar columna",
@@ -612,9 +614,12 @@
       "track_settings": "Configuración de pistas",
       "tempo_bpm": "Tempo (BPM)",
       "base_pitch": "Tono base",
-      "of_which_dont_fit": "De las cuales no se ajustan al instrumento",
+      "of_which_are_accidentals": "De las cuales tienen alteraciones",
       "of_which_out_of_range": "De las cuales están fuera de rango",
       "include_accidentals": "Incluir alteraciones",
+      "include_out_of_range_notes": "Incluir notas fuera de rango",
+      "include_out_of_range_notes_description": "Conservar las notas que el instrumento seleccionado no puede tocar. Las notas fuera de la tesitura disponible siempre se excluyen.",
+      "composer_locked_during_import": "El compositor es de solo lectura mientras el importador de MIDI está abierto.",
       "global_note_offset": "Transposición global de las notas",
       "global_note_offset_description": "El índice de cada nota se desplazará hacia arriba o hacia abajo en esta cantidad. Puedes usarla para adaptar la canción al rango de la aplicación y también cambiar la transposición de cada capa.",
       "merged_notes": "Repeticiones fusionadas",

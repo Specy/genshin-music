@@ -14,12 +14,15 @@
     changeVolume,
     onUpdate,
     songLocked = false,
+    hiddenSettings = [],
   }: {
     settings: Record<string, SettingsPropriety>;
     changeVolume?: (data: SettingVolumeUpdate) => void;
     onUpdate: (data: SettingUpdate) => void;
     /** Disable only settings serialized into the open song during a MIDI import session. */
     songLocked?: boolean;
+    /** Settings rendered by a dedicated control elsewhere in the same panel. */
+    hiddenSettings?: readonly SettingUpdateKey[];
   } = $props();
 
   type Group = {
@@ -36,6 +39,7 @@
   const groups = $derived.by(() => {
     const byCategory: Partial<Record<SettingsCategory, Group>> = {};
     for (const [key, setting] of Object.entries(settings)) {
+      if (hiddenSettings.includes(key as SettingUpdateKey)) continue;
       byCategory[setting.category] ??= { category: setting.category, settings: {} };
       byCategory[setting.category]!.settings[key] = setting;
     }

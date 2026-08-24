@@ -562,6 +562,8 @@
         "delete_themes": "删除主题"
     },
     "composer": {
+        "normal_view": "普通视图",
+        "pro_view": "PRO 视图",
         "add_new_page": "添加新页面",
         "remove_column": "删除列",
         "add_column": "添加列",
@@ -612,9 +614,12 @@
             "track_settings": "音轨设置",
             "tempo_bpm": "节奏（BPM）",
             "base_pitch": "基本音高",
-            "of_which_dont_fit": "其中不适合该乐器",
+            "of_which_are_accidentals": "其中带有临时记号的音符",
             "of_which_out_of_range": "其中超出范围",
             "include_accidentals": "包括临时记号",
+            "include_out_of_range_notes": "包含超出音域的音符",
+            "include_out_of_range_notes_description": "保留所选乐器无法演奏的音符。超出可用音域的音符始终会被排除。",
+            "composer_locked_during_import": "打开 MIDI 导入器时，编曲器为只读状态。",
             "global_note_offset": "全局音符偏移量",
             "global_note_offset_description": "每个音符的索引将被上推/下推这个量，您可以使用它来使歌曲适合应用的音域。您还可以更改每个图层的偏移量。",
             "merged_notes": "已合并的重复音符",

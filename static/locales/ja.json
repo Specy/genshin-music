@@ -562,6 +562,8 @@
         "delete_themes": "テーマを削除"
     },
     "composer": {
+        "normal_view": "通常表示",
+        "pro_view": "PRO表示",
         "add_new_page": "新しいページを追加",
         "remove_column": "列を削除",
         "add_column": "列を追加",
@@ -612,9 +614,12 @@
             "track_settings": "トラック設定",
             "tempo_bpm": "テンポ（BPM）",
             "base_pitch": "基本ピッチ",
-            "of_which_dont_fit": "そのうち楽器に合わないもの",
+            "of_which_are_accidentals": "そのうち臨時記号が付いているもの",
             "of_which_out_of_range": "そのうち音域外のもの",
             "include_accidentals": "臨時記号を含める",
+            "include_out_of_range_notes": "音域外の音符を含める",
+            "include_out_of_range_notes_description": "選択した楽器で演奏できない音符を保持します。指定可能な音域の外にある音符は常に除外されます。",
+            "composer_locked_during_import": "MIDIインポーターを開いている間、コンポーザーは読み取り専用です。",
             "global_note_offset": "グローバルノートオフセット",
             "global_note_offset_description": "各ノートのインデックスがこの量だけ上/下に押し上げ/下げられます。これを使用して、曲をアプリの音域に合わせることができます。各レイヤーのオフセットも変更できます。",
             "merged_notes": "統合された繰り返し",

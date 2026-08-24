@@ -69,10 +69,15 @@
       const parsed = parseInt(debounced);
       const next = Number.isFinite(parsed) ? parsed : null;
       elementValue = `${next ?? ''}`;
+      // A controlled input reports edits, not the value it was mounted with (or a value the parent
+      // just handed back). TrackInfo mounts two of these per MIDI track; emitting both unchanged
+      // seeds used to rebuild the complete preview twice per row after every file load.
+      if (next === untrack(() => value)) return;
       untrack(() => emit(next));
     } else {
       const parsed = Number(debounced);
       if (Number.isFinite(parsed)) {
+        if (parsed === untrack(() => value)) return;
         untrack(() => emit(parsed));
       } else {
         elementValue = '0';

@@ -562,6 +562,8 @@
     "delete_themes": "Excluir temas"
   },
   "composer": {
+    "normal_view": "Vista normal",
+    "pro_view": "Vista PRO",
     "add_new_page": "Adicionar nova página",
     "remove_column": "Remover coluna",
     "add_column": "Adicionar coluna",
@@ -612,9 +614,12 @@
       "track_settings": "Configurações da faixa",
       "tempo_bpm": "Tempo (BPM)",
       "base_pitch": "Tonalidade base",
-      "of_which_dont_fit": "Das quais não se encaixam no instrumento",
+      "of_which_are_accidentals": "Das quais são acidentes",
       "of_which_out_of_range": "Das quais estão fora do alcance",
       "include_accidentals": "Incluir acidentais",
+      "include_out_of_range_notes": "Incluir notas fora do alcance",
+      "include_out_of_range_notes_description": "Manter as notas que o instrumento selecionado não pode tocar. As notas fora da extensão acessível são sempre excluídas.",
+      "composer_locked_during_import": "O compositor é somente leitura enquanto o importador de MIDI estiver aberto.",
       "global_note_offset": "Deslocamento global de notas",
       "global_note_offset_description": "O índice de cada nota será empurrado para cima/baixo por essa quantidade, você pode usar isso para ajustar\n                            a música ao alcance do aplicativo. Você também pode alterar o deslocamento de cada camada.",
       "merged_notes": "Repetições mescladas",

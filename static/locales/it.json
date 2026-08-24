@@ -562,6 +562,8 @@
     "delete_themes": "Elimina temi"
   },
   "composer": {
+    "normal_view": "Vista normale",
+    "pro_view": "Vista PRO",
     "add_new_page": "Aggiungi nuova pagina",
     "remove_column": "Rimuovi colonna",
     "add_column": "Aggiungi colonna",
@@ -612,9 +614,12 @@
       "track_settings": "Impostazioni della traccia",
       "tempo_bpm": "Tempo (BPM)",
       "base_pitch": "Tonalità di base",
-      "of_which_dont_fit": "Di cui non adatte allo strumento",
+      "of_which_are_accidentals": "Di cui sono alterazioni",
       "of_which_out_of_range": "Di cui fuori estensione",
       "include_accidentals": "Includi le alterazioni",
+      "include_out_of_range_notes": "Includi le note fuori estensione",
+      "include_out_of_range_notes_description": "Mantieni le note che lo strumento selezionato non è in grado di suonare. Le note al di fuori dell'estensione raggiungibile sono sempre escluse.",
+      "composer_locked_during_import": "Il compositore è in sola lettura mentre l'importatore MIDI è aperto.",
       "global_note_offset": "Trasposizione globale delle note",
       "global_note_offset_description": "L'indice di ogni nota verrà spostato verso l'alto o il basso di questa quantità. Puoi usarlo per far rientrare il brano nell'estensione dell'app. Puoi anche modificare la trasposizione di ogni livello.",
       "merged_notes": "Ripetizioni unite",

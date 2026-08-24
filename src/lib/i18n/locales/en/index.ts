@@ -675,6 +675,8 @@ export const i18n_en = {
     delete_themes: 'Delete themes',
   },
   composer: {
+    normal_view: 'Normal view',
+    pro_view: 'PRO view',
     add_new_page: 'Add new page',
     remove_column: 'Remove column',
     add_column: 'Add column',

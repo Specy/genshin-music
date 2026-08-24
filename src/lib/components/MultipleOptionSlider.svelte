@@ -23,21 +23,39 @@
   } = $props();
 
   let rootEl: HTMLDivElement | undefined = $state();
-  let overlayState = $state({ width: 0, left: 0 });
+  let overlayState: { width: number; left: number } | null = $state(null);
 
   const selectedOption = $derived(options.find((option) => option.value === selected));
 
   $effect(() => {
-    const elements = rootEl?.querySelectorAll('button');
+    const elements = rootEl?.querySelectorAll<HTMLButtonElement>('button');
     const index = options.findIndex((e) => e.value === selected);
-    if (!elements || index < 0) return;
-    const bounds = elements[index].getBoundingClientRect();
-    const parentBounds = rootEl!.getBoundingClientRect();
-    overlayState = {
-      width: bounds.width - 3,
-      //TODO for some reason first item is off by 2px
-      left: bounds.left - parentBounds.left,
-    };
+    const selectedButton = elements?.[index];
+    if (!rootEl || !selectedButton || index < 0) {
+      overlayState = null;
+      return;
+    }
+    const button = selectedButton;
+
+    function positionOverlay() {
+      // A slider inside a closed menu panel has no layout box (`display:none`). Do not replace a
+      // valid position with zeroes; ResizeObserver runs this again as soon as the panel is shown.
+      if (button.offsetWidth === 0) return;
+      // offsetLeft is already relative to the positioned slider's padding edge. The old viewport
+      // rect subtraction counted the slider border twice, which caused the persistent ~2 px
+      // offset on the first option as well as stale measurements from hidden panels.
+      overlayState = {
+        width: button.offsetWidth,
+        left: button.offsetLeft,
+      };
+    }
+
+    positionOverlay();
+
+    const observer = new ResizeObserver(positionOverlay);
+    observer.observe(rootEl);
+    for (const element of elements) observer.observe(element);
+    return () => observer.disconnect();
   });
 </script>
 
@@ -54,10 +72,12 @@
       {capitalize(option.text)}
     </button>
   {/each}
-  <div
-    class="multiple-option-slider-overlay"
-    style="width:{overlayState.width}px;left:{overlayState.left}px;background-color:{selectedOption?.color}"
-  ></div>
+  {#if overlayState}
+    <div
+      class="multiple-option-slider-overlay"
+      style="width:calc({overlayState.width}px - 0.2rem);left:calc({overlayState.left}px + 0.1rem);background-color:{selectedOption?.color}"
+    ></div>
+  {/if}
 </div>
 
 <style>

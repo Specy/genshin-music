@@ -562,6 +562,8 @@
         "delete_themes": "Hapus tema"
     },
     "composer": {
+        "normal_view": "Tampilan normal",
+        "pro_view": "Tampilan PRO",
         "add_new_page": "Tambahkan halaman baru",
         "remove_column": "Hapus kolom",
         "add_column": "Tambahkan kolom",
@@ -612,9 +614,12 @@
             "track_settings": "Pengaturan trek",
             "tempo_bpm": "Tempo (BPM)",
             "base_pitch": "Nada dasar",
-            "of_which_dont_fit": "Di antaranya tidak cocok dengan instrumen",
+            "of_which_are_accidentals": "Di antaranya merupakan nada dengan tanda kromatis",
             "of_which_out_of_range": "Di antaranya di luar jangkauan",
             "include_accidentals": "Sertakan kecelakaan",
+            "include_out_of_range_notes": "Sertakan nada di luar jangkauan",
+            "include_out_of_range_notes_description": "Pertahankan nada yang tidak dapat dimainkan oleh instrumen yang dipilih. Nada di luar rentang yang dapat dijangkau selalu dikecualikan.",
+            "composer_locked_during_import": "Komposer hanya dapat dibaca saat pengimpor MIDI terbuka.",
             "global_note_offset": "Offset note global",
             "global_note_offset_description": "Indeks setiap nada akan didorong ke atas/bawah sejumlah ini, Anda bisa menggunakannya untuk membuat\n                        lagu cocok dengan jangkauan aplikasi. Anda juga bisa mengubah offset setiap lapisan.",
             "merged_notes": "Pengulangan yang digabungkan",

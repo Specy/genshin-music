@@ -112,6 +112,27 @@ describe('the MIDI import lifecycle has one save boundary', () => {
     expect(visibility).toContain('changes = Math.max(changes, 1)');
   });
 
+  it('keeps the working song when saving it is cancelled during a load', () => {
+    const code = functionCode('loadSong');
+    const cancelledSave = code.indexOf('if (confirm && !(await updateSong(song))) return;');
+    expect(cancelledSave).toBeGreaterThanOrEqual(0);
+    expect(cancelledSave).toBeLessThan(code.indexOf('song = parsed'));
+  });
+
+  it('lets a newer working song supersede the delayed mount-time route load', () => {
+    const code = functionCode('init');
+    const ownership = code.indexOf('const initialSong = song;');
+    const firstAwait = code.indexOf('await syncInstruments()');
+    const routeLoad = code.indexOf('await songService.getSongById(songId)');
+    const ownershipCheck = code.indexOf('if (!loadedSong || song !== initialSong) return;');
+    const install = code.indexOf('loadSong(loadedSong)');
+
+    expect(ownership).toBeGreaterThanOrEqual(0);
+    expect(ownership).toBeLessThan(firstAwait);
+    expect(routeLoad).toBeLessThan(ownershipCheck);
+    expect(ownershipCheck).toBeLessThan(install);
+  });
+
   it('treats an installed preview as unsaved when navigation bypasses the close path', () => {
     expect(functionCode('prepareToLeave')).toContain(
       'if (changes === 0 && !midiPreviewLoaded) return true'
@@ -137,7 +158,7 @@ describe('the MIDI import lifecycle has one save boundary', () => {
     expect(midiParser.indexOf('if (!componentAlive) return;')).toBeLessThan(
       midiParser.indexOf('functions.loadSong(song, { preview: true })')
     );
-    expect(midiParser).toContain('return await parseAudioToMidi(audio, name)');
+    expect(midiParser).toContain('return await parseAudioToMidi(audio, name, generation)');
   });
 });
 
