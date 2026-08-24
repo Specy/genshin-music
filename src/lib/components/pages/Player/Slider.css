@@ -1,7 +1,8 @@
 /* Shared, unscoped stylesheet: classes here are split across two components (PlayerSlider.svelte
-   owns two-way-slider/slider-outer/slider-full/slider-current/slider-input; PlayerSongControls.svelte
-   owns slider-select/slider-wrapper/sidebar-metronome-button) - a scoped style block living in only
-   one of them would never reach the other's elements. Both files import this as a side effect.
+   owns two-way-slider/two-way-slider-grab/slider-outer/slider-full/slider-current/slider-input;
+   PlayerSongControls.svelte owns slider-select/slider-wrapper/sidebar-metronome-button) - a scoped
+   style block living in only one of them would never reach the other's elements. Both files import
+   this as a side effect.
 
    CSS-comment hazard, confirmed by a past production build break: an asterisk placed immediately
    before a forward slash anywhere in this comment closes it early, dumping the rest of the file in
@@ -27,6 +28,22 @@
 .two-way-slider-thumb svg {
   transform: rotate(90deg);
   margin-left: 0.2rem;
+}
+
+/* The arrow's grab handle: a span whose only job is to BE an element the browser's touch
+   adjustment can aim at - see PlayerSlider's `touchAdjustmentTarget` for why one is needed. Plain
+   flow at its natural size, a stretched flex item exactly like the bare svg used to be, so the
+   glyph lands on the pixels it always did.
+
+   Deliberately NOT grown into a finger-sized hit box, though that is the obvious next step: a
+   thumb parked at either end of the track sits FLUSH against the button rows above and below it -
+   with the Section ending on the last frame, the arrow's top edge is already level with the Stop
+   button's bottom edge - so padding here would paint nothing yet win hit-testing over a fifth of
+   the Stop button and a sixth of the speed select, and a finger landing on either would silently
+   drag the Section instead of pressing the button it aimed at. Candidacy is what fixes the
+   targeting; size never was the missing piece, and there is no room to buy any. */
+.two-way-slider-grab {
+  display: flex;
 }
 
 .slider-outer {

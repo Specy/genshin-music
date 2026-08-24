@@ -1,5 +1,7 @@
 <script lang="ts">
   import * as workerTimers from 'worker-timers';
+  import { on } from 'svelte/events';
+  import type { Attachment } from 'svelte/attachments';
   import { DEFAULT_DOM_RECT } from '$core/legacyConfig';
   import { clamp } from '$core/utils/Utilities';
   import { playerControlsStore } from '$stores/PlayerControlsStore.svelte';
@@ -14,6 +16,27 @@
     /** One completed selector gesture; active playback restarts from the new Section here. */
     onCommit?: (start: number, end: number) => void;
   } = $props();
+
+  /**
+   * Enters an arrow handle into the browser's TOUCH ADJUSTMENT contest, which it otherwise loses.
+   *
+   * A finger never lands exactly on a 1em glyph, so every engine re-targets a touch to the nearest
+   * element it considers pressable. Blink's candidate test (WebKit's and Firefox-for-Android's are
+   * the same shape) counts mouse-button listeners, links and focusable form controls - nothing
+   * else. `pointerdown` does not qualify, and Svelte delegates it to the root anyway, so an arrow
+   * declared nothing an engine could see and every press near one was handed to a pressable
+   * NEIGHBOUR instead: the frame-number input beside it, where `handleSliderClick`'s deliberate
+   * early return swallowed it, or the speed select above the track, which is outside the slider
+   * entirely so the press never arrived at all. That was the whole "the thumbs cannot be dragged
+   * with a finger" bug - the mouse was unaffected because adjustment is a touch-only step.
+   *
+   * One real, empty mousedown listener is the whole declaration; the press itself keeps flowing
+   * through `.slider-outer`'s pointer handlers, which read coordinates and never the target. It is
+   * registered through `on()` rather than an `onmousedown` attribute because Svelte would delegate
+   * that one too, leaving the element as invisible to the engine as before.
+   */
+  const touchAdjustmentTarget: Attachment<HTMLElement> = (element) =>
+    on(element, 'mousedown', () => {});
 
   let selectedThumb: 'start' | 'end' | null = $state(null);
   let selectionChanged = false;
@@ -173,20 +196,22 @@
         oninput={(e) => handleSelectChange(+e.currentTarget.value, 'end')}
         onchange={commitInputChange}
       />
-      <svg
-        stroke="currentColor"
-        fill="currentColor"
-        stroke-width="0"
-        viewBox="0 0 16 16"
-        height="1em"
-        width="1em"
-        style="filter:drop-shadow(rgba(0, 0, 0, 0.4) 0px 2px 2px)"
-        xmlns="http://www.w3.org/2000/svg"
-        ><path
-          fill-rule="evenodd"
-          d="M7.022 1.566a1.13 1.13 0 0 1 1.96 0l6.857 11.667c.457.778-.092 1.767-.98 1.767H1.144c-.889 0-1.437-.99-.98-1.767z"
-        /></svg
-      >
+      <span class="two-way-slider-grab" {@attach touchAdjustmentTarget}>
+        <svg
+          stroke="currentColor"
+          fill="currentColor"
+          stroke-width="0"
+          viewBox="0 0 16 16"
+          height="1em"
+          width="1em"
+          style="filter:drop-shadow(rgba(0, 0, 0, 0.4) 0px 2px 2px)"
+          xmlns="http://www.w3.org/2000/svg"
+          ><path
+            fill-rule="evenodd"
+            d="M7.022 1.566a1.13 1.13 0 0 1 1.96 0l6.857 11.667c.457.778-.092 1.767-.98 1.767H1.144c-.889 0-1.437-.99-.98-1.767z"
+          /></svg
+        >
+      </span>
     </div>
     <div class="two-way-slider-thumb" style="bottom:calc({start}% - 14px)" bind:this={thumb1}>
       <input
@@ -202,20 +227,22 @@
         oninput={(e) => handleSelectChange(+e.currentTarget.value, 'start')}
         onchange={commitInputChange}
       />
-      <svg
-        stroke="currentColor"
-        fill="currentColor"
-        stroke-width="0"
-        viewBox="0 0 16 16"
-        height="1em"
-        width="1em"
-        style="filter:drop-shadow(rgba(0, 0, 0, 0.4) 0px 2px 2px)"
-        xmlns="http://www.w3.org/2000/svg"
-        ><path
-          fill-rule="evenodd"
-          d="M7.022 1.566a1.13 1.13 0 0 1 1.96 0l6.857 11.667c.457.778-.092 1.767-.98 1.767H1.144c-.889 0-1.437-.99-.98-1.767z"
-        /></svg
-      >
+      <span class="two-way-slider-grab" {@attach touchAdjustmentTarget}>
+        <svg
+          stroke="currentColor"
+          fill="currentColor"
+          stroke-width="0"
+          viewBox="0 0 16 16"
+          height="1em"
+          width="1em"
+          style="filter:drop-shadow(rgba(0, 0, 0, 0.4) 0px 2px 2px)"
+          xmlns="http://www.w3.org/2000/svg"
+          ><path
+            fill-rule="evenodd"
+            d="M7.022 1.566a1.13 1.13 0 0 1 1.96 0l6.857 11.667c.457.778-.092 1.767-.98 1.767H1.144c-.889 0-1.437-.99-.98-1.767z"
+          /></svg
+        >
+      </span>
     </div>
   </div>
 </div>
