@@ -822,8 +822,10 @@
             "change-6": "应用各处的小幅重新设计",
             "change-7": "MIDI 导出现在更加准确，导入其他应用时也能正常工作",
             "change-8": "作曲器设置中的全新“Pro view”：针对复杂歌曲改进的高级作曲器",
-            "change-9": "已为 Sky 添加七种乐器：大提琴、小提琴、萨克斯、口琴、横笛、小铃铛和福鼓。Aurora 和 Light Guitar 现在支持延音。",
-            "change-10": "其他问题修复和改进"
+            "change-9": "作曲器支持撤销与重做，快捷键为 Ctrl+Z 和 Ctrl+Y",
+            "change-10": "已为 Sky 添加十一种乐器：大提琴、小提琴、萨克斯、口琴、横笛、小铃铛、福鼓、Cymbals、Krill Horn、Tuned Krill Horn 和 Triumph HandPan。Aurora 和 Light Guitar 现在支持延音。",
+            "change-11": "已为 Genshin 添加 Nightwind Horn",
+            "change-12": "其他问题修复和改进"
         },
         "3-7-0": {
             "title": "新乐器(原神)",

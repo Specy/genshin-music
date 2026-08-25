@@ -955,9 +955,11 @@ export const i18n_en = {
       'change-7': 'MIDI export is now more accurate and works properly when imported in other apps',
       'change-8':
         'New "Pro view" in the composer settings: Improved and more advanced composer for complex songs',
-      'change-9':
-        'Added seven instruments to Sky: Cello, Violin, Saxophone, Harmonica, Transverse Flute, Small Bell and Fortune Drum. The Aurora and the Light Guitar are now sustained.',
-      'change-10': 'Other bug fixes and improvements',
+      'change-9': 'Undo and redo in the composer, with the Ctrl+Z and Ctrl+Y shortcuts',
+      'change-10':
+        'Added eleven instruments to Sky: Cello, Violin, Saxophone, Harmonica, Transverse Flute, Small Bell, Fortune Drum, Cymbals, Krill Horn, Tuned Krill Horn and Triumph HandPan. The Aurora and the Light Guitar are now sustained.',
+      'change-11': 'Added the Nightwind Horn to Genshin',
+      'change-12': 'Other bug fixes and improvements',
     },
     '3-7-0': {
       title: 'New instruments (Genshin)',
