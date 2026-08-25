@@ -311,8 +311,8 @@
     flex-direction: column;
     left: 0;
     right: 0;
-    width: 30vw;
-    max-width: 24rem;
+    width: 45vw;
+    max-width: 22rem;
     padding: 0.6rem;
     background-color: var(--primary);
     color: var(--primary-text);
