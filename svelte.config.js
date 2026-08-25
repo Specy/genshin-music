@@ -22,12 +22,17 @@ const basePath = process.env.PUBLIC_BASE_PATH ?? '';
 const config = {
   preprocess: vitePreprocess(),
   kit: {
-    // Deterministic by default so a comment-only change can be proven to produce
-    // byte-identical build output (scripts/commentOnlyCheck.js pins this via
-    // BUILD_VERSION_NAME for both builds it compares); safe because this app never
-    // reads SvelteKit's version-based update detection (`updated` from
-    // `$app/state`) - it drives update prompts through the service worker's
-    // SKIP_WAITING flow instead, so this value is inert at runtime.
+    // scripts/buildApp.js sets BUILD_VERSION_NAME to the same per-build timestamp it gives
+    // PUBLIC_SW_VERSION, so every deploy publishes a distinct `_app/version.json`. This value is
+    // NOT inert even though no app code reads `updated` from `$app/state`: Kit's own client
+    // fetches version.json whenever a load throws or a navigation resolves >= 400, and on a
+    // mismatch updates the service worker and does a full `location.href` navigation to the
+    // target URL instead of rendering +error.svelte (runtime/client/client.js). That is the only
+    // thing rescuing a tab left open across a deploy when a hashed chunk it imports is gone -
+    // the SW's SKIP_WAITING prompt handles the precache side, not this one. Pinning it to a
+    // constant silently disables that recovery; scripts/commentOnlyCheck.js and
+    // scripts/classAttrCheck.js do pin it deliberately, to prove two builds of identical source
+    // are byte-identical. The 'dev' fallback only applies to a bare `vite build`/`vite dev`.
     version: { name: process.env.BUILD_VERSION_NAME || 'dev' },
     adapter: adapter({
       pages: outDir,
