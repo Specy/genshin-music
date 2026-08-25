@@ -302,7 +302,7 @@
 </div>
 
 <style>
-  :global(.floating-prompt) {
+  .floating-prompt {
     position: absolute;
     margin-right: auto;
     margin-left: auto;
@@ -341,7 +341,7 @@
     }
   }
 
-  :global(.floating-prompt-hidden) {
+  .floating-prompt-hidden {
     opacity: 0;
     transform: translateY(-20%);
     pointer-events: none;
@@ -424,5 +424,26 @@
   .prompt-select-description {
     font-size: 0.8rem;
     opacity: 0.8;
+  }
+
+  @media only screen and (max-width: 920px) {
+      .floating-prompt {
+        width: 45vw;
+        padding: 0.5rem;
+      }
+  }
+
+  /* Both widths above (30vw, and 45vw on a phone) were written when a phone only ever showed this
+     app in landscape: 45vw of an 852px-wide screen is a comfortable 383px box. Held upright the same
+     45vw is 177px, which is narrower than the two buttons inside it - `.prompt-button` alone spends
+     4rem on horizontal padding - so `word-break: break-word` above snapped the labels mid-word and
+     asyncConfirm's Yes/No came out as "Y es" / "N o". Every de-warned page can raise one of these
+     (the bottom bar's Discord button asks for confirmation), so it is fixed here rather than per
+     page. Placed straight after the block it overrides: same specificity, source order decides.
+     `min()` keeps the existing `max-width: 24rem` cap meaningful on a portrait tablet. */
+  @media screen and (orientation: portrait) {
+    .floating-prompt {
+      width: min(90vw, 24rem);
+    }
   }
 </style>
