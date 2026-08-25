@@ -14,6 +14,7 @@ import {
     Recording,
     Song,
     TempoChunk,
+    UndoHistory,
     VisualChunk,
     VisualSong,
     VsrgHitObject,
@@ -40,10 +41,9 @@ import {reactiveArray} from './signals.svelte'
  * ACROSS: clone() must share nothing mutable with the song it copied - same failure mode, and
  * equally unwatched until now, because a payload walk cannot see inside a class instance.
  *
- * IN: a method that installs a column array as the live graph must install a PLAIN array.
- * restoreColumns is the one that is handed a Svelte deep proxy (the composer's undo history is a
- * `$state` array); initColumnsForConstruction copies for ownership rather than laundering - see its
- * header.
+ * IN: a method that installs a column array must install a PLAIN array it owns -
+ * initColumnsForConstruction copies for that reason (see its header), and a proxy reaching #columns
+ * would leave the canvas' draw path paying a trap per read for the rest of the session.
  *
  * One describe block below per direction, then the reflection that keeps the OUT table complete.
  */
@@ -277,17 +277,17 @@ describe('the guards fire', () => {
     })
 })
 
-describe('the column install paths launder reactive input', () => {
-    //Composer.svelte's undoHistory is a deep `$state` array, so an entry read back out of it is a
-    //Svelte PROXY of a column array. Installing one as #columns would leave the live graph proxied
-    //for the rest of the session - every columns[i] read on the canvas draw path paying a trap -
-    //and refreshSong()'s clone is what used to launder it away.
+describe('the column install path launders reactive input', () => {
+    //A column array read back out of a `$state` container is a Svelte PROXY of it. Installing one
+    //as #columns would leave the live graph proxied for the rest of the session - every columns[i]
+    //read on the canvas draw path paying a trap. The retired snapshot undo kept entries in exactly
+    //such a container, which is why its installer had to copy; the delta history holds plain arrays
+    //(UndoHistory's header) and never installs a column array at all.
     //
-    //That is restoreColumns' story: undo() hands it an array read back out of a `$state` container.
     //initColumnsForConstruction's callers build a fresh plain array, so its copy is about OWNERSHIP
     //of the installed array rather than laundering - it is tested here anyway, because "a public
     //method that installs #columns installs a plain array it owns" is the contract, and deleting
-    //either copy leaves the whole suite green without these tests.
+    //the copy leaves the whole suite green without this test.
     function proxiedColumns(song: ComposedSong): NoteColumn[] {
         const history: NoteColumn[][] = reactiveArray([song.clone().columns])
         const restored = history[0]
@@ -295,14 +295,6 @@ describe('the column install paths launder reactive input', () => {
         expect(() => structuredClone(restored)).toThrow()
         return restored
     }
-
-    it('restoreColumns copies the array it is given', () => {
-        const song = liveComposedSong()
-        const columns = proxiedColumns(song)
-        song.restoreColumns(columns)
-        expect(song.columns).not.toBe(columns)
-        expect(() => structuredClone(song.columns)).not.toThrow()
-    })
 
     it('initColumnsForConstruction copies the array it is given', () => {
         const song = liveComposedSong()
@@ -407,6 +399,11 @@ function modelClasses(): ModelClass[] {
         {label: 'Chunk (RecordedSong)', klass: Chunk, instance: new Chunk([], 0)},
         {label: 'Chunk (VisualSong)', klass: VisualChunk, instance: new VisualChunk()},
         {label: 'Folder', klass: Folder, instance: new Folder('surface')},
+        //not a persistence class at all: the composer's in-memory Undo Step history (ADR-0013),
+        //which the model folder exports and this registry therefore has to name. It carries no
+        //serialize-shaped member, so it contributes nothing to the surface below - the row exists
+        //so that the derivation above stays exhaustive.
+        {label: 'UndoHistory', klass: UndoHistory, instance: new UndoHistory()},
     ]
 }
 

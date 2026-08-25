@@ -15,6 +15,7 @@ import {
     ZenKeyboardSettings,
     type ZenKeyboardSettingsDataType
 } from "$core/BaseSettings"
+import {MIDIShortcut} from "$core/utils/Utilities"
 
 
 class SettingsService {
@@ -153,7 +154,7 @@ class SettingsService {
         try {
             const settings = JSON.parse(localStorage?.getItem(`${APP_NAME}_MIDI_Settings`) || 'null') as any
             if (settings !== null && settings.settingVersion === MIDISettings.settingVersion) {
-                return settings
+                return this.withCurrentMIDIShortcuts(settings)
             } else {
                 return MIDISettings
             }
@@ -161,6 +162,24 @@ class SettingsService {
             console.error(e)
             return MIDISettings
         }
+    }
+
+    /**
+     * A stored blob only ever holds the shortcut list as it stood when it was written, and the setup
+     * grid draws THAT array - so a shortcut added later (ADR-0013's undo/redo) would be unbindable
+     * for everyone who already has one. Reconciled against the current list here instead of bumping
+     * settingVersion: a version change discards the whole blob, taking every preset and every
+     * already-bound key with it, which is far too much for a longer list.
+     *
+     * The CURRENT list decides membership and order; a stored row keeps its bound key, a new one
+     * arrives unbound (-1), and a row whose name no longer exists is dropped.
+     */
+    private withCurrentMIDIShortcuts(settings: any) {
+        const stored: any[] = Array.isArray(settings.shortcuts) ? settings.shortcuts : []
+        settings.shortcuts = MIDISettings.shortcuts.map(shortcut =>
+            stored.find(existing => existing?.type === shortcut.type) ?? new MIDIShortcut(shortcut.type, -1)
+        )
+        return settings
     }
 
     getDefaultMIDISettings() {

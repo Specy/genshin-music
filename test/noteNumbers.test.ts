@@ -275,7 +275,7 @@ describe('a track that states no Basepoint follows the song\'s', () => {
         expect(song.columns[0].notes[0].id).toBe(buttonToNumber(instrument, 'F', 0))
         expect(song.columns[0].notes[0].id - buttonToNumber(instrument, 'C', 0)!).toBe(basepointOffset('F'))
         //...and the track stays free to follow a later song-level Basepoint change
-        song.applyBasepointChange('song', 'F', 'C')
+        song.changeBasepoint('song', 'C')
         expect(song.columns[0].notes[0].id).toBe(buttonToNumber(instrument, 'C', 0))
     })
 })

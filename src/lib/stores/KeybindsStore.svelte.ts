@@ -37,6 +37,22 @@ const defaultShortcuts = {
     //QWERT/ASDFG/ZXCVB, and the drum/SFX sets are subsets of those), so it cannot shadow a note key
     //while `keyboard`'s own listener is live. Not holdable: an auto-repeating toggle is a flicker.
     KeyK: createShortcut('toggle_keyboard', false, 'toggle_keyboard_description'),
+    //UNDO/REDO (ADR-0013). Holdable: holding the combo walks the history step by step, which is
+    //what the OS auto-repeat is for and what every editor does with it.
+    //
+    //ONE COMBO PER ACTION, and it is a constraint of this store rather than a preference: a
+    //shortcut is identified BY NAME everywhere outside this map - `reverseShortcuts` is
+    //name -> key, `load()` restores a stored rebind by looking its name up in it, and
+    //ShortcutsTable keys its rows by name - so a second entry named `undo` would collide in all
+    //three (a duplicate {#key} at best, a rebind landing on the wrong entry at worst). The design
+    //asked for Ctrl+Y AND Ctrl+Shift+Z for redo plus Cmd aliases for mac; aliases need this store
+    //to identify a binding by KEY instead, which is a persistence change and not this phase's.
+    //Ctrl+Y covers redo, and mac users can rebind either row to their Cmd combo on /keybinds -
+    //the combo composer matches the whole set of keys down, so a two-modifier combo works, but
+    //only when it is pressed in the order the map states it (`ShiftLeft+KeyS` has always had the
+    //same rule).
+    'ControlLeft+KeyZ': createShortcut('undo', true, 'undo_description'),
+    'ControlLeft+KeyY': createShortcut('redo', true, 'redo_description'),
   },
   player: {
     Space: createShortcut('toggle_record', false, 'toggle_record_description'),
@@ -326,6 +342,18 @@ export function createKeyboardListener(
 ): ShortcutDisposer {
   KeyboardProvider.listen(
     ({ code, event }) => {
+      //A NOTE KEY IS A BARE KEY. This listener matches on `code` alone — note entry has no
+      //modifiers to match — and KeyboardProvider fans every keydown out to EVERY listener, so
+      //without this an application chord whose letter happens to be a note key also enters that
+      //note: Ctrl+Z in the composer walked the history AND wrote note Z on top of it (both games'
+      //Label Sets contain Z, genshin's also Y), and that new Step cleared the redo branch the undo
+      //had just created. The combo listeners (createShortcutListener) are what answer such an
+      //event; alt/shift stay note entry, shift being the composer's own edit modifier.
+      //
+      //KEYDOWN ONLY — the release half below has no such guard, for the reason KeyboardProvider's
+      //typing-target guard is one-sided too: whoever is HOLDING a note needs its key-up, and a
+      //modifier pressed mid-hold must not swallow it.
+      if (event.ctrlKey || event.metaKey) return;
       if (!options?.repeat && event.repeat) return;
       const shortcut = keyBinds.getShortcut('keyboard', code);
       if (shortcut !== undefined) {

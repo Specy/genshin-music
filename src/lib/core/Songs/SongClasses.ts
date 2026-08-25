@@ -91,9 +91,9 @@ export class NoteColumn {
      * consumer keyed by index must hold the column OBJECT beside the number and compare both. See
      * ComposerRenderer's ColumnPaintKey, which states the same pair from the other side.
      *
-     * RULE 2: compare the number with `!==`, never `>`. clone() drops the counter, so a restored
-     * column (undo) is observable at 1 - restoreColumns' own #touchAllColumns bumps it on the way
-     * in - as is a freshly inserted one, both BELOW live columns edited more often, so `>`
+     * RULE 2: compare the number with `!==`, never `>`. clone() drops the counter, so a pasted
+     * column is observable at 1 - the paste's own #touchAllColumns bumps it on the way in - as is a
+     * freshly inserted one, both BELOW live columns edited more often, so `>`
      * is the comparison that never repaints exactly the columns whose contents are newest. Holding
      * the object as rule 1 requires happens to make the two forms coincide - a given instance's
      * counter only increments - which is why this is written as a rule rather than left implicit:
@@ -110,8 +110,8 @@ export class NoteColumn {
         const clone = new NoteColumn()
         clone.tempoChanger = this.tempoChanger
         clone.notes = this.notes.map(note => ({...note}))
-        //deliberately NOT copied: a clone is a different painted object, and undo history
-        //snapshots must not carry a version that makes a restored column look unchanged
+        //deliberately NOT copied: a clone is a different painted object, and a pasted (or
+        //otherwise installed) column must not arrive carrying a version that makes it look painted
         return clone
     }
 

@@ -1796,7 +1796,7 @@
       "shape": "sky-2x4",
       "sustain": {
         "release": 0.3,
-        "minLength": 0.1,
+        "minLength": 0.2,
         "loopMode": "loop-continuous"
       },
       "notes": [

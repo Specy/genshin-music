@@ -19,7 +19,7 @@
   import { game } from '$game';
   import { APP_NAME } from '$core/legacyConfig';
   import type { Pitch } from '$lib/games/types';
-  import { t, tInstrument } from '$i18n/binding.svelte';
+  import { t } from '$i18n/binding.svelte';
   import PageMetadata from '$cmp/shell/PageMetadata.svelte';
   import AppButton from '$cmp/inputs/AppButton.svelte';
   import MidiParser from './MidiParser/MidiParser.svelte';
@@ -32,6 +32,8 @@
   import { ComposerInstrumentSynchronizer } from './ComposerInstrumentSynchronizer';
   import CanvasTool from './CanvasTool.svelte';
   import InstrumentControls from './InstrumentControls.svelte';
+  import IconRotateLeft from '~icons/fa6-solid/rotate-left';
+  import IconRotateRight from '~icons/fa6-solid/rotate-right';
   import { Instrument, type ObservableNote } from '$lib/audio/Instrument.svelte';
   import { ComposerTransport, TRANSPORT_START_MARGIN_S } from '$lib/audio/ComposerTransport';
   import { exportSongAudio as exportAudio } from '$lib/audio/exportSongAudio';
@@ -39,7 +41,7 @@
   import { homeStore } from '$stores/HomeStore.svelte';
   import { logger } from '$stores/LoggerStore.svelte';
   import { consumePendingMidiImport } from '$stores/PendingMidiImportStore';
-  import { ComposedSong } from '$core/Songs/ComposedSong.svelte';
+  import { ComposedSong, type ComposedSongHistory } from '$core/Songs/ComposedSong.svelte';
   import { RecordedSong } from '$core/Songs/RecordedSong';
   import { VsrgSong } from '$core/Songs/VsrgSong.svelte';
   import type { SerializedSong } from '$core/Songs/Song.svelte';
@@ -108,7 +110,7 @@
     ])
   );
   // One-time seed, not reactive: later bpm/pitch edits flow through handleSettingChange's
-  // songSetting branch instead, which writes song.bpm/song.pitch directly.
+  // songSetting branch instead, which calls these same two methods.
   //
   // THE SONG IS THE SINGLE SOURCE OF TRUTH for the Basepoint inside this component, and every
   // read of it below goes through `song.pitch` for that reason. Since ADR-0007 the Basepoint
@@ -117,9 +119,9 @@
   // while the canvas drew them at another. `settings.pitch` survives as the persisted UI copy,
   // written together with the song on every edit and re-seeded FROM it on load and undo.
   // svelte-ignore state_referenced_locally
-  song.bpm = settings.bpm.value;
+  song.setBpm(settings.bpm.value);
   // svelte-ignore state_referenced_locally
-  song.pitch = settings.pitch.value;
+  song.changeBasepoint('song', settings.pitch.value);
   let layer = $state(0);
   // `$state.raw`, like song.breakpoints/song.instruments: this array is handed to the canvas and
   // the renderer calls `selectedColumns.includes(i)` once per visible column on every draw, so it
@@ -128,22 +130,26 @@
   // does, see selectColumn).
   let selectedColumns: number[] = $state.raw([]);
   /**
-   * One undo step. COMPOUND since ADR-0007, and it has to be: a Basepoint change or an instrument
-   * swap rewrites the notes AND moves the setting that says what they mean, so a columns-only
-   * snapshot would restore the notes into a song still claiming the new Basepoint — every one of
-   * them a semitone (or an instrument) out. The three are captured and restored together or the
-   * edit is not undoable at all.
+   * THE SONG'S UNDO STEP HISTORY (ADR-0013, CONTEXT.md § Composer Editing). The composer owns no
+   * recording of its own any more: the song records a typed delta at each of its own mutation
+   * sites, into the container attached here — so "attached" IS "this song is being edited", and
+   * attaching a fresh one at every install point is the whole of the clear-on-song-change rule.
+   *
+   * `$state.raw` and not `$state`: the container is a class holding plain arrays of deltas that
+   * carry LIVE references to detached notes and columns (UndoHistory's header — a deep proxy there
+   * would poison the graph on re-insertion). Raw still publishes the REPLACEMENT, which is what a
+   * song install is; everything inside it publishes through its own single version signal.
+   *
+   * Attached HERE rather than at `song`'s declaration so the two seed writes above record nothing:
+   * a fresh song must not open dirty (the persisted settings arrive later still — see onMount,
+   * which re-seeds and then re-attaches).
    */
-  type ComposerHistoryEntry = {
-    columns: NoteColumn[];
-    pitch: Pitch;
-    instruments: InstrumentData[];
-  };
-  let undoHistory: ComposerHistoryEntry[] = $state([]);
+  // svelte-ignore state_referenced_locally
+  let history: ComposedSongHistory = $state.raw(song.attachHistory());
   /**
-   * The tools panel's clipboard. COMPOUND for the same reason the undo entry above is: the copied
-   * columns hold ABSOLUTE Note Numbers (ADR-0007), which name the buttons they were copied from
-   * only together with the Basepoint each SOURCE track was stated at — so that is captured with
+   * The tools panel's clipboard, and it is COMPOUND for a reason: the copied columns hold ABSOLUTE
+   * Note Numbers (ADR-0007), which name the buttons they were copied from only together with the
+   * Basepoint each SOURCE track was stated at — so that is captured with
    * them (`ComposedSong.trackPitches`, indexed by source track) and the paste restates the numbers
    * in the destination's terms. Without it a copy at Basepoint C pasted into a song at F reproduces
    * different buttons, which is the one thing a clipboard may not do.
@@ -167,8 +173,24 @@
   let midiOpening = $state(false);
   /** The importer's live preview owns the song while its panel is open. */
   const songLocked = $derived(isMidiVisible || midiOpening);
-  /** Whether this import session has actually installed a preview that must leave the song dirty. */
+  /**
+   * Whether an installed MIDI preview is still unsaved work. It outlives the panel deliberately:
+   * closing the importer promotes the preview to an ordinary unsaved working song, and only a real
+   * save (or another song replacing it) clears the flag.
+   */
   let midiPreviewLoaded = $state(false);
+  /**
+   * WHETHER THE OPEN SONG HAS UNSAVED WORK, and the ONE answer every prompt below reads (CONTEXT.md
+   * § Savepoint): the leave guard, the load/create/import questions, the menu's dot, the export
+   * question. Derived from the history's Savepoint, so undoing back to the last save makes the song
+   * clean again — the retired `changes` counter only ever went up, so a session undone to nothing
+   * still asked about changes that no longer existed.
+   *
+   * `midiPreviewLoaded` rides along because an installed preview is unsaved work the history cannot
+   * see: it arrived through loadSong, which attaches a fresh (clean) history, the preview BEING the
+   * song.
+   */
+  const songIsDirty = $derived(history.isDirty || midiPreviewLoaded);
   // The file that sent the user here, handed over by whichever menu could not parse it
   // (PendingMidiImportStore). Taken at the moment the importer opens - so a hand-opened importer
   // never re-imports a stale file - and passed down for MidiParser to parse on mount.
@@ -183,6 +205,12 @@
   const playbackActive = $derived(isPlaying || playbackStarting);
   let playbackColumnStartMs = $state(0);
   let playbackAnchorGeneration = $state(0);
+  /**
+   * THE AUTOSAVE CADENCE, and nothing else since ADR-0013: how much editing has happened since the
+   * last save, so autosave fires every few edits. It does NOT answer "is the song dirty" any more —
+   * that is `songIsDirty` above, which the Savepoint can move backwards. Undo and redo count here
+   * as activity, so an undo-heavy session still autosaves what it lands on.
+   */
   let changes = $state(0);
   // Opening the importer settles a live sustain before asking what to do with the finished edit.
   // Its normal change accounting still runs, but autosave must not race that explicit question.
@@ -326,8 +354,12 @@
     //the persisted settings arrive AFTER the defaults the song was seeded from, so re-seed both
     //song-level values a fresh song carries (see their declaration) — nothing is loaded yet, so
     //there are no notes for the Basepoint to move
-    song.bpm = loadedSettings.bpm.value;
-    song.pitch = loadedSettings.pitch.value;
+    song.setBpm(loadedSettings.bpm.value);
+    song.changeBasepoint('song', loadedSettings.pitch.value);
+    //...and then a FRESH history over the two Steps that re-seed just recorded: the mount is a song
+    //install like any other (ADR-0013), and a composer that opened offering to undo its own seeding
+    //- or claiming unsaved changes on an empty song - would be wrong on both counts
+    installHistory();
     init(loadedSettings);
     broadcastChannel = window.BroadcastChannel
       ? new BroadcastChannel(APP_NAME + '_composer')
@@ -625,6 +657,18 @@
     //...and not while the tools hold the bottom of the window (keyboardSheetRaised): the flip
     //would change nothing visible now and spring a surprise state on the tools' close instead
     if (name === 'toggle_keyboard' && proView && !isToolsVisible) keyboardRaised = !keyboardRaised;
+    //UNDO/REDO (ADR-0013), and they run DURING PLAYBACK like every other edit - no `wasPlaying`
+    //guard above them. preventDefault because the browser's own undo stack is still aimed at the
+    //last text field this surface wrote into (the bpm box, the song name): without it Ctrl+Z can
+    //walk the song AND retype a settings field the user left minutes ago.
+    if (name === 'undo') {
+      event.preventDefault();
+      undo();
+    }
+    if (name === 'redo') {
+      event.preventDefault();
+      redo();
+    }
     if (name === 'toggle_play') {
       if (event.repeat) return;
       if ((event.target as HTMLElement | null)?.tagName === 'BUTTON') {
@@ -653,6 +697,16 @@
     //two sustain-recording paths the future columns are unchanged, so the resync is a harmless
     //no-op recommit — cheap, and simpler than exempting them.
     resyncPlayback();
+    countActivity();
+  }
+
+  /**
+   * The autosave half of the funnel on its own, for the paths that own their resync: undo and redo
+   * force a re-anchor (ADR-0006) and would otherwise retract and recommit the same window twice for
+   * one walk. It counts EDITING ACTIVITY and not dirtiness (see `changes`) — an undo is activity
+   * even though it moves the song back toward the file.
+   */
+  function countActivity() {
     changes++;
     if (!suppressAutoSave && changes > 5 && settings.autosave.value) {
       //TODO maybe add here that songs which arent saved dont get autosaved
@@ -724,6 +778,14 @@
           changeLayer(nextLayer);
           break;
         }
+        //ADR-0013. Reached from a note-on like every shortcut here, so the settle block inside the
+        //walk is what stops the press this very event started from writing into the restored graph.
+        case 'undo':
+          undo();
+          break;
+        case 'redo':
+          redo();
+          break;
         default:
           break;
       }
@@ -736,38 +798,36 @@
 
   function handleSettingChange({ data, key }: SettingUpdate) {
     if (songLocked && data.songSetting) return;
-    //captured BEFORE the write below, because a Basepoint change is a real note edit and needs
-    //both ends of the interval (ADR-0007). Undo has to see the song as it was, so the snapshot
-    //goes in first too.
+    //read BEFORE the write below: a pitch setting that names the Basepoint the song already has is
+    //not an edit, and changeBasepoint's own no-op path would publish and record nothing anyway -
+    //but the two branches at the bottom of this function still need to know which happened
     const previousPitch = song.pitch;
     const pitchChanged = key === 'pitch' && data.value !== previousPitch;
-    if (pitchChanged) addToHistory();
     // @ts-expect-error SettingUpdateKey spans all 4 settings families; narrower here by design
     settings[key] = { ...settings[key], value: data.value };
     if (data.songSetting) {
-      // A songSetting key is written straight onto the song here, so whether the write publishes
-      // is decided by the field it lands on. The keys that carry the flag today are bpm, pitch and
-      // reverb: bpm/pitch are signals and publish through this dynamic write (they keep public
-      // setters, which is why it still works); reverb is plain on purpose - it goes straight to
-      // AudioProvider below and into serialize(). A fourth songSetting whose field needs to be
-      // observed would have to be a signal on the song, like those two.
-      // @ts-expect-error SettingUpdateKey spans all 4 settings families; narrower here by design
-      song[key] = data.value;
+      // BY NAME, not through the `song[key] = data.value` this used to be (ADR-0013): a dynamic
+      // write is an edit the song cannot record and a reader of either file cannot find. The
+      // composer settings carrying the flag are exactly bpm, pitch and reverb, so a FOURTH one
+      // needs a method on the song and a branch here - it is otherwise dropped silently.
+      // `pitch` is absent on purpose - moving the Basepoint also rewrites the notes, so it is
+      // changeBasepoint's single call below rather than a field write here.
+      if (key === 'bpm') song.setBpm(data.value as number);
+      else if (key === 'reverb') song.setReverb(data.value as boolean);
     }
     if (key === 'reverb') {
       AudioProvider.setReverb(data.value as boolean);
     }
     //ADR-0007: the song's Basepoint is part of every number its notes store, so moving it REWRITES
     //them — every track that follows the song (a track with its own override keeps its effective
-    //Basepoint, so its notes must not move). The write above already installed the new value; this
-    //is handed both ends explicitly.
+    //Basepoint, so its notes must not move). ONE call for both halves: the method writes the field
+    //and rewrites the notes, reading the old end off the song itself (ADR-0013).
     //
     //...which makes it a NOTE EDIT, so it rides the note-edit funnel rather than resyncing on its
-    //own: handleAutoSave() is what marks the song dirty, and the dirty count is what the
-    //unsaved-changes prompts (loadSong, createNewSong, prepareToLeave) and the menu's dot read. A
-    //transposed song that still counted as saved was silently discarded by all three.
+    //own (ADR-0006). Dirtiness is the song's own Step to record now (ADR-0013) - what the funnel
+    //still owes this path is the resync and the autosave cadence.
     if (pitchChanged) {
-      song.applyBasepointChange('song', previousPitch, data.value as Pitch);
+      song.changeBasepoint('song', data.value as Pitch);
       handleAutoSave();
     } else if (key === 'bpm' || key === 'pitch') {
       //ADR-0006 resync-on-mutation: bpm re-times every uncommitted boundary, so it retracts and
@@ -790,52 +850,28 @@
     syncInstruments(song);
   }
 
-  async function removeInstrument(index: number) {
+  /**
+   * The layer panel's Delete layer. NO CONFIRM since ADR-0013: the question existed because losing
+   * a layer's notes was irreversible, and one Ctrl+Z now brings the roster entry and every note of
+   * it back. The `songLocked` and last-layer guards are what remain, and neither is a question.
+   */
+  function removeInstrument(index: number) {
     if (songLocked) return;
     if (layers.length <= 1) return logger.warn(t('composer:cant_remove_all_layers'));
-    const confirm = await asyncConfirm(
-      t('composer:confirm_layer_remove', {
-        // Was `i18n.t('instruments.' + name)` — a pre-existing '.'-for-':' namespace
-        // separator typo that NEVER resolved (i18next returned the raw
-        // "instruments.Name" key here). Routed through tInstrument like every other
-        // instrument-label lookup (Codex review, ADR-0003 follow-up): locale key,
-        // else config displayName, else the raw name.
-        layer_name: song.instruments[index].alias ?? tInstrument(song.instruments[index].name),
-      })
-    );
-    if (songLocked) return;
-    if (confirm) {
-      song.removeInstrument(index);
-      syncInstruments(song);
-      layer = Math.max(0, index - 1);
-    }
+    song.removeInstrument(index);
+    syncInstruments(song);
+    layer = Math.max(0, index - 1);
   }
 
   /**
    * The layer panel's Merge up / Merge down: fold the selected layer's notes into its neighbour and
-   * retire the layer. Destructive and NOT undoable, so the confirm is the whole guard - see below.
+   * retire the layer. Its confirm went the way removeInstrument's did (ADR-0013) - the merge is one
+   * Undo Step, notes, roster and all.
    */
-  async function mergeLayer(direction: 1 | -1) {
+  function mergeLayer(direction: 1 | -1) {
     if (songLocked) return;
     const target = layer + direction;
     if (target < 0 || target > song.instruments.length - 1) return;
-    // the same lookup removeInstrument's `layer_name` does - locale key, else config displayName,
-    // else the raw name - except `||`, because `alias` defaults to the empty string rather than
-    // undefined (as toMidi's track-name comment records); under `??` every unnamed layer would be
-    // announced as "" in the question below.
-    const layerName = (index: number) =>
-      song.instruments[index].alias || tInstrument(song.instruments[index].name);
-    const confirm = await asyncConfirm(
-      t('confirm:merge_layers', {
-        source_layer: layerName(layer),
-        destination_layer: layerName(target),
-      })
-    );
-    if (!confirm || songLocked) return;
-    // NO undo entry, deliberately. addToHistory() does snapshot the roster and the notes from one
-    // clone, so an entry COULD restore the pair - but it only records while the tools panel is open,
-    // and this edit is reachable with it closed, so half the merges would be undoable and half not.
-    // The decision is none of them: the question above is the guard.
     song.mergeTrackInto(layer, target);
     // BEFORE the funnel below: the roster shrank, so the engine list has to be re-requested for the
     // notes' new track indexes to address the right instruments. Slots whose instrument actually
@@ -845,8 +881,8 @@
     // merging UP moves the selection to the destination above; merging DOWN leaves it where it is,
     // because removing this layer slides the destination down into the index it already sits at
     if (direction === -1) layer = target;
-    // the note-edit funnel, as every path that changes what playback would sound: it marks the song
-    // dirty (which is what the unsaved-changes prompts read) and carries the ADR-0006 resync
+    // the note-edit funnel, as every path that changes what playback would sound: the ADR-0006
+    // resync plus the autosave cadence
     handleAutoSave();
   }
 
@@ -857,23 +893,37 @@
     // leave the layer panel showing the old name/colour/visibility. Do not "optimise" it away.
     //
     // ADR-0007: it is also where the two NOTE rewrites live — an instrument swap (button-preserving
-    // through nominal correspondence) and a per-layer Basepoint override change (the interval). The
-    // snapshot goes in first so undo restores the notes and the roster together.
-    const previous = song.instruments[index];
-    if (previous && (previous.name !== instrument.name || previous.pitch !== instrument.pitch)) {
-      addToHistory();
-    }
+    // through nominal correspondence) and a per-layer Basepoint override change (the interval).
+    // Both ride the one Step setInstrument records, roster entry and rewritten notes together.
     song.setInstrument(index, instrument);
     //THE NOTE-EDIT FUNNEL, not a bare resync: everything the popup writes is part of the saved song
     //(name, Basepoint override, volume, mute, alias, icon, visibility), and a swap or an override
-    //change rewrites the track's notes as well — none of which counted as a change before, so the
-    //save prompts and the menu's dirty dot never saw an edit made entirely from this panel.
+    //change rewrites the track's notes as well.
     //It carries the ADR-0006 resync with it: this is where mute and the per-layer pitch override
     //land, and both change what committed audio should contain, synchronously — playSound reads the
     //roster entry just written. A NAME change resyncs a second time from syncInstruments, once the
     //replacement instrument exists.
     handleAutoSave();
     syncInstruments(song);
+  }
+
+  /**
+   * THE LAYER SETTINGS POPUP'S CONTINUOUS INPUTS (design §5), the second gesture on this surface
+   * that spans time rather than one call: its volume slider and alias field emit one
+   * `onInstrumentChange` per tick and every one of them is a whole `setInstrument` Step. One drag
+   * would land ~125 of them - past the cap, evicting the session's real edits and stranding the
+   * Savepoint - so the popup brackets the gesture and it collapses into one Step, the same way the
+   * Duration Hold's does.
+   *
+   * The depth check is the composer answering what the container cannot see, exactly as
+   * dismissDurationPopover's is: a song install swaps the history out from under an open popup.
+   */
+  function beginInstrumentEditGroup() {
+    history.beginGroup();
+  }
+
+  function endInstrumentEditGroup() {
+    if (history.groupDepth > 0) history.endGroup();
   }
 
   function syncInstruments(songToSync: ComposedSong = song) {
@@ -1294,6 +1344,21 @@
     for (const { holder } of sustainRecordings.entries()) endSustainRecording(holder);
   }
 
+  /**
+   * ABANDON every recording instead of ending it: the voices stop, and no final quantization is
+   * written. What abandonNotePresses is to the press machine, this is to the recordings - and undo
+   * is why it exists (ADR-0013). A hold that quantized on its way out would land a Step of its own
+   * an instant before the walk, so Ctrl+Z would undo the sustain nobody meant to edit rather than
+   * the edit the user is looking at. The span already performed stays as it stands.
+   */
+  function abandonSustainRecordings() {
+    for (const { holder } of sustainRecordings.entries()) {
+      const released = sustainRecordings.release(holder);
+      if (!released) continue;
+      if (released.isLastHolderOfId) layers[released.meta.trackIndex]?.releaseNote(released.id);
+    }
+  }
+
   // Ends every hold when the ground under it moves. Loading or creating a song replaces `song`,
   // and an instrument edit, swap or removal replaces the Instrument a held voice belongs to —
   // all of those write `song`/`layer`/`layers` directly instead of going through changeLayer,
@@ -1415,7 +1480,7 @@
    * ONE FUNCTION AND NOT TWO, because everything about it has to be the same for both: the preview
    * sound (played BEFORE the occupancy test, so a press on a covered button is still heard, and on
    * REMOVAL too — the keyboard has always previewed the note it is deleting), the occupancy rule, the
-   * autosave funnel with its ADR-0006 resync and its `changes` count, and the fact that nothing here
+   * autosave funnel with its ADR-0006 resync and its autosave cadence, and the fact that nothing here
    * touches `song.selected`. A canvas tap edits the column it landed on and moves the cursor nowhere;
    * the keyboard edits the selected column because that is the column ITS caller passes.
    *
@@ -1446,13 +1511,9 @@
    * `proCellAction` say what that means. Other layers' notes are not looked up at all — they never
    * block an add and are never the thing removed.
    *
-   * THE UNDO SNAPSHOT is taken here rather than inside the shared toggle above, and that is a
-   * deliberate asymmetry: `addToHistory` is the tools panel's compound entry (one clone, columns +
-   * Basepoint + roster) and the composer keyboard has never taken one for a plain note toggle. Moving
-   * it into the shared path would change what a keyboard press does; leaving the canvas without one
-   * would make the one gesture that edits a column you cannot see the one gesture you cannot undo. So
-   * the canvas takes one per editing gesture, and only when the gesture really edits — an inert tap
-   * pushes nothing.
+   * Nothing here records: since ADR-0013 the model does it at the write, so an inert tap - which
+   * returns above without calling the toggle at all - leaves the history untouched by construction
+   * rather than by a guard placed before a snapshot.
    */
   function handleProCellTap(columnIndex: number, id: number) {
     if (songLocked) return;
@@ -1463,7 +1524,6 @@
       button: numberToButton(instrument?.name ?? '', layerPitch, id),
     });
     if (action === 'inert') return;
-    addToHistory();
     toggleNoteInColumn(columnIndex, id);
   }
 
@@ -1492,7 +1552,7 @@
     const startColumn = song.getSpanCovering(columnIndex, layer, id)?.startColumn ?? columnIndex;
     const existing = song.columns[startColumn]?.findNote(layer, id);
     if (!existing) return false;
-    addToHistory();
+    beginDurationHold();
     durationPopover = {
       startColumn,
       trackIndex: layer,
@@ -1558,7 +1618,7 @@
     const startColumn = press.coveringStart ?? song.selected;
     const existing = song.columns[startColumn]?.findNote(layer, id);
     if (!existing) return;
-    addToHistory();
+    beginDurationHold();
     durationPopover = {
       startColumn,
       trackIndex: layer,
@@ -1678,6 +1738,20 @@
     return song.maxSpanAt(popover.startColumn, popover.trackIndex, popover.id);
   });
 
+  /**
+   * THE NOTE CAN GO AWAY UNDER THE POPOVER - a short press on the same key removes it, a canvas tap
+   * toggles it off, a bulk erase takes the column with it - and the `{#if}` below only unmounts the
+   * BOX: `durationPopover` would stay set and, with it, the Duration Hold's group would stay open.
+   * A group nobody closes never lands its Step, so every later edit would accumulate into it and
+   * the next Ctrl+Z would revert all of them at once.
+   *
+   * So the state follows the note rather than the markup, through the one dismissal path that ends
+   * the group (see dismissDurationPopover). The `{#if}` stays as the frame's own guard.
+   */
+  $effect(() => {
+    if (durationPopover && popoverSpan === null) dismissDurationPopover();
+  });
+
   function setPopoverSpan(span: number) {
     if (songLocked || !durationPopover) return;
     song.setNoteSpan(
@@ -1689,8 +1763,37 @@
     handleAutoSave();
   }
 
-  function closeDurationPopover() {
+  /**
+   * A DURATION HOLD IS ONE UNDO STEP, however many spans it writes (CONTEXT.md: Duration Hold,
+   * ADR-0013). The gesture spans TIME rather than one call - the finger's drag, the columns the
+   * selection crosses, then the slider and the steppers after the finger is gone - so it is the one
+   * thing in the composer that opens an explicit group over the model's own per-call Steps.
+   *
+   * OPENED WITH THE POPOVER AND CLOSED WITH IT, never with the press: the popover outlives the hold
+   * by design, and its later `<`/`>`/wheel/slider edits belong to the same Step as the drag that
+   * started it.
+   */
+  function beginDurationHold() {
+    //a hold opening while another popover is still up REPLACES it, and that gesture is over: close
+    //its group here or its Step would keep swallowing this hold's edits (groups are reentrant, so
+    //an unclosed one simply never lands)
+    dismissDurationPopover();
+    history.beginGroup();
+  }
+
+  /**
+   * THE POPOVER'S ONE DISMISSAL PATH - every one of them (column jump, layer change, playback
+   * start, an outside press, the close button, the importer's settle, an undo/redo walk) - because
+   * each is also the end of the Duration Hold's group. A bare `durationPopover = null` anywhere
+   * would leave that group open and the Step unlanded.
+   */
+  function dismissDurationPopover() {
+    if (durationPopover === null) return;
     durationPopover = null;
+    //the depth check is the composer answering what the container cannot see (it warns on a group
+    //nobody opened, by design): a song install swaps the history out from under an open popover,
+    //and the group that popover opened went with the song it belonged to
+    if (history.groupDepth > 0) history.endGroup();
   }
 
   /**
@@ -1737,6 +1840,18 @@
     return held;
   });
 
+  /**
+   * The song MENU's rename, which is a rename of a LIBRARY ROW: songService.renameSong reads the
+   * stored song, renames it and writes it straight back, so the new name is on disk before this
+   * returns - and it takes none of the open song's unsaved edits with it.
+   *
+   * WHICH IS WHY THE MIRROR BELOW IS NOT AN UNDO STEP, `song.rename()` notwithstanding (that
+   * recorder exists for a name change made as an EDIT; nothing routes to it yet). A Step here would
+   * report a song whose name already matches the file as dirty, and one Ctrl+Z would put the old
+   * name back in the composer while the library kept the new one - the next save then writing the
+   * old name over a rename the user had already committed. A bare mirror leaves both readings
+   * right: clean stays clean, dirty stays dirty, and the file and the song agree on the name.
+   */
   async function renameSong(newName: string, id: string) {
     if (songLocked && song.id === id) return;
     await songsStore.renameSong(id, newName);
@@ -1751,6 +1866,15 @@
     return songToAdd;
   }
 
+  /**
+   * THE SAVEPOINT IS SET HERE, at each of the three paths that really write the file (CONTEXT.md §
+   * Savepoint): the song is clean exactly while its history sits where markSavepoint left it, so
+   * undoing back to a save un-dirties the song and nothing prompts about work that was undone.
+   *
+   * Marked on the SAVED song's own history rather than this component's field: `songToSave` is the
+   * open song at every call site today, and a save of some other song must not clean this one.
+   * `changes` is reset with it as the autosave cadence, which is all it still is.
+   */
   async function updateSong(songToSave: ComposedSong): Promise<boolean> {
     //if it is the default song, ask for name and add it
     if (songToSave.name === 'Untitled') {
@@ -1758,6 +1882,7 @@
       if (name === null || !mounted) return false;
       songToSave.name = name;
       changes = 0;
+      songToSave.history?.markSavepoint();
       await addSong(songToSave);
       midiPreviewLoaded = false;
       return true;
@@ -1769,6 +1894,7 @@
       await songsStore.updateSong(songToSave);
       console.log('song saved:', songToSave.name);
       changes = 0;
+      songToSave.history?.markSavepoint();
       midiPreviewLoaded = false;
     } else {
       //if it doesn't exist, add it
@@ -1778,6 +1904,7 @@
         songToSave.name = name;
         await addSong(songToSave);
         changes = 0;
+        songToSave.history?.markSavepoint();
         midiPreviewLoaded = false;
         return true;
       }
@@ -1800,7 +1927,7 @@
     // Closing an active import makes its installed preview an ordinary unsaved working song before
     // the create flow decides whether to save or discard it.
     if (isMidiVisible) await changeMidiVisibility(false);
-    if (changes > 0) {
+    if (songIsDirty) {
       const promptResult = await askForSongUpdate();
       if (promptResult === null) return;
       if (promptResult) {
@@ -1833,10 +1960,10 @@
     // newly-created song displays its three default instruments while still playing the previous
     // song's layer instruments until another roster action happens to synchronize them.
     syncInstruments(added);
-    // Selection and undo entries address the replaced song, while the clipboard is an
-    // editor-level one: preserving it is what allows copy -> new song -> paste.
+    // The selection addresses the replaced song, while the clipboard is an editor-level one:
+    // preserving it is what allows copy -> new song -> paste.
     selectedColumns = [];
-    undoHistory = [];
+    installHistory(added);
     midiPreviewLoaded = false;
     Analytics.songEvent({ type: 'create' });
   }
@@ -1866,7 +1993,7 @@
         }
       }
       if (!parsed) return;
-      if (!preview && changes !== 0) {
+      if (!preview && songIsDirty) {
         let confirm = settings.autosave.value && song.name !== 'Untitled';
         if (!confirm) {
           //TODO is there a reason why this was not cancellable before?
@@ -1894,11 +2021,10 @@
       song = parsed;
       midiPreviewLoaded = preview;
       selectedColumns = [];
-      // Both hold columns cloned from the PREVIOUS song, carrying that song's track indices.
-      // refreshSong() used to launder a stale restore into a fresh graph one tick later; with no
-      // clone, undoing after a load installs the old song's columns into the new one - and then
-      // autosaves the result.
-      undoHistory = [];
+      // A HISTORY BELONGS TO ONE SONG (ADR-0013): its deltas hold notes and columns of the song
+      // being replaced by reference, so the incoming song gets a fresh one - which is also what
+      // makes it clean, and the loaded file IS the saved state.
+      installHistory(parsed);
       // the clipboard is deliberately NOT reset: its NoteColumns were cloned by copyColumns(), so
       // they are safe to carry across songs and serve as the tools panel's clipboard — and it
       // carries the Basepoints they were copied at, which is what lets the incoming song restate
@@ -2062,7 +2188,6 @@
   function handleTempoChanger(changer: (typeof game.composer.tempoChangers)[number]) {
     if (songLocked) return;
     if (selectedColumns.length) {
-      addToHistory();
       song.setTempoChangerAt(selectedColumns, changer);
     } else {
       song.setTempoChangerAt(song.selected, changer);
@@ -2071,12 +2196,10 @@
   }
 
   async function prepareToLeave(): Promise<boolean> {
-    // A preview load deliberately resets `changes`: panel controls replace the live preview song
-    // without making every keystroke look like a separate composer edit. Explicitly closing the
-    // importer promotes that preview to dirty work, but route navigation can unmount the composer
-    // without taking the close path. Treat the installed preview as unsaved here too so Back and
-    // in-app links cannot silently discard it while the panel is still open.
-    if (changes === 0 && !midiPreviewLoaded) return true;
+    // A preview load installs a FRESH history (loadSong), so the history alone would call an
+    // installed preview clean - `songIsDirty` carries the preview flag for exactly that reason, and
+    // route navigation can unmount the composer without ever taking the importer's close path.
+    if (!songIsDirty) return true;
     if (settings.autosave.value) return updateSong(song);
     const shouldSave = await asyncConfirm(
       t('question:unsaved_song_save', { song_name: song.name }),
@@ -2117,7 +2240,7 @@
     //abandons any held press, whose deferred edit was aimed at the column being left - this
     //is also every playback tick, so a note held while the song plays stays as pressed
     if (jumped && !holding) {
-      if (durationPopover !== null) durationPopover = null;
+      dismissDurationPopover();
       abandonNotePresses();
     }
     song.selected = index;
@@ -2164,7 +2287,7 @@
 
   function changeLayer(newLayer: number) {
     layer = newLayer;
-    durationPopover = null;
+    dismissDurationPopover();
     //the keys now belong to another instrument: each held note keeps the span it recorded and
     //releases on the track that actually sounded it
     endAllSustainRecordings();
@@ -2184,7 +2307,6 @@
     // starts clean rather than offering a paste from whatever was copied hours ago. Opening
     // discards nothing, there being nothing yet to discard.
     if (wasVisible) clipboard = { columns: [], pitches: [] };
-    undoHistory = [];
   }
 
   function resetSelection() {
@@ -2192,33 +2314,91 @@
     selectedColumns = [song.selected];
   }
 
-  function addToHistory() {
-    if (!isToolsVisible) return;
-    //ONE clone for all three members, so they cannot come from two different moments
-    const snapshot = song.clone();
-    undoHistory = [
-      ...undoHistory,
-      { columns: snapshot.columns, pitch: snapshot.pitch, instruments: snapshot.instruments },
-    ];
+  /**
+   * A SONG INSTALL (ADR-0013): a fresh history for the song being installed, which is the whole of
+   * the clear-on-song-identity-change rule - the previous one holds notes and columns of the song
+   * that just left, by reference. Every install point calls it and nothing else does, so "attached"
+   * means "this is the song the composer is editing" and a fresh song opens CLEAN (the Savepoint
+   * starts at the bottom of an empty history).
+   */
+  function installHistory(target: ComposedSong = song) {
+    history = target.attachHistory();
+  }
+
+  /**
+   * SETTLE LIVE INPUT before walking the history (design §2.11) - the importer's settle block, for
+   * the same reason it takes one before locking: every gesture here can write to the song LATER, at
+   * a release or a selection move, and a write aimed at the graph as it was would land on the graph
+   * the walk has just restored.
+   *
+   * ONE DIFFERENCE from the importer's, and it is the whole of what a walk needs beyond it: the
+   * presses, holds and recordings are ABANDONED rather than released. An interrupted gesture is not
+   * a short press (it must not delete the note its down edge added), and a sustain that quantized
+   * on its way out would land a Step of its own an instant before the walk - so Ctrl+Z would undo
+   * that instead of what the user is looking at.
+   *
+   * The popover dismissal ends the Duration Hold's group with it; the loop is the defence against a
+   * group nobody closed (the container force-closes an open Step too, but a group left open would
+   * swallow the walk's own selection into a Step that never lands).
+   */
+  function settleLiveInput() {
+    dismissDurationPopover();
+    abandonNoteHolds();
+    abandonNotePresses();
+    abandonSustainRecordings();
+    while (history.groupDepth > 0) history.endGroup();
+  }
+
+  /**
+   * UNDO / REDO, the composer's half of ADR-0013: the song applies the Step, this restores
+   * everything the song does NOT own.
+   *
+   * Allowed while the song plays (design §2.11) - it is an edit like any other, and the forced
+   * re-anchor below is what makes the transport agree with the graph it now has. Refused while the
+   * importer holds the song, like every other write on this surface.
+   *
+   * THE CURSOR MEMO comes back with the Step and lands through the normal selectColumn path with
+   * audio suppressed: undoing jumps you to the column the edit was made at, without sounding it
+   * (CONTEXT.md: Undo Step). The three settings mirrors are re-seeded from the song because a Step
+   * can carry bpm, the Basepoint or reverb, and `settings` is the persisted UI copy of all three -
+   * one of them left behind is a panel disagreeing with the song until the next edit.
+   */
+  function walkHistory(direction: 'undo' | 'redo') {
+    if (songLocked) return;
+    settleLiveInput();
+    const memo = direction === 'undo' ? song.undo() : song.redo();
+    if (!memo) return;
+    //THE ACTIVE LAYER IS CURSOR STATE the Step deliberately does not carry (design §2.8) - but the
+    //ROSTER it indexes is part of the Step, and an undone `addInstrument` or a redone removal
+    //shrinks it under the selection. Left past the end, `currentInstrument` is undefined: a
+    //TypeError on the next note key or MIDI note, and any note still entered would land on a
+    //trackIndex serialize() drops. Clamped, not restored - which layer was selected stays unsaved.
+    layer = Math.min(layer, song.instruments.length - 1);
+    selectColumn(memo.selected, true);
+    settings.bpm = { ...settings.bpm, value: song.bpm };
+    settings.pitch = { ...settings.pitch, value: song.pitch };
+    settings.reverb = { ...settings.reverb, value: song.reverb };
+    updateSettings();
+    //the reverb node is live and outside the song, so it follows the restored value the same way
+    //loadSong makes it follow a loaded one
+    AudioProvider.setReverb(song.reverb);
+    //a Step can add, remove or swap tracks, so the loaded Instrument array is re-requested for the
+    //notes' track indexes to address the right instruments again
+    syncInstruments();
+    //ADR-0006, and FORCED: a Step can move columns out from under the transport's cursor, so the
+    //committed window is rebuilt from the selection this walk landed on rather than resynced in
+    //place. It is why undo/redo do not ride handleAutoSave, which resyncs unforced.
+    resyncPlayback(true);
+    //...and it is still editing activity, so an undo-heavy session keeps autosaving (see `changes`)
+    countActivity();
   }
 
   function undo() {
-    if (songLocked) return;
-    const history = undoHistory.pop();
-    if (!history) return;
-    song.restoreColumns(history.columns);
-    //restored TOGETHER with the columns (see ComposerHistoryEntry): the notes only mean what the
-    //Basepoint and the roster they were written against say they mean
-    song.pitch = history.pitch;
-    song.instruments = history.instruments.map((instrument) => instrument.clone());
-    //...and the settings panel is a second copy of the song's Basepoint, so it follows or the two
-    //disagree until the next edit
-    settings.pitch = { ...settings.pitch, value: history.pitch };
-    updateSettings();
-    syncInstruments();
-    //undo is the one mutation path with NO changes++ (it restores toward the saved state), so
-    //it cannot ride the funnel's resync in handleAutoSave — resync explicitly (ADR-0006)
-    resyncPlayback(true);
+    walkHistory('undo');
+  }
+
+  function redo() {
+    walkHistory('redo');
   }
 
   // The bulk tools below count changes bare rather than through handleAutoSave, so each carries
@@ -2239,7 +2419,6 @@
 
   function pasteColumns(insert: boolean, targetLayer: number | 'all') {
     if (songLocked) return;
-    addToHistory();
     if (targetLayer === 'all') song.pasteColumns(clipboard.columns, insert, clipboard.pitches);
     else if (Number.isFinite(targetLayer))
       song.pasteLayer(clipboard.columns, insert, targetLayer, clipboard.pitches);
@@ -2250,7 +2429,6 @@
 
   function eraseColumns(targetLayer: number | 'all') {
     if (songLocked) return;
-    addToHistory();
     song.eraseColumns(selectedColumns, targetLayer);
     changes++;
     resyncPlayback();
@@ -2259,7 +2437,6 @@
 
   function moveNotesBy(amount: number, position: number | 'all') {
     if (songLocked) return;
-    addToHistory();
     song.moveNotesBy(selectedColumns, amount, position);
     changes++;
     resyncPlayback();
@@ -2269,10 +2446,9 @@
     if (songLocked) return;
     const toSwap = layer + direction;
     if (toSwap < 0 || toSwap > song.instruments.length - 1) return;
-    // two halves of one move: swapLayer retags the notes (structure version), swapInstruments
-    // reorders the roster (instruments signal)
-    song.swapLayer(song.columns.length, 0, layer, toSwap);
-    song.swapInstruments(layer, toSwap);
+    // ONE call for both halves of the move — the notes' track index and the roster entry (ADR-0013).
+    // It was this call site that used to pair them, which is a move that can be half-applied
+    song.swapTracks(layer, toSwap);
     changes++;
     resyncPlayback();
     syncInstruments();
@@ -2281,7 +2457,6 @@
 
   function deleteColumns() {
     if (songLocked) return;
-    addToHistory();
     // no validateBreakpoints() chained on: deleteColumns() runs it itself, like the other paths
     // that shrink the column array. It did not use to, and while that was so, this call site was
     // what kept a deleted column's breakpoint out of the saved song
@@ -2298,7 +2473,7 @@
       // Settle everything which could write later from a release/pagehide/selection move. A sustain
       // recording is an edit that began before the lock, so it gets its normal final quantization;
       // only its automatic persistence is held back for the explicit question immediately below.
-      durationPopover = null;
+      dismissDurationPopover();
       abandonNoteHolds();
       abandonNotePresses();
       suppressAutoSave = true;
@@ -2311,7 +2486,7 @@
       // Lock while the asynchronous question is visible so a physical key or MIDI event cannot
       // create a new edit after the state the question refers to has been settled.
       midiOpening = true;
-      if (changes > 0) {
+      if (songIsDirty) {
         const shouldSave = await askForSongUpdate();
         if (shouldSave === null) {
           midiOpening = false;
@@ -2337,13 +2512,13 @@
       return true;
     }
 
-    // The live preview remains installed. Mark only a session which actually installed one dirty;
-    // opening and closing the empty panel must not turn an untouched song into unsaved work.
-    if (isMidiVisible && midiPreviewLoaded) changes = Math.max(changes, 1);
+    // The live preview remains installed, and `midiPreviewLoaded` deliberately SURVIVES the close:
+    // it is what keeps the promoted preview dirty (see songIsDirty), the preview's own history being
+    // a fresh, clean one. Only a real save - or another song replacing this one - clears it, so
+    // opening and closing the empty panel still turns no untouched song into unsaved work.
     pendingMidiFile = null;
     isMidiVisible = false;
     midiOpening = false;
-    midiPreviewLoaded = false;
     return true;
   }
 
@@ -2397,7 +2572,7 @@
    * version goes out, and a cancel abandons the export rather than picking one.
    */
   async function exportSongAudio(songToExport: SerializedSong) {
-    if (songToExport.id === song.id && changes > 0) {
+    if (songToExport.id === song.id && songIsDirty) {
       if (song.id === null || song.name === 'Untitled') {
         //never stored, so there is no saved version to fall back on and nothing updateSong could
         //write without stopping to ask for a name mid-export: what is on screen is what goes out
@@ -2635,6 +2810,39 @@
         {@render playIcon()}
       {/if}
     </AppButton>
+    <!-- UNDO / REDO (ADR-0013), where the tools panel's old undo button went: the edits it reverses
+         are made with that panel CLOSED, so it belongs on the one column that is always on screen.
+         A SECONDARY ROW under the play button - two buttons sharing its width at two thirds its
+         height - rather than a third full-size control, because this column's one primary control
+         is transport.
+         `min-width:0` is load-bearing: `.app-button`'s 5rem floor is wider than half of this
+         column (6.2rem, 5.4rem under 1000px), so without it the pair overflows the sidebar.
+         Enabled off the history itself, which is the only thing that knows whether there is a Step
+         to walk - and off `songLocked` like every other write while the importer holds the song. -->
+    <div class="row" style="gap:0.2rem;margin-top:0.2rem">
+      <AppButton
+        class="flex-centered"
+        style="flex:1;min-width:0;height:2rem;min-height:2rem;padding:0;border-radius:0.3rem;background-color:var(--primary-darken-10)"
+        disabled={songLocked || !history.canUndo}
+        onclick={undo}
+        tooltip={t('common:undo')}
+        tooltipPosition="right"
+        ariaLabel={t('common:undo')}
+      >
+        <IconRotateLeft />
+      </AppButton>
+      <AppButton
+        class="flex-centered"
+        style="flex:1;min-width:0;height:2rem;min-height:2rem;padding:0;border-radius:0.3rem;background-color:var(--primary-darken-10)"
+        disabled={songLocked || !history.canRedo}
+        onclick={redo}
+        tooltip={t('common:redo')}
+        tooltipPosition="right"
+        ariaLabel={t('common:redo')}
+      >
+        <IconRotateRight />
+      </AppButton>
+    </div>
     <InstrumentControls
       instruments={song.instruments}
       selected={layer}
@@ -2645,6 +2853,8 @@
       onInstrumentDelete={removeInstrument}
       onChangePosition={switchLayerPosition}
       onMerge={mergeLayer}
+      onEditGroupStart={beginInstrumentEditGroup}
+      onEditGroupEnd={endInstrumentEditGroup}
       {songLocked}
       onSettingsOpenChange={(open) => (layerSettingsDismissesClicks = open)}
     />
@@ -2829,7 +3039,7 @@
       anchor={durationPopover.anchor}
       holdActive={durationPopover.holdActive}
       onChange={setPopoverSpan}
-      onClose={closeDurationPopover}
+      onClose={dismissDurationPopover}
       disabled={songLocked}
     />
   {/if}
@@ -2837,7 +3047,7 @@
 <ComposerMenu
   data={{
     settings,
-    hasChanges: changes > 0,
+    hasChanges: songIsDirty,
     currentSongId: song.id,
     songLocked,
   }}
@@ -2863,19 +3073,16 @@
     layer,
     hasCopiedColumns: clipboard.columns.length > 0,
     selectedColumns,
-    undoHistory,
     proView,
     songLocked,
   }}
   functions={{
-    toggleTools,
     copyColumns,
     eraseColumns,
     moveNotesBy,
     pasteColumns,
     deleteColumns,
     resetSelection,
-    undo,
   }}
 />
 <!-- `song-info-pro` and not a descendant selector: this overlay is a SIBLING of `.composer-grid`, so

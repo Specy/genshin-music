@@ -372,7 +372,13 @@ export const MIDISettings = {
         new MIDIShortcut('previous_column', -1),
         new MIDIShortcut('add_column', -1),
         new MIDIShortcut('remove_column', -1),
-        new MIDIShortcut('change_layer', -1)
+        new MIDIShortcut('change_layer', -1),
+        //ADR-0013. Added WITHOUT bumping settingVersion above: a version change throws the whole
+        //blob away, taking every preset and every bound key with it, for what is only a longer
+        //list. SettingsService.getMIDISettings backfills a stored blob with the rows it lacks
+        //instead, which is what makes these reachable for users who already have one.
+        new MIDIShortcut('undo', -1),
+        new MIDIShortcut('redo', -1)
     ]
 }
 export type MidiSettingsType = typeof MIDISettings

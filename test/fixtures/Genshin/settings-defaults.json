@@ -384,6 +384,16 @@
         "type": "change_layer",
         "midi": -1,
         "status": "wrong"
+      },
+      {
+        "type": "undo",
+        "midi": -1,
+        "status": "wrong"
+      },
+      {
+        "type": "redo",
+        "midi": -1,
+        "status": "wrong"
       }
     ]
   },

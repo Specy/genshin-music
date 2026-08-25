@@ -319,9 +319,9 @@ describe('a two-finger pinch, measured', () => {
 // file's audio/canvas/service graph (test/composerToolsClipboard.test.ts states the same constraint
 // and takes the same route). What is asserted here is therefore policy - which function owns which
 // call - and it is chosen to cover exactly the three claims spec §7 makes about the canvas edit that
-// no runtime test in this repo can reach: it does not move the cursor, it is undoable, and it is the
-// KEYBOARD'S path rather than a second copy of it. The behaviour behind each is covered live in the
-// browser smoke pass.
+// no runtime test in this repo can reach: it does not move the cursor, it goes through the model
+// (which is what makes it undoable since ADR-0013), and it is the KEYBOARD'S path rather than a
+// second copy of it. The behaviour behind each is covered live in the browser smoke pass.
 const composer = readFileSync('src/lib/components/pages/Composer/Composer.svelte', 'utf8');
 const instanceScript = composer.match(/<script lang="ts">([\s\S]*?)<\/script>/)?.[1];
 if (!instanceScript) throw new Error('Composer.svelte has no TypeScript instance script');
@@ -386,12 +386,12 @@ describe('the Pro View tap edits through the keyboard\'s own path', () => {
     }
   });
 
-  it('a canvas edit is one undo entry, taken before the edit and only when it edits', () => {
+  it('records nothing of its own - and an inert tap edits nothing to record', () => {
     const code = functionCode('handleProCellTap');
-    //the inert tap returns before the snapshot, so an undo stack cannot fill with no-ops
-    expect(code.indexOf("=== 'inert'")).toBeLessThan(code.indexOf('addToHistory()'));
-    //...and the snapshot precedes the mutation, or it records the state undo is meant to leave
-    expect(code.indexOf('addToHistory()')).toBeLessThan(code.indexOf('toggleNoteInColumn'));
+    //ADR-0013 moved recording to the model's own write sites, so this path takes no snapshot and
+    //touches no history; an inert tap returns before the toggle, so it records nothing either
+    expect(code).not.toContain('history');
+    expect(code.indexOf("=== 'inert'")).toBeLessThan(code.indexOf('toggleNoteInColumn'));
   });
 
   it('the canvas long press applies the keyboard\'s own gates', () => {
@@ -400,7 +400,8 @@ describe('the Pro View tap edits through the keyboard\'s own path', () => {
     //instruments that can sustain; and the popover opens on a note of YOUR layer or not at all
     expect(code).toContain('if (isPlaying) return false');
     expect(code).toContain('supportsSustain');
-    expect(code).toContain('addToHistory()');
+    //...and the hold is ONE Undo Step however many spans it writes (CONTEXT.md: Duration Hold)
+    expect(code).toContain('beginDurationHold()');
     expect(code).toContain('return true');
   });
 });
@@ -459,7 +460,8 @@ describe('every input surface runs the one note-press machine', () => {
     expect(code).toContain('supportsSustain');
     //a hold over a span's TAIL edits the note that owns the tail, not the column under the key
     expect(code).toContain('press.coveringStart ?? song.selected');
-    expect(code).toContain('addToHistory()');
+    //the same group the canvas' hold opens, and the popover's dismissal is what closes it
+    expect(code).toContain('beginDurationHold()');
     //...and it opens as a Duration Hold: the press is still down by definition (CONTEXT.md)
     expect(code).toContain('holdActive: true');
   });

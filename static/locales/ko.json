@@ -59,8 +59,7 @@
   },
   "confirm": {
     "delete_song": "노래: \"{{song_name}}\"를 정말로 지우시겠습니까?",
-    "confirm_import_opened_file": "파일: \"{{files_names}}\"을 열었습니다. 이 파일들을 불러오고 싶으십니까?",
-    "merge_layers": "\"{{source_layer}}\" 레이어를 \"{{destination_layer}}\"에 병합할까요? 노트는 \"{{destination_layer}}\"로 옮겨지고 해당 레이어는 삭제됩니다. 이 작업은 되돌릴 수 없습니다."
+    "confirm_import_opened_file": "파일: \"{{files_names}}\"을 열었습니다. 이 파일들을 불러오고 싶으십니까?"
   },
   "common": {
     "warning": "경고",
@@ -84,6 +83,7 @@
     "change": "변경",
     "reverb": "리버브",
     "undo": "뒤로가기",
+    "redo": "다시 실행",
     "confirm": "확인",
     "loading": "로딩",
     "privacy": "개인정보 처리방침",
@@ -485,7 +485,9 @@
       "previous_column": "이전 열",
       "add_column": "열 추가하기",
       "remove_column": "열 제거하기",
-      "change_layer": "레이어 변경하기"
+      "change_layer": "레이어 변경하기",
+      "undo": "실행 취소",
+      "redo": "다시 실행"
     }
   },
   "error": {
@@ -572,7 +574,6 @@
     "remove_breakpoint": "제어점 제거하기",
     "add_breakpoint": "제어점 추가하기",
     "cant_remove_all_layers": "모든 레이어을 삭제할 수 없습니다!",
-    "confirm_layer_remove": "정말로 레이어: \"{{layer_name}}\"을 삭제하고 싶으십니까? 이 레이어의 모든 노트가 삭제될 것입니다",
     "cant_add_more_than_n_layers": "{{max_layers}}개보다 더 많은 레이어을 만들 수 없습니다!",
     "ask_song_name_for_composed_song_version": "편곡본의 이름을 입력하세요. 취소를 눌러 건너뛰세요",
     "export_audio": "오디오 내보내기",
@@ -702,6 +703,8 @@
       "next_breakpoint": "다음 제어점으로 이동하기",
       "previous_breakpoint": "이전 제어점으로 이동하기",
       "toggle_keyboard": "Toggle keyboard",
+      "undo": "실행 취소",
+      "redo": "다시 실행",
       "toggle_record": "녹음 시작/일시정지 전환",
       "stop": "멈추기",
       "restart": "다시 시작하기",
@@ -727,6 +730,8 @@
       "next_layer_description": "다음 레이어를 선택합니다",
       "next_breakpoint_description": "다음 제어점으로 이동합니다",
       "toggle_keyboard_description": "Raise or lower the keyboard in the pro view",
+      "undo_description": "곡에 적용한 마지막 변경을 취소합니다",
+      "redo_description": "방금 취소한 변경을 다시 실행합니다",
       "previous_breakpoint_description": "이전 제어점으로 이동합니다",
       "toggle_record_description": "키보드 녹음을 켜고 끄는 것을 전환합니다",
       "stop_description": "곡 연주, 녹음, 연습을 정지합니다",

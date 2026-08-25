@@ -59,8 +59,7 @@
   },
   "confirm": {
     "delete_song": "Tem certeza de que deseja excluir a música \"{{song_name}}\"?",
-    "confirm_import_opened_file": "Você abriu os arquivos \"{{files_names}}\", deseja importá-los?",
-    "merge_layers": "Mesclar a camada \"{{source_layer}}\" em \"{{destination_layer}}\"? As notas dela passarão para \"{{destination_layer}}\" e a camada será removida. Isso não pode ser desfeito."
+    "confirm_import_opened_file": "Você abriu os arquivos \"{{files_names}}\", deseja importá-los?"
   },
   "common": {
     "warning": "Aviso",
@@ -84,6 +83,7 @@
     "change": "Mudar",
     "reverb": "Reverberação",
     "undo": "Desfazer",
+    "redo": "Refazer",
     "confirm": "Confirmar",
     "loading": "Carregando",
     "privacy": "Privacidade",
@@ -485,7 +485,9 @@
       "previous_column": "Coluna anterior",
       "add_column": "Adicionar coluna",
       "remove_column": "Remover coluna",
-      "change_layer": "Mudar camada"
+      "change_layer": "Mudar camada",
+      "undo": "Desfazer",
+      "redo": "Refazer"
     }
   },
   "error": {
@@ -572,7 +574,6 @@
     "remove_breakpoint": "Remover ponto de interrupção",
     "add_breakpoint": "Adicionar ponto de interrupção",
     "cant_remove_all_layers": "Você não pode remover todas as camadas!",
-    "confirm_layer_remove": "Tem certeza de que deseja remover \"{{layer_name}}\"? TODAS AS NOTAS DESTA CAMADA SERÃO EXCLUÍDAS",
     "cant_add_more_than_n_layers": "Você não pode adicionar mais de {{max_layers}} camadas!",
     "ask_song_name_for_composed_song_version": "Digite o nome da música para a versão composta, pressione cancelar para ignorar",
     "export_audio": "Exportar áudio",
@@ -702,6 +703,8 @@
       "next_breakpoint": "Próximo ponto de interrupção",
       "previous_breakpoint": "Ponto de interrupção anterior",
       "toggle_keyboard": "Toggle keyboard",
+      "undo": "Desfazer",
+      "redo": "Refazer",
       "toggle_record": "Alternar gravação",
       "stop": "Parar",
       "restart": "Reiniciar",
@@ -727,6 +730,8 @@
       "next_layer_description": "Selecionar a próxima camada",
       "next_breakpoint_description": "Mover para o próximo ponto de interrupção",
       "toggle_keyboard_description": "Raise or lower the keyboard in the pro view",
+      "undo_description": "Desfaz a última alteração feita na música",
+      "redo_description": "Refaz a alteração que acabou de ser desfeita",
       "previous_breakpoint_description": "Mover para o ponto de interrupção anterior",
       "toggle_record_description": "Alternar gravação de teclado",
       "stop_description": "Parar reprodução / gravação / prática",

@@ -82,58 +82,73 @@ function functionCode(functionName: string): string {
         .replace(/\/\/.*$/gm, '')
 }
 
-/** The property names an object literal inside `functionName` supplies, across every literal in it. */
-function objectLiteralKeys(functionName: string): Set<string> {
-    const declaration = source.statements.find(
-        (statement): statement is ts.FunctionDeclaration =>
-            ts.isFunctionDeclaration(statement) && statement.name?.text === functionName,
-    )
-    if (!declaration) throw new Error(`Composer.svelte has no ${functionName} function`)
-    const keys = new Set<string>()
-    const visit = (node: ts.Node) => {
-        if (ts.isObjectLiteralExpression(node)) {
-            for (const property of node.properties) {
-                if (property.name && ts.isIdentifier(property.name)) keys.add(property.name.text)
-            }
-        }
-        ts.forEachChild(node, visit)
-    }
-    visit(declaration)
-    return keys
-}
-
 /**
- * ADR-0007's undo requirement, which no runtime test in this project can reach (Composer's history
- * is component-local and there is no component harness — see this file's header): a Basepoint
- * change or an instrument swap rewrites the NOTES and moves the setting that says what they mean,
- * so the snapshot has to carry all three or undo restores notes into a song that disagrees with
- * them — every note a semitone, or an instrument, out.
+ * THE COMPOSER'S HALF OF THE UNDO WIRING (ADR-0013), which no runtime test in this project can
+ * reach (there is no component harness — see this file's header). Recording itself lives in
+ * ComposedSong and is driven for real in test/undoRedo.test.ts; what is asserted here is what the
+ * component still owes a walk: a history per installed song, and the state OUTSIDE the song that a
+ * restored Step invalidates.
  */
-describe('composer undo is a compound snapshot (ADR-0007)', () => {
-    it('addToHistory captures columns, pitch and instruments in one entry', () => {
-        const keys = objectLiteralKeys('addToHistory')
-        expect(keys).toContain('columns')
-        expect(keys).toContain('pitch')
-        expect(keys).toContain('instruments')
+describe('the composer attaches a history and restores what the song does not own', () => {
+    it('installs a fresh history at every song-install point', () => {
+        //one history per song: its deltas hold the notes and columns of the song being replaced by
+        //reference, and a fresh one is also what makes an installed song read clean
+        for (const name of ['loadSong', 'createNewSong']) {
+            expect(functionCode(name)).toContain('installHistory(')
+        }
+        expect(functionCode('installHistory')).toContain('target.attachHistory()')
+        //the mount is the third: the persisted settings re-seed bpm and the Basepoint, and a
+        //composer that opened offering to undo its own seeding would be wrong
+        expect(instanceScript).toContain('installHistory();')
     })
 
-    it('undo restores all three, and the settings copy of the Basepoint with them', () => {
-        const assigned = assignedTargets('undo')
-        //the columns go back through the model's own restore path, not a bare assignment
-        expect(source.getText()).toContain('song.restoreColumns(history.columns)')
-        expect(assigned).toContain('song.pitch')
-        expect(assigned).toContain('song.instruments')
-        //`settings.pitch` is a SECOND copy of the song's Basepoint (the settings panel reads it),
-        //so undoing one without the other leaves the two disagreeing until the next edit
+    it('a walk re-seeds the settings mirrors, the roster and the transport', () => {
+        const assigned = assignedTargets('walkHistory')
+        //bpm, the Basepoint and reverb are all serialized, so a Step can carry any of them - and
+        //`settings` is the persisted UI copy of all three: one left behind is a panel disagreeing
+        //with the song until the next edit
+        expect(assigned).toContain('settings.bpm')
         expect(assigned).toContain('settings.pitch')
+        expect(assigned).toContain('settings.reverb')
+        const text = functionCode('walkHistory')
+        expect(text).toContain('updateSettings()')
+        //a Step can add, remove or swap tracks, so the loaded Instrument array is re-requested
+        expect(text).toContain('syncInstruments()')
+        //...and the committed window is rebuilt from the column the walk landed on (ADR-0006)
+        expect(text).toContain('resyncPlayback(true)')
+        //the cursor memo lands through the normal path, silently (CONTEXT.md: Undo Step)
+        expect(text).toContain('selectColumn(memo.selected, true)')
     })
 
-    it('the Basepoint edit takes a snapshot before it rewrites', () => {
+    it('every surface that walks the history goes through the one guarded pair (design §7)', () => {
+        //THE BUTTONS, in the transport column and not the tools panel: enabled off the history
+        //itself (nothing else knows whether there is a Step), disabled while the importer holds
+        //the song like every other write on this surface
+        expect(component).toContain('disabled={songLocked || !history.canUndo}')
+        expect(component).toContain('disabled={songLocked || !history.canRedo}')
+        expect(component).toContain('~icons/fa6-solid/rotate-left')
+        expect(component).toContain('~icons/fa6-solid/rotate-right')
+        //THE KEYBINDS: rebindable names out of KeybindsStore's composer map, reaching the same
+        //wrappers - and preventDefault, or the browser's own text undo rides along with them
+        expect(instanceScript).toContain("if (name === 'undo') {")
+        expect(instanceScript).toContain("if (name === 'redo') {")
+        //THE MIDI SWITCH, the third feeder (a controller key is a shortcut like any other)
+        const midi = functionCode('handleMidi')
+        expect(midi).toContain("case 'undo':")
+        expect(midi).toContain("case 'redo':")
+        //...and none of the three touches the song directly: the settle block and the guard live
+        //in walkHistory alone
+        expect(functionCode('undo')).toContain("walkHistory('undo')")
+        expect(functionCode('redo')).toContain("walkHistory('redo')")
+        expect(functionCode('walkHistory')).toContain('settleLiveInput()')
+    })
+
+    it('the Basepoint edit is ONE call the model records for itself', () => {
         const text = functionCode('handleSettingChange')
-        expect(text).toContain('addToHistory()')
-        expect(text).toContain('applyBasepointChange')
-        //the snapshot is taken BEFORE the rewrite, or it records the state undo is meant to leave
-        expect(text.indexOf('addToHistory()')).toBeLessThan(text.indexOf('applyBasepointChange'))
+        expect(text).toContain('changeBasepoint')
+        //no snapshot, and no history call at all: the method writes the field and rewrites the
+        //notes, and records both as one Step (ADR-0013)
+        expect(text).not.toContain('history')
     })
 
     it('MidiParser keeps its Basepoint local instead of rewriting the song it is previewing over', () => {
@@ -160,7 +175,7 @@ describe('the ADR-0007 note rewrites ride the note-edit funnel', () => {
     it('a song Basepoint change counts as a change, right after the rewrite', () => {
         const text = functionCode('handleSettingChange')
         expect(text).toContain('handleAutoSave()')
-        expect(text.indexOf('applyBasepointChange')).toBeLessThan(text.indexOf('handleAutoSave()'))
+        expect(text.indexOf('changeBasepoint')).toBeLessThan(text.indexOf('handleAutoSave()'))
     })
 
     it('an instrument edit counts as a change', () => {
@@ -171,12 +186,20 @@ describe('the ADR-0007 note rewrites ride the note-edit funnel', () => {
         expect(text).not.toContain('resyncPlayback()')
     })
 
-    it('the funnel is what the save prompts and the dirty dot read', () => {
+    it('the funnel counts autosave activity, and DIRTINESS is the Savepoint\'s answer', () => {
         //stated here so the three paths above cannot be "fixed" by counting somewhere else
-        expect(functionCode('handleAutoSave')).toContain('changes++')
-        for (const gate of ['loadSong', 'createNewSong', 'prepareToLeave']) {
-            expect(functionCode(gate)).toContain('changes')
+        expect(functionCode('handleAutoSave')).toContain('countActivity()')
+        expect(functionCode('countActivity')).toContain('changes++')
+        //...and since ADR-0013 the counter answers only "is it time to autosave": every prompt
+        //asks the history instead, so undoing back to the last save leaves nothing to prompt about
+        for (const gate of ['loadSong', 'createNewSong', 'prepareToLeave', 'exportSongAudio']) {
+            expect(functionCode(gate)).toContain('songIsDirty')
         }
+        expect(instanceScript).toContain(
+            'const songIsDirty = $derived(history.isDirty || midiPreviewLoaded);'
+        )
+        //the Savepoint is set where the file is really written, or a save would never clean it
+        expect(functionCode('updateSong')).toContain('history?.markSavepoint()')
     })
 })
 
@@ -207,7 +230,7 @@ describe('Composer tools clipboard lifecycle', () => {
         functionName => {
             const assigned = assignedIdentifiers(functionName)
             expect(assigned).toContain('selectedColumns')
-            expect(assigned).toContain('undoHistory')
+            expect(functionCode(functionName)).toContain('installHistory(')
             expect(assigned).not.toContain('clipboard')
         },
     )
@@ -218,8 +241,10 @@ describe('Composer tools clipboard lifecycle', () => {
         //assignment here would also wipe a clipboard the user is opening the panel to paste from.
         const assigned = assignedIdentifiers('toggleTools')
         expect(assigned).toContain('selectedColumns')
-        expect(assigned).toContain('undoHistory')
         expect(assigned).toContain('clipboard')
+        //...and the HISTORY is untouched by the toggle (ADR-0013): undo is composer-wide now, so a
+        //panel that cleared it would throw away Steps recorded while it was closed
+        expect(functionCode('toggleTools')).not.toContain('history')
         expect(functionCode('toggleTools')).toContain(
             'if (wasVisible) clipboard = { columns: [], pitches: [] }'
         )
@@ -282,9 +307,8 @@ describe('a paste reproduces the buttons that were copied (ADR-0007)', () => {
         const song = songAt('C')
         const copied = song.copyColumns([0, 1, 2], 'all')
         const pitches = song.trackPitches()
-        //the settings panel's edit, both halves of it
-        song.pitch = 'F'
-        song.applyBasepointChange('song', 'C', 'F')
+        //the settings panel's edit, both halves of it in one call
+        song.changeBasepoint('song', 'F')
         song.selected = 20
 
         await song.pasteColumns(copied, true, pitches)
@@ -298,8 +322,7 @@ describe('a paste reproduces the buttons that were copied (ADR-0007)', () => {
         //the pre-fix behavior, stated so the rewrite cannot be dropped as a no-op
         const song = songAt('C')
         const copied = song.copyColumns([0], 'all')
-        song.pitch = 'F'
-        song.applyBasepointChange('song', 'C', 'F')
+        song.changeBasepoint('song', 'F')
         const verbatim = copied[0].notes[0].id
         expect(numberToButton(instrument, 'F', verbatim)).not.toBe(buttons[0])
     })

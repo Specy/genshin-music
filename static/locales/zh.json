@@ -59,8 +59,7 @@
     },
     "confirm": {
         "delete_song": "你是否确定删除歌曲“{{song_name}}”?",
-        "confirm_import_opened_file": "您打开了文件“{{files_names}}”，是否要导入它？",
-        "merge_layers": "要将音层“{{source_layer}}”合并到“{{destination_layer}}”吗？它的音符会移动到“{{destination_layer}}”，该音层将被删除。此操作无法撤销。"
+        "confirm_import_opened_file": "您打开了文件“{{files_names}}”，是否要导入它？"
     },
     "common": {
         "warning": "警告",
@@ -84,6 +83,7 @@
         "change": "修改",
         "reverb": "混响",
         "undo": "取消",
+        "redo": "重做",
         "confirm": "确认",
         "loading": "加载中...",
         "privacy": "隐私",
@@ -485,7 +485,9 @@
             "previous_column": "上一列",
             "add_column": "添加列",
             "remove_column": "移除列",
-            "change_layer": "更改音层"
+            "change_layer": "更改音层",
+            "undo": "撤销",
+            "redo": "重做"
         }
     },
     "error": {
@@ -572,7 +574,6 @@
         "remove_breakpoint": "删除断点",
         "add_breakpoint": "添加断点",
         "cant_remove_all_layers": "你不能删除所有音层！",
-        "confirm_layer_remove": "您确定要删除“{{layer_name}}”吗？该层的所有音符都将被删除。",
         "cant_add_more_than_n_layers": "您不能添加超过 {{max_layers}} 层！",
         "ask_song_name_for_composed_song_version": "填写创作版本的歌曲名称，按取消忽略",
         "export_audio": "导出音频",
@@ -702,6 +703,8 @@
             "next_breakpoint": "下一个断点",
             "previous_breakpoint": "上一个断点",
             "toggle_keyboard": "Toggle keyboard",
+            "undo": "撤销",
+            "redo": "重做",
             "toggle_record": "切换记录",
             "stop": "停止",
             "restart": "重新启动",
@@ -727,6 +730,8 @@
             "next_layer_description": "选择下一音层",
             "next_breakpoint_description": "移动到下一个断点",
             "toggle_keyboard_description": "Raise or lower the keyboard in the pro view",
+            "undo_description": "撤销对乐曲所做的上一次更改",
+            "redo_description": "重做刚刚撤销的更改",
             "previous_breakpoint_description": "移动到上一个断点",
             "toggle_record_description": "切换键盘录音",
             "stop_description": "停止播放/录音/练习",

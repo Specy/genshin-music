@@ -59,8 +59,7 @@
     },
     "confirm": {
         "delete_song": "Вы уверены, что хотите удалить мелодию \"{{song_name}}\"?",
-        "confirm_import_opened_file": "Вы открыли файлы \"{{files_names}}\", хотите их импортировать?",
-        "merge_layers": "Объединить слой \"{{source_layer}}\" со слоем \"{{destination_layer}}\"? Его ноты перейдут на \"{{destination_layer}}\", а сам слой будет удалён. Это действие нельзя отменить."
+        "confirm_import_opened_file": "Вы открыли файлы \"{{files_names}}\", хотите их импортировать?"
     },
     "common": {
         "warning": "Предупреждение",
@@ -84,6 +83,7 @@
         "change": "Изменить",
         "reverb": "Эхо",
         "undo": "Отмена",
+        "redo": "Повторить",
         "confirm": "Подтвердить",
         "loading": "Загрузка",
         "privacy": "Конфиденциальность",
@@ -485,7 +485,9 @@
             "previous_column": "Previous column",
             "add_column": "Add column",
             "remove_column": "Remove column",
-            "change_layer": "Change layer"
+            "change_layer": "Change layer",
+            "undo": "Отменить",
+            "redo": "Повторить"
         }
     },
     "error": {
@@ -572,7 +574,6 @@
         "remove_breakpoint": "Remove breakpoint",
         "add_breakpoint": "Add breakpoint",
         "cant_remove_all_layers": "You can't remove all layers!",
-        "confirm_layer_remove": "Are you sure you want to remove \"{{layer_name}}\"? ALL NOTES OF THIS LAYER WILL BE DELETED",
         "cant_add_more_than_n_layers": "You can't add more than {{max_layers}} layers!",
         "ask_song_name_for_composed_song_version": "Write the song name for the composed version, press cancel to ignore",
         "export_audio": "Экспорт аудио",
@@ -702,6 +703,8 @@
             "next_breakpoint": "Next breakpoint",
             "previous_breakpoint": "Previous breakpoint",
             "toggle_keyboard": "Toggle keyboard",
+            "undo": "Отменить",
+            "redo": "Повторить",
             "toggle_record": "Toggle record",
             "stop": "Stop",
             "restart": "Restart",
@@ -727,6 +730,8 @@
             "next_layer_description": "Select the next layer",
             "next_breakpoint_description": "Move to the next breakpoint",
             "toggle_keyboard_description": "Raise or lower the keyboard in the pro view",
+            "undo_description": "Отменить последнее изменение в песне",
+            "redo_description": "Вернуть только что отменённое изменение",
             "previous_breakpoint_description": "Move to the previous breakpoint",
             "toggle_record_description": "Toggle keyboard recording",
             "stop_description": "Stop playing / recording / practicing",

@@ -5284,11 +5284,12 @@ export class ComposerRenderer {
    *    diffing two arrays into a symmetric difference to repaint one marker or one overlay sprite,
    *    which costs about what it saves;
    *  - `columns` (array identity) rules out a NoteColumn object being re-installed at an index a
-   *    view already holds a paint key for - restoreColumns (undo) and deleteColumns both assign a
-   *    new array, and a song swap hands over a different song's. Measured: moving this one onto the
-   *    narrowed path instead leaves every test green, because the key's object half catches those
-   *    cases anyway. It stays here as the cheap gate, so the argument for undo does not have to run
-   *    through counters that restart at 0;
+   *    view already holds a paint key for - deleteColumns assigns a new array and a song swap hands
+   *    over a different song's, while an undo re-splices the very column objects it removed (an
+   *    Undo Step holds them by reference, ADR-0013) and repaints through the touch-all every walk
+   *    ends in. Measured: moving this one onto the narrowed path instead leaves every test green,
+   *    because the key's object half catches those cases anyway. It stays here as the cheap gate,
+   *    so the argument does not have to run through counters that restart at 0;
    *  - `isRecordingAudio` hides the stage, which paints nothing and records no baseline.
    *
    * Each of the first six is pinned by test/composerRenderer.test.ts: moving any one of them onto

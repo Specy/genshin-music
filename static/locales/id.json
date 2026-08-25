@@ -59,8 +59,7 @@
     },
     "confirm": {
         "delete_song": "Apakah Anda yakin ingin menghapus lagu \"{{song_name}}\"?",
-        "confirm_import_opened_file": "Anda membuka file \"{{files_names}}\", apakah Anda ingin mengimpornya?",
-        "merge_layers": "Gabungkan lapisan \"{{source_layer}}\" ke \"{{destination_layer}}\"? Not-notnya akan pindah ke \"{{destination_layer}}\" dan lapisan tersebut dihapus. Tindakan ini tidak dapat dibatalkan."
+        "confirm_import_opened_file": "Anda membuka file \"{{files_names}}\", apakah Anda ingin mengimpornya?"
     },
     "common": {
         "warning": "Peringatan",
@@ -84,6 +83,7 @@
         "change": "Ubah",
         "reverb": "Gema",
         "undo": "Undo",
+        "redo": "Ulangi",
         "confirm": "Konfirmasi",
         "loading": "Memuat",
         "privacy": "Privasi",
@@ -485,7 +485,9 @@
             "previous_column": "Kolom sebelumnya",
             "add_column": "Tambah kolom",
             "remove_column": "Hapus kolom",
-            "change_layer": "Ubah lapisan"
+            "change_layer": "Ubah lapisan",
+            "undo": "Urungkan",
+            "redo": "Ulangi"
         }
     },
     "error": {
@@ -572,7 +574,6 @@
         "remove_breakpoint": "Hapus breakpoint",
         "add_breakpoint": "Tambah breakpoint",
         "cant_remove_all_layers": "Anda tidak bisa menghapus semua lapisan!",
-        "confirm_layer_remove": "Apakah Anda yakin ingin menghapus \"{{layer_name}}\"? SEMUA NOTE PADA LAPISAN INI AKAN DIHAPUS",
         "cant_add_more_than_n_layers": "Anda tidak dapat menambahkan lebih dari {{max_layers}} lapisan!",
         "ask_song_name_for_composed_song_version": "Tulis nama lagu untuk versi yang dikomposisikan, tekan batal untuk mengabaikan",
         "export_audio": "Ekspor audio",
@@ -702,6 +703,8 @@
             "next_breakpoint": "Titik henti berikutnya",
             "previous_breakpoint": "Titik henti sebelumnya",
             "toggle_keyboard": "Toggle keyboard",
+            "undo": "Urungkan",
+            "redo": "Ulangi",
             "toggle_record": "Alihkan rekaman",
             "stop": "Berhenti",
             "restart": "Mulai ulang",
@@ -727,6 +730,8 @@
             "next_layer_description": "Pilih lapisan berikutnya",
             "next_breakpoint_description": "Pindah ke titik henti berikutnya",
             "toggle_keyboard_description": "Raise or lower the keyboard in the pro view",
+            "undo_description": "Urungkan perubahan terakhir pada lagu",
+            "redo_description": "Ulangi perubahan yang baru saja diurungkan",
             "previous_breakpoint_description": "Pindah ke titik henti sebelumnya",
             "toggle_record_description": "Alihkan perekaman keyboard",
             "stop_description": "Berhenti memutar / merekam / berlatih",

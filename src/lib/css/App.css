@@ -2909,7 +2909,7 @@ select {
 }
 
 .tools-button:disabled,
-.tools-right button:disabled {
+.tools-selection-row button:disabled {
   cursor: not-allowed;
   opacity: 0.6;
   filter: unset;
@@ -2934,9 +2934,9 @@ select {
 .floating-tools {
   position: fixed;
   bottom: -50vh;
-  max-height: 45vh;
   min-width: 36vw;
-  min-height: 46vh;
+  min-height: min(52vh, 18rem);
+  max-height: min(52vh, 18rem);
   display: flex;
   margin-right: auto;
   margin-left: auto;
@@ -2949,28 +2949,37 @@ select {
   transition: all 0.4s;
   transform: scale(0.7);
   color: var(--menu-background-text);
-  max-height: 50vh;
   padding: 0.4rem;
 }
 
 .floating-tools-content {
   display: flex;
+  flex-direction: column;
   flex: 1;
+  gap: 0.3rem;
   overflow-y: auto;
   overflow-x: hidden;
 }
 
-.tools-right {
-  margin-left: 0.6rem;
-  padding-left: 0.6rem;
-  border-left: solid 2px var(--secondary);
-  min-width: 10rem;
+/* The selection scope sits ACROSS THE TOP of the panel rather than down its side, so its rule is the
+   panel's own horizontal divider - see the markup note in ComposerTools.svelte. It WRAPS because the
+   panel is only `min-width: 36vw` wide: on a narrow screen three buttons that refuse to wrap would
+   force the panel wider than the viewport instead. */
+.tools-selection-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  padding-bottom: 0.3rem;
+  border-bottom: solid 2px var(--secondary);
 }
 
-.tools-right .app-button {
+.tools-selection-row .app-button {
   min-width: unset;
+  flex: 1;
   display: flex;
   align-items: center;
+  justify-content: center;
+  white-space: nowrap;
   padding: 0.5rem 0.7rem;
 }
 
@@ -3839,7 +3848,7 @@ select {
   }
 
   .tools-visible {
-    bottom: 0.4rem;
+    bottom: 0.2rem;
   }
 
   .tools-icon {
@@ -3848,8 +3857,12 @@ select {
 
   .tools-buttons-grid {
     gap: 0.3rem;
+    font-size: 0.8;
   }
 
+  .tools-button {
+    padding: 0.4rem 0.8rem;
+  }
   .song-info div {
     max-width: 20vw;
   }

@@ -15,9 +15,6 @@
       hasCopiedColumns: boolean;
       selectedColumns: number[];
       layer: number;
-      //only its LENGTH is read here (the undo button's enabled state); what an entry holds is
-      //Composer.svelte's business (ComposerHistoryEntry — a compound snapshot since ADR-0007)
-      undoHistory: readonly unknown[];
       /**
        * CONTEXT.md: Pro View. Nothing in this panel changes with it — it only picks up the
        * translucency modifier below, because there the canvas it floats over IS the window and
@@ -28,14 +25,12 @@
       songLocked: boolean;
     };
     functions: {
-      toggleTools: () => void;
       copyColumns: (layer: number | 'all') => void;
       eraseColumns: (layer: number | 'all') => void;
       moveNotesBy: (amount: number, layer: number | 'all') => void;
       pasteColumns: (insert: boolean, layer: number | 'all') => void;
       deleteColumns: () => void;
       resetSelection: () => void;
-      undo: () => void;
     };
   } = $props();
 
@@ -225,6 +220,71 @@
   offset="0.1rem"
 >
   <div class="floating-tools-content">
+    <!-- WHAT THE SELECTION IS ADDRESSED TO comes FIRST, across the top: every button in the grid
+         below acts on `selectedTarget`, so the scope is read before the action rather than beside
+         it, and the rule under this row is the seam between "what" and "to what". -->
+    <div class="tools-selection-row">
+      <AppButton
+        style="padding: 0.4rem 0.8rem;"
+        class={hasTooltip(true)}
+        toggled={selectionType === 'all'}
+        onclick={() => (selectionType = 'all')}
+      >
+        <svg
+          stroke="currentColor"
+          fill="currentColor"
+          stroke-width="0"
+          viewBox="0 0 24 24"
+          style="margin-right:0.2rem"
+          height="16"
+          width="16"
+          xmlns="http://www.w3.org/2000/svg"
+          ><path
+            d="M3 5h2V3c-1.1 0-2 .9-2 2zm0 8h2v-2H3v2zm4 8h2v-2H7v2zM3 9h2V7H3v2zm10-6h-2v2h2V3zm6 0v2h2c0-1.1-.9-2-2-2zM5 21v-2H3c0 1.1.9 2 2 2zm-2-4h2v-2H3v2zM9 3H7v2h2V3zm2 18h2v-2h-2v2zm8-8h2v-2h-2v2zm0 8c1.1 0 2-.9 2-2h-2v2zm0-12h2V7h-2v2zm0 8h2v-2h-2v2zm-4 4h2v-2h-2v2zm0-16h2V3h-2v2zM7 17h10V7H7v10zm2-8h6v6H9V9z"
+          /></svg
+        >
+        {t('composer:tools.all_layers')}
+
+        <Tooltip style="left:0">
+          {t('composer:tools.all_layers_description')}
+        </Tooltip>
+      </AppButton>
+      <AppButton
+        style="padding: 0.4rem 0.8rem;"
+        class={hasTooltip(true)}
+        toggled={selectionType === 'layer'}
+        onclick={() => (selectionType = 'layer')}
+      >
+        <svg
+          stroke="currentColor"
+          fill="currentColor"
+          stroke-width="0"
+          viewBox="0 0 24 24"
+          style="margin-right:0.2rem"
+          height="16"
+          width="16"
+          xmlns="http://www.w3.org/2000/svg"
+          ><path
+            d="M23 15h-2v2h2v-2zm0-4h-2v2h2v-2zm0 8h-2v2c1 0 2-1 2-2zM15 3h-2v2h2V3zm8 4h-2v2h2V7zm-2-4v2h2c0-1-1-2-2-2zM3 21h8v-6H1v4c0 1.1.9 2 2 2zM3 7H1v2h2V7zm12 12h-2v2h2v-2zm4-16h-2v2h2V3zm0 16h-2v2h2v-2zM3 3C2 3 1 4 1 5h2V3zm0 8H1v2h2v-2zm8-8H9v2h2V3zM7 3H5v2h2V3z"
+          /></svg
+        >
+        {t('composer:tools.only_layer')}
+        <span style="min-width:0.6rem;margin-left:0.2rem">
+          {data.layer + 1}
+        </span>
+        <Tooltip style="left:0">
+          {t('composer:tools.select_layer_description')}
+        </Tooltip>
+      </AppButton>
+      <AppButton
+        style="padding: 0.4rem 0.8rem;"
+        onclick={functions.resetSelection}
+        disabled={data.selectedColumns.length <= 1 && !data.hasCopiedColumns}
+        toggled={data.hasCopiedColumns}
+      >
+        {t('composer:tools.clear_selection')}
+      </AppButton>
+    </div>
     <div class="tools-buttons-grid">
       {@render toolButton(
         {
@@ -294,82 +354,9 @@
         moveDownContent
       )}
     </div>
-    <div class="tools-right column">
-      <AppButton
-        style="margin-bottom:0.2rem"
-        class={hasTooltip(true)}
-        toggled={selectionType === 'all'}
-        onclick={() => (selectionType = 'all')}
-      >
-        <svg
-          stroke="currentColor"
-          fill="currentColor"
-          stroke-width="0"
-          viewBox="0 0 24 24"
-          style="margin-right:0.2rem"
-          height="16"
-          width="16"
-          xmlns="http://www.w3.org/2000/svg"
-          ><path
-            d="M3 5h2V3c-1.1 0-2 .9-2 2zm0 8h2v-2H3v2zm4 8h2v-2H7v2zM3 9h2V7H3v2zm10-6h-2v2h2V3zm6 0v2h2c0-1.1-.9-2-2-2zM5 21v-2H3c0 1.1.9 2 2 2zm-2-4h2v-2H3v2zM9 3H7v2h2V3zm2 18h2v-2h-2v2zm8-8h2v-2h-2v2zm0 8c1.1 0 2-.9 2-2h-2v2zm0-12h2V7h-2v2zm0 8h2v-2h-2v2zm-4 4h2v-2h-2v2zm0-16h2V3h-2v2zM7 17h10V7H7v10zm2-8h6v6H9V9z"
-          /></svg
-        >
-        {t('composer:tools.all_layers')}
-
-        <Tooltip style="left:0">
-          {t('composer:tools.all_layers_description')}
-        </Tooltip>
-      </AppButton>
-      <AppButton
-        style="margin-bottom:0.2rem"
-        class={hasTooltip(true)}
-        toggled={selectionType === 'layer'}
-        onclick={() => (selectionType = 'layer')}
-      >
-        <svg
-          stroke="currentColor"
-          fill="currentColor"
-          stroke-width="0"
-          viewBox="0 0 24 24"
-          style="margin-right:0.2rem"
-          height="16"
-          width="16"
-          xmlns="http://www.w3.org/2000/svg"
-          ><path
-            d="M23 15h-2v2h2v-2zm0-4h-2v2h2v-2zm0 8h-2v2c1 0 2-1 2-2zM15 3h-2v2h2V3zm8 4h-2v2h2V7zm-2-4v2h2c0-1-1-2-2-2zM3 21h8v-6H1v4c0 1.1.9 2 2 2zM3 7H1v2h2V7zm12 12h-2v2h2v-2zm4-16h-2v2h2V3zm0 16h-2v2h2v-2zM3 3C2 3 1 4 1 5h2V3zm0 8H1v2h2v-2zm8-8H9v2h2V3zM7 3H5v2h2V3z"
-          /></svg
-        >
-        {t('composer:tools.only_layer')}
-        <span style="min-width:0.6rem;margin-left:0.2rem">
-          {data.layer + 1}
-        </span>
-        <Tooltip style="left:0">
-          {t('composer:tools.select_layer_description')}
-        </Tooltip>
-      </AppButton>
-      <AppButton
-        style="margin-bottom:0.2rem;justify-content:center"
-        onclick={functions.resetSelection}
-        disabled={data.selectedColumns.length <= 1 && !data.hasCopiedColumns}
-        toggled={data.hasCopiedColumns}
-      >
-        {t('composer:tools.clear_selection')}
-      </AppButton>
-      <div class="row" style="flex:1;align-items:flex-end">
-        <AppButton
-          style="flex:1;justify-content:center"
-          disabled={data.songLocked || data.undoHistory.length === 0}
-          onclick={functions.undo}
-        >
-          {t('common:undo')}
-        </AppButton>
-        <AppButton
-          onclick={functions.toggleTools}
-          style="margin-left:0.2rem;flex:1;justify-content:center"
-        >
-          {t('common:ok')}
-        </AppButton>
-      </div>
-    </div>
+    <!-- UNDO IS NOT A TOOL any more (ADR-0013): it left this panel for the composer's own
+         transport column, where it is reachable with the tools closed - which is where most of
+         the edits it reverses are made. NO OK BUTTON EITHER (user, 2026-08-25): the toolbar
+         toggle that opened the panel is what closes it, so the grid is the last thing here. -->
   </div>
 </DecoratedCard>

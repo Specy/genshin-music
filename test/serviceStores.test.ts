@@ -42,4 +42,34 @@ describe('keybinds persistence', () => {
         expect(raw).toBeTruthy()
         expect(JSON.parse(raw!).version).toBe(13)
     })
+
+    //ADR-0013 added undo/redo to defaultShortcuts.composer. A stored map is the map as it stood
+    //when it was written, and load() only ever MOVES shortcuts it finds by name - so a default
+    //added later must survive a load of an older blob at the same version, or nobody with saved
+    //keybinds (everyone who ever opened /keybinds) could reach it.
+    it('a stored map from before a shortcut existed still receives its default key', () => {
+        const stored = {
+            version: 13,
+            vsrg: {k4: ['A', 'S', 'J', 'K'], k6: ['A', 'S', 'D', 'H', 'J', 'K']},
+            shortcuts: {
+                //the composer map WITHOUT undo/redo, and with one rebind the user made
+                composer: {
+                    Space: {name: 'toggle_play', holdable: false, description: 'toggle_play_description'},
+                    KeyU: {name: 'add_column', holdable: true, description: 'add_column_description'},
+                },
+                player: {}, keyboard: {}, vsrg_composer: {}, vsrg_player: {},
+            },
+        }
+        localStorage.setItem(`${APP_NAME}_keybinds`, JSON.stringify(stored))
+        keyBinds.load()
+        expect(keyBinds.getShortcut('composer', 'ControlLeft+KeyZ')?.name).toBe('undo')
+        expect(keyBinds.getShortcut('composer', 'ControlLeft+KeyY')?.name).toBe('redo')
+        //holding the combo walks the history rather than firing once (design §7)
+        expect(keyBinds.getShortcut('composer', 'ControlLeft+KeyZ')?.holdable).toBe(true)
+        expect(keyBinds.getShortcut('composer', 'ControlLeft+KeyY')?.holdable).toBe(true)
+        //...and the user's own rebind still lands, which is what makes this a merge and not a reset
+        expect(keyBinds.getShortcut('composer', 'KeyU')?.name).toBe('add_column')
+        expect(keyBinds.getShortcut('composer', 'KeyE')).toBeUndefined()
+        keyBinds.setShortcut('composer', 'KeyU', 'KeyE')
+    })
 })

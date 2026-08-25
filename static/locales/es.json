@@ -59,8 +59,7 @@
   },
   "confirm": {
     "delete_song": "¿Estás seguro de que deseas eliminar la canción \"{{song_name}}\"?",
-    "confirm_import_opened_file": "Abriste los archivos \"{{files_names}}\", ¿quieres importarlos?",
-    "merge_layers": "¿Fusionar la capa \"{{source_layer}}\" en \"{{destination_layer}}\"? Sus notas pasarán a \"{{destination_layer}}\" y la capa se eliminará. Esto no se puede deshacer."
+    "confirm_import_opened_file": "Abriste los archivos \"{{files_names}}\", ¿quieres importarlos?"
   },
   "common": {
     "warning": "Advertencia",
@@ -84,6 +83,7 @@
     "change": "Cambiar",
     "reverb": "Reverberación",
     "undo": "Deshacer",
+    "redo": "Rehacer",
     "confirm": "Confirmar",
     "loading": "Cargando",
     "privacy": "Privacidad",
@@ -485,7 +485,9 @@
       "previous_column": "Columna anterior",
       "add_column": "Agregar columna",
       "remove_column": "Quitar columna",
-      "change_layer": "Cambiar capa"
+      "change_layer": "Cambiar capa",
+      "undo": "Deshacer",
+      "redo": "Rehacer"
     }
   },
   "error": {
@@ -572,7 +574,6 @@
     "remove_breakpoint": "Eliminar punto de salto",
     "add_breakpoint": "Añadir punto de salto",
     "cant_remove_all_layers": "¡No puedes eliminar todas las capas!",
-    "confirm_layer_remove": "¿Estás seguro de que deseas eliminar \"{{layer_name}}\"? TODAS LAS NOTAS DE ESTA CAPA SERÁN BORRADAS",
     "cant_add_more_than_n_layers": "¡No puedes agregar más de {{max_layers}} capas!",
     "ask_song_name_for_composed_song_version": "Escribe el nombre de la canción para la versión compuesta o pulsa Cancelar para ignorar",
     "export_audio": "Exportar audio",
@@ -702,6 +703,8 @@
       "next_breakpoint": "Punto de salto siguiente",
       "previous_breakpoint": "Punto de salto anterior",
       "toggle_keyboard": "Mostrar u ocultar el teclado",
+      "undo": "Deshacer",
+      "redo": "Rehacer",
       "toggle_record": "Iniciar o detener la grabación",
       "stop": "Detener",
       "restart": "Reiniciar",
@@ -728,6 +731,8 @@
       "next_breakpoint_description": "Ir al punto de salto siguiente",
       "previous_breakpoint_description": "Ir al punto de salto anterior",
       "toggle_keyboard_description": "Subir o bajar el teclado en la Vista Pro",
+      "undo_description": "Deshace el último cambio hecho en la canción",
+      "redo_description": "Rehace el cambio que se acaba de deshacer",
       "toggle_record_description": "Iniciar o detener la grabación del teclado",
       "stop_description": "Dejar de reproducir / grabar / practicar",
       "restart_description": "Reiniciar la canción o la práctica",

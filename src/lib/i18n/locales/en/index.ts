@@ -80,7 +80,6 @@ export const i18n_en = {
     delete_song: `Are you sure you want to delete the song "{{song_name}}"?`,
 
     confirm_import_opened_file: `You opened the files "{{files_names}}", do you want to import it?`,
-    merge_layers: `Merge the layer "{{source_layer}}" into "{{destination_layer}}"? Its notes move onto "{{destination_layer}}" and the layer is removed. This cannot be undone.`,
   },
   common: {
     warning: 'Warning',
@@ -104,6 +103,7 @@ export const i18n_en = {
     change: 'Change',
     reverb: 'Reverb',
     undo: 'Undo',
+    redo: 'Redo', //the opposite of undo: re-applies the change that was just undone
     confirm: 'Confirm',
     loading: 'Loading',
     privacy: 'Privacy',
@@ -575,6 +575,8 @@ export const i18n_en = {
       add_column: 'Add column',
       remove_column: 'Remove column',
       change_layer: 'Change layer',
+      undo: 'Undo',
+      redo: 'Redo',
     } satisfies Record<MIDIShortcutName, string>,
   },
   error: {
@@ -687,7 +689,6 @@ export const i18n_en = {
     remove_breakpoint: 'Remove breakpoint',
     add_breakpoint: 'Add breakpoint',
     cant_remove_all_layers: "You can't remove all layers!",
-    confirm_layer_remove: `Are you sure you want to remove "{{layer_name}}"? ALL NOTES OF THIS LAYER WILL BE DELETED`,
     cant_add_more_than_n_layers: `You can't add more than {{max_layers}} layers!`,
     ask_song_name_for_composed_song_version:
       'Write the song name for the composed version, press cancel to ignore',
@@ -831,6 +832,8 @@ export const i18n_en = {
       next_breakpoint: 'Next breakpoint',
       previous_breakpoint: 'Previous breakpoint',
       toggle_keyboard: 'Toggle keyboard',
+      undo: 'Undo',
+      redo: 'Redo',
       toggle_record: 'Toggle record',
       stop: 'Stop',
       restart: 'Restart',
@@ -859,6 +862,8 @@ export const i18n_en = {
       next_breakpoint_description: 'Move to the next breakpoint',
       previous_breakpoint_description: 'Move to the previous breakpoint',
       toggle_keyboard_description: 'Raise or lower the keyboard in the pro view',
+      undo_description: 'Undo the last change made to the song',
+      redo_description: 'Redo the change that was just undone',
       toggle_record_description: 'Toggle keyboard recording',
       stop_description: 'Stop playing / recording / practicing',
       restart_description: 'Restart the song or practice',

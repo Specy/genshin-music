@@ -59,8 +59,7 @@
     },
     "confirm": {
         "delete_song": "本当に曲 \"{{song_name}}\" を削除してもよろしいですか？",
-        "confirm_import_opened_file": "ファイル \"{{files_names}}\" を開きました。インポートしますか？",
-        "merge_layers": "レイヤー「{{source_layer}}」を「{{destination_layer}}」に統合しますか？ノートは「{{destination_layer}}」に移動し、このレイヤーは削除されます。この操作は元に戻せません。"
+        "confirm_import_opened_file": "ファイル \"{{files_names}}\" を開きました。インポートしますか？"
     },
     "common": {
         "warning": "警告",
@@ -84,6 +83,7 @@
         "change": "変更",
         "reverb": "反響",
         "undo": "元に戻す",
+        "redo": "やり直す",
         "confirm": "確認",
         "loading": "読み込み中",
         "privacy": "プライバシー",
@@ -485,7 +485,9 @@
             "previous_column": "前の列",
             "add_column": "列を追加",
             "remove_column": "列を削除",
-            "change_layer": "レイヤーを変更"
+            "change_layer": "レイヤーを変更",
+            "undo": "元に戻す",
+            "redo": "やり直す"
         }
     },
     "error": {
@@ -572,7 +574,6 @@
         "remove_breakpoint": "ブレークポイントを削除",
         "add_breakpoint": "ブレークポイントを追加",
         "cant_remove_all_layers": "すべてのレイヤーを削除することはできません！",
-        "confirm_layer_remove": "本当に \"{{layer_name}}\" を削除してもよろしいですか？このレイヤーのすべてのノートが削除されます。",
         "cant_add_more_than_n_layers": "{{max_layers}} 層以上追加することはできません！",
         "ask_song_name_for_composed_song_version": "作曲済みバージョンの曲名を入力してください。キャンセルすると無視されます",
         "export_audio": "オーディオをエクスポート",
@@ -702,6 +703,8 @@
             "next_breakpoint": "次のブレークポイント",
             "previous_breakpoint": "前のブレークポイント",
             "toggle_keyboard": "Toggle keyboard",
+            "undo": "元に戻す",
+            "redo": "やり直す",
             "toggle_record": "録音を切り替え",
             "stop": "停止",
             "restart": "再起動",
@@ -727,6 +730,8 @@
             "next_layer_description": "次のレイヤーを選択",
             "next_breakpoint_description": "次のブレークポイントに移動",
             "toggle_keyboard_description": "Raise or lower the keyboard in the pro view",
+            "undo_description": "曲に加えた最後の変更を元に戻す",
+            "redo_description": "元に戻した変更をやり直す",
             "previous_breakpoint_description": "前のブレークポイントに移動",
             "toggle_record_description": "キーボード録音を切り替え",
             "stop_description": "再生/録音/練習を停止",

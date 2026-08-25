@@ -120,6 +120,16 @@ _Avoid_: tap-to-stop "click" (a Catch never takes the click path)
 The press that opened the duration popover — on a keyboard key, a Pro View cell, a physical note key, or a held MIDI note — for as long as it stays down. While it lasts, sustain length is edited by whole-column increments from the span it opened at: one column per visible column-width of pointer travel, and one column per column the selection moves underneath it, from any source (canvas scroll, wheel, the < > buttons, shortcuts). Column changes never dismiss the popover while it lasts, and neither does a press outside it — a second finger scrolling the canvas IS such a press, and it is part of the gesture. A layer change still dismisses, and so does playback starting: the transport moves the selection on its own, and a hold it drove would grow the span one column per tick. The Hold ends with the release — the popover outlives it.
 _Avoid_: drag-to-resize (suggests grabbing the tail and snapping it to a position — a Duration Hold only ever increments), snap-to-column
 
+### Composer Editing
+
+**Undo Step**:
+One user-meaningful unit of reversal in the composer's history. Everything the song file records — notes, spans, tempo changers, breakpoints, columns, Basepoints, bpm, reverb, the track roster and every per-track field, the song's name — changes inside some Step; cursor state (selected column, active layer, view framing, tools selection) never makes one, the selected column being persisted notwithstanding. A gesture is one Step however many edits it performs — a Duration Hold's whole life is a single Step. Undoing or redoing a Step also returns the selection to the column the edit was made at, without sounding it.
+_Avoid_: history entry (implementation-flavored), snapshot (the retired whole-song-copy mechanism)
+
+**Savepoint**:
+The position in the composer's undo history that equals the saved file. Whether the song has unsaved changes is derived from it: the song is dirty exactly when it does not sit at the Savepoint — so undoing back to it makes the song clean, and nothing prompts about changes that were undone. A Savepoint can become unreachable (evicted past the history's cap, stranded in a redo branch a new edit cleared, or taken mid-gesture — an autosave landing inside a Duration Hold writes a file no Step boundary describes), which correctly leaves the song dirty until the next save.
+_Avoid_: changes counter (the retired increment-only dirtiness), save flag
+
 ### Player
 
 **Section**:

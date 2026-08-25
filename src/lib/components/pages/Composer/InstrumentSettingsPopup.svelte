@@ -32,6 +32,8 @@
     onClose,
     onChangePosition,
     onMerge,
+    onEditGroupStart,
+    onEditGroupEnd,
     currentLayer,
     instruments,
     disabled = false,
@@ -44,8 +46,61 @@
     onMerge: (direction: 1 | -1) => void;
     onDelete: () => void;
     onClose: () => void;
+    /**
+     * Brackets around ONE CONTINUOUS GESTURE - a volume drag, a name being typed - for the
+     * composer to collapse into a single Undo Step. See the group bookkeeping below.
+     */
+    onEditGroupStart?: () => void;
+    onEditGroupEnd?: () => void;
     disabled?: boolean;
   } = $props();
+
+  /**
+   * ONE GESTURE, ONE UNDO STEP (design §5). The volume slider and the alias field emit an
+   * `onChange` PER TICK and each one is a whole `setInstrument` - one Step each. Ungrouped, a
+   * single drag from 0 to 125 lands ~125 Steps: past the history's cap, so the session's real edits
+   * are evicted from the bottom, the Savepoint is stranded, and undoing the drag costs 125 presses.
+   *
+   * The two brackets are INDEPENDENT and idempotent rather than one shared flag, because they
+   * overlap: a pointerdown on the slider is dispatched before the alias field's blur, so a single
+   * flag would be closed by that blur and leave the rest of the drag ungrouped. The composer's
+   * groups are reentrant, which is exactly what that nesting needs.
+   *
+   * CLOSED FROM EVERY END A GESTURE CAN HAVE - pointerup, pointercancel, lost capture, blur - plus
+   * the popup being taken away mid-drag (delete/merge close it): a group nobody closes never lands
+   * its Step and silently swallows every edit made after it.
+   */
+  let volumeGrouped = false;
+  let aliasGrouped = false;
+
+  function startVolumeGroup() {
+    if (volumeGrouped) return;
+    volumeGrouped = true;
+    onEditGroupStart?.();
+  }
+
+  function endVolumeGroup() {
+    if (!volumeGrouped) return;
+    volumeGrouped = false;
+    onEditGroupEnd?.();
+  }
+
+  function startAliasGroup() {
+    if (aliasGrouped) return;
+    aliasGrouped = true;
+    onEditGroupStart?.();
+  }
+
+  function endAliasGroup() {
+    if (!aliasGrouped) return;
+    aliasGrouped = false;
+    onEditGroupEnd?.();
+  }
+
+  $effect(() => () => {
+    endVolumeGroup();
+    endAliasGroup();
+  });
 
   /**
    * EVERY EDIT BELOW GOES THROUGH HERE, and the clone is the point: `instrument` is the LIVE
@@ -58,9 +113,9 @@
    * That is harmless for a colour or a volume, and it was silently fatal for the two halves of the
    * instrument's IDENTITY once ADR-0007 made them note edits: an instrument swap never ran its
    * button-preserving rewrite and a per-layer Basepoint override never moved its track's notes, so
-   * Lyre → Vintage-Lyre stopped re-flavoring and Composer.editInstrument never took its undo
-   * snapshot either. The vsrg panel states the same fact the other way round, by handing
-   * `VsrgSong.setTrack` the previous identity explicitly.
+   * Lyre → Vintage-Lyre stopped re-flavoring and the Undo Step for the edit held the roster change
+   * without the notes it should have moved. The vsrg panel states the same fact the other way
+   * round, by handing `VsrgSong.setTrack` the previous identity explicitly.
    *
    * A fresh object per edit, therefore: the popup DESCRIBES the entry it wants, and the song is
    * left able to see what moved.
@@ -86,6 +141,8 @@
         style="width:7.4rem"
         value={instrument.alias}
         {disabled}
+        onfocus={startAliasGroup}
+        onblur={endAliasGroup}
         oninput={(e) => onChange(edited({ alias: e.currentTarget.value }))}
         placeholder={tInstrument(instrument.name)}
       />
@@ -170,6 +227,13 @@
         max={125}
         value={instrument.volume}
         {disabled}
+        onpointerdown={startVolumeGroup}
+        onpointerup={endVolumeGroup}
+        onpointercancel={endVolumeGroup}
+        onlostpointercapture={endVolumeGroup}
+        onkeydown={startVolumeGroup}
+        onkeyup={endVolumeGroup}
+        onblur={endVolumeGroup}
         oninput={(e) => onChange(edited({ volume: Number(e.currentTarget.value) }))}
       />
       <AppButton

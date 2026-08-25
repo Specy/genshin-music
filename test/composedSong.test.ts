@@ -170,8 +170,7 @@ describe('a Basepoint change is a real edit of the notes', () => {
     it('moves every note of every track that FOLLOWS the song, by the interval', () => {
         const song = twoTrackSong()
         const before = [numbersOf(song, 0), numbersOf(song, 1)]
-        song.pitch = 'D'
-        song.applyBasepointChange('song', 'C', 'D')
+        song.changeBasepoint('song', 'D')
         expect(numbersOf(song, 0)).toEqual(before[0].map((n) => n + 2))
         expect(numbersOf(song, 1)).toEqual(before[1].map((n) => n + 2))
     })
@@ -182,8 +181,7 @@ describe('a Basepoint change is a real edit of the notes', () => {
         const song = twoTrackSong()
         song.setInstrument(1, new InstrumentData({name: INSTRUMENTS[0], pitch: 'F'}))
         const before = [numbersOf(song, 0), numbersOf(song, 1)]
-        song.pitch = 'D'
-        song.applyBasepointChange('song', 'C', 'D')
+        song.changeBasepoint('song', 'D')
         expect(numbersOf(song, 0)).toEqual(before[0].map((n) => n + 2))
         expect(numbersOf(song, 1)).toEqual(before[1])
     })
@@ -192,19 +190,17 @@ describe('a Basepoint change is a real edit of the notes', () => {
         //the interval is raw, not folded into an octave: folding it would silently octave-jump
         //a whole track (see basepointDelta)
         const song = twoTrackSong()
-        song.pitch = 'B'
-        song.applyBasepointChange('song', 'C', 'B')
+        song.changeBasepoint('song', 'B')
         const raised = numbersOf(song, 0)
-        song.pitch = 'C'
-        song.applyBasepointChange('song', 'B', 'C')
+        song.changeBasepoint('song', 'C')
         expect(numbersOf(song, 0)).toEqual(raised.map((n) => n - 11))
     })
 
     it('round-trips: a change and its inverse leave the song byte-identical', () => {
         const song = twoTrackSong()
         const before = JSON.parse(JSON.stringify(song.serialize()))
-        song.applyBasepointChange('song', 'C', 'Ab')
-        song.applyBasepointChange('song', 'Ab', 'C')
+        song.changeBasepoint('song', 'Ab')
+        song.changeBasepoint('song', 'C')
         expect(JSON.parse(JSON.stringify(song.serialize()))).toEqual(before)
     })
 
@@ -238,8 +234,7 @@ describe('a Basepoint change is a real edit of the notes', () => {
         expect(before.at(-1)!.stranded).toBe(true)
         expect(before.at(-1)!.accidental).not.toBe(0)
 
-        song.pitch = 'Eb'
-        song.applyBasepointChange('song', 'C', 'Eb')
+        song.changeBasepoint('song', 'Eb')
 
         expect(numbersOf(song, 0)).toEqual(numbers.map(number => number + 3))
         numbersOf(song, 0).forEach((number, i) => {
@@ -252,8 +247,7 @@ describe('a Basepoint change is a real edit of the notes', () => {
         const number = numbersOf(song, 0)[0]
         const before = gridRowForNumber(INSTRUMENTS[0], 'C', number)
         expect(before.stranded).toBe(false)
-        song.pitch = 'B'
-        song.applyBasepointChange('song', 'C', 'B')
+        song.changeBasepoint('song', 'B')
         expect(gridRowForNumber(INSTRUMENTS[0], 'B', numbersOf(song, 0)[0])).toEqual(before)
     })
 })
@@ -584,16 +578,19 @@ describe('merging a layer folds its notes into another and retires its slot', ()
  * is why these are model-level tests rather than something the composer is trusted to clean up.
  */
 describe('breakpoints only ever address columns that exist', () => {
-    it('undo drops the breakpoints the restored (shorter) song has no columns for', () => {
+    it('undo drops the breakpoints the undone (shorter) song has no columns for', () => {
         // the exact reviewer repro: a breakpoint set on a column that only exists in the newer
-        // state, then undone back to the snapshot that predates it
+        // state, then undone back past the columns that carried it. The delta history walks the two
+        // Steps in LIFO order (the toggle, then the columns), so the breakpoint array it restores is
+        // the one that was live before either
         const song = new ComposedSong('undo')
-        const snapshot = song.columns.map((column) => column.clone()) // the 100 constructor columns
+        song.attachHistory()
         song.addColumns(3, 'end')
         song.toggleBreakpoint(101)
         expect(song.breakpoints).toContain(101)
 
-        song.restoreColumns(snapshot)
+        song.undo()
+        song.undo()
 
         expect(song.columns.length).toBe(100)
         expect(song.breakpoints).not.toContain(101)

@@ -4,12 +4,12 @@
 // because these are whole-track EDITS — the song classes call them and then publish; this
 // module owns no state, reads no song and touches nothing reactive.
 //
-// NOTHING outside tests imports this yet (spec phase B): the rewrites land with the phase-C
-// flip, wired into ComposedSong/RecordedSong/VsrgSong mutators and the composer's undo
-// snapshots. Table-tested first, on purpose — every one of them is a silent-corruption
-// hazard if it is off by a semitone or drops a Stranded Note.
+// Wired into the ComposedSong/RecordedSong/VsrgSong mutators that move a track's numbers, which
+// record what the rewrite wrote as part of their own Undo Step (ADR-0013). Table-tested first, on
+// purpose — every one of them is a silent-corruption hazard if it is off by a semitone or drops a
+// Stranded Note.
 //
-// WHY THE SONG CLASSES DON'T ALREADY DO THIS TODAY: pitch used to be a play-time playback
+// WHY THE SONG CLASSES DID NOT USED TO DO THIS AT ALL: pitch used to be a play-time playback
 // rate and nothing else, so changing it rewrote nothing. Under ADR-0007 the Basepoint is
 // part of every stored number, which makes changing it a real, undoable edit.
 

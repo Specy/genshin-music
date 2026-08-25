@@ -59,8 +59,7 @@
   },
   "confirm": {
     "delete_song": "Vuoi davvero eliminare il brano \"{{song_name}}\"?",
-    "confirm_import_opened_file": "Hai aperto i file \"{{files_names}}\". Vuoi importarli?",
-    "merge_layers": "Vuoi unire il livello \"{{source_layer}}\" in \"{{destination_layer}}\"? Le sue note passeranno a \"{{destination_layer}}\" e il livello verrà rimosso. L'operazione non può essere annullata."
+    "confirm_import_opened_file": "Hai aperto i file \"{{files_names}}\". Vuoi importarli?"
   },
   "common": {
     "warning": "Avviso",
@@ -84,6 +83,7 @@
     "change": "Cambia",
     "reverb": "Riverbero",
     "undo": "Annulla ultima azione",
+    "redo": "Ripristina",
     "confirm": "Conferma",
     "loading": "Caricamento",
     "privacy": "Privacy",
@@ -485,7 +485,9 @@
       "previous_column": "Colonna precedente",
       "add_column": "Aggiungi colonna",
       "remove_column": "Rimuovi colonna",
-      "change_layer": "Cambia livello"
+      "change_layer": "Cambia livello",
+      "undo": "Annulla",
+      "redo": "Ripristina"
     }
   },
   "error": {
@@ -572,7 +574,6 @@
     "remove_breakpoint": "Rimuovi punto di salto",
     "add_breakpoint": "Aggiungi punto di salto",
     "cant_remove_all_layers": "Non puoi rimuovere tutti i livelli!",
-    "confirm_layer_remove": "Vuoi davvero rimuovere \"{{layer_name}}\"? TUTTE LE NOTE DI QUESTO LIVELLO VERRANNO ELIMINATE",
     "cant_add_more_than_n_layers": "Non puoi aggiungere più di {{max_layers}} livelli!",
     "ask_song_name_for_composed_song_version": "Inserisci il nome del brano per la versione composta oppure premi Annulla per ignorare",
     "export_audio": "Esporta audio",
@@ -702,6 +703,8 @@
       "next_breakpoint": "Punto di salto successivo",
       "previous_breakpoint": "Punto di salto precedente",
       "toggle_keyboard": "Mostra o nascondi la tastiera",
+      "undo": "Annulla",
+      "redo": "Ripristina",
       "toggle_record": "Avvia o sospendi la registrazione",
       "stop": "Interrompi",
       "restart": "Ricomincia",
@@ -728,6 +731,8 @@
       "next_breakpoint_description": "Vai al punto di salto successivo",
       "previous_breakpoint_description": "Vai al punto di salto precedente",
       "toggle_keyboard_description": "Alza o abbassa la tastiera nella Vista Pro",
+      "undo_description": "Annulla l'ultima modifica fatta alla canzone",
+      "redo_description": "Ripristina la modifica appena annullata",
       "toggle_record_description": "Avvia o sospendi la registrazione dalla tastiera",
       "stop_description": "Interrompi la riproduzione, la registrazione o l'esercitazione",
       "restart_description": "Ricomincia il brano o l'esercitazione",

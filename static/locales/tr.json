@@ -59,8 +59,7 @@
     },
     "confirm": {
         "delete_song": "\"{{song_name}}\" isimli müziği silmek istediğine emin misin?",
-        "confirm_import_opened_file": "\"{{files_names}}\" isimli dosyayı açtın, onu içe aktarmak ister misin?",
-        "merge_layers": "\"{{source_layer}}\" katmanı \"{{destination_layer}}\" katmanıyla birleştirilsin mi? Notaları \"{{destination_layer}}\" katmanına taşınır ve katman silinir. Bu işlem geri alınamaz."
+        "confirm_import_opened_file": "\"{{files_names}}\" isimli dosyayı açtın, onu içe aktarmak ister misin?"
     },
     "common": {
         "warning": "Uyarı",
@@ -84,6 +83,7 @@
         "change": "Değiştir",
         "reverb": "Yankı",
         "undo": "Geri Al",
+        "redo": "Yinele",
         "confirm": "Onayla",
         "loading": "Yükleniyor",
         "privacy": "Gizlilik",
@@ -485,7 +485,9 @@
             "previous_column": "Önceki sütun",
             "add_column": "Sütun ekle",
             "remove_column": "Sütun kaldır",
-            "change_layer": "Katmanı değiştir"
+            "change_layer": "Katmanı değiştir",
+            "undo": "Geri al",
+            "redo": "Yinele"
         }
     },
     "error": {
@@ -572,7 +574,6 @@
         "remove_breakpoint": "Yer imini kaldır",
         "add_breakpoint": "Yer imi ekle",
         "cant_remove_all_layers": "Tüm katmanları kaldıramazsın!",
-        "confirm_layer_remove": "\"{{layer_name}}\" isimli katmanı kaldırmak istediğine emin misin? BU KATMANDAKİ TÜM NOTALAR SİLİNECEK!",
         "cant_add_more_than_n_layers": "{{max_layers}} sayısından fazla katman ekleyemezsin!",
         "ask_song_name_for_composed_song_version": "Bestelenmiş versiyon için şarkı adı yaz, yazmak istemiyorsan iptale bas",
         "export_audio": "Sesi dışa aktar",
@@ -702,6 +703,8 @@
             "next_breakpoint": "Sonraki yer imi",
             "previous_breakpoint": "Önceki yer imi",
             "toggle_keyboard": "Toggle keyboard",
+            "undo": "Geri al",
+            "redo": "Yinele",
             "toggle_record": "Kaydı durdur/devam ettir",
             "stop": "Durdur",
             "restart": "Yeniden başlat",
@@ -727,6 +730,8 @@
             "next_layer_description": "Sonraki sütunu seç",
             "next_breakpoint_description": "Sonraki yer imini seç",
             "toggle_keyboard_description": "Raise or lower the keyboard in the pro view",
+            "undo_description": "Şarkıda yapılan son değişikliği geri al",
+            "redo_description": "Az önce geri alınan değişikliği yinele",
             "previous_breakpoint_description": "Önceki yer imini seç",
             "toggle_record_description": "Klavye kaydını aç/kapat",
             "stop_description": "Oynatmayı/kaydı/pratiği durdur",

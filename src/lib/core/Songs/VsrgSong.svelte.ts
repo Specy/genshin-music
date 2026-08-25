@@ -216,8 +216,7 @@ export class VsrgSong extends Song<VsrgSong, SerializedVsrgSong, 3> {
      *
      * Copies the array it is given for OWNERSHIP: it becomes this song's private graph, and a
      * caller that kept the argument could otherwise push into #tracks from outside, which is the
-     * write the private field exists to prevent. Its callers build a plain array and hand it over,
-     * so - unlike ComposedSong.restoreColumns - there is no proxy to launder here.
+     * write the private field exists to prevent.
      */
     initTracksForConstruction(tracks: VsrgTrack[]) {
         this.#tracks = [...tracks]

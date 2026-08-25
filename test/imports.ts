@@ -34,6 +34,10 @@ export {ApproachingNote, NoteColumn, InstrumentData, isTrackAudible, MidiNote, R
 export type {ColumnNote} from '$core/Songs/SongClasses'
 export {Song, extractStorable} from '$core/Songs/Song.svelte'
 export {ComposedSong, defaultInstrumentMap} from '$core/Songs/ComposedSong.svelte'
+// The composer's Undo Step container (ADR-0013). Song-agnostic, so it lives beside the songs
+// rather than under them; test/serializePlain.test.ts's registry has to name every class the model
+// folder exports, which is the reason it is re-exported here at all.
+export {UndoHistory, UNDO_HISTORY_CAP} from '$core/Songs/UndoHistory.svelte'
 // `Chunk` here is RecordedSong's own chunk class (notes/delay pair) - NOT the same class as
 // VisualSong's `Chunk` below (deliberately distinct, see VisualSong.ts's header comment); only one
 // of the two is re-exported under this name from this barrel, so no collision.

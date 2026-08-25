@@ -1,6 +1,6 @@
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest'
 import {KeyboardProvider} from '../src/lib/providers/KeyboardProvider'
-import {createShortcutListener} from '../src/lib/stores/KeybindsStore.svelte'
+import {createKeyboardListener, createShortcutListener, keyBinds} from '../src/lib/stores/KeybindsStore.svelte'
 
 function dispatchKey(code: string, type: 'keydown' | 'keyup' = 'keydown', init: KeyboardEventInit = {}) {
     window.dispatchEvent(new KeyboardEvent(type, {code, bubbles: true, ...init}))
@@ -259,6 +259,85 @@ describe('shortcut combos and held note keys', () => {
             expect(fired).toEqual(['next_column'])
         } finally {
             dispose()
+        }
+    })
+})
+
+/**
+ * NOTE ENTRY IS BARE-KEY ONLY (ADR-0013 fallout). The note listener matches on `code` alone and
+ * KeyboardProvider fans every keydown out to every listener, so the composer's Ctrl+Z used to walk
+ * the history AND enter note Z in the same event - and the Step that added it cleared the redo
+ * branch the undo had just created. Both listeners are driven here together, the way the composer
+ * registers them.
+ */
+describe('note keys and application chords', () => {
+    beforeEach(() => {
+        KeyboardProvider.create()
+    })
+    afterEach(() => {
+        KeyboardProvider.destroy()
+        document.body.innerHTML = ''
+    })
+
+    /** Both games' Label Sets bind Z, which is exactly why Ctrl+Z collided with it. */
+    const NOTE_CODE = 'KeyZ'
+
+    function listenForNotes(id: string) {
+        const down: string[] = []
+        const up: string[] = []
+        const dispose = createKeyboardListener(id, ({code}) => down.push(code), {
+            onRelease: ({code}) => up.push(code),
+        })
+        return {down, up, dispose}
+    }
+
+    it('binds the colliding key at all, so the rows below are not vacuous', () => {
+        expect(keyBinds.getShortcut('keyboard', NOTE_CODE)).toBeDefined()
+    })
+
+    it('enters nothing while Ctrl or Meta is held, and everything without them', () => {
+        const {down, dispose} = listenForNotes('note_chords')
+        try {
+            dispatchKey(NOTE_CODE, 'keydown', {ctrlKey: true})
+            dispatchKey(NOTE_CODE, 'keydown', {metaKey: true})
+            expect(down).toEqual([])
+            //shift is the composer's own edit modifier and stays note entry
+            dispatchKey(NOTE_CODE, 'keydown', {shiftKey: true})
+            dispatchKey(NOTE_CODE)
+            expect(down).toEqual([NOTE_CODE, NOTE_CODE])
+        } finally {
+            dispose()
+        }
+    })
+
+    it('still delivers the RELEASE under a modifier, so a held note cannot be stranded', () => {
+        const {up, dispose} = listenForNotes('note_chord_release')
+        try {
+            //ctrl pressed while the note key is already down: the key-up is the only thing that
+            //stops a looping sustaining voice
+            dispatchKey(NOTE_CODE, 'keyup', {ctrlKey: true})
+            expect(up).toEqual([NOTE_CODE])
+        } finally {
+            dispose()
+        }
+    })
+
+    it('Ctrl+Z reaches the composer combo and ONLY it', () => {
+        const notes = listenForNotes('undo_collision_notes')
+        const shortcuts: string[] = []
+        const disposeShortcuts = createShortcutListener(
+            'composer',
+            'undo_collision_combo',
+            ({shortcut}) => shortcuts.push((shortcut as {name: string}).name)
+        )
+        try {
+            dispatchKey('ControlLeft', 'keydown', {ctrlKey: true})
+            dispatchKey(NOTE_CODE, 'keydown', {ctrlKey: true})
+            expect(shortcuts).toEqual(['undo'])
+            expect(notes.down).toEqual([])
+        } finally {
+            disposeShortcuts()
+            notes.dispose()
         }
     })
 })

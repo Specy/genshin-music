@@ -118,7 +118,7 @@ function makeSong(): ComposedSong {
     return song
 }
 
-/** Columns to hand to restoreColumns/initColumnsForConstruction: a real snapshot, fresh counters. */
+/** Columns to hand to initColumnsForConstruction: a real snapshot, fresh counters. */
 function snapshotColumns(song: ComposedSong, amount: number): NoteColumn[] {
     return song.columns.slice(0, amount).map(column => column.clone())
 }
@@ -192,8 +192,9 @@ const CASES: PublishCase[] = [
     {
         name: 'initColumnsForConstruction',
         //pins the construction-only contract: it is for songs NOBODY is watching yet, so it must
-        //stay silent. A future caller reaching for it on the live song gets a frozen canvas, and
-        //this row is the reminder that restoreColumns is the one that publishes.
+        //stay silent. A future caller reaching for it on the live song gets a frozen canvas - on a
+        //song someone is watching, the column array moves through the mutators (and the undo rows
+        //below), never through an installer.
         publishes: [],
         touches: 'none',
         run: song => song.initColumnsForConstruction(snapshotColumns(song, 10)),
@@ -207,36 +208,6 @@ const CASES: PublishCase[] = [
         publishes: [],
         touches: 'none',
         run: song => song.appendColumnsForConstruction(2),
-    },
-    {
-        name: 'restoreColumns',
-        label: 'same length - selected still fits',
-        publishes: ['structure'],
-        touches: 'all',
-        run: song => song.restoreColumns(snapshotColumns(song, song.columns.length)),
-    },
-    {
-        name: 'restoreColumns',
-        label: 'shorter - selected re-clamps',
-        publishes: ['structure', 'selected'],
-        touches: 'all',
-        setup: song => {
-            song.selected = 50
-        },
-        run: song => song.restoreColumns(snapshotColumns(song, 10)),
-    },
-    {
-        name: 'restoreColumns',
-        //undo is a column-array SHRINK, so it owes the same breakpoint pass removeColumns does -
-        //without it, undoing past the column a breakpoint sits on leaves that breakpoint in the
-        //array and serialize() writes it to IndexedDB
-        label: 'shorter - a breakpoint falls off the end',
-        publishes: ['structure', 'breakpoints'],
-        touches: 'all',
-        setup: song => {
-            song.breakpoints = [0, 50]
-        },
-        run: song => song.restoreColumns(snapshotColumns(song, 10)),
     },
     // ---- bulk / structural -----------------------------------------------------------------
     {
@@ -343,6 +314,15 @@ const CASES: PublishCase[] = [
         touches: 'all',
         run: song => song.swapLayer(5, 0, 0, 1),
     },
+    {
+        //the layer panel's up/down: swapLayer + swapInstruments as ONE call (ADR-0013), so it
+        //publishes the union of the two rows around it - and each column still moves by exactly 1,
+        //which is what says the roster half did not bump the graph a second time
+        name: 'swapTracks',
+        publishes: ['structure', 'instruments'],
+        touches: 'all',
+        run: song => song.swapTracks(0, 1),
+    },
     // ---- roster ----------------------------------------------------------------------------
     {
         name: 'addInstrument',
@@ -394,35 +374,40 @@ const CASES: PublishCase[] = [
         run: song => song.setInstrument(9, new InstrumentData({name: INSTRUMENTS[0]})),
     },
     {
-        //ADR-0007: the song's Basepoint moving is a real edit of every note that follows it
-        name: 'applyBasepointChange',
+        //ADR-0007: the song's Basepoint moving is a real edit of every note that follows it - and
+        //BOTH halves are this one call now (ADR-0013), so the field signal is part of the set
+        name: 'changeBasepoint',
         label: 'song scope',
-        publishes: ['structure'],
+        publishes: ['structure', 'pitch'],
         touches: 'all',
-        run: song => song.applyBasepointChange('song', 'C', 'D'),
+        run: song => song.changeBasepoint('song', 'D'),
     },
     {
-        name: 'applyBasepointChange',
+        //a track scope is the NOTE half alone: the roster entry is setInstrument's to install, so
+        //nothing here publishes `instruments`
+        name: 'changeBasepoint',
         label: 'one track',
         publishes: ['structure'],
         touches: 'all',
-        run: song => song.applyBasepointChange(1, 'C', 'D'),
+        run: song => song.changeBasepoint(1, 'D'),
     },
     {
-        name: 'applyBasepointChange',
+        //the same Pitch the song already has: `$state` compares with `===`, so the field write is
+        //silent, and a zero interval moves no note
+        name: 'changeBasepoint',
         label: 'no interval',
         publishes: [],
         touches: 'none',
-        run: song => song.applyBasepointChange('song', 'D', 'D'),
+        run: song => song.changeBasepoint('song', 'C'),
     },
     {
         //every track of makeSong() follows the song, so scoping to a track index that owns no
         //notes leaves the graph untouched - and an untouched graph publishes nothing
-        name: 'applyBasepointChange',
+        name: 'changeBasepoint',
         label: 'a scope with no notes in it',
         publishes: [],
         touches: 'none',
-        run: song => song.applyBasepointChange(5, 'C', 'D'),
+        run: song => song.changeBasepoint(5, 'D'),
     },
     {
         name: 'swapInstruments',
@@ -486,6 +471,39 @@ const CASES: PublishCase[] = [
         touches: 'none',
         run: song => song.mergeTrackInto(1, 1),
     },
+    // ---- scalar fields -----------------------------------------------------------------------
+    //ADR-0013 moved these three behind methods (nothing outside the class writes a song field any
+    //more), so the table needs them as rows: each publishes exactly the field it writes, and the
+    //graph is not one of them - a scalar edit that touched a column would repaint the canvas for
+    //nothing.
+    {
+        name: 'setBpm',
+        publishes: ['bpm'],
+        touches: 'none',
+        run: song => song.setBpm(200),
+    },
+    {
+        //makeSong() is already at 160: the method guards nothing itself, `$state`'s `===` does
+        name: 'setBpm',
+        label: 'the bpm it already has',
+        publishes: [],
+        touches: 'none',
+        run: song => song.setBpm(160),
+    },
+    {
+        //`reverb` is deliberately NOT a signal (see the field): the composer pushes it to
+        //AudioProvider itself and serialize() reads it on save, so nothing subscribes
+        name: 'setReverb',
+        publishes: [],
+        touches: 'none',
+        run: song => song.setReverb(true),
+    },
+    {
+        name: 'rename',
+        publishes: ['name'],
+        touches: 'none',
+        run: song => song.rename('renamed'),
+    },
     // ---- breakpoints -----------------------------------------------------------------------
     {
         name: 'toggleBreakpoint',
@@ -536,6 +554,201 @@ const CASES: PublishCase[] = [
         publishes: [],
         touches: 'none',
         run: song => song.validateBreakpoints(),
+    },
+    //Undo Step application (ADR-0013, design §8.4). ONE ROW PER DELTA FAMILY, undo and redo, and
+    //the claim they make together is that walking the history publishes what the FORWARD op
+    //published - a restored song that nothing was told about is the same stale canvas a missed
+    //#bumpStructure gives, only harder to see because the model really did change back.
+    //
+    //Two asymmetries are deliberate and are why the rows are per-family rather than one pair:
+    // - the GRAPH families publish COARSELY. A Step can hold primitives spread over every column
+    //   (a Basepoint change, an instrument swap, a normalizeSpans pass), so #applyStep ends in one
+    //   touch-all + one bump instead of reconstructing the touched set - a note edit that touched
+    //   two columns forward touches all of them back, which is what `touches: 'all'` says here
+    //   against the narrow ranges the forward rows above claim.
+    // - the $state.raw and scalar families publish EXACTLY what the forward op did, because
+    //   #applyDelta restores them by assignment through the same fields.
+    {
+        name: 'attachHistory',
+        //installs the container and nothing else: the history is not song data
+        publishes: [],
+        touches: 'none',
+        run: song => void song.attachHistory(),
+    },
+    {
+        name: 'undo',
+        label: 'a note edit (the graph families)',
+        publishes: ['structure'],
+        touches: 'all',
+        setup: song => {
+            song.attachHistory()
+            song.addNoteAt(6, 0, idOf(2))
+        },
+        run: song => void song.undo(),
+    },
+    {
+        name: 'redo',
+        label: 'a note edit (the graph families)',
+        publishes: ['structure'],
+        touches: 'all',
+        setup: song => {
+            song.attachHistory()
+            song.addNoteAt(6, 0, idOf(2))
+            song.undo()
+        },
+        run: song => void song.redo(),
+    },
+    {
+        name: 'undo',
+        //columnsRemoved coming back IN: the column count grows, so this is also the row where
+        //`selected` moves - #applyStep re-clamps it, and the composer jumps it to the cursor memo
+        //afterwards. Undoing the removal cannot restore a cursor that is past the end.
+        label: 'columns come back and the cursor was clamped past them',
+        publishes: ['structure', 'selected'],
+        touches: 'all',
+        setup: song => {
+            song.attachHistory()
+            song.addColumns(3, 'end')
+            song.selected = 102
+        },
+        run: song => void song.undo(),
+    },
+    {
+        name: 'undo',
+        label: 'breakpointsReplaced',
+        publishes: ['breakpoints'],
+        touches: 'none',
+        setup: song => {
+            song.attachHistory()
+            song.toggleBreakpoint(5)
+        },
+        run: song => void song.undo(),
+    },
+    {
+        name: 'redo',
+        label: 'breakpointsReplaced',
+        publishes: ['breakpoints'],
+        touches: 'none',
+        setup: song => {
+            song.attachHistory()
+            song.toggleBreakpoint(5)
+            song.undo()
+        },
+        run: song => void song.redo(),
+    },
+    {
+        name: 'undo',
+        //the roster rides two array refs, so undoing a roster edit is one assignment - and the
+        //graph must stay untouched, exactly as addInstrument's forward row claims
+        label: 'instrumentsReplaced',
+        publishes: ['instruments'],
+        touches: 'none',
+        setup: song => {
+            song.attachHistory()
+            song.addInstrument(INSTRUMENTS[0])
+        },
+        run: song => void song.undo(),
+    },
+    {
+        name: 'redo',
+        label: 'instrumentsReplaced',
+        publishes: ['instruments'],
+        touches: 'none',
+        setup: song => {
+            song.attachHistory()
+            song.addInstrument(INSTRUMENTS[0])
+            song.undo()
+        },
+        run: song => void song.redo(),
+    },
+    {
+        name: 'undo',
+        label: 'fieldChanged (bpm)',
+        publishes: ['bpm'],
+        touches: 'none',
+        setup: song => {
+            song.attachHistory()
+            song.setBpm(200)
+        },
+        run: song => void song.undo(),
+    },
+    {
+        name: 'redo',
+        label: 'fieldChanged (bpm)',
+        publishes: ['bpm'],
+        touches: 'none',
+        setup: song => {
+            song.attachHistory()
+            song.setBpm(200)
+            song.undo()
+        },
+        run: song => void song.redo(),
+    },
+    {
+        name: 'undo',
+        //the Basepoint is BOTH families at once (ADR-0007): the field and every note that followed it
+        label: 'fieldChanged (pitch) with the note half',
+        publishes: ['structure', 'pitch'],
+        touches: 'all',
+        setup: song => {
+            song.attachHistory()
+            song.changeBasepoint('song', 'D')
+        },
+        run: song => void song.undo(),
+    },
+    {
+        name: 'redo',
+        label: 'fieldChanged (pitch) with the note half',
+        publishes: ['structure', 'pitch'],
+        touches: 'all',
+        setup: song => {
+            song.attachHistory()
+            song.changeBasepoint('song', 'D')
+            song.undo()
+        },
+        run: song => void song.redo(),
+    },
+    {
+        name: 'undo',
+        label: 'fieldChanged (name)',
+        publishes: ['name'],
+        touches: 'none',
+        setup: song => {
+            song.attachHistory()
+            song.rename('renamed')
+        },
+        run: song => void song.undo(),
+    },
+    {
+        name: 'undo',
+        //`reverb` is deliberately not a signal (see the field), so its forward row publishes
+        //nothing and so must its undo - the composer pushes the restored value to AudioProvider
+        //itself, the same way it does for the forward edit
+        label: 'fieldChanged (reverb) - a field with no signal',
+        publishes: [],
+        touches: 'none',
+        setup: song => {
+            song.attachHistory()
+            song.setReverb(true)
+        },
+        run: song => void song.undo(),
+    },
+    {
+        name: 'undo',
+        //nothing to undo: the call returns null before #applyStep, so it must not repaint the song
+        label: 'an empty history',
+        publishes: [],
+        touches: 'none',
+        setup: song => void song.attachHistory(),
+        run: song => void song.undo(),
+    },
+    {
+        name: 'redo',
+        label: 'nothing to redo',
+        publishes: [],
+        touches: 'none',
+        setup: song => void song.attachHistory(),
+        run: song => void song.redo(),
     },
 ]
 
@@ -707,8 +920,8 @@ describe('the table cannot be escaped', () => {
         song.breakpoints = [0, 1]
         expect(() => structuredClone(song.instruments)).not.toThrow()
         expect(() => structuredClone(song.breakpoints)).not.toThrow()
-        //`columns` is plain for a different reason - it is a private array behind a getter, never
-        //passed through a `$state` container without restoreColumns laundering it
+        //`columns` is plain for a different reason - it is a private array behind a getter, and
+        //nothing outside the class ever installs one (ADR-0013 retired the one path that did)
         expect(() => structuredClone(song.columns.map(column => column.tempoChanger))).not.toThrow()
         //Composer.svelte's `selectedColumns` is the third array on that draw path and is
         //component-local, so it cannot be reached from here - its rule lives at its declaration.
@@ -1367,9 +1580,8 @@ describe('structureVersion is the graph version as a value, on both classes', ()
         expect(b.structureVersion).toBe(0)
         expect(a.columns).not.toBe(b.columns)
         //...and the array identity is what does not see an edit made IN PLACE, which is what the
-        //version is there for. (Other mutators install a new array - restoreColumns, deleteColumns -
-        //so the identity moving is not evidence of a swap either; each half covers what the other
-        //cannot.)
+        //version is there for. (A mutator can install a new array too - deleteColumns does - so the
+        //identity moving is not evidence of a swap either; each half covers what the other cannot.)
         const columns = a.columns
         a.addNoteAt(0, 0, idOf(0))
         expect(a.columns).toBe(columns)

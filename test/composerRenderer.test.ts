@@ -2616,12 +2616,14 @@ const REPAINTS: RepaintCase[] = [
         ...FULL,
     },
     {
-        //undo installs a whole column array - a fresh one, so both halves of the columns/version
-        //pair move here
-        what: 'undo restores a previous column array',
-        change: context => {
-            context.song.restoreColumns(context.song.columns.slice(0, 60).map(column => column.clone()))
+        //an Undo Step re-splices the very columns it removed (ADR-0013: by reference) and then
+        //repaints coarsely - one touch-all plus one structure bump, whatever the Step held
+        what: 'an Undo Step is walked back',
+        setup: context => {
+            context.song.attachHistory()
+            context.song.deleteColumns([10, 11, 12])
         },
+        change: context => void context.song.undo(),
         ...FULL,
     },
     // ---- everything else the painted output depends on ----------------------------------------

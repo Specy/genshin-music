@@ -52,7 +52,8 @@ describe('the MIDI import session owns one handler-enforced song lock', () => {
     'removeColumns',
     'toggleBreakpoint',
     'handleTempoChanger',
-    'undo',
+    //the undo/redo pair's one body - the wrappers are two lines each
+    'walkHistory',
     'pasteColumns',
     'eraseColumns',
     'moveNotesBy',
@@ -79,9 +80,14 @@ describe('the MIDI import session owns one handler-enforced song lock', () => {
     expect(code).toContain('return true');
   });
 
-  it('re-checks the lock after destructive confirmation dialogs', () => {
-    expect(functionCode('removeInstrument').match(/songLocked/g)).toHaveLength(2);
-    expect(functionCode('mergeLayer').match(/songLocked/g)).toHaveLength(2);
+  it('re-checks the lock after asynchronous questions, and asks none it need not', () => {
+    //the layer merge and the layer delete lost their confirms with ADR-0013 (undo is the answer to
+    //"this cannot be undone"), so there is no await between their guard and their write any more
+    for (const name of ['removeInstrument', 'mergeLayer']) {
+      expect(functionCode(name).match(/songLocked/g)).toHaveLength(1);
+      expect(functionCode(name)).not.toContain('asyncConfirm');
+    }
+    //renameSong still asks, so it still re-checks on the other side of the await
     expect(functionCode('renameSong').match(/songLocked/g)).toHaveLength(2);
   });
 });
@@ -91,7 +97,7 @@ describe('the MIDI import lifecycle has one save boundary', () => {
     const code = functionCode('changeMidiVisibility');
     const lock = code.indexOf('midiOpening = true');
     for (const settlement of [
-      'durationPopover = null',
+      'dismissDurationPopover()',
       'abandonNoteHolds()',
       'abandonNotePresses()',
       'endAllSustainRecordings()',
@@ -105,11 +111,18 @@ describe('the MIDI import lifecycle has one save boundary', () => {
     );
   });
 
-  it('bypasses the load prompt for previews and dirties an installed preview on close', () => {
-    expect(functionCode('loadSong')).toContain('if (!preview && changes !== 0)');
-    const visibility = functionCode('changeMidiVisibility');
-    expect(visibility).toContain('if (isMidiVisible && midiPreviewLoaded)');
-    expect(visibility).toContain('changes = Math.max(changes, 1)');
+  it('bypasses the load prompt for previews and leaves an installed preview dirty on close', () => {
+    expect(functionCode('loadSong')).toContain('if (!preview && songIsDirty)');
+    //the flag SURVIVES the close (ADR-0013): the preview's own history is a fresh, clean one, so
+    //`midiPreviewLoaded` is the whole of what keeps the promoted preview dirty until it is saved
+    expect(instanceScript).toContain(
+      'const songIsDirty = $derived(history.isDirty || midiPreviewLoaded);'
+    );
+    //cleared on OPENING a session and nowhere else in here: the close path leaving it set is what
+    //stops a promoted preview from reading clean the moment the panel goes away
+    expect(functionCode('changeMidiVisibility').match(/midiPreviewLoaded = false/g)).toHaveLength(
+      1
+    );
   });
 
   it('keeps the working song when saving it is cancelled during a load', () => {
@@ -134,9 +147,8 @@ describe('the MIDI import lifecycle has one save boundary', () => {
   });
 
   it('treats an installed preview as unsaved when navigation bypasses the close path', () => {
-    expect(functionCode('prepareToLeave')).toContain(
-      'if (changes === 0 && !midiPreviewLoaded) return true'
-    );
+    //`songIsDirty` is what carries the preview flag - see the row above
+    expect(functionCode('prepareToLeave')).toContain('if (!songIsDirty) return true');
   });
 
   it('closes at explicit menu/new-song call sites, never from the general loader', () => {

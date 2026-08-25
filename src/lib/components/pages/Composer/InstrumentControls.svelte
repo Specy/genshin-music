@@ -15,6 +15,8 @@
     onInstrumentAdd,
     onChangePosition,
     onMerge,
+    onEditGroupStart,
+    onEditGroupEnd,
     onSettingsOpenChange,
     songLocked = false,
   }: {
@@ -27,6 +29,12 @@
     onInstrumentAdd: () => void;
     onChangePosition: (direction: 1 | -1) => void;
     onMerge: (direction: 1 | -1) => void;
+    /**
+     * Forwarded straight to the settings popup, whose continuous inputs (the volume drag, the
+     * alias field) emit one `onInstrumentChange` per tick — see its own group bookkeeping.
+     */
+    onEditGroupStart?: () => void;
+    onEditGroupEnd?: () => void;
     songLocked?: boolean;
     /**
      * Whether the layer settings popup is up, which is the same thing as whether it is taking
@@ -87,6 +95,8 @@
       //`instrument` prop is read by index - the same close the delete path does, for the same reason
       setNotEditing();
     }}
+    {onEditGroupStart}
+    {onEditGroupEnd}
     onClose={setNotEditing}
     disabled={songLocked}
   />

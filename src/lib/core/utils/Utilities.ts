@@ -50,6 +50,12 @@ export type MIDIShortcutName =
     | 'add_column'
     | 'remove_column'
     | 'change_layer'
+    // ADR-0013: the composer's history walk, on a controller key. A name added here needs three
+    // more things or it is dead: a MIDIShortcut row in BaseSettings' MIDISettings.shortcuts (the
+    // setup grid draws THAT array), a `keybinds:shortcuts.<name>` label (typed by
+    // satisfies Record<MIDIShortcutName, string>) and a case in Composer.svelte's handleMidi switch.
+    | 'undo'
+    | 'redo'
 
 class MIDINote {
     index: number
