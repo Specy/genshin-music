@@ -261,7 +261,6 @@ input[type='number'] {
   background-color: red;
 }
 
-
 a {
   text-decoration: none;
 }
@@ -312,7 +311,6 @@ a {
   color: rgb(255, 51, 74);
   display: inline-block;
 }
-
 
 .settings-row-wrap {
   display: flex;
@@ -3741,7 +3739,6 @@ select {
   overflow: hidden;
   border-bottom: solid 2px var(--secondary);
 }
-
 
 .vsrg-track-settings {
   position: absolute;

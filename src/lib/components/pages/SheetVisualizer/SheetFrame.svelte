@@ -13,7 +13,6 @@
   import type { NoteNameType } from '$lib/games/types';
   import { cn, cs } from '$core/utils/Utilities';
 
-
   // One note-grid "frame" tile - the small per-chunk sheet-music preview block rendered under
   // the player keyboard (fed RecordedSong chunks, duck-typed against this file's `Chunk` type).
   // CSS paints the empty-dot lattice; only filled notes render as explicitly placed grid children.

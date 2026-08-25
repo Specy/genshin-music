@@ -11,7 +11,6 @@
   import type { TempoChunk } from '$core/Songs/VisualSong';
   import type { NoteNameType } from '$lib/games/types';
 
-
   // The tempo-bracketed sheet-music frame row the sheet-visualizer page renders - one call per
   // `VisualSong` chunk, each producing 1+ column tiles (tempo-changer brackets can group several
   // `TempoChunkColumn`s into one visual chunk).
