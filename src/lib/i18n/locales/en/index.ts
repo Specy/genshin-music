@@ -524,6 +524,9 @@ export const i18n_en = {
     loop: 'Loop',
     loop_tooltip: 'Loop the song',
     hide_practice_notes: 'Hide notes in practice mode',
+    // Unused since the eye button became practice-mode-only (it is replaced by the play/pause
+    // button in the other modes rather than shown disabled). Kept so it does not have to be
+    // re-translated in nine locales if that slot ever shows a disabled eye again.
     hide_practice_notes_only_in_practice: 'Only affects practice mode',
     sheet_frame_options: 'Frame options',
     section_starts_here: 'Section starts here',

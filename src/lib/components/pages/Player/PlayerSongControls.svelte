@@ -6,6 +6,8 @@
   import Tooltip from '$cmp/utility/Tooltip.svelte';
   import IconButton from '$cmp/inputs/IconButton.svelte';
   import AppButton from '$cmp/inputs/AppButton.svelte';
+  import IconPlay from '~icons/fa6-solid/play';
+  import IconPause from '~icons/fa6-solid/pause';
   import PlayerSlider from './PlayerSlider.svelte';
   import PlayerSheetCard from './PlayerSheetCard.svelte';
   import { t } from '$i18n/binding.svelte';
@@ -64,9 +66,12 @@
     else toggleNeedsRefresh();
   }
 
-  // The hide-notes flag is only ever read in practice mode (PlayerKeyboard applies it as
-  // `hideNotesInPracticeMode && mode === 'practice'`), so outside it the eye is shown disabled
-  // rather than removed: the row's other controls must not shift every time the mode changes.
+  // ONE SLOT, TWO CONTROLS - and which one is in it is the mode's own question. Practice is the
+  // only mode the hide-notes flag is read in (PlayerKeyboard applies it as
+  // `hideNotesInPracticeMode && mode === 'practice'`) and the only one with nothing to pause: its
+  // notes wait for the user, so there is no clock to stop. Play and approaching are the mirror of
+  // that on both counts, so they get the play/pause button and the eye goes away entirely rather
+  // than sitting there disabled - the slot is filled either way, so no row shifts on a mode change.
   const canHidePracticeNotes = $derived(songData.eventType === 'practice');
 
   // The record-audio button and the song controls under it must swap in the same flush, so both
@@ -77,6 +82,7 @@
   // Song playback owns the audio graph; offer recording only in free-play/recording mode.
   const canRecordAudio = $derived(songData.eventType === 'stop');
   const canChangeSpeed = $derived(songData.eventType !== 'practice');
+  const isPaused = $derived(songData.paused);
 </script>
 
 {#snippet faEyeIcon()}
@@ -192,36 +198,7 @@
   {/if}
   <div class="column slider-wrapper" style={!hasActiveSong ? 'display:none' : ''}>
     <div class="row" style="width:100%;gap:0.4rem">
-      {#if hidePracticeNotes !== undefined}
-        <IconButton
-          class="practice-mode-control"
-          style="width:2.4rem"
-          disabled={!canHidePracticeNotes}
-          onclick={() => setHidePracticeNotes(!hidePracticeNotes)}
-          tooltip={canHidePracticeNotes
-            ? t('player:hide_practice_notes')
-            : t('player:hide_practice_notes_only_in_practice')}
-          toggled={hidePracticeNotes}
-          ariaLabel={t('player:hide_practice_notes')}
-        >
-          {#if hidePracticeNotes}
-            {@render faEyeSlashIcon()}
-          {:else}
-            {@render faEyeIcon()}
-          {/if}
-        </IconButton>
-      {/if}
-      <AppButton
-        style="flex:1;min-width:4rem"
-        tooltip={t('player:loop_tooltip')}
-        toggled={loopEnabled}
-        onclick={() => setLoopEnabled(!loopEnabled)}
-      >
-        {t('player:loop')}
-      </AppButton>
-    </div>
-    <div class="row" style="width:100%;gap:0.4rem">
-      <div class={[hasTooltip(true), 'row']}>
+      <div class={[hasTooltip(true), 'row']} style="flex:1">
         <!-- Deliberately a raw select, not the shared Select.svelte - that component
                      applies its own .select class and background-image arrow, which this one
                      explicitly cancels via background-image:none. -->
@@ -244,6 +221,46 @@
           {t('player:change_speed')}
         </Tooltip>
       </div>
+      <AppButton
+        style="flex:1;min-width:4rem"
+        tooltip={t('player:loop_tooltip')}
+        toggled={loopEnabled}
+        onclick={() => setLoopEnabled(!loopEnabled)}
+      >
+        {t('player:loop')}
+      </AppButton>
+    </div>
+    <div class="row" style="width:100%;gap:0.4rem">
+      {#if !canHidePracticeNotes}
+        <IconButton
+          class="play-pause-control"
+          style="width:2.4rem"
+          onclick={() => playerStore.togglePause()}
+          tooltip={isPaused ? t('common:play') : t('common:pause')}
+          ariaLabel={isPaused ? t('common:play') : t('common:pause')}
+        >
+          {#if isPaused}
+            <IconPlay />
+          {:else}
+            <IconPause />
+          {/if}
+        </IconButton>
+      {:else if hidePracticeNotes !== undefined}
+        <IconButton
+          class="practice-mode-control"
+          style="width:2.4rem"
+          onclick={() => setHidePracticeNotes(!hidePracticeNotes)}
+          tooltip={t('player:hide_practice_notes')}
+          toggled={hidePracticeNotes}
+          ariaLabel={t('player:hide_practice_notes')}
+        >
+          {#if hidePracticeNotes}
+            {@render faEyeSlashIcon()}
+          {:else}
+            {@render faEyeIcon()}
+          {/if}
+        </IconButton>
+      {/if}
       <IconButton
         onclick={() => {
           playerStore.resetSong();

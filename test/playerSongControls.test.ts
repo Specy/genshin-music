@@ -48,23 +48,52 @@ describe('Player song controls', () => {
         playerControlsStore.clearPages()
     })
 
-    it('swaps availability between the eye and speed controls in practice mode', () => {
-        const speed = target.querySelector<HTMLSelectElement>('select.slider-select')
-        const eye = target.querySelector<HTMLButtonElement>('button.practice-mode-control')
-        if (!speed) throw new Error('Player speed selector was not rendered')
-        if (!eye) throw new Error('Player practice-note visibility button was not rendered')
-        expect(speed.disabled).toBe(false)
-        expect(eye.disabled).toBe(true)
-
-        playerStore.setState({eventType: 'practice'})
-        flushSync()
-        expect(speed.disabled).toBe(true)
-        expect(eye.disabled).toBe(false)
+    // ONE SLOT beside the stop button, and the mode decides which control is in it: practice is the
+    // only mode the eye affects and the only one with no clock to pause, so the two are exact
+    // complements. The speed picker (now on the loop's row) is the mirror image - live everywhere
+    // but practice.
+    it('swaps the eye and the play/pause button between practice and the played modes', () => {
+        const speed = () => target.querySelector<HTMLSelectElement>('select.slider-select')!
+        const eye = () => target.querySelector<HTMLButtonElement>('button.practice-mode-control')
+        const playPause = () => target.querySelector<HTMLButtonElement>('button.play-pause-control')
+        if (!speed()) throw new Error('Player speed selector was not rendered')
 
         playerStore.setState({eventType: 'play'})
         flushSync()
-        expect(speed.disabled).toBe(false)
-        expect(eye.disabled).toBe(true)
+        expect(speed().disabled).toBe(false)
+        expect(eye()).toBe(null)
+        expect(playPause()).not.toBe(null)
+
+        playerStore.setState({eventType: 'practice'})
+        flushSync()
+        expect(speed().disabled).toBe(true)
+        expect(eye()).not.toBe(null)
+        expect(playPause()).toBe(null)
+
+        playerStore.setState({eventType: 'approaching'})
+        flushSync()
+        expect(speed().disabled).toBe(false)
+        expect(eye()).toBe(null)
+        expect(playPause()).not.toBe(null)
+    })
+
+    it('toggles the run\'s pause flag and swaps the button between pause and play', () => {
+        playerStore.setState({eventType: 'play'})
+        flushSync()
+        const playPause = () => target.querySelector<HTMLButtonElement>('button.play-pause-control')!
+
+        expect(playerStore.paused).toBe(false)
+        expect(playPause().getAttribute('aria-label')).toBe('Pause')
+
+        playPause().click()
+        flushSync()
+        expect(playerStore.paused).toBe(true)
+        expect(playPause().getAttribute('aria-label')).toBe('Play')
+
+        playPause().click()
+        flushSync()
+        expect(playerStore.paused).toBe(false)
+        expect(playPause().getAttribute('aria-label')).toBe('Pause')
     })
 
     it('offers audio recording only when no song is running', () => {

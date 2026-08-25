@@ -30,6 +30,14 @@ type PlayerStoreState = {
    * Section) while the Section the user drew must stay exactly where it is. Set only by `seek`.
    */
   preservesSection: boolean;
+  /**
+   * PAUSE IS NOT A TRANSPORT COMMAND. Nothing about WHAT runs changes, so `key`/`playId`
+   * deliberately stay put and no run is dispatched: PlayerKeyboard is what acts on this, freezing
+   * the run that is already going (play mode drops its transport and re-anchors from the cursor
+   * through the seek path when it comes back, approaching just stops its tick). Every command
+   * below clears it, so a run can never start out paused.
+   */
+  paused: boolean;
 };
 
 class PlayerStore {
@@ -41,6 +49,7 @@ class PlayerStore {
     start: 0,
     end: 0,
     preservesSection: false,
+    paused: false,
   });
   /**
    * The notes currently on the player's keyboard, in the displayed instrument's authored
@@ -62,6 +71,10 @@ class PlayerStore {
 
   get start(): number {
     return this.state.start;
+  }
+
+  get paused(): boolean {
+    return this.state.paused;
   }
 
   setKeyboardLayout = (keyboard: ObservableNote[]) => {
@@ -115,6 +128,7 @@ class PlayerStore {
       eventType: 'play',
       end,
       preservesSection: false,
+      paused: false,
       key: this.state.key + 1,
       playId: this.state.playId + 1,
     });
@@ -127,6 +141,7 @@ class PlayerStore {
       eventType: 'practice',
       end,
       preservesSection: false,
+      paused: false,
       key: this.state.key + 1,
       playId: this.state.playId + 1,
     });
@@ -139,6 +154,7 @@ class PlayerStore {
       eventType: 'approaching',
       end,
       preservesSection: false,
+      paused: false,
       key: this.state.key + 1,
       playId: this.state.playId + 1,
     });
@@ -151,6 +167,7 @@ class PlayerStore {
       start: 0,
       end: 0,
       preservesSection: false,
+      paused: false,
       key: this.state.key + 1,
       playId: 0,
     });
@@ -161,9 +178,21 @@ class PlayerStore {
       start,
       end,
       preservesSection: false,
+      paused: false,
       key: this.state.key + 1,
       playId: this.state.playId + 1,
     });
+  };
+  /**
+   * Freeze / unfreeze the run that is already going - see `paused`. Deliberately NOT a run
+   * dispatch: the sheet, the Section, the cursor and (in approaching) the score all belong to the
+   * run being paused and have to survive it, which is exactly what the commands above destroy.
+   */
+  setPaused = (paused: boolean) => {
+    this.setState({ paused });
+  };
+  togglePause = () => {
+    this.setPaused(!this.state.paused);
   };
   /**
    * Restart the current run over [start, end) without publishing that range as the Section - see
@@ -175,6 +204,7 @@ class PlayerStore {
       start,
       end,
       preservesSection: true,
+      paused: false,
       key: this.state.key + 1,
       playId: this.state.playId + 1,
     });

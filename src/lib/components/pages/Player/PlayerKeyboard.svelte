@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import { onMount, untrack } from 'svelte';
   import { game } from '$game';
   import {
     SPEED_CHANGERS,
@@ -660,6 +660,60 @@
     return firstChunk.firstNoteIndex;
   }
 
+  /**
+   * PAUSE, the two halves of it. Not a run boundary: `stopSong` below is the teardown for every
+   * transition BETWEEN runs and clears the sheet, the score and the queues along with the audio -
+   * all of which belong to the run being paused and have to still be there when it resumes. So the
+   * two modes with a clock of their own each give up only that clock.
+   *
+   * `pausedRunKey` is the run the pause was taken on, and every guard below is keyed by it: a
+   * transport command clears `paused` as a side effect (see PlayerStore), so without it stopping
+   * or picking another song while paused would read as a resume and re-anchor the run that was
+   * just replaced.
+   */
+  let pausedRunKey: number | null = null;
+
+  function pauseRun() {
+    const runKey = playerStore.state.key;
+    if (isCurrentRun(runKey, 'play')) {
+      pausedRunKey = runKey;
+      //the same three steps as a stop (ADR-0006/0009) and for the same reason - the transport
+      //never touches audio, so an uncancelled pause leaks the whole committed horizon - just
+      //without the run teardown around them
+      playTransport?.stop();
+      playTransport = null;
+      functions.cancelScheduledSounds();
+      functions.releaseAllSounds();
+      //song flashes and their release rings belong to notes that are no longer coming
+      playerStore.resetKeyboardLayout();
+      return;
+    }
+    //approaching owns nothing but its tick: the circles keep their positions, the queue keeps its
+    //order and the score keeps its count, so stopping the clock IS the pause
+    if (isCurrentRun(runKey, 'approaching')) {
+      pausedRunKey = runKey;
+      setTicker(false);
+    }
+  }
+
+  function resumeRun() {
+    const runKey = pausedRunKey;
+    pausedRunKey = null;
+    if (runKey === null) return;
+    if (isCurrentRun(runKey, 'approaching')) return setTicker(true, runKey);
+    if (!isCurrentRun(runKey, 'play')) return;
+    //PLAY RESUMES BY RE-ANCHORING, because the transport it lost was committed to absolute audio
+    //times: the seek path is what already knows how to enter a run part-way (mid-span notes
+    //resumed at the anchor, ADR-0009) and it leaves the Section the user drew alone (ADR-0010).
+    //`current` is the note that has NOT sounded yet, which is exactly where the ear stopped.
+    const runEnd = playerControlsStore.state.runEnd || playerControlsStore.size;
+    const current = playerControlsStore.current;
+    //a run paused after it had already finished has nothing left to resume - play it again from
+    //the Section's own start instead, which is what the restart button does
+    if (current >= runEnd) return void restartSong();
+    playerStore.seek(current, runEnd);
+  }
+
   async function restartSong(override?: number) {
     await stopSong();
     if (!mounted) return;
@@ -677,6 +731,9 @@
     setTicker(false);
     mode = undefined;
     activeRunKey = undefined;
+    //the run a pause was taken on is gone, so nothing may resume it (the store's own flag is
+    //already cleared by whichever command brought us here)
+    pausedRunKey = null;
     approachCountdown = null;
     songTimestamp = 0;
     timeouts.forEach((timeout) => clearTimeout(timeout));
@@ -1020,6 +1077,18 @@
           });
         }
       }, 4);
+    });
+
+    /**
+     * PAUSE gets an effect of its own rather than a branch inside the dispatch above: that one
+     * tracks `key`/`playId` and tears the whole run down on every fire, which is the one thing a
+     * pause must not do (see PlayerStore's `paused`).
+     */
+    $effect(() => {
+      const paused = playerStore.state.paused;
+      //everything the two halves read - the run key, the event type, the cursor - is state they
+      //must not be woken BY; only the flag itself is a dependency of this effect
+      untrack(() => (paused ? pauseRun() : resumeRun()));
     });
 
     MIDIProvider.addListener(handleMidi);

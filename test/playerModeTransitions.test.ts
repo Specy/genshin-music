@@ -326,6 +326,104 @@ describe('Player mode transition ownership', () => {
         expect(onSongFinished).not.toHaveBeenCalled()
     }, 10000)
 
+    // PAUSE IS NOT A STOP. It takes the same three audio steps (the transport never touches audio,
+    // so an uncancelled pause leaks the whole committed horizon) but none of the run teardown
+    // around them, because the sheet, the Section and the cursor all belong to the run that is
+    // about to carry on.
+    it('pauses a play run without losing its sheet, and re-anchors from the cursor on resume', async () => {
+        const song = buildRecordedSong()
+        playerStore.play(song, 0, song.notes.length)
+        await vi.waitFor(() => expect(playerControlsStore.current).toBeGreaterThan(0), {timeout: 4000})
+        const frames = playerControlsStore.pagesState.pages.flat().length
+        const committedBefore = commitSongNote.mock.calls.length
+        const cursor = playerControlsStore.current
+        teardownOrder.splice(0)
+
+        playerStore.setPaused(true)
+        flushSync()
+        expect(teardownOrder).toEqual(['cancel', 'release'])
+        expect(playerStore.eventType).toBe('play')
+        expect(playerControlsStore.pagesState.pages.flat().length).toBe(frames)
+        expect(playerControlsStore.current).toBe(cursor)
+        //the stopped transport commits nothing more, however much song was left
+        await new Promise(resolve => setTimeout(resolve, 400))
+        expect(commitSongNote).toHaveBeenCalledTimes(committedBefore)
+        expect(onSongFinished).not.toHaveBeenCalled()
+
+        playerStore.setPaused(false)
+        flushSync()
+        await vi.waitFor(() =>
+            expect(commitSongNote.mock.calls.length).toBeGreaterThan(committedBefore))
+        //resumed through the SEEK path: the run re-anchors on the cursor while the Section the
+        //user drew stays exactly where it was
+        expect(playerStore.state.preservesSection).toBe(true)
+        expect(playerControlsStore.position).toBe(0)
+        expect(playerControlsStore.end).toBe(song.notes.length)
+        expect(playerControlsStore.current).toBe(cursor)
+        await vi.waitFor(() => expect(onSongFinished).toHaveBeenCalled(), {timeout: 4000})
+    }, 15000)
+
+    // Approaching owns nothing but its tick, so that IS its pause: no re-anchoring, and in
+    // particular no teardown - a run whose score was reset by a pause would be unplayable.
+    it('freezes an approach run on pause, keeping its circles, score and sheet', async () => {
+        await beginApproach()
+        await finishApproachCountdown(() => vi.useFakeTimers())
+
+        let elapsed = 0
+        while (playerControlsStore.current === 0 && elapsed < 10000) {
+            vi.advanceTimersByTime(50)
+            elapsed += 50
+        }
+        const cursor = playerControlsStore.current
+        const score = {...playerControlsStore.score}
+        const frames = playerControlsStore.pagesState.pages.flat().length
+        expect(cursor).toBeGreaterThan(0)
+
+        playerStore.setPaused(true)
+        flushSync()
+        vi.advanceTimersByTime(10000)
+        flushSync()
+        expect(playerControlsStore.current).toBe(cursor)
+        expect({...playerControlsStore.score}).toEqual(score)
+        expect(playerControlsStore.pagesState.pages.flat().length).toBe(frames)
+        expect(onSongFinished).not.toHaveBeenCalled()
+
+        playerStore.setPaused(false)
+        flushSync()
+        vi.advanceTimersByTime(10000)
+        flushSync()
+        expect(onSongFinished).toHaveBeenCalled()
+    })
+
+    // Every transport command clears `paused` as a side effect (a run can never start out paused),
+    // so the un-pause edge alone cannot mean "resume": without keying the pause to the run it was
+    // taken on, stopping or picking another song would re-anchor the run just replaced.
+    it('does not resume a paused run that a stop or another song took over', async () => {
+        const song = buildRecordedSong()
+        playerStore.play(song, 0, song.notes.length)
+        await vi.waitFor(() => expect(commitSongNote).toHaveBeenCalled())
+        playerStore.setPaused(true)
+        flushSync()
+        const committed = commitSongNote.mock.calls.length
+
+        playerStore.resetSong()
+        flushSync()
+        await new Promise(resolve => setTimeout(resolve, 300))
+        expect(playerStore.eventType).toBe('stop')
+        expect(commitSongNote).toHaveBeenCalledTimes(committed)
+
+        playerStore.play(song, 0, song.notes.length)
+        await vi.waitFor(() => expect(playerControlsStore.current).toBeGreaterThan(0), {timeout: 4000})
+        playerStore.setPaused(true)
+        flushSync()
+        playerStore.play(song, 2, song.notes.length)
+        await vi.waitFor(() => expect(playerControlsStore.position).toBe(2))
+        //a stale resume would have issued a seek back to the previous run's cursor, which is
+        //exactly what publishing the new Section rules out
+        expect(playerStore.state.preservesSection).toBe(false)
+        expect(playerControlsStore.end).toBe(song.notes.length)
+    }, 15000)
+
     it('clears the practice sheet and score as soon as approach preparation starts', async () => {
         const song = await enterPractice()
         playerControlsStore.increaseScore(true)
