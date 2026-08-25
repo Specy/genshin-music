@@ -620,6 +620,7 @@ export const i18n_en = {
     page_not_found: 'The page was not found, click here to go back to the home page',
   },
   backup: {
+    unnamed_item: 'Unnamed', //shown in place of a missing name when listing the items that failed to validate
     confirm_after_songs_validation_error:
       'There were errors validating some songs. Do you want to continue downloading?',
     confirm_after_folders_validation_error:
@@ -688,6 +689,7 @@ export const i18n_en = {
     clone_song: 'Clone song',
     remove_breakpoint: 'Remove breakpoint',
     add_breakpoint: 'Add breakpoint',
+    permanent_breakpoint: 'The start and the end of the song are always breakpoints',
     cant_remove_all_layers: "You can't remove all layers!",
     cant_add_more_than_n_layers: `You can't add more than {{max_layers}} layers!`,
     ask_song_name_for_composed_song_version:

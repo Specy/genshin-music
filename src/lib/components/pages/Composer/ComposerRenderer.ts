@@ -45,6 +45,9 @@ import { clamp, colorToRGB, nearestEven } from '$core/utils/Utilities';
 import type { Timer } from '$core/utils/Utilities';
 import { TEMPO_CHANGERS, type NoteNameType, type Pitch } from '$core/legacyConfig';
 import type { NoteColumn, ColumnNote, InstrumentData } from '$core/Songs/SongClasses';
+// A pure two-function module and not the song model itself: this file is behind the dynamic pixi
+// import, so a value import of $core/Songs/ComposedSong.svelte would pull the whole model in with it.
+import { isFixedBreakpoint, withFixedBreakpoints } from '$core/Songs/breakpoints';
 // The canvas is the Song Grid, so it places through the *Grid* helpers (ADR-0004/ADR-0007: a
 // note's row is gridRowForNumber's answer for its OWN track), never computeButtonLayerStatuses,
 // which the composer KEYBOARD uses - there a row genuinely IS a Button of the selected instrument,
@@ -4896,8 +4899,13 @@ export class ComposerRenderer {
 
   // Called by ComposerCanvas.svelte's prev/next-breakpoint buttons and its own
   // composer_canvas shortcut listener.
+  //
+  // STEPS OVER THE FIXED BREAKPOINTS TOO (the first and last columns - see isFixedBreakpoint),
+  // which is what they are for: stepping right from anywhere always has somewhere to land, and the
+  // last one it lands on is the end of the song.
   handleBreakpoints = (direction: 1 | -1) => {
-    const { selected, columns, breakpoints } = this.state;
+    const { selected, columns } = this.state;
+    const breakpoints = withFixedBreakpoints(this.state.breakpoints, columns.length);
     const breakpoint =
       direction === 1 //1 = right, -1 = left
         ? breakpoints.filter((v) => v > selected).sort((a, b) => a - b)
@@ -5449,7 +5457,10 @@ export class ComposerRenderer {
       isToolsSelected: state.selectedColumns.includes(index),
       //false everywhere while smooth scrolling is on - see the overlayColumn field
       isSelected: index === this.overlayColumn,
-      isBreakpoint: state.breakpoints.includes(index),
+      //isFixedBreakpoint rather than withFixedBreakpoints: this runs once per painted column, and
+      //unioning the arrays here would allocate a Set per column per draw
+      isBreakpoint:
+        state.breakpoints.includes(index) || isFixedBreakpoint(index, state.columns.length),
       pro,
     });
     this.paintTails(view.tailGraphics, index, sizes, pro);
@@ -5758,13 +5769,21 @@ export class ComposerRenderer {
       this.timelineContentContainer.addChild(selectedRange);
     }
 
-    if (this.state.breakpoints.length) {
+    // The stored breakpoints AND the two fixed ones (first/last column - see isFixedBreakpoint):
+    // the marker is what makes an unremovable breakpoint visible, and this whole container is
+    // rebuilt on every draw() - including the structure-version draw a column add/remove lands on -
+    // so the end one tracks the song's length without a signal of its own.
+    const timelineBreakpoints = withFixedBreakpoints(
+      this.state.breakpoints,
+      this.state.columns.length
+    );
+    if (timelineBreakpoints.length) {
       const breakpointLines = new Graphics();
       const breakpointWidth = Math.min(
         Math.max(TIMELINE_BREAKPOINT_MIN_WIDTH, relativeColumnWidth),
         this.stripWidth()
       );
-      for (const breakpoint of this.state.breakpoints) {
+      for (const breakpoint of timelineBreakpoints) {
         // One coordinate system for every timeline element: a breakpoint marks the leading edge of
         // its column, on the same width/columns scale the bitmap and viewport use. Its visual line
         // is one timeline column wide with a three-pixel floor, so it does not disappear when a long

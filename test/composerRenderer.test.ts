@@ -2005,7 +2005,8 @@ function expectedTails(context: Context, index: number, geometry: Geometry, acce
  *    standard[3] at 0.4, and a column in neither shows none. So in ON mode a column that is both the
  *    playhead's and tools-selected takes standard[3] at 0.4, which is this file's statement of that
  *    decision;
- *  - a breakpoint column shows the marker;
+ *  - a breakpoint column shows the marker, and the song's FIRST and LAST columns always are
+ *    breakpoints whether or not `song.breakpoints` holds them (see expectedBreakpoints);
  *  - one note sprite per Song Grid row that computeGridRowLayerStatuses gives a non-zero status, at
  *    that row's y, dimmed to 0.45 when every note contributing to the row is stranded on its own
  *    instrument, and taking the ♯/♭ VARIANT of its icon texture when those notes are also OFF-SCALE
@@ -2020,6 +2021,25 @@ function expectedTails(context: Context, index: number, geometry: Geometry, acce
  * pool in the accent its LAST REPAINT captured, which is not always the one the theme currently
  * holds - see the theme test at the bottom of this file.
  */
+/**
+ * WHERE A MARKER GOES, on both surfaces: the breakpoints the song stores, plus the FIXED ones the
+ * first and last columns always carry ($core/Songs/breakpoints - derived from the column count,
+ * never stored, which is what makes them unremovable). Deduped and ascending, since the timeline
+ * draws one rect per entry and a stored `[0]` would otherwise draw twice over the fixed first one.
+ *
+ * Restated here rather than imported from the helper the renderer uses, like every other drawing
+ * rule in this file: a model that asked the production function could not fail when the production
+ * function is what broke.
+ */
+function expectedBreakpoints(song: ComposedSong): number[] {
+    const all = new Set(song.breakpoints)
+    if (song.columns.length > 0) {
+        all.add(0)
+        all.add(song.columns.length - 1)
+    }
+    return [...all].sort((a, b) => a - b)
+}
+
 function expectedWindow(
     context: Context,
     geometry: Geometry,
@@ -2028,6 +2048,7 @@ function expectedWindow(
     const {song, props} = context
     const {columnWidth, height} = geometry
     const groupSize = barGroupSize(props.beatMarks)
+    const breakpoints = expectedBreakpoints(song)
     const drawn: PaintedColumn[] = []
     for (let index = 0; index < song.columns.length; index++) {
         if (!isColumnVisible(index, song.selected, WINDOW_GEOMETRY)) continue
@@ -2073,7 +2094,7 @@ function expectedWindow(
                           alpha: toolsOnly ? 0.4 : 0.8,
                       }
                     : null,
-            breakpoint: song.breakpoints.includes(index)
+            breakpoint: breakpoints.includes(index)
                 ? {texture: 'breakpoints[1]', x: 0, y: 0, alpha: 1}
                 : null,
             notes,
@@ -2170,7 +2191,8 @@ function expectedCanvasStyle(): string {
  *    before the strip's own origin - in the timeline layer colour, so the three DOM buttons stand
  *    on it rather than on gaps in it;
  *  - a tools selection covers every selected cell, including the final one;
- *  - breakpoints are one timeline column wide with a three-pixel floor, at their columns' leading
+ *  - breakpoints - the stored ones and the two fixed ones, see expectedBreakpoints - are one
+ *    timeline column wide with a three-pixel floor, at their columns' leading
  *    edges and clamped at the strip's right edge. Their opaque colour is the exact transformed
  *    composer accent used by the notes canvas' cached breakpoint sprites;
  *  - the viewport outline is as wide as the number of columns the canvas shows, with its left edge
@@ -2220,10 +2242,11 @@ function expectedTimeline(context: Context, geometry: Geometry): PaintedScene['t
             ])
         )
     }
-    if (song.breakpoints.length) {
+    const breakpoints = expectedBreakpoints(song)
+    if (breakpoints.length) {
         const ops: unknown[] = []
         const breakpointWidth = Math.min(Math.max(3, timelineColumnWidth), stripWidth)
-        for (const breakpoint of song.breakpoints) {
+        for (const breakpoint of breakpoints) {
             ops.push([
                 'rect',
                 Math.min(timelineColumnWidth * breakpoint, stripWidth - breakpointWidth),

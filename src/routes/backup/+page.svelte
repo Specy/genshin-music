@@ -36,6 +36,20 @@
 
   let downloadFormat = $state<BackupFormat>('json');
 
+  /**
+   * WHAT FAILED, appended to the "keep downloading?" question below it. Each item that threw
+   * already produced its own toast while the loop ran, but those stack up and scroll away over a
+   * long validation, and the dialog - which is where the decision is actually made - used to say
+   * only that "some" items were bad. One name per line; the dialog renders its question with
+   * `white-space: pre-wrap`, so the breaks survive.
+   *
+   * A name is whatever the stored record carries, and a record that failed to parse is exactly the
+   * kind that may carry nothing at all - hence the fallback rather than a blank bullet.
+   */
+  function listNames(names: (string | undefined | null)[]): string {
+    return names.map((name) => `• ${name || t('backup:unnamed_item')}`).join('\n');
+  }
+
   onMount(() => {
     setPageVisited('backup');
     return () => logger.hidePill();
@@ -55,11 +69,9 @@
       }
     }
     if (errors.length > 0) {
-      // QUIRK: gates on asyncPrompt (a free-text prompt), not asyncConfirm (a real yes/no
-      // dialog) - `if (!keepDownloading)` only works because any non-empty typed string is
-      // truthy. A text prompt used as a boolean gate, but exactly what old does. Same
-      // pattern in validateFolders/validateThemes below.
-      const keepDownloading = await asyncPrompt(t('backup:confirm_after_songs_validation_error'));
+      const keepDownloading = await asyncConfirm(
+        `${t('backup:confirm_after_songs_validation_error')}\n\n${listNames(errors.map((song) => song?.name))}`
+      );
       if (!keepDownloading) return null;
     }
     logger.hidePill();
@@ -80,7 +92,9 @@
       }
     }
     if (folderErrors.length > 0) {
-      const keepDownloading = await asyncPrompt(t('backup:confirm_after_folders_validation_error'));
+      const keepDownloading = await asyncConfirm(
+        `${t('backup:confirm_after_folders_validation_error')}\n\n${listNames(folderErrors.map((folder) => folder?.name))}`
+      );
       if (!keepDownloading) return null;
     }
     logger.hidePill();
@@ -104,7 +118,9 @@
       }
     }
     if (errors.length > 0) {
-      const keepDownloading = await asyncPrompt(t('backup:confirm_after_themes_validation_error'));
+      const keepDownloading = await asyncConfirm(
+        `${t('backup:confirm_after_themes_validation_error')}\n\n${listNames(errors.map((theme) => theme?.other?.name))}`
+      );
       if (!keepDownloading) return null;
     }
     logger.hidePill();

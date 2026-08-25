@@ -57,6 +57,7 @@
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@iconify-json/fa6-solid": "^1.2.4",
+    "@iconify-json/lucide": "^1.2.126",
     "@sveltejs/adapter-static": "^3.0.10",
     "@sveltejs/kit": "^2.70.1",
     "@sveltejs/vite-plugin-svelte": "^7.2.0",

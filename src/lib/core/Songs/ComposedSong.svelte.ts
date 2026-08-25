@@ -31,6 +31,7 @@ import {
 import {assertKnownSongVersion, type SerializedSong, Song} from "./Song.svelte"
 import {UndoHistory, type UndoStep} from "./UndoHistory.svelte"
 import {clamp} from "../utils/Utilities"
+import {isFixedBreakpoint} from "./breakpoints"
 import {isLegacyAppName, LEGACY_NOTE_TABLES, type LegacyAppName, legacyIndexToId} from "./legacyNoteTables"
 import {type ConversionGame, findSimilarInstrument} from "./instrumentSimilarity"
 import {effectiveTrackPitch, gridRowForNumber, nominalToNumber, numberToButton} from "./noteIds"
@@ -1714,11 +1715,19 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 5> 
      * filters by, which is the point: two different notions of "a valid breakpoint" in one class
      * is how one of them ends up writing what the other exists to remove. The guard used to test
      * the upper end only, so `toggleBreakpoint(-1)` added -1 to the array.
+     *
+     * THE SONG'S FIRST AND LAST COLUMNS ARE A NO-OP TOO: both carry a fixed breakpoint that is
+     * derived rather than stored (see isFixedBreakpoint), so there is nothing there to toggle in
+     * either direction - adding one would write an entry the union already covers, and removing
+     * one cannot take away a marker no array holds. This is the model-side half of the rule; the
+     * composer additionally disables its button on those two columns, so the refusal is visible
+     * rather than a press that appears to do nothing.
      */
     toggleBreakpoint = (override?: number) => {
         this.#asStep('toggleBreakpoint', () => {
             const index = typeof override === "number" ? override : this.selected
             if (!this.#addressesColumn(index)) return
+            if (isFixedBreakpoint(index, this.#columns.length)) return
             const breakpointIndex = this.breakpoints.indexOf(index)
             this.#writeBreakpoints(breakpointIndex >= 0
                 ? this.breakpoints.filter((_, i) => i !== breakpointIndex)

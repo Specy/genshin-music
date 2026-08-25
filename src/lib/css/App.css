@@ -229,7 +229,7 @@ input[type='number'] {
 }
 
 .app-button:disabled {
-  opacity: 0.8;
+  opacity: 0.6;
   cursor: not-allowed;
 }
 
@@ -2769,6 +2769,27 @@ select {
   grid-area: a;
   width: 6.2rem;
   height: calc(100vh - 5rem);
+}
+
+/* THE UNDO/REDO PAIR, one unit heavier than lucide ships them (2 -> 3, in the icons' own 24-unit
+   viewBox): at the 2rem square these two sit on in the transport column, lucide's default weight
+   reads noticeably thinner than the solid Font Awesome glyphs around it.
+
+   A PLAIN CSS DECLARATION IS THE WHOLE MECHANISM, and it is not a trick: SVG presentation
+   attributes participate in the cascade below every author rule, so `stroke-width: 3` here beats
+   the `stroke-width="2"` lucide writes onto the <g> that holds both paths. Nothing is rewritten at
+   build time and the icon is still imported as shipped.
+
+   WHAT WILL NOT WORK, in case this looks like the long way round: unplugin-icons' `iconCustomizer`
+   sets props on the OUTER <svg>, and lucide's own <g stroke-width="2"> shadows anything inherited
+   from there - so the config-level version of this silently does nothing. (Its `transform` hook is
+   documented to apply only to `custom` collections.)
+
+   The descendant selector rather than the <svg> itself, for that same reason - the weight has to
+   land on the element that carries the attribute. Elements drawn with `fill` and no stroke (the
+   button's tooltip ornaments) take the declaration and render identically. */
+.composer-history-buttons svg * {
+  stroke-width: 3;
 }
 
 .instrument-name-button {

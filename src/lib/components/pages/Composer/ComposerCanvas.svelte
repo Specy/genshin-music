@@ -7,6 +7,7 @@
   import type { InstrumentData, NoteColumn } from '$core/Songs/SongClasses';
   import type { Pitch } from '$core/legacyConfig';
   import type { ComposerSettingsDataType } from '$core/BaseSettings';
+  import { isFixedBreakpoint } from '$core/Songs/breakpoints';
   import type { ComposerRenderer } from './ComposerRenderer';
   //a pure-rules module with no pixi in it (see its header), so unlike the renderer it is imported
   //statically - `import type` here besides, which is erased outright
@@ -198,7 +199,15 @@
   let rowHeight = $state(0);
   let hasCache = $state(false);
 
-  const isBreakpointSelected = $derived(breakpoints.includes(selected));
+  // THE ADD/REMOVE BUTTON'S TWO QUESTIONS. `isFixedBreakpoint` is the song's first/last column,
+  // which always carries a breakpoint nobody can remove (see its module): the button reads as a
+  // breakpoint there - a plus offering to add a second marker on top of one already drawn would be
+  // a lie - and it is DISABLED, so the model-side refusal in ComposedSong.toggleBreakpoint is
+  // something the user can see instead of a press that appears to do nothing.
+  const isFixedBreakpointSelected = $derived(isFixedBreakpoint(selected, columns.length));
+  const isBreakpointSelected = $derived(
+    isFixedBreakpointSelected || breakpoints.includes(selected)
+  );
   // Mirrors ComposerRenderer's own theme formulas - see that file's header for why this is
   // duplicated rather than shared.
   const sideButtonsRgb = $derived(colorToRGB(ThemeProvider.get('primary').darken(0.08)).join(','));
@@ -600,14 +609,18 @@
            gap between it and the two above exactly the strip's span - see the comment above -->
       <TimelineButton
         onclick={toggleBreakpoint}
-        disabled={songLocked}
+        disabled={songLocked || isFixedBreakpointSelected}
         style="margin-left:auto"
-        tooltip={isBreakpointSelected
-          ? t('composer:remove_breakpoint')
-          : t('composer:add_breakpoint')}
-        ariaLabel={isBreakpointSelected
-          ? t('composer:remove_breakpoint')
-          : t('composer:add_breakpoint')}
+        tooltip={isFixedBreakpointSelected
+          ? t('composer:permanent_breakpoint')
+          : isBreakpointSelected
+            ? t('composer:remove_breakpoint')
+            : t('composer:add_breakpoint')}
+        ariaLabel={isFixedBreakpointSelected
+          ? t('composer:permanent_breakpoint')
+          : isBreakpointSelected
+            ? t('composer:remove_breakpoint')
+            : t('composer:add_breakpoint')}
       >
         {@render (isBreakpointSelected ? faMinusCircleIcon : faPlusCircleIcon)()}
       </TimelineButton>

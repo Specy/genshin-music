@@ -126,8 +126,8 @@ describe('the composer attaches a history and restores what the song does not ow
         //the song like every other write on this surface
         expect(component).toContain('disabled={songLocked || !history.canUndo}')
         expect(component).toContain('disabled={songLocked || !history.canRedo}')
-        expect(component).toContain('~icons/fa6-solid/rotate-left')
-        expect(component).toContain('~icons/fa6-solid/rotate-right')
+        expect(component).toContain('~icons/lucide/undo-2')
+        expect(component).toContain('~icons/lucide/redo-2')
         //THE KEYBINDS: rebindable names out of KeybindsStore's composer map, reaching the same
         //wrappers - and preventDefault, or the browser's own text undo rides along with them
         expect(instanceScript).toContain("if (name === 'undo') {")

@@ -12,6 +12,7 @@ import {buildComposedSong} from './builders'
 import {expectGolden, readFixture} from './golden'
 import {basepointOffset, gridRowForNumber, noteIdToButton} from '$core/Songs/noteIds'
 import {rewriteForSwap} from '$core/Songs/noteNumberTransforms'
+import {isFixedBreakpoint, withFixedBreakpoints} from '$core/Songs/breakpoints'
 
 // Format-v4 rewrite (2026-08-03): `composed-song.json` is the frozen pre-v4 fixture —
 // its `serialized` member is a real v3 file and now serves as the LEGACY INPUT.
@@ -618,6 +619,61 @@ describe('breakpoints only ever address columns that exist', () => {
         payload.breakpoints = [0, 3, 500, -1, 2.5, Number.NaN]
         const parsed = ComposedSong.deserialize(payload)
         expect(parsed.breakpoints).toEqual([0, 3])
+    })
+})
+
+/**
+ * THE FIXED BREAKPOINTS - the song's first and last columns - are derived rather than stored, so
+ * there is nothing in `breakpoints` for a toggle to add or take away at either index. The model's
+ * refusal is what the composer's disabled button reflects; these are the model half.
+ */
+describe('the first and last columns carry a breakpoint nobody can toggle', () => {
+    it('isFixedBreakpoint names the two ends, and only when there is a column to name', () => {
+        expect(isFixedBreakpoint(0, 100)).toBe(true)
+        expect(isFixedBreakpoint(99, 100)).toBe(true)
+        expect(isFixedBreakpoint(50, 100)).toBe(false)
+        //a one-column song has ONE of them, not two
+        expect(isFixedBreakpoint(0, 1)).toBe(true)
+        //...and a song with no columns has none, the same rule the stored ones follow
+        expect(isFixedBreakpoint(0, 0)).toBe(false)
+    })
+
+    it('withFixedBreakpoints unions, dedupes and sorts', () => {
+        expect(withFixedBreakpoints([42, 7], 100)).toEqual([0, 7, 42, 99])
+        //the `[0]` every constructor writes coincides with the fixed first one rather than doubling it
+        expect(withFixedBreakpoints([0], 100)).toEqual([0, 99])
+        expect(withFixedBreakpoints([], 0)).toEqual([])
+    })
+
+    it('toggling the first or the last column does nothing at all', () => {
+        const song = new ComposedSong('fixed')
+        const before = song.breakpoints
+        song.toggleBreakpoint(0)
+        song.toggleBreakpoint(song.columns.length - 1)
+        //the same ARRAY, not merely an equal one: a refused toggle must not publish either
+        expect(song.breakpoints).toBe(before)
+    })
+
+    it('a stored breakpoint at what becomes the last column can no longer be removed there', () => {
+        const song = new ComposedSong('grown')
+        song.toggleBreakpoint(42)
+        expect(song.breakpoints).toContain(42)
+        //shrink the song so 42 IS the last column: the stored entry is now covered by the fixed one
+        song.removeColumns(57, 43)
+        expect(song.columns.length).toBe(43)
+        song.toggleBreakpoint(42)
+        expect(song.breakpoints).toContain(42)
+        //...and it is removable again the moment the song grows past it
+        song.addColumns(10, 'end')
+        song.toggleBreakpoint(42)
+        expect(song.breakpoints).not.toContain(42)
+    })
+
+    it('nothing about them reaches the serialized song', () => {
+        const song = new ComposedSong('serialize')
+        //exactly the constructor's `[0]`, which is a STORED breakpoint that happens to coincide -
+        //the fixed last column at 99 is nowhere in the payload
+        expect(song.serialize().breakpoints).toEqual([0])
     })
 })
 

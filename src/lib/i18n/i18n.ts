@@ -50,6 +50,19 @@ i18next.init({
   supportedLngs: AVAILABLE_LANGUAGES,
   fallbackLng: 'en',
   defaultNS,
+  // DOUBLE-ESCAPING, OFF. i18next HTML-escapes every interpolated value by default, on the
+  // assumption that its output is about to be assigned to innerHTML. Nothing here does that:
+  // every translated string in this app is rendered as Svelte TEXT, which escapes on its own, so
+  // the entities i18next produced survived to the screen literally - a song called
+  // "Wanderer / Bad Data" reached the backup page's error toast as "Wanderer &#x2F; Bad Data",
+  // and the same went for any name holding & < > " ' or /.
+  // SAFE BECAUSE THE ESCAPING DID NOT MOVE, it stopped happening TWICE: Svelte's own escaping is
+  // what stands between an interpolated name and the DOM. The invariant that keeps it that way is
+  // that no `{@html}` in this repo renders a translated string - there is no `{@html}` in this
+  // repo at all - so adding one over `t(...)` is what would make this line matter.
+  interpolation: {
+    escapeValue: false,
+  },
   resources: {
     en: i18n_en,
   },

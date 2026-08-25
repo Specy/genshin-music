@@ -32,8 +32,8 @@
   import { ComposerInstrumentSynchronizer } from './ComposerInstrumentSynchronizer';
   import CanvasTool from './CanvasTool.svelte';
   import InstrumentControls from './InstrumentControls.svelte';
-  import IconRotateLeft from '~icons/fa6-solid/rotate-left';
-  import IconRotateRight from '~icons/fa6-solid/rotate-right';
+  import IconUndo from '~icons/lucide/undo-2';
+  import IconRedo from '~icons/lucide/redo-2';
   import { Instrument, type ObservableNote } from '$lib/audio/Instrument.svelte';
   import { ComposerTransport, TRANSPORT_START_MARGIN_S } from '$lib/audio/ComposerTransport';
   import { exportSongAudio as exportAudio } from '$lib/audio/exportSongAudio';
@@ -2818,29 +2818,31 @@
          `min-width:0` is load-bearing: `.app-button`'s 5rem floor is wider than half of this
          column (6.2rem, 5.4rem under 1000px), so without it the pair overflows the sidebar.
          Enabled off the history itself, which is the only thing that knows whether there is a Step
-         to walk - and off `songLocked` like every other write while the importer holds the song. -->
-    <div class="row" style="gap:0.2rem;margin-top:0.2rem">
+         to walk - and off `songLocked` like every other write while the importer holds the song.
+         `composer-history-buttons` carries ONE declaration (App.css) - the heavier stroke these two
+         lucide glyphs are drawn at. -->
+    <div class="row composer-history-buttons" style="gap:0.2rem;margin-top:0.2rem">
       <AppButton
         class="flex-centered"
-        style="flex:1;min-width:0;height:2rem;min-height:2rem;padding:0;border-radius:0.3rem;background-color:var(--primary-darken-10)"
+        style="color: var(--icon-color);font-size:1rem;flex:1;min-width:0;height:2rem;min-height:2rem;padding:0;border-radius:0.3rem;background-color:var(--primary-darken-10)"
         disabled={songLocked || !history.canUndo}
         onclick={undo}
         tooltip={t('common:undo')}
         tooltipPosition="right"
         ariaLabel={t('common:undo')}
       >
-        <IconRotateLeft />
+        <IconUndo />
       </AppButton>
       <AppButton
         class="flex-centered"
-        style="flex:1;min-width:0;height:2rem;min-height:2rem;padding:0;border-radius:0.3rem;background-color:var(--primary-darken-10)"
+        style="color: var(--icon-color);font-size:1rem;flex:1;min-width:0;height:2rem;min-height:2rem;padding:0;border-radius:0.3rem;background-color:var(--primary-darken-10)"
         disabled={songLocked || !history.canRedo}
         onclick={redo}
         tooltip={t('common:redo')}
         tooltipPosition="right"
         ariaLabel={t('common:redo')}
       >
-        <IconRotateRight />
+        <IconRedo />
       </AppButton>
     </div>
     <InstrumentControls
