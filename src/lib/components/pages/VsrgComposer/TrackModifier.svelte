@@ -117,3 +117,20 @@
     </AppButton>
   </Row>
 </Row>
+
+<style>
+  :global(.track-modifier) {
+    padding: 0.4rem;
+    background-color: var(--menu-background);
+    color: var(--menu-background-text);
+    border-radius: 0.3rem;
+  }
+
+  :global(.vsrg-track-modifier-button) {
+    min-width: unset;
+    padding: 0.2rem;
+    height: 1.6rem;
+    width: 2rem;
+    font-size: 1rem;
+  }
+</style>

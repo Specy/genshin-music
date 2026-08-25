@@ -302,6 +302,101 @@
 </div>
 
 <style>
+  :global(.floating-prompt) {
+    position: absolute;
+    margin-right: auto;
+    margin-left: auto;
+    top: 1rem;
+    display: flex;
+    flex-direction: column;
+    left: 0;
+    right: 0;
+    width: 30vw;
+    max-width: 24rem;
+    padding: 0.6rem;
+    background-color: var(--primary);
+    color: var(--primary-text);
+    border: 2px solid var(--secondary);
+    border-radius: 0.5rem;
+    opacity: 1;
+    z-index: 1000;
+    word-break: break-word;
+    transition: 0.3s all;
+    opacity: 1;
+    transform: translateY(0%);
+    animation:
+      prompt-show 0.3s,
+      delayBackdrop 0.3s forwards;
+  }
+
+  @keyframes prompt-show {
+    from {
+      opacity: 0;
+      transform: translateY(-20%);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0%);
+    }
+  }
+
+  :global(.floating-prompt-hidden) {
+    opacity: 0;
+    transform: translateY(-20%);
+    pointer-events: none;
+  }
+
+  .prompt-button {
+    background-color: var(--primary);
+    color: var(--primary-text);
+    border: none;
+    padding: 0.5rem 2rem;
+    border-radius: 0.3rem;
+    cursor: pointer;
+  }
+
+  .prompt-input {
+    margin-top: 0.5rem;
+    border-radius: 0.3rem;
+    border: none;
+    cursor: text;
+    padding: 0.3rem;
+  }
+
+  .prompt-overlay {
+    width: 100%;
+    height: 100%;
+    background-color: rgba(var(--primary-rgb), 0.7);
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1000;
+    transition: all 0.2s;
+    animation: overlay-show 0.2s linear;
+  }
+
+  @keyframes overlay-show {
+    0% {
+      opacity: 0.5;
+    }
+
+    to {
+      opacity: 1;
+    }
+  }
+
+  .prompt-overlay-hidden {
+    opacity: 0;
+  }
+
+  .prompt-row {
+    display: flex;
+    width: 100%;
+    margin-top: 0.5rem;
+    justify-content: space-between;
+  }
+
   .prompt-select-options {
     display: flex;
     flex-direction: column;

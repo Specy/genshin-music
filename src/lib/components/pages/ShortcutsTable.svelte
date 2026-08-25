@@ -73,7 +73,7 @@
 {/snippet}
 
 <style>
-  /* .keyboard-key and .keys-table :nth-child(2) are styled globally in App.css, not here —
+  /* .keyboard-key is styled globally in App.css, not here.
        :nth-child(2) targets the description <td>, so reordering the <td>s below would misapply it.
        No :global() needed even though these snippets are exported and rendered from other files'
        templates: Svelte attaches the scoped-style class at this file's compile time, so it stays
@@ -82,5 +82,9 @@
     display: flex;
     gap: 0.8rem;
     align-items: center;
+  }
+
+  .keys-table :nth-child(2) {
+    width: 100%;
   }
 </style>

@@ -44,11 +44,41 @@
 </div>
 
 <style>
+  .theme-row {
+    margin-top: 0.5rem;
+    display: flex;
+    width: 100%;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 1.1rem;
+    min-height: 3rem;
+    border-radius: 0.4rem;
+    padding: 0 0.6rem;
+    transition: all 0.1s;
+  }
+
   /* The 9rem width used to be an inline `style` on the input. It is a scoped rule now purely so
      the portrait block below can widen the field without having to out-shout an inline
      declaration with !important - the landscape width is the same 9rem it always was. */
   .theme-input {
+    background-color: var(--primary);
+    color: var(--primary-text);
+    border-radius: 0.2rem;
+    padding: 0.5rem 1rem;
+    border: none;
+    height: fit-content;
+    cursor: text;
+    min-width: 5rem;
     width: 9rem;
+  }
+
+  .theme-input:disabled {
+    filter: brightness(0.8);
+    cursor: not-allowed;
+  }
+
+  .theme-input::placeholder {
+    color: var(--primary-text);
   }
 
   /* PORTRAIT: side by side, a label that wraps to three lines ("Composer Background image (URL)")

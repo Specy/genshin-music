@@ -102,6 +102,56 @@
 </div>
 
 <style>
+  .theme-preview {
+    display: flex;
+    position: relative;
+    flex-direction: column;
+    width: 100%;
+    height: fit-content;
+    border-radius: 0.6rem;
+    transition: filter 0.2s;
+    cursor: pointer;
+    overflow: hidden;
+    min-height: 7rem;
+  }
+
+  .theme-preview-bg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    background-repeat: no-repeat;
+    background-size: cover;
+  }
+
+  .theme-preview:hover {
+    filter: brightness(1.1);
+  }
+
+  .theme-preview-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 0 0.4rem;
+  }
+
+  .theme-preview-colors {
+    width: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    flex: 1;
+  }
+
+  .theme-preview-colors div {
+    flex: 1;
+    font-size: 0.6rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
   .theme-preview-actions {
     display: flex;
     margin-left: 0.2rem;

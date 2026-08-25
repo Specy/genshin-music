@@ -4,8 +4,6 @@
 
   // The Toast sub-component is inlined into the {#each} below rather than
   // split into a second file - it only ever had one call site.
-  //
-  // CSS (.logger-*/.pill*) lives in global App.css.
 </script>
 
 <div class="logger-wrapper">
@@ -99,3 +97,185 @@
     <button class="pill-button" type="button" onclick={action.onClick}>{action.text}</button>
   {/each}
 </div>
+
+<style>
+  .logger-wrapper {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.4rem;
+    position: fixed;
+    max-height: 100vh;
+    overflow-y: scroll;
+    right: 0;
+    top: 0rem;
+    padding: 0.8rem 0;
+    z-index: 999;
+  }
+
+  :global(.logger-toast) {
+    border-radius: 0.4rem;
+    border: solid 2px var(--secondary);
+    min-width: 15rem;
+    background-color: var(--primary);
+    box-shadow:
+      0 10px 15px -3px rgb(0 0 0 / 0.1),
+      0 4px 6px -4px rgb(0 0 0 / 0.1);
+    color: var(--primary-text);
+    display: flex;
+    padding: 0.5rem;
+    transition: all 0.3s;
+    display: flex;
+    flex-direction: column;
+    opacity: 1;
+    margin: 0 0.8rem;
+    transform: scale(1) translateY(0);
+    animation: toastAppear 0.3s;
+  }
+
+  @keyframes toastAppear {
+    0% {
+      opacity: 0.3;
+      transform: scale(0.8) translateY(calc(-120% - 0.8rem));
+    }
+    100% {
+      opacity: 1;
+      transform: scale(1) translateY(0);
+    }
+  }
+
+  :global(.logger-toast-hidden) {
+    opacity: 0;
+    pointer-events: none;
+    transform: scale(0.8) translateY(calc(-120% - 0.8rem));
+  }
+
+  .pill {
+    position: fixed;
+    border-radius: 1.5rem;
+    padding: 0.5rem 1.5rem;
+    gap: 0.6rem;
+    transition: all 0.3s;
+    min-height: 2.4rem;
+    background-color: rgba(var(--secondary-rgb), 0.9);
+    top: 0.8rem;
+    font-size: 0.8rem;
+    right: 50vw;
+    z-index: 998; /* Below logger */
+    pointer-events: none;
+    box-shadow:
+      0 10px 15px -3px rgb(0 0 0 / 0.1),
+      0 4px 6px -4px rgb(0 0 0 / 0.1);
+    color: var(--secondary-text);
+    opacity: 0;
+    transform: translateX(50%) translateY(calc(-120% - 0.8rem));
+  }
+
+  .pill-with-spinner {
+    padding-left: 0.8rem;
+  }
+
+  .pill-with-actions {
+    padding-right: 0.6rem;
+  }
+
+  .pill-visible {
+    opacity: 1;
+    transform: translateY(0) translateX(50%);
+    animation: delayBackdrop calc(0.2s * 1.2) forwards;
+  }
+
+  /* Sized in em so the spinner tracks the pill's font-size, and drawn in currentColor so it
+     inherits whatever text color the active theme resolved for the pill's background. */
+  .pill-spinner {
+    width: 1rem;
+    height: 1rem;
+    flex-shrink: 0;
+    border-radius: 50%;
+    border: 2px solid currentColor;
+    border-top-color: transparent;
+    animation: pill-spin 0.7s linear infinite;
+  }
+
+  @keyframes pill-spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  .pill-button {
+    /* The pill itself is pointer-events:none so it never blocks clicks on the app underneath;
+       re-enabling it here keeps that true for everything except the buttons. */
+    pointer-events: auto;
+    flex-shrink: 0;
+    background-color: var(--primary);
+    color: var(--primary-text);
+    border: none;
+    border-radius: 1rem;
+    padding: 0.2rem 0.7rem;
+    font-size: inherit;
+    font-family: inherit;
+    cursor: pointer;
+    transition: background-color 0.2s;
+  }
+
+  .pill-button:hover {
+    background-color: var(--primary-layer-10);
+  }
+
+  /* hidePill only flips visibility, so a dismissed pill keeps its contents through the fade-out;
+     its children then have to be neutralized once that fade ends, or the spinner would animate
+     forever offscreen and the action buttons would stay focusable and keyboard-clickable while
+     invisible. The 0s/0.3s delay matches the pill's own fade, so nothing pops out mid-transition. */
+  .pill:not(.pill-visible) .pill-spinner,
+  .pill:not(.pill-visible) .pill-button {
+    visibility: hidden;
+    animation-play-state: paused;
+    transition: visibility 0s 0.3s;
+  }
+
+  .logger-content {
+    display: flex;
+    flex-direction: row;
+    flex: 1;
+    padding: 0.1rem;
+    font-size: 0.9rem;
+  }
+
+  .logger-progress-outer {
+    overflow: hidden;
+    height: 5px;
+    margin-top: 0.6rem;
+    border-radius: 0.5rem;
+  }
+
+  .logger-progress-bar {
+    height: 100%;
+    width: 100%;
+    background-color: var(--accent);
+    animation: logger-animation linear 1s forwards;
+  }
+
+  @keyframes logger-animation {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(-100%);
+    }
+  }
+
+  .logger-status {
+    display: flex;
+    align-items: center;
+    margin-right: 0.6rem;
+    max-height: 1.4rem;
+  }
+
+  .logger-text {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    white-space: pre-line;
+    font-size: 0.9rem;
+  }
+</style>

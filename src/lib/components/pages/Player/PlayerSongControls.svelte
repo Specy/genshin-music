@@ -9,8 +9,6 @@
   import PlayerSlider from './PlayerSlider.svelte';
   import PlayerSheetCard from './PlayerSheetCard.svelte';
   import { t } from '$i18n/binding.svelte';
-  import './Slider.css';
-  import './VisualSheet.css';
 
   let {
     onRestart,
@@ -283,3 +281,65 @@
 {#if isVisualSheetVisible}
   <PlayerSheetCard columns={visualSheetColumns} {onSeek} onSectionChange={handleSectionChange} />
 {/if}
+
+<style>
+  .player-controls {
+    position: absolute;
+    align-items: flex-end;
+    padding: 0.8rem;
+    right: 0.2rem;
+    height: 100%;
+    margin-left: 3.5rem;
+    justify-content: space-between;
+    gap: 0.4rem;
+  }
+
+  .slider-select {
+    font-size: 0.8rem;
+    flex: 1;
+    height: 2rem;
+    text-align: center;
+    font-weight: bold;
+    border: none;
+    -moz-appearance: none;
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: none;
+    border-radius: 0.3rem;
+    background-color: var(--primary);
+    color: var(--primary-text);
+  }
+
+  .slider-wrapper {
+    height: 100%;
+    align-self: center;
+    width: 100%;
+    align-items: center;
+    gap: 0.4rem;
+    max-height: 25rem;
+  }
+
+  .slider-wrapper :global(.practice-mode-control:disabled) {
+    opacity: 0.3;
+    cursor: not-allowed;
+  }
+
+  .slider-wrapper :global(button) {
+    margin: 0;
+  }
+
+  @media only screen and (max-width: 920px) {
+    .player-controls {
+      right: 0;
+    }
+  }
+
+  @media screen and (max-width: 920px) {
+    .sidebar-metronome-button {
+      position: absolute;
+      right: 0.8rem;
+      bottom: 0.8rem;
+    }
+  }
+</style>
+

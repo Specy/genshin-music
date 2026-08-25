@@ -285,3 +285,26 @@
     onClick={onNoteSelect}
   />
 </div>
+
+<style>
+  :global(.vsrg-track-left) {
+    width: 2rem;
+    font-size: 1rem;
+    height: 100%;
+    min-width: 2rem;
+    padding: 0;
+    border-radius: 0;
+  }
+
+  .vsrg-track-wrapper {
+    min-height: 5rem;
+    background-color: var(--primary);
+    margin-bottom: 0.4rem;
+    border-radius: 0.6rem;
+    overflow-y: auto;
+  }
+
+  .vsrg-track-wrapper::-webkit-scrollbar-thumb {
+    background: var(--secondary);
+  }
+</style>

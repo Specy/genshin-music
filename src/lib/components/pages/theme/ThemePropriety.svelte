@@ -160,11 +160,140 @@
 </div>
 
 <style>
+  .theme-row {
+    margin-top: 0.5rem;
+    display: flex;
+    width: 100%;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 1.1rem;
+    min-height: 3rem;
+    border-radius: 0.4rem;
+    padding: 0 0.6rem;
+    transition: all 0.1s;
+  }
+
+  .color-preview {
+    border: solid 3px;
+    border-radius: 0.5rem;
+    overflow: hidden;
+    width: 5rem;
+    height: 3rem;
+    -webkit-appearance: none;
+    appearance: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    cursor: pointer;
+  }
+
+  .color-input-wrapper {
+    margin-left: 2rem;
+    display: flex;
+    align-items: center;
+    position: relative;
+  }
+
+  :global(.color-input::-webkit-color-swatch-wrapper) {
+    padding: 0;
+  }
+
+  :global(.color-input::-webkit-color-swatch) {
+    border: none;
+  }
+
+  :global(.theme-reset) {
+    padding: 0.4rem 0.6rem;
+    font-size: 0.8rem;
+    margin: 0;
+    width: 5rem;
+    margin-right: 1rem;
+  }
+
+  :global(.theme-reset.active) {
+    background-color: var(--accent);
+    color: var(--accent-text);
+  }
+
+  .color-picker-wrapper {
+    position: absolute;
+    padding: 0.3rem;
+    border-radius: 1rem 1rem 0.6rem 0.6rem;
+    background-color: #efeff0;
+    z-index: 2;
+    right: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    box-shadow: 1px 1px 5px #45455994;
+    animation: show 0.2s;
+    width: 16.6rem;
+  }
+
+  .color-picker-input {
+    display: flex;
+    align-items: center;
+    margin: 0;
+    padding: 0 0.4rem;
+    width: calc(100% - 4.6rem);
+    box-sizing: border-box;
+    border: none;
+    border-radius: 0.4rem;
+    font-size: 1rem;
+    box-shadow: -1px -1px 5px rgb(0, 0, 0, 0.2);
+  }
+
+  .color-picker-input * {
+    transform: translateY(0.05rem);
+  }
+
+  .color-picker-input input {
+    padding: 0.4rem;
+    display: flex;
+    margin: 0;
+    width: 100%;
+    background-color: transparent;
+    box-sizing: border-box;
+    outline: none;
+    border: none;
+  }
+
+  .color-picker-row {
+    display: flex;
+    height: 2rem;
+  }
+
+  .color-picker-check {
+    width: 2rem;
+    height: 2rem;
+    border-radius: 0.4rem;
+    border: none;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 0;
+    margin-left: 0.3rem;
+    padding: 0;
+    cursor: pointer;
+    box-shadow: -1px -1px 5px rgb(0, 0, 0, 0.2);
+  }
+
+  @keyframes show {
+    from {
+      opacity: 0;
+      transform: scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
   /* PORTRAIT. The label/swatch row survives a phone as-is - the swatch is already a 5x3rem
      target - so only the space around it gives ground, and only the picker's own controls, which
-     were sized for a mouse, grow. Everything is scoped under `.color-input-wrapper` on purpose:
-     Theme.css's `.color-picker-*` rules are shared with `inputs/ColorPicker.svelte` (Settings,
-     the VSRG composer), and those instances must not inherit this page's phone sizing. */
+     were sized for a mouse, grow. Everything is scoped under `.color-input-wrapper` on purpose. */
   @media (orientation: portrait) {
     /* 2rem of empty gutter is a luxury a 361px row cannot pay for: with it, "Composer secondary
        layer" wraps to two lines while the gutter sits empty. flex-shrink keeps the swatch (and,
@@ -183,22 +312,22 @@
 
     /* The picker opens leftwards from the wrapper's right edge, so it can only run out of room on
        a phone narrower than about 330px - this is the guard for that, not a resize. */
-    .color-input-wrapper :global(.color-picker-wrapper) {
+    .color-input-wrapper .color-picker-wrapper {
       max-width: calc(100vw - 3rem);
     }
 
     /* 2rem confirm/cancel buttons are mouse-sized. The hex field's width is stated as "the row
        minus the two buttons and their margins", so it has to be restated with them. */
-    .color-input-wrapper :global(.color-picker-row) {
+    .color-input-wrapper .color-picker-row {
       height: 2.6rem;
     }
 
-    .color-input-wrapper :global(.color-picker-check) {
+    .color-input-wrapper .color-picker-check {
       width: 2.6rem;
       height: 2.6rem;
     }
 
-    .color-input-wrapper :global(.color-picker-input) {
+    .color-input-wrapper .color-picker-input {
       width: calc(100% - 5.8rem);
     }
   }

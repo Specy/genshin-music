@@ -209,25 +209,60 @@
       revealFinalScrollTop = 0;
       resizeRevision++;
       centeredPages = null;
+      heldScrollTop = null;
       virtualRange = { startRow: 0, endRow: 1 };
       popover = null;
     }
   });
 
+  /**
+   * WHERE THE EXPANDED VIEW WAS WHEN A SECTION EDIT COMMITTED, in scroll offset. A Section edit
+   * from a frame restarts the run at the Section's START, and re-centring on that run's current
+   * frame would scroll the user away from the frame they just marked - "Section ends here" on the
+   * song's tail jumped the view back to the beginning. The edit holds the view exactly where it
+   * was instead: the sheet is the whole song and the chunking is identical across the restart, so
+   * the same offset shows the same rows. Consumed once, by the next page set (see below).
+   */
+  let heldScrollTop: number | null = null;
+
+  /** Hold the expanded view in place across the restart a Section edit is about to trigger. */
+  function holdViewInPlace() {
+    heldScrollTop = fullscreenPhase === 'open' && scrollElement ? scrollElement.scrollTop : null;
+  }
+
   // A NEW page set arriving while fullscreen stands (a loop repeat, a speed change, a seek) keeps
   // the view open and re-centres it on that run's current frame: the run transition emptied and
   // refilled the scroll content, so "leave the scroll alone" - the rule while a run plays - has
   // no position to preserve here. Identity-tracked so an unrelated rerun cannot re-centre a view
-  // the user has already scrolled.
+  // the user has already scrolled. A held offset (a Section edit made from a frame) overrides
+  // that: there the user's position IS worth preserving, and it is what they were looking at.
   $effect(() => {
     if (fullscreenPhase !== 'open' || pages.length === 0 || centeredPages === pages) return;
     const pageSet = pages;
     centeredPages = pageSet;
+    //consumed whatever happens next: a held offset belongs to the restart it was captured for.
+    //Ignored mid-reveal - the reveal owns the scroll until its hand-off, and no popover can be
+    //clicked during it anyway.
+    const heldTop = hasCenteredThisOpen ? heldScrollTop : null;
+    heldScrollTop = null;
     const finalViewportHeight = scrollElement?.clientHeight || expandedViewportEstimate();
-    const revealScrollTop = prepareVirtualWindowForCurrentFrame(finalViewportHeight);
+    let revealScrollTop = 0;
+    if (heldTop === null) {
+      revealScrollTop = prepareVirtualWindowForCurrentFrame(finalViewportHeight);
+    } else {
+      //mount the rows the held offset shows before the tick, so the restore below never lands on
+      //a band that was seeded around the run's frame instead
+      setVirtualRange(heldTop, Math.max(virtualMetrics.rowHeight, finalViewportHeight));
+    }
     tick().then(() => {
       if (fullscreenPhase !== 'open' || pages !== pageSet || centeredPages !== pageSet) return;
-      if (hasCenteredThisOpen) {
+      if (heldTop !== null) {
+        //the emptied-and-refilled content collapsed the scroll range for a frame, so the box's own
+        //scrollTop is gone by now - write the captured one back, clamped to the fresh geometry
+        if (scrollElement) {
+          scrollElement.scrollTop = clampScrollTop(heldTop, scrollElement.clientHeight);
+        }
+      } else if (hasCenteredThisOpen) {
         centerOnCurrentFrame();
       } else {
         if (scrollElement) scrollElement.scrollTop = revealScrollTop;
@@ -308,33 +343,34 @@
     if (chunk) action(chunk);
   }
 
-  function setSectionStart() {
+  /**
+   * A Section edit made from a frame: apply it, then commit it - and leave the expanded view on
+   * the frame that was clicked, not on the restarted run's first frame. Capturing BEFORE the
+   * commit, because the restart it triggers is what replaces the page set the hold is read against.
+   */
+  function commitSectionEdit(apply: (chunk: Chunk) => void) {
     withPopoverChunk((chunk) => {
-      playerControlsStore.setSectionStart(chunk.firstNoteIndex);
+      apply(chunk);
+      holdViewInPlace();
       onSectionChange();
     });
+  }
+
+  function setSectionStart() {
+    commitSectionEdit((chunk) => playerControlsStore.setSectionStart(chunk.firstNoteIndex));
   }
 
   function setSectionEnd() {
-    withPopoverChunk((chunk) => {
-      //the frame is INCLUDED: `end` is exclusive, so it lands one past the frame's last note
-      playerControlsStore.setSectionEnd(chunk.lastNoteIndex + 1);
-      onSectionChange();
-    });
+    //the frame is INCLUDED: `end` is exclusive, so it lands one past the frame's last note
+    commitSectionEdit((chunk) => playerControlsStore.setSectionEnd(chunk.lastNoteIndex + 1));
   }
 
   function removeSectionStart() {
-    withPopoverChunk(() => {
-      playerControlsStore.setSectionStart(0);
-      onSectionChange();
-    });
+    commitSectionEdit(() => playerControlsStore.setSectionStart(0));
   }
 
   function removeSectionEnd() {
-    withPopoverChunk(() => {
-      playerControlsStore.setSectionEnd(playerControlsStore.size);
-      onSectionChange();
-    });
+    commitSectionEdit(() => playerControlsStore.setSectionEnd(playerControlsStore.size));
   }
 
   function goToFrame() {
@@ -574,6 +610,9 @@
     hasCenteredThisOpen = false;
     prepareVirtualWindowForCurrentFrame(expandedViewportEstimate());
     collapseAfterReveal = false;
+    //an edit whose restart landed after the view was collapsed left its offset behind; a fresh
+    //open must never restore it over the page this reveal is anchoring to
+    heldScrollTop = null;
     centeredPages = pages;
     popover = null;
     fullscreenPhase = 'open';

@@ -10,7 +10,7 @@
   import { game } from '$game';
   import type { TempoChunk } from '$core/Songs/VisualSong';
   import type { NoteNameType } from '$lib/games/types';
-  import './SheetFrame.css';
+
 
   // The tempo-bracketed sheet-music frame row the sheet-visualizer page renders - one call per
   // `VisualSong` chunk, each producing 1+ column tiles (tempo-changer brackets can group several
@@ -99,3 +99,113 @@
     </div>
   </div>
 {/each}
+
+<style>
+  .visualizer-frame {
+    width: 94%;
+    height: 90%;
+    position: absolute;
+    top: 5%;
+    left: 3%;
+    display: grid;
+    grid-template-columns: repeat(var(--sheet-cols, 7), 1fr);
+    grid-template-rows: repeat(3, 1fr);
+    justify-items: center;
+    align-items: center;
+    background-image: radial-gradient(
+      circle closest-side,
+      var(--sheet-dot-color, var(--primary)) calc(var(--sheet-dot-r, 25%) - 0.5px),
+      transparent var(--sheet-dot-r, 25%)
+    );
+    background-size: calc(100% / var(--sheet-cols, 7)) calc(100% / 3);
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  .frame-outer-background {
+    width: 100%;
+    height: 100%;
+    padding: 0.25rem;
+    content-visibility: auto;
+    contain-intrinsic-size: auto 5rem;
+  }
+
+  .frame-outer {
+    border-radius: 0.4rem;
+    background-color: var(--primary);
+    width: 100%;
+    height: 100%;
+    border: solid var(--primary) 0.18rem;
+    padding-bottom: 60%;
+    position: relative;
+  }
+
+  .frame-note-s {
+    border-radius: 0.2rem;
+    width: 80%;
+    height: 80%;
+    font-size: 0.6rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    background-color: var(--selected-note-background, var(--accent));
+    color: var(--accent-text);
+  }
+
+  .frame-note-held::after {
+    content: '';
+    position: absolute;
+    bottom: 8%;
+    left: 22%;
+    right: 22%;
+    height: 0.14rem;
+    border-radius: 1rem;
+    background-color: currentColor;
+    opacity: 0.75;
+    pointer-events: none;
+  }
+
+  .visualizer-ball {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    border-color: transparent;
+    background-color: transparent;
+  }
+
+  .visualizer-ball div {
+    width: 0.5rem;
+    height: 0.5rem;
+    position: absolute;
+    top: calc(50% - 0.25rem);
+    left: calc(50% - 0.25rem);
+    background-color: #606876;
+    border-radius: 50%;
+    opacity: 0.5;
+  }
+
+  @media print {
+    .frame-outer-background {
+      content-visibility: visible;
+    }
+
+    .frame-note-s {
+      border-radius: 2px;
+    }
+
+    .visualizer-frame {
+      --sheet-dot-color: black;
+    }
+
+    .frame-outer {
+      background-color: white !important;
+      border: solid 0.1rem black;
+    }
+
+    .visualizer-ball {
+      border: none !important;
+    }
+  }
+</style>

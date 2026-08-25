@@ -478,6 +478,19 @@
     gap: 0.5rem;
   }
 
+  .midi-select {
+    width: 10rem;
+    border: none;
+    background-color: var(--primary);
+    height: 1.9rem;
+    border-radius: 0.2rem;
+    color: var(--primary-text);
+    text-align: left;
+    outline: none;
+    padding: 0.2rem;
+    padding-left: 0.5rem;
+  }
+
   .midi-preset-controls .midi-select {
     margin-left: 0.5rem;
   }

@@ -1,7 +1,6 @@
 <script lang="ts">
   import type { Snippet } from 'svelte';
 
-  // `.help-tooltip*` CSS lives in global App.css.
   let {
     children,
     maxWidth = 18,
@@ -54,3 +53,63 @@
     {@render children()}
   </div>
 </div>
+
+<style>
+  .help-tooltip :global(ul) {
+    margin: 0.2rem;
+    padding-left: 0.6rem;
+  }
+
+  .help-tooltip :global(li) {
+    margin-bottom: 0.2rem;
+  }
+
+  .help-tooltip-button {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: var(--primary);
+    color: var(--primary-text);
+    padding: 0;
+    width: 1.8rem;
+    height: 1.8rem;
+    cursor: pointer;
+    border-radius: 50%;
+    border: 0;
+    transition: all 0.2s;
+  }
+
+  .help-tooltip-button:hover {
+    transform: rotate(30deg);
+    filter: brightness(1.1);
+  }
+
+  .help-tooltip-content {
+    position: absolute;
+    transform: translateY(0.4rem);
+    --existing-transform: translateY(0.4rem);
+    display: none;
+    box-shadow:
+      0 10px 15px -3px rgb(0 0 0 / 0.15),
+      0 4px 6px -4px rgb(0 0 0 / 0.15);
+    border: solid 2px var(--secondary);
+    padding: 0.3rem 0.6rem;
+    border-radius: 0.4rem;
+    font-size: 0.8rem;
+    z-index: 2;
+    pointer-events: none;
+  }
+
+  .help-tooltip-button:focus + .help-tooltip-content {
+    display: flex;
+    background-color: var(--primary);
+    color: var(--primary-text);
+    animation: fadeIn 0.3s;
+    animation-fill-mode: forwards;
+  }
+
+  .help-tooltip-button:focus {
+    background-color: var(--accent);
+    color: var(--accent-text);
+  }
+</style>

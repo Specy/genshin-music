@@ -369,4 +369,64 @@ describe('Sheet Card', () => {
         expect(replacementIndices).toContain(375)
         expect(scroll.scrollTop).toBeLessThan(5000)
     })
+
+    it('holds the expanded view on the frame a Section bound was set from', async () => {
+        //fake timers so the 250ms fallback can stand in for the reveal Web Animation's finish
+        vi.useFakeTimers()
+        manyFrames(503)
+        playerControlsStore.setState({size: 503, position: 0, end: 503, current: 0})
+        render()
+
+        const card = target.querySelector<HTMLElement>('.player-sheet-card')!
+        const surface = target.querySelector<HTMLElement>('.player-sheet-surface')!
+        const scroll = target.querySelector<HTMLElement>('.player-sheet-scroll')!
+        Object.defineProperty(card, 'clientHeight', {configurable: true, value: 100})
+        vi.spyOn(surface, 'getBoundingClientRect').mockReturnValue(new DOMRect(0, 0, 0, 100.25))
+        Object.defineProperty(scroll, 'clientHeight', {configurable: true, value: 320})
+        Object.defineProperty(scroll, 'scrollTop', {configurable: true, writable: true, value: 0})
+        Object.defineProperty(frames()[0], 'offsetHeight', {configurable: true, value: 48})
+
+        target.querySelector<HTMLButtonElement>('.player-sheet-expand button')!.click()
+        await tick()
+        await tick()
+        await tick()
+        flushSync()
+        vi.advanceTimersByTime(251)
+        flushSync()
+
+        // scroll away from the run's frame, out to the song's tail, and end the Section there
+        scroll.scrollTop = 4000
+        scroll.dispatchEvent(new Event('scroll'))
+        flushSync()
+        const markedIndex = Number(frames()[2].dataset.frameIndex)
+        frames()[2].querySelector('button')!.click()
+        flushSync()
+        popoverItems()[1].click()
+        flushSync()
+        expect(playerControlsStore.end).toBe(markedIndex + 1)
+        expect(onSectionChange).toHaveBeenCalledTimes(1)
+
+        // the restart the parent answers that with: the run returns to the Section's START and
+        // republishes the whole song's frames. Re-centring on it would scroll the tail away, so
+        // the edit's view is held instead - the marked frame stays exactly where it was.
+        playerControlsStore.setCurrent(0)
+        manyFrames(503)
+        flushSync()
+        await tick()
+        await tick()
+        flushSync()
+        expect(target.querySelector('.player-sheet-card-expanded')).not.toBeNull()
+        expect(scroll.scrollTop).toBe(4000)
+        expect(frames().map(f => Number(f.dataset.frameIndex))).toContain(markedIndex)
+
+        // ...and it is held ONCE: the next page set (a loop repeat, a speed change) re-centres on
+        // the run's frame again, the rule while a run plays.
+        manyFrames(503)
+        flushSync()
+        await tick()
+        await tick()
+        flushSync()
+        expect(scroll.scrollTop).toBe(0)
+        expect(frames().map(f => Number(f.dataset.frameIndex))).toContain(0)
+    })
 })

@@ -145,3 +145,31 @@
     </AppButton>
   </div>
 </div>
+
+<style>
+  .vsrg-bottom {
+    grid-area: c;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-left: 3.2rem;
+    height: 2.5rem;
+  }
+
+  .vsrg-bottom input[type='range'] {
+    max-width: 30rem;
+  }
+
+  .vsrg-name {
+    text-align: center;
+    margin-left: 1rem;
+    max-width: 18vw;
+  }
+
+  :global(.vsrg-play-button) {
+    color: var(--icon-color);
+    border-radius: 0.4rem;
+    height: 100%;
+    margin-left: 0.6rem;
+  }
+</style>

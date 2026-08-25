@@ -2,7 +2,6 @@
   import { onMount } from 'svelte';
   import { t } from '$i18n/binding.svelte';
 
-  // `.drag-n-drop` CSS lives in global App.css.
   export interface DroppedFile<T = ArrayBuffer | object | string> {
     data: T;
     file: File;
@@ -117,3 +116,38 @@
     {t('home:drop_files_here')}
   </div>
 {/if}
+
+<style>
+  .drag-n-drop {
+    background-color: rgba(var(--accent-rgb), 0.7);
+    backdrop-filter: blur(4px);
+    filter: saturate(0.7);
+    color: var(--accent-text);
+    width: 100vw;
+    height: 100vh;
+    position: fixed;
+    top: 0;
+    left: 0;
+    justify-content: center;
+    align-items: center;
+    display: flex;
+    z-index: 5;
+    animation:
+      infinite drop-pulse 3s,
+      fadeInOpacity 0.3s;
+    font-size: 2rem;
+  }
+
+  @keyframes drop-pulse {
+    0% {
+      background-color: rgba(var(--accent-rgb), 0.7);
+    }
+
+    25% {
+      background-color: rgba(var(--primary-rgb), 0.7);
+    }
+    50% {
+      background-color: rgba(var(--accent-rgb), 0.7);
+    }
+  }
+</style>

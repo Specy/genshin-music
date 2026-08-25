@@ -266,11 +266,62 @@
 </DefaultPage>
 
 <style>
+  .theme-app-preview {
+    position: relative;
+    margin-top: 1.25rem;
+    border: dashed 4px var(--accent);
+    border-radius: 0.4rem;
+    overflow: hidden;
+    height: 70vh;
+  }
+
+  /* The shipped app sizes the preview's `.app` through the global `.app, .app-content` rule's
+     `height: 100%` (main:src/pages/App.css:117), which migration/next16-react19 - this port's blob
+     source - had already dropped. Restoring it globally is wrong HERE: see the note in App.css, it
+     collapses every full-page route to content height under this port's flex shell. Scoped to the
+     preview instead, where `.theme-app-preview` is a definite-height (70vh) block container, so the
+     percentage resolves exactly as it does in the live app. Without it the preview's background
+     image and keyboard stopped at content height (338px) inside the 504px dashed box; with it the
+     preview measures 496x755 with a 211x493 keyboard, matching the live app element for element. */
+  .theme-app-preview :global(.app) {
+    height: 100%;
+  }
+
+  .theme-app-preview :global(.keyboard) {
+    transform: scale(0.8) !important;
+  }
+
+  .new-theme {
+    width: 100%;
+    height: 100%;
+    border-radius: 0.6rem;
+    display: flex;
+    flex-direction: column;
+    font-size: 1.1rem;
+    align-items: center;
+    justify-content: center;
+    border: solid 3px var(--accent);
+    cursor: pointer;
+    background-color: transparent;
+    color: var(--accent);
+    min-height: 6rem;
+  }
+
+  .theme-preview-wrapper {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.8rem;
+    margin-top: 1rem;
+  }
+
+  @media (max-width: 920px) {
+    .theme-app-preview {
+      height: calc(100vh - 3rem);
+    }
+  }
+
   /* PORTRAIT. The page is already a single scrolling column, so nothing here has to be
-     un-stacked - what breaks on a phone is density. Both fixes live in this scoped block rather
-     than in Theme.css because that file is loaded globally and its `.color-picker-*` rules are
-     shared with the Settings pane's picker; a scoped rule on markup this file owns also outranks
-     the global one on specificity alone, so source order between the two files stops mattering. */
+     un-stacked - what breaks on a phone is density. */
   @media (orientation: portrait) {
     /* Four cards across 361px leaves ~80px each and every name ellipses down to "Rai. . .".
        auto-fill rather than a hard `repeat(2, ...)` so a portrait TABLET, which is wide enough
@@ -279,10 +330,7 @@
       grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr));
     }
 
-    /* Theme.css's phone tier sizes this box at `100vh - 3rem`, which in portrait is taller than
-       the screen minus the shell's bottom bar: the box's own bottom edge - and the mini-app's
-       menu, which `inPreview` parks at the bottom of it - end up underneath that bar. Reserving
-       the bar plus the "Preview" heading brings the whole preview into one screen, and the cap
+    /* Reserving the bar plus the "Preview" heading brings the whole preview into one screen, and the cap
        keeps a tall tablet from turning it into a page of its own. svh, not vh, so a mobile
        browser's collapsing toolbar cannot push the bottom edge back under the bar. */
     .theme-app-preview {

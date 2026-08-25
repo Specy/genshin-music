@@ -180,3 +180,18 @@
     />
   {/if}
 {/if}
+
+<style>
+  .vsrg-floating-settings {
+    position: absolute;
+    right: calc(13.6rem + 0.8rem);
+    width: 18rem;
+    background-color: var(--menu-background);
+    color: var(--menu-background-text);
+    border-radius: 0.6rem;
+    border: solid 2px var(--secondary);
+    top: 0.5rem;
+    padding: 0.4rem;
+    animation: fadeIn 0.15s ease-in-out forwards;
+  }
+</style>

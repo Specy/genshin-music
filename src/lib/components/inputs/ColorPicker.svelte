@@ -55,9 +55,7 @@
 </script>
 
 <!-- Named `.color-picker-wrapper`, not `.color-picker`: the vendor library
-     uses that exact class internally. All of this component's styling comes
-     from global Theme.css's `.color-picker-wrapper`/`.color-picker*` rules -
-     there is no local <style> block here. -->
+     uses that exact class internally. -->
 <div class="color-picker-wrapper" style="position:{absolute ? 'absolute' : 'unset'};{style}">
   <LibColorPicker
     hex={color.hex()}
@@ -120,3 +118,80 @@
     </button>
   </div>
 </div>
+
+<style>
+  .color-picker-wrapper {
+    position: absolute;
+    padding: 0.3rem;
+    border-radius: 1rem 1rem 0.6rem 0.6rem;
+    background-color: #efeff0;
+    z-index: 2;
+    right: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    box-shadow: 1px 1px 5px #45455994;
+    animation: show 0.2s;
+    width: 16.6rem;
+  }
+
+  .color-picker-input {
+    display: flex;
+    align-items: center;
+    margin: 0;
+    padding: 0 0.4rem;
+    width: calc(100% - 4.6rem);
+    box-sizing: border-box;
+    border: none;
+    border-radius: 0.4rem;
+    font-size: 1rem;
+    box-shadow: -1px -1px 5px rgb(0, 0, 0, 0.2);
+  }
+
+  .color-picker-input * {
+    transform: translateY(0.05rem);
+  }
+
+  .color-picker-input input {
+    padding: 0.4rem;
+    display: flex;
+    margin: 0;
+    width: 100%;
+    background-color: transparent;
+    box-sizing: border-box;
+    outline: none;
+    border: none;
+  }
+
+  .color-picker-row {
+    display: flex;
+    height: 2rem;
+  }
+
+  .color-picker-check {
+    width: 2rem;
+    height: 2rem;
+    border-radius: 0.4rem;
+    border: none;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 0;
+    margin-left: 0.3rem;
+    padding: 0;
+    cursor: pointer;
+    box-shadow: -1px -1px 5px rgb(0, 0, 0, 0.2);
+  }
+
+  @keyframes show {
+    from {
+      opacity: 0;
+      transform: scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+</style>

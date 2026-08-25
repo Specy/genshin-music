@@ -5,7 +5,6 @@
   import { DEFAULT_DOM_RECT } from '$core/legacyConfig';
   import { clamp } from '$core/utils/Utilities';
   import { playerControlsStore } from '$stores/PlayerControlsStore.svelte';
-  import './Slider.css';
 
   let {
     onChange,
@@ -246,3 +245,88 @@
     </div>
   </div>
 </div>
+
+<style>
+  .two-way-slider {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+  }
+
+  .two-way-slider-thumb {
+    display: flex;
+    transform: translate(-100%, -50%);
+    color: var(--accent);
+    position: absolute;
+    text-shadow: rgba(0, 0, 0, 0.4) 0px 2px 4px;
+  }
+
+  .two-way-slider-thumb svg {
+    transform: rotate(90deg);
+    margin-left: 0.2rem;
+  }
+
+  /* The arrow's grab handle: a span whose only job is to BE an element the browser's touch
+     adjustment can aim at - see PlayerSlider's `touchAdjustmentTarget` for why one is needed. Plain
+     flow at its natural size, a stretched flex item exactly like the bare svg used to be, so the
+     glyph lands on the pixels it always did.
+
+     Deliberately NOT grown into a finger-sized hit box, though that is the obvious next step: a
+     thumb parked at either end of the track sits FLUSH against the button rows above and below it -
+     with the Section ending on the last frame, the arrow's top edge is already level with the Stop
+     button's bottom edge - so padding here would paint nothing yet win hit-testing over a fifth of
+     the Stop button and a sixth of the speed select, and a finger landing on either would silently
+     drag the Section instead of pressing the button it aimed at. Candidacy is what fixes the
+     targeting; size never was the missing piece, and there is no room to buy any. */
+  .two-way-slider-grab {
+    display: flex;
+  }
+
+  .slider-outer {
+    width: 1rem;
+    position: relative;
+    margin-top: 0;
+    touch-action: none;
+    height: 100%;
+    cursor: pointer;
+  }
+
+  .slider-full {
+    height: 100%;
+    width: 100%;
+    background-color: var(--primary-darken-10);
+    border-radius: 0.2rem;
+    overflow: hidden;
+  }
+
+  .slider-input {
+    user-select: none;
+    font-family: 'Bonobo';
+    font-weight: bold;
+    width: 4ch;
+    text-align: end;
+    background: transparent;
+    color: var(--accent);
+    border: none;
+    -moz-appearance: textfield;
+    appearance: textfield;
+  }
+
+  .slider-input::-webkit-outer-spin-button,
+  .slider-input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  .slider-current {
+    height: 100%;
+    width: 100%;
+    transform: translateY(100%);
+    transition: all 0.1s linear;
+    background-color: var(--accent);
+    left: 0;
+    top: 0;
+  }
+</style>
+

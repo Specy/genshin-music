@@ -3,7 +3,6 @@
   import type { Chunk } from '$core/Songs/RecordedSong';
   import { ThemeProvider as theme } from '$core/theme/ThemeProvider.svelte';
   import PlayerSheetFrame from './PlayerSheetFrame.svelte';
-  import './VisualSheet.css';
 
   // One grid of Sheet Frames. The inline card feeds it the current page and the fullscreen card a
   // row window into the full song, so the frames are addressed by their WHOLE-SONG index
@@ -68,3 +67,25 @@
     {@render frames()}
   {/if}
 </div>
+
+<style>
+  /* Grid only: PlayerSheetCard owns where the sheet sits and how wide it is, because the same grid is
+     rendered twice - one page inside the inline card, every frame inside the expanded one. */
+  .player-chunks-page {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 0.2rem;
+  }
+
+  /* The virtual page's padding is the logical full-song height. Its child is only the mounted row
+     window, which stays cheap to translate during the opening reveal. */
+  .player-chunks-page.player-chunks-page-virtual {
+    display: block;
+  }
+
+  .player-chunks-window {
+    display: grid;
+    gap: 0.2rem;
+  }
+</style>
+
