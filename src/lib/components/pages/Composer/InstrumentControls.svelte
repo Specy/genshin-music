@@ -320,3 +320,168 @@
     >
   </AppButton>
 </div>
+
+<style>
+  /* THE THREE `AppButton`s OF A ROW WEAR THEIR CLASS ON A CHILD COMPONENT'S ROOT — the name button,
+     the "add layer" button and the solo bar are all `class` props handed to AppButton, so Svelte
+     cannot see them on any element of this file and would prune a plain selector. Scoped through
+     the wrapper this panel does own, which is also what keeps them beating `.app-button`'s own
+     padding and background in App.css whatever order the two stylesheets end up in. */
+  .instruments-button-wrapper :global(.instrument-name-button) {
+    padding: 0;
+    font-size: 0.8rem;
+  }
+
+  .instruments-button-wrapper {
+    overflow-y: auto;
+    overflow-x: hidden;
+    background-color: var(--primary-darken-10);
+    border-radius: 0.3rem;
+    margin-top: 0.2rem;
+    z-index: 2;
+  }
+
+  .instruments-button-wrapper :global(.new-instrument-button) {
+    padding: 0.4rem;
+    background-color: transparent;
+    margin-top: auto;
+    align-items: center;
+  }
+
+  .instruments-button-wrapper :global(.new-instrument-button:hover) {
+    background-color: var(--primary-darken-10);
+  }
+
+  .instruments-button-wrapper::-webkit-scrollbar-thumb {
+    background: var(--secondary);
+  }
+
+  /* NOTHING IN A LAYER ROW ANIMATES (user decision 2026-08-22). `.instrument-button-used` — the
+     highlight saying "this layer plays in the column under the cursor" — is toggled on every row on
+     every column change, which during playback is many times a second: a transition would leave each
+     row mid-fade between two states that have already moved on, and would put a compositing job on
+     the main thread per row per column for a cue that is only readable when it changes INSTANTLY.
+     Stated explicitly rather than left to the default, because these rows are `.app-button`s in the
+     markup and that base rule DOES carry a transition — see the rule at the end of this block. */
+  .instrument-button {
+    height: 3rem;
+    min-height: 3rem;
+    position: relative;
+    flex-direction: column;
+    border-radius: 0.3rem;
+    border-bottom: solid 2px var(--secondary);
+    border-radius: 0;
+    transition: none;
+  }
+
+  .instrument-button-used {
+    background-color: rgba(var(--composer-secondary-layer-rgb), 0.2);
+  }
+
+  /* An unselected row that carries the solo bar, and only that row: the selected one below is
+     taller anyway because it always shows the bar. Declared first so the selected height wins
+     when a row is both. */
+  .instrument-button-with-solo {
+    height: 4.6rem;
+    min-height: 4.6rem;
+  }
+
+  .instrument-button-selected {
+    height: 6rem;
+    min-height: 6rem;
+    background-color: var(--composer-main-layer);
+    color: var(--composer-main-layer-text);
+  }
+
+  /* The dim cue for a track outside the solo set — the selected row included, since it is just as
+     silent as the rest and the panel stays honest about that. Opacity on the whole row, so the
+     mute/hidden icons dim WITH it rather than disappearing. */
+  .instrument-button-outside-solo {
+    opacity: 0.55;
+  }
+
+  .instrument-button-selected :global(.app-button) {
+    color: var(--composer-main-layer-text);
+  }
+
+  /* THE SAME "NOTHING FADES" RULE, one level down: the name button and the settings buttons inside a
+     row are `.app-button`s in their own right and inherit none of the row's `transition: none`, they
+     carry the base rule's own. Playback toggles `.instrument-button-used` on this row on every column,
+     so anything in it that fades is either mid-fade against a state that has already changed again or
+     a per-column paint for no visible gain — and the two terms this rule used to keep alive bought
+     nothing anyway: the name button's own background is transparent, so its `background-color` never
+     visibly fired, and `filter` is unset below. `!important` like the two `unset`s beside it, so this
+     holds against a state rule of .app-button's own however specific it is. */
+  .instrument-button :global(.app-button) {
+    transition: none !important;
+    transform: unset !important;
+    filter: unset !important;
+  }
+
+  .instrument-settings {
+    font-size: 0.8rem;
+    display: grid;
+    width: 100%;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.2rem;
+    padding: 0.2rem;
+  }
+
+  /* One resting surface for the gear, the eye and the solo bar alike, in the secondary pair —
+     which carries its own text colour, so nothing here depends on what the row underneath
+     inherits. DECLARED AFTER `.instrument-button-selected .app-button`: equal specificity, so
+     source order is what keeps the secondary text colour on the selected row too.
+     `.app-button.active` then paints all three the accent pair when their state is on.
+     The fixed height is what makes the gear and the eye the same box despite their 15px/16px
+     icons — `height: fit-content` sized each to its own glyph. */
+  .instrument-settings :global(.app-button) {
+    padding: 0.1rem;
+    height: 1.2rem;
+    background-color: var(--secondary);
+    color: var(--secondary-text);
+    min-width: unset;
+    flex: 1;
+  }
+
+  /* The bar is a row of its own under the gear|eye pair, and the only child on an unselected
+     soloed row — 1 / -1 spans the grid in both cases. */
+  .instruments-button-wrapper :global(.instrument-solo-button) {
+    grid-column: 1 / -1;
+    font-size: 0.75rem;
+  }
+
+  /* THE COMPOSER'S MOBILE BREAKPOINT, the same query App.css states it with - this panel's own half
+     of that block. */
+  @media only screen and (max-width: 1000px) {
+    .instrument-button {
+      height: 2.6rem;
+      min-height: 2.6rem;
+    }
+
+    .instrument-button-with-solo {
+      height: 3.8rem;
+      min-height: 3.8rem;
+    }
+
+    .instrument-button-selected {
+      height: 4.5rem;
+      min-height: 4.5rem;
+    }
+
+    /* `align-items: flex-end` used to sit here too, and it never once applied: the button's own
+       markup above carries Utility.scss's `.flex-centered`, which sets `align-items: center` at
+       the same one-class specificity and from a stylesheet imported after App.css. Prefixing this
+       rule with the wrapper (which is what keeps its padding beating `.app-button`'s) would have
+       out-specified `.flex-centered` and finally let it through - bottom-aligning the layer label
+       for the first time since it was written. Deleted rather than moved: the component's own
+       markup asks for centred, so centred is the intent (user decision 2026-08-25). */
+    .instruments-button-wrapper :global(.instrument-name-button) {
+      padding-bottom: 0rem;
+    }
+
+    .instruments-button-wrapper :global(.new-instrument-button) {
+      padding: 0;
+      padding-bottom: 0.3rem;
+    }
+  }
+</style>

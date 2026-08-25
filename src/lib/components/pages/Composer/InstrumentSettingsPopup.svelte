@@ -402,3 +402,43 @@
     </div>
   </div>
 {/if}
+
+<style>
+  .floating-instrument-settings {
+    /* HOW MUCH TO TAKE OFF THE ACTION BUTTONS' TOP AND BOTTOM PADDING, subtracted inline by the
+       buttons themselves (merge/move, delete/OK). A custom property and not a rule of its own
+       because those paddings are inline styles, which no media query can override. Zero here, so
+       the desktop popup is untouched; the mobile block below is where it earns its keep. */
+    --instrument-settings-button-trim: 0rem;
+    position: absolute;
+    width: 17rem;
+    background-color: var(--menu-background);
+    color: var(--menu-background-text);
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    padding: 0.6rem;
+    border-radius: 0.4rem;
+    border: solid 2px var(--secondary);
+    top: 3.4rem;
+    margin-left: 6.6rem;
+    z-index: 10;
+    animation:
+      fadeIn 0.2s,
+      delayBackdrop 0.2s forwards;
+  }
+
+  /* THE COMPOSER'S MOBILE BREAKPOINT, the same query App.css states it with - this popup's own half
+     of that block. */
+  @media only screen and (max-width: 1000px) {
+    .floating-instrument-settings {
+      top: 0.4rem;
+      padding: 0.5rem;
+      margin-left: 5.8rem;
+      gap: 0.3rem;
+      /* The popup has the same rows to fit in a shorter viewport here, so its action buttons give
+         up 0.1rem off each of their top and bottom edges. Horizontal padding is left alone. */
+      --instrument-settings-button-trim: 0.1rem;
+    }
+  }
+</style>

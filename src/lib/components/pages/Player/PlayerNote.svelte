@@ -235,3 +235,65 @@
     </div>
   </div>
 </button>
+
+<style>
+  /* Practice-mode release ring: unwinds over a held note's remaining duration so the player
+     knows when to lift. Drawn well outside the button because on touch the finger covers the
+     button (and everything under it) for the whole hold. Its motion is a *sweep* where the
+     approach circle's is a *scale*, so the two never read as the same signal. */
+  .hold-release-ring {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    /* --ring-scale / --ring-stroke are set on the element from RING_SCALE / RING_STROKE in
+       $lib/games/noteShape.ts — tune them there, not here. The literals are fallbacks only,
+       for the case where the custom property never arrives. */
+    transform: scale(var(--ring-scale, 1.3));
+    transform-origin: 50% 50%;
+    pointer-events: none;
+    overflow: visible;
+    /* above .note (z-index 10): at any scale that clears a fingertip the ring reaches into the
+       neighbouring buttons, so it has to win against them or it reads as broken rather than
+       merely overlapping. */
+    z-index: 11;
+  }
+
+  .hold-release-ring path {
+    fill: none;
+    stroke-width: var(--ring-stroke, 4);
+    stroke-linecap: round;
+    /* No rotation to move the sweep's origin: ringGeometry() emits every outline starting at
+       top centre already. Rotating would spin a rounded square into a diamond. */
+  }
+
+  .hold-release-ring-track {
+    stroke: var(--accent);
+    opacity: 0.25;
+  }
+
+  .hold-release-ring-progress {
+    stroke: var(--accent);
+    /* --ring-perimeter and the matching stroke-dasharray are set per element: each silhouette
+       has its own outline length, and the sweep has to run exactly one lap of it. */
+    animation: hold-release-ring linear forwards;
+  }
+
+  @keyframes hold-release-ring {
+    from {
+      stroke-dashoffset: 0;
+    }
+    to {
+      stroke-dashoffset: var(--ring-perimeter);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    /* the ring is information, not decoration - keep it, just drop the easing-free sweep to a
+       stepped countdown so it still communicates remaining time without continuous motion */
+    .hold-release-ring-progress {
+      animation-timing-function: steps(8);
+    }
+  }
+</style>

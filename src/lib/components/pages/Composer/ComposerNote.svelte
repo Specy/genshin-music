@@ -203,4 +203,116 @@
     opacity: 0.65;
     cursor: not-allowed;
   }
+
+  /* ------------------------------------------------------------------------------------------
+     THE LAYER MARKS, moved out of App.css: every rule below is rooted in a class this component
+     puts on its own note element, and no other component renders any of them.
+
+     `layer-1`..`layer-4` are not spelled anywhere in this file's markup - classNameMap up top
+     builds them into ONE string per LayerStatus - so Svelte cannot narrow these selectors and just
+     scopes them to this component's elements, which is exactly right: the note div is one of them.
+     What it genuinely cannot reach are the descendants a CHILD renders, and those halves are
+     `:global(...)`: `.genshin-border` is the class this file hands to GenshinNoteBorder, and
+     `.svg-note`/`.svg-b` live inside the game's own glyph components (SvgNote -> notes.svgGlyphs).
+
+     `.note-composer` ITSELF STAYS IN App.css, together with `.note-composer svg`: it is one of the
+     four note classes the game config names (notes.cssClasses), so its sizing/border/transition
+     rules are written as one group with `.note`/`.note-sky`/`.note-composer-sky` and cannot travel
+     here. Only the `.layer-*` half of the block moved.
+
+     `.layer-3-ball` (the pre-"bigger" ball, grouped with `.layer-3-ball-bigger` in two of the rules
+     below) carried no markup anywhere and was dropped rather than moved. */
+
+  /* Ahead of the layer rules because that is where App.css had it. Inert either way - nothing
+     below sets `bottom` - but it is the order the cascade had. */
+  @media only screen and (max-width: 920px) {
+    .note-composer .note-name {
+      bottom: 10% !important;
+    }
+  }
+
+  .layer-1 {
+    background-color: var(--composer-main-layer) !important;
+    border-color: var(--composer-main-layer-layer-20) !important;
+  }
+
+  .layer-1 .note-name-sky {
+    color: var(--composer-main-layer-text) !important;
+  }
+
+  .layer-2 :global(.svg-b) {
+    stroke: var(--composer-secondary-layer) !important;
+  }
+
+  .layer-1 :global(.svg-b) {
+    stroke: var(--composer-main-layer) !important;
+  }
+
+  .layer-1 :global(.svg-note) {
+    fill: var(--composer-main-layer-text) !important;
+    stroke: var(--composer-main-layer-text) !important;
+  }
+
+  .layer-1 :global(.genshin-border) {
+    fill: var(--composer-main-layer-text) !important;
+    stroke: var(--composer-main-layer-text) !important;
+  }
+
+  .layer-1 .note-name {
+    color: var(--composer-main-layer-text) !important;
+  }
+
+  .layer-2,
+  .layer-2 :global(.genshin-border) {
+    border-color: var(--composer-secondary-layer) !important;
+    fill: var(--composer-secondary-layer) !important;
+    stroke: var(--composer-secondary-layer) !important;
+  }
+
+  .layer-3-ball-bigger {
+    position: absolute;
+    background-color: var(--composer-secondary-layer);
+    width: 1.5vw;
+    height: 1.5vw;
+    border-radius: 50%;
+    visibility: hidden;
+  }
+
+  .layer-4-line {
+    height: 25%;
+    width: 100%;
+    position: absolute;
+    background-color: var(--composer-secondary-layer);
+    border-radius: 0.2vw;
+    visibility: hidden;
+  }
+
+  .layer-4 .note-name-sky,
+  .layer-3 .note-name-sky {
+    color: var(--composer-secondary-layer-text) !important;
+  }
+
+  .note-composer.layer-3 :global(.svg-note),
+  .note-composer.layer-4 :global(.svg-note) {
+    fill: var(--composer-main-layer-text) !important;
+    stroke: var(--composer-main-layer-text) !important;
+  }
+
+  .layer-3 .layer-3-ball-bigger {
+    visibility: visible;
+  }
+
+  .layer-4 .layer-4-line {
+    visibility: visible;
+  }
+
+  .layer-3-ball-bigger {
+    width: 2.6vw;
+    height: 2.6vw;
+  }
+
+  .note-composer .layer-3-ball-bigger {
+    width: 3vw;
+    height: 3vw;
+  }
 </style>

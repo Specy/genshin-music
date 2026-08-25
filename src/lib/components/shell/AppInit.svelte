@@ -401,9 +401,10 @@
   });
 </script>
 
-<!-- CSS (.rotate-screen) lives in global App.css, which supplies the other half of the condition:
-     the overlay is `display: none` until @media (orientation: portrait) matches. This {#if} is the
-     ROUTE half - see LANDSCAPE_ONLY_ROUTES above for which pages earn a warning at all. -->
+<!-- CSS (.rotate-screen) lives in this file's own <style> block below, which supplies the other
+     half of the condition: the overlay is `display: none` until @media (orientation: portrait)
+     matches. This {#if} is the ROUTE half - see LANDSCAPE_ONLY_ROUTES above for which pages earn a
+     warning at all. -->
 {#if isLandscapeOnlyRoute}
   <div class="rotate-screen">
     {#if isOnMobile}
@@ -426,3 +427,48 @@
     {/if}
   </div>
 {/if}
+
+<style>
+  /* pulled forward from Player/menu.css (P3 final review Important-2) — Phase 4 must SKIP this block when porting menu.css */
+  .rotate-screen {
+    width: 100%;
+    height: 100%;
+    z-index: 1000;
+    position: fixed;
+    display: none;
+    justify-content: center;
+    align-items: center;
+    padding: 2rem;
+    flex-direction: column;
+    background-color: rgba(var(--primary-rgb), 0.85);
+    backdrop-filter: blur(4px);
+    font-size: 1.5rem;
+  }
+
+  .rotate-screen p {
+    text-align: center;
+  }
+
+  .rotate-screen img,
+  .rotate-screen svg {
+    width: 60vw;
+    height: 60vw;
+    margin-bottom: 1rem;
+    background-color: rgba(var(--primary-rgb), 1);
+    color: var(--icon-color);
+    filter: brightness(1.1);
+    padding: 1.5rem;
+    border-radius: 1rem;
+  }
+
+  /* ONLY THE ORIENTATION HALF OF THE CONDITION LIVES HERE. Which pages get a warning at all is
+     decided in AppInit.svelte (LANDSCAPE_ONLY_ROUTES): the overlay markup is not rendered on any
+     other route, so this rule has nothing to reveal there. It used to be effectively global - every
+     route but /blog - which is why the reading pages (donate, changelog, theme, blog, ...) were
+     refused to a phone held upright; those now render in portrait with the bottom-bar menu below. */
+  @media screen and (orientation: portrait) {
+    .rotate-screen {
+      display: flex;
+    }
+  }
+</style>

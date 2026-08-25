@@ -536,4 +536,74 @@
     opacity: 0.5;
     cursor: default;
   }
+
+  /* :global() below: `floating-midi` is handed to DecoratedCard as a class prop, so it lands on
+     that component's root div - not on an element in this file's own template. */
+  :global(.floating-midi) {
+    position: absolute;
+    margin-left: auto;
+    margin-right: auto;
+    bottom: 2rem;
+    /* FIXED size, not bounds: sized to its content, the card grew the moment a file was opened
+       (track list + summary appearing), shifting everything in it under the pointer. The mobile
+       override below was already fixed for the same reason. */
+    height: 48vh;
+    border-radius: 0.5rem;
+    background-color: rgba(var(--menu-background-rgb), 0.9);
+    border: solid 2px var(--secondary);
+    color: var(--menu-background-text);
+    width: 60vw;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    --backdrop-amount: 4px;
+    /* fadeIn/delayBackdrop are global keyframes from Utility.scss. Svelte only rewrites animation
+       names it also finds in @keyframes of THIS file, so declaring either name here would silently
+       rebind these two to the local copy. */
+    animation:
+      fadeIn 0.4s,
+      delayBackdrop calc(0.4s * 1.2) forwards;
+  }
+
+  /* Same reason as above: this one is handed to Column as a class prop. */
+  :global(.floating-midi-content) {
+    padding: 0.8rem;
+    padding-right: 0.5rem;
+    width: 100%;
+    height: 100%;
+    overflow-y: scroll;
+  }
+
+  /* :global() because the wildcard reaches every child component rendered inside the card. */
+  :global(.floating-midi *) {
+    font-size: 0.9rem;
+  }
+
+  .midi-btn {
+    background-color: var(--primary);
+    color: white;
+    border-radius: 0.2rem;
+    padding: 0.5rem 1rem;
+    border: none;
+    height: -moz-fit-content;
+    height: fit-content;
+    cursor: pointer;
+    min-width: 5rem;
+  }
+
+  @media only screen and (max-width: 1000px) {
+    :global(.floating-midi) {
+      bottom: 0.8rem;
+      height: 50vh;
+      max-height: 50vh;
+      max-width: 70vw;
+      width: 70vw;
+    }
+
+    :global(.floating-midi-content) {
+      padding: 0.4rem;
+      padding-right: 0.2rem;
+    }
+  }
 </style>

@@ -360,3 +360,93 @@
          toggle that opened the panel is what closes it, so the grid is the last thing here. -->
   </div>
 </DecoratedCard>
+
+<style>
+  .tools-icon {
+    font-size: 1.2rem;
+  }
+
+  .tools-buttons-grid {
+    display: grid;
+    grid-template-areas:
+      'a a b b'
+      'a a c c'
+      'd d e e'
+      'f f g g';
+    flex: 1;
+    gap: 0.6rem;
+  }
+
+  /* THE PANEL IS DecoratedCard'S OWN ROOT DIV, which is why this rule and the two state modifiers
+     below are `:global` while everything else here is scoped: the class is handed to that component
+     as a prop, so Svelte cannot see it on any element of this file and would prune the rule. Bare
+     `:global(...)` and not `.something :global(...)` deliberately - the panel is this component's
+     outermost element, and wrapping it in a scoped ancestor would only raise its specificity. */
+  :global(.floating-tools) {
+    position: fixed;
+    bottom: -50vh;
+    min-width: 36vw;
+    min-height: min(52vh, 18rem);
+    max-height: min(52vh, 18rem);
+    display: flex;
+    margin-right: auto;
+    margin-left: auto;
+    border-radius: 0.5rem;
+    box-shadow: -2px -1px 27px 4px rgba(0, 0, 0, 0.25);
+    background-color: rgba(var(--menu-background-rgb), 0.9);
+    z-index: 10;
+    opacity: 0;
+    border: solid 2px var(--secondary);
+    transition: all 0.4s;
+    transform: scale(0.7);
+    color: var(--menu-background-text);
+    padding: 0.4rem;
+  }
+
+  .floating-tools-content {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    gap: 0.3rem;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+
+  :global(.tools-visible) {
+    bottom: 1.4rem;
+    transform: scale(1);
+    opacity: 1;
+    --backdrop-amount: 3px;
+    animation: delayBackdrop calc(0.4s * 1.2) forwards;
+  }
+
+  /* PRO VIEW ONLY: there the canvas this panel floats over is the whole window rather than a card in
+     the middle of the page, so the rows it covers are the ones being edited - the panel lets a little
+     of them through instead of hiding them outright, and eases off the backdrop blur to match.
+     A MODIFIER ON THE PANEL ITSELF and not `.composer-grid-pro .tools-visible`: ComposerTools is a
+     SIBLING of `.composer-grid` (as `.song-info-pro` is), so no descendant selector can reach it -
+     ComposerTools.svelte takes `proView` as a prop for exactly this. After `.tools-visible`, whose
+     values it overrides at equal specificity. */
+  :global(.tools-visible-pro) {
+    opacity: 0.8;
+    --backdrop-amount: 2px;
+  }
+
+  /* THE COMPOSER'S MOBILE BREAKPOINT, the same query App.css states it with - the panel's own half
+     of that block. `.tools-button`'s padding override stays in App.css beside the base rule it
+     belongs to (see the note on that rule there). */
+  @media only screen and (max-width: 1000px) {
+    :global(.tools-visible) {
+      bottom: 0.2rem;
+    }
+
+    .tools-icon {
+      font-size: 1.1rem;
+    }
+
+    .tools-buttons-grid {
+      gap: 0.3rem;
+      font-size: 0.8;
+    }
+  }
+</style>

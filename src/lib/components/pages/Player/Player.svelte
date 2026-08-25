@@ -710,3 +710,14 @@
   onToggleMetronome={toggleMetronome}
   onRawSpeedChange={handleSpeedChanger}
 />
+
+<style>
+  .right-panel {
+    flex: 1;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+  }
+</style>

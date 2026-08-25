@@ -341,4 +341,76 @@
       bottom: 0.8rem;
     }
   }
+
+  /* TOP-LEFT, beside the Sheet Card rather than under it (ADR-0010). Its containing block is body
+     (every ancestor is static), and with no `left` it took its static position - which
+     `.app { justify-content: center }` centres, i.e. exactly where the card now sits. Anchoring it to
+     the viewport edge means it must clear the fixed menu column itself. */
+  .approaching-accuracy {
+    position: absolute;
+    top: 0.5rem;
+    left: calc(var(--menu-size) + 0.4rem);
+    color: var(--primary-text);
+    padding: 0.4rem;
+    background-color: var(--primary);
+    font-weight: bold;
+    border-radius: 0.4rem;
+  }
+
+  .approaching-accuracy table {
+    font-size: 0.8rem;
+    border-collapse: collapse;
+  }
+
+  /* THE STRIP THIS BOX LIVES IN IS NARROWEST JUST ABOVE THE CARD'S OWN BREAKPOINT, not below it.
+     The card is centred, so the room to its left is (100vw - card width)/2 minus the menu column -
+     and the card goes from 55vw to 65vw at 921px, which CUTS that room from 0.225 to 0.175 of the
+     window. Keying a compact tier to `max-width: 920px` therefore shrank the box exactly where it
+     had the most space and left it full-size where it had the least.
+     Measured against BonoboBold's advances: the two-column table is ~208px wide from the viewport's
+     left edge at 0.8rem (label 59.8px + 3.5rem value column + paddings + the 4.4rem menu offset),
+     which only clears the card from ~1140px up. At 0.7rem it is still ~187px and would need
+     ~1070px, so below 1140px the label goes ABOVE its value instead: a ~62px column - the width of
+     the word "Accuracy" - that clears the card at every width down to ~590px. */
+  @media only screen and (max-width: 1139px) {
+    .approaching-accuracy {
+      padding: 0.3rem;
+    }
+
+    .approaching-accuracy table {
+      font-size: 0.7rem;
+    }
+
+    .approaching-accuracy tbody,
+    .approaching-accuracy tr,
+    .approaching-accuracy td {
+      display: block;
+    }
+
+    .approaching-accuracy tr + tr {
+      margin-top: 0.25rem;
+    }
+
+    /* the border-left that separated the two columns has no side to sit on once they are stacked */
+    .approaching-accuracy .sc-2 {
+      padding-right: 0;
+      opacity: 0.75;
+    }
+
+    .approaching-accuracy .sc-1 {
+      padding-left: 0;
+      min-width: 0;
+      border-left: none;
+    }
+  }
+
+  .sc-2 {
+    padding-right: 0.5rem;
+  }
+
+  .sc-1 {
+    padding-left: 0.5rem;
+    min-width: 3.5rem;
+    border-left: solid 2px var(--secondary);
+  }
 </style>

@@ -307,4 +307,50 @@
   .vsrg-track-wrapper::-webkit-scrollbar-thumb {
     background: var(--secondary);
   }
+
+  .vsrg-top-right {
+    display: flex;
+    grid-area: b;
+    flex-direction: column;
+    width: 13.6rem;
+  }
+
+  .vsrg-top-right-disabled .vsrg-track-wrapper {
+    pointer-events: none;
+    opacity: 0.5;
+  }
+
+  .vsrg-track {
+    height: 3rem;
+    min-height: 3rem;
+    transition: background-color 0.15s;
+    cursor: pointer;
+    overflow: hidden;
+    border-bottom: solid 2px var(--secondary);
+  }
+
+  /* Fully :global(): `vsrg-breakpoints-buttons` is a `class` prop on <Row> and the buttons inside
+     are <AppButton>s, so neither half of this selector is markup Svelte can see in this file. */
+  :global(.vsrg-breakpoints-buttons button) {
+    display: flex;
+    min-width: unset;
+    height: 2rem;
+    justify-content: center;
+    border-radius: 0.4rem;
+    align-items: center;
+    flex: 1;
+    padding: 0.2rem;
+    margin-left: 0.2rem;
+  }
+
+  @media only screen and (max-width: 1000px) {
+    .vsrg-top-right {
+      width: 12.6rem;
+    }
+
+    .vsrg-track {
+      height: 2.4rem;
+      min-height: 2.4rem;
+    }
+  }
 </style>

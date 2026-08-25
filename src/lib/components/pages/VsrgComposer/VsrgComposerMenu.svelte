@@ -388,4 +388,29 @@
     font-size: 1.3rem;
     margin: 0.5rem 0;
   }
+
+  .vsrg-select-song-wrapper {
+    margin-top: 0.5rem;
+    border: dotted 4px var(--accent);
+    padding: 0 0.4rem;
+    border-radius: 0.4rem;
+  }
+
+  .vsrg-composer-selected-song {
+    gap: 0.4rem;
+    padding: 0.6rem;
+    border-radius: 0.4rem;
+    margin-top: 0.4rem;
+    background-color: var(--primary);
+    color: var(--primary-text);
+  }
+
+  /* Shrinks this page's own hamburger below the shared `.hamburger` size (App.css) on phones. It
+     only ever had this phone-sized override, never a base rule. */
+  @media only screen and (max-width: 1000px) {
+    .vsrg-hamburger {
+      width: 2.2rem;
+      height: 2.2rem;
+    }
+  }
 </style>

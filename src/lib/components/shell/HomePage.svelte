@@ -138,18 +138,19 @@
   }
 
   /* The bottom bar sits at the bottom of a SHORT page and directly under the content of a tall one.
-     `.home` got this from `justify-content: space-between`, which as a page would also push the
-     cards away from the title on a tall portrait screen. */
+     `.home` (the popup shell, in Home.svelte) got this from `justify-content: space-between`, which
+     as a page would also push the cards away from the title on a tall portrait screen. */
   .home-page :global(.home-bottom) {
     margin-top: auto;
     padding-top: 0.6rem;
   }
 
-  /* App.css's mobile block pads `.home-padded` 3.6rem on its LEFT, which is how the popup cleared
-     both its own close button and the rail behind it. The page clears the rail with its own
+  /* HomeContent's own mobile block pads `.home-padded` 3.6rem on its LEFT, which is how the popup
+     cleared both its own close button and the rail behind it. The page clears the rail with its own
      padding-left above, so that inner 3.6rem would only be doubling it - and on a phone the card
      width it eats is worth more than the asymmetry, which reads as a mistake once the content is
-     the whole window. Same 920px breakpoint as that block, so this lands after it. */
+     the whole window. Same 920px breakpoint as that block; this wins on specificity, not order -
+     `.home-page :global(...)` carries one class more than HomeContent's own scoped selector. */
   @media (max-width: 920px) {
     .home-page :global(.home-padded) {
       padding: 0.8rem 0.8rem 0.4rem;

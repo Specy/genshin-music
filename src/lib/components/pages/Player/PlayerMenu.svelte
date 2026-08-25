@@ -667,4 +667,74 @@
     margin-top: 1vh;
     justify-content: space-around;
   }
+
+  .library-search-result-text {
+    width: 100%;
+    height: 100%;
+    justify-content: center;
+    align-items: center;
+    display: flex;
+  }
+
+  .library-search-row {
+    display: flex;
+    width: 100%;
+    margin: 1rem 0 0.2rem 0;
+  }
+
+  .library-search-input {
+    box-sizing: border-box;
+    padding: 0 1rem;
+    outline: none;
+    color: var(--menu-background-text);
+    background-color: #d3bd8e;
+    display: flex;
+    flex: 1;
+    height: 2.2rem;
+    border: none;
+    border-radius: 0.3rem;
+    cursor: text;
+  }
+
+  .library-search-input::placeholder {
+    color: var(--menu-background-text);
+  }
+
+  .library-search-btn {
+    background-color: #d3bd8e;
+    color: var(--menu-background-text);
+    height: 2.2rem;
+    width: 2.2rem;
+    border: none;
+    cursor: pointer;
+    margin-left: 0.2rem;
+    border-radius: 0.3rem;
+    font-size: 1rem;
+    transition: all 0.2s;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .library-search-btn:hover {
+    filter: brightness(1.1);
+  }
+
+  .library-search-songs-wrapper {
+    border-bottom-left-radius: 0.3rem;
+    border-bottom-right-radius: 0.3rem;
+    padding: 0.5rem;
+    background-color: #ad9c85;
+    padding-top: 1rem;
+    margin: 0;
+    display: grid;
+    flex-direction: column;
+    gap: 0.3rem;
+  }
+
+  .library-search-songs-wrapper {
+    border-radius: 0.3rem;
+    padding-top: 0.5rem;
+  }
 </style>

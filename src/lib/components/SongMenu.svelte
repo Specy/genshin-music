@@ -13,12 +13,13 @@
   // state (e.g. a SongRow that resolves data async), which a snippet can't
   // own the way a component can.
   //
-  // SongMenuSearch.svelte holds its own style block instead of this file
-  // doing so directly: a svelte-check bug misreports a phantom "script left
-  // open" error on a generics-attributed component when the same file has
-  // both a style block and a comment that spells out a literal script or
-  // style tag name in brackets. Not a design preference - a tooling
-  // workaround (worded around it on purpose right here).
+  // MIND THE COMMENTS IN THIS FILE: a svelte-check bug misreports a phantom
+  // "script left open" error on a generics-attributed component when the same
+  // file has both a style block and a comment that spells out a literal
+  // script or style tag name in brackets. This file now carries its own style
+  // block (the .create-folder button at the bottom), so every comment here is
+  // deliberately worded to keep those tag names out of brackets - keep it
+  // that way. SongMenuSearch.svelte holds its own styles for the same reason.
 </script>
 
 <script lang="ts" generics="T extends SongMenuRowProps">
@@ -269,3 +270,31 @@
     </button>
   {/if}
 </div>
+
+<style>
+  /* --create-folder-color is set inline to the same color the folders are
+     filled with, so the outline matches them under any theme. */
+  .create-folder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    width: 100%;
+    margin: 0.4rem 0;
+    padding: 0.5rem;
+    border: solid 0.15rem var(--create-folder-color);
+    border-radius: 0.4rem;
+    background-color: transparent;
+    color: inherit;
+    font-family: inherit;
+    font-size: 1rem;
+    cursor: pointer;
+    transition:
+      background-color 0.2s,
+      filter 0.2s;
+  }
+
+  .create-folder:hover {
+    background-color: var(--create-folder-color);
+  }
+</style>

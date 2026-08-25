@@ -213,3 +213,19 @@
     />
   {/if}
 {/if}
+
+<style>
+  .keyboard-column-selection-buttons {
+    display: flex;
+    background: transparent;
+    border: none;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    color: var(--icon-color);
+    filter: drop-shadow(0px 0px 6px rgb(0 0 0 / 0.4));
+    border-radius: 0.4rem;
+    cursor: pointer;
+    width: 4rem;
+  }
+</style>

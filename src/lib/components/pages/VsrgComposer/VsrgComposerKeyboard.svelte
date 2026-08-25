@@ -32,3 +32,29 @@
     ></button>
   {/each}
 </div>
+
+<style>
+  .vsrg-keyboard {
+    margin-top: auto;
+    display: grid;
+    gap: 0.15rem;
+  }
+
+  .vsrg-keyboard button {
+    width: 100%;
+    transition: all 0.2s;
+    cursor: pointer;
+    border-radius: 0.2rem;
+    aspect-ratio: 1;
+    min-height: 1.4rem;
+    background-color: var(--icon-color);
+    border: none;
+  }
+
+  @media only screen and (max-width: 1000px) {
+    .vsrg-keyboard button {
+      aspect-ratio: unset;
+      min-height: 1.5rem;
+    }
+  }
+</style>

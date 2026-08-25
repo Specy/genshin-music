@@ -549,9 +549,363 @@
 <style>
   /* Was an inline style on this span; it needs a class of its own so the page variant can let it
      take a row of its own when the bottom bar wraps in portrait (see HomePage.svelte). The rest of
-     the home CSS lives in the global App.css - see its "Home overlay" block header for why. */
+     the home CSS follows below - it used to live in the global App.css ("Home overlay" block). */
   .home-rights {
     padding: 0 1rem;
     text-align: center;
+  }
+
+  /* ==================================================================================
+     THE HOME SCREEN'S OWN CSS. Old: src/components/pages/Index/Home.css, which the SvelteKit port
+     parked in the global App.css ("Home overlay" block) and the App.css break-up brought here.
+     Ported verbatim MINUS lines 41-157 of the old file (the `.logger-*`/`.pill*` block) - that
+     block was already relocated into App.css during P3 Task 6, ahead of that port, for
+     Logger.svelte's own needs. The old file's own @media block is merged into the single mobile
+     query at the end of this style block instead of duplicated per rule.
+
+     WHY SOME HALVES ARE `:global(...)`: everything this component writes in its OWN markup is
+     scoped normally. The `:global` halves are the classes that land on a CHILD component's
+     element - AppLink's <a> (`.home-content-element`, `.current-page`, `.non-visited`), Row's
+     <div> (`.home-app-scaling`) and AppButton's <button>. Svelte never puts this component's
+     scoping hash on a child component's markup, and it does NOT warn about it either: a plain
+     selector there compiles to a hash-scoped rule that silently matches nothing. Each `:global`
+     below is written to keep the ORIGINAL specificity, so nothing it used to lose to starts
+     losing to it.
+
+     `.middle-size-page` and `.middle-size-page:hover` deliberately stayed in App.css - see the
+     note next to them there.
+     ================================================================================== */
+  .home-padded {
+    padding: 0.6rem;
+    max-width: 48rem;
+    margin: 0 auto;
+  }
+
+  .home-spacing {
+    margin-bottom: 0.3rem;
+  }
+
+  .home-bottom {
+    width: 100%;
+    padding: 0.4rem;
+    color: var(--background-text);
+    padding-top: 0rem;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.8rem;
+  }
+
+  .home-content {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr;
+    gap: 1rem;
+    justify-items: center;
+    width: 100%;
+  }
+
+  :global(.home-content-element) {
+    width: 100%;
+    min-height: 10rem;
+    color: var(--primary-text);
+    border-radius: 0.5rem;
+    position: relative;
+    transition: all 0.15s ease-out;
+
+    cursor: pointer;
+  }
+
+  :global(.home-content-element:hover) {
+    transform: scale(1.02);
+    filter: brightness(1.1);
+  }
+
+  .home-welcome {
+    font-size: 0.9rem;
+    background-color: var(--primary-darken-10);
+    padding: 0.5rem;
+    border-radius: 0.5rem;
+    margin: 0.8rem;
+    outline: 2px dashed var(--secondary);
+    outline-offset: 2px;
+  }
+
+  .home-accept-storage {
+    border: none;
+    padding: 0.4rem 1rem;
+    border-radius: 0.2rem;
+    background-color: limegreen;
+    color: white;
+    margin-top: 0.5rem;
+    cursor: pointer;
+  }
+
+  .home-content-main {
+    padding: 0.5rem;
+    display: flex;
+    position: absolute;
+    flex-direction: column;
+    align-items: center;
+    border-radius: 0.5rem;
+    background-color: var(--primary);
+    color: var(--primary-text);
+    width: 100%;
+    height: 100%;
+    transition: all 0.2s ease-out;
+  }
+
+  :global(.home-content-element:active) {
+    transform: scale(0.97);
+    transition: all 0.1s ease-out;
+  }
+
+  /* BOTH HALVES GLOBAL, not `:global(.home-content-element) > .home-content-main`: the direct
+     parent of `.home-content-main` in this file's markup is the <AppLink> COMPONENT, and Svelte
+     cannot follow a child combinator across that boundary - it prunes the rule as unused. */
+  :global(.home-content-element > .home-content-main) {
+    background-color: rgba(53, 58, 70, 0.9);
+  }
+
+  .home-content-background {
+    position: absolute;
+    height: 100%;
+    border-radius: 0.5rem;
+    width: 100%;
+    background-size: cover;
+    overflow: hidden;
+  }
+
+  .home-content-title {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-bottom: solid 1px var(--secondary);
+    width: 94%;
+    padding-bottom: 0.3rem;
+    font-size: 1.2rem;
+  }
+
+  .home-content-title svg {
+    margin-right: 0.5rem;
+  }
+
+  .home-content-text {
+    font-size: 0.8rem;
+    margin-top: 0.25rem;
+    padding: 0.25rem;
+    text-align: center;
+    line-height: 1rem;
+  }
+
+  .home-content-open {
+    display: flex;
+    justify-content: center;
+    margin-top: auto;
+  }
+
+  /* Was one rule with `.home-dont-show-again *`; that half moved to Home.svelte, which owns the
+     hide-on-open button, and this half stayed with the Row it sits on here. */
+  :global(.home-app-scaling *) {
+    white-space: nowrap;
+  }
+
+  .top-right-home-label {
+    background-color: var(--accent);
+    color: var(--accent-text);
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    position: fixed;
+    top: 0;
+    z-index: 2;
+    padding: 0rem 3rem;
+    height: 4rem;
+    font-size: 1.5rem;
+    right: 0;
+    /*kinda hacky way to make this but eh */
+    transform: rotate(45deg) translate(20%, -70%);
+  }
+
+  :global(.home-app-scaling button) {
+    margin-left: 0.2rem;
+    min-width: unset;
+    padding: 0rem;
+    width: 1.5rem;
+    font-size: 0.6rem;
+    font-weight: bold;
+    height: 1.5rem;
+  }
+
+  .page-redirect-wrapper {
+    margin-top: 0.8rem;
+    display: flex;
+    flex-wrap: wrap;
+    width: 100%;
+  }
+
+  .page-redirect-wrapper :global(a),
+  .page-redirect-wrapper :global(button) {
+    background-color: var(--primary);
+    margin: 0.2rem;
+    color: var(--primary-text);
+    border-radius: 0.5rem;
+    border: none;
+    padding: 0.4rem 1rem;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.1s linear;
+  }
+
+  .page-redirect-wrapper :global(a:hover),
+  .page-redirect-wrapper :global(button:hover) {
+    filter: brightness(1.1);
+  }
+
+  .middle-size-pages-wrapper {
+    margin-top: 1rem;
+    gap: 1rem;
+  }
+
+  .middle-size-page-icon {
+    color: var(--primary-text);
+    font-size: 1.6rem;
+  }
+
+  :global(.current-page) {
+    /* Could be added */
+    outline: var(--accent) solid 2px;
+    filter: none;
+  }
+
+  .home-content-open button {
+    padding: 0.4rem 1.5rem;
+    background-color: var(--accent);
+    color: var(--accent-text);
+    border-radius: 0.5rem;
+    font-size: 0.8rem;
+    border: none;
+    cursor: pointer;
+  }
+
+  .home-top {
+    text-align: center;
+    margin-bottom: 1rem;
+  }
+
+  /* THE TITLE BLOCK IS THE FIRST THING TO GO ON A SHORT SCREEN. It is pure identity - the app's name
+     and its one-line description - while everything under it is navigation, so on a window too short
+     to hold both (a phone held in landscape is ~390px tall) the cards win. Height, not width or
+     orientation: the same 2.5rem of title is the problem on a short landscape phone and on a desktop
+     window dragged flat, and neither of the other two axes tells those apart. HomeContent renders
+     this block whenever the page variant asks for it (`alwaysShowTitle`), so the room has to be
+     bought back here. */
+  @media (max-height: 460px) {
+    .home-top {
+      display: none;
+    }
+  }
+
+  .home-title {
+    font-size: 2rem;
+  }
+
+  .home-top-text {
+    font-size: 0.8rem;
+    color: #b0ada8;
+  }
+
+  .home-separator {
+    border-top: 1px solid var(--secondary);
+    margin-top: 1rem;
+    font-size: 1.1rem;
+    width: 100%;
+  }
+
+  /* pageVisit "new" badge. Old: src/components/shared/PageVisit/pageVisit.module.scss. Consumed
+     by this file's nav cards via hasVisitedPage() (PageVisitStore.svelte.ts, ported ahead of
+     this task - see that file's own comment deferring this exact badge CSS/markup to Task 8). */
+  :global(.non-visited) {
+    position: relative;
+  }
+
+  :global(.non-visited)::after {
+    content: var(--new-text);
+    position: absolute;
+    top: 0;
+    transform: rotate(45deg) translate(20%, -80%);
+    right: 0;
+    background-color: var(--accent);
+    color: var(--accent-text);
+    font-size: 0.7rem;
+    z-index: 4;
+    border-radius: 0.2rem;
+    padding: 0.1rem 0.3rem;
+  }
+
+  /* Home.css's own mobile block. It has to stay AFTER every base rule above and BEFORE the
+     portrait block below - that is the order it had in App.css, and `.home-content`'s `gap` is
+     set by both, so a portrait phone narrower than 920px depends on the portrait one landing
+     last. `.home-dont-show-again` shared the font-size rule here; that half is gone, because
+     Home.svelte's own scoped `.home-dont-show-again` already out-specifies it. */
+  @media only screen and (max-width: 920px) {
+    .home-padded {
+      padding: 0.6rem 0.6rem 0.2rem 3.6rem;
+    }
+
+    :global(.home-app-scaling) {
+      font-size: 0.8rem;
+    }
+
+    .home-separator {
+      margin-top: 0.6rem;
+    }
+
+    :global(.home-content-element) {
+      min-height: 8.5rem;
+    }
+
+    .home-content-title {
+      font-size: 1.1rem;
+    }
+
+    .page-redirect-wrapper {
+      margin-top: 0.4rem;
+    }
+
+    .middle-size-pages-wrapper {
+      margin-top: 0.8rem;
+      gap: 0.8rem;
+    }
+
+    .home-content {
+      gap: 0.8rem;
+    }
+
+    .home-top {
+      margin: 1rem 0;
+    }
+
+    .home-bottom {
+      font-size: 0.6rem;
+    }
+
+    .page-redirect-wrapper :global(a),
+    .page-redirect-wrapper :global(button) {
+      padding: 0.4rem 0.7rem;
+    }
+  }
+
+  /* The orientation half of the old rotate-screen media block in App.css - only the two home
+     rules came along, `.rotate-screen` itself is still there. */
+  @media screen and (orientation: portrait) {
+    .home-content,
+    .middle-size-pages-wrapper {
+      gap: 0.5rem;
+    }
+    .middle-size-pages-wrapper {
+      margin-top: 0.5rem;
+    }
   }
 </style>

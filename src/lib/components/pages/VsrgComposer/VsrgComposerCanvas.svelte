@@ -178,3 +178,22 @@
   onpointermove={(e) => renderer?.handleDrag(e)}
   oncontextmenu={preventDefault}
 ></div>
+
+<style>
+  .vsrg-top-canvas-wrapper {
+    display: flex;
+    flex: 1;
+    justify-content: center;
+    position: relative;
+    cursor: pointer;
+  }
+
+  /* :global(canvas) because pixi creates the <canvas> and appends it into this wrapper at runtime
+     (VsrgComposerRenderer's `this.container.appendChild(this.app.canvas)`) - it is never in this
+     component's markup, so Svelte would otherwise prune the selector. */
+  .vsrg-top-canvas-wrapper :global(canvas) {
+    position: absolute;
+    opacity: 0.9;
+    /* border-radius: 0.6rem; */
+  }
+</style>

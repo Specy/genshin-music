@@ -929,3 +929,47 @@
     />
   </div>
 </AppBackground>
+
+<style>
+  /* pulled from vsrg-composer/VsrgComposer.css (old: src/app/_client-pages/vsrg-composer/
+     VsrgComposer.css, 270 lines — globally imported in app/layout.tsx at import order 12, after
+     Theme.css; this insertion instead sits BEFORE the separately-imported Theme.css, the one
+     cascade-order inversion this task's selector-intersection guard proves inert (see the task
+     report) — P4c Task 2. SKIPS 5 rules already ported verbatim into MultipleOptionSlider.svelte's
+     own <style> block (P4a Task 8; that file's own header names them): `.multiple-option-slider`,
+     `.multiple-option-slider button` (both the bare rule and its max-width:1000px override),
+     `.multiple-options-selected`, `.multiple-option-slider-overlay`. */
+  /* THAT BLOCK NO LONGER EXISTS AS A BLOCK: its rules now live in the <style> of whichever
+     VsrgComposer component owns the markup they style - VsrgTop, VsrgBottom, VsrgComposerKeyboard,
+     VsrgComposerCanvas and VsrgComposerMenu each hold their own; only the two page-level rules
+     below stayed here. `.vsrg-top` and `.vsrg-track-settings` were dropped as dead. */
+  .vsrg-page {
+    max-height: 100vh;
+    width: 100%;
+    height: 100%;
+    display: grid;
+    grid-template-areas:
+      'a b'
+      'c c';
+    flex: 1;
+    grid-template-rows: calc(100% - 2.9rem) min-content;
+    grid-template-columns: 1fr min-content;
+    gap: 0.4rem;
+    padding: 0.5rem;
+  }
+
+  /* :global() because `decorated-vsrg-canvas` is a `class` prop handed to <DecoratedCard>, so it
+     lands on that component's own root div rather than on markup written here. */
+  :global(.decorated-vsrg-canvas) {
+    grid-area: a;
+    display: flex;
+    border-radius: 0.4rem;
+    border: solid 0.15rem var(--secondary);
+  }
+
+  @media only screen and (max-width: 1000px) {
+    .vsrg-page {
+      grid-template-rows: calc(100% - 2.5rem) min-content;
+    }
+  }
+</style>

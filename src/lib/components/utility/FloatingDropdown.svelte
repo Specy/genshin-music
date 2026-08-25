@@ -30,7 +30,15 @@
   import type { ClassValue } from 'svelte/elements';
   import SongActionButton from '../inputs/SongActionButton.svelte';
 
-  // `.floating-dropdown*` CSS lives in global App.css.
+  // `.floating-dropdown*` CSS lives in this file's own style block at the
+  // bottom. `.dropdown-select` - the dropdown some callers put inside a
+  // dropdown row - stays in global App.css: five different components
+  // render it.
+  //
+  // (Careful with comments in this file now that it carries a style block:
+  // spelling a literal style or script tag name in brackets makes
+  // svelte-check's tag scanner pair it with the real closing tag below and
+  // report a phantom "script left open" error.)
   //
   // QUIRK: the toggle button below MUST use SongActionButton, not AppButton
   // - AppButton compiles fine (a compatible prop superset) but renders
@@ -176,3 +184,35 @@
     {@render children()}
   </div>
 </div>
+
+<style>
+  .floating-dropdown-children {
+    flex-direction: column;
+    box-shadow:
+      0 20px 25px -5px rgb(0 0 0 / 0.2),
+      0 8px 10px -6px rgb(0 0 0 / 0.2);
+    display: none;
+    position: absolute;
+    transform: translateX(calc(-100% + 3rem));
+    transform-origin: top;
+    --existing-transform: translateX(calc(-100% + 3rem));
+    z-index: 100;
+    padding: 0.2rem;
+    background-color: var(--primary);
+    color: var(--primary-text);
+    border: solid 1px var(--secondary);
+    border-radius: 0.4rem;
+  }
+
+  .floating-dropdown {
+    position: relative;
+  }
+
+  .floating-dropdown-active .floating-dropdown-children {
+    display: flex;
+    animation:
+      fadeIn 0.2s,
+      delayBackdrop 0.2s;
+    animation-fill-mode: forwards;
+  }
+</style>

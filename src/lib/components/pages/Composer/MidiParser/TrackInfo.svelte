@@ -137,3 +137,45 @@
     />
   </Column>
 </Column>
+
+<style>
+  /* The row's background lives on the HEADER alone (TrackInfo paints it inline); the column
+     itself only ever contributes the open-state border below. */
+  .midi-track-wrapper {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    align-items: center;
+    padding: 0.3rem 0.5rem;
+    border-radius: 0.2rem;
+  }
+
+  /* :global() on this rule and the next one: both classes are handed to Column as a class prop,
+     so they land on that component's root div rather than on markup in this file. */
+  :global(.midi-track-column) {
+    border-radius: 0.2rem;
+    display: flex;
+    flex-direction: column;
+    margin-top: 0.3rem;
+    width: 100%;
+    /* reserved while closed, so opening a row never shifts its neighbours */
+    border: solid 0.1rem transparent;
+  }
+
+  /* Open: the same border as the .midi-section wrapper around the track list. */
+  :global(.midi-track-open) {
+    border-color: var(--secondary);
+  }
+
+  .midi-track-center {
+    display: flex;
+    gap: 0.2rem;
+    align-items: center;
+  }
+
+  /* :global() on the wildcard half only - it has to reach elements rendered by the child
+     components inside the row (InstrumentSelect), which carry no scoping class from this file. */
+  .midi-track-center :global(*:not(:last-child)) {
+    margin-right: 0.5rem;
+  }
+</style>

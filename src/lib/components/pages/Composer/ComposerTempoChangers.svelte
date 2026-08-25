@@ -50,3 +50,59 @@
     </button>
   {/each}
 </div>
+
+<style>
+  /* THE BUTTONS' OWN RULES, moved out of App.css. THE WRAPPER'S STAY THERE, deliberately:
+     `.composer-grid-pro .tempo-changers-wrapper` and `...-hidden` re-position/re-show this column
+     for the Pro View from App.css, beating the base rule by one class. Scoping the base here would
+     add exactly one class back to it (`.tempo-changers-wrapper.svelte-<hash>`), the two would tie,
+     and a tie is settled by which stylesheet the browser saw last - so the Pro View could end up
+     with an absolutely-positioned tempo column over its canvas. The Pro rules cannot follow either:
+     test/composerCanvasCss.test.ts reads them out of App.css as text. The `max-width: 600px`
+     `gap` override on the wrapper stays with its base for the same reason.
+
+     Nothing below has a `.composer-grid-pro` counterpart, so the buttons and the caption travel
+     cleanly. */
+  .bottom-right-text {
+    text-align: center;
+    width: 100%;
+    color: var(--background-text);
+    text-shadow: rgb(51, 51, 51) 0px 1px 5px;
+    font-size: 0.8rem;
+  }
+
+  .tempo-changers-wrapper button {
+    flex: 1;
+    border-radius: 0.2rem;
+    border: none;
+    font-size: 1rem;
+    color: white;
+    padding: 0.4rem 0;
+    margin: 0;
+    filter: brightness(1.1);
+    cursor: pointer;
+  }
+
+  /* was grouped with `.layer-button:hover` in App.css; that class carried no markup anywhere and
+     went with the rest of the dead `.layer-button*` rules. */
+  .tempo-changers-wrapper button:hover {
+    filter: brightness(1.1);
+  }
+
+  .tempo-changers-wrapper button:focus {
+    filter: brightness(1.3);
+  }
+
+  @media only screen and (max-width: 1000px) {
+    .tempo-changers-wrapper button {
+      font-size: 0.7rem;
+      padding: 0.5rem;
+    }
+  }
+
+  @media only screen and (max-width: 600px) {
+    .tempo-changers-wrapper button {
+      font-size: 0.6rem;
+    }
+  }
+</style>

@@ -172,4 +172,20 @@
     height: 100%;
     margin-left: 0.6rem;
   }
+
+  /* THIS BLOCK IS LIVE FOR THE FIRST TIME (user decision 2026-08-25). It sat in App.css unscoped,
+     at one class, while the base rules above had already moved into this file - where Svelte's
+     scoping gives them two - so the phone adaptation lost every match and the bar kept its desktop
+     2.5rem and its song label on a phone. Both halves are in one file now, so source order decides
+     and the adaptation applies as written: shorter bar, no song name under 1000px. */
+  @media only screen and (max-width: 1000px) {
+    .vsrg-name {
+      display: none;
+    }
+
+    .vsrg-bottom {
+      height: 2.2rem;
+      margin-left: 2.9rem;
+    }
+  }
 </style>

@@ -115,7 +115,8 @@
      matching the LanguageSelector sitting next to it - only the square goes
      accent. It lives here rather than in HomeContent because the setting it
      writes (auto-open on load) only ever meant anything to this popup. The
-     rest of Home's CSS lives in the global App.css. */
+     overlay's own CSS follows below; the shared home CONTENT's CSS lives in
+     HomeContent.svelte, which owns the markup it styles. */
   .home-dont-show-again {
     gap: 0.4rem;
     padding: 0.5rem;
@@ -152,5 +153,80 @@
     border-color: var(--accent);
     color: var(--accent-text);
     opacity: 1;
+  }
+
+  /* ==================================================================================
+     THE OVERLAY SHELL ITSELF. Old: src/components/pages/Index/Home.css, by way of App.css's
+     "Home overlay" block; the rest of that block styled the shared content and moved to
+     HomeContent.svelte instead. `.home`/`.home-visible` reach the root <div> below through the
+     `homeClass` string, which Svelte cannot read statically - it does not prune them for exactly
+     that reason, and the scoping hash IS on that div, so they stay plain selectors.
+     `delayBackdrop` is Utility.scss's keyframe and stays global; `home-appear` is only ever named
+     by these two rules, so it comes along scoped.
+     ================================================================================== */
+  .home {
+    height: 100%;
+    justify-content: space-between;
+    overflow-y: auto;
+    position: fixed;
+    width: 100%;
+    background-color: var(--background);
+    color: var(--background-text);
+    z-index: 100;
+    transition: all 0.2s ease-out;
+    animation: 0.15s home-appear ease-out;
+    opacity: 0;
+    transform: scale(0.98);
+    will-change: opacity, transform, backdrop-filter;
+  }
+
+  .home-visible {
+    opacity: 1;
+    --backdrop-amount: 4px;
+    animation:
+      forwards delayBackdrop calc(0.2s * 1.2),
+      0.15s home-appear ease-out;
+    transform: scale(1);
+  }
+
+  @keyframes home-appear {
+    0% {
+      opacity: 0.5;
+      backdrop-filter: none;
+      transform: scale(0.98);
+    }
+    100% {
+      opacity: 1;
+      backdrop-filter: none;
+      transform: scale(1);
+    }
+  }
+
+  /* GLOBAL, and it has to be: this class is handed to MenuButton, which renders
+     `<button class={['menu-item', cls]}>` in ITS file, so the button never carries this
+     component's scoping hash. Bare `:global(...)` rather than `.home :global(.close-home)` so the
+     one-class specificity is exactly what App.css had - `.menu-item` sets the same
+     `border-radius` and `cursor` values on the same button, and a tie there must stay a tie. */
+  :global(.close-home) {
+    position: absolute;
+    top: 0.5rem;
+    left: 0.5rem;
+    padding: 0.5rem;
+    border-radius: 0.5rem;
+    cursor: pointer;
+  }
+
+  /* Was one rule with `.home-app-scaling *` in App.css; that half went to HomeContent.svelte with
+     the Row it sits on. The two <span>s inside the button are this file's own markup. */
+  .home-dont-show-again * {
+    white-space: nowrap;
+  }
+
+  /* Home.css's own mobile block, the `.close-home` half of it. The rest went to
+     HomeContent.svelte's copy of the same query. */
+  @media only screen and (max-width: 920px) {
+    :global(.close-home) {
+      left: 0.4rem;
+    }
   }
 </style>

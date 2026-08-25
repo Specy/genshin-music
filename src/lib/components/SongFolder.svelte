@@ -15,8 +15,15 @@
   import FloatingDropdownText from './utility/FloatingDropdownText.svelte';
   import FaEllipsisH from './icons/FaEllipsisH.svelte';
 
-  // CSS (.folder/.folder-header/.folder-header-button/.folder-name etc.)
-  // lives in global App.css; no component-local <style> is needed here.
+  // CSS (.folder/.folder-header/.folder-header-button/.folder-name) lives in
+  // this file's own style block at the bottom. `.dropdown-select` on the
+  // filter dropdown below stays in global App.css - four song-row components
+  // render that same class.
+  //
+  // (Careful with comments in this file now that it carries a style block:
+  // spelling a literal style or script tag name in brackets makes
+  // svelte-check's tag scanner pair it with the real closing tag below and
+  // report a phantom "script left open" error.)
   //
   // FOLDER_FILTER_TYPES/APP_NAME come from `$core/legacyConfig` even though
   // this is UI code: both are plain literals identical for both games
@@ -233,3 +240,44 @@
     </div>
   {/if}
 </div>
+
+<style>
+  .folder {
+    display: flex;
+    flex-direction: column;
+    border-radius: 0.4rem;
+    margin: 0.4rem 0;
+  }
+
+  .folder-header {
+    border-radius: 0.4rem 0.4rem 0 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-right: 0.5rem;
+  }
+
+  .folder-header-button {
+    display: flex;
+    align-items: center;
+    flex: 1;
+    cursor: pointer;
+    padding: 0.75rem;
+  }
+
+  .folder-header-button input {
+    background-color: transparent;
+    color: var(--menu-background-text);
+    border: none;
+    outline: solid 2px var(--secondary);
+    font-family: Bonobo;
+    border-radius: 0.2rem;
+  }
+
+  .folder-name {
+    font-size: 1.2rem;
+    padding: 0;
+    max-width: 20rem;
+    padding-left: 0.3rem;
+  }
+</style>
