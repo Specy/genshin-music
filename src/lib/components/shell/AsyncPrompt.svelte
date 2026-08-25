@@ -238,16 +238,12 @@
       onkeydown={handlePromptInputKeydown}
     />
     <div class="prompt-row">
-      <!-- QUIRK: Cancel/Ok below are literal English, unlike the
-                 confirm dialog's Yes/No above (t('common:yes')/t('common:no')) -
-                 this dialog was never wired to i18n. Not something to
-                 translate as a "fix". -->
       <button
         class="prompt-button"
         style="background-color:{color};color:white"
         onclick={() => asyncPromptStore.answerPrompt(null)}
       >
-        Cancel
+        {t('common:cancel')}
       </button>
       <button
         class={['prompt-button', !value && 'disabled']}
@@ -255,7 +251,7 @@
         style="background-color:{color};color:white"
         onclick={() => asyncPromptStore.answerPrompt(value)}
       >
-        Ok
+        {t('common:ok')}
       </button>
     </div>
   </DecoratedCard>
