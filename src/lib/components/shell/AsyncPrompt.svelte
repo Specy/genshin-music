@@ -302,7 +302,7 @@
 </div>
 
 <style>
-  .floating-prompt {
+  :global(.floating-prompt) {
     position: absolute;
     margin-right: auto;
     margin-left: auto;
@@ -341,7 +341,7 @@
     }
   }
 
-  .floating-prompt-hidden {
+  :global(.floating-prompt-hidden) {
     opacity: 0;
     transform: translateY(-20%);
     pointer-events: none;
@@ -427,7 +427,7 @@
   }
 
   @media only screen and (max-width: 920px) {
-      .floating-prompt {
+    :global(.floating-prompt) {
         width: 45vw;
         padding: 0.5rem;
       }
@@ -442,7 +442,7 @@
      page. Placed straight after the block it overrides: same specificity, source order decides.
      `min()` keeps the existing `max-width: 24rem` cap meaningful on a portrait tablet. */
   @media screen and (orientation: portrait) {
-    .floating-prompt {
+    :global(.floating-prompt) {
       width: min(90vw, 24rem);
     }
   }
