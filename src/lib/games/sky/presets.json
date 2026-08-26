@@ -277,13 +277,5 @@
       "pitched": false,
       "icon": "dm"
     }
-  ],
-  "sfx-1": [
-    {
-      "nominal": 60,
-      "baseNote": "C",
-      "pitched": false,
-      "icon": "cr"
-    }
   ]
 }

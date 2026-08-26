@@ -160,7 +160,9 @@ const UNTUNED = INSTRUMENTS.find((name: string) =>
 const WIDE = INSTRUMENTS.reduce((widest: string, name: string) =>
     getNoteIdTable(name).length > getNoteIdTable(widest).length ? name : widest, INSTRUMENTS[0])
 const NARROW = INSTRUMENTS.find((name: string) =>
-    CANONICAL_NOTE_IDS.some(id => !getNoteIdTable(name).includes(id)))!
+    CANONICAL_NOTE_IDS.some(id => !getNoteIdTable(name).includes(id))
+    //...and untuned, so the grid nominals these rows pass around ARE Note Numbers
+    && getSoundingTable(name).every((s, b) => s === getNoteIdTable(name)[b]))!
 
 /**
  * A track's instrument change is a NOTE edit (ADR-0007 §4), and the vsrg panel destroys the old

@@ -808,8 +808,7 @@
         "SFX_SpiritMantaCall": "光鲲之声",
         "SFX_JellyCall": "水母之声",
         "SFX_MantaCall": "遥鲲之声",
-        "SFX_MothCall": "幼童之声",
-        "SFX_KrillHorn": "Krill Horn"
+        "SFX_MothCall": "幼童之声"
     },
     "versions": {
         "4-0-0": {

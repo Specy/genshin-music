@@ -223,7 +223,9 @@ describe('computeButtonLayerStatuses', () => {
         //nothing like the 21-row grid); under sky it is an 8-note kit, whose buttons happen to
         //BE grid slots 0-7, so the same scenario there has fewer numbers to disagree about.
         const subGridInstruments = INSTRUMENTS.filter((name: InstrumentName) =>
-            CANONICAL_NOTE_IDS.some((id) => !getNoteIdTable(name).includes(id)))
+            CANONICAL_NOTE_IDS.some((id) => !getNoteIdTable(name).includes(id))
+            //...and untuned, since the rows below feed grid NOMINALS in as Note Numbers
+            && getSoundingTable(name).every((s, b) => s === getNoteIdTable(name)[b]))
         const keyboard = subGridInstruments.reduce((widest, name) =>
             getNoteIdTable(name).length > getNoteIdTable(widest).length ? name : widest,
         subGridInstruments[0])
@@ -400,7 +402,9 @@ describe('computeButtonLayerStatusesByGridRow', () => {
     })
 
     const subGrid = INSTRUMENTS.find((name: InstrumentName) =>
-        CANONICAL_NOTE_IDS.some((id) => !getNoteIdTable(name).includes(id)))
+        CANONICAL_NOTE_IDS.some((id) => !getNoteIdTable(name).includes(id))
+        //...and untuned: the row below feeds a grid NOMINAL in as a Note Number
+        && getSoundingTable(name).every((s, b) => s === getNoteIdTable(name)[b]))
 
     it.runIf(subGrid !== undefined)('marks nothing on a row this keyboard has no key for', () => {
         const missing = CANONICAL_NOTE_IDS.find((id) => !getNoteIdTable(subGrid!).includes(id)
@@ -454,7 +458,9 @@ describe('computeGridStrandedMarks', () => {
     it('marks an ON-SCALE strand 0: dimmed, but not claiming to be off the scale', () => {
         //a grid row this instrument has no button for, if the game ships such an instrument
         const narrow = INSTRUMENTS.find((name: InstrumentName) =>
-            CANONICAL_NOTE_IDS.some(id => noteIdToButton(name, id) === -1))
+            CANONICAL_NOTE_IDS.some(id => noteIdToButton(name, id) === -1)
+            //...and untuned, so the grid nominal below IS this instrument's Note Number
+            && getSoundingTable(name).every((s, b) => s === getNoteIdTable(name)[b]))
         if (!narrow) return
         const stranded = CANONICAL_NOTE_IDS.find(id => noteIdToButton(narrow, id) === -1)!
         expect(computeGridStrandedMarks([columnNote(0, stranded)], [track(narrow)], 'C'))

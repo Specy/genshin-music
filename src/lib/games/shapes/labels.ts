@@ -172,19 +172,6 @@ export const DRUMS_4_LABELS: ShapeLabels = {
   switch: [...DRUMS_8_LABELS.switch.slice(0, 2), ...DRUMS_8_LABELS.switch.slice(4, 6)],
 };
 
-/**
- * The single-button keyboard — Sky's Krill Horn (one unpitched call), the only
- * 1-button Instrument in either game. Key/label choices follow every other
- * set's first Button.
- */
-export const SFX_1_LABELS: ShapeLabels = {
-  keyboard: ['Q'],
-  abc: ['A1'],
-  number: ['1'],
-  playstation: ['⟰'],
-  switch: ['⟰'],
-};
-
 /** The 2×3 SFX keyboard (6 buttons). */
 export const SFX_6_LABELS: ShapeLabels = {
   keyboard: ['Q', 'W', 'E', 'A', 'S', 'D'],

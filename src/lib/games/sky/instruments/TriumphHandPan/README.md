@@ -58,7 +58,7 @@ one instrument, which is the point of shipping both.
 
 Normalized to the house −3.5 dBFS peak, like every instrument produced by
 `docs/skills/instrument-from-sequential-capture` (Cymbals, FortuneDrum,
-SFX_KrillHorn). **This makes it ~12 dB louder than `HandPan`**, whose rip-era
+KrillHorn). **This makes it ~12 dB louder than `HandPan`**, whose rip-era
 samples peak at −14 to −17 dBFS along with most of the legacy Sky library. That is
 the existing house-level migration showing at a seam, not a fault in this capture;
 re-normalizing `HandPan` is a separate change.

@@ -942,7 +942,6 @@ export const i18n_en = {
     SFX_JellyCall: 'Jelly Call',
     SFX_MantaCall: 'Manta Call',
     SFX_MothCall: 'Moth Call',
-    SFX_KrillHorn: 'Krill Horn', //one-button prop that plays a single krill roar
     GrandPiano: 'Grand Piano',
     LingeringEuphonia: 'Lingering Euphonia',
     LeapingSpiritPiano: 'Leaping Spirit Piano',

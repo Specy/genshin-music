@@ -946,7 +946,11 @@ function subGridPair(): {
         ),
         width: INSTRUMENTS_DATA[instrument].notes.length,
     }))
-        .filter(candidate => candidate.playableId !== undefined && candidate.strandedId !== undefined)
+        //Untuned as well as sub-grid: on a register-anchored instrument the probes above
+        //conflate the two axes (a grid id it lacks as a NOMINAL can still match a SOUNDING),
+        //so "playableId" would name a row the canvas never draws that note on.
+        .filter(candidate => candidate.playableId !== undefined && candidate.strandedId !== undefined
+            && INSTRUMENTS_DATA[candidate.instrument].notes.every(n => n.sounding === n.nominal))
         //stable, so instruments of equal width keep INSTRUMENTS order and the pick is deterministic
         .sort((a, b) => b.width - a.width)
     const best = candidates[0]

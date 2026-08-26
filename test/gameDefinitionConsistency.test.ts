@@ -65,7 +65,6 @@ describe('frozen legacy note tables match the live instrument data (transcriptio
             'SmallBell',
             'FortuneDrum',
             //Sky, 2026-08-23: one-button krill roar, in-game capture
-            'SFX_KrillHorn',
             //Sky, 2026-08-23: Season of Radiance 2x2 cymbals, in-game capture
             'Cymbals',
             //Sky, 2026-08-24: Season of Performance handpan, in-game capture. Shares the

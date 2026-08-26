@@ -306,12 +306,15 @@ describe('an instrument swap rewrites the track button-preservingly', () => {
      */
     it('a strand passes through a swap UNCHANGED and un-strands on an instrument that has it', () => {
         //by capability, never by game id: an instrument missing a grid row another one carries
+        //both sides UNTUNED as well as sub-grid, since the id below is fed in as a Note Number
+        const untuned = (name: string) =>
+            INSTRUMENTS_DATA[name].notes.every((n) => n.sounding === n.nominal)
         const narrow = INSTRUMENTS.find((name) =>
-            CANONICAL_NOTE_IDS.some((id) => noteIdToButton(name, id) === -1))!
+            CANONICAL_NOTE_IDS.some((id) => noteIdToButton(name, id) === -1) && untuned(name))!
         const stranded = CANONICAL_NOTE_IDS.find((id) =>
             noteIdToButton(narrow, id) === -1
-            && INSTRUMENTS.some((name) => noteIdToButton(name, id) !== -1))!
-        const wide = INSTRUMENTS.find((name) => noteIdToButton(name, stranded) !== -1)!
+            && INSTRUMENTS.some((name) => noteIdToButton(name, id) !== -1 && untuned(name)))!
+        const wide = INSTRUMENTS.find((name) => noteIdToButton(name, stranded) !== -1 && untuned(name))!
         const song = new ComposedSong('un-strand by swap', [narrow])
         song.addNoteAt(0, 0, stranded)
         expect(gridRowForNumber(narrow, 'C', stranded).stranded).toBe(true)
@@ -737,10 +740,11 @@ function idAtRow(row: number): number | undefined {
 function subGridInstrument(): (typeof INSTRUMENTS)[number] {
     const best = INSTRUMENTS.map((instrument) => ({
         instrument,
-        //an id it CAN play whose own button is NOT its canonical slot: the whole disagreement
+        //an id it CAN play whose own button is NOT its canonical slot: the whole disagreement.
+        //Untuned too, since the rows below store this instrument's nominals as Note Numbers.
         misplaced: CANONICAL_NOTE_IDS.some(
             (id, slot) => ![-1, slot].includes(noteIdToButton(instrument, id))
-        ),
+        ) && INSTRUMENTS_DATA[instrument].notes.every((n) => n.sounding === n.nominal),
         width: INSTRUMENTS_DATA[instrument].notes.length,
     }))
         .filter((candidate) => candidate.misplaced)

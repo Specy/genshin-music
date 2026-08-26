@@ -97,8 +97,7 @@
       "SFX_SpiritMantaCall",
       "SFX_JellyCall",
       "SFX_MantaCall",
-      "SFX_MothCall",
-      "SFX_KrillHorn"
+      "SFX_MothCall"
     ],
     "defaultVolume": 100
   },

@@ -181,8 +181,13 @@ describe('the keyboard the player publishes to the Shape', () => {
 // fixtures, not a rule — so it is ASSERTED below rather than assumed, and every call still goes
 // through the real Basepoint-aware resolution.
 describe('the two display coordinates of a player-loaded note', () => {
+    //Sub-grid AND untuned: the block header's premise is that a nominal doubles as the stored
+    //number, so an instrument whose register moves its soundings off its nominals (sky's
+    //register-anchored HandPan since 2026-08-26) cannot host these rows. Derived, not named, so
+    //a future register on the currently-chosen instrument re-selects instead of going red.
     const subGridInstruments = INSTRUMENTS.filter((name: InstrumentName) =>
-        CANONICAL_NOTE_IDS.some((id) => !getNoteIdTable(name).includes(id)))
+        CANONICAL_NOTE_IDS.some((id) => !getNoteIdTable(name).includes(id))
+        && getSoundingTable(name).every((sounding, button) => sounding === getNoteIdTable(name)[button]))
     /**
      * How sharp a reproduction an instrument can make: ids it has NO key for whose old number -
      * the note's own-track button on a full-size track, or the canonical Song-Grid slot for an id
@@ -190,7 +195,7 @@ describe('the two display coordinates of a player-loaded note', () => {
      * playing something else. A kit whose keys simply ARE grid slots 0..n-1 (sky's drums, genshin's
      * DunDun) scores 0: its foreign numbers fall off the end and were merely skipped, so it cannot
      * show this bug at all. Widest wins ties. genshin lands on the reported 14-key NightwindHorn;
-     * sky on the 8-key HandPan, whose keys are scattered across the 15-row grid.
+     * sky on an 8-key kit whose keys are scattered across the 15-row grid.
      */
     const wrongKeyCollisions = (name: InstrumentName) => {
         const table = getNoteIdTable(name)

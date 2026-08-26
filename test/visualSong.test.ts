@@ -109,6 +109,8 @@ describe('VisualSong short-instrument rows (pre-v4 parity)', () => {
         // pre-v4, the stored index WAS the own-instrument button — the row must not move
         const short = INSTRUMENTS.find(name =>
             INSTRUMENTS_DATA[name].notes.length < INSTRUMENTS_DATA[INSTRUMENTS[0]].notes.length
+            //...and untuned: the row below stores this instrument's nominals as Note Numbers
+            && INSTRUMENTS_DATA[name].notes.every((n) => n.sounding === n.nominal)
         )
         if (!short) throw new Error('no short instrument in this game to test with')
         const table = INSTRUMENTS_DATA[short].notes.map((n) => n.nominal)

@@ -1,10 +1,14 @@
 # Tuned Krill Horn — the one-shot prop, pitch-shifted into an octave (2026-08-24)
 
-`SFX_KrillHorn` is the shipped in-game capture: one button, one krill roar, and it
-stays exactly as it is. This folder turns that roar into a playable eight-button
-`sky-2x4` Instrument. **Button 0 is the original file, byte for byte** — the same
-`SFX_KrillHorn/0.mp3` — and the other seven are pitch-shifted up from it. Both
-Instruments ship; nothing about the SFX one changed.
+`SFX_KrillHorn` was the shipped in-game capture: one button, one krill roar. This
+folder turns that roar into a playable eight-button `sky-2x4` Instrument. **Button 0
+is that original file, byte for byte** — what used to be `SFX_KrillHorn/0.mp3` — and
+the other seven are pitch-shifted up from it.
+
+**2026-08-26: `SFX_KrillHorn` was retired** (user's call — the one-button prop was
+redundant once this tuned octave existed), so this folder is now the only home of the
+roar. Its history below still refers to the SFX folder because that is where the
+sample and its authoring decisions came from; the folder itself is in git history.
 
 ## The source is pitched — the original README's "no stable fundamental" was wrong
 
@@ -30,9 +34,9 @@ h4 and h8 independently agree to within 0.1 cent, so **f0 = 43.86 Hz = F1 + 8.2
 cents**, stable across the first 1.8 s (later windows scatter only once the tail has
 decayed into the noise floor). The horn is an F, not an unpitched roar.
 
-`SFX_KrillHorn` keeps `pitched: false` regardless: it is a one-button prop whose
-button is an Assigned Button by design, and flipping it would move where its notes
-land in every existing sheet.
+`SFX_KrillHorn` kept `pitched: false` regardless while it shipped: it was a
+one-button prop whose button is an Assigned Button by design, and flipping it would
+have moved where its notes land in every existing sheet. (It was retired 2026-08-26.)
 
 ## Why the octave starts on F
 
@@ -52,6 +56,16 @@ hear sits one octave below the Note Id. That is the same kind of offset as `Horn
 (two octaves) and `Contrabass` (three): Note Ids are identity, not measured pitch —
 see the `HandPan` README for the argument at one octave. Here it is not a choice at
 all, it is forced by pinning button 0 to the unshifted sample.
+
+**2026-08-26: that octave is now authored, as `"register": "F3"`** (ADR-0007
+addendum), so the model records the F3–F4 this table verifies instead of claiming
+the Note Ids' own F4–F5. Which octave to author was a real decision, because this
+roar's spectrum is lopsided: its true fundamental is F1 (44 Hz is a sharp tonal
+peak at −0.9 dB, not rumble — the h1 row below), but **h4 is the loudest partial**
+and h2/h3/h5/h7 sit 24–27 dB down. F1 is what an analyser calls it; F3 is what a
+listener hears, since 44 Hz is below what phone and laptop speakers reproduce and
+the ear needs ~25–30 dB more level there than at 175 Hz. The register follows the
+ear — and therefore this table, which is what the Instrument was tuned against.
 
 | Button | Note Id | Shift  | Ratio  | Audible h4  | Measured | vs A440 |
 | -----: | ------- | ------ | ------ | ----------- | -------- | ------- |
@@ -100,8 +114,8 @@ the default — is enough to let the fastest tap speak with its full attack.
 ## Processing — and why not ffmpeg
 
 Buttons 1–7 are rendered from `m61.wav`, the pre-encode PCM of the take that shipped
-as `SFX_KrillHorn/0.mp3`, so there is only one lossy generation. Button 0 skips the
-pipeline entirely and is a byte copy of the shipped MP3.
+as `SFX_KrillHorn/0.mp3` (retired 2026-08-26), so there is only one lossy generation.
+Button 0 skips the pipeline entirely and is a byte copy of that shipped MP3.
 
 The pitch shift is the **Rubber Band v4 CLI on its R3 ("finer") engine**:
 

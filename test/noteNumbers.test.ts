@@ -202,7 +202,9 @@ describe('gridRowForNumber', () => {
         //a sub-grid instrument (genshin's 14-button horn, sky's 8-note kits) and a grid id
         //it has no button for: drawn on its OWN row, marked stranded — unchanged from today
         const narrow = INSTRUMENTS.find((name: string) =>
-            CANONICAL_NOTE_IDS.some(id => !getNoteIdTable(name).includes(id)))!
+            CANONICAL_NOTE_IDS.some(id => !getNoteIdTable(name).includes(id))
+            //...and untuned: the id below is fed in as a Note Number
+            && getSoundingTable(name).every((s, b) => s === getNoteIdTable(name)[b]))!
         const id = CANONICAL_NOTE_IDS.find(candidate => !getNoteIdTable(narrow).includes(candidate))!
         for (const pitch of ALL_PITCHES) {
             expect(gridRowForNumber(narrow, pitch, id + basepointOffset(pitch)))
