@@ -424,9 +424,9 @@
 
   @media only screen and (max-width: 920px) {
     :global(.floating-prompt) {
-        width: 45vw;
-        padding: 0.5rem;
-      }
+      width: 45vw;
+      padding: 0.5rem;
+    }
   }
 
   /* Both widths above (30vw, and 45vw on a phone) were written when a phone only ever showed this

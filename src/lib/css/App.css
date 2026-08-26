@@ -1582,6 +1582,7 @@ select {
   width: 4rem;
   gap: 0.2rem;
   display: flex;
+  z-index: 3;
 }
 
 .tempo-changers-wrapper-hidden {
@@ -1900,7 +1901,7 @@ select {
   bottom: 0;
   width: 100%;
   height: var(--pro-sliver-height);
-  z-index: 7;
+  z-index: 2;
   background: transparent;
   border: none;
   padding: 0;
