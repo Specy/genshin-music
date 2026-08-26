@@ -4,7 +4,7 @@
 //
 // TWO AXES, ONE MODULE — deliberately, because a swap and a grid row need both at once:
 //  - NOMINAL IDS (ADR-0001): the instrument/grid namespace. Per-instrument tables come
-//    from the game definition's note structs (`note.midi`); the Song Grid's row order is a
+//    from the game definition's note structs (`note.nominal`); the Song Grid's row order is a
 //    SEPARATE authored list (CANONICAL_NOTE_IDS, ADR-0004) that no instrument defines,
 //    which is why the *Grid* helpers below place by id alone. Songs stopped storing these
 //    at ADR-0007; they survive as the currency of button correspondence (swaps, grid rows,
@@ -55,7 +55,7 @@ export function getNoteIdTable(instrumentName: RuntimeInstrumentName): readonly 
     const name = isInstrumentName(instrumentName) ? instrumentName : DEFAULT_INSTRUMENT
     const cached = idTableCache.get(name)
     if (cached) return cached
-    const table = INSTRUMENTS_DATA[name].notes.map((note) => note.midi)
+    const table = INSTRUMENTS_DATA[name].notes.map((note) => note.nominal)
     idTableCache.set(name, table)
     return table
 }
@@ -282,7 +282,8 @@ export function effectiveTrackPitch(instrument: {pitch: Pitch | ''} | undefined,
  * Replicates the legacy NoteLayer.toLayerStatus texture/status selection over per-track
  * notes, per BUTTON OF THE KEYBOARD ON SCREEN: bit 0 = the current layer has a note on this
  * button; bits 1-3 = the icon classes of OTHER visible tracks with a note there. Used by the
- * composer KEYBOARD only.
+ * composer keyboard in the PRO VIEW, whose canvas rows are absolute pitches; the compressed
+ * view's keyboard reads computeButtonLayerStatusesByGridRow below, mirroring ITS canvas.
  *
  * ONE coordinate space — the DISPLAYED instrument's Buttons (ADR-0004: the keyboard's rows
  * ARE the instrument's Buttons), at the DISPLAYED instrument's own Basepoint. Every note,
@@ -301,6 +302,56 @@ export function computeButtonLayerStatuses(notes: readonly ColumnNote[], current
     const buttons = new Map<number, LayerStatus>()
     for (const note of notes) {
         const button = numberToButton(keyboardInstrumentName, keyboardPitch, note.id)
+        if (button === -1) continue
+        let status = buttons.get(button) ?? 0
+        if (note.trackIndex === currentLayer) {
+            status |= 1
+        } else if (instruments[note.trackIndex]?.visible) {
+            status |= 1 << instruments[note.trackIndex].toNoteIcon()
+        }
+        buttons.set(button, LAYER_STATUSES[status] ?? 0)
+    }
+    return buttons
+}
+
+/**
+ * The COMPRESSED composer keyboard's variant of computeButtonLayerStatuses: same bits, same
+ * keys (the displayed keyboard's Buttons), but an OTHER track's note marks the key sitting on
+ * the Song-Grid row the compressed canvas draws it on (`gridRowForNumber` against the note's
+ * OWN track — the exact call computeGridRowLayerStatuses makes), not the key that sounds it.
+ *
+ * Register-shifted instruments are what make the two answers part company (sky's Guitar
+ * button 0 and Contrabass button 14 both sound 48): the compressed canvas puts that guitar
+ * note on the BOTTOM row — its own button's sheet position — so the keyboard sitting under
+ * that canvas must mark its bottom-row key, or the mark contradicts the canvas directly above
+ * it. The Pro View keyboard keeps the sounding-keyed variant for the mirrored reason: ITS
+ * canvas rows are absolute pitches, where "the key that sounds it" IS the aligned answer.
+ *
+ * The CURRENT layer stays sounding-keyed (bit 0 via numberToButton): its marks mean "pressing
+ * this key removes this note" — a press-toggle correspondence that must not drift from what a
+ * press enters — and for a voiced own-track note the two spellings agree anyway, because the
+ * keyboard IS that track's instrument. A row the keyboard has no button for marks nothing,
+ * exactly as a number it cannot voice does in the sounding-keyed variant.
+ */
+export function computeButtonLayerStatusesByGridRow(
+    notes: readonly ColumnNote[],
+    currentLayer: number,
+    instruments: InstrumentData[],
+    keyboardInstrumentName: RuntimeInstrumentName,
+    keyboardPitch: Pitch,
+    songPitch: Pitch
+): Map<number, LayerStatus> {
+    const buttons = new Map<number, LayerStatus>()
+    for (const note of notes) {
+        let button: number
+        if (note.trackIndex === currentLayer) {
+            button = numberToButton(keyboardInstrumentName, keyboardPitch, note.id)
+        } else {
+            const instrument = instruments[note.trackIndex]
+            const row = gridRowForNumberCached(instrument?.name ?? '', effectiveTrackPitch(instrument, songPitch), note.id).row
+            const rowId = CANONICAL_NOTE_IDS[row]
+            button = rowId === undefined ? -1 : noteIdToButton(keyboardInstrumentName, rowId)
+        }
         if (button === -1) continue
         let status = buttons.get(button) ?? 0
         if (note.trackIndex === currentLayer) {

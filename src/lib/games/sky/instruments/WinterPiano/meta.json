@@ -3,5 +3,6 @@
   "family": "piano",
   "midiName": "bright acoustic piano",
   "shape": "sky-3x5",
+  "register": "C5",
   "notes": "standard-15"
 }

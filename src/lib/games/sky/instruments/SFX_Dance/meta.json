@@ -5,37 +5,37 @@
   "shape": "sky-2x3",
   "notes": [
     {
-      "midi": 60,
+      "nominal": 60,
       "baseNote": "",
       "pitched": false,
       "icon": "cr"
     },
     {
-      "midi": 62,
+      "nominal": 62,
       "baseNote": "",
       "pitched": false,
       "icon": "dm"
     },
     {
-      "midi": 64,
+      "nominal": 64,
       "baseNote": "",
       "pitched": false,
       "icon": "cr"
     },
     {
-      "midi": 65,
+      "nominal": 65,
       "baseNote": "",
       "pitched": false,
       "icon": "cr"
     },
     {
-      "midi": 67,
+      "nominal": 67,
       "baseNote": "",
       "pitched": false,
       "icon": "dm"
     },
     {
-      "midi": 69,
+      "nominal": 69,
       "baseNote": "",
       "pitched": false,
       "icon": "cr"

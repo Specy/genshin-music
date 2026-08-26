@@ -3,5 +3,6 @@
   "family": "guitar",
   "midiName": "contrabass",
   "shape": "sky-3x5",
+  "register": "C1",
   "notes": "standard-15"
 }

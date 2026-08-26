@@ -23,7 +23,7 @@ import {
 
 /** Note Number of a button on the game's default instrument, at the fixture's Basepoint of C. */
 function idOf(button: number): number {
-    return INSTRUMENTS_DATA[INSTRUMENTS[0]].notes[button].midi
+    return INSTRUMENTS_DATA[INSTRUMENTS[0]].notes[button].nominal
 }
 
 /**

@@ -12,85 +12,85 @@
   "notes": [
     {
       "file": "m60.mp3",
-      "midi": 60,
+      "nominal": 60,
       "baseNote": "C",
       "icon": "do"
     },
     {
       "file": "m62.mp3",
-      "midi": 62,
+      "nominal": 62,
       "baseNote": "D",
       "icon": "re"
     },
     {
       "file": "m64.mp3",
-      "midi": 64,
+      "nominal": 64,
       "baseNote": "E",
       "icon": "mi"
     },
     {
       "file": "m65.mp3",
-      "midi": 65,
+      "nominal": 65,
       "baseNote": "F",
       "icon": "fa"
     },
     {
       "file": "m67.mp3",
-      "midi": 67,
+      "nominal": 67,
       "baseNote": "G",
       "icon": "so"
     },
     {
       "file": "m69.mp3",
-      "midi": 69,
+      "nominal": 69,
       "baseNote": "A",
       "icon": "la"
     },
     {
       "file": "m71.mp3",
-      "midi": 71,
+      "nominal": 71,
       "baseNote": "B",
       "icon": "ti"
     },
     {
       "file": "m48.mp3",
-      "midi": 48,
+      "nominal": 48,
       "baseNote": "C",
       "icon": "do"
     },
     {
       "file": "m50.mp3",
-      "midi": 50,
+      "nominal": 50,
       "baseNote": "D",
       "icon": "re"
     },
     {
       "file": "m52.mp3",
-      "midi": 52,
+      "nominal": 52,
       "baseNote": "E",
       "icon": "mi"
     },
     {
       "file": "m53.mp3",
-      "midi": 53,
+      "nominal": 53,
       "baseNote": "F",
       "icon": "fa"
     },
     {
       "file": "m55.mp3",
-      "midi": 55,
+      "nominal": 55,
       "baseNote": "G",
       "icon": "so"
     },
     {
       "file": "m57.mp3",
-      "midi": 57,
+      "nominal": 57,
       "baseNote": "A",
       "icon": "la"
     },
     {
       "file": "m59.mp3",
-      "midi": 59,
+      "nominal": 59,
       "baseNote": "B",
       "icon": "ti"
     }

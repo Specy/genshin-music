@@ -5,7 +5,7 @@ import {CANONICAL_NOTE_IDS, ComposedSong, INSTRUMENTS, INSTRUMENTS_DATA, NoteCol
 import {gridRowForNumber} from '$core/Songs/noteIds'
 
 function idOf(button: number): number {
-    return INSTRUMENTS_DATA[INSTRUMENTS[0]].notes[button].midi
+    return INSTRUMENTS_DATA[INSTRUMENTS[0]].notes[button].nominal
 }
 
 function makeSong(): ComposedSong {

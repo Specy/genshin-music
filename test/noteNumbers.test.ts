@@ -20,7 +20,7 @@ const notesOf = (name: string) => INSTRUMENTS_DATA[name as keyof typeof INSTRUME
 
 /** Instruments with at least one Pitched Button tuned away from its Nominal Id (genshin: Vintage-Lyre). */
 const TUNED = INSTRUMENTS.filter((name: string) =>
-    notesOf(name).some(note => note.pitched && note.sounding !== note.midi))
+    notesOf(name).some(note => note.pitched && note.sounding !== note.nominal))
 /** Instruments with at least one Assigned Button (percussion, SFX, chord strums). */
 const ASSIGNED = INSTRUMENTS.filter((name: string) => notesOf(name).some(note => !note.pitched))
 /** An instrument whose two axes coincide — every number off its nominal set is guaranteed stranded on it. */
@@ -38,13 +38,19 @@ describe('sounding tables', () => {
         }
     })
 
-    it('give an Assigned Button its own Nominal Id, and a Pitched Button a match within a tritone', () => {
+    it('give an Assigned Button its own Nominal Id, and a Pitched Button a class match within a tritone', () => {
         for (const name of INSTRUMENTS) {
             notesOf(name).forEach((note, button) => {
                 const sounding = getSoundingTable(name)[button]
-                if (!note.pitched) expect(sounding).toBe(note.midi)
-                //the registry rejects the exact ±6 tie, so a derived pitch is always strictly nearer
-                else expect(Math.abs(sounding - note.midi)).toBeLessThan(6)
+                if (!note.pitched) expect(sounding).toBe(note.nominal)
+                else {
+                    //the CLASS half of the derivation: nearest chromatic match, and the registry
+                    //rejects the exact ±6 tie, so it is always strictly nearer. Whole octaves of
+                    //distance are the instrument's authored register (meta.json `register` — sky's
+                    //Contrabass sounds three octaves under its nominal grid) and fold out first.
+                    const upward = ((sounding - note.nominal) % 12 + 12) % 12
+                    expect(Math.min(upward, 12 - upward)).toBeLessThan(6)
+                }
             })
         }
     })
@@ -116,8 +122,8 @@ describe.runIf(ASSIGNED.length > 0)('Assigned Buttons', () => {
             notesOf(name).forEach((note, button) => {
                 if (note.pitched) return
                 for (const pitch of ALL_PITCHES) {
-                    expect(buttonToNumber(name, pitch, button)).toBe(note.midi + basepointOffset(pitch))
-                    expect(numberToButton(name, pitch, note.midi + basepointOffset(pitch))).toBe(button)
+                    expect(buttonToNumber(name, pitch, button)).toBe(note.nominal + basepointOffset(pitch))
+                    expect(numberToButton(name, pitch, note.nominal + basepointOffset(pitch))).toBe(button)
                 }
             })
         }
@@ -131,9 +137,9 @@ describe.runIf(ASSIGNED.length > 0)('Assigned Buttons', () => {
             .filter(({note}) => !note.pitched)
         expect(chordButtons.map(({note}) => note.baseNote)).toEqual(['C', 'Dm', 'Em', 'F', 'G', 'Am', 'G7'])
         for (const {note, button} of chordButtons) {
-            expect(buttonToNumber('Ukulele', 'C', button)).toBe(note.midi)
-            expect(gridRowForNumber('Ukulele', 'C', note.midi))
-                .toEqual({row: songGridSlotForId(note.midi), stranded: false, accidental: 0})
+            expect(buttonToNumber('Ukulele', 'C', button)).toBe(note.nominal)
+            expect(gridRowForNumber('Ukulele', 'C', note.nominal))
+                .toEqual({row: songGridSlotForId(note.nominal), stranded: false, accidental: 0})
         }
     })
 })
@@ -261,7 +267,7 @@ describe('a track that states no Basepoint follows the song\'s', () => {
 
     it('a v4 track omitting `pitch` migrates at the SONG\'s Basepoint', () => {
         const instrument = INSTRUMENTS[0]
-        const nominal = INSTRUMENTS_DATA[instrument].notes[0].midi
+        const nominal = INSTRUMENTS_DATA[instrument].notes[0].nominal
         const song = ComposedSong.deserialize({
             id: null, folderId: null, name: 'No Basepoint', type: 'composed', version: 4,
             bpm: 220, pitch: 'F', reverb: false, breakpoints: [],

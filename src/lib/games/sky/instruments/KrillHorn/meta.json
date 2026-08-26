@@ -9,42 +9,42 @@
   },
   "notes": [
     {
-      "midi": 65,
+      "nominal": 65,
       "baseNote": "F",
       "icon": "dm"
     },
     {
-      "midi": 67,
+      "nominal": 67,
       "baseNote": "G",
       "icon": "cr"
     },
     {
-      "midi": 69,
+      "nominal": 69,
       "baseNote": "A",
       "icon": "cr"
     },
     {
-      "midi": 71,
+      "nominal": 71,
       "baseNote": "B",
       "icon": "dm"
     },
     {
-      "midi": 72,
+      "nominal": 72,
       "baseNote": "C",
       "icon": "dmcr"
     },
     {
-      "midi": 74,
+      "nominal": 74,
       "baseNote": "D",
       "icon": "dm"
     },
     {
-      "midi": 76,
+      "nominal": 76,
       "baseNote": "E",
       "icon": "cr"
     },
     {
-      "midi": 77,
+      "nominal": 77,
       "baseNote": "F",
       "icon": "cr"
     }

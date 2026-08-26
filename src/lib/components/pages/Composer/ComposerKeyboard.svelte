@@ -17,7 +17,10 @@
 <script lang="ts">
   import { game } from '$game';
   import type { NoteNameType, Pitch } from '$lib/games/types';
-  import { computeButtonLayerStatuses } from '$core/Songs/noteIds';
+  import {
+    computeButtonLayerStatuses,
+    computeButtonLayerStatusesByGridRow,
+  } from '$core/Songs/noteIds';
   import type { InstrumentData, NoteColumn } from '$core/Songs/SongClasses';
   import type { ComposerSettingsDataType } from '$core/BaseSettings';
   import type { Instrument, ObservableNote } from '$lib/audio/Instrument.svelte';
@@ -36,6 +39,12 @@
       currentLayer: number;
       currentColumn: NoteColumn;
       pitch: Pitch;
+      /**
+       * The SONG's Basepoint, unresolved: what other tracks' effective Basepoints derive from
+       * when the compressed view places their marks by Song-Grid row (`pitch` above is already
+       * the displayed track's own resolution and cannot answer for the rest of the roster).
+       */
+      songPitch: Pitch;
       settings: ComposerSettingsDataType;
       isPlaying: boolean;
       noteNameType: NoteNameType;
@@ -83,6 +92,13 @@
   // `data.pitch` is the DISPLAYED track's effective Basepoint (Composer.svelte resolves the
   // override there), which is the Basepoint every note's number has to be read at to answer
   // "which of THIS keyboard's keys sounds it" (ADR-0007).
+  //
+  // THE KEYBOARD MIRRORS ITS CANVAS (the register-shifted instruments made the two answers
+  // differ): under the compressed canvas, another track's mark sits on the key sharing the
+  // Song-Grid row the canvas draws that note on — sky's Guitar playing its bottom C marks
+  // this Contrabass keyboard's FIRST key, exactly where the canvas shows the note — while
+  // under the Pro View's absolute rows the aligned answer is the key that SOUNDS the number.
+  // Both variants keep the current layer's own marks press-toggle-keyed; see their docs.
   const layerStatuses = $derived.by(() => {
     //BEFORE the column is read, and reading nothing but the gate. The `data` object literal
     //upstream takes a fresh identity on every column advance, so this derived does re-enter under
@@ -90,13 +106,22 @@
     //same nothing (see NO_LAYER_STATUSES).
     if (data.noteStatesCleared) return NO_LAYER_STATUSES;
     try {
-      return computeButtonLayerStatuses(
-        data.currentColumn.notes,
-        data.currentLayer,
-        data.instruments,
-        data.keyboard.name,
-        data.pitch
-      );
+      return data.proView
+        ? computeButtonLayerStatuses(
+            data.currentColumn.notes,
+            data.currentLayer,
+            data.instruments,
+            data.keyboard.name,
+            data.pitch
+          )
+        : computeButtonLayerStatusesByGridRow(
+            data.currentColumn.notes,
+            data.currentLayer,
+            data.instruments,
+            data.keyboard.name,
+            data.pitch,
+            data.songPitch
+          );
     } catch {
       return null;
     }

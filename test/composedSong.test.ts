@@ -258,19 +258,19 @@ describe('an instrument swap rewrites the track button-preservingly', () => {
     const other = INSTRUMENTS.find((name) =>
         name !== INSTRUMENTS[0]
         && INSTRUMENTS_DATA[INSTRUMENTS[0]].notes.some(
-            (note) => noteIdToButton(name, note.midi) !== -1
+            (note) => noteIdToButton(name, note.nominal) !== -1
         ))!
 
     it('keeps the BUTTON, so the shape of what was played survives the swap', () => {
         const song = new ComposedSong('swap', [INSTRUMENTS[0]])
         const shared = INSTRUMENTS_DATA[INSTRUMENTS[0]].notes.filter(
-            (note) => noteIdToButton(other, note.midi) !== -1
+            (note) => noteIdToButton(other, note.nominal) !== -1
         )
         shared.forEach((note, column) => song.addNoteAt(column, 0, note.sounding))
         song.setInstrument(0, new InstrumentData({name: other}))
         //each note now sounds what the SAME nominal's button sounds on the new instrument
         shared.forEach((note, column) => {
-            const expected = INSTRUMENTS_DATA[other].notes[noteIdToButton(other, note.midi)].sounding
+            const expected = INSTRUMENTS_DATA[other].notes[noteIdToButton(other, note.nominal)].sounding
             expect(song.columns[column].notesOfTrack(0)[0].id).toBe(expected)
         })
     })
@@ -279,7 +279,7 @@ describe('an instrument swap rewrites the track button-preservingly', () => {
         //a swap is not a transposition: doing the interval first would ask the old instrument to
         //voice numbers that are already at the new Basepoint
         const shared = INSTRUMENTS_DATA[INSTRUMENTS[0]].notes.find(
-            (note) => noteIdToButton(other, note.midi) !== -1
+            (note) => noteIdToButton(other, note.nominal) !== -1
         )!
         const together = new ComposedSong('together', [INSTRUMENTS[0]])
         together.addNoteAt(0, 0, shared.sounding)
@@ -324,20 +324,33 @@ describe('an instrument swap rewrites the track button-preservingly', () => {
         expect(after.accidental).toBe(0)
     })
 
-    it.runIf(INSTRUMENTS.some((name) =>
-        INSTRUMENTS_DATA[name].notes.some((note) => note.pitched && note.sounding !== note.midi)
-    ))('an OFF-SCALE strand un-strands onto the tuned button that sounds it, moving to its row', () => {
+    /**
+     * Every (instrument, note) whose Sounding Pitch is not a grid id at all, with the un-swapped
+     * host that strands it — genshin's Vintage-Lyre semitone flavors and sky's octave-register
+     * instruments (`register`-anchored: Contrabass&co) both land here. Each game exercises the
+     * halves its own roster can state: whether the un-strand MOVES rows is a fact about the note
+     * (does the nearest row differ from the one its button's nominal prints?), so the two tests
+     * below select by that premise rather than assuming one tuning style.
+     */
+    const offGridPairs = INSTRUMENTS.flatMap((tuned) => INSTRUMENTS_DATA[tuned].notes
+        .filter((note) => note.pitched && note.sounding !== note.nominal
+            && !CANONICAL_NOTE_IDS.includes(note.sounding))
+        .map((reflavored) => ({
+            tuned,
+            reflavored,
+            host: INSTRUMENTS.find((name) => noteIdToButton(name, reflavored.sounding) === -1)!,
+        })))
+    const rowMoves = ({reflavored, host}: (typeof offGridPairs)[number]) =>
+        gridRowForNumber(host, 'C', reflavored.sounding).row !== CANONICAL_NOTE_IDS.indexOf(reflavored.nominal)
+
+    it.runIf(offGridPairs.some(rowMoves))('an OFF-SCALE strand un-strands onto the tuned button that sounds it, moving to its row', () => {
         //the Lyre -> Vintage-Lyre case the composer smoke pass walks through: a tuned instrument's
         //Sounding Pitch, stored on an untuned track, is not a grid id at all — it draws on the
         //nearest row with a ♯/♭ hint. Swapping the track to the instrument that OWNS that pitch
         //gives it a button, and the note moves to the row that button's nominal id prints.
-        const tuned = INSTRUMENTS.find((name) =>
-            INSTRUMENTS_DATA[name].notes.some((note) => note.pitched && note.sounding !== note.midi))!
-        const reflavored = INSTRUMENTS_DATA[tuned].notes.find(
-            (note) => note.pitched && note.sounding !== note.midi
-            && !CANONICAL_NOTE_IDS.includes(note.sounding))
-        if (!reflavored) return
-        const host = INSTRUMENTS.find((name) => noteIdToButton(name, reflavored.sounding) === -1)!
+        //(Sky states it at octave distance: Contrabass's D1 = 26 is nearest the C row, its button
+        //prints the D row.)
+        const {tuned, reflavored, host} = offGridPairs.find(rowMoves)!
         const before = gridRowForNumber(host, 'C', reflavored.sounding)
         expect(before.stranded).toBe(true)
         expect(before.accidental).not.toBe(0)
@@ -350,12 +363,33 @@ describe('an instrument swap rewrites the track button-preservingly', () => {
         expect(song.columns[0].notesOfTrack(0)[0].id).toBe(reflavored.sounding)
         const after = gridRowForNumber(tuned, 'C', reflavored.sounding)
         expect(after).toEqual({
-            row: CANONICAL_NOTE_IDS.indexOf(reflavored.midi),
+            row: CANONICAL_NOTE_IDS.indexOf(reflavored.nominal),
             stranded: false,
             accidental: 0,
         })
         //...and it left the row it was merely NEAREST to
         expect(after.row).not.toBe(before.row)
+    })
+
+    it.runIf(offGridPairs.some((pair) => !rowMoves(pair)))('an OUT-OF-GRID strand un-strands onto the register-shifted button without leaving its row', () => {
+        //the octave-register counterpart (sky: number 24 = C1 on a Piano track): the pitch class
+        //already names the row the note is nearest to, so giving it a button flips stranded and
+        //clears the accidental hint while the row stays exactly where the user sees it.
+        const {tuned, reflavored, host} = offGridPairs.find((pair) => !rowMoves(pair))!
+        const before = gridRowForNumber(host, 'C', reflavored.sounding)
+        expect(before.stranded).toBe(true)
+        expect(before.accidental).not.toBe(0)
+
+        const song = new ComposedSong('out-of-grid un-strand', [host])
+        song.addNoteAt(0, 0, reflavored.sounding)
+        song.setInstrument(0, new InstrumentData({name: tuned}))
+
+        expect(song.columns[0].notesOfTrack(0)[0].id).toBe(reflavored.sounding)
+        expect(gridRowForNumber(tuned, 'C', reflavored.sounding)).toEqual({
+            row: before.row,
+            stranded: false,
+            accidental: 0,
+        })
     })
 
     /**

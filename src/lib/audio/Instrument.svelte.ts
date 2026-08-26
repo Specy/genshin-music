@@ -247,7 +247,7 @@ export class Instrument {
         { keyboard: '' },
         url,
         configNote.baseNote,
-        configNote.midi ?? 0,
+        configNote.nominal ?? 0,
         configNote.sounding
       );
       note.instrument = this.name;
@@ -803,10 +803,10 @@ export class ObservableNote {
    */
   index: number;
   noteImage: NoteImage = DEFAULT_NOTE_ICON;
-  midiNote: number;
+  nominalNote: number;
   /**
    * This button's Sounding Pitch (ADR-0007) — its Note Number at Basepoint C. Derived and
-   * validated at registry build; equal to `midiNote` for every button whose instrument is not
+   * validated at registry build; equal to `nominalNote` for every button whose instrument is not
    * tuned away from its nominal grid, and for every Assigned Button by definition.
    */
   soundingNote: number;
@@ -832,20 +832,20 @@ export class ObservableNote {
     noteNames: NoteName,
     url: string,
     baseNote: string,
-    midiNote: number,
-    soundingNote: number = midiNote
+    nominalNote: number,
+    soundingNote: number = nominalNote
   ) {
     this.index = index;
     this.noteNames = noteNames;
     this.url = url;
     this.baseNote = baseNote;
-    this.midiNote = midiNote;
+    this.nominalNote = nominalNote;
     this.soundingNote = soundingNote;
   }
 
-  /** Nominal Id (ADR-0001) — the ShapeNote/grid-facing name of `midiNote`, never a song identity. */
+  /** Nominal Id (ADR-0001) — the ShapeNote/grid-facing name of `nominalNote`, never a song identity. */
   get id(): number {
-    return this.midiNote;
+    return this.nominalNote;
   }
 
   /**
@@ -887,7 +887,7 @@ export class ObservableNote {
       this.noteNames,
       this.url,
       this.baseNote,
-      this.midiNote,
+      this.nominalNote,
       this.soundingNote
     );
     obj.buffer = this.buffer;

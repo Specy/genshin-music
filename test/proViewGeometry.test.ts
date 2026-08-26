@@ -80,7 +80,7 @@ const NARROWEST = ALL_INSTRUMENTS.reduce((a, b) => (bandOf(b) < bandOf(a) ? b : 
 const ASSIGNED = ALL_INSTRUMENTS.filter((name) => notesOf(name).some((note) => !note.pitched));
 /** Instruments with at least one Pitched Button tuned away from its Nominal Id (genshin: Vintage-Lyre). */
 const TUNED = ALL_INSTRUMENTS.filter((name) =>
-  notesOf(name).some((note) => note.pitched && note.sounding !== note.midi)
+  notesOf(name).some((note) => note.pitched && note.sounding !== note.nominal)
 );
 
 describe('the addressable span', () => {
@@ -625,7 +625,7 @@ describe('the Editable Zone', () => {
           const zone = editableZone(name, pitch);
           for (const note of notesOf(name)) {
             if (note.pitched) continue;
-            expect(isAddable(zone, note.midi + basepointOffset(pitch))).toBe(true);
+            expect(isAddable(zone, note.nominal + basepointOffset(pitch))).toBe(true);
           }
         }
       }
@@ -637,11 +637,11 @@ describe('the Editable Zone', () => {
       for (const name of TUNED) {
         const zone = editableZone(name, 'C');
         for (const note of notesOf(name)) {
-          if (!note.pitched || note.sounding === note.midi) continue;
+          if (!note.pitched || note.sounding === note.nominal) continue;
           expect(isAddable(zone, note.sounding)).toBe(true);
           //...and the nominal it is labelled with is addable only if some OTHER button sounds it
-          expect(isAddable(zone, note.midi)).toBe(
-            getSoundingTable(name).includes(note.midi)
+          expect(isAddable(zone, note.nominal)).toBe(
+            getSoundingTable(name).includes(note.nominal)
           );
         }
       }
@@ -671,10 +671,10 @@ describe('the Editable Zone', () => {
     const chords = notesOf('Ukulele').filter((note) => !note.pitched);
     expect(chords.length).toBe(7);
     const zone = editableZone('Ukulele', 'C');
-    for (const chord of chords) expect(isAddable(zone, chord.midi)).toBe(true);
+    for (const chord of chords) expect(isAddable(zone, chord.nominal)).toBe(true);
     //at another Basepoint the whole row moves with everything else
     const raised = editableZone('Ukulele', 'Db');
-    for (const chord of chords) expect(isAddable(raised, chord.midi + 1)).toBe(true);
+    for (const chord of chords) expect(isAddable(raised, chord.nominal + 1)).toBe(true);
   });
 });
 

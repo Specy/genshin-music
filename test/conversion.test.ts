@@ -181,9 +181,10 @@ describe('cross-game import conversion', () => {
             reverb: false, breakpoints: [0],
             columnTempos: [0, 0, 0],
             tracks: [
-                //48 is Lyre's bottom C, a whole octave below anything Sky's Harp can voice:
-                //the fold used to raise it into range, it now imports as itself and strands
-                {instrument: genshinInstrument('Lyre'), notes: [[0, 48, 3], [1, 72]]},
+                //48 is Lyre's bottom C — and since Harp registers at "C3" (meta.json `register`)
+                //it is Harp's OWN bottom C, so the untouched number simply plays where the pre-shift
+                //config stranded it. 79, Lyre's top G, sits above Harp's C5 ceiling and strands.
+                {instrument: genshinInstrument('Lyre'), notes: [[0, 48, 3], [1, 72], [2, 79]]},
                 {instrument: genshinInstrument('HarmonicKey'), notes: [[2, 79]]},
             ],
         }
@@ -195,10 +196,13 @@ describe('cross-game import conversion', () => {
         //numbers and spans pass through untouched
         expect(parsed.columns[0].findNote(0, 48)!.span).toBe(3)
         expect(parsed.columns[1].findNote(0, 72)).toBeTruthy()
+        expect(parsed.columns[2].findNote(0, 79)).toBeTruthy()
         expect(parsed.columns[2].findNote(1, 79)).toBeTruthy()
-        //48 is stranded on Harp, 72 is not — the count is what raises the import warning
-        expect(numberToButton('Harp', 'C', 48)).toBe(-1)
-        expect(numberToButton('Harp', 'C', 72)).not.toBe(-1)
+        //79 is stranded on Harp but voiced on Piano in the same column; 48/72 land on Harp's
+        //real register — the count is what raises the import warning
+        expect(numberToButton('Harp', 'C', 48)).not.toBe(-1)
+        expect(numberToButton('Harp', 'C', 79)).toBe(-1)
+        expect(numberToButton('Piano', 'C', 79)).not.toBe(-1)
         expect(parsed.countStrandedNotes()).toBe(1)
     })
 
@@ -310,12 +314,12 @@ describe('cross-game import conversion', () => {
         }
         payload.data.appName = 'Genshin'
         payload.tracks[0].instrument.name = 'Lyre'
-        //48 strands on Harp, 72 does not — the fold used to raise 48 an octave
-        payload.tracks[0].hitObjects = [[0, 500, 0, [48, 72]]]
+        //48 lands on Harp's register-shifted bottom C; 79 sits above its C5 ceiling and strands
+        payload.tracks[0].hitObjects = [[0, 500, 0, [48, 79]]]
         const parsed = songService.parseSong(payload) as VsrgSong
         expect(parsed.tracks[0].instrument.name).toBe('Harp')
         expect(parsed.data.appName).toBe('Sky')
-        expect(parsed.tracks[0].hitObjects[0].notes).toEqual([48, 72])
+        expect(parsed.tracks[0].hitObjects[0].notes).toEqual([48, 79])
         expect(parsed.countStrandedNotes()).toBe(1)
     })
 

@@ -274,7 +274,7 @@ describe('game config surface', () => {
                         switchLayout: labels.switch,
                     },
                     icons: data.notes.map((n) => n.icon),
-                    midiNotes: data.notes.map((n) => n.midi),
+                    midiNotes: data.notes.map((n) => n.nominal),
                     ...(sustain !== undefined ? {sustain} : {}),
                 }]
             })

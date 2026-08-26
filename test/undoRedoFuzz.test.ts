@@ -85,7 +85,7 @@ class Rng {
 // ---------------------------------------------------------------------------------------------
 
 /** Absolute Note Numbers of the default instrument's buttons at a Basepoint of C. */
-const NOTE_POOL = INSTRUMENTS_DATA[INSTRUMENTS[0]].notes.map(note => note.midi)
+const NOTE_POOL = INSTRUMENTS_DATA[INSTRUMENTS[0]].notes.map(note => note.nominal)
 /** A Note Number nothing below can produce, for the "no such note" no-op paths. */
 const ABSENT_ID = -9999
 /** Keeps every op's index arithmetic inside a song, and the suite's runtime inside its budget. */

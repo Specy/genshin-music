@@ -96,7 +96,7 @@ interface PublishCase {
 
 /** Note Id of a button on the game's default instrument. */
 function idOf(button: number): number {
-    return INSTRUMENTS_DATA[INSTRUMENTS[0]].notes[button].midi
+    return INSTRUMENTS_DATA[INSTRUMENTS[0]].notes[button].nominal
 }
 
 /**

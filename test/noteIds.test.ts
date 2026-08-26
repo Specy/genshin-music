@@ -3,7 +3,8 @@ import {CANONICAL_NOTE_IDS, INSTRUMENTS, MIDI_BOUNDS, InstrumentData} from './im
 import type {ColumnNote} from './imports'
 import type {InstrumentNoteIcon} from '../src/lib/core/Songs/SongClasses'
 import {
-    songGridSlotForId, computeButtonLayerStatuses, computeGridStrandedMarks,
+    songGridSlotForId, buttonToNumber, computeButtonLayerStatuses,
+    computeButtonLayerStatusesByGridRow, computeGridStrandedMarks,
     displayButtonForNumber, foldNumberIntoRange, getNoteIdTable, getSoundingTable,
     gridRowForNumber, nominalToNumber, noteIdToButton, numberToButton, snapMidiToGrid,
     snapMidiToGridPeriodically,
@@ -132,7 +133,8 @@ describe('foldNumberIntoRange', () => {
     })
 })
 
-// The composer KEYBOARD's only source of note textures (ComposerKeyboard.svelte). ONE
+// The PRO VIEW keyboard's source of note textures (ComposerKeyboard.svelte; the compressed
+// view reads the ByGridRow variant, pinned in the next describe). ONE
 // coordinate space (ADR-0004: the keyboard's rows ARE the Buttons of the instrument it
 // draws), so every note - whatever track it sits on - is resolved against the DISPLAYED
 // instrument at the DISPLAYED instrument's Basepoint, and a number it cannot voice lights
@@ -301,6 +303,113 @@ describe('computeButtonLayerStatuses', () => {
                 expect(button).toBeLessThan(keyboardTable.length)
             }
         })
+    })
+})
+
+// The COMPRESSED keyboard's variant: an OTHER track's mark mirrors the canvas above it (the
+// Song-Grid row gridRowForNumber gives the note on its OWN track), while the current layer
+// stays press-toggle-keyed. Register-anchored instruments (sky's Contrabass under a Guitar
+// track) are where this and the sounding-keyed variant part company; every pairing below is
+// derived from config capability, so each game exercises exactly what its roster can state.
+describe('computeButtonLayerStatusesByGridRow', () => {
+    const DEFAULT_INSTRUMENT = INSTRUMENTS[0]
+    const defaultTable = getNoteIdTable(DEFAULT_INSTRUMENT)
+    const track = (icon: InstrumentNoteIcon, visible = true, name: InstrumentName = DEFAULT_INSTRUMENT, pitch: Pitch | '' = '') =>
+        new InstrumentData({name, icon, visible, pitch})
+
+    it('marks the current layer on its own sounding button, exactly like the Pro variant', () => {
+        const notes: ColumnNote[] = [{trackIndex: 0, id: nominalToNumber(DEFAULT_INSTRUMENT, 'C', defaultTable[3]), span: 1}]
+        const statuses = computeButtonLayerStatusesByGridRow(
+            notes, 0, [track('circle')], DEFAULT_INSTRUMENT, 'C', 'C')
+        expect(statuses).toEqual(new Map([[3, 1]]))
+        expect(statuses).toEqual(computeButtonLayerStatuses(notes, 0, [track('circle')], DEFAULT_INSTRUMENT, 'C'))
+    })
+
+    it('marks another track on the key sharing its canvas row, for every instrument and button', () => {
+        //the full mirror contract, stated against the same call the canvas makes: whatever
+        //gridRowForNumber answers for the note's own track, the keyboard marks the key whose
+        //nominal owns that row — or nothing, where this keyboard has no key there
+        for (const other of INSTRUMENTS) {
+            const instruments = [track('circle'), track('line', true, other)]
+            const iconBit = 1 << instruments[1].toNoteIcon()
+            getNoteIdTable(other).forEach((_, button) => {
+                const number = buttonToNumber(other, 'C', button)!
+                const row = gridRowForNumber(other, 'C', number).row
+                const key = row === -1 ? -1 : noteIdToButton(DEFAULT_INSTRUMENT, CANONICAL_NOTE_IDS[row])
+                const statuses = computeButtonLayerStatusesByGridRow(
+                    [{trackIndex: 1, id: number, span: 1}], 0, instruments, DEFAULT_INSTRUMENT, 'C', 'C')
+                expect(statuses, `${other} button ${button}`)
+                    .toEqual(key === -1 ? new Map() : new Map([[key, iconBit]]))
+            })
+        }
+    })
+
+    //A number two instruments VOICE on differently-named buttons — sky's Guitar bottom C and
+    //Contrabass top C both sound 48. Where no such pair exists (genshin: every roster register
+    //coincides), the two variants agree everywhere and the row above already proves it.
+    const divergent = (() => {
+        for (const keyboardName of INSTRUMENTS) {
+            for (const otherName of INSTRUMENTS) {
+                if (otherName === keyboardName) continue
+                const otherTable = getNoteIdTable(otherName)
+                for (let button = 0; button < otherTable.length; button++) {
+                    const number = buttonToNumber(otherName, 'C', button)
+                    if (number === null) continue
+                    const unisonKey = numberToButton(keyboardName, 'C', number)
+                    if (unisonKey === -1) continue
+                    const sheetKey = noteIdToButton(keyboardName, otherTable[button])
+                    if (sheetKey !== -1 && sheetKey !== unisonKey) {
+                        return {keyboardName, otherName, number, unisonKey, sheetKey}
+                    }
+                }
+            }
+        }
+        return null
+    })()
+
+    it.runIf(divergent !== null)('a register-shifted track marks the sheet key, not the unison key', () => {
+        //the screenshot case: a Guitar scale under a Contrabass keyboard — its first note's
+        //mark belongs on the FIRST key (where the canvas draws it), not on the key that
+        //happens to sound the same pitch
+        const {keyboardName, otherName, number, unisonKey, sheetKey} = divergent!
+        const instruments = [track('circle', true, keyboardName), track('line', true, otherName)]
+        const iconBit = 1 << instruments[1].toNoteIcon()
+        const notes: ColumnNote[] = [{trackIndex: 1, id: number, span: 1}]
+        expect(computeButtonLayerStatusesByGridRow(notes, 0, instruments, keyboardName, 'C', 'C'))
+            .toEqual(new Map([[sheetKey, iconBit]]))
+        //...which is precisely where the Pro variant and this one part company
+        expect(computeButtonLayerStatuses(notes, 0, instruments, keyboardName, 'C'))
+            .toEqual(new Map([[unisonKey, iconBit]]))
+    })
+
+    it("resolves the other track at ITS effective Basepoint — its override, else the song's", () => {
+        const nominal = defaultTable[4]
+        const expectedKey = noteIdToButton(DEFAULT_INSTRUMENT, nominal)
+        const raised = nominalToNumber(DEFAULT_INSTRUMENT, 'D', nominal)
+        const iconBit = (instruments: InstrumentData[]) => 1 << instruments[1].toNoteIcon()
+        //a per-track override: the note reads at D whatever the song says
+        const overridden = [track('circle'), track('line', true, DEFAULT_INSTRUMENT, 'D')]
+        expect(computeButtonLayerStatusesByGridRow(
+            [{trackIndex: 1, id: raised, span: 1}], 0, overridden, DEFAULT_INSTRUMENT, 'C', 'C'))
+            .toEqual(new Map([[expectedKey, iconBit(overridden)]]))
+        //no override: the song's Basepoint is what the number means
+        const following = [track('circle'), track('line')]
+        expect(computeButtonLayerStatusesByGridRow(
+            [{trackIndex: 1, id: raised, span: 1}], 0, following, DEFAULT_INSTRUMENT, 'C', 'D'))
+            .toEqual(new Map([[expectedKey, iconBit(following)]]))
+    })
+
+    const subGrid = INSTRUMENTS.find((name: InstrumentName) =>
+        CANONICAL_NOTE_IDS.some((id) => !getNoteIdTable(name).includes(id)))
+
+    it.runIf(subGrid !== undefined)('marks nothing on a row this keyboard has no key for', () => {
+        const missing = CANONICAL_NOTE_IDS.find((id) => !getNoteIdTable(subGrid!).includes(id)
+            && noteIdToButton(DEFAULT_INSTRUMENT, id) !== -1)!
+        const instruments = [track('circle', true, subGrid!), track('line')]
+        expect(computeButtonLayerStatusesByGridRow(
+            [{trackIndex: 1, id: nominalToNumber(DEFAULT_INSTRUMENT, 'C', missing), span: 1}],
+            0, instruments, subGrid!, 'C', 'C'))
+            .toEqual(new Map())
     })
 })
 

@@ -28,8 +28,11 @@ import type {
 
 /**
  * One button's note, as authored. Position in the array IS the Button index.
- * `midi` is the Nominal Id (ADR-0001) — required, it is the button's name in the
- * game's grid namespace.
+ * `nominal` is the Nominal Id (ADR-0001) — required, it is the button's name in the
+ * game's grid namespace: the sheet position it occupies (its Song-Grid row, its swap
+ * correspondence), NEVER a promise about sound. What the button sounds is `baseNote`
+ * (the pitch class) at the instrument's `register` (the octave) — the written-vs-concert
+ * distinction of a transposing instrument. Songs never store it.
  * `file` defaults to `<index>.mp3` — the historical sample naming (URL-locked for
  * existing instruments). New instruments may name samples anything matching
  * `[A-Za-z0-9._-]+` — the registry rejects everything else, since file names land
@@ -39,7 +42,7 @@ import type {
  */
 export type NoteMetaJson = {
   file?: string;
-  midi: number;
+  nominal: number;
   /**
    * Pitched Button (the default): a bare pitch-class spelling naming what the button
    * SOUNDS — the registry derives its Sounding Pitch from this and rejects anything the
@@ -122,6 +125,21 @@ export type InstrumentMetaJson = {
   /** Shape id (game-prefixed, e.g. 'genshin-3x7') — must exist in the game's shapes.ts. */
   shape: string;
   sustain?: SustainMetaJson;
+  /**
+   * The absolute pitch of the instrument's LOWEST Pitched Button — the register its
+   * samples actually sound in, as a note name ("C1", "D3", "C-1"; C4 = 60). Sky's
+   * Contrabass keyboard is the nominal 60–84 grid but the game plays C1–C3, so it
+   * authors "C1" and its C button's Sounding Pitch derives to 24. The registry takes
+   * only the OCTAVE from it: the anchor's pitch class must equal the lowest button's
+   * own derived class (else it fails — semitone flavor is `baseNote`'s to author,
+   * per button), so every Pitched Button moves by the same whole octaves and the two
+   * authored facts cannot drift into each other (ADR-0007's derivation stays: class
+   * from `baseNote`, ±5 semitones of the nominal; octave from here). It never moves
+   * Nominal Ids (grid rows, swaps and legacy decode are untouched) and never moves an
+   * Assigned Button (its Note Number IS its Nominal Id). Absent = the register the
+   * nominal grid itself names.
+   */
+  register?: string;
   /** A preset name from the game's presets.json, or the full inline note array. */
   notes: string | NoteMetaJson[];
 };

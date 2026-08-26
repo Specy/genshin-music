@@ -111,7 +111,7 @@ describe('VisualSong short-instrument rows (pre-v4 parity)', () => {
             INSTRUMENTS_DATA[name].notes.length < INSTRUMENTS_DATA[INSTRUMENTS[0]].notes.length
         )
         if (!short) throw new Error('no short instrument in this game to test with')
-        const table = INSTRUMENTS_DATA[short].notes.map((n) => n.midi)
+        const table = INSTRUMENTS_DATA[short].notes.map((n) => n.nominal)
         const button = table.length - 1
         const song = new ComposedSong('short', [short])
         song.columns[0].addNote(0, table[button])

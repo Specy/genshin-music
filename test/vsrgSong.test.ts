@@ -60,7 +60,7 @@ describe('VsrgSong formats', () => {
 
 /** Note Id of a button on the game's default instrument. */
 function idOf(button: number): number {
-    return INSTRUMENTS_DATA[INSTRUMENTS[0]].notes[button].midi
+    return INSTRUMENTS_DATA[INSTRUMENTS[0]].notes[button].nominal
 }
 
 /**
@@ -153,7 +153,7 @@ describe('every VsrgSong conversion carries the whole song across', () => {
 const notesOf = (name: string) => INSTRUMENTS_DATA[name as keyof typeof INSTRUMENTS_DATA].notes
 /** Instruments with a button tuned away from its Nominal Id (genshin: Vintage-Lyre; sky: none). */
 const TUNED = INSTRUMENTS.filter((name: string) =>
-    notesOf(name).some(note => note.pitched && note.sounding !== note.midi))
+    notesOf(name).some(note => note.pitched && note.sounding !== note.nominal))
 /** One whose two axes coincide everywhere — the "ordinary" side of a swap. */
 const UNTUNED = INSTRUMENTS.find((name: string) =>
     getSoundingTable(name).every((sounding, button) => sounding === getNoteIdTable(name)[button]))!
@@ -197,11 +197,11 @@ describe('a vsrg instrument swap rewrites the track', () => {
         //the behavior users rely on (Lyre -> Vintage-Lyre): the D button becomes the Db button,
         //where a sound-preserving swap would have stranded it
         const tuned = TUNED[0]
-        const reflavored = notesOf(tuned).find(note => note.pitched && note.sounding !== note.midi)!
-        const button = getNoteIdTable(tuned).indexOf(reflavored.midi)
+        const reflavored = notesOf(tuned).find(note => note.pitched && note.sounding !== note.nominal)!
+        const button = getNoteIdTable(tuned).indexOf(reflavored.nominal)
         for (const pitch of ['C', 'E'] as const) {
             const offset = basepointOffset(pitch)
-            const song = songOn(UNTUNED, [reflavored.midi + offset], pitch)
+            const song = songOn(UNTUNED, [reflavored.nominal + offset], pitch)
             expect(swapTo(song, tuned)).toEqual([reflavored.sounding + offset])
             //...and it really is the SAME key of the new instrument that voices it
             expect(numberToButton(tuned, pitch, song.tracks[0].hitObjects[0].notes[0])).toBe(button)
@@ -210,9 +210,9 @@ describe('a vsrg instrument swap rewrites the track', () => {
 
     it.runIf(TUNED.length > 0)('swaps a tuned number back off by its nominal', () => {
         const tuned = TUNED[0]
-        const reflavored = notesOf(tuned).find(note => note.pitched && note.sounding !== note.midi)!
+        const reflavored = notesOf(tuned).find(note => note.pitched && note.sounding !== note.nominal)!
         const song = songOn(tuned, [reflavored.sounding])
-        expect(swapTo(song, UNTUNED)).toEqual([reflavored.midi])
+        expect(swapTo(song, UNTUNED)).toEqual([reflavored.nominal])
     })
 
     it('STRANDS a number the new instrument has no button for, leaving it exactly where it was', () => {
@@ -235,15 +235,27 @@ describe('a vsrg instrument swap rewrites the track', () => {
             .toEqual({row: CANONICAL_NOTE_IDS.indexOf(stranded), stranded: false, accidental: 0})
     })
 
-    it.runIf(TUNED.length > 0)('un-strands an OFF-SCALE number onto the tuned button that sounds it', () => {
+    //Every tuned (instrument, off-grid note, stranding host) triple — semitone flavors
+    //(Vintage-Lyre) and octave registers (sky's `register`-anchored set) both land here.
+    //Whether the un-strand MOVES rows is a per-note fact (nearest row vs the button's own),
+    //so the two tests below select by that premise; see composedSong.test.ts for the
+    //composed-side twins and the fuller reasoning.
+    const offGridPairs = TUNED.flatMap((tuned: string) => notesOf(tuned)
+        .filter(note => note.pitched && note.sounding !== note.nominal
+            && !CANONICAL_NOTE_IDS.includes(note.sounding))
+        .map(note => ({
+            tuned,
+            reflavored: note,
+            host: INSTRUMENTS.find((name: string) => numberToButton(name, 'C', note.sounding) === -1)!,
+        })))
+    const rowMoves = ({reflavored, host}: (typeof offGridPairs)[number]) =>
+        gridRowForNumber(host, 'C', reflavored.sounding).row !== CANONICAL_NOTE_IDS.indexOf(reflavored.nominal)
+
+    it.runIf(offGridPairs.some(rowMoves))('un-strands an OFF-SCALE number onto the tuned button that sounds it', () => {
         //the vsrg twin of ComposedSong's row: a tuned instrument's Sounding Pitch is not a grid id
         //at all, so on an untuned track it draws on the NEAREST row with a ♯/♭ hint. Swapping to the
         //instrument that owns that pitch gives it a button and moves it to that button's own row.
-        const tuned = TUNED[0]
-        const reflavored = notesOf(tuned).find(note =>
-            note.pitched && note.sounding !== note.midi && !CANONICAL_NOTE_IDS.includes(note.sounding))
-        if (!reflavored) return
-        const host = INSTRUMENTS.find((name: string) => numberToButton(name, 'C', reflavored.sounding) === -1)!
+        const {tuned, reflavored, host} = offGridPairs.find(rowMoves)!
         const before = gridRowForNumber(host, 'C', reflavored.sounding)
         expect(before).toMatchObject({stranded: true})
         expect(before.accidental).not.toBe(0)
@@ -252,11 +264,28 @@ describe('a vsrg instrument swap rewrites the track', () => {
         expect(swapTo(song, tuned)).toEqual([reflavored.sounding])
         const after = gridRowForNumber(tuned, 'C', reflavored.sounding)
         expect(after).toEqual({
-            row: CANONICAL_NOTE_IDS.indexOf(reflavored.midi),
+            row: CANONICAL_NOTE_IDS.indexOf(reflavored.nominal),
             stranded: false,
             accidental: 0,
         })
         expect(after.row).not.toBe(before.row)
+    })
+
+    it.runIf(offGridPairs.some((pair) => !rowMoves(pair)))('un-strands an OUT-OF-GRID number onto the register-shifted button, keeping its row', () => {
+        //the octave-register counterpart (sky: 24 = C1 on a Piano track): the pitch class already
+        //names the nearest row, so the un-strand flips stranded and clears the hint in place.
+        const {tuned, reflavored, host} = offGridPairs.find((pair) => !rowMoves(pair))!
+        const before = gridRowForNumber(host, 'C', reflavored.sounding)
+        expect(before).toMatchObject({stranded: true})
+        expect(before.accidental).not.toBe(0)
+
+        const song = songOn(host, [reflavored.sounding])
+        expect(swapTo(song, tuned)).toEqual([reflavored.sounding])
+        expect(gridRowForNumber(tuned, 'C', reflavored.sounding)).toEqual({
+            row: before.row,
+            stranded: false,
+            accidental: 0,
+        })
     })
 
     it('applies the swap at the OLD Basepoint when the same save also moves the override', () => {

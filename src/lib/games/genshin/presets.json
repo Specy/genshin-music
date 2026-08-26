@@ -1,270 +1,270 @@
 {
   "standard-21": [
     {
-      "midi": 72,
+      "nominal": 72,
       "baseNote": "C",
       "icon": "do"
     },
     {
-      "midi": 74,
+      "nominal": 74,
       "baseNote": "D",
       "icon": "re"
     },
     {
-      "midi": 76,
+      "nominal": 76,
       "baseNote": "E",
       "icon": "mi"
     },
     {
-      "midi": 77,
+      "nominal": 77,
       "baseNote": "F",
       "icon": "fa"
     },
     {
-      "midi": 79,
+      "nominal": 79,
       "baseNote": "G",
       "icon": "so"
     },
     {
-      "midi": 81,
+      "nominal": 81,
       "baseNote": "A",
       "icon": "la"
     },
     {
-      "midi": 83,
+      "nominal": 83,
       "baseNote": "B",
       "icon": "ti"
     },
     {
-      "midi": 60,
+      "nominal": 60,
       "baseNote": "C",
       "icon": "do"
     },
     {
-      "midi": 62,
+      "nominal": 62,
       "baseNote": "D",
       "icon": "re"
     },
     {
-      "midi": 64,
+      "nominal": 64,
       "baseNote": "E",
       "icon": "mi"
     },
     {
-      "midi": 65,
+      "nominal": 65,
       "baseNote": "F",
       "icon": "fa"
     },
     {
-      "midi": 67,
+      "nominal": 67,
       "baseNote": "G",
       "icon": "so"
     },
     {
-      "midi": 69,
+      "nominal": 69,
       "baseNote": "A",
       "icon": "la"
     },
     {
-      "midi": 71,
+      "nominal": 71,
       "baseNote": "B",
       "icon": "ti"
     },
     {
-      "midi": 48,
+      "nominal": 48,
       "baseNote": "C",
       "icon": "do"
     },
     {
-      "midi": 50,
+      "nominal": 50,
       "baseNote": "D",
       "icon": "re"
     },
     {
-      "midi": 52,
+      "nominal": 52,
       "baseNote": "E",
       "icon": "mi"
     },
     {
-      "midi": 53,
+      "nominal": 53,
       "baseNote": "F",
       "icon": "fa"
     },
     {
-      "midi": 55,
+      "nominal": 55,
       "baseNote": "G",
       "icon": "so"
     },
     {
-      "midi": 57,
+      "nominal": 57,
       "baseNote": "A",
       "icon": "la"
     },
     {
-      "midi": 59,
+      "nominal": 59,
       "baseNote": "B",
       "icon": "ti"
     }
   ],
   "ukulele-21": [
     {
-      "midi": 72,
+      "nominal": 72,
       "baseNote": "C",
       "pitched": false,
       "icon": "do"
     },
     {
-      "midi": 74,
+      "nominal": 74,
       "baseNote": "Dm",
       "pitched": false,
       "icon": "re"
     },
     {
-      "midi": 76,
+      "nominal": 76,
       "baseNote": "Em",
       "pitched": false,
       "icon": "mi"
     },
     {
-      "midi": 77,
+      "nominal": 77,
       "baseNote": "F",
       "pitched": false,
       "icon": "fa"
     },
     {
-      "midi": 79,
+      "nominal": 79,
       "baseNote": "G",
       "pitched": false,
       "icon": "so"
     },
     {
-      "midi": 81,
+      "nominal": 81,
       "baseNote": "Am",
       "pitched": false,
       "icon": "la"
     },
     {
-      "midi": 83,
+      "nominal": 83,
       "baseNote": "G7",
       "pitched": false,
       "icon": "ti"
     },
     {
-      "midi": 60,
+      "nominal": 60,
       "baseNote": "C",
       "icon": "do"
     },
     {
-      "midi": 62,
+      "nominal": 62,
       "baseNote": "D",
       "icon": "re"
     },
     {
-      "midi": 64,
+      "nominal": 64,
       "baseNote": "E",
       "icon": "mi"
     },
     {
-      "midi": 65,
+      "nominal": 65,
       "baseNote": "F",
       "icon": "fa"
     },
     {
-      "midi": 67,
+      "nominal": 67,
       "baseNote": "G",
       "icon": "so"
     },
     {
-      "midi": 69,
+      "nominal": 69,
       "baseNote": "A",
       "icon": "la"
     },
     {
-      "midi": 71,
+      "nominal": 71,
       "baseNote": "B",
       "icon": "ti"
     },
     {
-      "midi": 48,
+      "nominal": 48,
       "baseNote": "C",
       "icon": "do"
     },
     {
-      "midi": 50,
+      "nominal": 50,
       "baseNote": "D",
       "icon": "re"
     },
     {
-      "midi": 52,
+      "nominal": 52,
       "baseNote": "E",
       "icon": "mi"
     },
     {
-      "midi": 53,
+      "nominal": 53,
       "baseNote": "F",
       "icon": "fa"
     },
     {
-      "midi": 55,
+      "nominal": 55,
       "baseNote": "G",
       "icon": "so"
     },
     {
-      "midi": 57,
+      "nominal": 57,
       "baseNote": "A",
       "icon": "la"
     },
     {
-      "midi": 59,
+      "nominal": 59,
       "baseNote": "B",
       "icon": "ti"
     }
   ],
   "drums-8": [
     {
-      "midi": 60,
+      "nominal": 60,
       "baseNote": "C",
       "pitched": false,
       "icon": "do"
     },
     {
-      "midi": 62,
+      "nominal": 62,
       "baseNote": "D",
       "pitched": false,
       "icon": "re"
     },
     {
-      "midi": 64,
+      "nominal": 64,
       "baseNote": "E",
       "pitched": false,
       "icon": "mi"
     },
     {
-      "midi": 65,
+      "nominal": 65,
       "baseNote": "F",
       "pitched": false,
       "icon": "fa"
     },
     {
-      "midi": 67,
+      "nominal": 67,
       "baseNote": "G",
       "pitched": false,
       "icon": "do"
     },
     {
-      "midi": 69,
+      "nominal": 69,
       "baseNote": "A",
       "pitched": false,
       "icon": "re"
     },
     {
-      "midi": 71,
+      "nominal": 71,
       "baseNote": "B",
       "pitched": false,
       "icon": "mi"
     },
     {
-      "midi": 72,
+      "nominal": 72,
       "baseNote": "C",
       "pitched": false,
       "icon": "fa"

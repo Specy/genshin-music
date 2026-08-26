@@ -2,7 +2,8 @@
 
 Sky's Triumph Saxophone, a fermata 𝄐 Instrument (held notes ring on). Ranges
 **C3–C5**, one octave below the Piano Keyboard — the buttons keep the game's
-nominal C4–C6 ids (ADR-0001) and the samples sound low, as for the Guitar and Harp.
+nominal C4–C6 ids (ADR-0001) and the register is authored as meta.json
+`register: "C3"` (ADR-0007 addendum), as for the Guitar and Harp.
 
 Source: the `Assets-audio-For-SkyAutoMusicIOS` instrument dump. 15 notes,
 44.1 kHz stereo 192 kbps, 3.1–3.5 s, already C major and in tune (±13 cents).

@@ -26,7 +26,7 @@ A button with no single sounding pitch: percussion, SFX, chord strums (Ukulele's
 _Avoid_: unpitched note (a chord is pitched — just not singly)
 
 **Sounding Pitch**:
-The actual pitch a Pitched Button plays, derived per button from its authored base note. It is what a Pitched Button's Note Numbers record; an Assigned Button has none.
+The actual pitch a Pitched Button plays, derived per button: the authored base note names the pitch class (nearest chromatic match to the Nominal Id), and the instrument's authored `register` ("C1"-style anchor of its lowest Pitched Button, ADR-0007 addendum) names the octave — Sky's Contrabass keyboard is the nominal 60–84 grid but sounds C1–C3. It is what a Pitched Button's Note Numbers record; an Assigned Button has none.
 _Avoid_: base note (the authored label it derives from), real pitch
 
 **Basepoint**:

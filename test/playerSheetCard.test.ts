@@ -59,6 +59,12 @@ describe('Sheet Card', () => {
         return [...target.querySelectorAll<HTMLElement>('[data-frame-index]')]
     }
 
+    /** The two page-bound rules' offsets in the scroll content, in the order they are drawn. */
+    function boundOffsets() {
+        return [...target.querySelectorAll<HTMLElement>('.player-sheet-page-bound')]
+            .map(bound => Number.parseFloat(bound.style.top))
+    }
+
     function popoverItems() {
         //the rows are the song dropdown's own FloatingDropdownRow buttons now
         return [...document.querySelectorAll<HTMLButtonElement>('.frame-popover button')]
@@ -428,5 +434,71 @@ describe('Sheet Card', () => {
         flushSync()
         expect(scroll.scrollTop).toBe(0)
         expect(frames().map(f => Number(f.dataset.frameIndex))).toContain(0)
+    })
+
+    // WHERE THE COLLAPSED CARD'S WINDOW IS, drawn into the expanded one. Expanded, the sheet is
+    // the whole song and nothing on screen says which slice of it the user is left looking at when
+    // they close it again - so the pair of rules says so, around the current page and nothing else.
+    it('rules off the collapsed card\'s own window inside the expanded one', async () => {
+        //fake timers so the 250ms fallback can stand in for the reveal Web Animation's finish
+        vi.useFakeTimers()
+        //20 pages of 25 frames - five rows each at the card's five columns
+        manyFrames(500, 25)
+        playerControlsStore.setState({size: 500, position: 0, end: 500, current: 260})
+        render()
+        //closed, the card holds exactly the current page - the window the rules mark out
+        expect(frames().map(f => Number(f.dataset.frameIndex)))
+            .toEqual(Array.from({length: 25}, (_, i) => 250 + i))
+        expect(target.querySelector('.player-sheet-page-bounds')).toBeNull()
+
+        const card = target.querySelector<HTMLElement>('.player-sheet-card')!
+        const surface = target.querySelector<HTMLElement>('.player-sheet-surface')!
+        const scroll = target.querySelector<HTMLElement>('.player-sheet-scroll')!
+        Object.defineProperty(card, 'clientHeight', {configurable: true, value: 100})
+        vi.spyOn(surface, 'getBoundingClientRect').mockReturnValue(new DOMRect(0, 0, 0, 100.25))
+        Object.defineProperty(scroll, 'clientHeight', {configurable: true, value: 320})
+        Object.defineProperty(scroll, 'scrollTop', {configurable: true, writable: true, value: 0})
+        Object.defineProperty(frames()[0], 'offsetHeight', {configurable: true, value: 48})
+
+        target.querySelector<HTMLButtonElement>('.player-sheet-expand button')!.click()
+        await tick()
+        await tick()
+        await tick()
+        flushSync()
+        vi.advanceTimersByTime(251)
+        flushSync()
+
+        //inside the scroll box, not beside it: they mark a place in the SONG, so they have to ride
+        //away with the content the way the frames do (the thumb is the opposite case)
+        expect(target.querySelector('.player-sheet-scroll .player-sheet-page-bounds')).not.toBeNull()
+        const [top, bottom] = boundOffsets()
+        expect(boundOffsets().length).toBe(2)
+        const pageHeight = bottom - top
+        expect(pageHeight).toBeGreaterThan(0)
+
+        // the pair follows the run: the next page's window is exactly one page further down, and
+        // it is the same height, because every page is the same five rows
+        playerControlsStore.setCurrent(275)
+        flushSync()
+        const [nextTop, nextBottom] = boundOffsets()
+        expect(nextTop - top).toBeCloseTo(pageHeight, 5)
+        expect(nextBottom - nextTop).toBeCloseTo(pageHeight, 5)
+
+        // ...and page 0's window opens at the top of the scroll content, which is what makes the
+        // whole set of offsets the song's own: page N starts N pages in
+        playerControlsStore.setCurrent(0)
+        flushSync()
+        const [firstTop, firstBottom] = boundOffsets()
+        expect(firstTop).toBeLessThan(pageHeight / 5)
+        expect(firstBottom - firstTop).toBeCloseTo(pageHeight, 5)
+        expect(top).toBeCloseTo(firstTop + 10 * pageHeight, 5)
+
+        // they belong to the expanded view alone - collapsed, the card IS the window
+        window.dispatchEvent(new KeyboardEvent('keydown', {code: 'Escape'}))
+        flushSync()
+        vi.advanceTimersByTime(251)
+        flushSync()
+        expect(target.querySelector('.player-sheet-card-expanded')).toBeNull()
+        expect(target.querySelector('.player-sheet-page-bounds')).toBeNull()
     })
 })

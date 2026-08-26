@@ -63,22 +63,48 @@ production build at prerender** with a message naming the game/instrument.
 | `clickColor`  | no       | note press color                                                       |
 | `shape`       | yes      | a Shape id from the game's `shapes.ts`                                 |
 | `sustain`     | no       | `{ release, crossfade?, loopCrossfade?, loopMode?, minLength?, loop }` |
+| `register`    | no       | absolute pitch of the lowest Pitched Button ("C1") — see below         |
 | `notes`       | yes      | a preset name from `presets.json` **or** an inline array of notes      |
 
 Each note (inline or in a preset) is:
 
 ```json
-{ "file": "0.mp3", "midi": 72, "baseNote": "C", "icon": "do", "loop": { "start": 0.9, "end": 1.1 } }
+{
+  "file": "0.mp3",
+  "nominal": 72,
+  "baseNote": "C",
+  "icon": "do",
+  "loop": { "start": 0.9, "end": 1.1 }
+}
 ```
 
-- `midi` — the **Nominal Id** (ADR-0001). Required; it is the button's name in the
-  game's grid namespace. Position in the array is the button position.
+- `nominal` — the **Nominal Id** (ADR-0001). Required; it is the button's name in the
+  game's grid namespace — the sheet position it occupies (Song-Grid row, swap
+  correspondence, legacy decode), NEVER a promise about sound: what the button sounds
+  is `baseNote` (the class) at the instrument's `register` (the octave), the
+  written-vs-concert distinction of a transposing instrument. Position in the array is
+  the button position.
 - `baseNote` — on a **Pitched Button** (the default), the bare pitch class the button
   actually SOUNDS: the registry derives the button's Sounding Pitch from it (nearest
-  chromatic match to `midi`) and rejects any other string, so it is NOT derivable from
-  `midi` (Vintage-Lyre's nominal 74 really does sound Db). On an **Assigned Button** it
+  chromatic match to `nominal`, placed in the instrument's `register`)
+  and rejects any other string, so it is NOT derivable from
+  `nominal` (Vintage-Lyre's nominal 74 really does sound Db). On an **Assigned Button** it
   is free display text. There is no `sounding` field to author: since ADR-0007 songs
   store that derived pitch, and a second authored copy of it could only drift.
+- `register` (meta.json, instrument-level) — the absolute pitch of the instrument's
+  LOWEST Pitched Button, as a note name (`"C1"`, `"D3"`; C4 = 60): the octave its
+  samples actually sound in. Sky's Contrabass keyboard is the nominal 60–84 grid but
+  the game plays C1–C3, so it authors `"C1"` and its C button's Sounding Pitch derives
+  to 24; absent = the register the nominal grid itself names. **Pitch-detect the
+  samples before authoring a new instrument** — the register belongs in config, not
+  corrected into the audio. The registry takes only the OCTAVE from the anchor (its
+  pitch class must equal the lowest button's own derived class — semitone flavor is
+  `baseNote`'s to author, per button), moves Pitched Buttons only (an Assigned
+  Button's Note Number is its Nominal Id), never moves Nominal Ids (grid rows, swaps
+  and legacy decode see nothing), and rejects a non-note-name, a register on an
+  instrument with no Pitched Button, and an anchored pitch outside MIDI 0–127. See
+  the ADR-0007 addendum for why this stays "derived, never authored": `baseNote` owns
+  the class, the register owns the octave.
 - `pitched` — optional, only ever `false`: declares an **Assigned Button** (ADR-0007) —
   percussion, SFX, a chord strum. It has no single sounding pitch, so it enters notes at
   its Nominal Id and its `baseNote` becomes a free label (`"G7"`, `""`). Never inferred

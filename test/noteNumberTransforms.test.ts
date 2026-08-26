@@ -16,7 +16,7 @@ import type {Pitch} from '../src/lib/core/legacyConfig'
 
 const notesOf = (name: string) => INSTRUMENTS_DATA[name as keyof typeof INSTRUMENTS_DATA].notes
 const TUNED = INSTRUMENTS.filter((name: string) =>
-    notesOf(name).some(note => note.pitched && note.sounding !== note.midi))
+    notesOf(name).some(note => note.pitched && note.sounding !== note.nominal))
 const UNTUNED = INSTRUMENTS.find((name: string) =>
     getSoundingTable(name).every((sounding, button) => sounding === getNoteIdTable(name)[button]))!
 /** The widest instrument (the swap's "grows the range" side) and a strictly sub-grid one. */
@@ -137,11 +137,11 @@ describe('rewriteForSwap', () => {
         //the behavior users rely on (Lyre -> Vintage-Lyre): the D button becomes the Db
         //button — same key, different pitch — where a sound-preserving swap would strand it
         const tuned = TUNED[0]
-        const reflavored = notesOf(tuned).find(note => note.pitched && note.sounding !== note.midi)!
-        const button = getNoteIdTable(tuned).indexOf(reflavored.midi)
+        const reflavored = notesOf(tuned).find(note => note.pitched && note.sounding !== note.nominal)!
+        const button = getNoteIdTable(tuned).indexOf(reflavored.nominal)
         for (const pitch of ALL_PITCHES) {
             const offset = basepointOffset(pitch)
-            const [swapped] = rewriteForSwap([reflavored.midi + offset], UNTUNED, tuned, pitch)
+            const [swapped] = rewriteForSwap([reflavored.nominal + offset], UNTUNED, tuned, pitch)
             expect(swapped).toBe(reflavored.sounding + offset)
             expect(numberToButton(tuned, pitch, swapped)).toBe(button)
         }
@@ -149,9 +149,9 @@ describe('rewriteForSwap', () => {
 
     it.runIf(TUNED.length > 0)('swaps a tuned number back off the tuned instrument by its nominal', () => {
         const tuned = TUNED[0]
-        const reflavored = notesOf(tuned).find(note => note.pitched && note.sounding !== note.midi)!
+        const reflavored = notesOf(tuned).find(note => note.pitched && note.sounding !== note.nominal)!
         const [swapped] = rewriteForSwap([reflavored.sounding], tuned, UNTUNED, 'C')
-        expect(swapped).toBe(reflavored.midi)
+        expect(swapped).toBe(reflavored.nominal)
     })
 
     it('passes a number stranded on the OLD instrument through unchanged', () => {
@@ -209,11 +209,11 @@ describe('migrateTrackNotes', () => {
 
     it.runIf(TUNED.length > 0)('records the tuned pitch a file only ever implied', () => {
         const tuned = TUNED[0]
-        const reflavored = notesOf(tuned).find(note => note.pitched && note.sounding !== note.midi)!
-        expect(migrateTrackNotes([reflavored.midi], tuned, 'C')).toEqual([reflavored.sounding])
+        const reflavored = notesOf(tuned).find(note => note.pitched && note.sounding !== note.nominal)!
+        expect(migrateTrackNotes([reflavored.nominal], tuned, 'C')).toEqual([reflavored.sounding])
         //the per-track Basepoint override is what the file's playback used, so it is what
         //the migration adds — a track at 'D' migrates two semitones higher than one at 'C'
-        expect(migrateTrackNotes([reflavored.midi], tuned, 'D')).toEqual([reflavored.sounding + 2])
+        expect(migrateTrackNotes([reflavored.nominal], tuned, 'D')).toEqual([reflavored.sounding + 2])
     })
 
     it('migrates a stranded id best-effort as id + offset', () => {

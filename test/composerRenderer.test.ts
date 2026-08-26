@@ -774,7 +774,7 @@ const WINDOW_GEOMETRY: ColumnWindowGeometry = {
 
 /** Nominal Id of a button on the game's default instrument — a Song-Grid row name, never a stored value. */
 function idOf(button: number): number {
-    return INSTRUMENTS_DATA[INSTRUMENTS[0]].notes[button].midi
+    return INSTRUMENTS_DATA[INSTRUMENTS[0]].notes[button].nominal
 }
 
 /** What a track of `instrument` STORES for that grid row at Basepoint C (ADR-0007 §4). */
@@ -3379,7 +3379,7 @@ describe('an off-scale note draws the accidental hint into its own icon', () => 
     })
 
     it.runIf(INSTRUMENTS.some(name =>
-        INSTRUMENTS_DATA[name].notes.some(note => note.pitched && note.sounding !== note.midi)
+        INSTRUMENTS_DATA[name].notes.some(note => note.pitched && note.sounding !== note.nominal)
     ))('an instrument swap that UN-STRANDS the note takes the hint off it', async () => {
         //THE UN-STRAND FLOW, END TO END ON THE CANVAS, and the composer smoke pass in miniature:
         //a tuned instrument's Sounding Pitch stored on an untuned track is off-scale there - drawn
@@ -3387,9 +3387,9 @@ describe('an off-scale note draws the accidental hint into its own icon', () => 
         //pitch passes the number through untouched and gives it a button, so the same note becomes
         //an ordinary voiced one on the row that button's nominal id prints.
         const tuned = INSTRUMENTS.find(name =>
-            INSTRUMENTS_DATA[name].notes.some(note => note.pitched && note.sounding !== note.midi))!
+            INSTRUMENTS_DATA[name].notes.some(note => note.pitched && note.sounding !== note.nominal))!
         const reflavored = INSTRUMENTS_DATA[tuned].notes.find(note =>
-            note.pitched && note.sounding !== note.midi && !CANONICAL_NOTE_IDS.includes(note.sounding))
+            note.pitched && note.sounding !== note.nominal && !CANONICAL_NOTE_IDS.includes(note.sounding))
         if (!reflavored) return
         const host = INSTRUMENTS.find(name => numberToButton(name, 'C', reflavored.sounding) === -1)!
         const before = gridRowForNumber(host, 'C', reflavored.sounding)
@@ -3424,7 +3424,7 @@ describe('an off-scale note draws the accidental hint into its own icon', () => 
             expect(notesAt()).toEqual([{
                 texture: 'notes[1]',
                 x: 0,
-                y: rowY(CANONICAL_NOTE_IDS.indexOf(reflavored.midi)),
+                y: rowY(CANONICAL_NOTE_IDS.indexOf(reflavored.nominal)),
                 alpha: 1,
             }])
         } finally {
@@ -8256,13 +8256,24 @@ describe('the Pro View pointer', () => {
             expect(harness.taps.at(-1)!.number).toBe(top - 1)
             for (let notch = 0; notch < 24; notch++) harness.wheelZoom(400, focalY)
             harness.push()
-            //zoomed all the way out the whole axis is shorter than the region, so the existing
-            //camera clamp collapses the travel and the axis sits at the region's top: the first row
-            //on screen is the axis' own highest number
             const floor = harness.rowHeightAt(PRO_ZOOM_MIN)
-            expect(harness.axis.rowCount * floor).toBeLessThan(harness.height)
-            harness.tap(x, harness.notesTop + floor * 0.5)
-            expect(harness.taps.at(-1)!.number).toBe(harness.axis.max)
+            if (harness.axis.rowCount * floor < harness.height) {
+                //zoomed all the way out the whole axis is shorter than the region, so the existing
+                //camera clamp collapses the travel and the axis sits at the region's top: the first
+                //row on screen is the axis' own highest number. Genshin's span states this premise;
+                //sky's — C1 to past C7 since the octave registers (meta.json `register`) — is taller
+                //than the region even at the zoom floor and takes the branch below.
+                harness.tap(x, harness.notesTop + floor * 0.5)
+                expect(harness.taps.at(-1)!.number).toBe(harness.axis.max)
+            } else {
+                //an axis TALLER than the region at the zoom floor: the clamp leaves real travel to
+                //scroll through, so nothing collapses — what must hold instead is that the row
+                //mapping stays exact at the floor: two vertically adjacent taps are adjacent numbers
+                harness.tap(x, harness.notesTop + floor * 0.5)
+                const first = harness.taps.at(-1)!.number
+                harness.tap(x, harness.notesTop + floor * 1.5)
+                expect(harness.taps.at(-1)!.number).toBe(first - 1)
+            }
         } finally {
             harness.destroy()
         }

@@ -4,7 +4,7 @@ import type {Pitch} from '$core/legacyConfig'
 
 /** Note Id of a button on the game's default instrument (what the legacy builders' indices meant). */
 function idOf(button: number): number {
-    return INSTRUMENTS_DATA[INSTRUMENTS[0]].notes[button].midi
+    return INSTRUMENTS_DATA[INSTRUMENTS[0]].notes[button].nominal
 }
 
 /**

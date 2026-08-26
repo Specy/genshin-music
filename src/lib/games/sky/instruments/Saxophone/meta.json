@@ -7,5 +7,6 @@
     "release": 0.28,
     "minLength": 0.15
   },
+  "register": "C3",
   "notes": "standard-15"
 }

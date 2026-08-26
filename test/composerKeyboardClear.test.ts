@@ -58,6 +58,7 @@ describe('the Pro View keyboard while the lowered sheet is cleared', () => {
                 currentLayer: 0,
                 currentColumn: song.columns[0],
                 pitch: 'C',
+                songPitch: 'C',
                 settings: ComposerSettings.data,
                 isPlaying: true,
                 noteNameType: ComposerSettings.data.noteNameType.value,

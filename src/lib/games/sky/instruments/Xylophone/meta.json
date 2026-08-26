@@ -3,5 +3,6 @@
   "family": "chromatic percussion",
   "midiName": "xylophone",
   "shape": "sky-3x5",
+  "register": "C5",
   "notes": "standard-15"
 }

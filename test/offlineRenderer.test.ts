@@ -36,7 +36,7 @@ const TRACK_PITCH: Pitch = 'G'
 /** The Note Number entering button `button` of `instrument` at Basepoint `pitch` produces. */
 function numberOf(instrument: string, pitch: Pitch, button: number): number {
     const notes = INSTRUMENTS_DATA[instrument as keyof typeof INSTRUMENTS_DATA].notes
-    return nominalToNumber(instrument, pitch, notes[button].midi)
+    return nominalToNumber(instrument, pitch, notes[button].nominal)
 }
 
 const SUSTAIN_TRACK = 0

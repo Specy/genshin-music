@@ -22,7 +22,7 @@ const COLUMNS = 400
 const SPAN_STRIDE = 7
 
 function idOf(button: number): number {
-    return INSTRUMENTS_DATA[INSTRUMENTS[0]].notes[button].midi
+    return INSTRUMENTS_DATA[INSTRUMENTS[0]].notes[button].nominal
 }
 
 const PROBE_ID = idOf(0)

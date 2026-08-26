@@ -46,6 +46,12 @@ node docs/skills/instrument-from-sequential-capture/scripts/extract-notes.mjs \
 - `--midi` is the authored Note Ids in capture order. Omit it to use rounded
   detected pitch, then CHECK the printed ids — they are identity (ADR-0001) and
   must be unique and inside the game's Song Grid for composer/import to work.
+- **Nominal Ids name grid rows, not octaves — compare the DETECTED octave against
+  them.** When the whole capture sits whole octaves away from the ids you author
+  (Sky's Contrabass: grid 60–84, sound C1–C3), keep the ids on the grid and author
+  the sounded pitch of the lowest button as meta.json `register` ("C1" there; see
+  `docs/adding-instruments-and-games.md`). Never repitch the audio to the grid and
+  never "fix" the ids — the register belongs in config.
 - Pitch is the median over many windows with parabolic interpolation. Trust it
   over ad-hoc measurement: a naive single-window estimate read 30–50 cents
   sharp on the NightwindHorn material. Deviations within ~±10 cents: ship as-is
@@ -105,7 +111,8 @@ maybe a third of the work):
 1. `src/lib/games/<game>/instruments/<Name>/` — samples, `meta.json`
    (displayName, family, `midiName` must be a General MIDI name — it becomes
    the exported MIDI program), `fill`/`clickColor`, `shape`, optional
-   `sustain`, notes. Add a README.md documenting source and processing.
+   `sustain`, `register` when the detected octave is off the nominal grid,
+   notes. Add a README.md documenting source and processing.
 2. Shape: reuse one from `<game>/shapes.ts` or add it there plus a Label Set in
    `games/shapes/labels.ts` (every label array length must equal capacity —
    `defineGame` throws otherwise). Prefer slicing an existing set when the

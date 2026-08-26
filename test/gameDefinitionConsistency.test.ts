@@ -49,7 +49,7 @@ describe('frozen legacy note tables match the live instrument data (transcriptio
             if (DROPPED_LIVE_INSTRUMENTS.has(name)) continue
             const live = game.instruments.data[name]
             expect(live, `frozen table for unknown instrument "${name}"`).toBeTruthy()
-            expect([...table], `table mismatch for "${name}"`).toEqual(live.notes.map((n) => n.midi))
+            expect([...table], `table mismatch for "${name}"`).toEqual(live.notes.map((n) => n.nominal))
         }
         //and every live instrument has a frozen table (new instruments added after the
         //freeze belong in the similarity map + live data only, never in the freeze —

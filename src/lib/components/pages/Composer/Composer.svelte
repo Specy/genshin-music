@@ -3017,6 +3017,7 @@
       currentColumn: song.selectedColumn,
       heldButtons,
       pitch: song.instruments[layer]?.pitch || song.pitch,
+      songPitch: song.pitch,
       noteNameType: settings.noteNameType.value,
       proView,
       noteStatesCleared,

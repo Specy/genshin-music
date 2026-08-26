@@ -9,7 +9,8 @@ Source: the `Assets-audio-For-SkyAutoMusicIOS` instrument dump, which carries th
 full holds: 7.5–10.9 s per note, 44.1 kHz stereo 192 kbps. Already **C3–C5** and
 in tune (±14 cents) — no repitch. C3–C5 is one octave below the Piano Keyboard,
 which is where the wiki puts it and where the short set already sat; the buttons
-keep the game's nominal C4–C6 ids (ADR-0001).
+keep the game's nominal C4–C6 ids (ADR-0001) and the register is authored as
+meta.json `register: "C3"` (ADR-0007 addendum).
 
 Processing (one-off script, see `docs/skills/instrument-from-sequential-capture`):
 downmix to mono, trim to onset/tail, DC removal, peak-normalize to ~−3.5 dBFS,

@@ -113,8 +113,8 @@ describe('Instrument number-keyed lookups (ADR-0005 §4 under ADR-0007)', () => 
         const note = instrument.notes[1]
         expect(instrument.getNoteByNumber(note.numberAt('C'), 'C')).toBe(note)
         expect(instrument.getNoteByNumber(-999, 'C')).toBeNull()
-        // the id accessor is just the ShapeNote-facing name of midiNote (the NOMINAL axis)
-        expect(note.id).toBe(note.midiNote)
+        // the id accessor is just the ShapeNote-facing name of nominalNote (the NOMINAL axis)
+        expect(note.id).toBe(note.nominalNote)
         expect(note.icon).toBe(note.noteImage)
     })
 

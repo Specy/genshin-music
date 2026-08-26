@@ -7,107 +7,107 @@
   "shape": "genshin-3x7",
   "notes": [
     {
-      "midi": 72,
+      "nominal": 72,
       "baseNote": "C",
       "icon": "do"
     },
     {
-      "midi": 74,
+      "nominal": 74,
       "baseNote": "Db",
       "icon": "reb"
     },
     {
-      "midi": 76,
+      "nominal": 76,
       "baseNote": "Eb",
       "icon": "mib"
     },
     {
-      "midi": 77,
+      "nominal": 77,
       "baseNote": "F",
       "icon": "fa"
     },
     {
-      "midi": 79,
+      "nominal": 79,
       "baseNote": "G",
       "icon": "so"
     },
     {
-      "midi": 81,
+      "nominal": 81,
       "baseNote": "Ab",
       "icon": "lab"
     },
     {
-      "midi": 83,
+      "nominal": 83,
       "baseNote": "Bb",
       "icon": "tib"
     },
     {
-      "midi": 60,
+      "nominal": 60,
       "baseNote": "C",
       "icon": "do"
     },
     {
-      "midi": 62,
+      "nominal": 62,
       "baseNote": "D",
       "icon": "re"
     },
     {
-      "midi": 64,
+      "nominal": 64,
       "baseNote": "Eb",
       "icon": "mib"
     },
     {
-      "midi": 65,
+      "nominal": 65,
       "baseNote": "F",
       "icon": "fa"
     },
     {
-      "midi": 67,
+      "nominal": 67,
       "baseNote": "G",
       "icon": "so"
     },
     {
-      "midi": 69,
+      "nominal": 69,
       "baseNote": "A",
       "icon": "la"
     },
     {
-      "midi": 71,
+      "nominal": 71,
       "baseNote": "Bb",
       "icon": "tib"
     },
     {
-      "midi": 48,
+      "nominal": 48,
       "baseNote": "C",
       "icon": "do"
     },
     {
-      "midi": 50,
+      "nominal": 50,
       "baseNote": "D",
       "icon": "re"
     },
     {
-      "midi": 52,
+      "nominal": 52,
       "baseNote": "Eb",
       "icon": "mib"
     },
     {
-      "midi": 53,
+      "nominal": 53,
       "baseNote": "F",
       "icon": "fa"
     },
     {
-      "midi": 55,
+      "nominal": 55,
       "baseNote": "G",
       "icon": "so"
     },
     {
-      "midi": 57,
+      "nominal": 57,
       "baseNote": "A",
       "icon": "la"
     },
     {
-      "midi": 59,
+      "nominal": 59,
       "baseNote": "Bb",
       "icon": "tib"
     }

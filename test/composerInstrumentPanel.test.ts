@@ -22,7 +22,7 @@ type Mounted = ReturnType<typeof mount>
 const notesOf = (name: string) => INSTRUMENTS_DATA[name as keyof typeof INSTRUMENTS_DATA].notes
 /** Roles by capability, never by game id — the same derivations the transform tests use. */
 const TUNED = INSTRUMENTS.filter((name: string) =>
-    notesOf(name).some(note => note.pitched && note.sounding !== note.midi))
+    notesOf(name).some(note => note.pitched && note.sounding !== note.nominal))
 /** An instrument that STRANDS at least one number the default one enters — the swap's other side. */
 const NARROW = INSTRUMENTS.find((name: string) =>
     notesOf(INSTRUMENTS[0]).some(note => numberToButton(name, 'C', note.sounding) === -1))!
@@ -75,11 +75,11 @@ describe('the composer layer panel rewrites the track it edits', () => {
         //Lyre -> Vintage-Lyre: the button is preserved and the pitch it sounds changes, which is
         //the behaviour ADR-0007 kept and the one this panel silently stopped delivering
         const tuned = TUNED[0]
-        const reflavored = notesOf(tuned).find(note => note.pitched && note.sounding !== note.midi)!
-        const source = INSTRUMENTS.find((name: string) => noteIdToButton(name, reflavored.midi) !== -1
+        const reflavored = notesOf(tuned).find(note => note.pitched && note.sounding !== note.nominal)!
+        const source = INSTRUMENTS.find((name: string) => noteIdToButton(name, reflavored.nominal) !== -1
             && name !== tuned)!
         const song = new ComposedSong('panel swap', [source])
-        const before = notesOf(source)[noteIdToButton(source, reflavored.midi)].sounding
+        const before = notesOf(source)[noteIdToButton(source, reflavored.nominal)].sounding
         song.addNoteAt(0, 0, before)
 
         openPanel(song)
@@ -89,7 +89,7 @@ describe('the composer layer panel rewrites the track it edits', () => {
         expect(song.columns[0].notes[0].id).toBe(reflavored.sounding)
         //the same BUTTON of the new instrument, which is what "button-preserving" means
         expect(numberToButton(tuned, 'C', song.columns[0].notes[0].id))
-            .toBe(noteIdToButton(tuned, reflavored.midi))
+            .toBe(noteIdToButton(tuned, reflavored.nominal))
     })
 
     it('a swap passes a stranded number through, and the panel is where it UN-STRANDS', () => {

@@ -51,7 +51,7 @@ const NARROW = INSTRUMENTS.find((name: string) =>
     && getSoundingTable(name).every((sounding, button) => sounding === getNoteIdTable(name)[button]))!
 /** Instruments with a button tuned away from its Nominal Id (genshin: Vintage-Lyre; sky: none). */
 const TUNED = INSTRUMENTS.filter((name: string) =>
-    notesOf(name).some(note => note.pitched && note.sounding !== note.midi))
+    notesOf(name).some(note => note.pitched && note.sounding !== note.nominal))
 /** A grid id the narrow instrument has no button for — stranded, silent, and staying that way. */
 const STRANDED_ID = CANONICAL_NOTE_IDS.find(id => !getNoteIdTable(NARROW).includes(id))!
 

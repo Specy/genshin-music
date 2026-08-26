@@ -210,7 +210,9 @@
     song: RecordedSong,
     start = 0,
     end?: number,
-    runKey: number = playerStore.state.key
+    runKey: number = playerStore.state.key,
+    /** Build the whole run but leave its tick stopped - see the dispatch's `startsPaused`. */
+    startsPaused = false
   ) {
     mode = 'approaching';
     activeRunKey = runKey;
@@ -267,10 +269,16 @@
     // Keep the existing two-second preparation window, but make all of it visible. Ownership is
     // checked BEFORE every write: an old async initializer may wake after a replacement run has
     // already put its own number on screen, and must neither replace nor clear that number.
-    for (const count of approachCountdownValues) {
-      if (!isCurrentRun(runKey, 'approaching')) return;
-      approachCountdown = count;
-      await delay(approachPreparationMs / approachCountdownValues.length);
+    //...and a run dispatched INTO a pause counts nobody in: the preparation window exists to hand
+    //the user the first circles at a predictable moment, and the moment they get them is now their
+    //own press of play. Skipping it also keeps this whole path synchronous, so the dispatch's
+    //`pausedRunKey` hand-off lands on a queue that is already built.
+    if (!startsPaused) {
+      for (const count of approachCountdownValues) {
+        if (!isCurrentRun(runKey, 'approaching')) return;
+        approachCountdown = count;
+        await delay(approachPreparationMs / approachCountdownValues.length);
+      }
     }
     // A mode change during the preparation delay owns the surface now. Without this guard, the
     // old approach run wakes up two seconds later and clears/replaces the newer mode's pages,
@@ -286,7 +294,9 @@
     //published only now, beside the ticker: a stale approach that lost the surface during the
     //preparation delay must not install its pages over the newer run's
     playerControlsStore.setPages(groupArrayEvery(pageChunks, data.visualSheetSize));
-    setTicker(true, runKey);
+    //the circles, the queue and the sheet are all in place; only the clock is withheld, which is
+    //exactly the state `pauseRun` leaves an approach run in, so `resumeRun` starts it unchanged
+    if (!startsPaused) setTicker(true, runKey);
   }
 
   function tick(runKey: number) {
@@ -448,7 +458,9 @@
     song: RecordedSong,
     start = 0,
     end?: number,
-    runKey: number = playerStore.state.key
+    runKey: number = playerStore.state.key,
+    /** Build the whole run but leave its transport uncreated - see the dispatch's `startsPaused`. */
+    startsPaused = false
   ) {
     mode = 'play';
     activeRunKey = runKey;
@@ -465,6 +477,12 @@
     //array the planner is built from a few lines down.
     const mergedNotes = RecordedSong.mergeNotesIntoChunks(notes.map((n) => n.clone()));
     playerControlsStore.setPages(groupArrayEvery(mergedNotes, visualSheetSize));
+    //A RUN DISPATCHED INTO A PAUSE STOPS HERE, with the sheet published and nothing scheduled.
+    //That is the same shape `pauseRun` leaves a paused play run in - no transport, no committed
+    //horizon, no metronome - so `resumeRun` re-anchors it from the cursor by the one path that
+    //already knows how to enter a run part-way (ADR-0009), rather than a second entry point of
+    //its own. Everything below this line either sounds something or schedules something to.
+    if (startsPaused) return;
 
     // ONE PLANNER for the audio export, the composer's conversion and live play: which tracks are
     // audible, at what Basepoint, press or plain trigger, and how long is decided there and
@@ -985,6 +1003,12 @@
         const runKey = state.key;
         const song = playerStore.song;
         const type = playerStore.eventType;
+        // A COMMAND ISSUED WHILE PAUSED STAYS PAUSED. `seek` and `restartSong` carry the flag
+        // through (see PlayerStore's `paused`), so "Go to here" and the Section edits that restart
+        // through it re-aim a paused run without sounding it. The run is still set up in FULL -
+        // sheet, cursor, queue, score - and only its clock is withheld, so the play button has an
+        // ordinary paused run to resume.
+        const startsPaused = state.paused;
         await stopSong();
         // A second transition can arrive while the await yields. Its own debounced callback will
         // perform the setup; this stale one must not install the song/mode it captured beforehand.
@@ -1059,14 +1083,19 @@
           //would highlight a frame the run never asks the user to play.
           let runCurrent = start;
           if (type === 'play') {
-            playSong(lostReference, start, end, runKey);
+            playSong(lostReference, start, end, runKey, startsPaused);
           }
           if (type === 'practice') {
+            //practice has no clock of its own - its notes wait for the user either way - so it is
+            //the one mode with nothing a pause could withhold (see `pauseRun`)
             runCurrent = practiceSong(lostReference, start, end, runKey) ?? start;
           }
           if (type === 'approaching') {
-            approachingSong(lostReference, start, end, runKey);
+            approachingSong(lostReference, start, end, runKey, startsPaused);
           }
+          //`stopSong` above cleared the key the previous pause was taken on; this run now owns the
+          //pause, and is what the next un-pause edge resumes
+          if (startsPaused && type !== 'practice') pausedRunKey = runKey;
           functions.setHasSong(true);
           Analytics.songEvent({ type });
           playerControlsStore.setState({

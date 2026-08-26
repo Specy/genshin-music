@@ -3,7 +3,9 @@
 Sky's Cello, one of the six Instruments the wiki marks with the fermata 𝄐 ("notes
 can be held down to play an extended note"). Ranges **C2–C4**, two octaves below
 the Piano Keyboard — like the Contrabass, the buttons keep the game's nominal
-C4–C6 ids (ADR-0001) and it is the samples that sound low.
+C4–C6 ids (ADR-0001) and the register is authored as meta.json
+`register: "C2"` (ADR-0007 addendum), so the model records the C2–C4 the
+ear hears.
 
 Source: the `Assets-audio-For-SkyAutoMusicIOS` instrument dump (the same rip the
 app's existing Sky samples come from — every shared folder in it is byte-identical

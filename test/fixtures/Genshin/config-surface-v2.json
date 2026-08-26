@@ -23,7 +23,7 @@
       "notes": [
         {
           "file": "0.mp3",
-          "midi": 60,
+          "nominal": 60,
           "baseNote": "C",
           "pitched": false,
           "sounding": 60,
@@ -31,7 +31,7 @@
         },
         {
           "file": "1.mp3",
-          "midi": 62,
+          "nominal": 62,
           "baseNote": "D",
           "pitched": false,
           "sounding": 62,
@@ -39,7 +39,7 @@
         },
         {
           "file": "2.mp3",
-          "midi": 64,
+          "nominal": 64,
           "baseNote": "E",
           "pitched": false,
           "sounding": 64,
@@ -47,7 +47,7 @@
         },
         {
           "file": "3.mp3",
-          "midi": 65,
+          "nominal": 65,
           "baseNote": "F",
           "pitched": false,
           "sounding": 65,
@@ -55,7 +55,7 @@
         },
         {
           "file": "4.mp3",
-          "midi": 67,
+          "nominal": 67,
           "baseNote": "G",
           "pitched": false,
           "sounding": 67,
@@ -63,7 +63,7 @@
         },
         {
           "file": "5.mp3",
-          "midi": 69,
+          "nominal": 69,
           "baseNote": "A",
           "pitched": false,
           "sounding": 69,
@@ -71,7 +71,7 @@
         },
         {
           "file": "6.mp3",
-          "midi": 71,
+          "nominal": 71,
           "baseNote": "B",
           "pitched": false,
           "sounding": 71,
@@ -79,7 +79,7 @@
         },
         {
           "file": "7.mp3",
-          "midi": 72,
+          "nominal": 72,
           "baseNote": "C",
           "pitched": false,
           "sounding": 72,
@@ -98,7 +98,7 @@
       "notes": [
         {
           "file": "0.mp3",
-          "midi": 60,
+          "nominal": 60,
           "baseNote": "C",
           "pitched": false,
           "sounding": 60,
@@ -106,7 +106,7 @@
         },
         {
           "file": "1.mp3",
-          "midi": 62,
+          "nominal": 62,
           "baseNote": "D",
           "pitched": false,
           "sounding": 62,
@@ -114,7 +114,7 @@
         },
         {
           "file": "2.mp3",
-          "midi": 64,
+          "nominal": 64,
           "baseNote": "E",
           "pitched": false,
           "sounding": 64,
@@ -122,7 +122,7 @@
         },
         {
           "file": "3.mp3",
-          "midi": 65,
+          "nominal": 65,
           "baseNote": "F",
           "pitched": false,
           "sounding": 65,
@@ -130,7 +130,7 @@
         },
         {
           "file": "4.mp3",
-          "midi": 67,
+          "nominal": 67,
           "baseNote": "G",
           "pitched": false,
           "sounding": 67,
@@ -138,7 +138,7 @@
         },
         {
           "file": "5.mp3",
-          "midi": 69,
+          "nominal": 69,
           "baseNote": "A",
           "pitched": false,
           "sounding": 69,
@@ -146,7 +146,7 @@
         },
         {
           "file": "6.mp3",
-          "midi": 71,
+          "nominal": 71,
           "baseNote": "B",
           "pitched": false,
           "sounding": 71,
@@ -154,7 +154,7 @@
         },
         {
           "file": "7.mp3",
-          "midi": 72,
+          "nominal": 72,
           "baseNote": "C",
           "pitched": false,
           "sounding": 72,
@@ -178,7 +178,7 @@
       "notes": [
         {
           "file": "0.mp3",
-          "midi": 72,
+          "nominal": 72,
           "baseNote": "C",
           "pitched": true,
           "sounding": 72,
@@ -186,7 +186,7 @@
         },
         {
           "file": "1.mp3",
-          "midi": 74,
+          "nominal": 74,
           "baseNote": "D",
           "pitched": true,
           "sounding": 74,
@@ -194,7 +194,7 @@
         },
         {
           "file": "2.mp3",
-          "midi": 76,
+          "nominal": 76,
           "baseNote": "E",
           "pitched": true,
           "sounding": 76,
@@ -202,7 +202,7 @@
         },
         {
           "file": "3.mp3",
-          "midi": 77,
+          "nominal": 77,
           "baseNote": "F",
           "pitched": true,
           "sounding": 77,
@@ -210,7 +210,7 @@
         },
         {
           "file": "4.mp3",
-          "midi": 79,
+          "nominal": 79,
           "baseNote": "G",
           "pitched": true,
           "sounding": 79,
@@ -218,7 +218,7 @@
         },
         {
           "file": "5.mp3",
-          "midi": 81,
+          "nominal": 81,
           "baseNote": "A",
           "pitched": true,
           "sounding": 81,
@@ -226,7 +226,7 @@
         },
         {
           "file": "6.mp3",
-          "midi": 83,
+          "nominal": 83,
           "baseNote": "B",
           "pitched": true,
           "sounding": 83,
@@ -234,7 +234,7 @@
         },
         {
           "file": "7.mp3",
-          "midi": 60,
+          "nominal": 60,
           "baseNote": "C",
           "pitched": true,
           "sounding": 60,
@@ -242,7 +242,7 @@
         },
         {
           "file": "8.mp3",
-          "midi": 62,
+          "nominal": 62,
           "baseNote": "D",
           "pitched": true,
           "sounding": 62,
@@ -250,7 +250,7 @@
         },
         {
           "file": "9.mp3",
-          "midi": 64,
+          "nominal": 64,
           "baseNote": "E",
           "pitched": true,
           "sounding": 64,
@@ -258,7 +258,7 @@
         },
         {
           "file": "10.mp3",
-          "midi": 65,
+          "nominal": 65,
           "baseNote": "F",
           "pitched": true,
           "sounding": 65,
@@ -266,7 +266,7 @@
         },
         {
           "file": "11.mp3",
-          "midi": 67,
+          "nominal": 67,
           "baseNote": "G",
           "pitched": true,
           "sounding": 67,
@@ -274,7 +274,7 @@
         },
         {
           "file": "12.mp3",
-          "midi": 69,
+          "nominal": 69,
           "baseNote": "A",
           "pitched": true,
           "sounding": 69,
@@ -282,7 +282,7 @@
         },
         {
           "file": "13.mp3",
-          "midi": 71,
+          "nominal": 71,
           "baseNote": "B",
           "pitched": true,
           "sounding": 71,
@@ -290,7 +290,7 @@
         },
         {
           "file": "14.mp3",
-          "midi": 48,
+          "nominal": 48,
           "baseNote": "C",
           "pitched": true,
           "sounding": 48,
@@ -298,7 +298,7 @@
         },
         {
           "file": "15.mp3",
-          "midi": 50,
+          "nominal": 50,
           "baseNote": "D",
           "pitched": true,
           "sounding": 50,
@@ -306,7 +306,7 @@
         },
         {
           "file": "16.mp3",
-          "midi": 52,
+          "nominal": 52,
           "baseNote": "E",
           "pitched": true,
           "sounding": 52,
@@ -314,7 +314,7 @@
         },
         {
           "file": "17.mp3",
-          "midi": 53,
+          "nominal": 53,
           "baseNote": "F",
           "pitched": true,
           "sounding": 53,
@@ -322,7 +322,7 @@
         },
         {
           "file": "18.mp3",
-          "midi": 55,
+          "nominal": 55,
           "baseNote": "G",
           "pitched": true,
           "sounding": 55,
@@ -330,7 +330,7 @@
         },
         {
           "file": "19.mp3",
-          "midi": 57,
+          "nominal": 57,
           "baseNote": "A",
           "pitched": true,
           "sounding": 57,
@@ -338,7 +338,7 @@
         },
         {
           "file": "20.mp3",
-          "midi": 59,
+          "nominal": 59,
           "baseNote": "B",
           "pitched": true,
           "sounding": 59,
@@ -362,7 +362,7 @@
       "notes": [
         {
           "file": "0.mp3",
-          "midi": 72,
+          "nominal": 72,
           "baseNote": "C",
           "pitched": true,
           "sounding": 72,
@@ -370,7 +370,7 @@
         },
         {
           "file": "1.mp3",
-          "midi": 74,
+          "nominal": 74,
           "baseNote": "D",
           "pitched": true,
           "sounding": 74,
@@ -378,7 +378,7 @@
         },
         {
           "file": "2.mp3",
-          "midi": 76,
+          "nominal": 76,
           "baseNote": "E",
           "pitched": true,
           "sounding": 76,
@@ -386,7 +386,7 @@
         },
         {
           "file": "3.mp3",
-          "midi": 77,
+          "nominal": 77,
           "baseNote": "F",
           "pitched": true,
           "sounding": 77,
@@ -394,7 +394,7 @@
         },
         {
           "file": "4.mp3",
-          "midi": 79,
+          "nominal": 79,
           "baseNote": "G",
           "pitched": true,
           "sounding": 79,
@@ -402,7 +402,7 @@
         },
         {
           "file": "5.mp3",
-          "midi": 81,
+          "nominal": 81,
           "baseNote": "A",
           "pitched": true,
           "sounding": 81,
@@ -410,7 +410,7 @@
         },
         {
           "file": "6.mp3",
-          "midi": 83,
+          "nominal": 83,
           "baseNote": "B",
           "pitched": true,
           "sounding": 83,
@@ -418,7 +418,7 @@
         },
         {
           "file": "7.mp3",
-          "midi": 60,
+          "nominal": 60,
           "baseNote": "C",
           "pitched": true,
           "sounding": 60,
@@ -426,7 +426,7 @@
         },
         {
           "file": "8.mp3",
-          "midi": 62,
+          "nominal": 62,
           "baseNote": "D",
           "pitched": true,
           "sounding": 62,
@@ -434,7 +434,7 @@
         },
         {
           "file": "9.mp3",
-          "midi": 64,
+          "nominal": 64,
           "baseNote": "E",
           "pitched": true,
           "sounding": 64,
@@ -442,7 +442,7 @@
         },
         {
           "file": "10.mp3",
-          "midi": 65,
+          "nominal": 65,
           "baseNote": "F",
           "pitched": true,
           "sounding": 65,
@@ -450,7 +450,7 @@
         },
         {
           "file": "11.mp3",
-          "midi": 67,
+          "nominal": 67,
           "baseNote": "G",
           "pitched": true,
           "sounding": 67,
@@ -458,7 +458,7 @@
         },
         {
           "file": "12.mp3",
-          "midi": 69,
+          "nominal": 69,
           "baseNote": "A",
           "pitched": true,
           "sounding": 69,
@@ -466,7 +466,7 @@
         },
         {
           "file": "13.mp3",
-          "midi": 71,
+          "nominal": 71,
           "baseNote": "B",
           "pitched": true,
           "sounding": 71,
@@ -474,7 +474,7 @@
         },
         {
           "file": "14.mp3",
-          "midi": 48,
+          "nominal": 48,
           "baseNote": "C",
           "pitched": true,
           "sounding": 48,
@@ -482,7 +482,7 @@
         },
         {
           "file": "15.mp3",
-          "midi": 50,
+          "nominal": 50,
           "baseNote": "D",
           "pitched": true,
           "sounding": 50,
@@ -490,7 +490,7 @@
         },
         {
           "file": "16.mp3",
-          "midi": 52,
+          "nominal": 52,
           "baseNote": "E",
           "pitched": true,
           "sounding": 52,
@@ -498,7 +498,7 @@
         },
         {
           "file": "17.mp3",
-          "midi": 53,
+          "nominal": 53,
           "baseNote": "F",
           "pitched": true,
           "sounding": 53,
@@ -506,7 +506,7 @@
         },
         {
           "file": "18.mp3",
-          "midi": 55,
+          "nominal": 55,
           "baseNote": "G",
           "pitched": true,
           "sounding": 55,
@@ -514,7 +514,7 @@
         },
         {
           "file": "19.mp3",
-          "midi": 57,
+          "nominal": 57,
           "baseNote": "A",
           "pitched": true,
           "sounding": 57,
@@ -522,7 +522,7 @@
         },
         {
           "file": "20.mp3",
-          "midi": 59,
+          "nominal": 59,
           "baseNote": "B",
           "pitched": true,
           "sounding": 59,
@@ -541,7 +541,7 @@
       "notes": [
         {
           "file": "0.mp3",
-          "midi": 72,
+          "nominal": 72,
           "baseNote": "C",
           "pitched": false,
           "sounding": 72,
@@ -549,7 +549,7 @@
         },
         {
           "file": "1.mp3",
-          "midi": 74,
+          "nominal": 74,
           "baseNote": "Dm",
           "pitched": false,
           "sounding": 74,
@@ -557,7 +557,7 @@
         },
         {
           "file": "2.mp3",
-          "midi": 76,
+          "nominal": 76,
           "baseNote": "Em",
           "pitched": false,
           "sounding": 76,
@@ -565,7 +565,7 @@
         },
         {
           "file": "3.mp3",
-          "midi": 77,
+          "nominal": 77,
           "baseNote": "F",
           "pitched": false,
           "sounding": 77,
@@ -573,7 +573,7 @@
         },
         {
           "file": "4.mp3",
-          "midi": 79,
+          "nominal": 79,
           "baseNote": "G",
           "pitched": false,
           "sounding": 79,
@@ -581,7 +581,7 @@
         },
         {
           "file": "5.mp3",
-          "midi": 81,
+          "nominal": 81,
           "baseNote": "Am",
           "pitched": false,
           "sounding": 81,
@@ -589,7 +589,7 @@
         },
         {
           "file": "6.mp3",
-          "midi": 83,
+          "nominal": 83,
           "baseNote": "G7",
           "pitched": false,
           "sounding": 83,
@@ -597,7 +597,7 @@
         },
         {
           "file": "7.mp3",
-          "midi": 60,
+          "nominal": 60,
           "baseNote": "C",
           "pitched": true,
           "sounding": 60,
@@ -605,7 +605,7 @@
         },
         {
           "file": "8.mp3",
-          "midi": 62,
+          "nominal": 62,
           "baseNote": "D",
           "pitched": true,
           "sounding": 62,
@@ -613,7 +613,7 @@
         },
         {
           "file": "9.mp3",
-          "midi": 64,
+          "nominal": 64,
           "baseNote": "E",
           "pitched": true,
           "sounding": 64,
@@ -621,7 +621,7 @@
         },
         {
           "file": "10.mp3",
-          "midi": 65,
+          "nominal": 65,
           "baseNote": "F",
           "pitched": true,
           "sounding": 65,
@@ -629,7 +629,7 @@
         },
         {
           "file": "11.mp3",
-          "midi": 67,
+          "nominal": 67,
           "baseNote": "G",
           "pitched": true,
           "sounding": 67,
@@ -637,7 +637,7 @@
         },
         {
           "file": "12.mp3",
-          "midi": 69,
+          "nominal": 69,
           "baseNote": "A",
           "pitched": true,
           "sounding": 69,
@@ -645,7 +645,7 @@
         },
         {
           "file": "13.mp3",
-          "midi": 71,
+          "nominal": 71,
           "baseNote": "B",
           "pitched": true,
           "sounding": 71,
@@ -653,7 +653,7 @@
         },
         {
           "file": "14.mp3",
-          "midi": 48,
+          "nominal": 48,
           "baseNote": "C",
           "pitched": true,
           "sounding": 48,
@@ -661,7 +661,7 @@
         },
         {
           "file": "15.mp3",
-          "midi": 50,
+          "nominal": 50,
           "baseNote": "D",
           "pitched": true,
           "sounding": 50,
@@ -669,7 +669,7 @@
         },
         {
           "file": "16.mp3",
-          "midi": 52,
+          "nominal": 52,
           "baseNote": "E",
           "pitched": true,
           "sounding": 52,
@@ -677,7 +677,7 @@
         },
         {
           "file": "17.mp3",
-          "midi": 53,
+          "nominal": 53,
           "baseNote": "F",
           "pitched": true,
           "sounding": 53,
@@ -685,7 +685,7 @@
         },
         {
           "file": "18.mp3",
-          "midi": 55,
+          "nominal": 55,
           "baseNote": "G",
           "pitched": true,
           "sounding": 55,
@@ -693,7 +693,7 @@
         },
         {
           "file": "19.mp3",
-          "midi": 57,
+          "nominal": 57,
           "baseNote": "A",
           "pitched": true,
           "sounding": 57,
@@ -701,7 +701,7 @@
         },
         {
           "file": "20.mp3",
-          "midi": 59,
+          "nominal": 59,
           "baseNote": "B",
           "pitched": true,
           "sounding": 59,
@@ -718,7 +718,7 @@
       "notes": [
         {
           "file": "0.mp3",
-          "midi": 72,
+          "nominal": 72,
           "baseNote": "C",
           "pitched": true,
           "sounding": 72,
@@ -726,7 +726,7 @@
         },
         {
           "file": "1.mp3",
-          "midi": 74,
+          "nominal": 74,
           "baseNote": "D",
           "pitched": true,
           "sounding": 74,
@@ -734,7 +734,7 @@
         },
         {
           "file": "2.mp3",
-          "midi": 76,
+          "nominal": 76,
           "baseNote": "E",
           "pitched": true,
           "sounding": 76,
@@ -742,7 +742,7 @@
         },
         {
           "file": "3.mp3",
-          "midi": 77,
+          "nominal": 77,
           "baseNote": "F",
           "pitched": true,
           "sounding": 77,
@@ -750,7 +750,7 @@
         },
         {
           "file": "4.mp3",
-          "midi": 79,
+          "nominal": 79,
           "baseNote": "G",
           "pitched": true,
           "sounding": 79,
@@ -758,7 +758,7 @@
         },
         {
           "file": "5.mp3",
-          "midi": 81,
+          "nominal": 81,
           "baseNote": "A",
           "pitched": true,
           "sounding": 81,
@@ -766,7 +766,7 @@
         },
         {
           "file": "6.mp3",
-          "midi": 83,
+          "nominal": 83,
           "baseNote": "B",
           "pitched": true,
           "sounding": 83,
@@ -774,7 +774,7 @@
         },
         {
           "file": "7.mp3",
-          "midi": 60,
+          "nominal": 60,
           "baseNote": "C",
           "pitched": true,
           "sounding": 60,
@@ -782,7 +782,7 @@
         },
         {
           "file": "8.mp3",
-          "midi": 62,
+          "nominal": 62,
           "baseNote": "D",
           "pitched": true,
           "sounding": 62,
@@ -790,7 +790,7 @@
         },
         {
           "file": "9.mp3",
-          "midi": 64,
+          "nominal": 64,
           "baseNote": "E",
           "pitched": true,
           "sounding": 64,
@@ -798,7 +798,7 @@
         },
         {
           "file": "10.mp3",
-          "midi": 65,
+          "nominal": 65,
           "baseNote": "F",
           "pitched": true,
           "sounding": 65,
@@ -806,7 +806,7 @@
         },
         {
           "file": "11.mp3",
-          "midi": 67,
+          "nominal": 67,
           "baseNote": "G",
           "pitched": true,
           "sounding": 67,
@@ -814,7 +814,7 @@
         },
         {
           "file": "12.mp3",
-          "midi": 69,
+          "nominal": 69,
           "baseNote": "A",
           "pitched": true,
           "sounding": 69,
@@ -822,7 +822,7 @@
         },
         {
           "file": "13.mp3",
-          "midi": 71,
+          "nominal": 71,
           "baseNote": "B",
           "pitched": true,
           "sounding": 71,
@@ -830,7 +830,7 @@
         },
         {
           "file": "14.mp3",
-          "midi": 48,
+          "nominal": 48,
           "baseNote": "C",
           "pitched": true,
           "sounding": 48,
@@ -838,7 +838,7 @@
         },
         {
           "file": "15.mp3",
-          "midi": 50,
+          "nominal": 50,
           "baseNote": "D",
           "pitched": true,
           "sounding": 50,
@@ -846,7 +846,7 @@
         },
         {
           "file": "16.mp3",
-          "midi": 52,
+          "nominal": 52,
           "baseNote": "E",
           "pitched": true,
           "sounding": 52,
@@ -854,7 +854,7 @@
         },
         {
           "file": "17.mp3",
-          "midi": 53,
+          "nominal": 53,
           "baseNote": "F",
           "pitched": true,
           "sounding": 53,
@@ -862,7 +862,7 @@
         },
         {
           "file": "18.mp3",
-          "midi": 55,
+          "nominal": 55,
           "baseNote": "G",
           "pitched": true,
           "sounding": 55,
@@ -870,7 +870,7 @@
         },
         {
           "file": "19.mp3",
-          "midi": 57,
+          "nominal": 57,
           "baseNote": "A",
           "pitched": true,
           "sounding": 57,
@@ -878,7 +878,7 @@
         },
         {
           "file": "20.mp3",
-          "midi": 59,
+          "nominal": 59,
           "baseNote": "B",
           "pitched": true,
           "sounding": 59,
@@ -902,7 +902,7 @@
       "notes": [
         {
           "file": "m60.mp3",
-          "midi": 60,
+          "nominal": 60,
           "baseNote": "C",
           "pitched": true,
           "sounding": 60,
@@ -910,7 +910,7 @@
         },
         {
           "file": "m62.mp3",
-          "midi": 62,
+          "nominal": 62,
           "baseNote": "D",
           "pitched": true,
           "sounding": 62,
@@ -918,7 +918,7 @@
         },
         {
           "file": "m64.mp3",
-          "midi": 64,
+          "nominal": 64,
           "baseNote": "E",
           "pitched": true,
           "sounding": 64,
@@ -926,7 +926,7 @@
         },
         {
           "file": "m65.mp3",
-          "midi": 65,
+          "nominal": 65,
           "baseNote": "F",
           "pitched": true,
           "sounding": 65,
@@ -934,7 +934,7 @@
         },
         {
           "file": "m67.mp3",
-          "midi": 67,
+          "nominal": 67,
           "baseNote": "G",
           "pitched": true,
           "sounding": 67,
@@ -942,7 +942,7 @@
         },
         {
           "file": "m69.mp3",
-          "midi": 69,
+          "nominal": 69,
           "baseNote": "A",
           "pitched": true,
           "sounding": 69,
@@ -950,7 +950,7 @@
         },
         {
           "file": "m71.mp3",
-          "midi": 71,
+          "nominal": 71,
           "baseNote": "B",
           "pitched": true,
           "sounding": 71,
@@ -958,7 +958,7 @@
         },
         {
           "file": "m48.mp3",
-          "midi": 48,
+          "nominal": 48,
           "baseNote": "C",
           "pitched": true,
           "sounding": 48,
@@ -966,7 +966,7 @@
         },
         {
           "file": "m50.mp3",
-          "midi": 50,
+          "nominal": 50,
           "baseNote": "D",
           "pitched": true,
           "sounding": 50,
@@ -974,7 +974,7 @@
         },
         {
           "file": "m52.mp3",
-          "midi": 52,
+          "nominal": 52,
           "baseNote": "E",
           "pitched": true,
           "sounding": 52,
@@ -982,7 +982,7 @@
         },
         {
           "file": "m53.mp3",
-          "midi": 53,
+          "nominal": 53,
           "baseNote": "F",
           "pitched": true,
           "sounding": 53,
@@ -990,7 +990,7 @@
         },
         {
           "file": "m55.mp3",
-          "midi": 55,
+          "nominal": 55,
           "baseNote": "G",
           "pitched": true,
           "sounding": 55,
@@ -998,7 +998,7 @@
         },
         {
           "file": "m57.mp3",
-          "midi": 57,
+          "nominal": 57,
           "baseNote": "A",
           "pitched": true,
           "sounding": 57,
@@ -1006,7 +1006,7 @@
         },
         {
           "file": "m59.mp3",
-          "midi": 59,
+          "nominal": 59,
           "baseNote": "B",
           "pitched": true,
           "sounding": 59,
@@ -1025,7 +1025,7 @@
       "notes": [
         {
           "file": "0.mp3",
-          "midi": 72,
+          "nominal": 72,
           "baseNote": "C",
           "pitched": true,
           "sounding": 72,
@@ -1033,7 +1033,7 @@
         },
         {
           "file": "1.mp3",
-          "midi": 74,
+          "nominal": 74,
           "baseNote": "D",
           "pitched": true,
           "sounding": 74,
@@ -1041,7 +1041,7 @@
         },
         {
           "file": "2.mp3",
-          "midi": 76,
+          "nominal": 76,
           "baseNote": "E",
           "pitched": true,
           "sounding": 76,
@@ -1049,7 +1049,7 @@
         },
         {
           "file": "3.mp3",
-          "midi": 77,
+          "nominal": 77,
           "baseNote": "F",
           "pitched": true,
           "sounding": 77,
@@ -1057,7 +1057,7 @@
         },
         {
           "file": "4.mp3",
-          "midi": 79,
+          "nominal": 79,
           "baseNote": "G",
           "pitched": true,
           "sounding": 79,
@@ -1065,7 +1065,7 @@
         },
         {
           "file": "5.mp3",
-          "midi": 81,
+          "nominal": 81,
           "baseNote": "A",
           "pitched": true,
           "sounding": 81,
@@ -1073,7 +1073,7 @@
         },
         {
           "file": "6.mp3",
-          "midi": 83,
+          "nominal": 83,
           "baseNote": "B",
           "pitched": true,
           "sounding": 83,
@@ -1081,7 +1081,7 @@
         },
         {
           "file": "7.mp3",
-          "midi": 60,
+          "nominal": 60,
           "baseNote": "C",
           "pitched": true,
           "sounding": 60,
@@ -1089,7 +1089,7 @@
         },
         {
           "file": "8.mp3",
-          "midi": 62,
+          "nominal": 62,
           "baseNote": "D",
           "pitched": true,
           "sounding": 62,
@@ -1097,7 +1097,7 @@
         },
         {
           "file": "9.mp3",
-          "midi": 64,
+          "nominal": 64,
           "baseNote": "E",
           "pitched": true,
           "sounding": 64,
@@ -1105,7 +1105,7 @@
         },
         {
           "file": "10.mp3",
-          "midi": 65,
+          "nominal": 65,
           "baseNote": "F",
           "pitched": true,
           "sounding": 65,
@@ -1113,7 +1113,7 @@
         },
         {
           "file": "11.mp3",
-          "midi": 67,
+          "nominal": 67,
           "baseNote": "G",
           "pitched": true,
           "sounding": 67,
@@ -1121,7 +1121,7 @@
         },
         {
           "file": "12.mp3",
-          "midi": 69,
+          "nominal": 69,
           "baseNote": "A",
           "pitched": true,
           "sounding": 69,
@@ -1129,7 +1129,7 @@
         },
         {
           "file": "13.mp3",
-          "midi": 71,
+          "nominal": 71,
           "baseNote": "B",
           "pitched": true,
           "sounding": 71,
@@ -1137,7 +1137,7 @@
         },
         {
           "file": "14.mp3",
-          "midi": 48,
+          "nominal": 48,
           "baseNote": "C",
           "pitched": true,
           "sounding": 48,
@@ -1145,7 +1145,7 @@
         },
         {
           "file": "15.mp3",
-          "midi": 50,
+          "nominal": 50,
           "baseNote": "D",
           "pitched": true,
           "sounding": 50,
@@ -1153,7 +1153,7 @@
         },
         {
           "file": "16.mp3",
-          "midi": 52,
+          "nominal": 52,
           "baseNote": "E",
           "pitched": true,
           "sounding": 52,
@@ -1161,7 +1161,7 @@
         },
         {
           "file": "17.mp3",
-          "midi": 53,
+          "nominal": 53,
           "baseNote": "F",
           "pitched": true,
           "sounding": 53,
@@ -1169,7 +1169,7 @@
         },
         {
           "file": "18.mp3",
-          "midi": 55,
+          "nominal": 55,
           "baseNote": "G",
           "pitched": true,
           "sounding": 55,
@@ -1177,7 +1177,7 @@
         },
         {
           "file": "19.mp3",
-          "midi": 57,
+          "nominal": 57,
           "baseNote": "A",
           "pitched": true,
           "sounding": 57,
@@ -1185,7 +1185,7 @@
         },
         {
           "file": "20.mp3",
-          "midi": 59,
+          "nominal": 59,
           "baseNote": "B",
           "pitched": true,
           "sounding": 59,
@@ -1204,7 +1204,7 @@
       "notes": [
         {
           "file": "0.mp3",
-          "midi": 72,
+          "nominal": 72,
           "baseNote": "C",
           "pitched": false,
           "sounding": 72,
@@ -1212,7 +1212,7 @@
         },
         {
           "file": "1.mp3",
-          "midi": 74,
+          "nominal": 74,
           "baseNote": "Dm",
           "pitched": false,
           "sounding": 74,
@@ -1220,7 +1220,7 @@
         },
         {
           "file": "2.mp3",
-          "midi": 76,
+          "nominal": 76,
           "baseNote": "Em",
           "pitched": false,
           "sounding": 76,
@@ -1228,7 +1228,7 @@
         },
         {
           "file": "3.mp3",
-          "midi": 77,
+          "nominal": 77,
           "baseNote": "F",
           "pitched": false,
           "sounding": 77,
@@ -1236,7 +1236,7 @@
         },
         {
           "file": "4.mp3",
-          "midi": 79,
+          "nominal": 79,
           "baseNote": "G",
           "pitched": false,
           "sounding": 79,
@@ -1244,7 +1244,7 @@
         },
         {
           "file": "5.mp3",
-          "midi": 81,
+          "nominal": 81,
           "baseNote": "Am",
           "pitched": false,
           "sounding": 81,
@@ -1252,7 +1252,7 @@
         },
         {
           "file": "6.mp3",
-          "midi": 83,
+          "nominal": 83,
           "baseNote": "G7",
           "pitched": false,
           "sounding": 83,
@@ -1260,7 +1260,7 @@
         },
         {
           "file": "7.mp3",
-          "midi": 60,
+          "nominal": 60,
           "baseNote": "C",
           "pitched": true,
           "sounding": 60,
@@ -1268,7 +1268,7 @@
         },
         {
           "file": "8.mp3",
-          "midi": 62,
+          "nominal": 62,
           "baseNote": "D",
           "pitched": true,
           "sounding": 62,
@@ -1276,7 +1276,7 @@
         },
         {
           "file": "9.mp3",
-          "midi": 64,
+          "nominal": 64,
           "baseNote": "E",
           "pitched": true,
           "sounding": 64,
@@ -1284,7 +1284,7 @@
         },
         {
           "file": "10.mp3",
-          "midi": 65,
+          "nominal": 65,
           "baseNote": "F",
           "pitched": true,
           "sounding": 65,
@@ -1292,7 +1292,7 @@
         },
         {
           "file": "11.mp3",
-          "midi": 67,
+          "nominal": 67,
           "baseNote": "G",
           "pitched": true,
           "sounding": 67,
@@ -1300,7 +1300,7 @@
         },
         {
           "file": "12.mp3",
-          "midi": 69,
+          "nominal": 69,
           "baseNote": "A",
           "pitched": true,
           "sounding": 69,
@@ -1308,7 +1308,7 @@
         },
         {
           "file": "13.mp3",
-          "midi": 71,
+          "nominal": 71,
           "baseNote": "B",
           "pitched": true,
           "sounding": 71,
@@ -1316,7 +1316,7 @@
         },
         {
           "file": "14.mp3",
-          "midi": 48,
+          "nominal": 48,
           "baseNote": "C",
           "pitched": true,
           "sounding": 48,
@@ -1324,7 +1324,7 @@
         },
         {
           "file": "15.mp3",
-          "midi": 50,
+          "nominal": 50,
           "baseNote": "D",
           "pitched": true,
           "sounding": 50,
@@ -1332,7 +1332,7 @@
         },
         {
           "file": "16.mp3",
-          "midi": 52,
+          "nominal": 52,
           "baseNote": "E",
           "pitched": true,
           "sounding": 52,
@@ -1340,7 +1340,7 @@
         },
         {
           "file": "17.mp3",
-          "midi": 53,
+          "nominal": 53,
           "baseNote": "F",
           "pitched": true,
           "sounding": 53,
@@ -1348,7 +1348,7 @@
         },
         {
           "file": "18.mp3",
-          "midi": 55,
+          "nominal": 55,
           "baseNote": "G",
           "pitched": true,
           "sounding": 55,
@@ -1356,7 +1356,7 @@
         },
         {
           "file": "19.mp3",
-          "midi": 57,
+          "nominal": 57,
           "baseNote": "A",
           "pitched": true,
           "sounding": 57,
@@ -1364,7 +1364,7 @@
         },
         {
           "file": "20.mp3",
-          "midi": 59,
+          "nominal": 59,
           "baseNote": "B",
           "pitched": true,
           "sounding": 59,
@@ -1383,7 +1383,7 @@
       "notes": [
         {
           "file": "0.mp3",
-          "midi": 72,
+          "nominal": 72,
           "baseNote": "C",
           "pitched": true,
           "sounding": 72,
@@ -1391,7 +1391,7 @@
         },
         {
           "file": "1.mp3",
-          "midi": 74,
+          "nominal": 74,
           "baseNote": "Db",
           "pitched": true,
           "sounding": 73,
@@ -1399,7 +1399,7 @@
         },
         {
           "file": "2.mp3",
-          "midi": 76,
+          "nominal": 76,
           "baseNote": "Eb",
           "pitched": true,
           "sounding": 75,
@@ -1407,7 +1407,7 @@
         },
         {
           "file": "3.mp3",
-          "midi": 77,
+          "nominal": 77,
           "baseNote": "F",
           "pitched": true,
           "sounding": 77,
@@ -1415,7 +1415,7 @@
         },
         {
           "file": "4.mp3",
-          "midi": 79,
+          "nominal": 79,
           "baseNote": "G",
           "pitched": true,
           "sounding": 79,
@@ -1423,7 +1423,7 @@
         },
         {
           "file": "5.mp3",
-          "midi": 81,
+          "nominal": 81,
           "baseNote": "Ab",
           "pitched": true,
           "sounding": 80,
@@ -1431,7 +1431,7 @@
         },
         {
           "file": "6.mp3",
-          "midi": 83,
+          "nominal": 83,
           "baseNote": "Bb",
           "pitched": true,
           "sounding": 82,
@@ -1439,7 +1439,7 @@
         },
         {
           "file": "7.mp3",
-          "midi": 60,
+          "nominal": 60,
           "baseNote": "C",
           "pitched": true,
           "sounding": 60,
@@ -1447,7 +1447,7 @@
         },
         {
           "file": "8.mp3",
-          "midi": 62,
+          "nominal": 62,
           "baseNote": "D",
           "pitched": true,
           "sounding": 62,
@@ -1455,7 +1455,7 @@
         },
         {
           "file": "9.mp3",
-          "midi": 64,
+          "nominal": 64,
           "baseNote": "Eb",
           "pitched": true,
           "sounding": 63,
@@ -1463,7 +1463,7 @@
         },
         {
           "file": "10.mp3",
-          "midi": 65,
+          "nominal": 65,
           "baseNote": "F",
           "pitched": true,
           "sounding": 65,
@@ -1471,7 +1471,7 @@
         },
         {
           "file": "11.mp3",
-          "midi": 67,
+          "nominal": 67,
           "baseNote": "G",
           "pitched": true,
           "sounding": 67,
@@ -1479,7 +1479,7 @@
         },
         {
           "file": "12.mp3",
-          "midi": 69,
+          "nominal": 69,
           "baseNote": "A",
           "pitched": true,
           "sounding": 69,
@@ -1487,7 +1487,7 @@
         },
         {
           "file": "13.mp3",
-          "midi": 71,
+          "nominal": 71,
           "baseNote": "Bb",
           "pitched": true,
           "sounding": 70,
@@ -1495,7 +1495,7 @@
         },
         {
           "file": "14.mp3",
-          "midi": 48,
+          "nominal": 48,
           "baseNote": "C",
           "pitched": true,
           "sounding": 48,
@@ -1503,7 +1503,7 @@
         },
         {
           "file": "15.mp3",
-          "midi": 50,
+          "nominal": 50,
           "baseNote": "D",
           "pitched": true,
           "sounding": 50,
@@ -1511,7 +1511,7 @@
         },
         {
           "file": "16.mp3",
-          "midi": 52,
+          "nominal": 52,
           "baseNote": "Eb",
           "pitched": true,
           "sounding": 51,
@@ -1519,7 +1519,7 @@
         },
         {
           "file": "17.mp3",
-          "midi": 53,
+          "nominal": 53,
           "baseNote": "F",
           "pitched": true,
           "sounding": 53,
@@ -1527,7 +1527,7 @@
         },
         {
           "file": "18.mp3",
-          "midi": 55,
+          "nominal": 55,
           "baseNote": "G",
           "pitched": true,
           "sounding": 55,
@@ -1535,7 +1535,7 @@
         },
         {
           "file": "19.mp3",
-          "midi": 57,
+          "nominal": 57,
           "baseNote": "A",
           "pitched": true,
           "sounding": 57,
@@ -1543,7 +1543,7 @@
         },
         {
           "file": "20.mp3",
-          "midi": 59,
+          "nominal": 59,
           "baseNote": "Bb",
           "pitched": true,
           "sounding": 58,
@@ -1562,7 +1562,7 @@
       "notes": [
         {
           "file": "0.mp3",
-          "midi": 72,
+          "nominal": 72,
           "baseNote": "C",
           "pitched": true,
           "sounding": 72,
@@ -1570,7 +1570,7 @@
         },
         {
           "file": "1.mp3",
-          "midi": 74,
+          "nominal": 74,
           "baseNote": "D",
           "pitched": true,
           "sounding": 74,
@@ -1578,7 +1578,7 @@
         },
         {
           "file": "2.mp3",
-          "midi": 76,
+          "nominal": 76,
           "baseNote": "E",
           "pitched": true,
           "sounding": 76,
@@ -1586,7 +1586,7 @@
         },
         {
           "file": "3.mp3",
-          "midi": 77,
+          "nominal": 77,
           "baseNote": "F",
           "pitched": true,
           "sounding": 77,
@@ -1594,7 +1594,7 @@
         },
         {
           "file": "4.mp3",
-          "midi": 79,
+          "nominal": 79,
           "baseNote": "G",
           "pitched": true,
           "sounding": 79,
@@ -1602,7 +1602,7 @@
         },
         {
           "file": "5.mp3",
-          "midi": 81,
+          "nominal": 81,
           "baseNote": "A",
           "pitched": true,
           "sounding": 81,
@@ -1610,7 +1610,7 @@
         },
         {
           "file": "6.mp3",
-          "midi": 83,
+          "nominal": 83,
           "baseNote": "B",
           "pitched": true,
           "sounding": 83,
@@ -1618,7 +1618,7 @@
         },
         {
           "file": "7.mp3",
-          "midi": 60,
+          "nominal": 60,
           "baseNote": "C",
           "pitched": true,
           "sounding": 60,
@@ -1626,7 +1626,7 @@
         },
         {
           "file": "8.mp3",
-          "midi": 62,
+          "nominal": 62,
           "baseNote": "D",
           "pitched": true,
           "sounding": 62,
@@ -1634,7 +1634,7 @@
         },
         {
           "file": "9.mp3",
-          "midi": 64,
+          "nominal": 64,
           "baseNote": "E",
           "pitched": true,
           "sounding": 64,
@@ -1642,7 +1642,7 @@
         },
         {
           "file": "10.mp3",
-          "midi": 65,
+          "nominal": 65,
           "baseNote": "F",
           "pitched": true,
           "sounding": 65,
@@ -1650,7 +1650,7 @@
         },
         {
           "file": "11.mp3",
-          "midi": 67,
+          "nominal": 67,
           "baseNote": "G",
           "pitched": true,
           "sounding": 67,
@@ -1658,7 +1658,7 @@
         },
         {
           "file": "12.mp3",
-          "midi": 69,
+          "nominal": 69,
           "baseNote": "A",
           "pitched": true,
           "sounding": 69,
@@ -1666,7 +1666,7 @@
         },
         {
           "file": "13.mp3",
-          "midi": 71,
+          "nominal": 71,
           "baseNote": "B",
           "pitched": true,
           "sounding": 71,
@@ -1674,7 +1674,7 @@
         },
         {
           "file": "14.mp3",
-          "midi": 48,
+          "nominal": 48,
           "baseNote": "C",
           "pitched": true,
           "sounding": 48,
@@ -1682,7 +1682,7 @@
         },
         {
           "file": "15.mp3",
-          "midi": 50,
+          "nominal": 50,
           "baseNote": "D",
           "pitched": true,
           "sounding": 50,
@@ -1690,7 +1690,7 @@
         },
         {
           "file": "16.mp3",
-          "midi": 52,
+          "nominal": 52,
           "baseNote": "E",
           "pitched": true,
           "sounding": 52,
@@ -1698,7 +1698,7 @@
         },
         {
           "file": "17.mp3",
-          "midi": 53,
+          "nominal": 53,
           "baseNote": "F",
           "pitched": true,
           "sounding": 53,
@@ -1706,7 +1706,7 @@
         },
         {
           "file": "18.mp3",
-          "midi": 55,
+          "nominal": 55,
           "baseNote": "G",
           "pitched": true,
           "sounding": 55,
@@ -1714,7 +1714,7 @@
         },
         {
           "file": "19.mp3",
-          "midi": 57,
+          "nominal": 57,
           "baseNote": "A",
           "pitched": true,
           "sounding": 57,
@@ -1722,7 +1722,7 @@
         },
         {
           "file": "20.mp3",
-          "midi": 59,
+          "nominal": 59,
           "baseNote": "B",
           "pitched": true,
           "sounding": 59,

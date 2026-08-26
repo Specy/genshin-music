@@ -15,7 +15,7 @@ import type { InstrumentNote, ShapeDefinition, ShapeNote } from '../types';
 
 /** The ShapeNote view of an authored instrument note (`midi` IS the Note Id, ADR-0001). */
 export function shapeNoteOf(note: InstrumentNote): ShapeNote {
-  return { id: note.midi, baseNote: note.baseNote, icon: note.icon };
+  return { id: note.nominal, baseNote: note.baseNote, icon: note.icon };
 }
 
 /**

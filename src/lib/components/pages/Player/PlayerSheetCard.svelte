@@ -119,10 +119,15 @@
       options
     );
     revealAnimations = [surfaceAnimation];
-    const windowElement = scrollElement?.querySelector('.player-chunks-window');
-    if (windowElement) {
+    //the page-bounds overlay is positioned in the same scroll-content coordinates as the rows, so
+    //it has to make the same journey - left behind, its lines would sit a whole centring shift off
+    //the page they bracket for the length of the reveal
+    const slidingElements = scrollElement
+      ? scrollElement.querySelectorAll('.player-chunks-window, .player-sheet-page-bounds')
+      : [];
+    for (const element of slidingElements) {
       revealAnimations.push(
-        windowElement.animate(
+        element.animate(
           [
             { transform: `translateY(${revealFromShift}px)` },
             { transform: `translateY(${revealCenterShift}px)` },
@@ -298,6 +303,36 @@
   });
   const visibleChunks = $derived(showsAllFrames ? virtualChunks : playerControlsStore.currentPage);
   const indexOffset = $derived(showsAllFrames ? virtualStartIndex : pageIndexOffset);
+
+  /**
+   * WHERE THE COLLAPSED CARD'S WINDOW IS, drawn into the expanded one as two full-width rules.
+   * Expanded, the sheet is the whole song and there is nothing on screen to say which slice of it
+   * the user will be left looking at when they close the card again - so the slice says so itself.
+   * It is the CURRENT PAGE, exactly what `visibleChunks` falls back to when `showsAllFrames` goes
+   * false, and it moves with the run: a page flip re-draws the pair around the new page.
+   *
+   * Offsets are in the scroll content's own coordinates (the same space `centeredScrollTop` and
+   * the virtual spacers are computed in), and page size is a whole number of rows
+   * (`visualSheetSize` = columns x rows), so both rules land in a grid gutter rather than across
+   * a frame. Half a row-gap out from the page's own edges keeps them clear of the Section
+   * brackets, which overhang their frames by 0.25rem.
+   */
+  const collapsedPageBounds = $derived.by(() => {
+    if (!showsAllFrames) return null;
+    const pageLength = playerControlsStore.currentPage.length;
+    if (pageLength === 0 || totalRows === 0) return null;
+    const pitch = virtualMetrics.rowHeight + virtualMetrics.rowGap;
+    const firstRow = Math.floor(pageIndexOffset / safeColumns);
+    const lastRow = Math.floor((pageIndexOffset + pageLength - 1) / safeColumns);
+    return {
+      top: virtualMetrics.marginTop + firstRow * pitch - virtualMetrics.rowGap / 2,
+      bottom:
+        virtualMetrics.marginTop +
+        lastRow * pitch +
+        virtualMetrics.rowHeight +
+        virtualMetrics.rowGap / 2,
+    };
+  });
 
   /**
    * The two frames the Section's markers go on: the first and the last frame its note range
@@ -765,6 +800,14 @@
          style vars above are the same values, kept for tests and debugging. -->
     <div class="player-sheet-surface" bind:this={surfaceElement}>
       <div class="player-sheet-scroll" bind:this={scrollElement} onscroll={handleSheetScroll}>
+        {#if collapsedPageBounds}
+          <!-- Deliberately INSIDE the scroll box, unlike the thumb below: these two mark a place in
+               the song, so they belong to the scroll layer and must ride away with the content. -->
+          <div class="player-sheet-page-bounds" aria-hidden="true">
+            <div class="player-sheet-page-bound" style="top:{collapsedPageBounds.top}px"></div>
+            <div class="player-sheet-page-bound" style="top:{collapsedPageBounds.bottom}px"></div>
+          </div>
+        {/if}
         <PlayerPagesRenderer
           chunks={visibleChunks}
           {columns}
@@ -908,6 +951,30 @@
   .player-sheet-card-expanded .player-sheet-scroll::-webkit-scrollbar,
   .player-sheet-card-closing .player-sheet-scroll::-webkit-scrollbar {
     display: none;
+  }
+
+  /* The collapsed card's window, marked out in the expanded one. Zero-height wrapper so the two
+     rules are positioned in the scroll content's coordinates without adding to its height, and
+     dashed rather than solid so they stay clearly distinct from the Section's solid brackets. */
+  .player-sheet-page-bounds {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 0;
+    pointer-events: none;
+    z-index: 2;
+  }
+
+  .player-sheet-page-bound {
+    position: absolute;
+    left: 0;
+    right: 0;
+    /* centred ON the offset rather than hanging below it, so the pair encloses the page evenly */
+    transform: translateY(-50%);
+    /* 0.15rem, not 0.12: Chrome floors a border width to whole pixels, and 0.12rem lands on 1px */
+    border-top: 0.15rem dashed var(--accent);
+    opacity: 0.7;
   }
 
   /* Indicator only, never a control: it overlays the frames' right edge without taking layout

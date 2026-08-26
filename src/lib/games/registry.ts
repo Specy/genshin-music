@@ -101,15 +101,38 @@ export function nearestChromaticMatch(nominal: number, pitchClass: number): numb
 }
 
 /**
+ * Parse an absolute note name — "C4", "Db2", "F#3", "C-1" — to its MIDI number (C4 = 60,
+ * MIDI's own octave numbering). The octave digit names the chromatic octave C..B, so the
+ * enharmonic spellings ("Cb4", "B#4") resolve to their pitch class WITHIN that octave
+ * rather than by letter-name convention. Returns null when the text is not a note name.
+ */
+export function parseNoteName(name: string): number | null {
+  const match = /^([A-G](?:#|b)?)(-?\d{1,2})$/.exec(name);
+  if (!match) return null;
+  const pitchClass = BASE_NOTE_PITCH_CLASSES.get(match[1]);
+  if (pitchClass === undefined) return null;
+  return (Number(match[2]) + 1) * 12 + pitchClass;
+}
+
+/**
  * Resolve one instrument's authored `notes` (a preset name or an inline array) into the
  * runtime note structs, deriving each button's identity and rejecting what the JSON cast
  * cannot promise. Takes the notes rather than the whole meta so the config tests can drive
  * the same validator the registry runs, on authored note lists of their own.
+ *
+ * `register` (meta.json) anchors the instrument's lowest Pitched Button to the absolute
+ * pitch its samples actually sound ("C1" for Sky's Contrabass), moving every Pitched
+ * Button by the same whole octaves. The pitch CLASS still comes from `baseNote` through
+ * the nearest-chromatic derivation — the anchor's class must MATCH the lowest button's,
+ * so the two authored facts stay orthogonal and cannot drift (the reason ADR-0007
+ * rejected authoring `sounding` directly). Assigned Buttons are untouched: their Note
+ * Number is their Nominal Id, which no register may move.
  */
 export function normalizeNotes(
   context: string,
   authoredNotes: InstrumentMetaJson['notes'],
-  presets: NotePresetsJson
+  presets: NotePresetsJson,
+  register?: string
 ): InstrumentNote[] {
   let authored: NoteMetaJson[];
   if (typeof authoredNotes === 'string') {
@@ -123,15 +146,15 @@ export function normalizeNotes(
     fail(context, 'notes must be a preset name or a non-empty array');
   }
   const notes = authored.map((note, index) => {
-    if (!Number.isInteger(note.midi)) {
-      fail(context, `note ${index}: Note Id (midi) must be an integer, got ${note.midi}`);
+    if (!Number.isInteger(note.nominal)) {
+      fail(context, `note ${index}: Nominal Id (nominal) must be an integer, got ${note.nominal}`);
     }
     // Absent = Pitched Button (ADR-0007). `pitched: false` is the ONLY spelling of an
     // Assigned Button, so a chord label can never quietly reclassify a tuned button.
     const pitched = note.pitched !== false;
     // An Assigned Button sounds no single pitch, so its Note Number is its Nominal Id
     // carried by the Basepoint — its label is free text and nothing reads it.
-    let sounding = note.midi;
+    let sounding = note.nominal;
     if (pitched) {
       const pitchClass = BASE_NOTE_PITCH_CLASSES.get(note.baseNote);
       if (pitchClass === undefined) {
@@ -140,11 +163,11 @@ export function normalizeNotes(
           `note ${index}: a Pitched Button's baseNote must be a bare pitch class (C, Db, F#, …), got "${note.baseNote}" — a percussion, SFX or chord-strum button declares "pitched": false and may then label itself anything`
         );
       }
-      const match = nearestChromaticMatch(note.midi, pitchClass);
+      const match = nearestChromaticMatch(note.nominal, pitchClass);
       if (match === null) {
         fail(
           context,
-          `note ${index}: baseNote "${note.baseNote}" is a tritone from Nominal Id ${note.midi}, so its Sounding Pitch could be either neighbour — author the intended spelling, or "pitched": false if the button sounds no single pitch`
+          `note ${index}: baseNote "${note.baseNote}" is a tritone from Nominal Id ${note.nominal}, so its Sounding Pitch could be either neighbour — author the intended spelling, or "pitched": false if the button sounds no single pitch`
         );
       }
       sounding = match;
@@ -158,7 +181,7 @@ export function normalizeNotes(
     assertSafeSegment(context, `note ${index} file`, file);
     return {
       file,
-      midi: note.midi,
+      nominal: note.nominal,
       baseNote: note.baseNote,
       pitched,
       sounding,
@@ -167,10 +190,55 @@ export function normalizeNotes(
       ...(note.minLength !== undefined ? { minLength: note.minLength } : {}),
     };
   });
+  // The register anchors the lowest Pitched Button AFTER per-note derivation, since the
+  // lowest is only known once every button's class has resolved.
+  if (register !== undefined) {
+    const pitchedNotes = notes.filter((n) => n.pitched);
+    // A register on an instrument of only Assigned Buttons places nothing — dead config
+    // is an authoring mistake, not a harmless default.
+    if (pitchedNotes.length === 0) {
+      fail(
+        context,
+        `register "${register}" is declared but no button is Pitched, so there is nothing it could place`
+      );
+    }
+    const anchor = parseNoteName(register);
+    if (anchor === null) {
+      fail(
+        context,
+        `register "${register}" must be an absolute note name ("C1", "Db2") — the pitch the lowest Pitched Button actually sounds`
+      );
+    }
+    const lowest = pitchedNotes.reduce((a, b) => (b.sounding < a.sounding ? b : a));
+    // Same pitch class, or the anchor could only transpose by non-octaves: the register
+    // moves whole octaves, and a per-button semitone flavor is baseNote's to author.
+    if ((anchor - lowest.sounding) % 12 !== 0) {
+      fail(
+        context,
+        `register "${register}" must name the same pitch class as the lowest Pitched Button (baseNote "${lowest.baseNote}", nominal ${lowest.nominal}) — the register only moves whole octaves; a button that sounds another class authors it in baseNote`
+      );
+    }
+    const displacement = anchor - lowest.sounding;
+    if (displacement !== 0) {
+      for (const note of notes) {
+        if (note.pitched) note.sounding += displacement;
+      }
+    }
+  }
+  // The MIDI axis itself (0..127): a Sounding Pitch outside it is unexportable and can
+  // only be a wrong register — no real instrument sounds there.
+  for (const [index, note] of notes.entries()) {
+    if (note.pitched && (note.sounding < 0 || note.sounding > 127)) {
+      fail(
+        context,
+        `note ${index}: Sounding Pitch ${note.sounding} is outside the MIDI axis 0..127 — is the register right?`
+      );
+    }
+  }
   // Nominal Ids are per-instrument identity (ADR-0001): the id->button reverse map is
   // first-occurrence-wins, so a duplicate would silently strand the later button.
-  const ids = new Set(notes.map((n) => n.midi));
-  if (ids.size !== notes.length) fail(context, 'duplicate Note Ids (midi) within the instrument');
+  const ids = new Set(notes.map((n) => n.nominal));
+  if (ids.size !== notes.length) fail(context, 'duplicate Nominal Ids within the instrument');
   // Two buttons entering the same Note Number are indistinguishable in every song (ADR-0007),
   // and the Note Number -> button map (noteIds.getSoundingReverseMap) is first-occurrence-wins,
   // so the later one would be voiced by the earlier one's sample. Checked across BOTH kinds:
@@ -323,12 +391,12 @@ function buildGameMeta(id: string): GameMeta {
       // = held notes play their file once and note-off fades.
       if (meta.sustain.loop !== undefined) assertLoop(context, 'sustain.loop', meta.sustain.loop);
     }
-    const notes = normalizeNotes(context, meta.notes, presets);
+    const notes = normalizeNotes(context, meta.notes, presets, meta.register);
     for (const note of notes) {
-      if (!gridIds.has(note.midi)) {
+      if (!gridIds.has(note.nominal)) {
         fail(
           context,
-          `Note Id ${note.midi} is not in ${id}'s notes.canonicalNoteIds, so the Song Grid has no row to draw it on`
+          `Nominal Id ${note.nominal} is not in ${id}'s notes.canonicalNoteIds, so the Song Grid has no row to draw it on`
         );
       }
     }

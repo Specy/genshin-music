@@ -37,7 +37,7 @@ function recordingSink(): { sink: ComposerTimelineMinimapSink; ops: RectOp[] } {
 
 /**
  * The Note Number a button enters at Basepoint C — what a song stores since ADR-0007, and
- * deliberately NOT `note.midi`: on a tuned instrument the nominal is a number no button
+ * deliberately NOT `note.nominal`: on a tuned instrument the nominal is a number no button
  * sounds, so a song built from nominals would draw every note dimmed as a Stranded Note.
  */
 function noteNumber(instrument: (typeof INSTRUMENTS)[number], button: number): number {

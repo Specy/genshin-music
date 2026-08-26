@@ -3,5 +3,6 @@
   "family": "brass",
   "midiName": "tuba",
   "shape": "sky-3x5",
+  "register": "C2",
   "notes": "standard-15"
 }

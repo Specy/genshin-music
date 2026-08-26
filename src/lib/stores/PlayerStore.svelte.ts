@@ -34,8 +34,13 @@ type PlayerStoreState = {
    * PAUSE IS NOT A TRANSPORT COMMAND. Nothing about WHAT runs changes, so `key`/`playId`
    * deliberately stay put and no run is dispatched: PlayerKeyboard is what acts on this, freezing
    * the run that is already going (play mode drops its transport and re-anchors from the cursor
-   * through the seek path when it comes back, approaching just stops its tick). Every command
-   * below clears it, so a run can never start out paused.
+   * through the seek path when it comes back, approaching just stops its tick).
+   *
+   * PAUSE OUTLIVES A RE-AIM, NOT A RE-CHOICE. `play`/`practice`/`approaching`/`resetSong` pick
+   * what runs and always clear it; `seek` and `restartSong` only move an existing run's range
+   * ("Go to here", a Section edit, a speed change) and CARRY IT THROUGH - a user who paused asked
+   * for silence, and re-aiming the sheet is not a request to hear it again. PlayerKeyboard's
+   * dispatch is what honours that: it sets the run up in full and leaves its clock stopped.
    */
   paused: boolean;
 };
@@ -174,11 +179,12 @@ class PlayerStore {
   };
   restartSong = (start: number, end: number) => {
     this.prepareTransition();
+    //`paused` deliberately absent - a restart re-aims the run that is already chosen, so it keeps
+    //whatever the play/pause button last said (see `paused`)
     this.setState({
       start,
       end,
       preservesSection: false,
-      paused: false,
       key: this.state.key + 1,
       playId: this.state.playId + 1,
     });
@@ -200,11 +206,13 @@ class PlayerStore {
    */
   seek = (start: number, end: number) => {
     this.prepareTransition();
+    //...and neither does this one clear `paused`: "Go to here" on a paused run moves where it will
+    //resume from, it does not resume it. Resuming is the other direction - the play button clears
+    //the flag first, and PlayerKeyboard's resume is what calls this.
     this.setState({
       start,
       end,
       preservesSection: true,
-      paused: false,
       key: this.state.key + 1,
       playId: this.state.playId + 1,
     });

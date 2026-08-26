@@ -9,7 +9,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import { gamesMeta, nearestChromaticMatch, normalizeNotes } from '$lib/games/registry';
+import { gamesMeta, nearestChromaticMatch, normalizeNotes, parseNoteName } from '$lib/games/registry';
 import { BASE_NOTE_PITCH_CLASSES, BASE_NOTES } from '$lib/games/types';
 import { baseNoteText, DO_RE_MI_NOTE_SCALE, NOTE_SCALE, PITCHES } from '$core/sharedConfig';
 import type { NoteMetaJson } from '$lib/games/schema';
@@ -121,9 +121,9 @@ describe('Sounding Pitch derivation (ADR-0007)', () => {
     // The instrument the whole design turns on: its buttons are named for grid rows it does
     // not actually play, and the flat rows are what a song must record honestly.
     for (const note of notesOf('genshin', 'Vintage-Lyre')) {
-      expect(note.pitched, `${note.baseNote}@${note.midi}`).toBe(true);
-      expect(note.sounding, `${note.baseNote}@${note.midi}`).toBe(
-        note.baseNote.endsWith('b') ? note.midi - 1 : note.midi
+      expect(note.pitched, `${note.baseNote}@${note.nominal}`).toBe(true);
+      expect(note.sounding, `${note.baseNote}@${note.nominal}`).toBe(
+        note.baseNote.endsWith('b') ? note.nominal - 1 : note.nominal
       );
     }
   });
@@ -144,11 +144,11 @@ describe('Sounding Pitch derivation (ADR-0007)', () => {
       ]);
       for (const note of chordRow) {
         expect(note.pitched, `${instrument} ${note.baseNote}`).toBe(false);
-        expect(note.sounding, `${instrument} ${note.baseNote}`).toBe(note.midi);
+        expect(note.sounding, `${instrument} ${note.baseNote}`).toBe(note.nominal);
       }
       // and the two rows below it are ordinary tuned buttons, untouched by the reclassification
       for (const note of notesOf('genshin', instrument).slice(7)) {
-        expect(note.pitched, `${instrument} ${note.baseNote}@${note.midi}`).toBe(true);
+        expect(note.pitched, `${instrument} ${note.baseNote}@${note.nominal}`).toBe(true);
       }
     }
   });
@@ -156,18 +156,47 @@ describe('Sounding Pitch derivation (ADR-0007)', () => {
   it('every shipped button derives an identity consistent with its class', () => {
     for (const [gameId, meta] of Object.entries(gamesMeta)) {
       for (const instrument of Object.values(meta.instruments)) {
-        for (const note of instrument.notes) {
-          const where = `${gameId}/${instrument.name} ${note.baseNote}@${note.midi}`;
+        // The authored register is meta.json's business, not the registry output's — read
+        // it back off disk so this reproduces the WHOLE derivation, register included.
+        const authored = JSON.parse(
+          fs.readFileSync(
+            path.join(GAMES_DIR, gameId, 'instruments', instrument.name, 'meta.json'),
+            'utf8'
+          )
+        );
+        // The class half first: nearest chromatic match to each nominal, register-free.
+        const unshifted = instrument.notes.map((note) =>
+          note.pitched
+            ? nearestChromaticMatch(note.nominal, BASE_NOTE_PITCH_CLASSES.get(note.baseNote)!)!
+            : note.nominal
+        );
+        // The octave half: the anchor pitch of the lowest Pitched Button, whole octaves only.
+        let displacement = 0;
+        if (authored.register !== undefined) {
+          const anchor = parseNoteName(authored.register);
+          expect(anchor, `${gameId}/${instrument.name} register "${authored.register}"`).not.toBe(
+            null
+          );
+          const lowest = Math.min(
+            ...instrument.notes.map((note, i) => (note.pitched ? unshifted[i] : Infinity))
+          );
+          displacement = anchor! - lowest;
+          expect(Math.abs(displacement % 12), `${gameId}/${instrument.name} register octave-only`).toBe(0);
+        }
+        instrument.notes.forEach((note, i) => {
+          const where = `${gameId}/${instrument.name} ${note.baseNote}@${note.nominal}`;
           if (!note.pitched) {
-            expect(note.sounding, where).toBe(note.midi);
-            continue;
+            expect(note.sounding, where).toBe(note.nominal);
+            return;
           }
-          // a Pitched Button's Sounding Pitch spells its own label, within the ±6 window
+          // a Pitched Button's Sounding Pitch spells its own label...
           expect(((note.sounding % 12) + 12) % 12, where).toBe(
             BASE_NOTE_PITCH_CLASSES.get(note.baseNote)
           );
-          expect(Math.abs(note.sounding - note.midi), where).toBeLessThanOrEqual(5);
-        }
+          // ...at the nearest chromatic match to the nominal, placed in the instrument's
+          // authored register — the exact derivation, no other displacement possible
+          expect(note.sounding, where).toBe(unshifted[i] + displacement);
+        });
       }
     }
   });
@@ -177,7 +206,7 @@ describe('registry rejections around note identity (ADR-0007)', () => {
   // Drives the very validator buildGameMeta runs, on authored note lists the shipped games
   // must never contain — the shipped data can only ever prove the passing half.
   const note = (fields: Partial<NoteMetaJson>): NoteMetaJson => ({
-    midi: 72,
+    nominal: 72,
     baseNote: 'C',
     icon: 'do',
     ...fields,
@@ -199,13 +228,13 @@ describe('registry rejections around note identity (ADR-0007)', () => {
   });
 
   it('a tritone between label and Nominal Id (two equally near Sounding Pitches)', () => {
-    expect(normalize([note({ midi: 72, baseNote: 'Gb' })])).toThrow(/tritone/);
-    expect(normalize([note({ midi: 72, baseNote: 'F#' })])).toThrow(/tritone/);
+    expect(normalize([note({ nominal: 72, baseNote: 'Gb' })])).toThrow(/tritone/);
+    expect(normalize([note({ nominal: 72, baseNote: 'F#' })])).toThrow(/tritone/);
   });
 
   it('two Pitched Buttons that would sound the same pitch', () => {
     // distinct Nominal Ids, one Sounding Pitch: both labels resolve to 72
-    expect(normalize([note({ midi: 72, baseNote: 'C' }), note({ midi: 73, baseNote: 'C' })])).toThrow(
+    expect(normalize([note({ nominal: 72, baseNote: 'C' }), note({ nominal: 73, baseNote: 'C' })])).toThrow(
       /duplicate Sounding Pitches/
     );
     // Two Assigned Buttons cannot collide: their Sounding Pitches are their Nominal Ids, which
@@ -213,8 +242,8 @@ describe('registry rejections around note identity (ADR-0007)', () => {
     // Nominal Id in the first place, so alike-sounding buttons stay addressable.
     expect(
       normalize([
-        note({ midi: 72, baseNote: 'C', pitched: false }),
-        note({ midi: 73, baseNote: 'C', pitched: false }),
+        note({ nominal: 72, baseNote: 'C', pitched: false }),
+        note({ nominal: 73, baseNote: 'C', pitched: false }),
       ])
     ).not.toThrow();
   });
@@ -225,15 +254,45 @@ describe('registry rejections around note identity (ADR-0007)', () => {
     // Number 72 and only the first of them could ever be addressed (noteIds.numberToButton is
     // first-occurrence-wins). Both orders, since the reverse map's answer depends on it.
     expect(
-      normalize([note({ midi: 73, baseNote: 'C' }), note({ midi: 72, baseNote: 'C', pitched: false })])
+      normalize([note({ nominal: 73, baseNote: 'C' }), note({ nominal: 72, baseNote: 'C', pitched: false })])
     ).toThrow(/duplicate Sounding Pitches.*72/);
     expect(
-      normalize([note({ midi: 72, baseNote: 'C', pitched: false }), note({ midi: 73, baseNote: 'C' })])
+      normalize([note({ nominal: 72, baseNote: 'C', pitched: false }), note({ nominal: 73, baseNote: 'C' })])
     ).toThrow(/duplicate Sounding Pitches.*72/);
     // ...and the same pair with the pitched button tuned anywhere else is fine
     expect(
-      normalize([note({ midi: 73, baseNote: 'Db' }), note({ midi: 72, baseNote: 'C', pitched: false })])
+      normalize([note({ nominal: 73, baseNote: 'Db' }), note({ nominal: 72, baseNote: 'C', pitched: false })])
     ).not.toThrow();
+  });
+
+  it('the register anchors the lowest Pitched Button by whole octaves, and rejects everything else', () => {
+    const withRegister = (notes: NoteMetaJson[], register: string) => () =>
+      normalizeNotes('test', notes, {}, register);
+    const scale = [note({ nominal: 60 }), note({ nominal: 62, baseNote: 'D' })];
+    // the anchor names the lowest button's own class in another octave — every pitched
+    // button moves together
+    expect(withRegister(scale, 'C2')().map((n) => n.sounding)).toEqual([36, 38]);
+    expect(withRegister(scale, 'C6')().map((n) => n.sounding)).toEqual([84, 86]);
+    // parseNoteName speaks MIDI's own octave numbering
+    expect(parseNoteName('C4')).toBe(60);
+    expect(parseNoteName('Db2')).toBe(37);
+    expect(parseNoteName('C-1')).toBe(0);
+    expect(parseNoteName('H2')).toBe(null);
+    // not a note name at all
+    expect(withRegister(scale, 'low')).toThrow(/absolute note name/);
+    // a class the lowest button does not sound: octave moves belong here, semitone flavor
+    // to baseNote
+    expect(withRegister(scale, 'D2')).toThrow(/same pitch class/);
+    // an instrument of only Assigned Buttons has nothing to anchor
+    expect(withRegister([note({ pitched: false, baseNote: '' })], 'C2')).toThrow(/no button is Pitched/);
+    // an anchor that walks off the MIDI axis
+    expect(withRegister(scale, 'C-2')).toThrow(/outside the MIDI axis/);
+    // an Assigned Button never moves: its Note Number is its Nominal Id, whatever register
+    // its pitched neighbours sound in
+    expect(
+      withRegister([note({ nominal: 60 }), note({ nominal: 62, baseNote: '', pitched: false })], 'C2')()
+        .map((n) => n.sounding)
+    ).toEqual([36, 62]);
   });
 });
 

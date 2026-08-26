@@ -424,6 +424,84 @@ describe('Player mode transition ownership', () => {
         expect(playerControlsStore.end).toBe(song.notes.length)
     }, 15000)
 
+    // RE-AIMING A PAUSED RUN IS NOT RESUMING IT. `seek` and `restartSong` carry `paused` through
+    // (unlike the four commands that pick what runs), so "Go to here" and the Section edits that
+    // restart through it move where the run will start from and leave the sounding to the play
+    // button. The run is still set up in full - the sheet and the cursor follow the frame that was
+    // clicked - and only its clock is withheld.
+    it('moves a paused play run to a seeked frame without sounding it', async () => {
+        const song = buildRecordedSong()
+        playerStore.play(song, 0, song.notes.length)
+        await vi.waitFor(() => expect(commitSongNote).toHaveBeenCalled())
+        playerStore.setPaused(true)
+        flushSync()
+        const committed = commitSongNote.mock.calls.length
+
+        //note 3 rather than the song's last: on Sky the golden song's tail note has no key on this
+        //keyboard, and a run with nothing playable in it is a dead run in either game
+        expect(playerControlsStore.current).toBeLessThan(3)
+
+        // "Go to here" on a later frame, from a paused run
+        playerStore.seek(3, song.notes.length)
+        await vi.waitFor(() => expect(playerControlsStore.current).toBe(3))
+        expect(playerStore.state.paused).toBe(true)
+        //the sheet is rebuilt and the Section the user drew is untouched (ADR-0010)
+        expect(playerControlsStore.pagesState.pages.flat().length).toBeGreaterThan(0)
+        expect(playerControlsStore.position).toBe(0)
+        expect(playerControlsStore.end).toBe(song.notes.length)
+        //...and nothing was scheduled, however long it is left alone
+        await new Promise(resolve => setTimeout(resolve, 400))
+        expect(commitSongNote).toHaveBeenCalledTimes(committed)
+        expect(onSongFinished).not.toHaveBeenCalled()
+
+        // the play button is what starts it, from where the seek left it
+        playerStore.setPaused(false)
+        flushSync()
+        await vi.waitFor(() =>
+            expect(commitSongNote.mock.calls.length).toBeGreaterThan(committed))
+        expect(playerControlsStore.position).toBe(0)
+        await vi.waitFor(() => expect(onSongFinished).toHaveBeenCalled(), {timeout: 4000})
+    }, 15000)
+
+    // The same rule in approaching, where the withheld clock is the tick - and where a restart
+    // would otherwise also spend the two-second preparation window counting a run in that the user
+    // has not asked to hear yet.
+    it('re-aims a paused approach run without counting it back in or ticking', async () => {
+        const song = await beginApproach()
+        await finishApproachCountdown(() => vi.useFakeTimers())
+
+        let elapsed = 0
+        while (playerControlsStore.current === 0 && elapsed < 10000) {
+            vi.advanceTimersByTime(50)
+            elapsed += 50
+        }
+        expect(playerControlsStore.current).toBeGreaterThan(0)
+        playerStore.setPaused(true)
+        flushSync()
+
+        // a Section edit made from a frame restarts the run; a paused run restarts paused
+        playerStore.restartSong(1, song.notes.length)
+        flushSync()
+        await vi.advanceTimersByTimeAsync(20)
+        flushSync()
+        expect(playerControlsStore.position).toBe(1)
+        expect(playerControlsStore.current).toBe(1)
+        expect(playerStore.state.paused).toBe(true)
+        //no preparation window was entered: the user's own press of play is the count-in now
+        expect(mocks.pendingDelays.some(({ms}) => ms === approachCountdownStepMs)).toBe(false)
+        expect(target.querySelector('.approach-countdown')).toBeNull()
+        vi.advanceTimersByTime(10000)
+        flushSync()
+        expect(playerControlsStore.current).toBe(1)
+        expect(onSongFinished).not.toHaveBeenCalled()
+
+        playerStore.setPaused(false)
+        flushSync()
+        vi.advanceTimersByTime(10000)
+        flushSync()
+        expect(onSongFinished).toHaveBeenCalled()
+    })
+
     it('clears the practice sheet and score as soon as approach preparation starts', async () => {
         const song = await enterPractice()
         playerControlsStore.increaseScore(true)

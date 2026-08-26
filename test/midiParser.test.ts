@@ -70,7 +70,7 @@ describe('MIDI key-signature Basepoints', () => {
 const notesOf = (name: string) => INSTRUMENTS_DATA[name as keyof typeof INSTRUMENTS_DATA].notes
 /** Instruments with at least one Pitched Button tuned away from its Nominal Id (genshin: Vintage-Lyre). */
 const TUNED = INSTRUMENTS.filter((name: string) =>
-    notesOf(name).some(note => note.pitched && note.sounding !== note.midi))
+    notesOf(name).some(note => note.pitched && note.sounding !== note.nominal))
 /** An instrument whose two axes coincide, i.e. one the old bare arithmetic could not misplace. */
 const UNTUNED = INSTRUMENTS.find((name: string) =>
     getSoundingTable(name).every((sounding, button) => sounding === getNoteIdTable(name)[button]))!

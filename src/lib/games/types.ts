@@ -191,12 +191,13 @@ export type InstrumentSustain = {
 
 /**
  * One button's note, normalized. Array position IS the Button index.
- * `midi` is the Nominal Id (ADR-0001); `file` is always resolved (default `<index>.mp3`);
+ * `nominal` is the Nominal Id (ADR-0001); `file` is always resolved (default `<index>.mp3`);
  * `loop` and `minLength` override the instrument's sustain values for this note.
  */
 export type InstrumentNote = {
   file: string;
-  midi: number;
+  /** Nominal Id (ADR-0001): the button's sheet position in the game's grid namespace — never a pitch. */
+  nominal: number;
   /**
    * Display label. A Pitched Button's is a bare pitch-class spelling that `sounding` is
    * derived from; an Assigned Button's is free text ('Dm', 'G7', ''), hence `string` —
@@ -208,7 +209,10 @@ export type InstrumentNote = {
   /**
    * The Note Number this button enters at Basepoint C (ADR-0007): its Sounding Pitch when
    * Pitched, its Nominal Id when Assigned. Derived and validated at registry build, never
-   * authored — see registry.ts.
+   * authored — see registry.ts. For a Pitched Button the derivation is `baseNote`'s nearest
+   * chromatic match to the nominal, placed in the instrument's authored `register`
+   * (schema.ts) — Sky's Contrabass keyboard is the nominal 60..84 grid but registers at
+   * "C1", so its C button enters 24.
    */
   sounding: number;
   icon: NoteImage;
