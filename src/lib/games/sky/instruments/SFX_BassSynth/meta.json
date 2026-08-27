@@ -3,5 +3,6 @@
   "family": "bass",
   "midiName": "synth bass 1",
   "shape": "sky-2x4",
+  "register": "C2",
   "notes": "synth-8"
 }

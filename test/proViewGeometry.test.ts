@@ -11,12 +11,13 @@
  * Ukulele) are guarded by roster PRESENCE — they pin the exact numbers the ADR-0007 audit produced,
  * on the build that actually ships them.
  *
- * ONE PIXEL CONVENTION runs through the camera rows: the notes region is ALWAYS exactly
- * `perColumn + 2` rows tall (that IS proRowHeight's divisor at zoom 1), so every height here is
- * stated as a whole number of rows and ROW is chosen to divide exactly in both games. A test that
- * picked a round pixel height instead would be asserting float noise. The USER'S own zoom - a
- * multiplier on that fit since 2026-08-22 - has its own describe block at the end of the row
- * section, and every other row here is at zoom 1 by omission.
+ * ONE PIXEL CONVENTION runs through the camera rows: the notes region is ALWAYS exactly the
+ * canonical frame tall - the game's widest zone plus its two framing rows, which IS proRowHeight's
+ * divisor at zoom 1 since the 2026-08-27 revision - so every height here is stated as a whole
+ * number of rows and ROW is chosen to divide exactly in both games. A test that picked a round
+ * pixel height instead would be asserting float noise. The USER'S own zoom - a multiplier on that
+ * fit since 2026-08-22 - has its own describe block at the end of the row section, and every other
+ * row here is at zoom 1 by omission.
  */
 import { describe, expect, it } from 'vitest';
 import { INSTRUMENTS, INSTRUMENTS_DATA, InstrumentData, NOTES_PER_COLUMN, PITCHES } from './imports';
@@ -34,6 +35,7 @@ import {
   maxCameraY,
   numberAtY,
   numberForRow,
+  offscreenZoneDirection,
   proRowHeight,
   proViewAxis,
   rowForNumber,
@@ -53,6 +55,7 @@ import {
   isAccidentalMidi,
   noteNameForMidi,
   numberToButton,
+  widestInstrumentSpan,
 } from '$core/Songs/noteIds';
 import type { Pitch } from '$core/legacyConfig';
 
@@ -61,21 +64,23 @@ const ALL_INSTRUMENTS = Object.keys(INSTRUMENTS_DATA);
 const ALL_PITCHES = PITCHES as readonly Pitch[];
 const notesOf = (name: string) => INSTRUMENTS_DATA[name as keyof typeof INSTRUMENTS_DATA].notes;
 
-/** How many rows of the axis the notes region shows — fixed, because the row height is derived from it. */
-const REGION_ROWS = NOTES_PER_COLUMN + ROW_HEIGHT_FRAMING_ROWS;
-/** One row, in px. Any value works; a whole one keeps every expectation below exact. */
-const ROW = 20;
-const REGION = REGION_ROWS * ROW;
-
 const AXIS = proViewAxis();
 const bandOf = (name: string) => {
   const zone = editableZone(name, 'C');
   return zone.max - zone.min;
 };
-/** The instrument that reaches furthest — the "full range" case for the locked camera. */
+/** The instrument that reaches furthest — the canonical frame, and the "full range" locked case. */
 const WIDEST = ALL_INSTRUMENTS.reduce((a, b) => (bandOf(b) > bandOf(a) ? b : a));
 /** ...and the narrowest, which is a drums/SFX kit in both shipped games (8 or fewer buttons). */
 const NARROWEST = ALL_INSTRUMENTS.reduce((a, b) => (bandOf(b) < bandOf(a) ? b : a));
+
+/** The game's canonical frame (spec §4, 2026-08-27): the widest zone's rows, every layer's scale. */
+const CANONICAL_ROWS = zoneRowCount(editableZone(WIDEST, 'C'));
+/** How many rows of the axis the notes region shows — the canonical frame plus its framing air. */
+const REGION_ROWS = CANONICAL_ROWS + ROW_HEIGHT_FRAMING_ROWS;
+/** One row, in px. Any value works; a whole one keeps every expectation below exact. */
+const ROW = 20;
+const REGION = REGION_ROWS * ROW;
 /** Instruments with at least one Assigned Button (percussion, SFX, chord strums). */
 const ASSIGNED = ALL_INSTRUMENTS.filter((name) => notesOf(name).some((note) => !note.pitched));
 /** Instruments with at least one Pitched Button tuned away from its Nominal Id (genshin: Vintage-Lyre). */
@@ -198,70 +203,57 @@ describe('rows', () => {
     expect(rowForNumber(AXIS, 60) - rowForNumber(AXIS, 61)).toBe(1);
   });
 
-  it('caps a row at the game\'s own note size: perColumn + 2 rows fill the region', () => {
+  /**
+   * THE ROW HEIGHT IS A GAME CONSTANT (spec §4, user revision 2026-08-27 — was: the current
+   * layer's own zone since 2026-08-21, which re-scaled the whole canvas on an instrument swap;
+   * sky's 25-row harp to its 13-row drum stretched every row 1.6x). The region is sized ONCE for
+   * the widest zone any instrument has, so every layer keeps one scale — and the 2026-08-21
+   * promise ("the locked frame shows the whole instrument") holds for free, since no zone is
+   * wider than the widest.
+   */
+  it('fits the game\'s canonical frame: the widest zone plus its framing fills the region', () => {
+    //noteIds' registry scan and this file's own roster reduce are the same widest instrument
+    expect(widestInstrumentSpan()).toBe(CANONICAL_ROWS);
     expect(proRowHeight({ notesRegionHeight: REGION })).toBe(ROW);
     expect(proRowHeight({ notesRegionHeight: REGION }) * REGION_ROWS).toBe(REGION);
-    //the two shipped `perColumn` values, from one build - same trick as composerCanvasSize's
-    //`rowHeightScale` parameter
-    expect(proRowHeight({ notesRegionHeight: 230, perColumn: 21 })).toBe(10);
-    expect(proRowHeight({ notesRegionHeight: 170, perColumn: 15 })).toBe(10);
-    //the cap scales with the region and with nothing else
+    //the fit scales with the region and with nothing else
     expect(proRowHeight({ notesRegionHeight: REGION * 2 })).toBe(ROW * 2);
   });
 
-  /**
-   * THE FRAMING FITS THE WHOLE INSTRUMENT (spec §4, user revision 2026-08-21).
-   *
-   * `perColumn` counts BUTTONS and the Pro View draws a row per SEMITONE, so the two part company
-   * for every instrument with a gap in it: the widest one in either shipped game spans far more
-   * semitones than the game's layout has buttons, and a region sized for `perColumn + 2` showed
-   * two thirds of its Editable Zone with the locked frame cutting the rest off.
-   *
-   * Stated over the ROSTER rather than over named instruments, like everything else in this file:
-   * whichever instrument reaches furthest in this build is the one that has to fit.
-   */
-  it('shrinks a row until the whole Editable Zone plus its framing fits the region', () => {
-    const zone = editableZone(WIDEST, 'C');
-    const rows = zoneRowCount(zone);
-    const rowHeight = proRowHeight({ notesRegionHeight: REGION, zoneRowCount: rows });
-    //the zone and its two framing rows tile the region exactly
-    expect(rowHeight * (rows + ROW_HEIGHT_FRAMING_ROWS)).toBeCloseTo(REGION, 9);
-    //...which is what makes the whole band visible: the zone itself is shorter than the region
-    expect(rowHeight * rows).toBeLessThan(REGION);
-    //genshin's widest instrument spans more semitones than the game has buttons per column, so
-    //this is a REAL shrink there; on a game where it does not, the cap below is what answers
-    if (rows > NOTES_PER_COLUMN) {
-      expect(rowHeight).toBeLessThan(proRowHeight({ notesRegionHeight: REGION }));
+  it('...a frame every instrument\'s whole zone fits inside, at every Basepoint', () => {
+    for (const name of ALL_INSTRUMENTS) {
+      for (const pitch of ALL_PITCHES) {
+        const rows = zoneRowCount(editableZone(name, pitch));
+        //the zone plus its framing air never overruns the region the canonical fit sized
+        expect((rows + ROW_HEIGHT_FRAMING_ROWS) * ROW).toBeLessThanOrEqual(REGION);
+      }
     }
-  });
-
-  it('...but never grows one: a narrow instrument keeps the game\'s note size', () => {
-    const rows = zoneRowCount(editableZone(NARROWEST, 'C'));
-    expect(rows).toBeLessThan(REGION_ROWS);
-    //the cap, exactly - the drum kit's 8 buttons over a dozen semitones would otherwise draw
-    //notes twice the size of every other instrument's, which is a different view and not a frame
-    expect(proRowHeight({ notesRegionHeight: REGION, zoneRowCount: rows })).toBe(ROW);
   });
 
   it('is the smaller of the two terms, whichever that is, in both shipped layouts', () => {
-    //BOTH GAMES FROM ONE BUILD, the way the cap row above checks both `perColumn` values: 21/15
-    //buttons, against a zone wider than the layout and a zone narrower than it.
+    //BOTH GAMES FROM ONE BUILD, through the parameters - same trick as composerCanvasSize's
+    //`rowHeightScale`: 21/15 buttons, against a frame wider than the layout and one narrower
+    //than it (the narrow side is unreachable from a real registry, where a table of N buttons
+    //spans at least N semitones - it is the cap's own statement, not a shipped case).
     for (const perColumn of [21, 15]) {
-      const cap = proRowHeight({ notesRegionHeight: 460, perColumn });
-      //a 36-row zone (genshin's Lyre) fits at 460 / 38, well under either cap
-      expect(proRowHeight({ notesRegionHeight: 460, perColumn, zoneRowCount: 36 })).toBe(460 / 38);
+      const cap = 460 / (perColumn + ROW_HEIGHT_FRAMING_ROWS);
+      //a 36-row frame (genshin's) fits at 460 / 38, under either cap
+      expect(proRowHeight({ notesRegionHeight: 460, perColumn, canonicalRowCount: 36 })).toBe(
+        460 / 38
+      );
       //a 6-row one would want 460 / 8 and gets the cap instead
-      expect(proRowHeight({ notesRegionHeight: 460, perColumn, zoneRowCount: 6 })).toBe(cap);
-      //...and exactly `perColumn` rows of zone is the crossover: the two terms are the same number
-      expect(proRowHeight({ notesRegionHeight: 460, perColumn, zoneRowCount: perColumn })).toBe(cap);
+      expect(proRowHeight({ notesRegionHeight: 460, perColumn, canonicalRowCount: 6 })).toBe(cap);
+      //...and exactly `perColumn` rows is the crossover: the two terms are the same number
+      expect(
+        proRowHeight({ notesRegionHeight: 460, perColumn, canonicalRowCount: perColumn })
+      ).toBe(cap);
     }
   });
 
-  it('is the cap alone when no zone is given - the state before the first framing', () => {
-    expect(proRowHeight({ notesRegionHeight: REGION, zoneRowCount: undefined })).toBe(ROW);
-    //a degenerate count cannot poison the row height either
-    expect(proRowHeight({ notesRegionHeight: REGION, zoneRowCount: 0 })).toBe(ROW);
-    expect(proRowHeight({ notesRegionHeight: REGION, zoneRowCount: -4 })).toBe(ROW);
+  it('answers the cap alone for a degenerate canonical count - the corrupt-registry guard', () => {
+    const cap = REGION / (NOTES_PER_COLUMN + ROW_HEIGHT_FRAMING_ROWS);
+    expect(proRowHeight({ notesRegionHeight: REGION, canonicalRowCount: 0 })).toBe(cap);
+    expect(proRowHeight({ notesRegionHeight: REGION, canonicalRowCount: -4 })).toBe(cap);
   });
 
   it('counts a zone\'s rows with both ends included', () => {
@@ -277,10 +269,11 @@ describe('rows', () => {
  * THE USER'S VERTICAL ZOOM (spec §4/§7, user revision 2026-08-22): one multiplier on the fitted row
  * height, clamped to a range, floored at a drawable px, and never anything else.
  *
- * The point of every row here is that the FIT is still what it was: the same two terms, the same
- * layer-follows-instrument behaviour, with a factor applied on the way out — so a zoomed view keeps
- * its magnification through a layer switch, and re-locking (which the renderer implements by putting
- * the multiplier back to 1) gives back exactly the framing the lock has always given.
+ * The point of every row here is that the FIT is still what it was: the same two terms, one game
+ * constant since 2026-08-27, with a factor applied on the way out — so a zoomed view keeps its
+ * magnification through a layer switch (trivially now: the switch moves nothing under it), and
+ * re-locking (which the renderer implements by putting the multiplier back to 1) gives back exactly
+ * the framing the lock has always given.
  */
 describe('the vertical zoom', () => {
   it('holds a multiplier inside the documented range, at both ends', () => {
@@ -299,16 +292,15 @@ describe('the vertical zoom', () => {
   });
 
   it('multiplies the fit, whichever of the two terms the fit came from', () => {
-    const wide = zoneRowCount(editableZone(WIDEST, 'C'));
-    const narrow = zoneRowCount(editableZone(NARROWEST, 'C'));
-    for (const zoneRowCountValue of [wide, narrow, undefined]) {
-      const fitted = proRowHeight({ notesRegionHeight: REGION, zoneRowCount: zoneRowCountValue });
-      expect(proRowHeight({ notesRegionHeight: REGION, zoneRowCount: zoneRowCountValue, zoom: 1 }))
-        .toBe(fitted);
+    //the game's own frame, a cap-bound tiny one, and the default (the game's again)
+    for (const canonicalRowCount of [CANONICAL_ROWS, 6, undefined]) {
+      const fitted = proRowHeight({ notesRegionHeight: REGION, canonicalRowCount });
+      expect(proRowHeight({ notesRegionHeight: REGION, canonicalRowCount, zoom: 1 })).toBe(fitted);
       for (const zoom of [PRO_ZOOM_MIN, 0.75, 1.5, PRO_ZOOM_MAX]) {
-        expect(
-          proRowHeight({ notesRegionHeight: REGION, zoneRowCount: zoneRowCountValue, zoom })
-        ).toBeCloseTo(fitted * zoom, 9);
+        expect(proRowHeight({ notesRegionHeight: REGION, canonicalRowCount, zoom })).toBeCloseTo(
+          fitted * zoom,
+          9
+        );
       }
     }
   });
@@ -326,18 +318,17 @@ describe('the vertical zoom', () => {
   });
 
   it('keeps a zoomed-out row drawable, and never inflates one above the fit', () => {
-    //a landscape phone framing the widest instrument: the fit is already thin, and half of it must
+    //a landscape phone framing the canonical frame: the fit is already thin, and half of it must
     //still be a row something can be drawn in
-    const rows = zoneRowCount(editableZone(WIDEST, 'C'));
-    const tiny = (rows + ROW_HEIGHT_FRAMING_ROWS) * 3;
-    const fitted = proRowHeight({ notesRegionHeight: tiny, zoneRowCount: rows });
+    const tiny = REGION_ROWS * 3;
+    const fitted = proRowHeight({ notesRegionHeight: tiny });
     expect(fitted).toBe(3);
-    expect(proRowHeight({ notesRegionHeight: tiny, zoneRowCount: rows, zoom: PRO_ZOOM_MIN })).toBe(
+    expect(proRowHeight({ notesRegionHeight: tiny, zoom: PRO_ZOOM_MIN })).toBe(
       PRO_MIN_ROW_HEIGHT_PX
     );
     //...and where the FIT is already under the floor (a region measured before layout), zooming out
     //stops moving rather than making rows taller than the region fits
-    const degenerate = { notesRegionHeight: 1, zoneRowCount: rows };
+    const degenerate = { notesRegionHeight: 1 };
     const degenerateFit = proRowHeight(degenerate);
     expect(degenerateFit).toBeLessThan(PRO_MIN_ROW_HEIGHT_PX);
     expect(proRowHeight({ ...degenerate, zoom: PRO_ZOOM_MIN })).toBe(degenerateFit);
@@ -348,37 +339,27 @@ describe('the vertical zoom', () => {
     );
   });
 
-  it('rides on the layer\'s own fit, so a switch keeps the magnification', () => {
-    //the two shipped extremes of reach, at one zoom: each keeps ITS fit, times the same factor -
-    //which is what makes "the fitted base changes under the multiplier" true
+  it('is one fit for every layer, so a switch keeps both the scale and the magnification', () => {
+    //proRowHeight has no per-layer input left (spec §4, user revision 2026-08-27): the only thing
+    //that can put two row heights on one window is the zoom, and that is the user's own. What a
+    //switch changes is the ZONE, and either extreme of the roster still fits the shared frame.
     const zoom = 1.75;
+    expect(proRowHeight({ notesRegionHeight: REGION, zoom })).toBeCloseTo(ROW * zoom, 9);
     for (const name of [WIDEST, NARROWEST]) {
       const rows = zoneRowCount(editableZone(name, 'C'));
-      const fitted = proRowHeight({ notesRegionHeight: REGION, zoneRowCount: rows });
-      expect(proRowHeight({ notesRegionHeight: REGION, zoneRowCount: rows, zoom })).toBeCloseTo(
-        fitted * zoom,
-        9
-      );
+      expect((rows + ROW_HEIGHT_FRAMING_ROWS) * ROW).toBeLessThanOrEqual(REGION);
     }
-    //...and the two are still different row heights, so the switch really did re-fit under it
-    const wide = proRowHeight({
-      notesRegionHeight: REGION,
-      zoneRowCount: zoneRowCount(editableZone(WIDEST, 'C')),
-      zoom,
-    });
-    const narrow = proRowHeight({
-      notesRegionHeight: REGION,
-      zoneRowCount: zoneRowCount(editableZone(NARROWEST, 'C')),
-      zoom,
-    });
-    expect(narrow).toBeGreaterThan(wide);
   });
 
   it('keeps the focal point\'s row at the same screen y', () => {
-    const geometry = { axis: AXIS, notesRegionHeight: REGION };
+    //a region SHORTER than the axis is at every zoom below, in both games - the preserved-focal
+    //formula only holds while there is travel to preserve it in; the collapsed case (a whole axis
+    //shorter than the region) has the row after this one to itself
+    const region = ROW * 20;
+    const geometry = { axis: AXIS, notesRegionHeight: region };
     const cameraY = ROW * 7;
     //a row a third of the way down the region, which is where a pointer usually is
-    const focalY = REGION / 3;
+    const focalY = region / 3;
     const number = numberAtY({ axis: AXIS, y: focalY, cameraY, rowHeight: ROW })!;
     const before = yForNumber({ axis: AXIS, number, rowHeight: ROW, cameraY });
     for (const zoom of [1.25, 2, 0.6]) {
@@ -550,6 +531,69 @@ describe('the camera', () => {
     expect(clampCameraY({ ...short, cameraY: 999 })).toBe(0);
     expect(lockedCameraY({ ...short, zone: { min: 60, max: 71 } })).toBe(0);
     expect(yForNumber({ ...short, number: shortAxis.max, cameraY: 0 })).toBe(0);
+  });
+});
+
+/**
+ * THE OFFSCREEN-ZONE ARROW'S DIRECTION (spec §6, user addition 2026-08-27): which side of the
+ * camera window the Editable Zone is on when the window shows none of it — the "where did my
+ * instrument go" signpost an unlocked pan needs.
+ *
+ * A HAND AXIS so every pixel in the expectations is literal: 40 rows of 10px each, a 100px window.
+ * The zone 20..29 occupies rows 10..19, i.e. the px band [100, 200) down the axis.
+ */
+describe('the offscreen-zone arrow direction', () => {
+  const axis: ProViewAxis = { min: 0, max: 39, rowCount: 40 };
+  const zone = { min: 20, max: 29 };
+  const at = (cameraY: number, rest: Partial<Parameters<typeof offscreenZoneDirection>[0]> = {}) =>
+    offscreenZoneDirection({ axis, zone, rowHeight: 10, cameraY, notesRegionHeight: 100, ...rest });
+
+  it('answers the side the whole band is on, and null while any of it shows', () => {
+    expect(at(0)).toBe('below');
+    expect(at(250)).toBe('above');
+    //the band straddling either window edge is on screen - a visible zone line is its own signpost
+    expect(at(120)).toBe(null);
+    expect(at(150)).toBe(null);
+  });
+
+  it('is strict at both edges: a band flush with an edge shows nothing and counts offscreen', () => {
+    //band bottom px exactly 0: the last row's bottom edge touches the window's top and no pixel of
+    //the band is inside - the same measure-zero choice visibleColumnRange makes
+    expect(at(200)).toBe('above');
+    expect(at(199)).toBe(null);
+    //band top px exactly at the region's height: flush with the bottom edge, nothing inside
+    expect(at(0)).toBe('below');
+    expect(at(1)).toBe(null);
+  });
+
+  it('never fires at the locked framing, whatever the instrument or Basepoint', () => {
+    //the lock's whole promise is "the zone is on screen", and the arrow's is "it is not" - the two
+    //must be mutually exclusive over the entire roster
+    for (const name of ALL_INSTRUMENTS) {
+      for (const pitch of ALL_PITCHES) {
+        const realZone = editableZone(name, pitch);
+        const cameraY = lockedCameraY({
+          axis: AXIS,
+          zone: realZone,
+          rowHeight: ROW,
+          notesRegionHeight: REGION,
+        });
+        expect(
+          offscreenZoneDirection({
+            axis: AXIS,
+            zone: realZone,
+            rowHeight: ROW,
+            cameraY,
+            notesRegionHeight: REGION,
+          })
+        ).toBe(null);
+      }
+    }
+  });
+
+  it('answers null for an unmeasured region, where there is nothing to point from', () => {
+    expect(at(0, { rowHeight: 0 })).toBe(null);
+    expect(at(0, { notesRegionHeight: 0 })).toBe(null);
   });
 });
 

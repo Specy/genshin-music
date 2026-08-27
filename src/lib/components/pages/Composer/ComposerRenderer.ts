@@ -72,13 +72,13 @@ import {
   lockedCameraY,
   numberAtY,
   numberForRow,
+  offscreenZoneDirection,
   proRowHeight,
   proStripWidth,
   proViewAxis,
   rowForNumber,
   visibleRowRange,
   yForNumber,
-  zoneRowCount,
   zoomedCameraY,
   type EditableZone,
   type ProViewAxis,
@@ -280,6 +280,35 @@ const PRO_OCTAVE_BAND_ALPHA = 0.07;
 const PRO_ZONE_LINE_ALPHA = 0.9;
 /** The zone's two boundary lines, in px. */
 const PRO_ZONE_LINE_WIDTH = 2;
+/**
+ * THE OFFSCREEN-ZONE ARROW (spec §6, user addition 2026-08-27): a triangle at the notes region's
+ * top or bottom edge, horizontally centred, shown when the camera window shows NONE of the current
+ * layer's Editable Zone and pointing the way to it (proViewGeometry.offscreenZoneDirection) — the
+ * "I just switched instrument, where did it go?" signpost an unlocked frame otherwise lacks.
+ *
+ * Sized as a glyph rather than as rows: the arrow is chrome, like the strip's labels, so it must
+ * not balloon with a zoomed row or vanish with a thin one. The margin keeps it clear of the
+ * region's edge (top: right under the mini-timeline band; bottom: just over the keyboard sliver's
+ * band), the corners are rounded so it reads as a soft glyph rather than a sharp caret, and it is
+ * filled in the theme's ACCENT — the zone it points at is drawn in the layer's own note colour, so
+ * the pointer borrows the palette's attention colour instead of competing on the same hue.
+ */
+const PRO_ARROW_WIDTH = 22;
+const PRO_ARROW_HEIGHT = 11;
+const PRO_ARROW_EDGE_MARGIN = 6;
+const PRO_ARROW_ALPHA = 0.9;
+const PRO_ARROW_CORNER_RADIUS = 3;
+/**
+ * THE ARROW'S TAP TARGET (user addition, same day): a band at the region's edge around the glyph,
+ * far larger than the triangle itself — a 22px glyph is no finger target, and a tap retargeted by
+ * a browser's own slop must still land inside (the Blink touch-target lesson). A settled tap in
+ * the band, while THAT edge's arrow is shown, centres the zone in the region instead of editing
+ * the cell underneath — decided by the tap dispatch (handleStageUp) the way the row-label strip's
+ * inertness is, never by the Graphics, which stays `eventMode: 'none'` so a drag STARTING on the
+ * arrow still pans.
+ */
+const PRO_ARROW_HIT_WIDTH = 48;
+const PRO_ARROW_HIT_HEIGHT = 32;
 
 /**
  * The cap put on the notes Application's Ticker while the song is playing. Stopped-song motion
@@ -321,6 +350,8 @@ function composerProTheme(): ComposerRendererTheme['pro'] {
     //same direction their own bar colours were lightened or darkened in
     shade: primary.luminosity() < 0.05 ? 0xffffff : 0x000000,
     zoneLine: ThemeProvider.get('composer_main_layer').rgb().rgbNumber(),
+    //the theme's own attention colour, for the offscreen-zone arrow - see PRO_ARROW_WIDTH
+    accent: ThemeProvider.get('accent').rgb().rgbNumber(),
     //a LAYER of the primary rather than the primary itself, the way the mini-timeline's own bar is
     //(`ThemeProvider.layer('primary', 0.1)`): the canvas clears to primary, so a strip painted in it
     //would be invisible against the empty canvas beside the first column
@@ -508,7 +539,7 @@ interface ComposerRendererTheme {
   /**
    * THE PRO VIEW'S OWN INK (CONTEXT.md: Pro View), captured with the rest for the reason tailAccent
    * is: these are read inside draw calls, and a live `ThemeProvider.get(...)` there is an allocation
-   * per painted column and a reactive read besides. Built in both views - four Color reads on a
+   * per painted column and a reactive read besides. Built in both views - five Color reads on a
    * channel that already does a dozen - so the two theme literals stay one shape.
    *
    * `shade` is the tint every band and the out-of-zone overlay is filled with, and it FLIPS with the
@@ -520,6 +551,8 @@ interface ComposerRendererTheme {
     shade: number;
     /** The two zone lines, in the CURRENT layer's own note colour - the zone is that layer's reach. */
     zoneLine: number;
+    /** The offscreen-zone arrow's fill - the theme's attention colour (see PRO_ARROW_WIDTH). */
+    accent: number;
     /** The row-label strip's backing and the ink of the labels standing on it. */
     stripBackground: number;
     stripText: number;
@@ -662,7 +695,8 @@ export interface ComposerRendererState {
    *
    * LOCKED, the frame is pinned to the current layer's Editable Zone and nothing but a zone change
    * moves it. UNLOCKED, a stage drag pans the camera as well (dy through clampCameraY, dx unchanged),
-   * and the frame stays where the hand left it - see handleStageSlide and syncProCamera.
+   * and the frame stays where the hand left it THROUGH EVERYTHING - a zone change included (user
+   * revision 2026-08-27) - see handleStageSlide and syncProCamera.
    *
    * EPHEMERAL UI STATE and not a setting: Composer.svelte owns it (every mount starts locked) and it
    * arrives through the props channel like every other reactive value, read in ComposerCanvas.svelte's
@@ -843,10 +877,11 @@ export interface ComposerRendererCallbacks {
      * strip's own top is: a DOM element over the canvas is positioned against it, and a second
      * statement of it could disagree.
      *
-     * It is a property of the CURRENT LAYER now (proRowHeight fits the layer's Editable Zone,
-     * capped at the game's note size), so ComposerCanvas.svelte cannot derive it from the reported
-     * region height alone any more - the left side chevron is inset by `proStripWidth(rowHeight)`
-     * so it does not stand on the row labels, and that inset moves with the instrument.
+     * It moves with the user's ZOOM as well as with the window (proRowHeight - since spec §4's
+     * 2026-08-27 revision a layer switch moves it no more), so ComposerCanvas.svelte cannot derive
+     * it from the reported region height alone - the left side chevron is inset by
+     * `proStripWidth(rowHeight)` so it does not stand on the row labels, and that inset follows a
+     * pinch.
      */
     rowHeight: number;
     hasCache: boolean;
@@ -886,8 +921,9 @@ export function isColumnVisible(
  *
  * NULL IS THE COMPRESSED VIEW, and that is the whole of the switch a painted column sees - the
  * Song-Grid path below reads none of these and cannot be reached with them present. All three move
- * only through ComposerRenderer (the axis with the song's structure, the camera with the current
- * layer's zone, the row height with the canvas), so a view never has to ask for them.
+ * only through ComposerRenderer (the axis with the song's structure, the camera with the lock's
+ * framing or the user's own pan, the row height with the canvas and the zoom), so a view never has
+ * to ask for them.
  */
 interface ProPaintGeometry {
   axis: ProViewAxis;
@@ -1393,7 +1429,7 @@ export class ComposerRenderer {
   // CONSTRUCTED IN BOTH VIEWS AND ATTACHED IN ONE. These are field initialisers like every other
   // persistent object above, so they exist wherever the class does; init() adds them to the stage
   // ONLY on the pro branch, which is what keeps the Compressed View's stage the three children
-  // test/composerRenderer.test.ts states (columns, playhead, strip) rather than five. An unattached
+  // test/composerRenderer.test.ts states (columns, playhead, strip) rather than six. An unattached
   // Graphics costs an object and no GPU resource at all - nothing is ever drawn into these while the
   // setting is off.
   /**
@@ -1403,6 +1439,16 @@ export class ComposerRenderer {
    * except during a camera ease, which is the one thing that moves it by itself.
    */
   private readonly proZoneGraphics = new Graphics();
+  /**
+   * THE OFFSCREEN-ZONE ARROW, in one Graphics OVER the zone's dim (the arrow shows exactly when
+   * the window is deep in overlay territory, and must read at full contrast there) and under the
+   * playhead: one rounded triangle at the region's top or bottom edge, horizontally centred,
+   * pointing at the current layer's Editable Zone when the window shows none of it (spec §6, user
+   * addition 2026-08-27 - see drawProArrows). `eventMode: 'none'` like the zone's Graphics: the
+   * TAP that centres the zone is the tap dispatch's decision (proArrowTapAt, the strip's own
+   * pattern), so the object itself swallows nothing and a drag starting on it still pans.
+   */
+  private readonly proArrowsGraphics = new Graphics();
   /**
    * THE ROW-LABEL STRIP: a sticky column at the notes region's left inside edge, its own backing
    * Graphics plus one pooled Text per visible row (spec §2's VSRG-style strip).
@@ -1479,12 +1525,12 @@ export class ComposerRenderer {
   /**
    * THE ROW HEIGHT THE CAMERA IS MEASURED IN, or 0 before the first framing.
    *
-   * The Pro View's row height is a property of the CURRENT LAYER now (proRowHeight fits the whole
-   * Editable Zone, capped at the game's own note size), so a layer switch, an instrument swap or a
-   * Basepoint change that widens the zone re-scales the axis under the camera. `cameraY` is a
-   * distance down that axis in px, so it means something different on either side of that change -
-   * this is what lets syncProCamera notice, rescale the offset it is holding, and take the new
-   * framing at once instead of easing between two coordinate systems.
+   * The Pro View's row height is a game constant at a given window and zoom (spec §4's 2026-08-27
+   * revision - a layer switch re-scales nothing any more), but the ZOOM half still moves: a pinch,
+   * and the re-lock that resets it. `cameraY` is a distance down the axis in px, so it means
+   * something different on either side of such a move - this is what lets syncProCamera notice,
+   * rescale the offset it is holding, and take the new framing at once instead of easing between
+   * two coordinate systems (applyProZoom writes it itself for the gesture's own frames).
    */
   private cameraRowHeight = 0;
   /**
@@ -1907,6 +1953,10 @@ export class ComposerRenderer {
     if (this.state.proView) {
       this.proZoneGraphics.eventMode = 'none';
       this.notesApp.stage.addChild(this.proZoneGraphics);
+      //...and the offscreen-note arrows over the dim, so pointing at a note outside the zone is
+      //never itself dimmed - see the field
+      this.proArrowsGraphics.eventMode = 'none';
+      this.notesApp.stage.addChild(this.proArrowsGraphics);
     }
     //a sibling added after the columns, so it renders over them
     this.notesApp.stage.addChild(this.playheadGraphics);
@@ -2072,6 +2122,7 @@ export class ComposerRenderer {
     oldApp.ticker.remove(this.onMotionFrame, this);
     oldApp.stage.removeChild(this.notesColumnsContainer);
     oldApp.stage.removeChild(this.proZoneGraphics);
+    oldApp.stage.removeChild(this.proArrowsGraphics);
     oldApp.stage.removeChild(this.playheadGraphics);
     oldApp.stage.removeChild(this.proStripContainer);
     oldApp.stage.removeChild(this.timelineStrip);
@@ -2088,6 +2139,7 @@ export class ComposerRenderer {
     //...in init()'s own order, so a renderer that survived a lost context draws the Pro View's
     //layers in the same order the one that mounted did
     if (this.state.proView) replacement.stage.addChild(this.proZoneGraphics);
+    if (this.state.proView) replacement.stage.addChild(this.proArrowsGraphics);
     replacement.stage.addChild(this.playheadGraphics);
     if (this.state.proView) replacement.stage.addChild(this.proStripContainer);
     replacement.stage.addChild(this.timelineStrip);
@@ -2173,10 +2225,11 @@ export class ComposerRenderer {
     //a SIBLING of the columns rather than a child (see playheadIsVisible), so it carries the offset
     //itself instead of inheriting it
     this.playheadGraphics.y = y;
-    //...and so are the Pro View's two layers, which are drawn in the region's own coordinates like
-    //everything else in this class. Written in both views: both are 0 in the Compressed View, where
-    //neither object is on the stage at all.
+    //...and so are the Pro View's own layers, which are drawn in the region's own coordinates like
+    //everything else in this class. Written in both views: all are 0 in the Compressed View, where
+    //none of these objects is on the stage at all.
     this.proZoneGraphics.y = y;
+    this.proArrowsGraphics.y = y;
     this.proStripContainer.y = y;
   }
 
@@ -2227,24 +2280,20 @@ export class ComposerRenderer {
   }
 
   /**
-   * ONE ROW'S HEIGHT: the notes region over the CURRENT LAYER'S zone plus its framing, capped at the
-   * game's own note size and multiplied by the user's own zoom (proRowHeight, spec §4's 2026-08-21
-   * and 2026-08-22 revisions).
+   * ONE ROW'S HEIGHT: the notes region over the game's CANONICAL frame - the widest Editable Zone
+   * any instrument has - capped at the game's own note size and multiplied by the user's own zoom
+   * (proRowHeight, spec §4's 2026-08-27 and 2026-08-22 revisions).
    *
-   * `this.proZone` and not a fresh `editableZone` lookup, so every surface that asks - the note
-   * placement, the zone's own drawing, the strip, the tap resolution, the texture cache - is asking
-   * about the same zone the camera was framed on. syncProCamera writes that field before it reads
-   * this, and init()'s first framing runs before anything paints; a null zone (the Compressed View,
-   * and the instant before that first framing) is the cap alone.
-   *
-   * `this.proZoom` is the other half of the same discipline: the zoom multiplies the fit HERE, in
-   * the one function every one of those surfaces already goes through, so nothing else in this class
-   * has to know a gesture happened.
+   * A CONSTANT OF (window, zoom), and deliberately not of the current layer any more: a layer
+   * switch, an instrument swap or a Basepoint change moves the camera's TARGET and never the
+   * scale, so nothing stretches and nothing re-bakes on a swap. `this.proZoom` is the one live
+   * input: the zoom multiplies the fit HERE, in the one function every row-sized surface - the
+   * note placement, the zone's own drawing, the strip, the tap resolution, the texture cache -
+   * already goes through, so nothing else in this class has to know a gesture happened.
    */
   private proRowHeightPx(): number {
     return proRowHeight({
       notesRegionHeight: this.height,
-      zoneRowCount: this.proZone ? zoneRowCount(this.proZone) : undefined,
       zoom: this.proZoom,
     });
   }
@@ -2372,7 +2421,8 @@ export class ComposerRenderer {
    * needsUnconditionalRepaint asks:
    *  - THE ZONE MOVED (a layer switch, an instrument swap, a Basepoint change - spec §9). Each of
    *    those already forces a full repaint on its own, so the `true` here is belt to that brace; what
-   *    this branch really does is RETARGET THE CAMERA, which nothing else would.
+   *    this branch really does is RETARGET THE CAMERA - the locked frame's ease, which nothing else
+   *    would start (an unlocked frame holds still there - see syncProCamera).
    *  - THE AXIS MOVED. A song's outlier number widens it, so deleting or adding one restates every
    *    row's position while only the edited column's version counter moved - the narrowed repaint
    *    would leave every other column a row out.
@@ -2425,27 +2475,30 @@ export class ComposerRenderer {
    *  - 'rebuild' for a resize or a theme rebuild, which restate the row height under the camera -
    *    instant for the same reason, but an UNLOCKED frame is the user's, so it is re-clamped to the
    *    new travel rather than hauled back to the zone;
-   *  - 'ease' for an ordinary update, which moves the camera only if the framing it is aimed at
-   *    MOVED (a layer switch, an instrument swap, a Basepoint change - spec §9). That test is what
-   *    lets an unlocked pan survive every update that changed nothing about the zone, while a zone
-   *    change still eases to the new one WITHOUT re-locking (spec §2);
+   *  - 'ease' for an ordinary update, which moves the camera only while the View Lock is CLOSED
+   *    and the framing it is aimed at MOVED (a layer switch, an instrument swap, a Basepoint
+   *    change - spec §9). AN OPEN LOCK'S CAMERA IS THE USER'S AND A ZONE CHANGE NEVER MOVES IT
+   *    (USER REVISION 2026-08-27 - was: the zone change eased in either lock state): the swap
+   *    repaints the zone's framing where the hand left the frame, and only the travel is still
+   *    enforced, so an axis that shrank back under the pan re-clamps instead of stranding the
+   *    view past its end;
    *  - 'relock' for the View Lock closing, which eases even when the target is exactly where it was:
    *    that is the whole point of the button.
    * The ease applies the same `smoothScroll` gate easeTo does, so with smooth motion off even those
    * arrive at once.
    *
-   * WHAT THE LOCK CHANGES HERE is only the 'rebuild' (see above). Every other path is the same in
-   * both states - including the zone-change ease, which follows a new zone without re-locking
-   * (spec §2).
+   * WHAT THE LOCK CHANGES HERE: the 'rebuild' (see above), and since the 2026-08-27 revision the
+   * whole of 'ease' - a closed lock follows the zone, an open one holds still.
    *
-   * ...AND ONE THING NEITHER THE LOCK NOR THE MODE DECIDES: A ROW HEIGHT THAT MOVED. The zone is
-   * what proRowHeight sizes a row by (spec §4's 2026-08-21 revision), so a switch from a 36-row
-   * instrument to a 12-row one re-scales the whole axis - and `cameraY`, a px distance down that
-   * axis, stops meaning what it meant. The offset is rescaled by the ratio (which holds the same
-   * axis position at the top of the region) and the framing is taken AT ONCE whatever the mode
-   * asked for: an ease from a camera measured in the old rows is an ease from nowhere, the same
-   * reason 'rebuild' is instant. The note textures are baked at the old cell height too, so the
-   * cache is regenerated through the resize path rather than a new one of its own.
+   * ...AND ONE THING NEITHER THE LOCK NOR THE MODE DECIDES: A ROW HEIGHT THAT MOVED. The row
+   * height is a game constant at a given window and zoom now (spec §4's 2026-08-27 revision), so
+   * inside this method it moves for exactly one reason - 'relock' resetting the zoom just above -
+   * but whenever it does, `cameraY`, a px distance down the axis, stops meaning what it meant. The
+   * offset is rescaled by the ratio (which holds the same axis position at the top of the region)
+   * and the framing is taken AT ONCE whatever the mode asked for: an ease from a camera measured
+   * in the old rows is an ease from nowhere, the same reason 'rebuild' is instant. The note
+   * textures are baked at the old cell height too, so the cache is regenerated through the resize
+   * path rather than a new one of its own.
    */
   private syncProCamera(
     state: ComposerRendererState,
@@ -2462,7 +2515,7 @@ export class ComposerRenderer {
     const zone = editableZone(name, pitch);
     const zoneMoved = zone !== this.proZone;
     this.proZone = zone;
-    //BEFORE the target below, which divides by it: the field above is what proRowHeightPx reads
+    //after the zoom reset above, which it reads; the zone no longer feeds it (spec §4, 2026-08-27)
     const rowHeight = this.proRowHeightPx();
     const rowHeightMoved = this.cameraRowHeight > 0 && rowHeight !== this.cameraRowHeight;
     if (rowHeightMoved) {
@@ -2486,8 +2539,9 @@ export class ComposerRenderer {
     //A RESCALED AXIS JOINS THE TWO INSTANT MODES, for their own reason: there is no sliding between
     //two row heights. The unlocked branch keeps the user's pan - rescaled just above, re-clamped
     //here to the travel the new rows give the axis - and the locked one lands on the new framing.
-    //Nothing is painted from here: a row height only moves when the ZONE does, so the caller's
-    //`zoneMoved` repaint is what puts it on screen.
+    //Nothing is painted from here: a row height only moves when the ZOOM does (the re-lock reset
+    //above - spec §4's 2026-08-27 revision took the zone out of it), and that path has just armed
+    //the debounced rebuild that repaints.
     if (mode === 'frame' || mode === 'rebuild' || rowHeightMoved) {
       this.cameraEase = null;
       //A ZOOM HAS ALREADY TAKEN THE FRAME, whatever `viewLocked` says at this instant (spec §7, user
@@ -2503,6 +2557,21 @@ export class ComposerRenderer {
               notesRegionHeight: this.height,
               cameraY: this.cameraY,
             });
+      return zoneMoved;
+    }
+    if (mode === 'ease' && !state.viewLocked) {
+      //THE UNLOCKED CAMERA IS THE USER'S AND NOTHING ELSE'S (user revision 2026-08-27): a zone
+      //change repaints the zone's framing - the caller's `zoneMoved` - and moves the frame
+      //nowhere. Only the travel is enforced, because the axis can SHRINK under a held pan (the
+      //song edit that deletes its last outlier): the clamp usually changes nothing and costs no
+      //repaint then; where it bites, applyCameraY is what puts the pulled-back rows on screen.
+      const clamped = clampCameraY({
+        axis: this.proAxis(),
+        rowHeight,
+        notesRegionHeight: this.height,
+        cameraY: this.cameraY,
+      });
+      if (clamped !== this.cameraY) this.applyCameraY(clamped);
       return zoneMoved;
     }
     if (mode === 'ease' && !targetMoved && !zoneMoved) return false;
@@ -2574,6 +2643,7 @@ export class ComposerRenderer {
     }
     this.syncOverlayColumn(cacheData);
     this.drawProZone();
+    this.drawProArrows();
     this.syncProStrip();
     this.notesApp.render();
   }
@@ -2628,6 +2698,131 @@ export class ComposerRenderer {
     if (lined) {
       graphics.fill({ color: this.theme.pro.zoneLine, alpha: PRO_ZONE_LINE_ALPHA });
     }
+  }
+
+  /**
+   * THE OFFSCREEN-ZONE ARROW DRAWN (spec §6, user addition 2026-08-27): a rounded triangle at the
+   * notes region's top edge when the current layer's Editable Zone is wholly above the camera
+   * window, at the bottom edge when wholly below, and nothing while any of the band is on screen
+   * (proViewGeometry.offscreenZoneDirection) — the "where did my instrument go" signpost, pointing
+   * the way to pan, and tappable to jump there (proArrowTapAt / centerProZoneCamera). Horizontally
+   * centred, filled in the theme's accent (see PRO_ARROW_WIDTH).
+   *
+   * A function of (zone, camera) exactly like drawProZone beside it, so it redraws from the same
+   * two seams — draw() and applyCameraY — and from nowhere else: a locked frame re-centres on every
+   * zone change, so in practice this appears when an UNLOCKED pan and an instrument or layer switch
+   * part ways (the camera holds still there since the same day's revision).
+   */
+  private drawProArrows(): void {
+    const graphics = this.proArrowsGraphics;
+    graphics.clear();
+    const zone = this.proZone;
+    if (!zone) return;
+    const direction = offscreenZoneDirection({
+      axis: this.proAxis(),
+      zone,
+      rowHeight: this.proRowHeightPx(),
+      cameraY: this.cameraY,
+      notesRegionHeight: this.height,
+    });
+    if (!direction) return;
+    const centre = this.width / 2;
+    const half = PRO_ARROW_WIDTH / 2;
+    //the tip sits on the edge margin and the base opens toward the region's middle, so the
+    //triangle points at the zone: up when the band is above the window, down when below.
+    //roundShape rather than poly for the soft corners - see PRO_ARROW_CORNER_RADIUS - and the
+    //`true` is QUADRATIC corner rounding, which is load-bearing: pixi 8.19's default arc-based
+    //rounding degenerates on this triangle (verified: it collapses the 22x11 glyph to a ~13x5
+    //sliver with the tip cut off, in either winding), while the quadratic path lerps toward each
+    //neighbour and curves through the corner, which survives any corner angle.
+    if (direction === 'above') {
+      const tip = PRO_ARROW_EDGE_MARGIN;
+      const base = tip + PRO_ARROW_HEIGHT;
+      graphics.roundShape(
+        [
+          { x: centre, y: tip },
+          { x: centre + half, y: base },
+          { x: centre - half, y: base },
+        ],
+        PRO_ARROW_CORNER_RADIUS,
+        true
+      );
+    } else {
+      const tip = this.height - PRO_ARROW_EDGE_MARGIN;
+      const base = tip - PRO_ARROW_HEIGHT;
+      graphics.roundShape(
+        [
+          { x: centre, y: tip },
+          { x: centre + half, y: base },
+          { x: centre - half, y: base },
+        ],
+        PRO_ARROW_CORNER_RADIUS,
+        true
+      );
+    }
+    graphics.fill({ color: this.theme.pro.accent, alpha: PRO_ARROW_ALPHA });
+  }
+
+  /**
+   * WHETHER A SETTLED TAP LANDED ON THE SHOWN ARROW (spec §7, user addition 2026-08-27): inside
+   * the edge band the glyph stands in (PRO_ARROW_HIT_WIDTH/HEIGHT), at the edge whose arrow is
+   * actually up — the band at the OTHER edge stays ordinary cells, so the target only ever covers
+   * a place where there is something to tap.
+   *
+   * Asked from handleStageUp's cell-tap branch and nowhere else: a drag, a hold or a
+   * sheet-dismissing tap over the same pixels keeps its own meaning, exactly as they do over the
+   * row-label strip.
+   */
+  private proArrowTapAt(canvasX: number, canvasY: number): boolean {
+    const zone = this.proZone;
+    if (!zone) return false;
+    const direction = offscreenZoneDirection({
+      axis: this.proAxis(),
+      zone,
+      rowHeight: this.proRowHeightPx(),
+      cameraY: this.cameraY,
+      notesRegionHeight: this.height,
+    });
+    if (!direction) return false;
+    if (Math.abs(canvasX - this.width / 2) > PRO_ARROW_HIT_WIDTH / 2) return false;
+    const y = canvasY - composerNotesRegionY(this.state.proView, this.timelineHeight);
+    return direction === 'above'
+      ? y >= 0 && y <= PRO_ARROW_HIT_HEIGHT
+      : y >= this.height - PRO_ARROW_HIT_HEIGHT && y <= this.height;
+  }
+
+  /**
+   * BRING THE ZONE TO THE MIDDLE OF THE REGION — what tapping the arrow does (spec §7, user
+   * addition 2026-08-27): the locked framing's own centring (lockedCameraY), taken ONCE, without
+   * touching the View Lock. The frame stays the user's afterwards: this is a navigation jump to
+   * where the instrument is, not a re-lock, so the padlock button keeps its one meaning.
+   *
+   * The ease is syncProCamera's own tail restated - same duration, same `smoothScroll` gate - so
+   * "the camera slides to the zone" feels identical whichever of the two asked for it. The zoom is
+   * left alone too: the user chose that scale, and the centring is exact at any of them.
+   */
+  private centerProZoneCamera(): void {
+    const zone = this.proZone;
+    if (!zone) return;
+    const target = lockedCameraY({
+      axis: this.proAxis(),
+      zone,
+      rowHeight: this.proRowHeightPx(),
+      notesRegionHeight: this.height,
+    });
+    this.cameraTarget = target;
+    if (!this.state.smoothScroll || target === this.cameraY) {
+      this.cameraEase = null;
+      if (target !== this.cameraY) this.applyCameraY(target);
+      return;
+    }
+    this.cameraEase = {
+      from: this.cameraY,
+      to: target,
+      startMs: this.now(),
+      durationMs: PRO_CAMERA_EASE_MS,
+    };
+    this.startMotionFrames();
   }
 
   /**
@@ -2793,12 +2988,14 @@ export class ComposerRenderer {
   }
 
   /**
-   * Show or hide the zone's framing and the row-label strip together - the columns' own gate, which
-   * both of them exist to frame. Writes in the Compressed View too, where neither object is on the
-   * stage: a `visible` on an unparented Graphics reaches no renderer.
+   * Show or hide the zone's framing, the offscreen-note arrows and the row-label strip together -
+   * the columns' own gate, which all of them exist to frame. Writes in the Compressed View too,
+   * where none of these objects is on the stage: a `visible` on an unparented Graphics reaches no
+   * renderer.
    */
   private setProLayersVisible(visible: boolean): void {
     this.proZoneGraphics.visible = visible;
+    this.proArrowsGraphics.visible = visible;
     this.proStripContainer.visible = visible;
   }
 
@@ -3122,12 +3319,11 @@ export class ComposerRenderer {
    * inputs rather than a branch inside the cache: a mode flip remounts this renderer, so a cache
    * instance already belongs to exactly one view.
    *
-   * THE PRO CELL HEIGHT MOVES WITH THE LAYER, not only with the window: proRowHeight fits the
-   * current Editable Zone (spec §4's 2026-08-21 revision), so a switch between instruments of
-   * different reach lands here through the same debounced rebuild a resize takes - the only path
-   * that re-bakes these textures. `proRowHeightPx()` and not the `height` parameter alone, so the
-   * cell is the row the scene is being painted at; the caller writes `this.height` first, and
-   * syncProCamera has already refreshed the zone under it.
+   * THE PRO CELL HEIGHT MOVES WITH THE WINDOW AND THE USER'S ZOOM, and with nothing else since
+   * spec §4's 2026-08-27 revision (the row height is the game's canonical fit, so an instrument
+   * swap re-bakes nothing) - both still land here through the same debounced rebuild, the only
+   * path that re-bakes these textures. `proRowHeightPx()` and not the `height` parameter alone,
+   * so the cell is the row the scene is being painted at; the caller writes `this.height` first.
    */
   private generateCache(
     columnWidth: number,
@@ -4605,6 +4801,10 @@ export class ComposerRenderer {
     //of this release (spec §2), so nothing else can also happen on it
     if (intent === 'dismiss-sheet') return this.callbacks.onKeyboardDismiss();
     if (intent === 'cell-tap') {
+      //A TAP ON THE SHOWN ARROW IS NAVIGATION, NOT AN EDIT (spec §7, user addition 2026-08-27):
+      //it brings the zone to the middle of the region and the cell under it is never resolved -
+      //the same precedence the row-label strip's band has, decided in the same place
+      if (this.proArrowTapAt(e.globalX, e.globalY)) return this.centerProZoneCamera();
       const target = this.proTapTargetAt(e.globalX, e.globalY);
       //the dispatch itself is Composer.svelte's: this class resolved the cell and stops there
       if (target) this.callbacks.onProCellTap(target.column, target.number);
@@ -5682,6 +5882,7 @@ export class ComposerRenderer {
       // the next update's "did the axis move" question is asked against.
       this.paintedAxis = pro.axis;
       this.drawProZone();
+      this.drawProArrows();
       this.syncProStrip();
     }
     return true;

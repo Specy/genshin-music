@@ -62,6 +62,8 @@ LingeringEuphonia, NightwindHorn. Sky: SFX_BirdCall, SFX_CrabCall (C4).
 | SFX_JellyCall       | C4                          | `register: "C3"`                                 | median −12 (13 of 15 notes); the ±1 semitone scatter on the other two is the **source's own warble**, which no config can fix — the octave is what a register owns                                                                                                                                                                                                                                                                                                                            |
 | KrillHorn (tuned)   | F4–F5                       | `register: "F3"`                                 | its roar's true fundamental is F1 (44 Hz is a sharp tonal peak at −0.9 dB, not rumble), but **h4 is the loudest partial** and h2/h3/h5/h7 are 24–27 dB down. F1 is what an analyser calls it; F3 is what a listener hears — 44 Hz is below phone/laptop reproduction and the ear needs ~25–30 dB more level there — and F3–F4 is exactly what the instrument was built and verified against (its README's construction table). **User's decision**; today's F4 was wrong under either reading |
 | SmallBell           | D E A B (a whole tone high) | repitched **−2.00 st**                           | its strike notes were D5 E5 A5 B5 where `Bells` plays C5 D5 G5 A5 — a capture made in another key. Not a per-note match onto the Large Bell: both bells are individually 4–39 cents off equal temperament, so an integer shift keeps this one's intervals and character. After: the two agree to a mean of **8 cents**, residuals −23…+44, which is the difference between two real bells                                                                                                     |
+| SFX_BassSynth | C4–C5 | `register: "C2"` | four independent methods agree: wide-range estimator −24 uniform, zero-crossing rate 62.7 Hz, autocorrelation 127.9 Hz on the top note, and **98.1% of the energy below 90 Hz** with h1 sitting 20–43 dB above every other partial. (The user first read it as C5 — which is what the app *labels* its top button today under the unregistered `synth-8` preset) |
+| genshin Ukulele | C3–C5 | `register: "C4"` + a **model change** | +12 measured (ACF 1.00 on both pitched rows) and confirmed by ear ("the note on the left in the middle row seems to be a C5" — which is exactly what this produces). It could not be authored until the register was made to translate the WHOLE instrument: its 7 Assigned chord buttons held 72–83, and moving only the pitched half walked the middle row onto them. See the ADR-0007 addendum |
 | SFX_TR-909          | pitched `synth-8`           | `pitched: false` (inline, same nominals + icons) | unpitched drum-machine hits; per-sample "pitch" is meaningless and the Basepoint was transposing drum hits. Soundings are unchanged (an Assigned Button's Note Number is its Nominal Id), so **no song breaks**                                                                                                                                                                                                                                                                               |
 | SFX_KrillHorn       | shipped                     | **removed**                                      | user's call: the one-button roar prop was redundant once `KrillHorn` (the tuned octave built from it) existed. Its dead `sky-1x1` Shape, `SFX_1_LABELS` Label Set and `sfx-1` preset went with it                                                                                                                                                                                                                                                                                             |
 
@@ -74,47 +76,24 @@ lands within 14 cents, SpiritManta dead on.
 
 | instrument                      | finding                                                                                                                                                                                                                                                                           | proposal                                                                            |
 | ------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
-| SFX_BassSynth                   | −24, and inherently ~35 cents flat                                                                                                                                                                                                                                                | `register: "C2"`                                                                    |
 | Bells / SmallBell row structure | the wiki's Small Bell article says **both rows play the same pitches** (C4 D4 G4 A4, differing only in timbre) — the app spreads them C4/C5. The wiki contradicts itself (its own table says C5–A5), and duplicate pitched rows are inexpressible under ADR-0007's collision rule | recommend leaving as-is; recorded so the discrepancy is a decision, not an accident |
 
-## BLOCKED — genshin Ukulele needs a model decision first
+## The rule this audit changed
 
-The measurement and the user's ear agree: both pitched rows sound **+12** (ACF
-1.00; the user heard the middle row's left key as C5, which is exactly what
-`register: "C4"` produces). But that register **cannot be authored today** — the
-registry rejects it:
+Registering the Ukulele forced a model decision, recorded in the ADR-0007 addendum: a
+register now translates the **whole instrument**, Assigned Buttons included, rather than
+its Pitched Buttons only. The argument is that a rigid translation *cannot* create a Note
+Number collision — the button set was distinct before it, and translation preserves
+distinctness — whereas moving half an instrument can, and did. An Assigned Button's number
+was always an identity rather than a pitch; it now reads "its Nominal Id carried by the
+instrument's register and the Basepoint".
 
-```
-genshin/Ukulele: duplicate Sounding Pitches: two buttons both enter Note Number 72
-```
-
-Why: the Ukulele's top row is seven **Assigned** chord buttons whose Note Numbers
-are their Nominal Ids, 72–83. A register moves Pitched Buttons only, so the middle
-row (nominals 60–71) lands on 72–83 — colliding with all seven chord buttons.
-
-Two ways out, and the choice is a model decision, not an authoring one:
-
-1. **Make the register translate the whole instrument, Assigned buttons included.**
-   Ukulele's chord row would become 84–95 and the pitched rows 60–83. This is
-   arguably the more principled rule — a register places the _instrument_ on the
-   axis, and rigid translation _cannot_ create a collision, since the instrument
-   was collision-free before it. Costs: ADR-0007 and CONTEXT.md currently say an
-   Assigned Button's Note Number IS its Nominal Id, so the wording, a few tests and
-   the derivation change; and v5 songs holding Ukulele chord notes break the same
-   way registered pitched tracks do.
-2. **Leave the Ukulele unregistered**, accepting that it plays an octave below what
-   it sounds. Costs nothing, fixes nothing.
-
-Only the Ukulele hits this: it is the one instrument with both a register need and
-Assigned buttons. LingeringEuphonia shares the same `ukulele-21` preset but
-measures correct at its authored octave, so it needs no register and is unaffected
-either way.
-
-## No pitch claim (Assigned — nothing to audit)
-
-Sky: Drum, DunDun (wiki "Prophecy Drum", pitch **None**), FortuneDrum (None),
-Cymbals, SFX_Dance, and now SFX_TR-909.
-Genshin: DunDun, DjemDjemDrum, and the Ukulele/LingeringEuphonia chord rows.
+Blast radius, measured across both games: **exactly one instrument moved**, because the
+Ukulele is the only one anywhere with both a register and Assigned buttons (its chord row
+72–83 → 84–95). Two consequences: genshin's Addressable Span grew C3–B5 → C3–B6, so its Pro
+View axis gains twelve rows only chord buttons can occupy; and those chord identities
+stopped sharing numbers with real C5–B5 pitches, which is the more honest arrangement on an
+axis that means sounding pitch everywhere else.
 
 ## A fallout pattern registers keep causing in tests
 

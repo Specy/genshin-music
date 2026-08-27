@@ -99,10 +99,11 @@ Each note (inline or in a preset) is:
   samples before authoring a new instrument** — the register belongs in config, not
   corrected into the audio. The registry takes only the OCTAVE from the anchor (its
   pitch class must equal the lowest button's own derived class — semitone flavor is
-  `baseNote`'s to author, per button), moves Pitched Buttons only (an Assigned
-  Button's Note Number is its Nominal Id), never moves Nominal Ids (grid rows, swaps
-  and legacy decode see nothing), and rejects a non-note-name, a register on an
-  instrument with no Pitched Button, and an anchored pitch outside MIDI 0–127. See
+  `baseNote`'s to author, per button), translates the WHOLE instrument including its
+  Assigned Buttons (ADR-0007 addendum — their numbers are identities, and a rigid
+  translation is what keeps them collision-free), never moves Nominal Ids (grid rows,
+  swaps and legacy decode see nothing), and rejects a non-note-name, a register on an
+  instrument with no Pitched Button, and a resulting number outside MIDI 0–127. See
   the ADR-0007 addendum for why this stays "derived, never authored": `baseNote` owns
   the class, the register owns the octave.
 - `pitched` — optional, only ever `false`: declares an **Assigned Button** (ADR-0007) —

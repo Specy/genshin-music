@@ -204,11 +204,11 @@ export type InstrumentNote = {
    * see baseNoteText in $core/sharedConfig for how a label with no scale row renders.
    */
   baseNote: string;
-  /** false = Assigned Button (percussion, SFX, chord strum): no single Sounding Pitch. */
+  /** false = Assigned Button (percussion, SFX, chord strum): no single Sounding Pitch; its `sounding` is its Nominal Id carried by the instrument's register. */
   pitched: boolean;
   /**
    * The Note Number this button enters at Basepoint C (ADR-0007): its Sounding Pitch when
-   * Pitched, its Nominal Id when Assigned. Derived and validated at registry build, never
+   * Pitched, its Nominal Id when Assigned — both carried by the instrument's register. Derived and validated at registry build, never
    * authored — see registry.ts. For a Pitched Button the derivation is `baseNote`'s nearest
    * chromatic match to the nominal, placed in the instrument's authored `register`
    * (schema.ts) — Sky's Contrabass keyboard is the nominal 60..84 grid but registers at

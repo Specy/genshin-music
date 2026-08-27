@@ -151,6 +151,10 @@ const pixi = vi.hoisted(() => {
             return this
         }
 
+        roundShape() {
+            return this
+        }
+
         circle() {
             return this
         }

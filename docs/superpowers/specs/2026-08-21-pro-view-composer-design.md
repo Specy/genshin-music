@@ -11,8 +11,11 @@ marked USER REVISION, 2026-08-21, which is the first round of feedback on the sh
 (the framing rule in §2/§4, the keyboard overlay in §2/§8, the bottom band in §8, and the
 playhead variant and timeline band in §6), or USER REVISION, 2026-08-22, which is the
 second (the VERTICAL ZOOM, which the §2 scope fence used to forbid — §2/§4/§7; the song
-info giving its reserved row back and the page's 3.2px scroll overflow — §8). Each of those
-keeps the text it replaced.
+info giving its reserved row back and the page's 3.2px scroll overflow — §8), or USER
+REVISION, 2026-08-27, which is the third: the row height became a GAME constant — the
+canonical fit of the widest zone, so instrument swaps stop re-scaling the canvas — an
+unlocked camera stopped following zone changes, and the offscreen-zone arrow was added
+(§2/§4/§6/§9). Each of those keeps the text it replaced.
 
 ## 1. Goal
 
@@ -28,29 +31,51 @@ song format does not change; a song opens identically in either view.
 - **Axis**: chromatic rows over the game's full addressable span — every instrument's
   addable numbers at every Basepoint — plus visual padding; widened only when the loaded
   song holds outlier numbers (nothing is ever off-axis, clamped, or hidden).
-- **Row height fits the current layer's Editable Zone, capped at the game's base note
-  size** (USER REVISION, 2026-08-21 — was: _"Row height fixed, no vertical zoom: the game's
-  base layout (`perColumn`: 21/15 rows) plus padding fits the notes region's height. Note
-  size never changes across layers."_). `perColumn` counts BUTTONS and this view draws a row
-  per SEMITONE, so the two part company for every instrument with a gap in it: genshin's Lyre
-  spans 36 semitones with its 21 buttons, and a region sized for `perColumn + 2` showed two
-  thirds of its zone — the locked frame, whose whole promise is "this is what this layer can
-  play", cut the instrument in half. The rule is now
-  `rowHeight = min(H / (zoneRows + 2), H / (perColumn + 2))`: the zone plus its two framing
-  rows fills the region exactly, capped so a small instrument (a drum kit) keeps today's note
-  size instead of ballooning. The row height is therefore a property of the current LAYER, in
-  both lock states — §4 has the formula and §6 what it costs the texture cache.
+- **Row height fits the game's WIDEST Editable Zone — one canonical scale per game — capped
+  at the game's base note size** (USER REVISION, 2026-08-27 — was, since the 2026-08-21
+  revision: _"Row height fits the current layer's Editable Zone, capped at the game's base
+  note size … the row height is therefore a property of the current LAYER."_ And before
+  that: _"Row height fixed, no vertical zoom: the game's base layout (`perColumn`: 21/15
+  rows) plus padding fits the notes region's height. Note size never changes across
+  layers."_). Each earlier rule had the other one's defect. The original `perColumn + 2` fit
+  ignored that this view draws a row per SEMITONE while `perColumn` counts BUTTONS: genshin's
+  Lyre spans 36 semitones with its 21 buttons, so the locked frame — whose whole promise is
+  "this is what this layer can play" — cut the instrument in half. The 2026-08-21 fix sized
+  the region by the CURRENT layer's zone, which re-scaled the entire canvas on every
+  instrument swap: sky's 25-row harp to its 13-row drum stretched every row 1.6x, a layout
+  shift that read as the song jumping. The rule is now
+  `rowHeight = min(H / (widestZoneRows + 2), H / (perColumn + 2))`, where `widestZoneRows`
+  is the widest zone ANY instrument in the game has (`noteIds.widestInstrumentSpan()`, a
+  build-time game constant like the Addressable Span): every instrument's zone still fits its
+  locked frame whole (none is wider than the widest), a narrow one stands in more air at the
+  SAME scale instead of ballooning to a different one, and a layer switch, instrument swap or
+  Basepoint change moves the camera's framing and never the scale — §4 has the formula, and
+  the per-layer texture-rebuild cost §6 priced is gone with the per-layer fit.
   **AND THE USER'S OWN ZOOM MULTIPLIES IT** (USER REVISION, 2026-08-22 — was: _"Still no
   vertical zoom: nothing the USER does changes a row's height."_). A trackpad or a touchscreen
   offers a pinch and users reach for it; the fit above is what a row is WORTH by default, not a
   ceiling on what it may be. `effectiveRowHeight = fittedRowHeight × zoom`, one multiplier on
-  everything the two terms decided, so a layer switch still re-fits underneath it and re-locking
-  still gives the fit back exactly (§4 for the formula and its clamp, §7 for the gestures).
+  everything the two terms decided, so a layer switch moves nothing underneath it (the fit is a
+  game constant since 2026-08-27) and re-locking still gives the fit back exactly (§4 for the
+  formula and its clamp, §7 for the gestures).
 - **View Lock** (default locked): frame pinned to the current track's Editable Zone,
   centered, no vertical scrolling; wheel and drag keep today's exact meanings. Unlocked
   (button in the right CanvasTool column): drag pans 2D, wheel STAYS horizontal,
-  flick/coast stays horizontal-only. Re-locking eases back to the zone; layer switches
-  ease to the new zone in either mode (unlocked stays unlocked).
+  flick/coast stays horizontal-only. Re-locking eases back to the zone; while LOCKED, layer
+  switches ease to the new zone. UNLOCKED, THE CAMERA IS THE USER'S ALONE: a layer switch,
+  instrument swap or Basepoint change redraws the zone and moves the frame nowhere (USER
+  REVISION, 2026-08-27 — was: _"layer switches ease to the new zone in either mode
+  (unlocked stays unlocked)"_; with the canonical row height above, changing instruments
+  now changes nothing at all about where an unlocked view is looking).
+- **Offscreen-zone arrow** (USER ADDITION, 2026-08-27, same round as the two revisions
+  above): when the camera window shows NONE of the current layer's Editable Zone, one
+  accent-coloured rounded triangle stands at the notes region's top or bottom edge,
+  horizontally centred, pointing the way to the zone — the "I just switched instrument,
+  where is it?" signpost the still-standing unlocked frame otherwise lacks (a locked frame
+  re-centres on the zone and never shows it). Any visible part of the band suppresses it —
+  a zone line on screen is its own signpost. A settled TAP on it centres the zone in the
+  region (the locked framing's arithmetic, at the current zoom, without touching the View
+  Lock — §7's dispatch order); every other gesture over it keeps its own meaning.
 - **Editable Zone**: two horizontal lines at the current layer's min/max addable numbers
   (instrument + effective Basepoint); overlay dims everything outside; in-zone rows with
   no button are striped and inert. All notes always visible — other layers' and stranded
@@ -117,18 +142,18 @@ All in one new pure module `src/lib/components/pages/Composer/proViewGeometry.ts
   Recomputed on song load and on structure changes (outliers can be deleted; axis may
   shrink back — acceptable, it only varies for already-weird files).
 - **Rows**: row index `r(n) = axisMax − n` (row 0 on top, pitch rises upward).
-  `rowHeight = min(notesRegionHeight / (zoneRows + 2), notesRegionHeight / (perColumn + 2))`
-  where `zoneRows = zone.max − zone.min + 1` (the “+2” is the framing padding, one row at
-  each end). USER REVISION, 2026-08-21 — was `notesRegionHeight / (perColumn + 2)` alone,
-  which did not fit a wide instrument's own zone (§2). THREE CONSEQUENCES, all handled:
-  the row height varies per (layer, Basepoint) in BOTH lock states, so the camera offset —
-  a px distance down the axis — is rescaled by the ratio whenever it moves and the framing
-  is re-taken AT ONCE rather than eased (an ease measured in two row heights is an ease
-  from nowhere, the same reason a resize is instant); the note textures are baked at the
-  cell height, so a layer switch regenerates the ComposerCache through the EXISTING resize
-  path (§6), debounced with it and never per frame; and the strip's width and label sizes,
-  which derive from the row height, shrink with it (verified legible at genshin's Lyre,
-  the tightest case either game has).
+  `rowHeight = min(notesRegionHeight / (widestZoneRows + 2), notesRegionHeight / (perColumn + 2))`
+  where `widestZoneRows` is the widest span any single instrument's zone covers —
+  `noteIds.widestInstrumentSpan()`, a build-time game constant, Basepoint-independent by
+  construction — and the “+2” is the framing padding, one row at each end. USER REVISION,
+  2026-08-27 — was `zoneRows`, the CURRENT layer's own span, since 2026-08-21 (itself a
+  revision of `notesRegionHeight / (perColumn + 2)` alone, which did not fit a wide
+  instrument's zone — §2 carries the whole history). The 2026-08-21 rule's three handled
+  consequences are gone with it: the row height is one scale per (game, window, zoom), so a
+  layer switch rescales no camera, re-bakes no texture and resizes no strip — the swap's
+  whole cost is the locked camera's ease. What remains variable is the ZOOM (below), and the
+  camera-rescale + texture-rebuild machinery survives for exactly the moments the zoom moves
+  the row height (a pinch's frames, and the re-lock that resets it).
   THE USER'S OWN ZOOM MULTIPLIES ALL OF IT (USER REVISION, 2026-08-22 — the formula above
   was the whole of it):
   `rowHeight = max(min(fit, 2), clampProZoom(zoom) × fit)` where `fit` is the min() above.
@@ -149,8 +174,10 @@ All in one new pure module `src/lib/components/pages/Composer/proViewGeometry.ts
 - **Camera**: `y(n) = r(n) * rowHeight − cameraY`. Locked:
   `cameraY = (r(zoneMax) + r(zoneMin) + 1) / 2 * rowHeight − notesRegionHeight / 2`,
   clamped to `[0, axisRows*rowHeight − notesRegionHeight]`. Unlocked: cameraY free within
-  the same clamp. Both lock transitions and layer switches ease cameraY (reuse the
-  existing ease timing).
+  the same clamp. Lock transitions ease cameraY (reuse the existing ease timing), and so do
+  layer switches WHILE LOCKED; an unlocked camera never moves on its own (USER REVISION,
+  2026-08-27 — was: layer switches eased in either mode), it is only re-clamped when the
+  axis shrinks under it.
 - **Editable Zone** for the current layer: `offset = basepointOffset(effectiveTrackPitch
 (instrument, songPitch))`; `zone = {t + offset : t ∈ getSoundingTable(name)}`;
   lines at `max(zone)` (top) and `min(zone)` (bottom); addable rows are exactly `zone`'s
@@ -181,17 +208,22 @@ scalar (read in ComposerCanvas.svelte's $effect object, per that file's dependen
   window get sprites; the column-view pooling stays as is).
 - **Textures**: pro cell size is `(columnWidth, rowHeight_pro)` — the ComposerCache
   instance is rebuilt on mode flips exactly as it is on resize today; same
-  `noteTextureKey` statuses. AND ON A LAYER SWITCH, since the 2026-08-21 revision made the
-  row height a property of the current layer (§2/§4): the renderer notices the row height
-  moving and calls the resize path itself, so a switch costs one debounced rebuild and
-  nothing per frame — a new path of its own is exactly what this must not be.
+  `noteTextureKey` statuses. NOT on a layer switch any more (2026-08-27 — the canonical row
+  height took the per-layer rebuild with it, §2/§4): the notice-the-row-height-moved →
+  resize-path machinery survives for the zoom, whose re-lock reset really does move the
+  cell, so a pinch costs one debounced rebuild and nothing per frame — a new path of its
+  own is exactly what this must not be.
   Own-layer strands reuse the accidental-marked look; the '♯/♭ nearest-row' compression
   trick is NOT used in pro (a number IS its row) — the accidental texture variants simply
   mark strandedness there.
 - **New draw layers** (bottom→top): octave striping + no-button row striping (one
   Graphics, redrawn on camera/zone/theme change) → notes → out-of-zone overlay (two
-  translucent rects) + the two zone lines → playhead → row-label strip (leftmost,
-  screen-fixed x, tracks cameraY; pixi Text pooled per visible row) → timeline strip.
+  translucent rects) + the two zone lines → the offscreen-zone arrow (2026-08-27: one
+  rounded accent triangle at the region's top or bottom edge when the window shows none of
+  the zone, over the dim so it reads at full contrast, `eventMode: 'none'` — its tap is
+  §7's dispatch, not the object's) → playhead →
+  row-label strip (leftmost, screen-fixed x, tracks cameraY; pixi Text pooled per visible
+  row) → timeline strip.
   The strip's own background repeats the canvas' inert-row shade on its no-button rows
   and its labels are centered in the band, both ways (user revision, 2026-08-21 — the
   strip first shipped with a uniform backing and left-set text).
@@ -265,8 +297,9 @@ scalar (read in ComposerCanvas.svelte's $effect object, per that file's dependen
   - **The zoom is anchored, and it UNLOCKS the view.** The row under the pointer (or under the
     pinch's centre) keeps its screen y, §4 has the formula. Zooming is the user taking manual
     control of the frame, so the padlock follows the gesture — once per gesture, not once per
-    event — and re-locking resets the multiplier to 1 and returns the layer's own fit. A layer
-    switch keeps working while zoomed: the FITTED base changes underneath the multiplier.
+    event — and re-locking resets the multiplier to 1 and returns the fit. A layer switch keeps
+    working while zoomed, trivially since 2026-08-27: the fitted base is a game constant, so
+    nothing moves underneath the multiplier.
   - **The clamp is `PRO_ZOOM_MIN = 0.5 .. PRO_ZOOM_MAX = 3`**, with a `PRO_MIN_ROW_HEIGHT_PX = 2`
     floor under the result (§4 says why the two are different guards, and why the degenerate
     axis-shorter-than-region case needs no new rule).
@@ -288,9 +321,14 @@ scalar (read in ComposerCanvas.svelte's $effect object, per that file's dependen
   touch. (Same threshold, not a new one — spec §12.)
 - **Tap dispatch** (new renderer callback `onCellTap(column, number)` → Composer.svelte):
   1. keyboard overlay raised → dismiss, swallow;
-  2. own-layer note at (column, number) → remove (stranded included — this is delete);
-  3. `numberToButton ≥ 0` → toggle add via the shared path;
-  4. otherwise inert.
+  2. the shown offscreen-zone arrow's edge band (USER ADDITION, 2026-08-27) → centre the
+     zone in the region and swallow — renderer-side navigation that never reaches
+     Composer.svelte, does not touch the View Lock or the zoom, and eases exactly as a
+     re-lock does; the band is far larger than the glyph (48×32) and only the edge whose
+     arrow is UP takes it, so drags, holds and the other edge keep their meanings;
+  3. own-layer note at (column, number) → remove (stranded included — this is delete);
+  4. `numberToButton ≥ 0` → toggle add via the shared path;
+  5. otherwise inert.
 - **The shared path**: Composer.svelte extracts the core of `toggleNoteImmediate` into a
   `toggleNoteInColumn(columnIndex, button)` both the keyboard press and the tap call:
   same preview sound, same history push, same playback-state behavior. Canvas edits do
@@ -426,10 +464,11 @@ scalar (read in ComposerCanvas.svelte's $effect object, per that file's dependen
 ## 9. Cross-cutting behaviors
 
 - **Basepoint change**: notes rewrite (ADR-0007) AND the zone moves by the same interval,
-  so locked framing follows automatically on the next paint; undo restores both.
-- **Instrument swap**: zone + strip labels recompute from the new instrument; camera
-  eases to the new zone.
-- **Layer switch**: statuses recolor (existing), zone/strip/framing follow.
+  so LOCKED framing follows automatically on the next paint (an unlocked camera holds
+  still — §2's View Lock, 2026-08-27); undo restores both.
+- **Instrument swap**: zone + strip labels recompute from the new instrument; a locked
+  camera eases to the new zone, an unlocked one and the row scale do not move (2026-08-27).
+- **Layer switch**: statuses recolor (existing), zone/strip follow; framing as above.
 - **Recording audio**: overlay content swaps to the recording UI (as the keyboard does
   today); canvas taps stay live.
 - **Theme**: new draw layers subscribe through the existing theme channel (striping,

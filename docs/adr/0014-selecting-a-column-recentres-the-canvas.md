@@ -1,0 +1,21 @@
+# Selecting a column always recentres the composer canvas
+
+The composer's horizontal scroll is not a value of its own. `ComposerRenderer.rest()` assigns `scrollPosition = state.selected`, and the container offset draws the column at `scrollPosition` at `playheadX` — half the canvas width in the Compressed View, a quarter of it in the Pro View (`PLAYHEAD_X_FRACTION`). Selection and scroll are therefore **one number**, and the selected column is always at a fixed x. Every click-to-select the composer has ever had slides the whole canvas to put the clicked column back under that line.
+
+The Column Ruler (CONTEXT.md) forced the question, because it is the first surface on which that reads as wrong: it is a scale whose whole premise is pressing a column you can already see, and pressing one you can see slides everything under you. We decided (2026-08-27): **the invariant stays. Selecting a column recentres the canvas, whatever asked for the selection.**
+
+What decoupling would actually cost — which is why this is a decision and not an oversight:
+
+- **`rest()` and `settleAt()` are the same statement twice.** Both end a motion by asserting where the canvas is, and both say "the canvas is at `selected`". A canvas that may rest somewhere else needs a second stored position, and every path that ends a motion has to choose between the two.
+- **The motion round-trips are discriminated by comparing `selected` against a position.** A drag publishes `floor(position)` and recognises its own update coming back through Svelte by `state.selected === this.motion.publishedColumn`; the Coast does the same; the ease uses `state.selected === this.motion.to`. Each of those tests is only meaningful while the two are the same column. Decoupled, an external selection that happens to equal a motion's target becomes indistinguishable from that motion's own round-trip, and `syncScrollSchedule` loses the ability to tell a discontinuity from an echo.
+- **The playhead's fixed x is a consequence, not a choice.** The line is drawn at `playheadX` because that is where the sounding column is. Decoupled, playback either drags the canvas along anyway — the invariant again, restricted to playback — or lets the playhead wander off screen.
+- **The Pro View's cell hit-test converts x to a column through the same offset.** Two positions means two answers to "which column is under this pixel", on a surface where the answer is an edit.
+
+Considered and rejected: **scroll-into-view — move the canvas only when the selected column is off screen.** It is the better feel, and it is what a DAW does; we are not claiming otherwise. It is rejected on scope, not on merit: it is a change to the composer's scroll model touching every path above, and it arrived as a sub-question of adding a ruler. Also rejected: **recentring only when the press was a Ruler Scrub and not a clean tap** — the tap case still needs the decoupling to be expressible at all, so it buys an inconsistency (two scroll outcomes from one surface, separated by three pixels of finger travel) without avoiding any of the cost.
+
+## Consequences
+
+- **The Column Ruler's cursor is the playhead's flag, not a position indicator.** It stands at `playheadX` at rest, travels only while a Ruler Scrub holds the canvas still, and returns home when the release settles the canvas. That return *is* the "press it and it scrolls to it" the ruler was asked for — the recentring is the feature, not a side effect of it.
+- **The ruler introduces no new scroll behavior.** A Compressed View column click has recentred the canvas since before the Pro View existed; the ruler is the same rule reaching a surface that did not have it.
+- **A Ruler Scrub is expressible only because a drag already suspends the invariant.** `syncScrollSchedule` returns at its first statement while `motion.kind === 'dragging'`, so a third `surface: 'ruler'` whose `motion.position` is never written gives "the canvas holds still while the selection moves" for free — and the release restores the invariant by easing to `selected`. The suspension is bounded by the gesture, which is what keeps it from being the decoupling above.
+- **If scroll-into-view is ever wanted, it is its own piece of work on the scroll model**, and this ADR is what it supersedes. It should not arrive as a flag on a surface.

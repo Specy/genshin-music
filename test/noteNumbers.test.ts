@@ -14,6 +14,8 @@ import {
     basepointOffset, buttonToNumber, getNoteIdTable, getSoundingTable, gridRowForNumber,
     numberToButton, songGridSlotForId,
 } from '../src/lib/core/Songs/noteIds'
+import {nearestChromaticMatch} from '$lib/games/registry'
+import {BASE_NOTE_PITCH_CLASSES} from '$lib/games/types'
 import type {Pitch} from '../src/lib/core/legacyConfig'
 
 const notesOf = (name: string) => INSTRUMENTS_DATA[name as keyof typeof INSTRUMENTS_DATA].notes
@@ -26,6 +28,19 @@ const ASSIGNED = INSTRUMENTS.filter((name: string) => notesOf(name).some(note =>
 /** An instrument whose two axes coincide — every number off its nominal set is guaranteed stranded on it. */
 const UNTUNED = INSTRUMENTS.find((name: string) =>
     getSoundingTable(name).every((sounding, button) => sounding === getNoteIdTable(name)[button]))!
+/**
+ * The whole-octave displacement an instrument's authored `register` applies. Since the
+ * ADR-0007 addendum it translates EVERY button, Assigned ones included, so the rows below
+ * ask for it rather than assuming an Assigned Button sits on its bare Nominal Id. Read off a
+ * PITCHED button through the registry's own derivation — no second copy of the anchor
+ * arithmetic here — and 0 for an instrument that authored no register.
+ */
+const registerDisplacement = (name: string): number => {
+    const pitched = notesOf(name).find(note => note.pitched)
+    if (!pitched) return 0
+    return pitched.sounding - nearestChromaticMatch(pitched.nominal, BASE_NOTE_PITCH_CLASSES.get(pitched.baseNote)!)!
+}
+
 /** Every Basepoint, so no case can accidentally hold only at offset 0. */
 const ALL_PITCHES = PITCHES as readonly Pitch[]
 
@@ -42,7 +57,7 @@ describe('sounding tables', () => {
         for (const name of INSTRUMENTS) {
             notesOf(name).forEach((note, button) => {
                 const sounding = getSoundingTable(name)[button]
-                if (!note.pitched) expect(sounding).toBe(note.nominal)
+                if (!note.pitched) expect(sounding).toBe(note.nominal + registerDisplacement(name))
                 else {
                     //the CLASS half of the derivation: nearest chromatic match, and the registry
                     //rejects the exact ±6 tie, so it is always strictly nearer. Whole octaves of
@@ -117,13 +132,15 @@ describe.runIf(INSTRUMENTS.includes('Vintage-Lyre'))('Vintage-Lyre asymmetric oc
 // carried by the Basepoint — identity, whatever its label says (the labels here are chord
 // names: C, Dm, Em, F, G, Am, G7).
 describe.runIf(ASSIGNED.length > 0)('Assigned Buttons', () => {
-    it('enter their own Nominal Id plus the Basepoint offset, on every instrument that has one', () => {
+    it('enter their own Nominal Id plus the register and the Basepoint offset, on every instrument that has one', () => {
         for (const name of ASSIGNED) {
+            const displacement = registerDisplacement(name)
             notesOf(name).forEach((note, button) => {
                 if (note.pitched) return
                 for (const pitch of ALL_PITCHES) {
-                    expect(buttonToNumber(name, pitch, button)).toBe(note.nominal + basepointOffset(pitch))
-                    expect(numberToButton(name, pitch, note.nominal + basepointOffset(pitch))).toBe(button)
+                    const entered = note.nominal + displacement + basepointOffset(pitch)
+                    expect(buttonToNumber(name, pitch, button)).toBe(entered)
+                    expect(numberToButton(name, pitch, entered)).toBe(button)
                 }
             })
         }
@@ -131,15 +148,25 @@ describe.runIf(ASSIGNED.length > 0)('Assigned Buttons', () => {
 
     it.runIf(INSTRUMENTS.includes('Ukulele'))('keep the Ukulele chord row on its own nominal rows', () => {
         //the chord row's labels are free text and numerically irrelevant; what matters is
-        //that a chord button never collapses onto a pitched neighbour
+        //that a chord button never collapses onto a pitched neighbour — which is exactly what
+        //the register's rigid translation protects: this instrument registers "C4", and moving
+        //only its pitched half would walk the middle row onto these seven numbers.
+        const displacement = registerDisplacement('Ukulele')
         const chordButtons = notesOf('Ukulele')
             .map((note, button) => ({note, button}))
             .filter(({note}) => !note.pitched)
         expect(chordButtons.map(({note}) => note.baseNote)).toEqual(['C', 'Dm', 'Em', 'F', 'G', 'Am', 'G7'])
         for (const {note, button} of chordButtons) {
-            expect(buttonToNumber('Ukulele', 'C', button)).toBe(note.nominal)
-            expect(gridRowForNumber('Ukulele', 'C', note.nominal))
+            const entered = note.nominal + displacement
+            expect(buttonToNumber('Ukulele', 'C', button)).toBe(entered)
+            //the ROW is still its Nominal Id's, untouched by the register (grid rows are nominal space)
+            expect(gridRowForNumber('Ukulele', 'C', entered))
                 .toEqual({row: songGridSlotForId(note.nominal), stranded: false, accidental: 0})
+        }
+        //and no chord number is a number any pitched button of this instrument enters
+        const pitchedNumbers = new Set(notesOf('Ukulele').filter(n => n.pitched).map(n => n.sounding))
+        for (const {note} of chordButtons) {
+            expect(pitchedNumbers.has(note.nominal + displacement)).toBe(false)
         }
     })
 })

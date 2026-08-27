@@ -128,11 +128,21 @@ describe('Sounding Pitch derivation (ADR-0007)', () => {
     }
   });
 
-  it("the ukulele-21 top row is a chord row: Assigned, named, and sounding its Nominal Ids", () => {
+  it("the ukulele-21 top row is a chord row: Assigned, named, and riding the instrument's register", () => {
     // In-game those seven buttons strum chords (capture 2026-08-19); both instruments that
-    // share the preset must show it.
+    // share the preset must show it. Their Note Numbers are their Nominal Ids TRANSLATED BY THE
+    // INSTRUMENT'S REGISTER (ADR-0007 addendum) — Ukulele registers "C4" and Euphonia does not,
+    // so the same preset row lands an octave apart on the two, which is exactly the point: the
+    // number is an identity that stays rigid with its own instrument, not a shared constant.
     for (const instrument of ['Ukulele', 'LingeringEuphonia']) {
-      const chordRow = notesOf('genshin', instrument).slice(0, 7);
+      const notes = notesOf('genshin', instrument);
+      // the displacement this instrument applies, read off a PITCHED button (whose derivation
+      // the previous tests pin) rather than assumed
+      const pitchedSample = notes.find((note) => note.pitched)!;
+      const displacement =
+        pitchedSample.sounding -
+        nearestChromaticMatch(pitchedSample.nominal, BASE_NOTE_PITCH_CLASSES.get(pitchedSample.baseNote)!)!;
+      const chordRow = notes.slice(0, 7);
       expect(chordRow.map((note) => note.baseNote), instrument).toEqual([
         'C',
         'Dm',
@@ -144,7 +154,7 @@ describe('Sounding Pitch derivation (ADR-0007)', () => {
       ]);
       for (const note of chordRow) {
         expect(note.pitched, `${instrument} ${note.baseNote}`).toBe(false);
-        expect(note.sounding, `${instrument} ${note.baseNote}`).toBe(note.nominal);
+        expect(note.sounding, `${instrument} ${note.baseNote}`).toBe(note.nominal + displacement);
       }
       // and the two rows below it are ordinary tuned buttons, untouched by the reclassification
       for (const note of notesOf('genshin', instrument).slice(7)) {
@@ -186,7 +196,8 @@ describe('Sounding Pitch derivation (ADR-0007)', () => {
         instrument.notes.forEach((note, i) => {
           const where = `${gameId}/${instrument.name} ${note.baseNote}@${note.nominal}`;
           if (!note.pitched) {
-            expect(note.sounding, where).toBe(note.nominal);
+            //no pitch to derive, but it rides the instrument's register like everything else
+            expect(note.sounding, where).toBe(note.nominal + displacement);
             return;
           }
           // a Pitched Button's Sounding Pitch spells its own label...
@@ -287,12 +298,19 @@ describe('registry rejections around note identity (ADR-0007)', () => {
     expect(withRegister([note({ pitched: false, baseNote: '' })], 'C2')).toThrow(/no button is Pitched/);
     // an anchor that walks off the MIDI axis
     expect(withRegister(scale, 'C-2')).toThrow(/outside the MIDI axis/);
-    // an Assigned Button never moves: its Note Number is its Nominal Id, whatever register
-    // its pitched neighbours sound in
+    // an Assigned Button RIDES ALONG (ADR-0007 addendum): it has no pitch to place, but its
+    // Note Number is an identity, and translating the instrument rigidly is what keeps those
+    // identities collision-free — moving only the pitched half is what created the collision
+    // this rule exists to prevent (genshin's Ukulele, whose middle row walked onto its own
+    // chord row's numbers).
     expect(
       withRegister([note({ nominal: 60 }), note({ nominal: 62, baseNote: '', pitched: false })], 'C2')()
         .map((n) => n.sounding)
-    ).toEqual([36, 62]);
+    ).toEqual([36, 38]);
+    // ...and that is exactly why it cannot collide: the pitched-only rule DID collide here,
+    // where the assigned button sits an octave above a scale the register lifts by one
+    const collidable = [note({ nominal: 60 }), note({ nominal: 72, baseNote: '', pitched: false })];
+    expect(withRegister(collidable, 'C5')().map((n) => n.sounding)).toEqual([72, 84]);
   });
 });
 

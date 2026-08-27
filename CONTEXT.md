@@ -7,7 +7,7 @@ A web app for composing, recording, and practicing songs played on the in-game i
 ### Notes
 
 **Note Number**:
-The universal identity of a note in a song: an absolute MIDI number on one shared axis, stored Basepoint-included. For a Pitched Button it is the Sounding Pitch the listener hears; for an Assigned Button it is the button's Nominal Id carried onto the axis by the Basepoint.
+The universal identity of a note in a song: an absolute MIDI number on one shared axis, stored Basepoint-included. For a Pitched Button it is the Sounding Pitch the listener hears; for an Assigned Button it is the button's Nominal Id carried onto the axis by its instrument's register and the Basepoint.
 _Avoid_: note id (the retired nominal storage identity), note index, midi note (ambiguous with MIDI-file events)
 
 **Nominal Id**:
@@ -22,7 +22,7 @@ _Avoid_: note position, key (ambiguous with keybind and musical key), index
 A button that plays one single pitch. Pressing it stores that Sounding Pitch, so an instrument's real tuning — Vintage-Lyre's flats included — is visible in the song itself.
 
 **Assigned Button**:
-A button with no single sounding pitch: percussion, SFX, chord strums (Ukulele's whole top row, C through G7). Declared in config, never inferred; pressing it stores its Nominal Id carried by the Basepoint, so two Assigned Buttons never collapse however alike they sound.
+A button with no single sounding pitch: percussion, SFX, chord strums (Ukulele's whole top row, C through G7). Declared in config, never inferred; pressing it stores its Nominal Id carried by its instrument's register and the Basepoint, so two Assigned Buttons never collapse however alike they sound. It has no pitch to place, but it moves with its instrument's register anyway: the number is an identity, and translating an instrument rigidly is what keeps every identity on it collision-free.
 _Avoid_: unpitched note (a chord is pitched — just not singly)
 
 **Sounding Pitch**:
@@ -99,8 +99,12 @@ The band of Note Numbers the current track can voice at its effective Basepoint,
 _Avoid_: range (overloaded: MIDI bounds, octave ranges), reach, instrument span
 
 **View Lock**:
-The Pro View's vertical framing toggle. Locked (the default) pins the frame to the current track's Editable Zone, centered, with no vertical scrolling; unlocked frees panning over the whole axis, and zooming — which is taking the frame into your own hands — unlocks by itself. Re-locking returns the frame to the zone, zoom reset included. Horizontal scrolling is never its business.
+The Pro View's vertical framing toggle. Locked (the default) pins the frame to the current track's Editable Zone, centered, with no vertical scrolling; unlocked frees panning over the whole axis, and zooming — which is taking the frame into your own hands — unlocks by itself. An unlocked frame moves only by the user's own hand: a layer switch, instrument swap, or Basepoint change redraws the zone and moves the camera nowhere. Re-locking returns the frame to the zone, zoom reset included. Horizontal scrolling is never its business.
 _Avoid_: scroll lock (horizontal scrolling is unaffected)
+
+**Column Ruler**:
+The scale across the top of the Pro View canvas: one pressable position per column, labelled at intervals with the timestamp its column begins at. Pressing a position selects that column, sounds it, and brings the canvas to it — the Pro View's only click-to-select surface, since a tap on the notes stage there edits a cell instead. It is addressed in columns and never in time: no press lands between two columns, and on a fast song two adjacent labels may print the same timestamp.
+_Avoid_: timeline (the whole-song minimap above it), time ruler (it measures the column axis, not the clock), scrub bar
 
 ### Composer Canvas Gestures
 
@@ -117,8 +121,12 @@ A press on the notes stage while a Coast is running. The press itself is the gra
 _Avoid_: tap-to-stop "click" (a Catch never takes the click path)
 
 **Duration Hold**:
-The press that opened the duration popover — on a keyboard key, a Pro View cell, a physical note key, or a held MIDI note — for as long as it stays down. While it lasts, sustain length is edited by whole-column increments from the span it opened at: one column per visible column-width of pointer travel, and one column per column the selection moves underneath it, from any source (canvas scroll, wheel, the < > buttons, shortcuts). Column changes never dismiss the popover while it lasts, and neither does a press outside it — a second finger scrolling the canvas IS such a press, and it is part of the gesture. A layer change still dismisses, and so does playback starting: the transport moves the selection on its own, and a hold it drove would grow the span one column per tick. The Hold ends with the release — the popover outlives it.
+The press that opened the duration popover — on a keyboard key, a Pro View cell, a physical note key, or a held MIDI note — for as long as it stays down. While it lasts, sustain length is edited by whole-column increments from the span it opened at: one column per visible column-width of pointer travel, and one column per column the selection moves underneath it, from any source (canvas scroll, a Ruler Scrub, wheel, the < > buttons, shortcuts). Column changes never dismiss the popover while it lasts, and neither does a press outside it — a second finger scrolling the canvas IS such a press, and it is part of the gesture. A layer change still dismisses, and so does playback starting: the transport moves the selection on its own, and a hold it drove would grow the span one column per tick. The Hold ends with the release — the popover outlives it.
 _Avoid_: drag-to-resize (suggests grabbing the tail and snapping it to a position — a Duration Hold only ever increments), snap-to-column
+
+**Ruler Scrub**:
+A drag along the Column Ruler. The canvas holds still and the selection follows the finger, sounding each column it passes — rate-limited, so a fast sweep is a sparse run through the song rather than every column it crossed at once. The RELEASE is what moves the canvas: it settles on the column the finger landed on. While the song plays it sounds nothing and is a moving seek, like every other manual move.
+_Avoid_: scrubbing (alone — the minimap above scrubs silently and never carries the selection under the finger), drag-to-select
 
 ### Composer Editing
 

@@ -54,8 +54,9 @@ export type NoteMetaJson = {
   baseNote: string;
   /**
    * Declares an Assigned Button (ADR-0007): a button with no single sounding pitch —
-   * percussion, SFX, a chord strum. It enters notes at its Nominal Id instead of a
-   * derived Sounding Pitch, and its `baseNote` becomes a free label. Absent = Pitched.
+   * percussion, SFX, a chord strum. It enters notes at its Nominal Id (carried by the
+   * instrument's `register`, like every other button) instead of a derived Sounding Pitch,
+   * and its `baseNote` becomes a free label. Absent = Pitched.
    * Never inferred: a label alone must not be able to flip a button's identity class.
    */
   pitched?: false;
@@ -132,12 +133,14 @@ export type InstrumentMetaJson = {
    * authors "C1" and its C button's Sounding Pitch derives to 24. The registry takes
    * only the OCTAVE from it: the anchor's pitch class must equal the lowest button's
    * own derived class (else it fails — semitone flavor is `baseNote`'s to author,
-   * per button), so every Pitched Button moves by the same whole octaves and the two
+   * per button), so the whole instrument moves by the same whole octaves and the two
    * authored facts cannot drift into each other (ADR-0007's derivation stays: class
    * from `baseNote`, ±5 semitones of the nominal; octave from here). It never moves
-   * Nominal Ids (grid rows, swaps and legacy decode are untouched) and never moves an
-   * Assigned Button (its Note Number IS its Nominal Id). Absent = the register the
-   * nominal grid itself names.
+   * Nominal Ids (grid rows, swaps and legacy decode are untouched). Assigned Buttons
+   * translate too (ADR-0007 addendum): they have no pitch to place, but their Note
+   * Numbers are identities, and a rigid translation is what keeps those collision-free —
+   * moving only the pitched half is what collides. Absent = the register the nominal
+   * grid itself names.
    */
   register?: string;
   /** A preset name from the game's presets.json, or the full inline note array. */

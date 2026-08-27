@@ -121,12 +121,13 @@ export function parseNoteName(name: string): number | null {
  * the same validator the registry runs, on authored note lists of their own.
  *
  * `register` (meta.json) anchors the instrument's lowest Pitched Button to the absolute
- * pitch its samples actually sound ("C1" for Sky's Contrabass), moving every Pitched
- * Button by the same whole octaves. The pitch CLASS still comes from `baseNote` through
+ * pitch its samples actually sound ("C1" for Sky's Contrabass), translating the whole
+ * instrument by the same whole octaves. The pitch CLASS still comes from `baseNote` through
  * the nearest-chromatic derivation — the anchor's class must MATCH the lowest button's,
  * so the two authored facts stay orthogonal and cannot drift (the reason ADR-0007
- * rejected authoring `sounding` directly). Assigned Buttons are untouched: their Note
- * Number is their Nominal Id, which no register may move.
+ * rejected authoring `sounding` directly). An Assigned Button has no pitch to place, but it
+ * rides along anyway (ADR-0007 addendum): its Note Number is an IDENTITY, and keeping the
+ * instrument rigid is what guarantees those identities stay collision-free.
  */
 export function normalizeNotes(
   context: string,
@@ -191,7 +192,12 @@ export function normalizeNotes(
     };
   });
   // The register anchors the lowest Pitched Button AFTER per-note derivation, since the
-  // lowest is only known once every button's class has resolved.
+  // lowest is only known once every button's class has resolved. It then translates the
+  // WHOLE instrument — Assigned Buttons included (ADR-0007 addendum): a register places the
+  // instrument on the axis, and a rigid translation cannot create a Note Number collision,
+  // since the button set was distinct before it. Moving only the pitched half CAN, and did:
+  // genshin's Ukulele registers +12, which walks its middle row onto the very numbers its
+  // seven Assigned chord buttons hold.
   if (register !== undefined) {
     const pitchedNotes = notes.filter((n) => n.pitched);
     // A register on an instrument of only Assigned Buttons places nothing — dead config
@@ -220,18 +226,18 @@ export function normalizeNotes(
     }
     const displacement = anchor - lowest.sounding;
     if (displacement !== 0) {
-      for (const note of notes) {
-        if (note.pitched) note.sounding += displacement;
-      }
+      for (const note of notes) note.sounding += displacement;
     }
   }
-  // The MIDI axis itself (0..127): a Sounding Pitch outside it is unexportable and can
-  // only be a wrong register — no real instrument sounds there.
+  // The MIDI axis itself (0..127): a Note Number outside it is unexportable and can only be
+  // a wrong register — no real instrument sounds there, and an Assigned Button's identity has
+  // to stay on the axis songs are written on. Checked for both kinds, since the register now
+  // moves both; without one an Assigned Button sits on its Nominal Id, already grid-validated.
   for (const [index, note] of notes.entries()) {
-    if (note.pitched && (note.sounding < 0 || note.sounding > 127)) {
+    if (note.sounding < 0 || note.sounding > 127) {
       fail(
         context,
-        `note ${index}: Sounding Pitch ${note.sounding} is outside the MIDI axis 0..127 — is the register right?`
+        `note ${index}: Note Number ${note.sounding} is outside the MIDI axis 0..127 — is the register right?`
       );
     }
   }

@@ -2656,7 +2656,7 @@
           "nominal": 60,
           "baseNote": "C",
           "pitched": true,
-          "sounding": 60,
+          "sounding": 36,
           "icon": "dmcr"
         },
         {
@@ -2664,7 +2664,7 @@
           "nominal": 62,
           "baseNote": "D",
           "pitched": true,
-          "sounding": 62,
+          "sounding": 38,
           "icon": "dm"
         },
         {
@@ -2672,7 +2672,7 @@
           "nominal": 64,
           "baseNote": "E",
           "pitched": true,
-          "sounding": 64,
+          "sounding": 40,
           "icon": "cr"
         },
         {
@@ -2680,7 +2680,7 @@
           "nominal": 65,
           "baseNote": "F",
           "pitched": true,
-          "sounding": 65,
+          "sounding": 41,
           "icon": "dm"
         },
         {
@@ -2688,7 +2688,7 @@
           "nominal": 67,
           "baseNote": "G",
           "pitched": true,
-          "sounding": 67,
+          "sounding": 43,
           "icon": "cr"
         },
         {
@@ -2696,7 +2696,7 @@
           "nominal": 69,
           "baseNote": "A",
           "pitched": true,
-          "sounding": 69,
+          "sounding": 45,
           "icon": "dm"
         },
         {
@@ -2704,7 +2704,7 @@
           "nominal": 71,
           "baseNote": "B",
           "pitched": true,
-          "sounding": 71,
+          "sounding": 47,
           "icon": "cr"
         },
         {
@@ -2712,7 +2712,7 @@
           "nominal": 72,
           "baseNote": "C",
           "pitched": true,
-          "sounding": 72,
+          "sounding": 48,
           "icon": "dmcr"
         }
       ]

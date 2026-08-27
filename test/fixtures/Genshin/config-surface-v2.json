@@ -1207,7 +1207,7 @@
           "nominal": 72,
           "baseNote": "C",
           "pitched": false,
-          "sounding": 72,
+          "sounding": 84,
           "icon": "do"
         },
         {
@@ -1215,7 +1215,7 @@
           "nominal": 74,
           "baseNote": "Dm",
           "pitched": false,
-          "sounding": 74,
+          "sounding": 86,
           "icon": "re"
         },
         {
@@ -1223,7 +1223,7 @@
           "nominal": 76,
           "baseNote": "Em",
           "pitched": false,
-          "sounding": 76,
+          "sounding": 88,
           "icon": "mi"
         },
         {
@@ -1231,7 +1231,7 @@
           "nominal": 77,
           "baseNote": "F",
           "pitched": false,
-          "sounding": 77,
+          "sounding": 89,
           "icon": "fa"
         },
         {
@@ -1239,7 +1239,7 @@
           "nominal": 79,
           "baseNote": "G",
           "pitched": false,
-          "sounding": 79,
+          "sounding": 91,
           "icon": "so"
         },
         {
@@ -1247,7 +1247,7 @@
           "nominal": 81,
           "baseNote": "Am",
           "pitched": false,
-          "sounding": 81,
+          "sounding": 93,
           "icon": "la"
         },
         {
@@ -1255,7 +1255,7 @@
           "nominal": 83,
           "baseNote": "G7",
           "pitched": false,
-          "sounding": 83,
+          "sounding": 95,
           "icon": "ti"
         },
         {
@@ -1263,7 +1263,7 @@
           "nominal": 60,
           "baseNote": "C",
           "pitched": true,
-          "sounding": 60,
+          "sounding": 72,
           "icon": "do"
         },
         {
@@ -1271,7 +1271,7 @@
           "nominal": 62,
           "baseNote": "D",
           "pitched": true,
-          "sounding": 62,
+          "sounding": 74,
           "icon": "re"
         },
         {
@@ -1279,7 +1279,7 @@
           "nominal": 64,
           "baseNote": "E",
           "pitched": true,
-          "sounding": 64,
+          "sounding": 76,
           "icon": "mi"
         },
         {
@@ -1287,7 +1287,7 @@
           "nominal": 65,
           "baseNote": "F",
           "pitched": true,
-          "sounding": 65,
+          "sounding": 77,
           "icon": "fa"
         },
         {
@@ -1295,7 +1295,7 @@
           "nominal": 67,
           "baseNote": "G",
           "pitched": true,
-          "sounding": 67,
+          "sounding": 79,
           "icon": "so"
         },
         {
@@ -1303,7 +1303,7 @@
           "nominal": 69,
           "baseNote": "A",
           "pitched": true,
-          "sounding": 69,
+          "sounding": 81,
           "icon": "la"
         },
         {
@@ -1311,7 +1311,7 @@
           "nominal": 71,
           "baseNote": "B",
           "pitched": true,
-          "sounding": 71,
+          "sounding": 83,
           "icon": "ti"
         },
         {
@@ -1319,7 +1319,7 @@
           "nominal": 48,
           "baseNote": "C",
           "pitched": true,
-          "sounding": 48,
+          "sounding": 60,
           "icon": "do"
         },
         {
@@ -1327,7 +1327,7 @@
           "nominal": 50,
           "baseNote": "D",
           "pitched": true,
-          "sounding": 50,
+          "sounding": 62,
           "icon": "re"
         },
         {
@@ -1335,7 +1335,7 @@
           "nominal": 52,
           "baseNote": "E",
           "pitched": true,
-          "sounding": 52,
+          "sounding": 64,
           "icon": "mi"
         },
         {
@@ -1343,7 +1343,7 @@
           "nominal": 53,
           "baseNote": "F",
           "pitched": true,
-          "sounding": 53,
+          "sounding": 65,
           "icon": "fa"
         },
         {
@@ -1351,7 +1351,7 @@
           "nominal": 55,
           "baseNote": "G",
           "pitched": true,
-          "sounding": 55,
+          "sounding": 67,
           "icon": "so"
         },
         {
@@ -1359,7 +1359,7 @@
           "nominal": 57,
           "baseNote": "A",
           "pitched": true,
-          "sounding": 57,
+          "sounding": 69,
           "icon": "la"
         },
         {
@@ -1367,7 +1367,7 @@
           "nominal": 59,
           "baseNote": "B",
           "pitched": true,
-          "sounding": 59,
+          "sounding": 71,
           "icon": "ti"
         }
       ]

@@ -371,6 +371,11 @@ const pixi = vi.hoisted(() => {
             return this
         }
 
+        roundShape(points: {x: number, y: number}[], radius: number) {
+            this.ops.push(['roundShape', points, radius])
+            return this
+        }
+
         circle() {
             return this
         }
@@ -716,7 +721,6 @@ import {
     proStripWidth,
     proViewAxis,
     rowForNumber,
-    zoneRowCount,
     type ProViewAxis,
 } from '$cmp/pages/Composer/proViewGeometry'
 import {songNumberSpan} from '$cmp/pages/Composer/proViewNotes'
@@ -7487,8 +7491,8 @@ describe('Audio recording does not render notes or timeline and avoids rendering
 // test/proViewGeometry.test.ts.
 //
 // mount() above cannot serve: it asserts the Compressed View's three-child stage, and a Pro View
-// stage carries five (the zone's framing and the row-label strip join it). The harness below is
-// deliberately small - it reads no scene at all.
+// stage carries six (the zone's framing, the offscreen-note arrows and the row-label strip join
+// it). The harness below is deliberately small - it reads no scene at all.
 describe('the Pro View pointer', () => {
     /**
      * A pro renderer over the same fixture song, with the two Pro View callbacks recorded.
@@ -7587,25 +7591,23 @@ describe('the Pro View pointer', () => {
         //applyCameraY has nothing to move
         await vi.advanceTimersByTimeAsync(180)
         const [app] = pixi.applications.slice(appsBefore)
-        //the Pro View's stage: columns, the zone's framing, the playhead, the row-label strip, the
-        //mini-timeline. Stated here for the reason mount() states its own three - the LAST child is
-        //what pixi hit-tests first, and the notes container being [0] is what the emits below reach.
-        expect(app.stage.children).toHaveLength(5)
+        //the Pro View's stage: columns, the zone's framing, the offscreen-note arrows, the
+        //playhead, the row-label strip, the mini-timeline. Stated here for the reason mount()
+        //states its own three - the LAST child is what pixi hit-tests first, and the notes
+        //container being [0] is what the emits below reach.
+        expect(app.stage.children).toHaveLength(6)
         const notesColumns = app.stage.children[0]
 
         //THE VIEW FUNCTION, restated from the same modules the renderer reads it from (see this
-        //part's import note): the axis this song draws on, the row height this region gives the
-        //CURRENT LAYER (the zone's own fit, capped at the game's note size - spec §4's 2026-08-21
-        //revision), and the camera the LOCKED framing puts on that layer's Editable Zone.
+        //part's import note): the axis this song draws on, the row height this region gives EVERY
+        //layer (the game's canonical fit, capped at its note size - spec §4's 2026-08-27
+        //revision), and the camera the LOCKED framing puts on a layer's Editable Zone.
         const zoneOf = (layer = 0) =>
             editableZone(
                 song.instruments[layer].name,
                 effectiveTrackPitch(song.instruments[layer], song.pitch)
             )
-        const rowHeight = proRowHeight({
-            notesRegionHeight: height,
-            zoneRowCount: zoneRowCount(zoneOf(0)),
-        })
+        const rowHeight = proRowHeight({notesRegionHeight: height})
         const axis: ProViewAxis = proViewAxis(songNumberSpan(song.columns))
         const notesTop = composerNotesRegionY(true, timelineHeight)
         const lockedCamera = (layer = 0) =>
@@ -7643,13 +7645,24 @@ describe('the Pro View pointer', () => {
             longPressEnds: () => longPressEnds,
             dismissals: () => dismissals,
             unlocks: () => unlocks,
-            /** The row height the user's own zoom multiplies the layer's fit to - see proRowHeight. */
-            rowHeightAt: (zoom: number) =>
-                proRowHeight({
-                    notesRegionHeight: height,
-                    zoneRowCount: zoneRowCount(zoneOf(0)),
-                    zoom,
-                }),
+            /**
+             * Which offscreen-zone arrow is drawn, read from the arrow Graphics' own ops (stage
+             * child 2, between the zone's framing and the playhead): a rounded shape whose TIP -
+             * its first point - is in the region's top half is the up arrow, in the bottom half
+             * the down one - drawProArrows.
+             */
+            arrows(): {top: boolean, bottom: boolean} {
+                const ops = (app.stage.children[2] as {ops: unknown[][]}).ops
+                const tips = ops
+                    .filter(op => op[0] === 'roundShape')
+                    .map(op => (op[1] as {x: number, y: number}[])[0].y)
+                return {
+                    top: tips.some(y => y < height / 2),
+                    bottom: tips.some(y => y > height / 2),
+                }
+            },
+            /** The row height the user's own zoom multiplies the shared fit to - see proRowHeight. */
+            rowHeightAt: (zoom: number) => proRowHeight({notesRegionHeight: height, zoom}),
             /**
              * A ctrl+wheel over the notes canvas - what a browser delivers for a trackpad PINCH, and
              * the Pro View's zoom (spec §7). `canvasY` is the gesture's focal point: jsdom reports
@@ -8066,16 +8079,14 @@ describe('the Pro View pointer', () => {
         }
     })
 
-    it('a zone change eases an UNLOCKED frame to the new zone, and leaves it unlocked', async () => {
-        const harness = await mountPro({viewLocked: false})
+    it('locked, a zone change eases the frame to the new zone - the lock follows the layer', async () => {
+        const harness = await mountPro({viewLocked: true})
         try {
             const number = addableNumber(harness)
             const x = harness.xOfColumn(SELECTED)
             const y = harness.yOfNumber(number, harness.lockedCamera())
-            const travel = harness.rowHeight * 3
-            harness.drag(x, y, x, y + travel)
-            //the Basepoint moves the whole Editable Zone (spec §9), which is a zone change the
-            //camera follows in either lock state
+            //the Basepoint moves the whole Editable Zone (spec §9), which is exactly what a closed
+            //lock exists to follow
             harness.song.pitch = 'B'
             harness.push()
             const zoneCamera = harness.lockedCamera()
@@ -8083,14 +8094,95 @@ describe('the Pro View pointer', () => {
             expect(harness.taps).toEqual([
                 {column: SELECTED, number: harness.numberAt(y, zoneCamera)},
             ])
-            //STILL UNLOCKED: the next drag pans exactly as the first one did - UPWARD this time,
-            //which is where the travel is. A Basepoint of B lifts the whole zone to within a row or
-            //two of the axis' top, and the frame now fits that zone exactly (spec §4's 2026-08-21
-            //revision), so a downward pan from there is clamped at 0 within the first row.
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    it('a zone change leaves an UNLOCKED frame exactly where the user put it', async () => {
+        const harness = await mountPro({viewLocked: false})
+        try {
+            const number = addableNumber(harness)
+            const x = harness.xOfColumn(SELECTED)
+            const y = harness.yOfNumber(number, harness.lockedCamera())
+            const travel = harness.rowHeight * 3
+            harness.drag(x, y, x, y + travel)
+            //the camera the pan left behind, captured BEFORE the zone moves under it
+            const pannedCamera = harness.lockedCamera() - travel
+            //the Basepoint moves the whole Editable Zone (spec §9) - and since the 2026-08-27
+            //revision an OPEN lock ignores it: the zone redraws, the camera holds still, and the
+            //row height (a game constant now) re-scales nothing under it. Was: the frame eased to
+            //the new zone's framing in either lock state.
+            harness.song.pitch = 'B'
+            harness.push()
+            //the framing really did move - what this row pins is that the camera did NOT follow it
+            expect(harness.lockedCamera()).not.toBe(pannedCamera)
+            harness.tap(x, y)
+            expect(harness.taps).toEqual([
+                {column: SELECTED, number: harness.numberAt(y, pannedCamera)},
+            ])
+            expect(harness.taps[0].number).toBe(number + 3)
+            //...and still unlocked: the next drag pans from exactly where the frame held
             harness.drag(x, y, x, y - travel)
             harness.tap(x, y)
-            expect(harness.taps[1].number).toBe(harness.numberAt(y, zoneCamera + travel))
             expect(harness.taps[1].number).toBe(harness.taps[0].number - 3)
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    it('an offscreen zone shows the arrow pointing to it, and a visible zone shows none', async () => {
+        const harness = await mountPro()
+        try {
+            //LOCKED, the framing contains the whole zone by construction: no arrow, in any game
+            expect(harness.arrows()).toEqual({top: false, bottom: false})
+            const x = harness.xOfColumn(SELECTED)
+            const focalY = harness.yOfNumber(addableNumber(harness), harness.lockedCamera())
+            //zoom to the ceiling (which unlocks the view), so the window is a third of the
+            //canonical frame and fits inside axis bands no zone reaches at Basepoint C...
+            for (let notch = 0; notch < 12; notch++) harness.wheelZoom(-400, focalY)
+            harness.push()
+            //...the TOPMOST band: the axis padding plus the full Basepoint lift stand above every
+            //zone at C, so parked at the axis' top the zone is wholly BELOW the window and the
+            //arrow stands at the bottom edge, pointing down toward it
+            harness.drag(x, focalY, x, focalY + harness.height * 8)
+            expect(harness.arrows()).toEqual({top: false, bottom: true})
+            //Basepoint B lifts the zone clear of the axis' bottom band (the unlocked camera holds
+            //still through the zone change), so parked at the very bottom the zone is wholly
+            //ABOVE the window and the arrow flips to the top edge
+            harness.song.pitch = 'B'
+            harness.push()
+            harness.drag(x, focalY, x, focalY - harness.height * 12)
+            expect(harness.arrows()).toEqual({top: true, bottom: false})
+            //the edge WITHOUT an arrow stays ordinary cells: a tap on the bottom band, while the
+            //arrow is at the top, is the cell's own tap
+            const taps = harness.taps.length
+            harness.tap(CANVAS_WIDTH / 2, harness.notesTop + harness.height - 8)
+            expect(harness.taps.length).toBe(taps + 1)
+            //...AND A TAP ON THE ARROW ITSELF IS NAVIGATION: no cell tap, the zone centred in the
+            //region at the CURRENT zoom - the locked framing's own arithmetic, without re-locking
+            harness.tap(CANVAS_WIDTH / 2, harness.notesTop + 10)
+            expect(harness.taps.length).toBe(taps + 1)
+            expect(harness.arrows()).toEqual({top: false, bottom: false})
+            const rowHeight = harness.rowHeightAt(PRO_ZOOM_MAX)
+            const centred = lockedCameraY({
+                axis: harness.axis,
+                zone: editableZone(
+                    harness.song.instruments[0].name,
+                    effectiveTrackPitch(harness.song.instruments[0], harness.song.pitch)
+                ),
+                rowHeight,
+                notesRegionHeight: harness.height,
+            })
+            harness.tap(x, focalY)
+            expect(harness.taps.at(-1)!.number).toBe(
+                numberAtY({
+                    axis: harness.axis,
+                    y: focalY - harness.notesTop,
+                    cameraY: centred,
+                    rowHeight,
+                })
+            )
         } finally {
             harness.destroy()
         }

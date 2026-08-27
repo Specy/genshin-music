@@ -498,6 +498,36 @@ export function addressableSpan(): {min: number, max: number} {
     return addressable
 }
 
+// Build-time like `addressable` above, and paid once for the same reason.
+let widestSpan: number | null = null
+
+/**
+ * THE WIDEST SEMITONE SPAN any single instrument's sounding table covers, ends included — the
+ * CANONICAL frame the Pro View sizes its rows by (proViewGeometry.proRowHeight, user revision
+ * 2026-08-27). A game constant: Basepoint-independent by construction (an offset shifts a table's
+ * two ends together), and scanned over the complete registry for addressableSpan's own reason —
+ * an Unlisted Instrument is still loadable, and its zone must fit the frame like every other's.
+ */
+export function widestInstrumentSpan(): number {
+    if (widestSpan !== null) return widestSpan
+    let widest = -Infinity
+    for (const name of Object.keys(INSTRUMENTS_DATA)) {
+        let min = Infinity
+        let max = -Infinity
+        for (const sounding of getSoundingTable(name)) {
+            if (sounding < min) min = sounding
+            if (sounding > max) max = sounding
+        }
+        const span = max - min + 1
+        if (Number.isFinite(span) && span > widest) widest = span
+    }
+    // Same guard as addressableSpan: registry validation makes an empty registry unreachable, and
+    // a finite fallback keeps a corrupt build's row arithmetic finite — proRowHeight's cap term
+    // (the game's base layout) simply wins its min() and decides the row height alone.
+    widestSpan = Number.isFinite(widest) ? widest : 1
+    return widestSpan
+}
+
 // QUIRK: plain module-level Map cache, not reactive — same reasoning as reverseCache.
 // eslint-disable-next-line svelte/prefer-svelte-reactivity
 const soundingReverseCache = new Map<string, Map<number, number>>()
