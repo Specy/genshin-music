@@ -62,6 +62,28 @@ export const TIMELINE_BAND_PADDING = 0;
 const RECLAIMED_TIMELINE_PADDING = TIMELINE_BUTTON_MARGIN * 2;
 
 /**
+ * `.canvas-buttons`'s `min-width: 2.8rem` in src/lib/css/App.css - the footprint of the two
+ * previous/next-column chevrons that float over the canvas' left and right edges, and THE WIDTH OF
+ * THE TWO BANDS A RULER SCRUB CREEPS IN (CONTEXT.md: Ruler Scrub).
+ *
+ * ONE STATEMENT OF THE COUPLING, in the same shape TIMELINE_BUTTON_SIZE states the mini-timeline's:
+ * the stylesheet places the DOM buttons and this file hands the same px to the pixi side, so the
+ * band a finger auto-scrolls in and the button it is pushing against are one rectangle rather than
+ * two that happen to agree. test/composerCanvasCss.test.ts keeps the two sides together.
+ *
+ * THE BAND IS THE BUTTON'S GEOMETRY AND NOT ITS EXISTENCE. Those chevrons are `display: none` on
+ * desktop pointers at wide widths, and the `useKeyboardSideButtons` setting replaces them with keys
+ * outright - the creep bands are live in all three cases, because what they are is "the edge of the
+ * canvas, as wide as this app has always called an edge", and a gesture that changed shape with a
+ * media query would be a gesture nobody could learn. See ComposerRenderer.advanceRulerCreep.
+ *
+ * The LEFT band starts at the row-label strip's inner edge rather than at x 0, which is where
+ * ComposerCanvas.svelte puts the left chevron (`left: {stripInset}px`, from proStripWidth) so it
+ * does not stand on the pitch labels; the RIGHT one ends at the canvas' own edge (`right: 0`).
+ */
+export const CANVAS_SIDE_BUTTON_WIDTH = 2.8 * ROOT_FONT_SIZE;
+
+/**
  * THE COLUMN RULER'S HEIGHT, in px - THE SAME NUMBER ON DESKTOP AND ON PHONES (CONTEXT.md: Column
  * Ruler, Ruler Scrub; spec 2026-08-27 §2).
  *

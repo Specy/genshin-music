@@ -458,6 +458,10 @@ describe('every input surface runs the one note-press machine', () => {
     const code = functionCode('openDurationPopover');
     expect(code).toContain('if (isPlaying) return');
     expect(code).toContain('supportsSustain');
+    //THE CAPABILITY GATE COMES FIRST, before the press record is even looked up - which is what
+    //lets a non-sustaining press leave no record at all (see the block below) without this path
+    //having to know it: the hold clock still fires here, and still finds nothing to open
+    expect(code.indexOf('supportsSustain')).toBeLessThan(code.indexOf('notePresses.get'));
     //a hold over a span's TAIL edits the note that owns the tail, not the column under the key
     expect(code).toContain('press.coveringStart ?? song.selected');
     //the same group the canvas' hold opens, and the popover's dismissal is what closes it
@@ -484,6 +488,89 @@ describe('every input surface runs the one note-press machine', () => {
     //a sustain being recorded
     expect(code).toContain('noteHolds.keys()');
     expect(code).toContain("entriesOfSource('keyboard')");
+  });
+});
+
+/**
+ * WHERE THE REMOVAL LANDS (user revision 2026-08-27): the whole tap resolves at the DOWN edge on an
+ * instrument that cannot sustain, and only a sustaining one still defers it to the release.
+ *
+ * THE REASON IS THE POPOVER AND NOTHING ELSE: the release half exists so a hold can turn into a
+ * Duration Hold without the note it means to edit having been deleted first, and
+ * `openDurationPopover` refuses every instrument whose config says `supportsSustain: false`. So on
+ * those the wait bought nothing and cost a press of latency on every deselect.
+ *
+ * Policy assertions again, for this block's own reason as well as the file's: the rule is a branch
+ * inside a stateful machine in a 3000-line component, and what a runtime test could not see anyway
+ * is the thing that MUST hold - that the shortcut leaves NO press record, which is what makes the
+ * release a no-op by construction instead of by a second copy of the same condition. Capability
+ * comes from the instrument config, never from which game is loaded, so both PUBLIC_GAMEs assert
+ * identical rows here as everywhere else in this file.
+ */
+describe('a tap that cannot become a Duration Hold finishes at the down edge', () => {
+  const begin = functionCode('beginNotePress');
+  /** The press half up to the first record it keeps - everything the non-sustaining tap can reach. */
+  const nonSustaining = begin.slice(
+    begin.indexOf('!layers[layer]?.supportsSustain'),
+    begin.indexOf('notePresses.set')
+  );
+
+  it('reads the capability off the layer\'s instrument rather than the game', () => {
+    expect(begin).toContain('!layers[layer]?.supportsSustain');
+    //...and the sound comes first either way: a press is heard before it is decided
+    expect(begin.indexOf('playSound(layer, id)')).toBeLessThan(begin.indexOf('supportsSustain'));
+    //a locked song is still only an audition, ahead of every edit branch
+    expect(begin.indexOf('playAuditionSound')).toBeLessThan(begin.indexOf('supportsSustain'));
+  });
+
+  it('removes AND adds in the same breath as the press', () => {
+    expect(nonSustaining).toContain('song.addNoteAt(song.selected, layer, id)');
+    expect(nonSustaining).toContain('song.removeNoteAt(song.selected, layer, id)');
+    //both halves ride the autosave funnel the deferred path rode on the way up
+    expect(nonSustaining).toContain('handleAutoSave()');
+  });
+
+  it('keeps the occupancy rule: a covered button sounds and does nothing', () => {
+    //a span CAN sit on a non-sustaining track - swapping the instrument leaves the authored spans
+    //behind - so this branch is reachable and must stay inert, exactly as the release resolved it
+    expect(nonSustaining.indexOf('if (covering) return')).toBeGreaterThanOrEqual(0);
+    expect(nonSustaining.indexOf('if (covering) return')).toBeLessThan(
+      nonSustaining.indexOf('song.addNoteAt')
+    );
+  });
+
+  it('leaves no press record behind, which is what makes the release a no-op', () => {
+    //the branch RETURNS before the record-keeping half of the function begins: the slice above ends
+    //at the first `notePresses.set`, so a record written on this path would show up inside it
+    expect(nonSustaining).not.toContain('notePresses');
+    expect(nonSustaining.lastIndexOf('return;')).toBeGreaterThan(
+      nonSustaining.indexOf('handleAutoSave()')
+    );
+    //...and the release half is unchanged for it: no record, nothing done, no branch of its own
+    const end = functionCode('endNotePress');
+    expect(end).toContain('if (!press) return');
+    expect(end).not.toContain('supportsSustain');
+    expect(end.indexOf('if (!press) return')).toBeLessThan(end.indexOf('removeNoteAt'));
+  });
+
+  it('a sustaining instrument still defers its removal to the release, untouched', () => {
+    //the record the popover reads (`coveringStart` for a hold over a span's tail) and the deferred
+    //existence flag both still only exist past the gate
+    expect(begin).toContain('coveringStart: covering.startColumn');
+    expect(begin).toContain('existedAtPress: existing !== null');
+    const end = functionCode('endNotePress');
+    //a short press removes, a hold that opened the popover edits nothing, covered toggles nothing
+    expect(end).toContain('press.existedAtPress');
+    expect(end).toContain('if (press.longPressFired) return');
+    expect(end).toContain('press.coveringStart !== null');
+    expect(end).toContain('song.removeNoteAt(song.selected, layer, id)');
+  });
+
+  it('the interrupted-hold and abandon paths still read an empty map as "nothing to do"', () => {
+    //the two consumers that survive a press which recorded nothing: abandonNoteHolds never touched
+    //the press map to begin with, and the whole-map drop is a clear() that is happy to be empty
+    expect(functionCode('abandonNoteHolds')).not.toContain('notePresses');
+    expect(functionCode('abandonNotePresses')).toContain('notePresses.clear()');
   });
 });
 

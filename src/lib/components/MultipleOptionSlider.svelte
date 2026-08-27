@@ -1,4 +1,7 @@
 <script module lang="ts">
+  import type { Snippet } from 'svelte';
+  import type { TooltipPosition } from './utility/tooltip';
+
   // `Option<T>` lives in this module block, not the generics-attributed
   // instance script below, because only a `<script module>` block's exports
   // are real ES exports a consumer can import.
@@ -6,20 +9,38 @@
     value: T;
     text: string;
     color: string;
+    /**
+     * Drawn in place of the label. `text` does not go unused when there is one - it becomes the
+     * option's tooltip and its accessible name, which is all that names a button whose face is a
+     * glyph. An option either wears its label or wears an icon; there is no room in the pill for
+     * both, and a mixed row would leave the icons' neighbours reading as the only pressable ones.
+     */
+    icon?: Snippet;
+    /**
+     * Which side this option's tooltip opens on - only an ICON option has one. The default
+     * (`bottom`, centred on the button) is right for a slider with room around it and wrong for
+     * one parked against the window's edge, where the outermost option's tooltip opens off the
+     * page: the player's mode switcher points its last option's inward for that reason.
+     */
+    tooltipPosition?: TooltipPosition;
   };
 </script>
 
 <script lang="ts" generics="T extends string">
   import { capitalize } from '$core/utils/Utilities';
+  import Tooltip from './utility/Tooltip.svelte';
+  import { hasTooltip } from './utility/tooltip';
 
   let {
     options,
     selected,
     onChange,
+    style,
   }: {
     options: Option<T>[];
     selected: T;
     onChange: (value: T) => void;
+    style?: string;
   } = $props();
 
   let rootEl: HTMLDivElement | undefined = $state();
@@ -62,14 +83,29 @@
 <div
   class="multiple-option-slider"
   bind:this={rootEl}
-  style="border: solid 0.1rem {selectedOption?.color ?? 'var(--accent)'}"
+  style="border: solid 0.1rem {selectedOption?.color ?? 'var(--accent)'}; {style}"
 >
   {#each options as option (option.value)}
+    <!-- `data-value` is the button saying WHICH option it is - the one thing about it that is not
+         readable off a glyph face, and the handle a test or a host stylesheet addresses it by. -->
     <button
       onclick={() => onChange(option.value)}
-      class={option === selectedOption ? 'multiple-options-selected' : ''}
+      data-value={option.value}
+      aria-label={option.icon ? option.text : undefined}
+      class={[
+        option === selectedOption && 'multiple-options-selected',
+        option.icon && 'multiple-option-icon',
+        hasTooltip(Boolean(option.icon)),
+      ]}
     >
-      {capitalize(option.text)}
+      {#if option.icon}
+        {@render option.icon()}
+        <Tooltip position={option.tooltipPosition}>
+          {option.text}
+        </Tooltip>
+      {:else}
+        {capitalize(option.text)}
+      {/if}
     </button>
   {/each}
   {#if overlayState}
@@ -117,6 +153,18 @@
     color: var(--accent-text) !important;
   }
 
+  /* AN OPTION WHOSE FACE IS A GLYPH. Its label moved into the tooltip, so the padding no longer has
+     to hold a localized word and tightens to a square-ish target - three of these have to stand in
+     the player's right-hand column beside the visual sheet, which is the narrowest place this
+     component is used. Written as a descendant of the root so it outweighs the label padding above,
+     which is a (0,1,1) selector this class alone would lose to. */
+  .multiple-option-slider .multiple-option-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 0.6rem;
+  }
+
   .multiple-option-slider-overlay {
     transition: all 0.15s ease-out;
     position: absolute;
@@ -129,6 +177,10 @@
   @media only screen and (max-width: 1000px) {
     .multiple-option-slider button {
       padding: 0 1rem;
+    }
+
+    .multiple-option-slider .multiple-option-icon {
+      padding: 0 0.6rem;
     }
   }
 </style>

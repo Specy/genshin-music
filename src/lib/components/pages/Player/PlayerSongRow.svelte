@@ -20,6 +20,9 @@
   import FloatingDropdownRow from '$cmp/utility/FloatingDropdownRow.svelte';
   import FloatingDropdownText from '$cmp/utility/FloatingDropdownText.svelte';
   import FaEllipsisH from '$cmp/icons/FaEllipsisH.svelte';
+  import IconMusic from '~icons/fa6-solid/music';
+  import IconCrosshairs from '~icons/fa6-solid/crosshairs';
+  import IconCircle from '~icons/fa6-regular/circle';
   import Tooltip from '$cmp/utility/Tooltip.svelte';
   import { hasTooltip } from '$cmp/utility/tooltip';
   import AppLink from '$cmp/AppLink.svelte';
@@ -111,36 +114,6 @@
     functions.downloadSong(song.toMidi());
   }
 </script>
-
-{#snippet faCrosshairsIcon()}
-  <svg
-    stroke="currentColor"
-    fill="currentColor"
-    stroke-width="0"
-    viewBox="0 0 512 512"
-    height="1em"
-    width="1em"
-    xmlns="http://www.w3.org/2000/svg"
-    ><path
-      d="M500 224h-30.364C455.724 130.325 381.675 56.276 288 42.364V12c0-6.627-5.373-12-12-12h-40c-6.627 0-12 5.373-12 12v30.364C130.325 56.276 56.276 130.325 42.364 224H12c-6.627 0-12 5.373-12 12v40c0 6.627 5.373 12 12 12h30.364C56.276 381.675 130.325 455.724 224 469.636V500c0 6.627 5.373 12 12 12h40c6.627 0 12-5.373 12-12v-30.364C381.675 455.724 455.724 381.675 469.636 288H500c6.627 0 12-5.373 12-12v-40c0-6.627-5.373-12-12-12zM288 404.634V364c0-6.627-5.373-12-12-12h-40c-6.627 0-12 5.373-12 12v40.634C165.826 392.232 119.783 346.243 107.366 288H148c6.627 0 12-5.373 12-12v-40c0-6.627-5.373-12-12-12h-40.634C119.768 165.826 165.757 119.783 224 107.366V148c0 6.627 5.373 12 12 12h40c6.627 0 12-5.373 12-12v-40.634C346.174 119.768 392.217 165.757 404.634 224H364c-6.627 0-12 5.373-12 12v40c0 6.627 5.373 12 12 12h40.634C392.232 346.174 346.243 392.217 288 404.634zM288 256c0 17.673-14.327 32-32 32s-32-14.327-32-32c0-17.673 14.327-32 32-32s32 14.327 32 32z"
-    /></svg
-  >
-{/snippet}
-
-{#snippet faRegCircleIcon()}
-  <svg
-    stroke="currentColor"
-    fill="currentColor"
-    stroke-width="0"
-    viewBox="0 0 512 512"
-    height="1em"
-    width="1em"
-    xmlns="http://www.w3.org/2000/svg"
-    ><path
-      d="M256 8C119 8 8 119 8 256s111 248 248 248 248-111 248-248S393 8 256 8zm0 448c-110.5 0-200-89.5-200-200S145.5 56 256 56s200 89.5 200 200-89.5 200-200 200z"
-    /></svg
-  >
-{/snippet}
 
 {#snippet faPenIcon()}
   <svg
@@ -254,13 +227,25 @@
       </Tooltip>
     </div>
     <div class="song-buttons-wrapper">
+      <!-- ONE BUTTON PER MODE, play included: clicking the song's name starts it in play mode and
+           always has, but that is a target nothing marks as a button next to two that are - so the
+           three modes are offered as three glyphs, and this one calls the very same `playSong`. -->
+      <SongActionButton
+        onclick={playSong}
+        tooltip={t('menu:play_song')}
+        ariaLabel={t('menu:play_song')}
+        style={buttonStyle}
+      >
+        <IconMusic />
+      </SongActionButton>
+
       <SongActionButton
         onclick={practiceSong}
         ariaLabel={t('player:practice_mode_description', { song_name: data.name })}
         tooltip={t('player:practice_mode')}
         style={buttonStyle}
       >
-        {@render faCrosshairsIcon()}
+        <IconCrosshairs />
       </SongActionButton>
 
       <SongActionButton
@@ -269,7 +254,7 @@
         ariaLabel={t('player:approach_mode_description', { song_name: data.name })}
         style={buttonStyle}
       >
-        {@render faRegCircleIcon()}
+        <IconCircle />
       </SongActionButton>
       <FloatingDropdown
         Icon={FaEllipsisH}

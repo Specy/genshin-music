@@ -114,6 +114,7 @@ import {
 } from './proViewNotes';
 import { ComposerCache, noteTextureKey, type ComposerCacheData } from './ComposerCache';
 import {
+  CANVAS_SIDE_BUTTON_WIDTH,
   COLUMN_RULER_HEIGHT,
   TIMELINE_BAND_PADDING,
   TIMELINE_INSET_LEFT,
@@ -127,9 +128,10 @@ import {
 } from './composerCanvasGeometry';
 // THE COLUMN RULER'S CADENCE (CONTEXT.md: Column Ruler; spec 2026-08-27 §4), in the same pixi-free
 // shape proViewGeometry and composerInput are in: which columns of the top band carry a printed
-// timestamp, and what each one reads. Read on a `state.proView` branch and nowhere else - the
-// Compressed View has no ruler at all (its mini-timeline is at the BOTTOM, so "below the timeline"
-// does not parse there, and a stage tap already selects the column).
+// timestamp, what each one reads, and - `rulerEdgeScrollAt` - whether a held scrub is pushing
+// against an edge band and how fast it creeps there. Read on a `state.proView` branch and nowhere
+// else - the Compressed View has no ruler at all (its mini-timeline is at the BOTTOM, so "below
+// the timeline" does not parse there, and a stage tap already selects the column).
 //
 // `columnRulerBarLength` is deliberately NOT imported: it is a mirror of this class' own
 // counterLimit(), and the renderer passes counterLimit() itself as `barLength` rather than
@@ -141,6 +143,7 @@ import {
   columnRulerLabelStep,
   columnRulerLabels,
   isColumnRulerLabel,
+  rulerEdgeScrollAt,
 } from './columnRuler';
 import {
   COMPOSER_TIMELINE_MINIMAP_CONFIG,
@@ -1231,24 +1234,45 @@ type Motion =
    * It is the one motion both modes reach. While smooth scrolling is OFF the handlers write it
    * through snapManualPosition, so it holds a whole column and moves once per column crossed.
    *
-   * THE `ruler` SURFACE IS THE ONE THAT NEVER WRITES `position` (CONTEXT.md: Ruler Scrub; spec §6),
-   * and that omission IS the gesture rather than a gap in it. A Ruler Scrub holds the canvas STILL
-   * while the selection follows the finger, and "still" is not a state this class has: what it has
-   * is `syncScrollSchedule` returning at its first statement for as long as a drag runs, so every
-   * playback tick, snap and re-anchor is suspended and the frames go on painting whatever
-   * `position` holds. Entered once at the press with the position the canvas is already at and left
-   * alone, that is a canvas that does not move - for exactly as long as the finger is down, which
-   * is ADR-0014's "the suspension is bounded by the gesture". The release eases to `state.selected`
-   * and the invariant is back.
+   * ON THE `ruler` SURFACE THE FINGER NEVER WRITES `position` - THE EDGE BANDS CREEP IT
+   * (CONTEXT.md: Ruler Scrub; spec §6 and its 2026-08-27 USER REVISION). A Ruler Scrub holds the
+   * canvas STILL while the selection follows the finger, and "still" is not a state this class has:
+   * what it has is `syncScrollSchedule` returning at its first statement for as long as a drag runs,
+   * so every playback tick, snap and re-anchor is suspended and the frames go on painting whatever
+   * `position` holds. Entered once at the press with the position the canvas is already at, that is
+   * a canvas that does not move - for exactly as long as the finger is down, which is ADR-0014's
+   * "the suspension is bounded by the gesture". The release eases to `state.selected` and the
+   * invariant is back.
+   *
+   * THE ONE WRITER IS advanceRulerCreep, ON THE FRAME AND NOT ON A MOVE, which is what keeps the
+   * sentence above true of the finger: a scrub pushed into either edge band walks the position
+   * toward the song's start or end at a speed the band's depth sets, and a scrub anywhere else
+   * writes nothing at all, ever. It is a frame writer BECAUSE a finger held motionless in the band
+   * emits no pointer events - the creep is a state the hand holds, not a motion it makes - and the
+   * frames are already running for the whole of any drag by the Ticker rule above.
    *
    * REJECTED: a fourth `kind` for it, or a `frozen` flag beside the position. Both would put a
    * second answer to "what is moving the canvas" in the union - and every branch that reasons about
    * a drag (the hitarea deferrals, the wheel's abdication, the schedule's suspension, the repaint
    * suppression update() lifts for this surface alone) wants exactly the drag's answer here. What
-   * distinguishes a Ruler Scrub from the other two is not what is moving the position; it is that
-   * nothing is.
+   * distinguishes a Ruler Scrub from the other two is not what moves the position; it is what does
+   * not - the finger.
    */
   | { kind: 'dragging'; surface: 'stage' | 'timeline' | 'ruler'; position: number };
+
+/**
+ * A RULER SCRUB IN PROGRESS - see the `rulerPointer` field, which is the only thing that ever holds
+ * one, for what each field is and why. Named rather than written inline there because two methods
+ * take one as a parameter (crossRulerColumn from the move path and from the creep's frame).
+ */
+interface RulerScrub {
+  id: number;
+  column: number;
+  soundedAtMs: number;
+  lastX: number;
+  creepPosition: number;
+  creepAtMs: number;
+}
 
 /**
  * ONE COLUMN'S WORTH OF PLAYHEAD TRAVEL, as an absolute wall-clock schedule: between `startMs` and
@@ -1868,8 +1892,9 @@ export class ComposerRenderer {
   } | null = null;
   /**
    * THE RULER SCRUB IN PROGRESS, or null for "no pointer is down on the band" (CONTEXT.md: Ruler
-   * Scrub; spec §6). stagePointer's counterpart for this surface, and it carries the three things a
-   * scrub is - who owns it, where it has got to, and when it last made a sound - and nothing else.
+   * Scrub; spec §6 and its 2026-08-27 USER REVISION). stagePointer's counterpart for this surface,
+   * and it carries what a scrub is - who owns it, where it has got to, when it last made a sound,
+   * and where the finger is STANDING - and nothing else.
    *
    * `id` IS THE ONE-GESTURE-AT-A-TIME RULE, and it is here for the reason stagePointer's is rather
    * than by symmetry: pixi dispatches per pointerId AND per mouse button, so "a second pointer" is a
@@ -1892,8 +1917,24 @@ export class ComposerRenderer {
    * which SOUNDS, so the window opens closed and the first crossing of a slow scrub is already past
    * it. On the shared now() timebase, like stagePointer.samples, so the tests drive it with the same
    * fake clock everything else in this class is driven with.
+   *
+   * `lastX` IS WHERE THE FINGER IS STANDING, in canvas x, written at the press and by every move -
+   * and it is here because the EDGE CREEP is driven by the frames rather than by the pointer stream.
+   * A finger held motionless in an edge band emits no events at all, so the thing that has to keep
+   * asking "is it still pushing?" is advanceRulerCreep on the Ticker, and the only x it can ask
+   * about is the last one an event reported. Canvas x and not band-local, because that is what
+   * rulerColumnAt and rulerEdgeScrollAt both take.
+   *
+   * `creepPosition` IS THE CREEP'S OWN UNROUNDED POSITION, and it exists because `motion.position`
+   * cannot hold one while snapping: with smooth scrolling off the Motion invariant says a dragging
+   * position is a whole column at EVERY instant, so the motion is written through
+   * snapManualPosition and reading it back as the creep's accumulator would round 2 columns/second
+   * away to nothing every frame. Seeded from the motion's own starting position at the press.
+   *
+   * `creepAtMs` is the instant the last creep frame integrated up to - the dt the next one advances
+   * over, on the same now() timebase as `soundedAtMs`.
    */
-  private rulerPointer: { id: number; column: number; soundedAtMs: number } | null = null;
+  private rulerPointer: RulerScrub | null = null;
   /** The last canvas x of a mouse over the ruler, or null when it is not being hovered. */
   private rulerHoverX: number | null = null;
   /**
@@ -4852,7 +4893,12 @@ export class ComposerRenderer {
    * the frame rate coalesces here, and a schedule stalled on a late tick costs this call and nothing
    * else.
    *
-   * THE COAST IS THE ONE MOTION WHOSE FRAME ALSO PUBLISHES: each floor crossing hands selectColumn
+   * TWO MOTIONS PUBLISH FROM THEIR OWN FRAMES, and they are the two that have no other writer: the
+   * Coast, below, and a Ruler Scrub's edge creep, which runs at the top of this method and reaches
+   * the selection through crossRulerColumn - see advanceRulerCreep for why the frame is the only
+   * place a held, motionless finger can be noticed at all.
+   *
+   * THE COAST: each floor crossing hands selectColumn
    * the column under the playhead - ignoreAudio, at most once per column, the drag's own rule, so
    * Coasted columns are selected and never sounded. Its arrival settles the way the ease's does,
    * and needs no publish of its own: `to` is a whole column, so the frame that reaches it has an
@@ -4872,6 +4918,13 @@ export class ComposerRenderer {
     //switch eases the framing while nothing is scrolling, which is what stopMotionFrames defers to.
     //A no-op in the Compressed View, where `cameraEase` is never assigned.
     if (this.cameraEase) this.advanceCameraEase(now);
+    //...THEN THE RULER SCRUB'S EDGE CREEP, which is the one thing that WRITES a motion position from
+    //inside this loop rather than reading one: a finger held against an edge band emits no events,
+    //so its push has to be re-asked per frame. It writes `motion.position`, so it must run before
+    //motionPositionAt reads it - a creep applied after the read would paint one frame late and would
+    //publish a column against an offset the canvas no longer has. A no-op unless a Ruler Scrub is
+    //live and standing in a band; there is no such thing outside the Pro View.
+    if (this.rulerPointer) this.advanceRulerCreep(now);
     const position = this.motionPositionAt(now);
     if (position === null) return;
     if (this.motion.kind === 'easing' && position === this.motion.to)
@@ -5025,9 +5078,17 @@ export class ComposerRenderer {
     return this.state.smoothScroll ? position : Math.round(position);
   }
 
-  /** The column under a canvas x, fractional - the inverse of the offset containerX() applies. */
-  private columnAtCanvasX(x: number): number {
-    return this.scrollPosition + (x - this.playheadX()) / this.columnSize.width;
+  /**
+   * The column under a canvas x, fractional - the inverse of the offset containerX() applies.
+   *
+   * `position` defaults to where the canvas IS, which is what every hit test wants. The edge creep
+   * passes the position it has just written into the motion and the frame has not applied yet, so
+   * the column it publishes is the one the finger will be over once this same frame paints - a
+   * crossing computed against the pre-creep offset would name the column one frame behind the
+   * pixels.
+   */
+  private columnAtCanvasX(x: number, position = this.scrollPosition): number {
+    return position + (x - this.playheadX()) / this.columnSize.width;
   }
 
   /** Convert the WheelEvent's declared unit to the screen pixels the stage drag is stated in. */
@@ -5908,9 +5969,17 @@ export class ComposerRenderer {
   // merely inert. That is the same shape the Pro View's other input has - `proTapTargetAt` is
   // reached only from a branch stageReleaseIntent already decided.
 
-  /** The one column addressed by a ruler x, shared by hover, press and scrub. */
-  private rulerColumnAt(globalX: number): number {
-    return clamp(Math.floor(this.columnAtCanvasX(globalX)), 0, this.state.columns.length - 1);
+  /**
+   * The one column addressed by a ruler x, shared by hover, press, scrub and creep. `position` is
+   * the scroll the x is resolved against and defaults to the canvas' own - see columnAtCanvasX for
+   * the one caller that passes anything else.
+   */
+  private rulerColumnAt(globalX: number, position?: number): number {
+    return clamp(
+      Math.floor(this.columnAtCanvasX(globalX, position)),
+      0,
+      this.state.columns.length - 1
+    );
   }
 
   /** A mouse hover previews the ruler's column resolution without selecting or sounding it. */
@@ -5939,7 +6008,8 @@ export class ComposerRenderer {
    * wait, because a press on this band can only ever mean "that column": it cannot become an edit,
    * a pan or a pinch, and a press that never moves is a tap on the column it landed on. So the drag
    * motion is entered here, at the press, and the whole of what makes the canvas hold still is that
-   * nothing ever writes its `position` again (see the Motion type's `ruler` paragraph).
+   * the FINGER never writes its `position` - only a push into one of the two edge bands does, on
+   * the frame rather than on a move (see the Motion type's `ruler` paragraph and advanceRulerCreep).
    *
    * WITH AUDIO, and unconditionally - `selectColumn` is called with no `ignoreAudio` and with no
    * `column !== state.selected` guard, which is the one place this surface deliberately differs from
@@ -5965,18 +6035,25 @@ export class ComposerRenderer {
     const column = this.rulerColumnAt(e.globalX);
     //A mouse release stays a hover until pointerout; touch and pen have no persistent hover.
     this.rulerHoverX = e.pointerType === 'mouse' ? e.globalX : null;
-    this.rulerPointer = { id: e.pointerId, column, soundedAtMs: this.now() };
+    const position = this.snapManualPosition(this.scrollPosition);
+    this.rulerPointer = {
+      id: e.pointerId,
+      column,
+      soundedAtMs: this.now(),
+      //THE CREEP IS ARMED BY THE PRESS, wherever it landed: a press that goes straight down inside
+      //an edge band starts walking on its very first frame, with no move needed to arm it. See
+      //advanceRulerCreep, and rulerPointer for what these three fields are.
+      lastX: e.globalX,
+      creepPosition: position,
+      creepAtMs: this.now(),
+    };
     //THE MOTION IS ENTERED BEFORE THE SELECTION IS PUBLISHED, which is an ordering claim and not a
     //style: `selectColumn` is what suspends the schedule's authority over the canvas, and an update
     //carrying the new column that arrived while the motion was still `resting` would take
     //syncScrollSchedule's snap branch and slide the canvas onto it - the one thing this gesture
     //promises not to do. Svelte's round-trip is a microtask, so no hand can produce that ordering;
     //writing it the other way round would leave the promise resting on that fact.
-    this.enterMotion({
-      kind: 'dragging',
-      surface: 'ruler',
-      position: this.snapManualPosition(this.scrollPosition),
-    });
+    this.enterMotion({ kind: 'dragging', surface: 'ruler', position });
     this.callbacks.selectColumn(column);
     //the flag is under the finger from the press onwards, on this frame rather than after the
     //round-trip above comes back - see syncRulerCursorMark
@@ -5994,16 +6071,19 @@ export class ComposerRenderer {
    * pointer stream is. Only the `ignoreAudio` argument is throttled, so a sweep is a sparse run
    * through the song rather than a wall of voices - see RULER_SCRUB_AUDIO_MS.
    *
-   * NOTHING IS WRITTEN INTO THE MOTION. That is the entire mechanism of "the canvas holds still",
+   * THE FINGER WRITES NOTHING INTO THE MOTION. That is the mechanism of "the canvas holds still",
    * and the omission is the code: `syncScrollSchedule` is already suspended for the length of any
-   * drag, so a `position` nobody moves is a canvas nobody moves.
+   * drag, so a `position` the moves never touch is a canvas the moves never move. The one thing
+   * that does write it is the frame, and only while the finger is inside an edge band - see
+   * advanceRulerCreep, which reaches the selection through crossRulerColumn below exactly as this
+   * does.
    *
    * IT REPAINTS ITSELF, which the drag handlers above deliberately do not. They write a position and
-   * let the frame apply it; this one has no position to write, so the frame it would ride on paints
-   * nothing at all (motionPositionAt returns the same number every time). The mark's other half -
-   * the selected-column overlay - travels back through Svelte and lands in update(), which lifts its
-   * drag suppression for this surface alone; see the paragraph at that branch for why the two are
-   * different repaints rather than one.
+   * let the frame apply it; this one has no position to write, so outside the edge bands the frame
+   * it would ride on paints nothing at all (motionPositionAt returns the same number every time).
+   * The mark's other half - the selected-column overlay - travels back through Svelte and lands in
+   * update(), which lifts its drag suppression for this surface alone; see the paragraph at that
+   * branch for why the two are different repaints rather than one.
    */
   private handleRulerSlide = (e: FederatedPointerEvent) => {
     const pointer = this.rulerPointer;
@@ -6012,6 +6092,9 @@ export class ComposerRenderer {
     if (e.pointerId !== pointer.id) return;
     const motion = this.motion;
     if (motion.kind !== 'dragging' || motion.surface !== 'ruler') return;
+    //WHERE THE FINGER IS STANDING, recorded on every move whether or not it crossed anything: it is
+    //the only x the creep's frames have to ask their zone question about - see rulerPointer.
+    pointer.lastX = e.globalX;
     const column = this.rulerColumnAt(e.globalX);
     if (e.pointerType === 'mouse') {
       const inside =
@@ -6021,7 +6104,26 @@ export class ComposerRenderer {
         e.globalY <= this.columnRulerStrip.y + COLUMN_RULER_HEIGHT;
       this.rulerHoverX = inside ? e.globalX : null;
     }
-    if (column === pointer.column) return;
+    if (!this.crossRulerColumn(pointer, column)) return;
+    this.syncRulerCursorMark();
+  };
+
+  /**
+   * ONE COLUMN CROSSING OF A RULER SCRUB, whatever moved the finger over it - the hand (a
+   * pointermove) or the canvas creeping underneath a hand that is not moving at all
+   * (advanceRulerCreep). Both reach the selection through here so that the crossing rule is written
+   * once: the two paths differ in what changed the answer to "which column is under the finger",
+   * never in what a change to that answer means.
+   *
+   * THE CROSSING TEST IS AGAINST THE SCRUB'S OWN LAST COLUMN and never `state.selected` - see
+   * rulerPointer's `column` for the round-trip gap that makes those two different questions - and
+   * only the `ignoreAudio` argument is throttled, so every column is selected in order however fast
+   * the crossings arrive while the previews stay a sparse run through the song.
+   *
+   * @returns whether anything was published, which is what the callers repaint on.
+   */
+  private crossRulerColumn(pointer: RulerScrub, column: number): boolean {
+    if (column === pointer.column) return false;
     pointer.column = column;
     const now = this.now();
     //THE WINDOW IS RE-OPENED BY THE CROSSING THAT USES IT and not by the clock: a scrub that dwells
@@ -6030,8 +6132,75 @@ export class ComposerRenderer {
     const sounds = now - pointer.soundedAtMs >= RULER_SCRUB_AUDIO_MS;
     if (sounds) pointer.soundedAtMs = now;
     this.callbacks.selectColumn(column, !sounds);
-    this.syncRulerCursorMark();
-  };
+    return true;
+  }
+
+  /**
+   * THE EDGE CREEP: a scrub pushed into one of the two edge bands walks the canvas toward the song's
+   * start or end, and the selection rides the columns passing under the held finger (CONTEXT.md:
+   * Ruler Scrub; spec 2026-08-27 USER REVISION - the user reversed an earlier rejection of this).
+   *
+   * WHY IT REACHES THE SONG'S FAR END AT ALL. A Ruler Scrub selects the column under the finger over
+   * a canvas that does not move, so the columns it can reach are the columns ON SCREEN - about
+   * twenty of them - and a song is hundreds. Everything past the edge needed a release, a
+   * mini-timeline scrub and another press. Pushing into the edge is how every timeline in every
+   * editor extends its own reach, and the two bands here ARE the chevron buttons' footprints (see
+   * CANVAS_SIDE_BUTTON_WIDTH), so the place you push to walk the song is the place that already
+   * walks the song one column per tap.
+   *
+   * ON THE FRAME, WHICH IS THE WHOLE REASON THIS IS A METHOD AND NOT A LINE IN handleRulerSlide: a
+   * finger held still against the edge emits no pointer events, and it is exactly the held finger
+   * that has to keep moving the canvas. The frames are already running for the length of any drag
+   * (the Ticker rule at Motion), so this costs the loop one zone test per frame and nothing else.
+   *
+   * dt COMES OFF now() AND NOT OFF THE TICKER'S DELTA, for motionPositionAt's reasons: a backgrounded
+   * tab's missed frames come back as one clamped step there, and the maxFPS gate spaces the executed
+   * frames unevenly. Integrating a speed is the one thing in this class that cannot be re-derived
+   * from an absolute clock - the creep has no destination to interpolate toward, only a rate - so it
+   * carries `creepAtMs` and advances over real elapsed time.
+   *
+   * THE ACCUMULATOR IS UNROUNDED AND THE MOTION IS SNAPPED. With smooth scrolling off the Motion
+   * invariant says a dragging position is a whole column at every instant, so what is published to
+   * the motion goes through snapManualPosition while `creepPosition` keeps the fraction - otherwise
+   * a 2 columns/second creep would round to zero on every 16ms frame and never move at all.
+   *
+   * CLAMPED TO THE SONG, and the clamp is where the creep STOPS: at column 0 or the last column the
+   * accumulator has nowhere to go, the position stops changing and the frame goes back to painting
+   * nothing. Nothing here ends the gesture - the finger is still down, the release still recentres.
+   */
+  private advanceRulerCreep(nowMs: number): void {
+    const pointer = this.rulerPointer;
+    const motion = this.motion;
+    if (!pointer || motion.kind !== 'dragging' || motion.surface !== 'ruler') return;
+    const elapsedMs = nowMs - pointer.creepAtMs;
+    pointer.creepAtMs = nowMs;
+    const edge = rulerEdgeScrollAt({
+      x: pointer.lastX,
+      //the same inset ComposerCanvas.svelte holds the left chevron to, from the same function
+      stripInset: this.state.proView ? proStripWidth(this.proRowHeightPx()) : 0,
+      canvasWidth: this.width,
+      bandWidth: CANVAS_SIDE_BUTTON_WIDTH,
+    });
+    if (!edge || !(elapsedMs > 0)) return;
+    const last = Math.max(0, this.state.columns.length - 1);
+    //THE ACCUMULATOR IS ITS OWN AUTHORITY, deliberately never re-read from the motion: in snap
+    //mode the motion holds a floored column, and seeding from it would discard the fraction the
+    //2 col/s rate lives in (see the header). The clamp only re-bounds it to a song an edit may
+    //have shortened; the one mid-gesture writer that can floor the motion underneath it (a
+    //smoothScroll flip in syncScrollSchedule) is re-converged by the next snapManualPosition
+    //write below, a transient of under one column.
+    const from = clamp(pointer.creepPosition, 0, last);
+    const next = clamp(from + edge.direction * edge.speed * (elapsedMs / 1000), 0, last);
+    pointer.creepPosition = next;
+    const snapped = this.snapManualPosition(next);
+    if (snapped === motion.position) return;
+    motion.position = snapped;
+    //THE COLUMN AGAINST THE POSITION THIS FRAME IS ABOUT TO PAINT, not the one it is painting from -
+    //see columnAtCanvasX. The repaint is the frame's own: onMotionFrame applies `snapped` right
+    //after this returns and applyScrollPosition moves the flag and renders, so publishing here and
+    //painting there is one frame's worth of work rather than two.
+    this.crossRulerColumn(pointer, this.rulerColumnAt(pointer.lastX, snapped));
+  }
 
   /**
    * THE RELEASE, which is what moves the canvas (CONTEXT.md: Ruler Scrub) - the recentring ADR-0014
@@ -6079,10 +6248,13 @@ export class ComposerRenderer {
    * position/visibility, and the one repaint in this class that a motion does not pay for.
    *
    * WHY IT CANNOT RIDE ON A FRAME. The frames are running (the scrub is a `dragging` motion, and the
-   * Ticker rule at Motion follows from that), but every one of them reads the same unmoved
-   * `motion.position` and returns without painting - which is exactly right, because the canvas is
-   * meant to hold still, and exactly why the flag has to ask for its own render. syncColumnRulerTempo
-   * is the same shape for the same reason: a change nothing else in the class would repaint.
+   * Ticker rule at Motion follows from that), but for a finger anywhere but the two edge bands every
+   * one of them reads the same unmoved `motion.position` and returns without painting - which is
+   * exactly right, because the canvas is meant to hold still, and exactly why the flag has to ask
+   * for its own render. (A creeping scrub is the one case where the frame IS painting, and
+   * applyScrollPosition carries the flag along inside it - which is why advanceRulerCreep publishes
+   * its crossing and calls nothing here.) syncColumnRulerTempo is the same shape for the same
+   * reason: a change nothing else in the class would repaint.
    *
    * WHY IT CANNOT WAIT FOR update() EITHER. The selection round-trips through Svelte, so the earliest
    * an update can carry the new column is the next microtask - a visible lag on a mark that is
@@ -6549,10 +6721,14 @@ export class ComposerRenderer {
     // risk). The suppression above is about a canvas that IS moving: the mark's new column is
     // painted against pixels the frame has not yet shifted, so the highlight leads the canvas by one
     // column for as long as the finger travels. A Ruler Scrub moves the selection over a canvas that
-    // is deliberately STILL - `motion.position` is never written for that surface - so there is no
-    // frame coming to reconcile anything with, no stale pixels to paint against, and nothing else
+    // is deliberately STILL - no move ever writes `motion.position` for that surface - so there is
+    // no frame coming to reconcile anything with, no stale pixels to paint against, and nothing else
     // that would ever repaint the mark: with the suppression left in place the overlay freezes on
-    // the column the scrub started from and unfreezes at the release. This is the one place the
+    // the column the scrub started from and unfreezes at the release. The EDGE CREEP does write a
+    // position, and it needs this branch no more than a stage drag would: it publishes its crossing
+    // from inside the frame that is about to apply the same position, so by the time that publish
+    // comes back through Svelte the pixels have already moved and this branch merely repaints the
+    // mark onto a canvas that agrees with it. This is the one place the
     // existing machinery does not simply extend, and lifting it for `surface === 'ruler'` alone is
     // the whole of the extension - the stage's and the timeline's behaviour is byte-identical, since
     // neither can reach this branch any more than it could before.

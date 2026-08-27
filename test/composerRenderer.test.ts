@@ -706,6 +706,7 @@ import {COMPOSER_TIMELINE_MINIMAP_CONFIG} from '$cmp/pages/Composer/composerTime
 //drawn strip clear of. Imported rather than restated for the same reason nearestEven is: they are
 //the definition, and test/composerCanvasCss.test.ts is what pins them against App.css.
 import {
+    CANVAS_SIDE_BUTTON_WIDTH,
     COLUMN_RULER_HEIGHT,
     TIMELINE_INSET_LEFT,
     TIMELINE_INSET_RIGHT,
@@ -717,6 +718,8 @@ import {
 //that reads it - which mark each column gets, where it lands, and what it says.
 import {
     COLUMN_RULER_BASE_LABEL_STEP,
+    RULER_EDGE_SCROLL_MAX_COLUMNS_PER_SECOND,
+    RULER_EDGE_SCROLL_MIN_COLUMNS_PER_SECOND,
     columnRulerBarLength,
     columnRulerLabelStep,
     isColumnRulerLabel,
@@ -9454,7 +9457,13 @@ describe('the Ruler Scrub', () => {
         //claim pass for free
         const selectedColumns: number[] = []
         const selectColumnCalls: {index: number, ignoreAudio: boolean, forceAnchor: boolean}[] = []
-        let reported: {width: number, height: number, timelineHeight: number, rulerTop: number} | null = null
+        let reported: {
+            width: number
+            height: number
+            timelineHeight: number
+            rulerTop: number
+            rowHeight: number
+        } | null = null
         const state = (): ComposerRendererState => ({
             columns: song.columns,
             structureVersion: song.structureVersion,
@@ -9497,6 +9506,7 @@ describe('the Ruler Scrub', () => {
                     height: geometry.height,
                     timelineHeight: geometry.timelineHeight,
                     rulerTop: geometry.rulerTop,
+                    rowHeight: geometry.rowHeight,
                 }
             },
             onProCellTap: () => {},
@@ -9530,6 +9540,18 @@ describe('the Ruler Scrub', () => {
          */
         const startOfColumn = (column: number) => notesColumns.x + column * columnWidth()
         const xOfColumn = (column: number) => startOfColumn(column) + columnWidth() / 2
+        /**
+         * THE TWO EDGE BANDS, as the renderer resolves them: the chevron buttons' own footprint
+         * (CANVAS_SIDE_BUTTON_WIDTH), the left one held clear of the row-label strip by the same
+         * proStripWidth ComposerCanvas.svelte insets the left chevron with. `depth` is 0 at the
+         * band's inner boundary and 1 at the canvas' edge, which is the ramp's own parameter - so a
+         * row can ask for the speed it wants rather than for a pixel and hope.
+         */
+        const stripInset = () => proStripWidth(geometry().rowHeight)
+        const leftBandX = (depth: number) =>
+            stripInset() + CANVAS_SIDE_BUTTON_WIDTH * (1 - depth)
+        const rightBandX = (depth: number) =>
+            geometry().width - CANVAS_SIDE_BUTTON_WIDTH * (1 - depth)
 
         return {
             song,
@@ -9538,6 +9560,9 @@ describe('the Ruler Scrub', () => {
             playheadX,
             startOfColumn,
             xOfColumn,
+            stripInset,
+            leftBandX,
+            rightBandX,
             selectColumnCalls,
             /** Every column handed to selectColumn, in order - the SELECTION stream. */
             selected: () => selectColumnCalls.map(call => call.index),
@@ -9918,6 +9943,155 @@ describe('the Ruler Scrub', () => {
             harness.push()
             harness.release(harness.xOfColumn(SELECTED + 2))
             expect(harness.scrollPosition()).toBeCloseTo(SELECTED + 2, 6)
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    // ── THE EDGE CREEP (CONTEXT.md: Ruler Scrub; spec 2026-08-27, USER REVISION) ─────────────────
+    //
+    // The rows above are the gesture as it was first shipped: the canvas holds still and the
+    // selection follows the finger. The rows below are the ONE carve-out of that, which the user
+    // asked for after first rejecting it - a scrub held inside either of the two edge bands (the
+    // chevron buttons' own footprint) walks the canvas toward the song's start or end, faster the
+    // deeper the push, while the selection rides the columns going past under the held finger.
+    //
+    // WHAT MAKES THESE ROWS DIFFERENT FROM EVERY OTHER ROW IN THIS PART: they advance the CLOCK and
+    // nothing else. A finger held motionless in a band emits no pointer events at all, so there is
+    // no move to drive, and the whole feature is a frame reading a stored x - which is exactly why
+    // it could regress without a single row above noticing.
+
+    it('creeps toward the song end while the finger is held in the right band, and not before', async () => {
+        const harness = await mountScrub()
+        try {
+            harness.press(harness.xOfColumn(SELECTED))
+            harness.push()
+            //THE OLD INVARIANT, STILL TRUE OF EVERYTHING BUT THE BANDS: a whole second of frames on a
+            //scrub held in the middle of the canvas moves nothing. This is the regression guard the
+            //carve-out is measured against, and it is a SECOND rather than the 48ms the row above
+            //advances - at the floor speed of 2 columns/second even a mis-scoped band would show.
+            await vi.advanceTimersByTimeAsync(1000)
+            expect(harness.scrollPosition()).toBeCloseTo(SELECTED, 6)
+            expect(harness.selected()).toEqual([SELECTED])
+            //...and now into the band, halfway between its inner boundary and the canvas edge, which
+            //is the ramp's midpoint: 4 columns a second.
+            harness.move(harness.rightBandX(0.5))
+            harness.push()
+            const atEdge = harness.selected().at(-1)!
+            expect(atEdge).toBeGreaterThan(SELECTED)
+            await vi.advanceTimersByTimeAsync(1000)
+            //FOUR COLUMNS OF CANVAS, and the position is a WHOLE one because this harness snaps -
+            //the creep keeps its own unrounded accumulator so that a rate below one column per frame
+            //is not rounded away, and publishes the snapped value the mode asks for.
+            const mid = (RULER_EDGE_SCROLL_MIN_COLUMNS_PER_SECOND +
+                RULER_EDGE_SCROLL_MAX_COLUMNS_PER_SECOND) / 2
+            expect(harness.scrollPosition()).toBe(SELECTED + mid)
+            //THE SELECTION RIDES THE COLUMNS GOING PAST, which is the half of the feature that is not
+            //scrolling: the finger has not moved, so what changed under it is the song.
+            expect(harness.selected().at(-1)).toBe(atEdge + mid)
+            harness.push()
+            expect(harness.overlayColumns()).toEqual([atEdge + mid])
+            //...and the flag stays pinned to the column under the finger while the canvas moves
+            expect(harness.cursorX()).toBeCloseTo(harness.startOfColumn(atEdge + mid), 6)
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    it('mirrors it in the left band, at the speed the depth of the push asks for', async () => {
+        const harness = await mountScrub()
+        try {
+            harness.press(harness.xOfColumn(SELECTED))
+            harness.push()
+            //DEPTH 1 IS THE CANVAS' EDGE - here the row-label strip's own inside edge, which is where
+            //ComposerCanvas.svelte stands the left chevron so it does not cover the pitch labels.
+            harness.move(harness.leftBandX(1))
+            harness.push()
+            const atEdge = harness.selected().at(-1)!
+            await vi.advanceTimersByTimeAsync(1000)
+            expect(harness.scrollPosition()).toBe(
+                SELECTED - RULER_EDGE_SCROLL_MAX_COLUMNS_PER_SECOND
+            )
+            expect(harness.selected().at(-1)).toBe(atEdge - RULER_EDGE_SCROLL_MAX_COLUMNS_PER_SECOND)
+            //...AND THE INNER BOUNDARY IS THE FLOOR SPEED, not zero: a band whose first pixel did
+            //nothing would have a dead strip exactly where the user is already pushing.
+            harness.move(harness.leftBandX(0))
+            await vi.advanceTimersByTimeAsync(1000)
+            expect(harness.scrollPosition()).toBe(
+                SELECTED -
+                    RULER_EDGE_SCROLL_MAX_COLUMNS_PER_SECOND -
+                    RULER_EDGE_SCROLL_MIN_COLUMNS_PER_SECOND
+            )
+            //LEAVING THE BAND STOPS IT, and leaves the canvas where the creep got it to: the finger
+            //is still down, the gesture is still a scrub, and the selection goes on following it.
+            const stopped = harness.scrollPosition()
+            harness.move(harness.xOfColumn(SELECTED))
+            await vi.advanceTimersByTimeAsync(1000)
+            expect(harness.scrollPosition()).toBe(stopped)
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    it('stops at the last column and stays a scrub there', async () => {
+        const harness = await mountScrub()
+        try {
+            const last = harness.song.columns.length - 1
+            harness.selectColumn(last - 19)
+            harness.push()
+            expect(harness.scrollPosition()).toBeCloseTo(last - 19, 6)
+            harness.press(harness.xOfColumn(last - 19))
+            harness.push()
+            harness.move(harness.rightBandX(1))
+            //ten seconds at the top speed is ~60 columns against the ~19 that remain, so this is the
+            //clamp being asked for rather than the song being long enough to hide it
+            await vi.advanceTimersByTimeAsync(10_000)
+            expect(harness.scrollPosition()).toBe(last)
+            expect(harness.selected().at(-1)).toBe(last)
+            //THE CLAMP IS NOT AN ENDING: nothing here releases the pointer or leaves the motion, so a
+            //finger held against the edge of a song that has run out simply stops moving it, and the
+            //release still recentres from wherever it ended up.
+            const arrived = harness.selected().length
+            await vi.advanceTimersByTimeAsync(2000)
+            expect(harness.scrollPosition()).toBe(last)
+            expect(harness.selected()).toHaveLength(arrived)
+            harness.push()
+            harness.release(harness.rightBandX(1))
+            expect(harness.scrollPosition()).toBe(last)
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    it("puts the creep's own crossings through the scrub's audio throttle", async () => {
+        const harness = await mountScrub({smoothScroll: true})
+        try {
+            const columnWidth = harness.columnWidth()
+            //A HELD x ONE PIXEL SHORT OF A COLUMN'S RIGHT EDGE, deep in the right band: the creep
+            //needs 1/columnWidth of a column to cross it, i.e. ~2ms at the top speed, which is what
+            //puts a CREEP crossing inside the 50ms window a MOVE crossing has just opened. Every
+            //other crossing a creep makes is a sixth of a second apart and sounds; this is the one
+            //case where the two sources of crossings meet, and they must meet at one throttle.
+            const edgeColumn = Math.floor(
+                (harness.geometry().width - 2 - harness.startOfColumn(0)) / columnWidth
+            )
+            const held = harness.startOfColumn(edgeColumn) + columnWidth - 1
+            harness.press(harness.xOfColumn(SELECTED))
+            expect(harness.sounded()).toEqual([SELECTED])
+            //the move's own crossing, at the same instant as the press's sound: silent
+            harness.move(held)
+            expect(harness.selected().at(-1)).toBe(edgeColumn)
+            expect(harness.sounded()).toEqual([SELECTED])
+            await vi.advanceTimersByTimeAsync(30)
+            //...and the creep's first crossing, still inside that window: also silent, and SELECTED
+            //all the same - the selection is never throttled, only the preview is
+            expect(harness.selected().at(-1)).toBe(edgeColumn + 1)
+            expect(harness.sounded()).toEqual([SELECTED])
+            //past the window a creep sounds every column it walks over, which at 10 columns a second
+            //is what a run through a song is supposed to be
+            await vi.advanceTimersByTimeAsync(400)
+            expect(harness.sounded().length).toBeGreaterThan(1)
+            expect(harness.sounded().at(-1)).toBe(harness.selected().at(-1))
         } finally {
             harness.destroy()
         }

@@ -8,6 +8,7 @@
   import AppButton from '$cmp/inputs/AppButton.svelte';
   import IconPlay from '~icons/fa6-solid/play';
   import IconPause from '~icons/fa6-solid/pause';
+  import PlayerModeSelector from './PlayerModeSelector.svelte';
   import PlayerSlider from './PlayerSlider.svelte';
   import PlayerSheetCard from './PlayerSheetCard.svelte';
   import { t } from '$i18n/binding.svelte';
@@ -15,6 +16,7 @@
   let {
     onRestart,
     onSeek,
+    onSwitchMode,
     onRawSpeedChange,
     onToggleRecordAudio,
     onToggleMetronome,
@@ -30,6 +32,7 @@
   }: {
     onRestart: () => void;
     onSeek: (noteIndex: number) => void;
+    onSwitchMode: (mode: 'play' | 'practice' | 'approaching') => void;
     onRawSpeedChange: (event: Event & { currentTarget: EventTarget & HTMLSelectElement }) => void;
     onToggleRecordAudio: (override: boolean) => void;
     onToggleMetronome: () => void;
@@ -79,6 +82,11 @@
   // flips it a debounced tick after eventType changes, and that lag painted the button one frame
   // before the sliders vanished - a visible layout shift on leaving approaching mode.
   const hasActiveSong = $derived(songData.eventType !== 'stop');
+  // WHICH OPTION THE MODE SLIDER SITS UNDER. The slider is only rendered while a run exists, so
+  // `stop` is never a mode it shows - but it is a value this field legitimately holds, and the
+  // slider needs one of its own three options at every instant it is alive rather than a fourth
+  // that would leave the pill measuring nothing.
+  const activeMode = $derived(songData.eventType === 'stop' ? 'play' : songData.eventType);
   // Song playback owns the audio graph; offer recording only in free-play/recording mode.
   const canRecordAudio = $derived(songData.eventType === 'stop');
   const canChangeSpeed = $derived(songData.eventType !== 'practice');
@@ -189,6 +197,17 @@
   </div>
 {/if}
 <div class="column player-controls">
+  {#if hasActiveSong}
+    <!-- THREE WAYS OF RUNNING THE SAME SONG, so this is a SLIDER over one setting rather than three
+         separate transport commands: pressing an option re-aims what is already going from where the
+         ear is, keeping the Section, the speed and the sheet (Player's switchPlayMode). One control
+         with one answer - the running mode is the one the pill sits under, and its own press does
+         nothing.
+         It exists only while a run does - with no song loaded there is no run to re-aim, and the
+         song list's own rows are where a mode is chosen from scratch. That makes it the exact
+         complement of the record-audio button below, so this slot is filled either way. -->
+    <PlayerModeSelector selected={activeMode} onSelect={onSwitchMode} />
+  {/if}
   {#if canRecordAudio}
     <div>
       <AppButton toggled={isRecordingAudio} onclick={() => onToggleRecordAudio(!isRecordingAudio)}>

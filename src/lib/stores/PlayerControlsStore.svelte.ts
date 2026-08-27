@@ -6,6 +6,23 @@ import { clamp } from '$core/utils/Utilities';
 interface PlayerControlsState {
   position: number;
   current: number;
+  /**
+   * THE NOTE THE EAR IS ON - the last one this run has actually sounded - or -1 when it has
+   * sounded nothing yet. It is what the frame highlight follows, and it is a second number rather
+   * than a reading of `current` because the two answer different questions at the same instant.
+   *
+   * `current` is the CONSUMPTION cursor: the note the run will take NEXT. So the moment a frame's
+   * last note sounds, `current` already names the first note of the frame after it - and a
+   * listener, who is at that instant hearing the frame that just sounded, would watch the
+   * highlight leave it before a single one of its notes had been heard through. The ear's frame is
+   * the one holding the note that sounded, and that is this.
+   *
+   * ONLY PLAY WRITES IT. Practice and approaching sound nothing of their own - their notes are the
+   * user's to press - and their highlight belongs on the frame being ASKED for, which is exactly
+   * what `current` names. They leave this at -1 and the cursor falls back, so the fallback is the
+   * rule for every mode with no ear to follow rather than a default nobody meant.
+   */
+  sounded: number;
   size: number;
   end: number;
   /**
@@ -29,6 +46,7 @@ class PlayerControlsStore {
   state: PlayerControlsState = $state({
     position: 0,
     current: 0,
+    sounded: -1,
     size: 0,
     end: 0,
     runEnd: 0,
@@ -44,10 +62,16 @@ class PlayerControlsStore {
   });
 
   /**
-   * WHERE THE HIGHLIGHT IS, DERIVED - one lookup of `current` (an absolute `song.notes` position)
-   * against the chunk spans, so the slider, the frames and anything asking "which chunk is this"
-   * cannot disagree. The modes only ever move `current`; there is no chunk stepping to keep in
-   * sync with it any more, and no assumption that chunk 0 is the run's first note.
+   * WHERE THE HIGHLIGHT IS, DERIVED - one lookup of an absolute `song.notes` position against the
+   * chunk spans, so the slider, the frames and anything asking "which chunk is this" cannot
+   * disagree. The modes only ever move that position; there is no chunk stepping to keep in sync
+   * with it any more, and no assumption that chunk 0 is the run's first note.
+   *
+   * WHICH POSITION IS THE EAR'S QUESTION (see `sounded`): the note last heard while a play run is
+   * sounding, and `current` - the note about to be consumed - before that run's first note and in
+   * every mode that sounds nothing of its own. A frame therefore holds the highlight until the
+   * NEXT frame is heard to begin, rather than surrendering it the instant its own last note goes
+   * out.
    *
    * `globalChunkIndex` counts across pages (-1 when there are no pages); `chunkIndex` is the same
    * frame's index WITHIN its page, which is what the page renderer compares its each-index to.
@@ -66,8 +90,8 @@ class PlayerControlsStore {
     const { pages } = this.pagesState;
     const flat: Chunk[] = [];
     for (const page of pages) for (const chunk of page) flat.push(chunk);
-    const { current, runEnd } = this.state;
-    let globalChunkIndex = chunkIndexAt(flat, current);
+    const { current, sounded, runEnd } = this.state;
+    let globalChunkIndex = chunkIndexAt(flat, sounded >= 0 ? sounded : current);
     if (runEnd > 0) {
       let lastInRun = -1;
       for (let i = 0; i < flat.length; i++) if (flat[i].firstNoteIndex < runEnd) lastInRun = i;
@@ -139,6 +163,12 @@ class PlayerControlsStore {
    * after the last frame. It stays fixed while notes inside one frame resolve, then advances once
    * to the next frame. Finishing a run advances past its last selected frame even when the
    * Section cuts through the middle of that frame.
+   *
+   * MEASURED AGAINST `current` AND NOT THE EAR, which is what keeps it whole while the highlight
+   * lags behind it (see `sounded`): this counts what the run has CONSUMED, so a frame whose last
+   * note has just sounded is already behind the line even though the highlight is still on it -
+   * the `current > lastNoteIndex` test below is what turns the ear's frame back into the
+   * consumption cursor's boundary, and the pair answers the same number it always did.
    */
   get currentFrameBoundary(): number {
     const index = this.currentGlobalChunkIndex;
@@ -173,6 +203,7 @@ class PlayerControlsStore {
       size: song.notes.length,
       position: 0,
       current: 0,
+      sounded: -1,
     });
     this.setPages([]);
   };
@@ -244,6 +275,15 @@ class PlayerControlsStore {
    */
   advanceCurrentTo = (current: number) => {
     if (current > this.current) this.setState({ current });
+  };
+
+  /**
+   * A note REACHED THE EAR - the frame holding it is the one the highlight belongs on until the
+   * next frame is heard to begin (see `sounded`). Forward-only for its sibling's reason: the plan
+   * hands out events in note order, and a run must never walk its highlight back.
+   */
+  advanceSoundedTo = (sounded: number) => {
+    if (sounded > this.state.sounded) this.setState({ sounded });
   };
 
   setCurrent = (current: number) => {

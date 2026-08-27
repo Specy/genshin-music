@@ -155,10 +155,11 @@ describe('game config surface', () => {
         //  - fill/clickColor: re-sampled off the new recordings' in-game button art. HarmonicKey's
         //    clickColor is deliberately absent below — its lighter click tint (#e1cba3) survived.
         //  - sustain: the new captures are real sustained holds, where the 2026-08-03 set was
-        //    tap-only, so both gained a LOOPLESS sustain block (release 0.3, minLength 0.1 — the
-        //    attacks are near-instant, unlike NightwindHorn's swells). The legacy v1 sustain shape
+        //    tap-only, so both gained a LOOPLESS sustain block (minLength 0.1 — the attacks are
+        //    near-instant, unlike NightwindHorn's swells — with a 0.5 release on HarmonicKey, whose
+        //    keys ring out longer than LeapingSpiritPiano's 0.3). The legacy v1 sustain shape
         //    carried only {release, crossfade?, loop?, noteLoops?}, which is why the whole expected
-        //    value here is {release: 0.3}: no loop is authored, and minLength never existed in v1.
+        //    value here is just the release: no loop is authored, and minLength never existed in v1.
         // Each edit names the frozen value it replaces and that value is ASSERTED before patching,
         // so this exception can absorb exactly the changes enumerated here and nothing else — a
         // further color tweak, a changed release, an added loop, or a hand-edit of the frozen file
@@ -168,7 +169,7 @@ describe('game config surface', () => {
                 ? {
                     HarmonicKey: [
                         {field: 'fill', from: '#ddb055', to: '#dcb154'},
-                        {field: 'sustain', from: undefined, to: {release: 0.3}},
+                        {field: 'sustain', from: undefined, to: {release: 0.5}},
                     ],
                     LeapingSpiritPiano: [
                         {field: 'fill', from: '#5cadbd', to: '#58afb9'},

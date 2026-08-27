@@ -29,6 +29,7 @@ import {describe, expect, it} from 'vitest'
 import {readFileSync} from 'node:fs'
 import {nearestEven} from '$core/utils/Utilities'
 import {
+    CANVAS_SIDE_BUTTON_WIDTH,
     COLUMN_RULER_HEIGHT,
     COMPOSER_DESKTOP_MEDIA_QUERY,
     COMPOSER_MOBILE_MAX_WIDTH,
@@ -1081,6 +1082,40 @@ describe("the timeline buttons' declared size and the inset the strip is drawn a
         expect(separator.get('z-index')).toBe('1')
         expect(separator.get('background-color')).toBe('var(--primary-darken-10)')
         expect(separator.get('pointer-events')).toBe('none')
+    })
+})
+
+describe("the side chevrons' declared width and the bands a Ruler Scrub creeps in", () => {
+    const buttons = declarationsOf('.canvas-buttons')
+
+    it('App.css still declares the rem value composerCanvasGeometry converts', () => {
+        //THE SECOND BRIDGE between this stylesheet and the pixi side, and the same shape as the
+        //timeline's above. The two previous/next-column chevrons are DOM elements floating over the
+        //canvas; the renderer never draws them - but a Ruler Scrub auto-scrolls in exactly their
+        //footprint (CONTEXT.md: Ruler Scrub), so the band and the button have to be one rectangle.
+        //Edit either side alone and the creep starts somewhere the user is not pushing.
+        expect(buttons.get('min-width')).toBe('2.8rem')
+        //...at the 16px root font size composerCanvasGeometry assumes and states
+        expect(CANVAS_SIDE_BUTTON_WIDTH).toBe(2.8 * 16)
+    })
+
+    it('places the two chevrons where the two bands are, and only the left one clears the strip', () => {
+        //THE LEFT BAND'S OFFSET IS THIS INLINE `left`, from proStripWidth, and the right band has no
+        //counterpart because the row-label strip is at the left edge only. Both are read back out of
+        //the template rather than assumed: `stripInset` is the renderer's own reported row height put
+        //through the strip's own width function, which is the same number ComposerRenderer hands
+        //rulerEdgeScrollAt.
+        expect(COMPOSER_CANVAS).toContain(
+            'const stripInset = $derived(proView && rowHeight > 0 ? proStripWidth(rowHeight) : 0);'
+        )
+        const left = openTagContaining('selectColumn(selected - 1)')
+        const right = openTagContaining('selectColumn(selected + 1)')
+        expect(left).toContain('style="left:{stripInset}px;')
+        expect(right).toContain('style="right:0;')
+        //BOTH ARE `.canvas-buttons`, which is what makes the one min-width above the width of both
+        //bands rather than of the left one alone
+        expect(left).toContain("'canvas-buttons'")
+        expect(right).toContain("'canvas-buttons'")
     })
 })
 

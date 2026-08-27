@@ -1,5 +1,4 @@
 <script lang="ts">
-  import * as workerTimers from 'worker-timers';
   import { on } from 'svelte/events';
   import type { Attachment } from 'svelte/attachments';
   import { DEFAULT_DOM_RECT } from '$core/legacyConfig';
@@ -10,7 +9,7 @@
     onChange,
     onCommit,
   }: {
-    /** Live Section feedback while a thumb moves or a frame number is typed. */
+    /** Live Section feedback while a thumb moves. */
     onChange?: (start: number, end: number) => void;
     /** One completed selector gesture; active playback restarts from the new Section here. */
     onCommit?: (start: number, end: number) => void;
@@ -23,11 +22,10 @@
    * element it considers pressable. Blink's candidate test (WebKit's and Firefox-for-Android's are
    * the same shape) counts mouse-button listeners, links and focusable form controls - nothing
    * else. `pointerdown` does not qualify, and Svelte delegates it to the root anyway, so an arrow
-   * declared nothing an engine could see and every press near one was handed to a pressable
-   * NEIGHBOUR instead: the frame-number input beside it, where `handleSliderClick`'s deliberate
-   * early return swallowed it, or the speed select above the track, which is outside the slider
-   * entirely so the press never arrived at all. That was the whole "the thumbs cannot be dragged
-   * with a finger" bug - the mouse was unaffected because adjustment is a touch-only step.
+   * declares nothing an engine can see and every press near one is handed to a pressable NEIGHBOUR
+   * instead - the speed select and Stop button above the track or the restart button below it, all
+   * outside the slider entirely, so the press never arrives here at all. That is the whole "the thumbs cannot be
+   * dragged with a finger" bug - the mouse is unaffected because adjustment is a touch-only step.
    *
    * One real, empty mousedown listener is the whole declaration; the press itself keeps flowing
    * through `.slider-outer`'s pointer handlers, which read coordinates and never the target. It is
@@ -40,7 +38,6 @@
   let selectedThumb: 'start' | 'end' | null = $state(null);
   let selectionChanged = false;
   let inputDimension: DOMRect = $state(DEFAULT_DOM_RECT);
-  let inputsEnabled = $state(true);
   let thumb1: HTMLDivElement | undefined;
   let thumb2: HTMLDivElement | undefined;
   let slider: HTMLDivElement | undefined;
@@ -87,17 +84,7 @@
     publishChange(beforePosition, beforeEnd);
   }
 
-  function handleSelectChange(val: number, type: 'start' | 'end') {
-    // Inputs show human-facing frame ordinals (1..N); only the start needs converting to its
-    // zero-based boundary. The end ordinal already equals the boundary after that frame.
-    setFrameBoundary(type === 'start' ? val - 1 : val, type);
-  }
-
   function handleSliderClick(event: PointerEvent) {
-    // The frame-number fields sit beside the thumbs but are descendants of this hit area. Let a
-    // press in one edit/focus that field; treating its off-track coordinate as a drag would move
-    // the Section before the user had typed anything.
-    if ((event.target as Element | null)?.closest('.slider-input')) return;
     if (slider && thumb1 && thumb2) {
       const size = slider.getBoundingClientRect();
       const offset = event.clientY;
@@ -120,23 +107,6 @@
     if (!selectionChanged) return;
     selectionChanged = false;
     onCommit?.(playerControlsStore.position, playerControlsStore.end);
-  }
-
-  function commitInputChange() {
-    if (!selectionChanged) return;
-    selectionChanged = false;
-    onCommit?.(playerControlsStore.position, playerControlsStore.end);
-  }
-
-  function enableInputs(e: MouseEvent) {
-    inputsEnabled = true;
-    workerTimers.setTimeout(() => {
-      (e.currentTarget as HTMLInputElement | null)?.focus();
-    }, 50);
-  }
-
-  function disableInputs() {
-    inputsEnabled = false;
   }
 
   function handleSliderMove(event: PointerEvent, override?: 'start' | 'end') {
@@ -181,20 +151,6 @@
   </div>
   <div class="two-way-slider">
     <div class="two-way-slider-thumb" style="bottom:calc({end}% - 18px)" bind:this={thumb2}>
-      <!-- oninput updates live per keystroke, matching drag feedback; onchange commits once. -->
-      <input
-        type="number"
-        class="slider-input"
-        style="font-size:0.8rem"
-        value={endBoundary}
-        min={Math.max(1, startBoundary + 1)}
-        max={frames.length}
-        onclick={enableInputs}
-        readonly={!inputsEnabled}
-        onblur={disableInputs}
-        oninput={(e) => handleSelectChange(+e.currentTarget.value, 'end')}
-        onchange={commitInputChange}
-      />
       <span class="two-way-slider-grab" {@attach touchAdjustmentTarget}>
         <svg
           stroke="currentColor"
@@ -213,19 +169,6 @@
       </span>
     </div>
     <div class="two-way-slider-thumb" style="bottom:calc({start}% - 14px)" bind:this={thumb1}>
-      <input
-        type="number"
-        class="slider-input"
-        style="font-size:0.8rem"
-        value={startBoundary + 1}
-        min={1}
-        max={Math.max(1, endBoundary)}
-        onclick={enableInputs}
-        readonly={!inputsEnabled}
-        onblur={disableInputs}
-        oninput={(e) => handleSelectChange(+e.currentTarget.value, 'start')}
-        onchange={commitInputChange}
-      />
       <span class="two-way-slider-grab" {@attach touchAdjustmentTarget}>
         <svg
           stroke="currentColor"
@@ -298,25 +241,6 @@
     background-color: var(--primary-darken-10);
     border-radius: 0.2rem;
     overflow: hidden;
-  }
-
-  .slider-input {
-    user-select: none;
-    font-family: 'Bonobo';
-    font-weight: bold;
-    width: 4ch;
-    text-align: end;
-    background: transparent;
-    color: var(--accent);
-    border: none;
-    -moz-appearance: textfield;
-    appearance: textfield;
-  }
-
-  .slider-input::-webkit-outer-spin-button,
-  .slider-input::-webkit-inner-spin-button {
-    -webkit-appearance: none;
-    margin: 0;
   }
 
   .slider-current {

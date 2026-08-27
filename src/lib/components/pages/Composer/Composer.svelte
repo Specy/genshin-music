@@ -479,10 +479,19 @@
   // ── the KEYLESS surfaces' own press machine, WHILE STOPPED (user decisions 2026-08-22) ─────────
   // A physical note key and an incoming MIDI note run the pointer's machine exactly
   // (beginNotePress/endNotePress/openDurationPopover), so all three surfaces are one gesture with
-  // three input devices: a missing note is added at the DOWN edge, removing an existing one waits
-  // for the UP edge (short press = remove), and holding for COMPOSER_LONG_PRESS_MS opens the
-  // duration popover - after which the key is a Duration Hold like any other, and every column the
-  // selection moves through grows the span (CONTEXT.md: Duration Hold).
+  // three input devices: a missing note is added at the DOWN edge, and holding for
+  // COMPOSER_LONG_PRESS_MS opens the duration popover - after which the key is a Duration Hold like
+  // any other, and every column the selection moves through grows the span (CONTEXT.md: Duration
+  // Hold).
+  //
+  // WHERE THE REMOVAL LANDS IS THE INSTRUMENT'S TO SAY (user revision 2026-08-27). It waits for the
+  // UP edge (short press = remove) only where a hold can become a Duration Hold, which is exactly
+  // the instruments that can sustain: deleting the note at the down edge would leave that hold with
+  // nothing left to edit. Everywhere else the tap is WHOLE AT THE DOWN EDGE - the delay bought
+  // nothing there, since openDurationPopover refuses a non-sustaining instrument outright - and such
+  // a press leaves no record behind at all, so the release is a no-op by construction rather than by
+  // a branch. Capability from the config (`layers[layer].supportsSustain`, the very flag the popover
+  // gates on) and never from which game is loaded.
   //
   // MIDI JOINED IN THE SAME PASS (superseding "MIDI stays an instant toggle"): the zen keyboard now
   // broadcasts real note-down/up over the wire (MIDIProvider.broadcastNoteDown/Up), so genuine hold
@@ -727,10 +736,11 @@
       MIDIProvider.getNotesOfMIDIevent(note).forEach((keyboardNote) => {
         const holder = midiHolderToken(note, keyboardNote.index);
         endSustainRecording(holder);
-        //...and the stopped song's UP EDGE (user revision 2026-08-22): the short press that removes
-        //a note it found, and the end of a Duration Hold. One of the two registries is always empty
-        //here - a press is either recording or editing - so both are told and each ignores a holder
-        //it never had.
+        //...and the stopped song's UP EDGE (user revision 2026-08-22): on a sustaining instrument
+        //the short press that removes a note it found, and the end of a Duration Hold - on a
+        //non-sustaining one the down edge already did the whole toggle, so this only clears the
+        //hold's clock. One of the two registries is always empty here - a press is either recording
+        //or editing - so both are told and each ignores a holder it never had.
         endNoteHold(holder);
       });
       return;
@@ -748,10 +758,12 @@
         //WHILE PLAYING NOTHING CHANGED: a note-on that records no sustain (a non-sustaining
         //instrument, a covered button) is still an immediate toggle, because playing is performing.
         if (isPlaying) return toggleNoteImmediate(pressed);
-        //STOPPED, a MIDI key is a PRESS like any other (user revision 2026-08-22): it adds the note
-        //it finds missing now and defers the removal to the note-off above, so a hold in between can
-        //open the duration popover. The zen keyboard broadcasting real note-down/up over the wire is
-        //what makes a MIDI note's LENGTH mean something to reach for.
+        //STOPPED, a MIDI key is a PRESS like any other (user revision 2026-08-22): on a sustaining
+        //instrument it adds the note it finds missing now and defers the removal to the note-off
+        //above, so a hold in between can open the duration popover; on a non-sustaining one the
+        //press machine toggles whole at this down edge (see beginNotePress). The zen keyboard
+        //broadcasting real note-down/up over the wire is what makes a MIDI note's LENGTH mean
+        //something to reach for.
         beginNoteHold(holder, pressed);
       });
       const shortcut = MIDIProvider.settings.shortcuts.find((e) => e.midi === note);
@@ -1194,11 +1206,14 @@
     dragDeltaX: number;
   } | null = $state(null);
   // One press record PER BUTTON, not one for the whole keyboard: on touch two notes can be
-  // held at once, and only the ADD half of the gesture runs at pointerdown - removal and
-  // long-press are deferred to the release. A single slot let the second pointerdown
-  // overwrite the first finger's record, so neither release recognised its own press and
-  // tapping two selected notes together deselected NEITHER (one at a time worked, because
-  // each down/up pair completed before the next down).
+  // held at once, and on a SUSTAINING track only the ADD half of the gesture runs at pointerdown -
+  // removal and long-press are deferred to the release there (see beginNotePress). A single slot let
+  // the second pointerdown overwrite the first finger's record, so neither release recognised its
+  // own press and tapping two selected notes together deselected NEITHER (one at a time worked,
+  // because each down/up pair completed before the next down).
+  // ONLY SUSTAINING TRACKS ENTER ANYTHING HERE: elsewhere the tap has already finished at the down
+  // edge, so the map is empty for it and every consumer below reads that emptiness as "nothing to
+  // do" - the same answer they already give a release whose press was abandoned.
   // Keyed by Note Id, the same currency the three handlers already speak, so the id equality
   // the release used to test by hand is now the map lookup itself. Two fingers on the SAME
   // button still collapse to one record, which is the same single toggle they produced before.
@@ -1391,6 +1406,10 @@
     //while playing on a sustaining track the press is a PERFORMANCE, not an edit: it sounds
     //its own held attack, records its duration, and never deletes on release
     if (startSustainRecording(holderToken('pointer', pointerId), id)) return;
+    //A NON-SUSTAINING TRACK WHILE PLAYING falls through to a press that resolves whole at the down
+    //edge, which is the same immediate toggle a physical key already makes there
+    //(toggleNoteImmediate, "a performance has no long press to wait for") - the two surfaces agree
+    //rather than one of them lagging a release behind the other.
     beginNotePress(id);
   }
 
@@ -1400,8 +1419,15 @@
    * gesture on the same surface, and the 2026-08-22 decision to give the physical key a long press
    * of its own is only true if it takes this path rather than a parallel one.
    *
-   * The note is SOUNDED and, when it is missing, ADDED here - the common tap feel. Removal is the
-   * release's, so a hold can open the duration popover without deleting the note first.
+   * The note is SOUNDED and, when it is missing, ADDED here - the common tap feel.
+   *
+   * WHETHER THE REMOVAL WAITS is the instrument's answer, not this function's (user revision
+   * 2026-08-27). Removal is the release's ONLY where a hold can become a Duration Hold - a
+   * sustaining instrument - because there the popover must find the note still there to edit.
+   * On everything else the tap is whole HERE: the delay protected a popover that
+   * openDurationPopover's own `supportsSustain` gate would never open, and it made every deselect
+   * feel a press behind. Such a press deliberately stores NO record, which is what makes its release
+   * a no-op without endNotePress needing to know any of this.
    */
   function beginNotePress(id: number) {
     if (songLocked) {
@@ -1410,6 +1436,17 @@
     }
     playSound(layer, id);
     const covering = song.getSpanCovering(song.selected, layer, id);
+    if (!layers[layer]?.supportsSustain) {
+      //THE OCCUPANCY RULE SURVIVES THE SHORTCUT: a covered button is inert on every surface, and
+      //a span CAN be sitting on a non-sustaining track - a swap from a sustaining instrument leaves
+      //its authored spans behind. Sound only, exactly as the deferred path resolved it on release.
+      if (covering) return;
+      const pressed = song.selectedColumn.findNote(layer, id);
+      if (pressed === null) song.addNoteAt(song.selected, layer, id);
+      else song.removeNoteAt(song.selected, layer, id);
+      handleAutoSave();
+      return;
+    }
     if (covering) {
       notePresses.set(id, {
         existedAtPress: false,
@@ -1434,6 +1471,11 @@
    * THE RELEASE HALF, and the other end of every rule beginNotePress deferred: a short press on a
    * note that already existed REMOVES it, a covered button toggles nothing, and a press whose hold
    * opened the popover edits nothing at all on the way up.
+   *
+   * ONLY SUSTAINING INSTRUMENTS EVER DEFER ANYTHING TO IT (user revision 2026-08-27) - elsewhere the
+   * down edge finished the tap and left no record, so the `!press` return below is the whole of this
+   * function for those surfaces. That is by construction: the rule lives in one place, the press
+   * half, and this half stays the same code for every instrument.
    *
    * It is also where a Duration Hold ENDS for the two surfaces that own a press record (a keyboard
    * key and a physical note key) - the canvas has none and reports its own release through

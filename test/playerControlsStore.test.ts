@@ -9,7 +9,7 @@ import {buildRecordedSong} from './builders'
 beforeEach(() => {
     playerControlsStore.resetScore()
     playerControlsStore.clearPages()
-    playerControlsStore.setState({position: 0, current: 0, size: 0, end: 0, runEnd: 0})
+    playerControlsStore.setState({position: 0, current: 0, sounded: -1, size: 0, end: 0, runEnd: 0})
 })
 
 describe('increaseScore (combo/score math)', () => {
@@ -199,6 +199,80 @@ describe('derived chunk/page cursor', () => {
     })
 })
 
+// A LISTENER'S FRAME IS THE ONE SOUNDING, never the one about to sound. `current` runs a note
+// ahead by construction - it names what the run will consume NEXT - so a play run whose highlight
+// read it alone handed the frame over at the instant that frame's own last note was heard, and the
+// listener watched the next frame light up while still hearing this one.
+describe('cursor while a play run sounds (`sounded`)', () => {
+    // note 0 alone, notes 1-2 together, note 3 alone
+    const wholeSong = () => [spannedChunk(0, 0), spannedChunk(1, 2), spannedChunk(3, 3)]
+
+    it('keeps the frame that was HEARD while `current` already names the next one', () => {
+        playerControlsStore.setPages([wholeSong()])
+        // the run's first note has just sounded: `current` is frame 1's first note already
+        playerControlsStore.setState({current: 1, sounded: 0})
+        expect(playerControlsStore.currentGlobalChunkIndex).toBe(0)
+        // ...and the frame changes hands only once frame 1 is heard to begin
+        playerControlsStore.setState({current: 2, sounded: 1})
+        expect(playerControlsStore.currentGlobalChunkIndex).toBe(1)
+    })
+
+    it('holds one frame through every note inside it', () => {
+        playerControlsStore.setPages([wholeSong()])
+        for (const sounded of [1, 2]) {
+            playerControlsStore.setState({current: sounded + 1, sounded})
+            expect(playerControlsStore.currentGlobalChunkIndex).toBe(1)
+        }
+    })
+
+    it('parks on the last frame played rather than past it when the run ends', () => {
+        playerControlsStore.setPages([wholeSong()])
+        // the finish counts the tail in: `current` reaches the run's exclusive end, the ear stops
+        // on the last note there was
+        playerControlsStore.setState({current: 4, sounded: 3, runEnd: 4})
+        expect(playerControlsStore.currentGlobalChunkIndex).toBe(2)
+    })
+
+    it('falls back to `current` before a note has sounded, and in the modes that sound none', () => {
+        playerControlsStore.setPages([wholeSong()])
+        // a run dispatched onto frame 1 (a seek, or practice waiting to be played): nothing has
+        // been heard, and the frame to show is the one being asked for
+        playerControlsStore.setState({current: 1, sounded: -1})
+        expect(playerControlsStore.currentGlobalChunkIndex).toBe(1)
+    })
+
+    it('leaves the progress boundary measuring what the run CONSUMED', () => {
+        playerControlsStore.setPages([wholeSong()])
+        // the two cursors name different frames here, and the boundary must still answer what it
+        // answered when `current` alone drove it: one whole frame is behind the line
+        playerControlsStore.setState({current: 1, sounded: 0})
+        expect(playerControlsStore.currentGlobalChunkIndex).toBe(0)
+        expect(playerControlsStore.currentFrameBoundary).toBe(1)
+        // mid-frame the line stays put while the highlight does too
+        playerControlsStore.setState({current: 2, sounded: 1})
+        expect(playerControlsStore.currentFrameBoundary).toBe(1)
+        playerControlsStore.setState({current: 3, sounded: 2})
+        expect(playerControlsStore.currentFrameBoundary).toBe(2)
+    })
+})
+
+describe('advanceSoundedTo (monotonic ear)', () => {
+    it('moves forward only, so a late event cannot walk the highlight back', () => {
+        playerControlsStore.advanceSoundedTo(3)
+        expect(playerControlsStore.state.sounded).toBe(3)
+        playerControlsStore.advanceSoundedTo(1)
+        expect(playerControlsStore.state.sounded).toBe(3)
+        playerControlsStore.advanceSoundedTo(4)
+        expect(playerControlsStore.state.sounded).toBe(4)
+    })
+
+    it('starts from -1, which is what a fresh run is reset to', () => {
+        expect(playerControlsStore.state.sounded).toBe(-1)
+        playerControlsStore.advanceSoundedTo(0)
+        expect(playerControlsStore.state.sounded).toBe(0)
+    })
+})
+
 describe('advanceCurrentTo (monotonic cursor)', () => {
     it('moves `current` forward and ignores anything at or behind it', () => {
         playerControlsStore.setCurrent(4)
@@ -220,17 +294,20 @@ describe('advanceCurrentTo (monotonic cursor)', () => {
 })
 
 describe('setSong', () => {
-    it('sets size from notes.length and resets position/current/pages', () => {
+    it('sets size from notes.length and resets position/current/sounded/pages', () => {
         // 5 flat notes under the per-track model (the pre-v3 builder's 4th entry was one
         // merged two-layer note; it's now one note per track), see test/builders.ts
         const song = buildRecordedSong()
         playerControlsStore.setPages([[new Chunk([], 0)]])
+        playerControlsStore.advanceSoundedTo(3)
 
         playerControlsStore.setSong(song)
 
         expect(playerControlsStore.size).toBe(5)
         expect(playerControlsStore.position).toBe(0)
         expect(playerControlsStore.current).toBe(0)
+        // a new song has been heard as far as nothing at all, whatever the last one reached
+        expect(playerControlsStore.state.sounded).toBe(-1)
         expect(playerControlsStore.pagesState.pages).toEqual([])
     })
 })

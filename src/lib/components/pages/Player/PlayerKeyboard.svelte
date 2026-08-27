@@ -527,10 +527,15 @@
 
     let countedThrough = start - 1;
     /**
-     * The sheet cursor, in absolute note positions: `current` is the note that has NOT sounded yet,
-     * and the frame under the highlight follows from it (ADR-0010). Indexes the plan left out - an
-     * inaudible track contributes no events - are simply passed over rather than counted one by
-     * one, because nothing steps here any more.
+     * The sheet cursors, in absolute note positions, moved together because they are two readings
+     * of one edge (ADR-0010): `current` is the note that has NOT sounded yet, and `sounded` is the
+     * one that just did. Indexes the plan left out - an inaudible track contributes no events -
+     * are simply passed over rather than counted one by one, because nothing steps here any more.
+     *
+     * BOTH, AND NOT ONE DERIVED FROM THE OTHER: the progress line measures what the run has
+     * consumed and the frame highlight follows what the ear has heard, and between a frame's last
+     * note sounding and the next frame's first they are different frames. Play is the only mode
+     * that can tell the store the second number, because it is the only one that makes the sound.
      */
     const advanceCountingTo = (noteIndex: number) => {
       if (noteIndex <= countedThrough) return;
@@ -539,6 +544,7 @@
       //reaches the end. The frame highlight is kept off the run's exclusive end by the store's
       //own `runEnd` lookup clamp, not here.
       playerControlsStore.advanceCurrentTo(noteIndex + 1);
+      playerControlsStore.advanceSoundedTo(noteIndex);
     };
 
     const transport = new PlayerTransport(audioClock, {
@@ -742,7 +748,7 @@
   }
 
   async function stopSong(): Promise<void> {
-    // This is the one teardown path for every play/practice/approach/restart/stop transition.
+    // This is the one teardown path for every play/practice/approach/switchMode/restart/stop transition.
     // Shared player state must be cleared here rather than by whichever destination happens to
     // overwrite it later: approach has a two-second preparation window, empty songs return early,
     // and the keyboard shortcut does not pass through PlayerSongControls' stop button.
@@ -989,8 +995,8 @@
 
     $effect(() => {
       // Reading key/playId here (values otherwise unused) makes this effect rerun on every
-      // play/practice/approaching/restartSong/resetSong call, even when the song object is
-      // reference-equal.
+      // play/practice/approaching/switchMode/restartSong/resetSong call, even when the song
+      // object is reference-equal.
       void playerStore.state.key;
       void playerStore.state.playId;
       // This debounce isn't just coalescing multiple fires into one - it defers past the
@@ -1074,6 +1080,7 @@
               ...section,
               runEnd: end,
               current: start,
+              sounded: -1,
             });
             return;
           }
@@ -1103,6 +1110,10 @@
             ...section,
             runEnd: end,
             current: runCurrent,
+            //NOTHING HAS BEEN HEARD YET, whatever the run before this one heard: the highlight
+            //starts on the frame this run is about to play (its `current`), and only a note
+            //actually sounding hands it over to the ear - see the store's `sounded`.
+            sounded: -1,
           });
         }
       }, 4);

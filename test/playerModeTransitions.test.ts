@@ -17,7 +17,11 @@ vi.mock('$core/utils/Utilities', async importOriginal => ({
     delay: mocks.delay,
 }))
 
-vi.mock('$stores/KeybindsStore.svelte', () => ({
+// The two listener factories are stubbed so no case here can be reached by a real key press; the
+// rest of the module is left alone, because the menu the whole-Player suite mounts reads the shortcut
+// map itself to draw the help tab.
+vi.mock('$stores/KeybindsStore.svelte', async importOriginal => ({
+    ...(await importOriginal<typeof import('../src/lib/stores/KeybindsStore.svelte')>()),
     createKeyboardListener: () => () => {},
     createShortcutListener: () => () => {},
 }))
@@ -52,8 +56,31 @@ vi.mock('$lib/providers/AudioProvider', () => ({
                 return Date.now() / 1000
             },
         })),
+        // the rest of the seam is only reached by the whole-Player suite at the bottom of this
+        // file, which owns the instrument roster PlayerKeyboard alone never touches
+        waitReverb: vi.fn(async () => {}),
+        disconnect: vi.fn(),
+        connect: vi.fn(),
+        setReverb: vi.fn(),
+        setReverbOfNode: vi.fn(),
+        clear: vi.fn(),
+        startRecording: vi.fn(),
+        stopRecording: vi.fn(),
     },
 }))
+
+// Mounting Player loads its instruments; fetching sample buffers is orthogonal to every case here
+// and jsdom has no AudioContext to decode into. The real Instrument model (notes, shapes, ids) is
+// kept - only the I/O is stubbed out.
+vi.mock('$lib/audio/Instrument.svelte', async importOriginal => {
+    const actual = await importOriginal<typeof import('../src/lib/audio/Instrument.svelte')>()
+    return {
+        ...actual,
+        Instrument: class extends actual.Instrument {
+            load = vi.fn(async () => true)
+        },
+    }
+})
 
 vi.mock('worker-timers', () => ({
     setTimeout: (handler: () => void, ms: number) => globalThis.setTimeout(handler, ms),
@@ -63,6 +90,7 @@ vi.mock('worker-timers', () => ({
 }))
 
 import PlayerKeyboard from '../src/lib/components/pages/Player/PlayerKeyboard.svelte'
+import Player from '../src/lib/components/pages/Player/Player.svelte'
 import {Instrument} from '../src/lib/audio/Instrument.svelte'
 import {playerStore} from '../src/lib/stores/PlayerStore.svelte'
 import {playerControlsStore} from '../src/lib/stores/PlayerControlsStore.svelte'
@@ -859,5 +887,137 @@ describe('Player mode transition ownership', () => {
         expect(playerStore.eventType).toBe('play')
         expect(onSongFinished).not.toHaveBeenCalled()
         expect(playerControlsStore.score.wrong).toBe(1)
+    })
+})
+
+// THE MODE SWITCHER, end to end through the page it lives on: the three-icon control at the top of
+// the right-hand column re-aims the run that is already going. A mode change is a seek-shaped
+// RE-CHOICE - it runs from where the ear is and leaves the Section the user drew alone (ADR-0010),
+// but it chooses what runs, so it clears a pause the way play/practice/approaching do. The whole
+// Player is mounted because where to aim is its question, not the store's.
+describe('Player mode switcher', () => {
+    let target: HTMLDivElement
+    let component: Mounted | null
+
+    beforeEach(() => {
+        localStorage.clear()
+        mocks.pendingDelays.splice(0)
+        mocks.delay.mockClear()
+        mocks.songEvent.mockClear()
+        playerStore.resetSong()
+        playerControlsStore.clearPages()
+        playerControlsStore.resetScore()
+        playerControlsStore.setState({position: 0, current: 0, size: 0, end: 0, runEnd: 0})
+
+        target = document.createElement('div')
+        document.body.append(target)
+        component = mount(Player, {target})
+        flushSync()
+    })
+
+    afterEach(async () => {
+        if (component) unmount(component)
+        component = null
+        target.remove()
+        mocks.pendingDelays.splice(0).forEach(({resolve}) => resolve())
+        await Promise.resolve()
+        playerStore.resetSong()
+        playerControlsStore.clearPages()
+        playerControlsStore.resetScore()
+    })
+
+    function pressMode(mode: 'play' | 'practice' | 'approaching') {
+        const button = target.querySelector<HTMLButtonElement>(
+            `.player-mode-selector button[data-value="${mode}"]`)
+        if (!button) throw new Error(`Mode switcher did not render the ${mode} option`)
+        button.click()
+        flushSync()
+    }
+
+    /** A practice run over a Section that is neither the whole song nor at its start. */
+    async function runPracticeSection(start = 1, end = 3) {
+        const song = buildRecordedSong()
+        playerStore.practice(song, start, end)
+        await vi.waitFor(() => {
+            expect(playerControlsStore.position).toBe(start)
+            expect(playerControlsStore.state.runEnd).toBe(end)
+        })
+        return song
+    }
+
+    it('re-aims a running mode at the cursor and leaves the Section exactly as drawn', async () => {
+        await runPracticeSection(1, 3)
+        //where the ear is: one note into the Section, with the run still unfinished
+        playerControlsStore.setCurrent(2)
+
+        pressMode('play')
+
+        expect(playerStore.eventType).toBe('play')
+        expect(playerStore.state.start).toBe(2)
+        expect(playerStore.state.end).toBe(3)
+        //...and the range it runs is NOT published as the Section (ADR-0010)
+        expect(playerStore.state.preservesSection).toBe(true)
+        await vi.waitFor(() => expect(playerControlsStore.current).toBe(2))
+        expect(playerControlsStore.position).toBe(1)
+        expect(playerControlsStore.end).toBe(3)
+    })
+
+    it('starts a finished run over from the Section rather than from its own end', async () => {
+        await runPracticeSection(1, 3)
+        //a run parks its cursor ON the exclusive end when it finishes - there is no remainder left
+        //to carry into the new mode
+        playerControlsStore.setCurrent(3)
+
+        pressMode('play')
+
+        expect(playerStore.state.start).toBe(1)
+        expect(playerStore.state.end).toBe(3)
+        expect(playerStore.state.preservesSection).toBe(true)
+        await vi.waitFor(() => expect(playerControlsStore.current).toBe(1))
+        expect(playerControlsStore.position).toBe(1)
+        expect(playerControlsStore.end).toBe(3)
+    })
+
+    // PAUSE OUTLIVES A RE-AIM, NOT A RE-CHOICE (PlayerStore's `paused`): asking for another mode is
+    // asking to run it, unlike "Go to here", which only moves where a paused run will resume.
+    it('clears a pause when the mode is switched', async () => {
+        const song = buildRecordedSong()
+        playerStore.play(song, 0, song.notes.length)
+        await vi.waitFor(() => expect(playerControlsStore.state.runEnd).toBe(song.notes.length))
+        playerStore.setPaused(true)
+        flushSync()
+
+        pressMode('practice')
+
+        expect(playerStore.eventType).toBe('practice')
+        expect(playerStore.paused).toBe(false)
+    })
+
+    it('dispatches nothing when the mode already running is pressed', async () => {
+        await runPracticeSection(1, 3)
+        const {key, playId} = playerStore.state
+
+        pressMode('practice')
+
+        expect(playerStore.state.key).toBe(key)
+        expect(playerStore.state.playId).toBe(playId)
+        expect(playerStore.eventType).toBe('practice')
+    })
+
+    // A switch is an ordinary run dispatch in every way a run boundary matters: PlayerKeyboard tears
+    // the old one down through `stopSong` first, so approaching entered mid-song counts from zero
+    // and leaving it strands no score on screen.
+    it('scores an approach entered mid-song from zero', async () => {
+        await runPracticeSection(0, buildRecordedSong().notes.length)
+        playerControlsStore.increaseScore(true)
+        expect(playerControlsStore.score.correct).toBe(2)
+        expect(playerControlsStore.pagesState.pages.length).toBeGreaterThan(0)
+
+        pressMode('approaching')
+
+        expect(playerStore.eventType).toBe('approaching')
+        await vi.waitFor(() =>
+            expect(playerControlsStore.score).toEqual({correct: 1, wrong: 1, score: 0, combo: 0}))
+        expect(playerControlsStore.pagesState.pages).toEqual([])
     })
 })

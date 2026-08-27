@@ -2,7 +2,8 @@
 
 Status: IMPLEMENTED 2026-08-27 (phases A-D, uncommitted on Dev). CONTEXT.md terms landed
 (**Column Ruler**, **Ruler Scrub**); ADR-0014 records the scroll decision taken inside this
-design.
+design. **Read USER REVISION 2026-08-27 at the end before acting on §2's rejections** — one of
+them (edge auto-scroll during a Ruler Scrub) was reversed by the user and is now built.
 
 Built as written, with three corrections to the text found during implementation, each marked
 AS BUILT below: section 4's "the ladder almost never engages" is wrong at phone widths (a 360px
@@ -253,3 +254,58 @@ selected column, which is a correctness check a user can see.
 - A setting to hide it. The band is unconditional in the Pro View.
 - Scroll-into-view (selecting a visible column without moving the canvas) — see ADR-0014, which
   records why, and which any future attempt supersedes rather than extends.
+
+## USER REVISION 2026-08-27 — edge auto-scroll during a Ruler Scrub
+
+**The rejection recorded above is not standing.** §2 locks "the canvas holds still and the cursor
+follows the finger" and rejects "the canvas moving under the finger like a stage drag"; the user
+subsequently asked for edge auto-scroll and, told it had been rejected, **explicitly reversed that
+rejection**. It is implemented at their request. A future session reading §2 should read this
+section as the later decision rather than protecting the user from a call they have already
+un-made. What §2's rejection still stands for is unchanged and is not what this adds: the canvas
+does not follow the finger, and a scrub anywhere but the two edge bands moves nothing at all.
+
+- **The zone is the chevron buttons' own geometry.** Two bands, each `.canvas-buttons`'s
+  `min-width: 2.8rem` wide (`composerCanvasGeometry.CANVAS_SIDE_BUTTON_WIDTH`, pinned against
+  App.css in test/composerCanvasCss.test.ts): `[stripInset, stripInset + BAND]` on the left, where
+  ComposerCanvas.svelte insets the left chevron clear of the row-label strip with the same
+  `proStripWidth(rowHeight)`, and `[canvasWidth - BAND, canvasWidth]` on the right. Reusing the
+  buttons' footprint is what makes the gesture learnable — the place you push to walk the song is
+  the place that already walks it one column per tap.
+- **Always active during a scrub, on every device and every setting**, including where those
+  buttons are not rendered at all (desktop `hover: hover` at wide widths) or replaced outright
+  (`useKeyboardSideButtons`). The band is "the edge of the canvas, as wide as this app has always
+  called an edge"; a gesture that changed shape with a media query is one nobody could learn. It is
+  Pro-only by construction and carries no view branch — the Compressed View has no ruler.
+- **X only.** `y` is not consulted: once a scrub owns the band pixi delivers every move to it
+  wherever the finger goes, so requiring the finger to stay inside a 20px band to keep creeping
+  would end the creep by accident.
+- **Linear 2 → 10 columns per second by depth into the band**, depth 0 at the inner boundary and 1
+  at the canvas edge, clamped to 1 past the outer limit (over the row-label strip on the left, off
+  the canvas on the right). Columns per second and not pixels, so a push means the same thing at
+  every zoom. Two is slow enough to stop on a column; ten is ~4s across a screen — pushed to the
+  edge the creep is a way to travel, while a whole-song jump remains the mini-timeline's above.
+- **Driven by the FRAME, not by moves.** A finger held motionless in a band emits no pointer
+  events, and it is exactly the held finger that has to keep moving the canvas; the frames already
+  run for the whole of any drag. `rulerPointer` gained `lastX`, an unrounded `creepPosition`
+  accumulator (snap mode's whole-column invariant would otherwise round a sub-frame rate away) and
+  `creepAtMs`. See `ComposerRenderer.advanceRulerCreep`.
+- **The selection stays pinned under the stationary pointer**: each frame re-resolves the column
+  under `lastX` against the position that frame is about to paint, and publishes through the SAME
+  crossing rule a move does — `crossRulerColumn`, factored out of `handleRulerSlide`, so the ~50ms
+  `RULER_SCRUB_AUDIO_MS` throttle and the "diff against the scrub's own last column" rule are
+  written once and shared.
+- **Position is clamped to `[0, columns.length - 1]`, and the clamp is where the creep stops.** It
+  is not an ending: the finger is still down and the gesture is still a scrub.
+- **Everything else is unchanged**, deliberately: the release still eases to `state.selected`, so
+  ADR-0014's recentring is exactly what it was; the `isRecordingAudio` gate, the wheel-settle
+  cancel and the hover behaviour are untouched; and a scrub made while the song plays remains a
+  silent moving seek, because Composer.svelte's own gates already make that free for every crossing
+  whatever moved the finger over it.
+
+The invariant comments this invalidates were rewritten rather than annotated (the Motion type's
+`ruler` paragraph, `handleRulerDown`'s promise, `handleRulerSlide`'s "nothing is written into the
+motion"): the rule now reads **the FINGER never writes the position; the edge bands creep it**.
+ADR-0014's own §"A Ruler Scrub is expressible only because a drag already suspends the invariant"
+is unaffected in substance — the suspension is still bounded by the gesture — though its aside that
+`motion.position` is "never written" for this surface now means "never written by a move".

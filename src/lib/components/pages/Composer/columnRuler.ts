@@ -4,7 +4,10 @@
 // Pro View canvas, between the mini-timeline and the notes region: one pressable position per
 // column, marked at intervals with the timestamp its column begins at. composerCanvasGeometry owns
 // the BAND (COLUMN_RULER_HEIGHT and where it sits); this file owns everything printed ON it - which
-// columns get a reading, and what each one reads.
+// columns get a reading, and what each one reads - PLUS the one thing the band does that is not
+// printing: rulerEdgeScrollAt, the zone-and-speed arithmetic of a Ruler Scrub's edge creep. That
+// belongs here for the same reason the ladder does - it is a function from numbers to numbers that
+// the renderer would otherwise state inside a pixi-only class, where no plain test could reach it.
 //
 // SAME DISCIPLINE AS proViewGeometry.ts beside it - no pixi (ComposerRenderer is behind a dynamic
 // import, so anything it shares with a plain test must load without it), no `document`
@@ -216,4 +219,103 @@ export function columnRulerLabels(input: {
     labels.push({ index, text: columnRulerLabelText(input.columnStartMs(index)) });
   }
   return labels;
+}
+
+/**
+ * THE SLOWEST AND FASTEST A RULER SCRUB'S EDGE CREEP RUNS, in COLUMNS PER SECOND (CONTEXT.md: Ruler
+ * Scrub; spec 2026-08-27, USER REVISION).
+ *
+ * COLUMNS AND NOT PIXELS, which is the choice the whole ramp rests on: the Pro View's column width
+ * is a zoom, so a px/s creep would crawl at one zoom and bolt at another while the finger did the
+ * same thing. Stated in columns, a push against the edge means "walk the song at this many columns a
+ * second" at every zoom, every canvas width and every tempo - the same unit the selection this
+ * gesture is steering is counted in.
+ *
+ * TWO AT THE INNER EDGE is a column every half second: slow enough that a finger resting just inside
+ * the band can stop on the column it wanted, which is the whole reason there is a floor rather than
+ * a ramp from zero - a creep that starts at nothing has a dead strip at the band's inner edge where
+ * the user is pushing and nothing happens.
+ *
+ * TEN AT THE OUTER EDGE is a column every 100ms, ~4s to cross a 40-column screen. Pushed all the way
+ * it is a way to travel: the band's inner half stays the precise nudge, and the last of it covers
+ * ground the user would otherwise have to leave the gesture for. The mini-timeline directly above
+ * the band remains the way to jump a whole song at once, which is why even the ceiling is a walk.
+ *
+ * LINEAR BETWEEN THEM, and not eased. The depth of a push is a position the hand holds, not a motion
+ * it makes, so the map from depth to speed is something the user reads back by feel and holds - and
+ * a curve makes the same fingertip position mean different things at different band widths.
+ */
+export const RULER_EDGE_SCROLL_MIN_COLUMNS_PER_SECOND = 2;
+export const RULER_EDGE_SCROLL_MAX_COLUMNS_PER_SECOND = 10;
+
+/** A creep in progress: which way along the song, and how fast in columns per second. */
+export interface RulerEdgeScroll {
+  /** -1 toward the song's start, +1 toward its end - the direction the POSITION moves. */
+  direction: -1 | 1;
+  /** Columns per second, between the two constants above. */
+  speed: number;
+}
+
+/**
+ * WHETHER A HELD RULER SCRUB IS PUSHING AGAINST AN EDGE, and how hard - the whole of the edge
+ * creep's decision, as arithmetic (CONTEXT.md: Ruler Scrub).
+ *
+ * X ONLY. `y` is not a parameter because the gesture ignores it: once a scrub owns the band pixi
+ * dispatches every move to it wherever the finger goes (the hitarea opens up for the owning
+ * pointer), so a finger that has slid down over the notes or off the canvas entirely is still
+ * scrubbing, and asking it to also stay inside a 20px band to keep creeping would make the gesture
+ * end by accident.
+ *
+ * THE TWO BANDS ARE THE TWO CHEVRON BUTTONS' FOOTPRINTS, both `bandWidth` wide (App.css's
+ * `.canvas-buttons` min-width, carried as composerCanvasGeometry.CANVAS_SIDE_BUTTON_WIDTH):
+ * `[stripInset, stripInset + bandWidth]` on the left, where ComposerCanvas.svelte insets the left
+ * chevron clear of the row-label strip, and `[canvasWidth - bandWidth, canvasWidth]` on the right,
+ * where it pins the other one to the edge. Reusing the buttons' geometry rather than inventing a
+ * zone is what makes the creep learnable: the place you push to walk the song a column at a time is
+ * the place you push to walk it a column at a time.
+ *
+ * DEPTH IS 0 AT THE BAND'S INNER BOUNDARY AND 1 AT THE CANVAS' EDGE, so the ramp is oriented the way
+ * the hand is - deeper into the corner is faster. PAST THE OUTER LIMIT IT CLAMPS TO 1 rather than
+ * falling out of the band: on the left that outer limit is `stripInset`, and the strip beyond it is
+ * a real place to put a finger (it is 22-46px of pitch labels); on the right it is the canvas edge,
+ * past which the finger is off the canvas but pixi still delivers the moves. Either way a push that
+ * overshoots is a push at full speed, never a creep that stops because the user pushed too far.
+ *
+ * Answers null for "not in a band", which is what stops a creep: a finger that slides back into the
+ * middle of the canvas leaves the canvas where the creep got it to and goes on scrubbing normally.
+ *
+ * DEGENERATE INPUTS ANSWER null rather than a speed - a non-finite x (a pointer read before layout),
+ * a non-positive band. Bands that OVERLAP, which needs a canvas narrower than the strip plus two
+ * bands (~135px, below any viewport this app runs at), resolve to the LEFT one: it is stated so that
+ * the answer is a decision rather than whichever comparison happened to be written first.
+ */
+export function rulerEdgeScrollAt(input: {
+  x: number;
+  stripInset: number;
+  canvasWidth: number;
+  bandWidth: number;
+}): RulerEdgeScroll | null {
+  const { x, stripInset, canvasWidth, bandWidth } = input;
+  if (!Number.isFinite(x) || !(bandWidth > 0) || !Number.isFinite(canvasWidth)) return null;
+  const leftInner = stripInset + bandWidth;
+  if (x <= leftInner) {
+    //depth grows leftward from the inner boundary; the outer limit is written as its own case
+    //rather than left to the clamp so that both ends of the ramp are EXACT rather than a float
+    //hair off the constants they are meant to be
+    const depth = x <= stripInset ? 1 : (leftInner - x) / bandWidth;
+    return { direction: -1, speed: rulerEdgeScrollSpeed(depth) };
+  }
+  const rightInner = canvasWidth - bandWidth;
+  if (x >= rightInner) {
+    const depth = x >= canvasWidth ? 1 : (x - rightInner) / bandWidth;
+    return { direction: 1, speed: rulerEdgeScrollSpeed(depth) };
+  }
+  return null;
+}
+
+/** The linear ramp itself, on a depth already clamped into [0, 1] by its caller. */
+function rulerEdgeScrollSpeed(depth: number): number {
+  const min = RULER_EDGE_SCROLL_MIN_COLUMNS_PER_SECOND;
+  const max = RULER_EDGE_SCROLL_MAX_COLUMNS_PER_SECOND;
+  return min + (max - min) * Math.max(0, Math.min(1, depth));
 }

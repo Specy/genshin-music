@@ -294,6 +294,35 @@
     playerStore.seek(noteIndex, noteIndex >= end ? playerControlsStore.size : end);
   }
 
+  /**
+   * SWITCHING MODE IS A RE-CHOICE AIMED AT WHERE THE EAR IS (see `playerStore.switchMode`). The
+   * three modes are three ways of running the SAME song, so the switcher hands the current position
+   * to the new one instead of starting the song over: the Section the user drew, the speed and the
+   * sheet all stay as they are and only what the run asks of the user changes.
+   *
+   * Where to aim is the same question a mid-run pitch or page-size change asks, and gets the same
+   * answer: a run still in progress carries on from `current`, with seekToNote's rule for a cursor
+   * already at or past the Section's end (that one run reaches the song's end rather than being a
+   * dead run), while a finished run has no remainder to continue and starts from the Section's own
+   * start. The score and the sheet need nothing here - the dispatch bumps `key`, and PlayerKeyboard
+   * tears every run down through `stopSong` before building the next, which is what clears the
+   * pages and the score for an ordinary play/practice/approaching command too. So approaching
+   * entered mid-song scores from zero, and leaving it strands nothing.
+   */
+  function switchPlayMode(mode: 'play' | 'practice' | 'approaching') {
+    if (!mounted) return;
+    const type = playerStore.eventType;
+    //nothing to switch to: no run is going, or the pressed mode is the one already running
+    if (type === 'stop' || type === mode) return;
+    const { current, runEnd } = playerControlsStore.state;
+    if (runEnd > 0 && current < runEnd) {
+      const end = playerControlsStore.end;
+      playerStore.switchMode(mode, current, current >= end ? playerControlsStore.size : end);
+    } else {
+      playerStore.switchMode(mode, playerControlsStore.position, playerControlsStore.end);
+    }
+  }
+
   async function onSongFinished() {
     if (!settings.loopPractice.value) return;
     const finishedKey = playerStore.state.key;
@@ -707,6 +736,7 @@
   onToggleRecordAudio={toggleRecordAudio}
   onRestart={restartSong}
   onSeek={seekToNote}
+  onSwitchMode={switchPlayMode}
   onToggleMetronome={toggleMetronome}
   onRawSpeedChange={handleSpeedChanger}
 />

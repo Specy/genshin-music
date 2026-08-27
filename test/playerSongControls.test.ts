@@ -10,6 +10,7 @@ describe('Player song controls', () => {
     let target: HTMLDivElement
     let component: ReturnType<typeof mount> | null
     let onRestart: ReturnType<typeof vi.fn>
+    let onSwitchMode: ReturnType<typeof vi.fn>
 
     beforeEach(() => {
         playerStore.resetSong()
@@ -18,11 +19,13 @@ describe('Player song controls', () => {
         target = document.createElement('div')
         document.body.append(target)
         onRestart = vi.fn()
+        onSwitchMode = vi.fn()
         component = mount(PlayerSongControls, {
             target,
             props: {
                 onRestart,
                 onSeek: vi.fn(),
+                onSwitchMode,
                 onRawSpeedChange: vi.fn(),
                 onToggleRecordAudio: vi.fn(),
                 onToggleMetronome: vi.fn(),
@@ -96,6 +99,60 @@ describe('Player song controls', () => {
         expect(playPause().getAttribute('aria-label')).toBe('Pause')
     })
 
+    // The switcher is a picker of the CURRENT run's mode, so it exists only while a run does - with
+    // no song loaded there is nothing to re-aim, and the song list's rows are where a mode is
+    // chosen from scratch. That makes it the exact complement of the record-audio button below.
+    it('shows the three-mode switcher only while a run is active, marking the running mode', () => {
+        const modes = ['play', 'practice', 'approaching'] as const
+        // `data-value` and not a class of the host's: the slider's own buttons say which option
+        // each one is, which is the only thing about an icon-faced button that is not a glyph.
+        const buttons = () => modes.map(mode =>
+            target.querySelector<HTMLButtonElement>(
+                `.player-mode-selector button[data-value="${mode}"]`))
+
+        expect(buttons()).toEqual([null, null, null])
+
+        for (const running of modes) {
+            playerStore.setState({eventType: running})
+            flushSync()
+            const rendered = buttons()
+            expect(rendered.every(button => button !== null)).toBe(true)
+            // exactly one answer: the pill sits under the running mode and under no other
+            expect(modes.filter((mode, index) =>
+                rendered[index]!.classList.contains('multiple-options-selected')))
+                .toEqual([running])
+            // ...and the label the glyph replaced is still the button's accessible name
+            expect(rendered.every(button => (button!.getAttribute('aria-label') ?? '').length > 0))
+                .toBe(true)
+        }
+
+        playerStore.setState({eventType: 'stop'})
+        flushSync()
+        expect(buttons()).toEqual([null, null, null])
+    })
+
+    // The option only asks; Player decides where to aim the new run and whether the press is a
+    // no-op (pressing the mode already running). The switcher itself hands every press over.
+    it('asks for the pressed mode, including the one already running', () => {
+        playerStore.setState({eventType: 'practice'})
+        flushSync()
+        const option = (mode: string) => target.querySelector<HTMLButtonElement>(
+            `.player-mode-selector button[data-value="${mode}"]`)!
+
+        option('play').click()
+        flushSync()
+        expect(onSwitchMode).toHaveBeenCalledWith('play')
+
+        option('approaching').click()
+        flushSync()
+        expect(onSwitchMode).toHaveBeenLastCalledWith('approaching')
+
+        option('practice').click()
+        flushSync()
+        expect(onSwitchMode).toHaveBeenLastCalledWith('practice')
+        expect(onSwitchMode).toHaveBeenCalledTimes(3)
+    })
+
     it('offers audio recording only when no song is running', () => {
         const recordButton = () => [...target.querySelectorAll('button')]
             .find(button => button.textContent?.trim() === 'Record audio')
@@ -159,23 +216,20 @@ describe('Player song controls', () => {
         playerStore.setState({eventType: 'play'})
         flushSync()
 
-        const inputs = target.querySelectorAll<HTMLInputElement>('.slider-input')
-        const endInput = inputs[0]
-        const startInput = inputs[1]
-        expect(startInput.value).toBe('1')
-        expect(endInput.value).toBe('3')
+        // The thumbs are placed by FRAME boundary, not by note: the end arrow sits after frame
+        // three (the whole song) and the start arrow before frame one, whatever the note counts are.
+        const thumbs = target.querySelectorAll<HTMLElement>('.two-way-slider-thumb')
+        expect(thumbs.length).toBe(2)
+        expect(thumbs[0].style.bottom).toBe('calc(100% - 18px)')
+        expect(thumbs[1].style.bottom).toBe('calc(0% - 14px)')
 
-        startInput.value = '2'
-        startInput.dispatchEvent(new Event('input', {bubbles: true}))
+        // Frame two only: start at absolute note 3, exclusive end at 5.
+        playerControlsStore.setSectionStart(3)
+        playerControlsStore.setSectionEnd(5)
         flushSync()
-        // Frame two begins at absolute note 3; raw note 2 is inside frame one.
-        expect(playerControlsStore.position).toBe(3)
-
-        endInput.value = '2'
-        endInput.dispatchEvent(new Event('input', {bubbles: true}))
-        flushSync()
-        // Frame two ends at absolute note 4, so the playback end remains exclusive at 5.
-        expect(playerControlsStore.end).toBe(5)
+        // jsdom rounds the serialised percentage to four decimals.
+        expect(thumbs[0].style.bottom).toBe('calc(66.6667% - 18px)')
+        expect(thumbs[1].style.bottom).toBe('calc(33.3333% - 14px)')
 
         playerControlsStore.setState({position: 0, current: 0, end: 9, runEnd: 9})
         flushSync()

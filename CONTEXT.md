@@ -125,7 +125,7 @@ The press that opened the duration popover — on a keyboard key, a Pro View cel
 _Avoid_: drag-to-resize (suggests grabbing the tail and snapping it to a position — a Duration Hold only ever increments), snap-to-column
 
 **Ruler Scrub**:
-A drag along the Column Ruler. The canvas holds still and the selection follows the finger, sounding each column it passes — rate-limited, so a fast sweep is a sparse run through the song rather than every column it crossed at once. The RELEASE is what moves the canvas: it settles on the column the finger landed on. While the song plays it sounds nothing and is a moving seek, like every other manual move.
+A drag along the Column Ruler. The canvas holds still and the selection follows the finger, sounding each column it passes — rate-limited, so a fast sweep is a sparse run through the song rather than every column it crossed at once. The exception is the two edge bands, over the < > column buttons: hold the finger in one and the canvas creeps toward the song's start or end — faster the deeper the push — while the selection rides the column passing under the held finger. The RELEASE is what moves the canvas: it settles on the column the finger landed on. While the song plays it sounds nothing and is a moving seek, like every other manual move.
 _Avoid_: scrubbing (alone — the minimap above scrubs silently and never carries the selection under the finger), drag-to-select
 
 ### Composer Editing
@@ -149,7 +149,7 @@ One playable instant of a song in the player: the near-simultaneous notes merged
 _Avoid_: column (composer-side), chord (a Chunk may hold one note)
 
 **Sheet Frame**:
-One Chunk drawn as a tile of the player's visual sheet. The frame-granular handle for the Section: a frame can start it, end it, or be sought to.
+One Chunk drawn as a tile of the player's visual sheet. The frame-granular handle for the Section: a frame can start it, end it, or be sought to. Exactly one frame is marked as the run's own: while the player performs it is the frame being HEARD, which keeps the mark until the next frame is heard to begin; while the user performs it is the frame being asked for, which keeps the mark until every note in it has been played.
 _Avoid_: frame (alone, ambiguous with animation frames), sheet tile
 
 **Sheet Card**:

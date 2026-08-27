@@ -22,6 +22,12 @@
  * ...and the timestamps owe one thing: they are `ComposedSong.columnsDurationMs(0, i)`, the
  * ADR-0008 boundary-differenced grid, and not any second accumulation of the same durations. The
  * last block pins that against the drift ADR-0008 exists to remove.
+ *
+ * THE LAST BLOCK IS NOT ABOUT LABELS AT ALL: `rulerEdgeScrollAt` is the Ruler Scrub's edge creep as
+ * pure arithmetic (spec 2026-08-27, USER REVISION) — which x is pushing against an edge, which way,
+ * and how fast. It lives in the same module for the reason the ladder does, and it is exercised here
+ * for the same reason: the renderer that consumes it is behind a dynamic pixi import, and a zone
+ * boundary is a place where being one pixel out is a gesture that does nothing.
  */
 import { describe, expect, it } from 'vitest';
 import { ComposedSong, ComposerSettings, INSTRUMENTS, TEMPO_CHANGERS } from './imports';
@@ -34,8 +40,14 @@ import {
   columnRulerLabelText,
   columnRulerLabels,
   isColumnRulerLabel,
+  RULER_EDGE_SCROLL_MAX_COLUMNS_PER_SECOND,
+  RULER_EDGE_SCROLL_MIN_COLUMNS_PER_SECOND,
+  rulerEdgeScrollAt,
 } from '$cmp/pages/Composer/columnRuler';
-import { composerCanvasSize } from '$cmp/pages/Composer/composerCanvasGeometry';
+import {
+  CANVAS_SIDE_BUTTON_WIDTH,
+  composerCanvasSize,
+} from '$cmp/pages/Composer/composerCanvasGeometry';
 import { formatMs, nearestEven } from '$core/utils/Utilities';
 
 /** ComposerSettings' own option lists — see this file's header for why they are not restated. */
@@ -394,5 +406,109 @@ describe('the readings the labels carry', () => {
     //`formatMs` floors the minutes and rounds the seconds independently, so a negative would print
     //nonsense; the grid never produces one and the band draws nothing left of column 0
     expect(columnRulerLabelText(-500)).toBe('0:00');
+  });
+});
+
+/**
+ * THE RULER SCRUB'S EDGE CREEP, as arithmetic (CONTEXT.md: Ruler Scrub; spec 2026-08-27, USER
+ * REVISION). The renderer's half — that a held finger keeps creeping frame after frame, that the
+ * selection rides the columns going past it, that the clamp stops it — is in
+ * test/composerRenderer.test.ts. What is here is the map from one x to one (direction, speed), which
+ * is where a band that is a pixel out or a ramp that runs backwards would first be visible.
+ */
+describe('the edge bands a Ruler Scrub creeps in', () => {
+  //The real band width, so a change to `.canvas-buttons` min-width reaches these rows through
+  //composerCanvasGeometry rather than past them — test/composerCanvasCss.test.ts is the other end
+  //of that same coupling. The strip inset is a proStripWidth answer at a mid-sized row.
+  const BAND = CANVAS_SIDE_BUTTON_WIDTH;
+  const STRIP = 40;
+  const WIDTH = 1000;
+  const at = (x: number) =>
+    rulerEdgeScrollAt({ x, stripInset: STRIP, canvasWidth: WIDTH, bandWidth: BAND });
+
+  it('is the two chevron footprints and nothing between them', () => {
+    //THE MIDDLE OF THE CANVAS IS NOT A BAND, which is the whole of "a scrub that never pushes an
+    //edge never moves the canvas" — the invariant the creep is a carve-out of, not a repeal of.
+    expect(at(WIDTH / 2)).toBeNull();
+    //...and the two inner boundaries are inclusive, so the first pixel of the band already creeps
+    //(at the floor speed, which is what makes the boundary unnoticeable rather than a step)
+    expect(at(STRIP + BAND)).toEqual({
+      direction: -1,
+      speed: RULER_EDGE_SCROLL_MIN_COLUMNS_PER_SECOND,
+    });
+    expect(at(STRIP + BAND + 0.01)).toBeNull();
+    expect(at(WIDTH - BAND)).toEqual({
+      direction: 1,
+      speed: RULER_EDGE_SCROLL_MIN_COLUMNS_PER_SECOND,
+    });
+    expect(at(WIDTH - BAND - 0.01)).toBeNull();
+    //THE LEFT BAND STARTS AT THE ROW-LABEL STRIP and not at x 0: that is where ComposerCanvas.svelte
+    //puts the left chevron, so the band and the button it is pushing against are one rectangle.
+    expect(at(STRIP + BAND / 2)?.direction).toBe(-1);
+    expect(at(WIDTH - BAND / 2)?.direction).toBe(1);
+  });
+
+  it('ramps linearly from the inner boundary to the canvas edge, both sides', () => {
+    const min = RULER_EDGE_SCROLL_MIN_COLUMNS_PER_SECOND;
+    const max = RULER_EDGE_SCROLL_MAX_COLUMNS_PER_SECOND;
+    expect([min, max]).toEqual([2, 10]);
+    //depth 0, 0.5, 1 — the three points a linear ramp is fixed by
+    expect(at(STRIP + BAND)?.speed).toBeCloseTo(min, 10);
+    expect(at(STRIP + BAND / 2)?.speed).toBeCloseTo((min + max) / 2, 10);
+    expect(at(STRIP)?.speed).toBeCloseTo(max, 10);
+    expect(at(WIDTH - BAND)?.speed).toBeCloseTo(min, 10);
+    expect(at(WIDTH - BAND / 2)?.speed).toBeCloseTo((min + max) / 2, 10);
+    expect(at(WIDTH)?.speed).toBeCloseTo(max, 10);
+    //...and it is MONOTONIC across the whole of both bands, which is what "deeper is faster" means
+    //to a hand and is the one property a sign slip in the depth expression would break silently
+    const leftward = Array.from({ length: 24 }, (_, step) =>
+      at(STRIP + BAND - (step * BAND) / 23)
+    );
+    for (let i = 1; i < leftward.length; i++) {
+      expect(leftward[i]!.direction).toBe(-1);
+      expect(leftward[i]!.speed).toBeGreaterThan(leftward[i - 1]!.speed);
+    }
+    const rightward = Array.from({ length: 24 }, (_, step) =>
+      at(WIDTH - BAND + (step * BAND) / 23)
+    );
+    for (let i = 1; i < rightward.length; i++) {
+      expect(rightward[i]!.direction).toBe(1);
+      expect(rightward[i]!.speed).toBeGreaterThan(rightward[i - 1]!.speed);
+    }
+  });
+
+  it('clamps to full speed past either outer limit rather than falling out of the band', () => {
+    //THE STRIP IS A REAL PLACE TO PUT A FINGER — 22-46px of pitch labels — and pixi goes on
+    //delivering moves from a pointer that has left the canvas entirely, so an overshoot in either
+    //direction has to stay a push at full speed. A band that ended at its outer edge would make the
+    //creep stop exactly where the user pushed hardest.
+    for (const x of [STRIP, STRIP - 1, 0, -500, -100_000]) {
+      expect(at(x)).toEqual({ direction: -1, speed: RULER_EDGE_SCROLL_MAX_COLUMNS_PER_SECOND });
+    }
+    for (const x of [WIDTH, WIDTH + 1, WIDTH + 5000, 100_000]) {
+      expect(at(x)).toEqual({ direction: 1, speed: RULER_EDGE_SCROLL_MAX_COLUMNS_PER_SECOND });
+    }
+  });
+
+  it('answers nothing at all for inputs a canvas mid-resize can produce', () => {
+    //an INFINITY is not an overshoot, it is a broken measurement, and the row above is about
+    //overshoots: a non-finite x answers null with the rest of them
+    for (const x of [Number.NaN, Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY]) {
+      expect(at(x)).toBeNull();
+    }
+    expect(
+      rulerEdgeScrollAt({ x: 500, stripInset: STRIP, canvasWidth: Number.NaN, bandWidth: BAND })
+    ).toBeNull();
+    for (const bandWidth of [0, -1, Number.NaN]) {
+      expect(
+        rulerEdgeScrollAt({ x: 500, stripInset: STRIP, canvasWidth: WIDTH, bandWidth })
+      ).toBeNull();
+    }
+    //OVERLAPPING BANDS RESOLVE LEFT, on a canvas narrower than the strip plus two bands (~135px,
+    //below any viewport this app runs at). Stated so the answer is a decision rather than whichever
+    //comparison happened to be written first.
+    expect(
+      rulerEdgeScrollAt({ x: 60, stripInset: STRIP, canvasWidth: 100, bandWidth: BAND })?.direction
+    ).toBe(-1);
   });
 });
