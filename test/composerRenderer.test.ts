@@ -245,6 +245,9 @@ const pixi = vi.hoisted(() => {
      */
     interface FakePointerEvent {
         globalX: number
+        globalY?: number
+        pointerId?: number
+        pointerType?: string
     }
 
     class FakeContainer {
@@ -669,7 +672,7 @@ import {
 } from './imports'
 //the renderer's own rounding helper, used here to DERIVE the column geometry rather than read it
 //back off the ComposerCache the renderer built - see Geometry
-import {nearestEven} from '$core/utils/Utilities'
+import {formatMs, nearestEven} from '$core/utils/Utilities'
 //the CANVAS placement rules (ADR-0004 under ADR-0007): a row is gridRowForNumber's answer for the
 //note's OWN track at its own Basepoint, so the oracles below take the *Grid* helpers.
 //computeButtonLayerStatuses, keyed by the Buttons of the keyboard on screen, belongs to the composer
@@ -703,10 +706,21 @@ import {COMPOSER_TIMELINE_MINIMAP_CONFIG} from '$cmp/pages/Composer/composerTime
 //drawn strip clear of. Imported rather than restated for the same reason nearestEven is: they are
 //the definition, and test/composerCanvasCss.test.ts is what pins them against App.css.
 import {
+    COLUMN_RULER_HEIGHT,
     TIMELINE_INSET_LEFT,
     TIMELINE_INSET_RIGHT,
+    composerColumnRulerY,
     composerNotesRegionY,
 } from '$cmp/pages/Composer/composerCanvasGeometry'
+//PART TEN's cadence, imported for the same reason the insets are: the ladder IS the definition and
+//test/columnRuler.test.ts is what pins it against the spec. What PART TEN checks is the DRAWING
+//that reads it - which mark each column gets, where it lands, and what it says.
+import {
+    COLUMN_RULER_BASE_LABEL_STEP,
+    columnRulerBarLength,
+    columnRulerLabelStep,
+    isColumnRulerLabel,
+} from '$cmp/pages/Composer/columnRuler'
 //PART NINE's rules, imported for the same reason nearestEven and the insets are: they ARE the axis
 //and the framing, pinned in test/proViewGeometry.test.ts against the spec, so restating them here
 //would be restating a definition rather than checking one. What PART NINE checks is the INPUT
@@ -718,6 +732,7 @@ import {
     lockedCameraY,
     proRowHeight,
     numberAtY,
+    numberForRow,
     proStripWidth,
     proViewAxis,
     rowForNumber,
@@ -1576,6 +1591,11 @@ async function mount(context: Context = makeContext()): Promise<Harness> {
     //      returns on the first hit - so being last is what makes the strip decide a pointer before
     //      the notes container sees it. Draw order is free (the two regions never overlap in y), so
     //      hit order is the whole of why it is here.
+    //THE PRO VIEW ADDS A SECOND CONTAINER TO THAT RULE and no third region to this one: the Column
+    //Ruler's band is a later child than the columns and an earlier one than the strip, which is what
+    //lets a press on it win over a press on a note while leaving the mini-timeline deciding first
+    //(mountPro states the seven, PART ELEVEN presses them). Nothing of it exists in THIS view - the
+    //stage is these three - which is the whole of the Compressed View's no-op claim.
     const [app] = pixi.applications.slice(appsBefore)
     expect(app.stage.children).toHaveLength(3)
     const notesColumns = app.stage.children[0]
@@ -7592,11 +7612,18 @@ describe('the Pro View pointer', () => {
         await vi.advanceTimersByTimeAsync(180)
         const [app] = pixi.applications.slice(appsBefore)
         //the Pro View's stage: columns, the zone's framing, the offscreen-note arrows, the
-        //playhead, the row-label strip, the mini-timeline. Stated here for the reason mount()
-        //states its own three - the LAST child is what pixi hit-tests first, and the notes
-        //container being [0] is what the emits below reach.
-        expect(app.stage.children).toHaveLength(6)
+        //playhead, the COLUMN RULER's band, the row-label strip, the mini-timeline. Stated here for
+        //the reason mount() states its own three - the LAST child is what pixi hit-tests first, and
+        //the notes container being [0] is what the emits below reach.
+        //
+        //The ruler remains later than the notes container, which lets its press win over a note.
+        //The row-label strip is later still so its backing and pitch labels draw above the ruler at
+        //the left edge; eventMode `none` makes that a draw-order relationship only. The timeline is
+        //last and keeps deciding first over its own band. PART TEN reads the band through this same
+        //index and PART ELEVEN presses it.
+        expect(app.stage.children).toHaveLength(7)
         const notesColumns = app.stage.children[0]
+        const proStrip = app.stage.children[5]
 
         //THE VIEW FUNCTION, restated from the same modules the renderer reads it from (see this
         //part's import note): the axis this song draws on, the row height this region gives EVERY
@@ -7642,6 +7669,45 @@ describe('the Pro View pointer', () => {
             yOfNumber,
             numberAt,
             stripWidth: () => proStripWidth(rowHeight),
+            noteSprites(columnIndex = song.selected): {y: number, height: number, visible: boolean}[] {
+                const column = notesColumns.children.find(
+                    child => Math.round(child.x / COLUMN_WIDTH) === columnIndex
+                )
+                return (column?.children.slice(4) ?? []).map(sprite => ({
+                    y: sprite.y,
+                    height: (sprite as unknown as {height: number}).height,
+                    visible: sprite.visible,
+                }))
+            },
+            tailRects(columnIndex = song.selected): number[][] {
+                const column = notesColumns.children.find(
+                    child => Math.round(child.x / COLUMN_WIDTH) === columnIndex
+                )
+                const tails = column?.children[3] as unknown as {ops?: unknown[][]} | undefined
+                return (tails?.ops ?? [])
+                    .filter(op => op[0] === 'rect')
+                    .map(op => op.slice(1) as number[])
+            },
+            columnBackground(columnIndex = song.selected): {y: number, height: number} | null {
+                const column = notesColumns.children.find(
+                    child => Math.round(child.x / COLUMN_WIDTH) === columnIndex
+                )
+                const background = column?.children[0] as unknown as
+                    | {y: number, height: number}
+                    | undefined
+                return background ? {y: background.y, height: background.height} : null
+            },
+            stripBackgroundRects(): number[][] {
+                const background = proStrip.children[0] as unknown as {ops?: unknown[][]}
+                return (background.ops ?? [])
+                    .filter(op => op[0] === 'rect')
+                    .map(op => op.slice(1) as number[])
+            },
+            stripLabels(): {y: number, visible: boolean}[] {
+                return proStrip.children
+                    .filter(child => child.kind === 'text')
+                    .map(child => ({y: child.y, visible: child.visible}))
+            },
             longPressEnds: () => longPressEnds,
             dismissals: () => dismissals,
             unlocks: () => unlocks,
@@ -8036,6 +8102,129 @@ describe('the Pro View pointer', () => {
             harness.tap(x, harness.notesTop + harness.rowHeight / 2)
             //camera 0 = the axis' top row at the region's top edge
             expect(harness.taps).toEqual([{column: SELECTED, number: harness.axis.max}])
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    it('keeps a whole row behind the ruler until it is completely above it', async () => {
+        const harness = await mountPro({viewLocked: false})
+        try {
+            //Choose a SHADED row with camera travel on both sides, then put a real current-layer
+            //note and span there. The octave band is the row's moving background; choosing it
+            //explicitly makes the same culling boundary observable for every layer of the row.
+            const maxCameraRows = harness.axis.rowCount - harness.height / harness.rowHeight
+            const middleRow = Math.max(1, Math.floor(maxCameraRows / 2))
+            const candidateRow = Array.from(
+                {length: Math.max(0, Math.floor(maxCameraRows) - 1)},
+                (_, index) => index + 1
+            )
+                .sort((a, b) => Math.abs(a - middleRow) - Math.abs(b - middleRow))
+                .find(
+                    candidate =>
+                        Math.floor(numberForRow(harness.axis, candidate) / 12) % 2 === 0
+                )
+            if (candidateRow === undefined)
+                throw new Error('fixture has no shaded row inside camera travel')
+            const number = numberForRow(harness.axis, candidateRow)
+            harness.song.addNoteAt(SELECTED, 0, number, 3)
+            harness.push()
+            //Adding the probe can widen the song-derived axis near an edge. Resolve its row again
+            //from the exact axis the post-edit renderer paints instead of retaining a stale index.
+            const row = rowForNumber(proViewAxis(songNumberSpan(harness.song.columns)), number)
+            const cameraAtNotesEdge = (row + 1) * harness.rowHeight
+            const tailHeight = Math.max(2, harness.rowHeight * 0.22)
+            const tailAtNotesEdge = -harness.rowHeight + (harness.rowHeight - tailHeight) / 2
+            const x = harness.xOfColumn(SELECTED)
+            //Drive the camera from a stable point inside the notes surface. The row selected above
+            //is chosen for the camera destination and may begin outside the locked frame; using
+            //its offscreen centre as the pointer origin would correctly decline the press.
+            const y = harness.notesTop + harness.height / 2
+
+            //Put the row's bottom on the notes region's top edge. Its upper part is still behind the
+            //translucent ruler, so culling against the notes region alone removes visible pixels.
+            harness.drag(
+                x,
+                y,
+                x,
+                y + harness.lockedCamera() - cameraAtNotesEdge
+            )
+            expect(
+                harness.noteSprites().some(
+                    sprite =>
+                        sprite.visible && Math.abs(sprite.y + harness.rowHeight) < 0.000001
+                )
+            ).toBe(true)
+            expect(
+                harness.tailRects().some(([, tailY]) => Math.abs(tailY - tailAtNotesEdge) < 0.000001)
+            ).toBe(true)
+            expect(
+                harness.tailRects().some(
+                    ([bandX, bandY, bandWidth, bandHeight]) =>
+                        bandX === 0 &&
+                        Math.abs(bandY + harness.rowHeight) < 0.000001 &&
+                        bandWidth === COLUMN_WIDTH &&
+                        bandHeight === harness.rowHeight
+                )
+            ).toBe(true)
+            expect(harness.columnBackground()).toEqual({
+                y: -COLUMN_RULER_HEIGHT,
+                height: harness.height + COLUMN_RULER_HEIGHT,
+            })
+            expect(harness.stripBackgroundRects()).toContainEqual([
+                0,
+                -COLUMN_RULER_HEIGHT,
+                harness.stripWidth(),
+                harness.height + COLUMN_RULER_HEIGHT,
+            ])
+            const labelAtNotesEdge = -harness.rowHeight / 2
+            expect(
+                harness
+                    .stripLabels()
+                    .some(
+                        label =>
+                            label.visible &&
+                            Math.abs(label.y - labelAtNotesEdge) < 0.000001
+                    )
+            ).toBe(true)
+
+            //Once the same row's bottom reaches the ruler's top edge, no part of either mark is
+            //left on screen and the pooled sprite/tail may be culled.
+            const beyondRuler = COLUMN_RULER_HEIGHT + 1
+            harness.drag(x, y, x, y - beyondRuler)
+            expect(
+                harness.noteSprites().some(
+                    sprite =>
+                        sprite.visible &&
+                        Math.abs(sprite.y + harness.rowHeight + beyondRuler) < 0.000001
+                )
+            ).toBe(false)
+            expect(
+                harness
+                    .tailRects()
+                    .some(
+                        ([, tailY]) =>
+                            Math.abs(tailY - (tailAtNotesEdge - beyondRuler)) < 0.000001
+                    )
+            ).toBe(false)
+            expect(
+                harness.tailRects().some(
+                    ([bandX, bandY, bandWidth, bandHeight]) =>
+                        bandX === 0 &&
+                        Math.abs(bandY + harness.rowHeight + beyondRuler) < 0.000001 &&
+                        bandWidth === COLUMN_WIDTH &&
+                        bandHeight === harness.rowHeight
+                )
+            ).toBe(false)
+            expect(
+                harness
+                    .stripLabels()
+                    .some(
+                        label =>
+                            label.visible &&
+                            Math.abs(label.y - (labelAtNotesEdge - beyondRuler)) < 0.000001
+                    )
+            ).toBe(false)
         } finally {
             harness.destroy()
         }
@@ -8520,6 +8709,1215 @@ describe('the Pro View pointer', () => {
             expect(harness.longPresses).toEqual([])
             harness.release(x, focalY, PRIMARY_POINTER)
             expect(harness.taps).toEqual([])
+        } finally {
+            harness.destroy()
+        }
+    })
+})
+
+// ---------------------------------------------------------------------------------------------
+// PART TEN: THE COLUMN RULER (CONTEXT.md: Column Ruler, Ruler Scrub; spec 2026-08-27 §5, phase B).
+//
+// The ~20px band across the top of the Pro View canvas, between the mini-timeline and the notes
+// region: a scale of the VISIBLE WINDOW, ticked on the canvas' own 4-column grouping and marked at
+// intervals with the timestamp each labelled column begins at.
+//
+// THE SCENE ONLY. Every row below reads what the band DRAWS and none of them drives a pointer at
+// it: what a press on it means - the hit area, the `ruler` drag surface, the Ruler Scrub and its
+// audio throttle - is PART ELEVEN's, and the two are kept apart because they fail on different
+// mistakes. The one thing this part states on that part's behalf is the stage child ORDER, which
+// mountPro's own assertion carries.
+//
+// WHAT THESE ROWS CAN SEE. The band is three objects and this file can read all three: the tick
+// Graphics' draw ops, the pooled Texts' strings and placements, and the cursor flag's ops and x.
+// What it cannot see is anything that needs a rasteriser - a Text's width, and therefore whether
+// two readings ACTUALLY collide at a given canvas width. That is columnRuler.ts' MIN_LABEL_SPACING_PX
+// and its own suite's business; what is checked here is that the renderer asks the ladder rather
+// than inventing a cadence, which the narrow-canvas row below is what makes visible.
+//
+// THE COMPRESSED VIEW IS A NO-OP and the first row says so directly. Everything else in this part
+// mounts pro.
+describe('the Column Ruler', () => {
+    /**
+     * THE RULER'S OWN DRAW CONSTANTS, restated rather than imported - the same discipline the
+     * playhead rows above use for its `3`/`6`/`8`/`0.9`, and for the same reason: they are private
+     * to ComposerRenderer's draw path, so exporting them purely to compare a scene against itself
+     * would make every one of these assertions a tautology. Restated, a change to any of them fails
+     * HERE, which is where a band that stopped looking like a ruler would first be noticed.
+     */
+    const MINOR_TICK_HEIGHT = 4
+    const MAJOR_TICK_HEIGHT = 8
+    const TICK_WIDTH = 1
+    const MINOR_TICK_ALPHA = 0.35
+    const MAJOR_TICK_ALPHA = 0.7
+    const LABEL_GUTTER = 3
+    const LABEL_ALPHA = 0.85
+    /** PLAYHEAD_ARROW_HALF_WIDTH, which the flag borrows so the two marks read as one family. */
+    const CURSOR_HALF_WIDTH = 6
+    const CURSOR_SHAPE_ALPHA = 1
+    const CURSOR_HOVER_ALPHA = 0.5
+    /** PLAYHEAD_X_FRACTION.pro - the Pro View stands the playhead a QUARTER across (spec §6). */
+    const PRO_PLAYHEAD_FRACTION = 0.25
+
+    /**
+     * A pro renderer with the Column Ruler's three objects exposed, and nothing else: mount()
+     * asserts the Compressed View's three-child stage and reads a scene this part does not want,
+     * and mountPro is PART NINE's pointer harness. This one is deliberately small the same way.
+     *
+     * `body` is the one option the others hang off. The ladder cannot be reached at a desktop width
+     * at ANY shipped `columnsPerCanvas` - a 4-column tick is 140-350px there against a 46px need -
+     * so the row that drives it past its base rung mounts a 360px phone, which is the width that
+     * genuinely produces a 6px column and a 24px tick.
+     */
+    async function mountRuler(
+        options: {
+            proView?: boolean
+            smoothScroll?: boolean
+            beatMarks?: number
+            columnsPerCanvas?: number
+            selected?: number
+            body?: {width: number, height: number}
+        } = {}
+    ) {
+        const proView = options.proView ?? true
+        const columnsPerCanvas = options.columnsPerCanvas ?? COLUMNS_PER_CANVAS
+        const beatMarks = options.beatMarks ?? 3
+        //BEFORE the renderer is constructed: computeCanvasSize reads the body rect at init(), and
+        //the whole point of the narrow case is a canvas that was never 1920 wide
+        if (options.body) {
+            vi.spyOn(document.body, 'getBoundingClientRect')
+                .mockReturnValue(new DOMRect(0, 0, options.body.width, options.body.height))
+        }
+        const song = makeSong()
+        song.selected = options.selected ?? SELECTED
+        const canvasEl = document.createElement('div')
+        document.body.append(canvasEl)
+        let isRecordingAudio = false
+        //THE TEMPO IS EDITABLE HERE, unlike in every other harness in this file, because it is the
+        //one input to the band's readings that reaches update() as a change nothing else in the
+        //renderer notices - see 'a tempo edit reprints the readings'. It is written onto the SONG as
+        //well as into the state, because the oracle those readings are compared against is
+        //`song.columnsDurationMs`, and ComposedSong builds its grid from its own `bpm`.
+        let bpm = BPM
+        //ONE ARRAY, HOISTED, and not a `[]` literal inside state(): needsUnconditionalRepaint
+        //compares `selectedColumns` BY IDENTITY (it is `$state.raw` in Composer.svelte, replaced
+        //rather than edited), so a fresh literal per update makes every push a full repaint - which
+        //would quietly satisfy the two rows below that are about what does NOT repaint.
+        const selectedColumns: number[] = []
+        let reported: {
+            width: number
+            height: number
+            timelineHeight: number
+            timelineTop: number
+            rulerTop: number
+            rulerHeight: number
+        } | null = null
+        const state = (): ComposerRendererState => ({
+            columns: song.columns,
+            structureVersion: song.structureVersion,
+            isPlaying: false,
+            playbackColumnStartMs: performance.now(),
+            playbackAnchorGeneration: 0,
+            isRecordingAudio,
+            instruments: song.instruments,
+            songPitch: song.pitch,
+            selected: song.selected,
+            currentLayer: 0,
+            beatMarks,
+            columnsPerCanvas,
+            proView,
+            viewLocked: true,
+            keyboardRaised: false,
+            noteNameType: 'Note name',
+            breakpoints: song.breakpoints,
+            selectedColumns,
+            smoothScroll: options.smoothScroll ?? false,
+            bpm,
+        })
+        const appsBefore = pixi.applications.length
+        const renderer = new ComposerRenderer(canvasEl, state(), {
+            selectColumn: () => {},
+            toggleBreakpoint: () => {},
+            onGeometryChange: geometry => {
+                reported = {
+                    width: geometry.width,
+                    height: geometry.height,
+                    timelineHeight: geometry.timelineHeight,
+                    timelineTop: geometry.timelineTop,
+                    rulerTop: geometry.rulerTop,
+                    rulerHeight: geometry.rulerHeight,
+                }
+            },
+            onProCellTap: () => {},
+            onProCellLongPress: () => false,
+            onProCellLongPressDrag: () => {},
+            onProCellLongPressEnd: () => {},
+            onKeyboardDismiss: () => {},
+            onViewUnlock: () => {},
+        })
+        await renderer.init()
+        //the cache debounce, exactly as mount() waits it out: the ruler's marks are filled in by
+        //draw()'s pro branch, and there is no draw before the first cache
+        await vi.advanceTimersByTimeAsync(180)
+        const [app] = pixi.applications.slice(appsBefore)
+        //PART NINE's seven in the Pro View, mount()'s three in the Compressed one - the whole of
+        //what this part's first row is about
+        expect(app.stage.children).toHaveLength(proView ? 7 : 3)
+        const notesColumns = app.stage.children[0]
+        //After the notes and before the inert pitch strip - see mountPro for both orderings.
+        const band = proView ? app.stage.children[4] : null
+        const content = band ? band.children[0] : null
+        const cursor = band
+            ? (band.children[1] as unknown as {
+                  ops: unknown[][]
+                  x: number
+                  visible: boolean
+                  alpha: number
+              })
+            : null
+        const ticks = content
+            ? (content.children[0] as unknown as {ops: unknown[][], clears: number})
+            : null
+
+        const geometry = () => {
+            if (!reported) throw new Error('the renderer reported no geometry')
+            return reported
+        }
+        const columnWidth = () => nearestEven(geometry().width / columnsPerCanvas)
+        const startOfColumn = (column: number) => notesColumns.x + column * columnWidth()
+        const xOfColumn = (column: number) => startOfColumn(column) + columnWidth() / 2
+        /** The ladder the renderer is asking, evaluated from the pure module rather than guessed. */
+        const labelStep = () =>
+            columnRulerLabelStep({
+                columnWidth: columnWidth(),
+                barLength: columnRulerBarLength(beatMarks),
+            })
+        /**
+         * The drawn window, through the SAME predicate the rest of this file states it with - at the
+         * PRO playhead fraction, which is the one thing the two views change about the horizontal
+         * coordinate system.
+         */
+        const drawnColumns = (position = song.selected) => {
+            const drawn: number[] = []
+            for (let i = 0; i < song.columns.length; i++) {
+                const visible = isColumnVisible(i, position, {
+                    width: geometry().width,
+                    columnWidth: columnWidth(),
+                    playheadX: geometry().width * PRO_PLAYHEAD_FRACTION,
+                })
+                if (visible) drawn.push(i)
+            }
+            return drawn
+        }
+
+        /**
+         * The tick Graphics' ops as marks: the rects queued before each fill take that fill's alpha,
+         * which is exactly how drawColumnRulerTicks separates the two weights (two passes, two
+         * fills, one Graphics). A pass that queued nothing contributes nothing here, which is the
+         * shape the desktop row asserts.
+         */
+        const tickMarks = (): {x: number, y: number, width: number, height: number, alpha: number}[] => {
+            const marks: {x: number, y: number, width: number, height: number, alpha: number}[] = []
+            let pending: number[][] = []
+            for (const op of ticks?.ops ?? []) {
+                if (op[0] === 'rect') pending.push(op.slice(1) as number[])
+                else if (op[0] === 'fill') {
+                    const {alpha} = op[1] as {alpha: number}
+                    for (const [x, y, width, height] of pending) marks.push({x, y, width, height, alpha})
+                    pending = []
+                }
+            }
+            return marks.sort((a, b) => a.x - b.x)
+        }
+
+        /** Every SHOWN reading, in the order it is printed across the band. */
+        const printedLabels = (): {text: string, x: number, y: number, alpha: number}[] =>
+            (content?.children ?? [])
+                .filter(child => (child as unknown as {kind: string}).kind === 'text')
+                .map(child => child as unknown as {text: string, x: number, y: number, alpha: number, visible: boolean})
+                .filter(label => label.visible)
+                .map(({text, x, y, alpha}) => ({text, x, y, alpha}))
+                .sort((a, b) => a.x - b.x)
+
+        /**
+         * The FILL of every SHOWN reading, in print order. Deliberately not a field on
+         * printedLabels: two of the rows above compare that shape against a literal, and the ink is
+         * only interesting to the one rule that writes it (syncColumnRuler's restyle gate).
+         */
+        const labelInks = (): unknown[] =>
+            (content?.children ?? [])
+                .filter(child => (child as unknown as {kind: string}).kind === 'text')
+                .map(child => child as unknown as {x: number, visible: boolean, style: {fill: unknown}})
+                .filter(label => label.visible)
+                .sort((a, b) => a.x - b.x)
+                .map(label => label.style.fill)
+
+        return {
+            song,
+            geometry,
+            columnWidth,
+            labelStep,
+            drawnColumns,
+            tickMarks,
+            printedLabels,
+            labelInks,
+            bandY: () => band?.y ?? null,
+            bandVisible: () => band?.visible ?? null,
+            timelineVisible: () => app.stage.children[app.stage.children.length - 1].visible,
+            notesVisible: () => notesColumns.visible,
+            contentX: () => content?.x ?? null,
+            notesX: () => notesColumns.x,
+            cursorX: () => cursor?.x ?? null,
+            cursorVisible: () => cursor?.visible ?? false,
+            cursorAlpha: () => cursor?.alpha ?? null,
+            cursorOps: () => cursor?.ops ?? [],
+            xOfColumn,
+            hoverColumn(column: number) {
+                band?.emit('pointerover', {
+                    globalX: xOfColumn(column),
+                    globalY: (band?.y ?? 0) + COLUMN_RULER_HEIGHT / 2,
+                    pointerId: PRIMARY_POINTER,
+                    pointerType: 'mouse',
+                })
+            },
+            leaveRuler() {
+                band?.emit('pointerout', {
+                    globalX: -1,
+                    globalY: -1,
+                    pointerId: PRIMARY_POINTER,
+                    pointerType: 'mouse',
+                })
+            },
+            /**
+             * HOW MANY TIMES THE BAND HAS BEEN REFILLED, read off the tick Graphics' own clear
+             * count. syncColumnRuler gates the ticks AND the pooled labels behind ONE key, so a
+             * clear here happens exactly when the readings were re-set - which is what makes this
+             * the observable for spec §5's "never per frame". A Text's own rasterisation is
+             * invisible to this file (nothing rasterises), so counting the clears is the reading
+             * that exists.
+             */
+            refills: () => ticks?.clears ?? 0,
+            textsConstructed: () => counters.constructed.texts,
+            /** A plain wheel over the notes canvas - the song's own horizontal scroll, in both views. */
+            wheelOverNotes(deltaY: number) {
+                app.canvas.dispatchEvent(
+                    new WheelEvent('wheel', {
+                        deltaY,
+                        deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+                        cancelable: true,
+                    })
+                )
+            },
+            setRecording(recording: boolean) {
+                isRecordingAudio = recording
+            },
+            setBpm(next: number) {
+                bpm = next
+                song.bpm = next
+            },
+            selectColumn(index: number) {
+                song.selected = index
+            },
+            push() {
+                renderer.update(state())
+            },
+            destroy() {
+                renderer.destroy()
+                canvasEl.remove()
+            },
+        }
+    }
+
+    it('the Compressed View has no band at all, and is told so as 0/0', async () => {
+        const harness = await mountRuler({proView: false})
+        try {
+            //THE WHOLE OF THE NO-OP CLAIM this file can make: the stage is mount()'s own three
+            //children, so nothing was added; the band's own container is never on it, so nothing it
+            //holds can be drawn, cleared or hit-tested; and no pixi Text was ever constructed, which
+            //is what says the label pool was not filled behind the scenes either (the Compressed
+            //View does not even load the Text class - see ComposerRenderer.proTextClass).
+            expect(harness.bandY()).toBeNull()
+            expect(harness.textsConstructed()).toBe(0)
+            //...and the report carries the shape `rowHeight` already uses for "this view does not
+            //have one", rather than a nullable the template would have to unwrap
+            expect(harness.geometry().rulerTop).toBe(0)
+            expect(harness.geometry().rulerHeight).toBe(0)
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    it('the band tiles the canvas between the mini-timeline and the notes region', async () => {
+        const harness = await mountRuler()
+        try {
+            const {timelineTop, timelineHeight, rulerTop, rulerHeight} = harness.geometry()
+            //THE REPORT AND THE SCENE ARE ONE STATEMENT. The template positions DOM over the bands
+            //this canvas draws, so a report that disagreed with the container would be invisible to
+            //everything except a user - which is the same obligation 'the strip is under the notes
+            //region' states for the mini-timeline.
+            expect(harness.bandY()).toBe(rulerTop)
+            expect(rulerTop).toBe(composerColumnRulerY(timelineHeight))
+            expect(rulerHeight).toBe(COLUMN_RULER_HEIGHT)
+            //...and the three regions TILE, with no gap and no overlap: the strip's band ends where
+            //the ruler's begins, and the ruler's ends where the notes region does. Dropping the
+            //ruler's term from either composerNotesRegionY or composerCanvasElementHeight leaves
+            //the notes region overrunning the canvas by exactly this band, which is what this
+            //arithmetic is standing in front of.
+            expect(timelineTop + timelineHeight).toBe(rulerTop)
+            expect(rulerTop + rulerHeight).toBe(composerNotesRegionY(true, timelineHeight))
+            expect(harness.notesX()).toBeCloseTo(
+                harness.geometry().width * PRO_PLAYHEAD_FRACTION - SELECTED * harness.columnWidth(),
+                6
+            )
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    it('its contents carry the notes container own offset, so a tick and its column are at one x', async () => {
+        const harness = await mountRuler({smoothScroll: true})
+        try {
+            expect(harness.contentX()).toBe(harness.notesX())
+            //A SUB-COLUMN SCROLL, which is the case a per-update sync would miss entirely: the wheel
+            //moves the canvas by a fraction of a column and the frame paints it, so the band has to
+            //follow on the FRAME and not on the next update. Four hardware px against an 84px column
+            //is ~1/20th of one, which keeps the drawn window exactly where it was.
+            harness.wheelOverNotes(4)
+            await vi.advanceTimersByTimeAsync(32)
+            expect(harness.notesX()).not.toBe(
+                harness.geometry().width * PRO_PLAYHEAD_FRACTION - SELECTED * harness.columnWidth()
+            )
+            expect(harness.contentX()).toBe(harness.notesX())
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    it('marks the labelled columns and nothing between them at a desktop width', async () => {
+        const harness = await mountRuler()
+        try {
+            const columnWidth = harness.columnWidth()
+            const step = harness.labelStep()
+            //THE LADDER DOES NOT ENGAGE AT THIS WIDTH, which is the premise of this row: an 84px
+            //column makes a 4-column tick 336px against a 46px need, so every 4th column carries a
+            //reading and the minor pass has nothing left to draw. That is not a missing tick - it is
+            //what "a minor tick every 4th column, a major tick at each labelled column" comes to
+            //when the two sets coincide, and the narrow row below is where they part.
+            expect(step).toBe(COLUMN_RULER_BASE_LABEL_STEP)
+            const expected = harness
+                .drawnColumns()
+                .filter(index => isColumnRulerLabel(index, step))
+            expect(harness.tickMarks()).toEqual(
+                expected.map(index => ({
+                    x: index * columnWidth,
+                    //FLUSH WITH THE BAND'S BOTTOM EDGE and growing upward, so a tick's lower end
+                    //lands on the notes region's top edge and continues the column boundary drawn
+                    //under it - the visible half of "a tick and its column are always at one x"
+                    y: COLUMN_RULER_HEIGHT - MAJOR_TICK_HEIGHT,
+                    width: TICK_WIDTH,
+                    height: MAJOR_TICK_HEIGHT,
+                    alpha: MAJOR_TICK_ALPHA,
+                }))
+            )
+            //...and NOTHING per column (spec §4): at 50 columns/canvas on a phone those are 8px
+            //apart and read as a picket fence, and the notes grid immediately below already draws
+            //every column boundary. A renderer that ticked every column would put ~24 marks here.
+            expect(harness.tickMarks()).toHaveLength(expected.length)
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    it('a phone canvas thins the readings and the ticks between them become the minor ones', async () => {
+        //360px is the width that actually reaches the ladder: 50 columns over a `85vw - 45px`
+        //canvas is a 6px column, so a 4-column tick is 24px against the 46px two readings need.
+        const harness = await mountRuler({
+            columnsPerCanvas: 50,
+            beatMarks: 3,
+            body: {width: 360, height: 640},
+        })
+        try {
+            const columnWidth = harness.columnWidth()
+            const step = harness.labelStep()
+            //THE SECOND RUNG, which is the BAR and not a doubling: at `beatMarks: 3` the canvas'
+            //own stripes are 12 columns wide, and 4 -> 8 would put every other reading across a
+            //stripe seam. columnRuler.ts states that; this asserts the renderer is asking it.
+            expect(step).toBe(columnRulerBarLength(3))
+            expect(step).toBeGreaterThan(COLUMN_RULER_BASE_LABEL_STEP)
+            const drawn = harness.drawnColumns()
+            const marks = harness.tickMarks()
+            const minor = marks.filter(mark => mark.alpha === MINOR_TICK_ALPHA)
+            const major = marks.filter(mark => mark.alpha === MAJOR_TICK_ALPHA)
+            expect(major.map(mark => mark.x)).toEqual(
+                drawn.filter(index => isColumnRulerLabel(index, step)).map(index => index * columnWidth)
+            )
+            expect(minor.map(mark => mark.x)).toEqual(
+                drawn
+                    .filter(index => index % COLUMN_RULER_BASE_LABEL_STEP === 0)
+                    .filter(index => !isColumnRulerLabel(index, step))
+                    .map(index => index * columnWidth)
+            )
+            expect(minor.length).toBeGreaterThan(0)
+            //the hierarchy itself: a subdivision mark is SHORTER and FAINTER than a reading's, so
+            //the band is legible as a scale before any one reading is legible as a number
+            expect(minor.every(mark => mark.height === MINOR_TICK_HEIGHT)).toBe(true)
+            expect(major.every(mark => mark.height === MAJOR_TICK_HEIGHT)).toBe(true)
+            expect(MINOR_TICK_HEIGHT).toBeLessThan(MAJOR_TICK_HEIGHT)
+            expect(MINOR_TICK_ALPHA).toBeLessThan(MAJOR_TICK_ALPHA)
+            //...and both stay inside the band, flush with the edge the notes region begins at
+            expect(marks.every(mark => mark.y >= 0)).toBe(true)
+            expect(marks.every(mark => mark.y + mark.height === COLUMN_RULER_HEIGHT)).toBe(true)
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    it('every reading is the ms the transport commits its own column at', async () => {
+        const harness = await mountRuler()
+        try {
+            const columnWidth = harness.columnWidth()
+            const step = harness.labelStep()
+            const labelled = harness.drawnColumns().filter(index => isColumnRulerLabel(index, step))
+            //THE ADR-0008 GRID AND NOT A SECOND ACCUMULATION OF THE SAME DURATIONS. The renderer
+            //differences its OWN prefix rather than holding the song, and the two are bit-identical
+            //by construction (the same `msPerBeat * changer` additions in the same order), so this
+            //compares the drawn string against ComposedSong's answer directly. The DRIFT that makes
+            //the distinction matter - 43ms by column 236 at bpm 110, where a naive per-column
+            //accumulation rounds away from the grid - is pinned in test/columnRuler.test.ts, on the
+            //MS rather than on the printed string, because 43ms only moves the second near a .5s
+            //boundary. Never Utilities.calculateSongLength.
+            expect(harness.printedLabels()).toEqual(
+                labelled.map(index => ({
+                    text: formatMs(harness.song.columnsDurationMs(0, index)),
+                    //left-anchored a gutter right of its own tick, so the reading names the mark it
+                    //stands beside and nothing is ever printed left of column 0's tick
+                    x: index * columnWidth + LABEL_GUTTER,
+                    y: COLUMN_RULER_HEIGHT / 2,
+                    alpha: LABEL_ALPHA,
+                }))
+            )
+            //the fixture carries a tempo changer at column 5, so these readings are NOT a constant
+            //multiple of the column index and a renderer that ignored the changers would differ
+            expect(new Set(harness.printedLabels().map(label => label.text)).size).toBe(labelled.length)
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    it('anchors on the first column of each group, so column 0 reads 0:00 and nothing is drawn left of it', async () => {
+        const harness = await mountRuler({selected: 0})
+        try {
+            const labels = harness.printedLabels()
+            //`index % labelStep === 0` and not `(index + 1) % labelStep === 0`: anchoring on the
+            //group's FIRST column is what makes column 0 read 0:00, which is the one reading whose
+            //value a user can check against nothing at all. The canvas' own "larger" background
+            //accent is on columns 3, 7, 11 - the accepted cosmetic mismatch of spec §4 - so a
+            //renderer that followed the accent would start this band at 3 and print a beat's worth
+            //of ms as its first reading.
+            expect(labels[0].text).toBe('0:00')
+            expect(labels[0].x).toBe(LABEL_GUTTER)
+            //AT SCROLL POSITION 0 THE LEADING QUARTER OF THE BAND IS EMPTY, exactly as the notes
+            //region is: no tick and no reading is drawn at a negative time, because the drawn window
+            //is clamped to the song and the band inherits the notes' own offset.
+            expect(harness.tickMarks().every(mark => mark.x >= 0)).toBe(true)
+            expect(labels.every(label => label.x >= 0)).toBe(true)
+            expect(harness.contentX()).toBeCloseTo(
+                harness.geometry().width * PRO_PLAYHEAD_FRACTION,
+                6
+            )
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    it('refills the pooled readings when the visible set moves, and never per frame', async () => {
+        const harness = await mountRuler({smoothScroll: true})
+        try {
+            const before = harness.refills()
+            const texts = harness.textsConstructed()
+            const labels = harness.printedLabels()
+            //A SCROLL THAT STAYS INSIDE ONE COLUMN. The band moves - the frame writes its offset -
+            //and not one reading is re-set: a pixi Text re-rasterises on every `text` write, so a
+            //band that refilled per frame would rasterise ~6 textures per frame for the whole of
+            //every drag, wheel and playback glide (spec §5, and the row-label strip's own rule).
+            harness.wheelOverNotes(4)
+            await vi.advanceTimersByTimeAsync(32)
+            expect(harness.contentX()).toBe(harness.notesX())
+            expect(harness.refills()).toBe(before)
+            expect(harness.printedLabels()).toEqual(labels)
+            //...AND A SCROLL THAT MOVES THE WINDOW does refill, from the pool rather than from new
+            //Texts. The gate is not "never", it is "when the label set moved".
+            harness.selectColumn(SELECTED + 4)
+            harness.push()
+            expect(harness.refills()).toBe(before + 1)
+            expect(harness.textsConstructed()).toBe(texts)
+            const moved = harness.printedLabels()
+            expect(moved).not.toEqual(labels)
+            expect(moved.map(label => label.text)).toEqual(
+                harness
+                    .drawnColumns(SELECTED + 4)
+                    .filter(index => isColumnRulerLabel(index, harness.labelStep()))
+                    .map(index => formatMs(harness.song.columnsDurationMs(0, index)))
+            )
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    it('a tempo edit reprints the readings, on the flip and with nothing else repainted', async () => {
+        const harness = await mountRuler()
+        try {
+            const before = harness.printedLabels()
+            const refills = harness.refills()
+            //A bpm EDIT IS THE ONE INPUT TO THIS BAND THAT NOTHING ELSE IN THE RENDERER NOTICES: it
+            //changes no column's pixels, moves no `version` counter, is deliberately absent from
+            //needsUnconditionalRepaint, and does not move `structureVersion` either - ComposedSong
+            //writes bpm outside `#bumpStructure` because there is no graph edit behind it. So this
+            //update repaints nothing at all unless syncColumnRulerTempo catches it, and the band
+            //would go on printing the previous tempo until an unrelated scroll moved the window.
+            harness.setBpm(BPM / 2)
+            harness.push()
+            const after = harness.printedLabels()
+            expect(harness.refills()).toBe(refills + 1)
+            //HALF THE TEMPO IS TWICE THE TIME, read through the song's own grid rather than by
+            //doubling the previous strings: `formatMs` floors its minutes, so a doubled string is
+            //not the string of a doubled time.
+            expect(after.map(label => label.text)).toEqual(
+                harness
+                    .drawnColumns()
+                    .filter(index => isColumnRulerLabel(index, harness.labelStep()))
+                    .map(index => formatMs(harness.song.columnsDurationMs(0, index)))
+            )
+            expect(after.map(label => label.text)).not.toEqual(before.map(label => label.text))
+            //...and the marks did NOT move: a tempo is not a geometry, so the ticks and the label
+            //positions are exactly where they were and only the strings differ
+            expect(after.map(label => label.x)).toEqual(before.map(label => label.x))
+            //an update that leaves the tempo alone must not refill - the guard is on the FLIP, not
+            //on every update that happens to carry a bpm
+            harness.push()
+            expect(harness.refills()).toBe(refills + 1)
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    it('a reading hidden across a theme edit comes back in the NEW ink', async () => {
+        const harness = await mountRuler()
+        const previousPrimary = ThemeProvider.get('primary').hex()
+        try {
+            //THE POOL IS INDEXED BY POSITION IN THE LABEL ARRAY and keeps every slot it has ever
+            //grown, so the count of SHOWN readings is what moves - and a slot above that count is
+            //hidden with whatever ink it was last shown in. The restyle gate is on the INK having
+            //moved, which by construction only reaches the slots this refill paints; a slot hidden
+            //across the edit and revealed afterwards is the one that gate cannot see.
+            const wide = harness.labelInks().length
+            harness.selectColumn(0)
+            harness.push()
+            const narrow = harness.labelInks().length
+            //the premise, asserted rather than assumed: at scroll position 0 the leading quarter of
+            //the window is clamped away (visibleColumnRange's `Math.max(0, ...)`), so fewer
+            //readings are drawn and the slots above `narrow` are sitting hidden
+            expect(narrow).toBeLessThan(wide)
+            const before = harness.labelInks()[0]
+            //`primary` and not `stripText`: the band's ink is
+            //getTextColorFromBackground(primary), so a light/dark flip of the background is what
+            //moves it - and moves it all the way, which is the case that shows up as white on white
+            ThemeProvider.set('primary', '#ffffff')
+            //BOTH DEBOUNCES, and that is why this is not the 60ms the accent test above waits: a
+            //theme edit reaches this class through subscribeTheme's 50ms debounce, and `this.theme`
+            //- which is where `pro.stripText` is read from - is rebuilt by the recalculateCacheAndSizes
+            //pass behind a SECOND one. At 60ms the band still prints the previous ink, which is the
+            //correct behavior and not the case this row is about.
+            await vi.advanceTimersByTimeAsync(260)
+            harness.push()
+            const after = harness.labelInks()[0]
+            expect(after).not.toBe(before)
+            //...AND NOW REVEAL THE SLOTS THAT SAT OUT THE EDIT. Every reading on screen must carry
+            //the ink the theme currently holds, not the one its slot was last shown in.
+            harness.selectColumn(SELECTED)
+            harness.push()
+            const revealed = harness.labelInks()
+            expect(revealed.length).toBe(wide)
+            expect(revealed).toEqual(new Array(wide).fill(after))
+        } finally {
+            harness.destroy()
+            //ThemeProvider is a singleton shared by every test in this file
+            ThemeProvider.set('primary', previousPrimary)
+        }
+    })
+
+    it('shows the cursor flag only over a desktop hover, in both scroll modes', async () => {
+        for (const smoothScroll of [true, false]) {
+            const harness = await mountRuler({smoothScroll})
+            try {
+                expect(harness.cursorVisible()).toBe(false)
+                const hovered = SELECTED + 2
+                harness.hoverColumn(hovered)
+                expect(harness.cursorVisible()).toBe(true)
+                expect(harness.cursorAlpha()).toBe(CURSOR_HOVER_ALPHA)
+                expect(harness.cursorX()).toBeCloseTo(
+                    harness.xOfColumn(hovered) - harness.columnWidth() / 2,
+                    6
+                )
+                //A DOWN-POINTING TRIANGLE SPANNING THE BAND, drawn at the Graphics' OWN ORIGIN so
+                //that moving it for hover or a Ruler Scrub costs an `x` write
+                //rather than a GraphicsContext rebuild - viewportGraphics' own trade. Its apex is on
+                //the band's bottom edge, i.e. the notes region's top.
+                expect(harness.cursorOps()).toEqual([
+                    ['poly', [-CURSOR_HALF_WIDTH, 0, CURSOR_HALF_WIDTH, 0, 0, COLUMN_RULER_HEIGHT]],
+                    [
+                        'fill',
+                        {
+                            color: ThemeProvider.get('accent').rgbNumber(),
+                            alpha: CURSOR_SHAPE_ALPHA,
+                        },
+                    ],
+                ])
+                harness.leaveRuler()
+                expect(harness.cursorVisible()).toBe(false)
+            } finally {
+                harness.destroy()
+            }
+        }
+    })
+
+    it('hides with the notes stage while recording audio, and comes back with it', async () => {
+        const harness = await mountRuler()
+        try {
+            expect(harness.bandVisible()).toBe(true)
+            harness.setRecording(true)
+            harness.push()
+            //A SCALE MARKED IN THE TIMESTAMPS OF COLUMNS NOBODY CAN SEE IS A SCALE FOR NOTHING, so
+            //the band goes with the columns it scales (spec §7) - the same gate the zone's framing
+            //and the row-label strip take.
+            expect(harness.notesVisible()).toBe(false)
+            expect(harness.bandVisible()).toBe(false)
+            //THE MINI-TIMELINE IS HIDDEN TOO, and that is a rule that predates the ruler - see
+            //'Audio recording does not render notes or timeline', which is where it is pinned. Spec
+            //§7 reads "the mini-timeline stays up, unchanged"; only the second half of that is true
+            //of this code, and phase B deliberately does not touch the strip's own gate to make the
+            //first half true. Asserted here so the divergence is a decision on the record rather
+            //than something rediscovered as a bug.
+            expect(harness.timelineVisible()).toBe(false)
+            harness.setRecording(false)
+            harness.push()
+            expect(harness.bandVisible()).toBe(true)
+            expect(harness.notesVisible()).toBe(true)
+        } finally {
+            harness.destroy()
+        }
+    })
+})
+
+// ---------------------------------------------------------------------------------------------
+// PART ELEVEN: THE RULER SCRUB (CONTEXT.md: Column Ruler, Ruler Scrub; spec 2026-08-27 §6, phase C).
+//
+// PART TEN drives no pointer at all - the band draws there and does nothing. This part is the other
+// half: what a press on it MEANS. The band is the Pro View's only click-to-select surface (a settled
+// tap on the notes stage edits a cell there), so these rows are the whole of "pressing a column
+// selects it, sounds it, and brings the canvas to it".
+//
+// THE ONE CLAIM THAT IS NOT LIKE THE OTHER GESTURES, and the one spec §10 flagged as the place the
+// existing machinery does not simply extend: THE CANVAS HOLDS STILL. Every other pointer gesture on
+// this canvas moves it - that is what `motion.position` is for - and a Ruler Scrub is a drag that
+// deliberately never writes one, so `syncScrollSchedule`'s suspension holds the canvas where the
+// press found it while the selection walks. Two consequences the rows below state separately,
+// because they are covered by two different pieces of code:
+//  - the canvas must not move for the WHOLE gesture, however many round-trips land inside it;
+//  - the MARK must move anyway. update() suppresses the overlay repaint while a drag runs (it would
+//    paint the new column against pixels the frame has not shifted yet), and here there is nothing
+//    to be early against - so that suppression is lifted for this surface alone, and the cursor flag
+//    is painted by the crossing itself, which is what covers the glide mode where update() has
+//    nothing to notice at all.
+//
+// WHAT THESE ROWS CAN SEE: every `selectColumn` the renderer makes, with its `ignoreAudio` (which IS
+// the sounding - the preview itself is Composer.svelte's and is not reachable from here), the notes
+// container's own offset as the scroll position, the drawn overlay, and the flag's x. The audio
+// throttle is read off the `ignoreAudio` stream against this file's driven clock.
+describe('the Ruler Scrub', () => {
+    /** PLAYHEAD_X_FRACTION.pro, restated as PART TEN restates it. */
+    const PRO_PLAYHEAD_FRACTION = 0.25
+
+    /**
+     * A pro renderer whose band is pressable and whose selection ROUND-TRIPS, which is the one thing
+     * mountRuler (a scene reader) does not need and every row here does: `selectColumn` writes
+     * `song.selected` the way Composer.svelte does, and the test calls `push()` where Svelte would
+     * hand the new state back. Keeping the push explicit is what lets a row assert what is true
+     * BEFORE the round-trip lands - which is where the flag's own repaint lives.
+     */
+    async function mountScrub(options: {smoothScroll?: boolean} = {}) {
+        const song = makeSong()
+        const canvasEl = document.createElement('div')
+        document.body.append(canvasEl)
+        //hoisted for the reason mountRuler hoists it: `selectedColumns` is compared BY IDENTITY, so
+        //a fresh literal per update makes every push a full repaint and any "this did not repaint"
+        //claim pass for free
+        const selectedColumns: number[] = []
+        const selectColumnCalls: {index: number, ignoreAudio: boolean, forceAnchor: boolean}[] = []
+        let reported: {width: number, height: number, timelineHeight: number, rulerTop: number} | null = null
+        const state = (): ComposerRendererState => ({
+            columns: song.columns,
+            structureVersion: song.structureVersion,
+            isPlaying: false,
+            playbackColumnStartMs: performance.now(),
+            playbackAnchorGeneration: 0,
+            isRecordingAudio: false,
+            instruments: song.instruments,
+            songPitch: song.pitch,
+            selected: song.selected,
+            currentLayer: 0,
+            beatMarks: 3,
+            columnsPerCanvas: COLUMNS_PER_CANVAS,
+            proView: true,
+            viewLocked: true,
+            keyboardRaised: false,
+            noteNameType: 'Note name',
+            breakpoints: song.breakpoints,
+            selectedColumns,
+            smoothScroll: options.smoothScroll ?? false,
+            bpm: BPM,
+        })
+        const appsBefore = pixi.applications.length
+        const renderer = new ComposerRenderer(canvasEl, state(), {
+            //COMPOSER.SVELTE'S OWN ORDER: the selection is written whatever `ignoreAudio` says - that
+            //flag decides only whether the column is PREVIEWED, which happens downstream of the
+            //write and is not this class's business
+            selectColumn: (index, ignoreAudio, forceAnchor) => {
+                selectColumnCalls.push({
+                    index,
+                    ignoreAudio: ignoreAudio ?? false,
+                    forceAnchor: forceAnchor ?? false,
+                })
+                song.selected = index
+            },
+            toggleBreakpoint: () => {},
+            onGeometryChange: geometry => {
+                reported = {
+                    width: geometry.width,
+                    height: geometry.height,
+                    timelineHeight: geometry.timelineHeight,
+                    rulerTop: geometry.rulerTop,
+                }
+            },
+            onProCellTap: () => {},
+            onProCellLongPress: () => false,
+            onProCellLongPressDrag: () => {},
+            onProCellLongPressEnd: () => {},
+            onKeyboardDismiss: () => {},
+            onViewUnlock: () => {},
+        })
+        await renderer.init()
+        //the cache debounce, as every harness in this file waits it out: with no cache nothing is
+        //painted and the overlay these rows read does not exist
+        await vi.advanceTimersByTimeAsync(180)
+        const [app] = pixi.applications.slice(appsBefore)
+        expect(app.stage.children).toHaveLength(7)
+        const notesColumns = app.stage.children[0]
+        const band = app.stage.children[4]
+        const cursor = band.children[1] as unknown as {x: number, visible: boolean, alpha: number}
+        const geometry = () => {
+            if (!reported) throw new Error('the renderer reported no geometry')
+            return reported
+        }
+        const columnWidth = () => nearestEven(geometry().width / COLUMNS_PER_CANVAS)
+        const playheadX = () => geometry().width * PRO_PLAYHEAD_FRACTION
+        /**
+         * THE CANVAS x OF A COLUMN'S OWN LEFT EDGE, read off the live container offset rather than
+         * computed from `song.selected`: during a scrub those two deliberately disagree - the
+         * selection has moved and the canvas has not - so a column's x has to come from where the
+         * canvas actually is. It is columnAtCanvasX's exact inverse, which is what makes the presses
+         * below land on the column they name however the canvas got where it is.
+         */
+        const startOfColumn = (column: number) => notesColumns.x + column * columnWidth()
+        const xOfColumn = (column: number) => startOfColumn(column) + columnWidth() / 2
+
+        return {
+            song,
+            geometry,
+            columnWidth,
+            playheadX,
+            startOfColumn,
+            xOfColumn,
+            selectColumnCalls,
+            /** Every column handed to selectColumn, in order - the SELECTION stream. */
+            selected: () => selectColumnCalls.map(call => call.index),
+            /** ...and the subset of it that was allowed to sound: the AUDIO stream. */
+            sounded: () =>
+                selectColumnCalls.filter(call => !call.ignoreAudio).map(call => call.index),
+            bandY: () => band.y,
+            notesTop: () => notesColumns.y,
+            cursorX: () => cursor.x,
+            cursorVisible: () => cursor.visible,
+            cursorAlpha: () => cursor.alpha,
+            renders: () => app.renders,
+            /** Where the canvas is, in columns, read back through the offset the frame writes. */
+            scrollPosition: () => (playheadX() - notesColumns.x) / columnWidth(),
+            /**
+             * The drawn columns carrying the SELECTED overlay - slot 2 at alpha 0.8, exactly what
+             * selectedColumnsOf reads for the Compressed View's harness (ColumnView.paintSelection
+             * draws the tools-only state at 0.4 and nothing here selects a range).
+             */
+            overlayColumns: () =>
+                notesColumns.children
+                    .filter(column => {
+                        const overlay = column.children[1]
+                        return overlay.visible && overlay.alpha === 0.8
+                    })
+                    .map(column => Math.round(column.x / columnWidth()))
+                    .sort((a, b) => a - b),
+            /** Whether a canvas point reaches the BAND, through its own hitarea in band-local space. */
+            rulerAccepts(canvasX: number, canvasY: number) {
+                const hitArea = band.hitArea as {contains(x: number, y: number): boolean}
+                return hitArea.contains(canvasX - band.x, canvasY - band.y)
+            },
+            /** ...and whether it reaches the NOTES STAGE, which must never be the same point. */
+            notesStageAccepts(canvasX: number, canvasY: number) {
+                const hitArea = notesColumns.hitArea as {contains(x: number, y: number): boolean}
+                return hitArea.contains(canvasX - notesColumns.x, canvasY - notesColumns.y)
+            },
+            /** The stage indexes the hit ORDER rests on - pixi walks children in reverse. */
+            childOrder: () => ({
+                notes: app.stage.children.indexOf(notesColumns),
+                band: app.stage.children.indexOf(band),
+                timeline: app.stage.children.length - 1,
+            }),
+            press(canvasX: number, pointerId = PRIMARY_POINTER) {
+                band.emit('pointerdown', {globalX: canvasX, globalY: band.y + 10, pointerId})
+            },
+            move(canvasX: number, pointerId = PRIMARY_POINTER) {
+                band.emit('pointermove', {globalX: canvasX, globalY: band.y + 10, pointerId})
+            },
+            release(canvasX: number, pointerId = PRIMARY_POINTER) {
+                band.emit('pointerup', {globalX: canvasX, globalY: band.y + 10, pointerId})
+            },
+            pressOverNotes(canvasX: number) {
+                notesColumns.emit('pointerdown', {
+                    globalX: canvasX,
+                    globalY: notesColumns.y + 10,
+                    pointerId: PRIMARY_POINTER,
+                })
+            },
+            /** A pointercancel, which pixi delivers to nothing and the window listener catches. */
+            cancelPointer() {
+                window.dispatchEvent(new Event('pointercancel'))
+            },
+            selectColumn(index: number) {
+                song.selected = index
+            },
+            push() {
+                renderer.update(state())
+            },
+            destroy() {
+                renderer.destroy()
+                canvasEl.remove()
+            },
+        }
+    }
+
+    it('answers its own band across the whole canvas, and leaves the notes region to the stage', async () => {
+        const harness = await mountScrub()
+        try {
+            const {width, rulerTop} = harness.geometry()
+            const y = rulerTop + COLUMN_RULER_HEIGHT / 2
+            expect(harness.bandY()).toBe(rulerTop)
+            expect(harness.rulerAccepts(width / 2, y)).toBe(true)
+            //THE FULL WIDTH, AND NO TIMELINE_INSET_* (spec §6). Those two bands exist to decline the
+            //presses the three DOM timeline buttons stand over - and those buttons stand over the
+            //MINI-TIMELINE, a different band flush above this one. Nothing floats over the ruler, so
+            //its first and last columns are as pressable as the ones in the middle.
+            expect(harness.rulerAccepts(0, y)).toBe(true)
+            expect(harness.rulerAccepts(width, y)).toBe(true)
+            expect(harness.rulerAccepts(TIMELINE_INSET_LEFT - 1, y)).toBe(true)
+            expect(harness.rulerAccepts(width - TIMELINE_INSET_RIGHT + 1, y)).toBe(true)
+            //...and its own y range and nothing either side of it: the mini-timeline's band above,
+            //the notes region below
+            expect(harness.rulerAccepts(width / 2, rulerTop - 0.5)).toBe(false)
+            expect(harness.rulerAccepts(width / 2, rulerTop + COLUMN_RULER_HEIGHT - 0.5)).toBe(true)
+            expect(harness.rulerAccepts(width / 2, rulerTop + COLUMN_RULER_HEIGHT + 0.5)).toBe(false)
+            expect(harness.rulerAccepts(width / 2, harness.notesTop() + 100)).toBe(false)
+            //THE STAGE DOES NOT ANSWER THE BAND, which is the half that keeps a scrub from also
+            //editing a cell: testStageHitarea's `y` bound is the notes REGION, and the band is above
+            //it, so this needs no exclusion of its own (spec §6)
+            expect(harness.notesStageAccepts(width / 2, y)).toBe(false)
+            //...and there is no dead row between the two: the first pixel past the band is the notes
+            //region's own first row
+            expect(harness.notesStageAccepts(width / 2, rulerTop + COLUMN_RULER_HEIGHT + 0.5)).toBe(true)
+            //THE CHILD ORDER, which is what makes any of the above reachable: pixi's EventBoundary
+            //walks children in REVERSE and returns on the first hit, so the band must be a LATER
+            //child than the notes container or a press on it would be claimed by the columns
+            //underneath - the same load-bearing rule testTimelineHitarea documents for the strip.
+            const order = harness.childOrder()
+            expect(order.band).toBeGreaterThan(order.notes)
+            expect(order.band).toBeLessThan(order.timeline)
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    it('defers to a press that already owns the notes surface, and claims everything once it owns the gesture', async () => {
+        const harness = await mountScrub()
+        try {
+            const {width, rulerTop} = harness.geometry()
+            const y = rulerTop + COLUMN_RULER_HEIGHT / 2
+            harness.pressOverNotes(width / 2)
+            //THE DEFERRAL, inherited from the mini-timeline's own: the band is hit-tested BEFORE the
+            //notes container, so without it a stage drag whose finger wanders up into the band is
+            //claimed here and the drag freezes until it comes back down. It is also what keeps a
+            //Duration Hold's second finger on its documented path (CONTEXT.md: Duration Hold) - with
+            //the popover open under a finger on the canvas, a second finger anywhere scrolls the
+            //song, and that press has to reach the stage rather than start a scrub.
+            expect(harness.rulerAccepts(width / 2, y)).toBe(false)
+            harness.cancelPointer()
+            expect(harness.rulerAccepts(width / 2, y)).toBe(true)
+            //...AND THE OTHER DIRECTION: once a scrub owns the gesture the band answers every point,
+            //which is what puts it on the composed path pixi dispatches the moves and the release
+            //along. A finger that wanders off the band - onto the notes, onto the mini-timeline, off
+            //the canvas entirely - goes on tracking columns and still settles on release.
+            harness.press(harness.xOfColumn(SELECTED))
+            expect(harness.rulerAccepts(width / 2, harness.notesTop() + 100)).toBe(true)
+            expect(harness.rulerAccepts(-1000, -1000)).toBe(true)
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    it('a press selects the column under it and sounds it, and re-pressing that column sounds it again', async () => {
+        const harness = await mountScrub()
+        try {
+            const column = SELECTED + 3
+            harness.press(harness.xOfColumn(column))
+            //WITH AUDIO - `ignoreAudio` false - which is what makes this surface an instrument rather
+            //than a scrollbar, and what every other gesture in this class deliberately does not do
+            //(a drag, a wheel and a timeline scrub all publish silently).
+            expect(harness.selectColumnCalls).toEqual([
+                {index: column, ignoreAudio: false, forceAnchor: false},
+            ])
+            harness.push()
+            harness.release(harness.xOfColumn(column))
+            harness.push()
+            //THE RE-PRESS (spec §2). The press is NOT gated on the column having changed: the band
+            //is pressed to HEAR a column, so "you are already there" is not a reason to stay silent.
+            //Every other publish in this file is behind a `column !== state.selected` test, which is
+            //what this row is standing in front of.
+            harness.press(harness.xOfColumn(column))
+            expect(harness.selectColumnCalls.at(-1)).toEqual({
+                index: column,
+                ignoreAudio: false,
+                forceAnchor: false,
+            })
+            expect(harness.sounded()).toEqual([column, column])
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    it('holds the canvas exactly where the press found it, and moves it on the release', async () => {
+        const harness = await mountScrub()
+        try {
+            const frozen = harness.scrollPosition()
+            expect(frozen).toBe(SELECTED)
+            harness.press(harness.xOfColumn(SELECTED))
+            harness.push()
+            for (let step = 1; step <= 4; step++) {
+                harness.move(harness.xOfColumn(SELECTED + step))
+                //SVELTE HANDING `selected` BACK, which is the write that would move the canvas: with
+                //no gesture running, an update carrying a new `selected` takes syncScrollSchedule's
+                //snap branch and rest() assigns the position from it. The suspension is the drag,
+                //and a `ruler` drag never writes a position for a frame to apply either.
+                harness.push()
+                await vi.advanceTimersByTimeAsync(48)
+                expect(harness.scrollPosition()).toBeCloseTo(frozen, 6)
+                expect(harness.selected().at(-1)).toBe(SELECTED + step)
+            }
+            //THE RELEASE IS WHAT MOVES IT (ADR-0014): the recentring is the feature the band was
+            //asked for, not a side effect of it - and it settles on the column the finger LANDED on,
+            //which is `state.selected` by then.
+            harness.release(harness.xOfColumn(SELECTED + 4))
+            expect(harness.scrollPosition()).toBeCloseTo(SELECTED + 4, 6)
+            //A touch scrub has no hover state to preserve, so its flag ends with the gesture.
+            expect(harness.cursorVisible()).toBe(false)
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    it('sounds at most one column per throttle window while the selection tracks every crossing', async () => {
+        const harness = await mountScrub()
+        try {
+            //THE PRESS OPENS THE WINDOW by sounding, so the first crossing of a slow scrub is already
+            //past it - see RULER_SCRUB_AUDIO_MS.
+            harness.press(harness.xOfColumn(SELECTED))
+            expect(harness.sounded()).toEqual([SELECTED])
+            //FOUR CROSSINGS INSIDE ONE 50ms WINDOW, 10ms apart. Every one of them is SELECTED - the
+            //composer downstream reasons in columns, and a sweep that skipped some would leave the
+            //mark, the readout and a running Duration Hold's span behind the finger - and not one of
+            //them may sound.
+            for (let step = 1; step <= 4; step++) {
+                await vi.advanceTimersByTimeAsync(10)
+                harness.move(harness.xOfColumn(SELECTED + step))
+                harness.push()
+            }
+            expect(harness.selected()).toEqual([
+                SELECTED,
+                SELECTED + 1,
+                SELECTED + 2,
+                SELECTED + 3,
+                SELECTED + 4,
+            ])
+            expect(harness.sounded()).toEqual([SELECTED])
+            //THE COLUMN THE FINGER IS ON *NOW* sounds when the window opens, never a queued one: what
+            //passed silently is gone, and the reading is always where the hand is.
+            await vi.advanceTimersByTimeAsync(10)
+            harness.move(harness.xOfColumn(SELECTED + 5))
+            harness.push()
+            expect(harness.sounded()).toEqual([SELECTED, SELECTED + 5])
+            //...and the next crossing inside the NEW window is silent again, which is what says the
+            //window is re-opened by the crossing that used it rather than by a fixed cadence
+            await vi.advanceTimersByTimeAsync(10)
+            harness.move(harness.xOfColumn(SELECTED + 6))
+            harness.push()
+            expect(harness.sounded()).toEqual([SELECTED, SELECTED + 5])
+            //A SLOW SCRUB PAYS NOTHING FOR THE THROTTLE EXISTING: past the window every crossing
+            //sounds, which is the ordinary case of browsing a song a column at a time.
+            await vi.advanceTimersByTimeAsync(60)
+            harness.move(harness.xOfColumn(SELECTED + 7))
+            harness.push()
+            await vi.advanceTimersByTimeAsync(60)
+            harness.move(harness.xOfColumn(SELECTED + 8))
+            harness.push()
+            expect(harness.sounded()).toEqual([SELECTED, SELECTED + 5, SELECTED + 7, SELECTED + 8])
+            //ONE EVENT THAT CROSSES SEVERAL COLUMNS PUBLISHES THE ONE IT LANDED ON, and not the run
+            //between: the resolution is "the column under x", asked per event, so a pointer stream
+            //slower than the hand is sparse in the same way the audio is.
+            await vi.advanceTimersByTimeAsync(60)
+            harness.move(harness.xOfColumn(SELECTED + 12))
+            expect(harness.selected().at(-1)).toBe(SELECTED + 12)
+            expect(harness.selected()).not.toContain(SELECTED + 10)
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    it('repaints the mark under the finger, over a canvas that is holding still', async () => {
+        //SPEC §10'S FIRST RISK, and the one place the existing machinery does not simply extend.
+        //update() suppresses the overlay repaint for the whole of a drag, because during a STAGE
+        //drag the canvas is moving and painting the mark from an update puts it on the new column
+        //against pixels the frame has not shifted yet - once per column crossed, which is what read
+        //as the highlight flickering behind the drag. A Ruler Scrub is the opposite case: the canvas
+        //is deliberately still, nothing is coming to reconcile with, and NOTHING ELSE would ever
+        //repaint the mark - so with the suppression left in place the overlay freezes on the column
+        //the scrub started from for the entire gesture.
+        const harness = await mountScrub()
+        try {
+            harness.press(harness.xOfColumn(SELECTED))
+            harness.push()
+            expect(harness.overlayColumns()).toEqual([SELECTED])
+            expect(harness.cursorVisible()).toBe(true)
+            //A held ruler press is a committed scrub, distinct from the 50%-alpha mouse preview.
+            expect(harness.cursorAlpha()).toBe(1)
+            const frozen = harness.scrollPosition()
+            for (let step = 1; step <= 3; step++) {
+                harness.move(harness.xOfColumn(SELECTED + step))
+                //the round-trip is the only thing that can paint the OVERLAY: the crossing knows the
+                //column but not which view is losing the mark, and `overlayColumn` is written by
+                //update() and by the constructor and by nothing else
+                harness.push()
+                expect(harness.overlayColumns()).toEqual([SELECTED + step])
+                expect(harness.scrollPosition()).toBeCloseTo(frozen, 6)
+                //...and THE FLAG, which is the other mark and comes from the crossing itself rather
+                //than from the update - at the scrubbed column's own left edge, which is where the
+                //playhead will be standing once the release has settled the canvas there
+                expect(harness.cursorX()).toBeCloseTo(harness.startOfColumn(SELECTED + step), 6)
+            }
+            //THE SUPPRESSION IS LIFTED FOR THIS SURFACE AND NO OTHER: a stage drag reaching the same
+            //branch still waits for its frame, which the rows in PART SEVEN state.
+            harness.release(harness.xOfColumn(SELECTED + 3))
+            harness.push()
+            expect(harness.overlayColumns()).toEqual([SELECTED + 3])
+            expect(harness.cursorVisible()).toBe(false)
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    it('moves the flag with the finger while gliding, where no update paints anything at all', async () => {
+        const harness = await mountScrub({smoothScroll: true})
+        try {
+            harness.press(harness.xOfColumn(SELECTED))
+            harness.push()
+            //GLIDE MODE DRAWS NO SELECTED OVERLAY AT ALL (R1's mutual exclusion), so the flag is the
+            //only mark this mode has above the playhead line - and update() has nothing whatever to
+            //notice here: `overlayColumn` is NO_OVERLAY_COLUMN before and after, and the scroll
+            //position is frozen by the gesture. The crossing's own repaint is what draws this.
+            expect(harness.overlayColumns()).toEqual([])
+            const before = harness.renders()
+            harness.move(harness.xOfColumn(SELECTED + 2))
+            expect(harness.cursorX()).toBeCloseTo(harness.startOfColumn(SELECTED + 2), 6)
+            expect(harness.renders()).toBeGreaterThan(before)
+            //...and it is drawn BEFORE the round-trip, which is the point of it being the crossing's
+            //own: a mark pinned to a fingertip cannot wait a microtask for Svelte
+            expect(harness.selectColumnCalls.at(-1)?.index).toBe(SELECTED + 2)
+            harness.push()
+            expect(harness.cursorX()).toBeCloseTo(harness.startOfColumn(SELECTED + 2), 6)
+            //A MOVE INSIDE ONE COLUMN REPAINTS NOTHING: the flag is column-addressed, so it moves
+            //once per crossing and never per event (CONTEXT.md: Column Ruler - "no press lands
+            //between two columns")
+            const settled = harness.renders()
+            harness.move(harness.xOfColumn(SELECTED + 2) + 2)
+            expect(harness.renders()).toBe(settled)
+            expect(harness.selectColumnCalls.at(-1)?.index).toBe(SELECTED + 2)
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    it('a scrub the page forgets settles instead of leaving the canvas frozen', async () => {
+        const harness = await mountScrub()
+        try {
+            harness.press(harness.xOfColumn(SELECTED))
+            harness.push()
+            harness.move(harness.xOfColumn(SELECTED + 2))
+            harness.push()
+            //A pointercancel REACHES NO PIXI HANDLER AT ALL - EventSystem registers nothing for it -
+            //so the window backstop is the only thing that can end this gesture. A `dragging` motion
+            //nothing ends freezes the whole canvas for the life of the renderer: syncScrollSchedule
+            //would return at its first statement on every update after it, with the song playing on.
+            harness.cancelPointer()
+            expect(harness.scrollPosition()).toBeCloseTo(SELECTED + 2, 6)
+            expect(harness.cursorVisible()).toBe(false)
+            //...and the canvas follows the selection again, which is the suspension being over
+            harness.selectColumn(SELECTED + 6)
+            harness.push()
+            expect(harness.scrollPosition()).toBeCloseTo(SELECTED + 6, 6)
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    it('is one gesture at a time: a second pointer neither walks the scrub nor ends it', async () => {
+        const harness = await mountScrub()
+        try {
+            harness.press(harness.xOfColumn(SELECTED))
+            harness.push()
+            harness.move(harness.xOfColumn(SELECTED + 1))
+            harness.push()
+            const walked = harness.selected().length
+            //THE SECOND POINTER, which pixi delivers to this same container - a second finger, or a
+            //right-button press during a left-button drag (see rulerPointer's `id`). The composer has
+            //ONE selection, so it cannot be a second scrub: it could only walk this one's column and
+            //spend its throttle.
+            harness.press(harness.xOfColumn(SELECTED + 9), SECOND_POINTER)
+            harness.move(harness.xOfColumn(SELECTED + 9), SECOND_POINTER)
+            expect(harness.selected()).toHaveLength(walked)
+            //...and its release is not this gesture ending: the canvas must not settle under the
+            //finger still holding it
+            harness.release(harness.xOfColumn(SELECTED + 9), SECOND_POINTER)
+            expect(harness.scrollPosition()).toBeCloseTo(SELECTED, 6)
+            //the owning pointer still owns it, and its own release still settles
+            harness.move(harness.xOfColumn(SELECTED + 2))
+            harness.push()
+            harness.release(harness.xOfColumn(SELECTED + 2))
+            expect(harness.scrollPosition()).toBeCloseTo(SELECTED + 2, 6)
         } finally {
             harness.destroy()
         }

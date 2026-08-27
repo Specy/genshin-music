@@ -294,25 +294,29 @@ export function yForNumber(input: {
  * THE ROWS THE CAMERA WINDOW SHOWS, first and last INCLUSIVE — the Pro View's vertical counterpart
  * of ComposerRenderer.visibleColumnRange, and stated the same way: the closed form of the overlap
  * test "row r occupies `[r*rowHeight, (r+1)*rowHeight)` and the window occupies
- * `[cameraY, cameraY + notesRegionHeight)`".
+ * `[cameraY - topBleed, cameraY + notesRegionHeight)`". `topBleed` defaults to zero; the renderer
+ * gives it the translucent Column Ruler's height so row-level content is not culled while it is
+ * still visible behind that band.
  *
  * STRICT ON BOTH SIDES, so a row touching an edge exactly is outside — the same measure-zero choice
  * visibleColumnRange makes, and made the same way so the two read alike. Clamped to the axis, so a
  * camera at either end reports only rows that exist; `last < first` means the window shows no row at
  * all, which a zero/negative row height (a region measured before layout) also produces.
  *
- * WHAT READS IT: the row-label strip (one pooled Text per visible row) and the note culling inside a
- * painted column. Both are recomputed when the camera moves, which is why this is a closed form
- * rather than a scan over the axis' rows.
+ * WHAT READS IT: the row-label strip (one pooled Text per visible row) and the moving row bands
+ * inside each painted column. Both are recomputed when the camera moves, which is why this is a
+ * closed form rather than a scan over the axis' rows.
  */
 export function visibleRowRange(input: {
   axis: ProViewAxis;
   rowHeight: number;
   cameraY: number;
   notesRegionHeight: number;
+  topBleed?: number;
 }): { first: number; last: number } {
   if (!(input.rowHeight > 0)) return { first: 0, last: -1 };
-  const first = Math.max(0, Math.floor(input.cameraY / input.rowHeight - 1) + 1);
+  const topBleed = Math.max(0, Number.isFinite(input.topBleed) ? (input.topBleed ?? 0) : 0);
+  const first = Math.max(0, Math.floor((input.cameraY - topBleed) / input.rowHeight - 1) + 1);
   const last = Math.min(
     input.axis.rowCount - 1,
     Math.ceil((input.cameraY + input.notesRegionHeight) / input.rowHeight) - 1

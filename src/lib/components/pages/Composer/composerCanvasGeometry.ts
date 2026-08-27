@@ -62,6 +62,36 @@ export const TIMELINE_BAND_PADDING = 0;
 const RECLAIMED_TIMELINE_PADDING = TIMELINE_BUTTON_MARGIN * 2;
 
 /**
+ * THE COLUMN RULER'S HEIGHT, in px - THE SAME NUMBER ON DESKTOP AND ON PHONES (CONTEXT.md: Column
+ * Ruler, Ruler Scrub; spec 2026-08-27 §2).
+ *
+ * The band exists because the Pro View has no click-to-select-column at all: composerInput's
+ * `stageReleaseIntent` resolves a settled tap on the notes stage to `cell-tap` there and to
+ * `select-column` only in the Compressed View, so without the ruler the only ways to change column
+ * in this view are a stage drag, a mini-timeline scrub, or the keyboard. It is the surface, and the
+ * timestamps printed on it are what it is marked with.
+ *
+ * TWENTY PIXELS IS KNOWINGLY UNDER THE ~44px TOUCH GUIDELINE, accepted rather than overlooked. What
+ * carries it: the band is the WHOLE canvas wide, so the target is enormous in the one axis the
+ * gesture travels along, and the mini-timeline directly above it stays the coarse whole-song
+ * alternative for a thumb that lands high.
+ *
+ * AND THERE IS NO MOBILE BRANCH, unlike composerTimelineHeight() a few lines below - the asymmetry
+ * is the decision, not an omission. Rejected: ~30px on mobile to match that function, which would
+ * make the ruler a second UA-dependent term in a sum the PRERENDERED placeholder has to reproduce
+ * (composerCanvasCssSize), for a band whose whole content is a row of small timestamps that reads no
+ * better at 30px. Also rejected: a thin DRAWN band with a hit area reaching down into the notes
+ * region, which would steal every press aimed at a note whenever the camera is unlocked - i.e. it
+ * would break cell editing to make the ruler easier to hit.
+ *
+ * THE BILL, in the units a user sees it in (spec §4): genshin's canonical frame is ~36 rows over a
+ * ~900px region, so a desktop row goes 24 -> 23.4px (-2.4%); a 420px landscape phone goes 11 ->
+ * 10.5px (-5%). If 20px proves bad in use, the escape is the mobile height branch above, NOT the
+ * hidden hit area.
+ */
+export const COLUMN_RULER_HEIGHT = 20;
+
+/**
  * The canvas' size as a fraction of the body's, stated in the CSS units the placeholder is written
  * in - `85vw`, `45vh` - so that composerCanvasSize and composerCanvasCssSize below are two
  * renderings of ONE formula rather than two formulas that happen to agree today.
@@ -258,27 +288,56 @@ export function composerTimelineHeight(): number {
 }
 
 /**
- * THE CANVAS ELEMENT'S HEIGHT: the notes region, then the band the mini-timeline sits in. The one
- * statement of that sum - ComposerRenderer.canvasHeight() and composerCanvasCssSize below are both
- * this, so the placeholder and the canvas cannot disagree about the band.
+ * THE CANVAS ELEMENT'S HEIGHT: the notes region, the band the mini-timeline sits in, and - in the
+ * Pro View ONLY - the Column Ruler's band between the two. The one statement of that sum;
+ * ComposerRenderer.canvasHeight() and composerCanvasCssSize below are both this, so the placeholder
+ * and the canvas cannot disagree about what the bands take.
+ *
+ * `proView` IS A PARAMETER, AND IT DEFAULTS TO THE COMPRESSED VIEW - which is this function's whole
+ * history in two lines. It took no view at all for as long as the two regions merely SWAPPED PLACES
+ * inside a constant sum (composerNotesRegionY still states that swap, and nothing about it has
+ * changed); the ruler is the first band that exists in one view and not in the other, so the sum
+ * itself parts company between them. The default reproduces the Compressed View's arithmetic
+ * TERM FOR TERM, so every caller with no view to give keeps exactly the height it had - which is
+ * what makes that view a byte-identical no-op here.
+ *
+ * IT MUST BE GIVEN THE SAME FLAG composerNotesRegionY IS. The two are one layout statement split in
+ * half: the region's top carries the ruler's band and this carries it again, so a `true` here with
+ * a `false` there (or the reverse) leaves the notes region overrunning the canvas by exactly
+ * COLUMN_RULER_HEIGHT, and the axis' lowest rows are drawn off the bottom edge where nothing shows
+ * them. test/composerCanvasCss.test.ts tiles both views to hold the three functions together.
  */
-export function composerCanvasElementHeight(notesHeight: number, timelineHeight: number): number {
-  return notesHeight + TIMELINE_BAND_PADDING * 2 + timelineHeight;
+export function composerCanvasElementHeight(
+  notesHeight: number,
+  timelineHeight: number,
+  proView = false
+): number {
+  return (
+    notesHeight + TIMELINE_BAND_PADDING * 2 + timelineHeight + (proView ? COLUMN_RULER_HEIGHT : 0)
+  );
 }
 
 /**
- * WHICH END OF THE CANVAS THE STRIP IS AT, and it is the whole of the Pro View's layout difference:
- * the Compressed View puts the mini-timeline BELOW the notes region, the Pro View at the TOP
- * (spec §6). The sum composerCanvasElementHeight states is the same either way - the two regions
- * swap places inside it rather than one of them changing size - which is why that function takes no
- * view and these two do.
+ * WHICH END OF THE CANVAS THE STRIP IS AT, AND WHAT STANDS BETWEEN IT AND THE NOTES: the Compressed
+ * View puts the mini-timeline BELOW the notes region (spec §6), the Pro View at the TOP with the
+ * Column Ruler's own band under it (CONTEXT.md: Column Ruler; ruler spec §4), so the region there
+ * starts below BOTH.
+ *
+ * THE SWAP USED TO BE THE WHOLE OF THE DIFFERENCE, and is not any more. While the two regions only
+ * exchanged ends inside a constant sum, composerCanvasElementHeight could take no view at all; the
+ * ruler is the first band that exists in one view and not the other, so that function gained a
+ * `proView` too and this term appears in both. GIVE THEM THE SAME FLAG - see the note there for
+ * what a disagreement costs (a notes region overrunning the canvas by COLUMN_RULER_HEIGHT, with the
+ * axis' lowest rows drawn off the bottom edge).
  *
  * `composerTimelineStripY` is the strip's own top edge (one TIMELINE_BAND_PADDING inside its band),
  * which is both where ComposerRenderer puts `timelineStrip` and where ComposerCanvas.svelte pins
- * the DOM row of timeline buttons - the renderer reports it so those two cannot disagree.
+ * the DOM row of timeline buttons - the renderer reports it so those two cannot disagree. It needs
+ * no ruler term in either view: the strip is ABOVE the ruler in the Pro View and below the notes in
+ * the Compressed one, so nothing the ruler takes is between it and its own edge.
  */
 export function composerNotesRegionY(proView: boolean, timelineHeight: number): number {
-  return proView ? TIMELINE_BAND_PADDING * 2 + timelineHeight : 0;
+  return proView ? TIMELINE_BAND_PADDING * 2 + timelineHeight + COLUMN_RULER_HEIGHT : 0;
 }
 
 /** Where the mini-timeline strip is drawn - see composerNotesRegionY. */
@@ -287,20 +346,51 @@ export function composerTimelineStripY(proView: boolean, notesHeight: number): n
 }
 
 /**
- * THE PRO VIEW'S NOTES REGION: everything the window has left once the composer's own chrome and
- * the mini-timeline's band are taken off it (spec §6).
+ * WHERE THE COLUMN RULER'S BAND STARTS on the canvas, in px: flush under the mini-timeline's whole
+ * band, which in the Pro View is at the top. Its height is COLUMN_RULER_HEIGHT and the notes region
+ * begins exactly where it ends, so this, composerTimelineStripY and composerNotesRegionY tile the
+ * height composerCanvasElementHeight sums with no gap and no overlap - which is the property
+ * test/composerCanvasCss.test.ts checks rather than the three numbers separately.
+ *
+ * PRO VIEW ONLY, AND IT TAKES NO `proView` TO SAY SO. The Compressed View has no ruler at all (spec
+ * §2: its mini-timeline is at the BOTTOM, so "below the timeline" does not parse there, and a stage
+ * tap in that view already selects the column), so there is no y for it to answer - a `proView`
+ * parameter here could only ever return a number nothing may draw at, or a null every caller has to
+ * unwrap. Its one production caller is inside ComposerRenderer's own `state.proView` branch, which
+ * is the single boolean the whole band stands behind.
+ */
+export function composerColumnRulerY(timelineHeight: number): number {
+  return TIMELINE_BAND_PADDING * 2 + timelineHeight;
+}
+
+/**
+ * THE PRO VIEW'S NOTES REGION: everything the window has left once the composer's own chrome, the
+ * mini-timeline's band and the Column Ruler's are taken off it (spec §6; ruler spec §4).
  *
  * Stated once here because composerCanvasSize and composerCanvasCssSize below are two renderings of
- * it - the CSS one adds the band back and emits `max(band + floor, 100vh - inset)`, which is this
+ * it - the CSS one adds the bands back and emits `max(bands + floor, 100vh - inset)`, which is this
  * function with `max` and `-` in the other order.
+ *
+ * THE RULER COMES OUT OF THE REGION AND NOT OUT OF THE CANVAS, which is why the canvas ELEMENT is
+ * exactly as tall as it was before the ruler existed: this subtracts COLUMN_RULER_HEIGHT and
+ * composerCanvasElementHeight adds it straight back, so the sum is still `100vh - inset` and the
+ * window is still filled to the sliver.
+ *
+ * What moved is the SPLIT inside it, and that is where the band is actually paid for: the region is
+ * 20px shorter, proViewGeometry.proRowHeight divides it by the same canonical frame it always did,
+ * and every row comes out proportionally thinner - the -2.4% desktop / -5% landscape-phone bill
+ * COLUMN_RULER_HEIGHT's own docblock quotes. No caller had to be told; the row height is a function
+ * of this number and follows it.
  */
 function proNotesRegionHeight(bodyHeight: number, timelineHeight: number): number {
   return Math.max(
     PRO_MIN_NOTES_HEIGHT_PX,
     bodyHeight * (PRO_CANVAS_HEIGHT_VH / 100) -
       PRO_CANVAS_INSET_PX -
-      //the band, as one term, so the split between the two regions is stated in one place
-      composerCanvasElementHeight(0, timelineHeight)
+      //BOTH bands, as one term, so the split between the regions is stated in one place - and with
+      //`proView` hard-coded true because this function is the pro branch: there is no compressed
+      //caller for the flag to come from
+      composerCanvasElementHeight(0, timelineHeight, true)
   );
 }
 
@@ -432,8 +522,12 @@ export function composerCanvasCssSize(input: {
   if (input.inPreview) return null;
   const scale = input.rowHeightScale ?? game.notes.composerRowHeightScale;
   const timelineHeight = input.timelineHeight ?? composerTimelineHeight();
-  //the band, as one literal - composerCanvasElementHeight's `notesHeight` is the `45vh * scale` term
-  const band = composerCanvasElementHeight(0, timelineHeight);
+  //THE BANDS, as one literal - composerCanvasElementHeight's `notesHeight` is the `45vh * scale`
+  //term below, and the `proView` here is what puts the Column Ruler's 20px into the literal in the
+  //view that has one. This is the whole of what the placeholder has to be told about the ruler: get
+  //it wrong and the wrapper is 20px short of the canvas that lands in it hundreds of ms later, which
+  //is exactly the load-time jump this function exists to prevent (test/composerCanvasCss.test.ts).
+  const band = composerCanvasElementHeight(0, timelineHeight, input.proView);
   return {
     mobileWidth: `calc(${CANVAS_WIDTH_VW}vw - ${CANVAS_WIDTH_INSET_PX}px)`,
     //`3.5rem` and not the 56px it comes to at ROOT_FONT_SIZE: this term IS `.tool`'s own

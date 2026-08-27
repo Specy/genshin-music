@@ -1621,10 +1621,10 @@ select {
 }
 
 .canvas-buttons {
-  height: 100%;
+  height: var(--canvas-buttons-notes-height, 100%);
   position: absolute;
   min-width: 2.8rem;
-  top: 0;
+  top: var(--canvas-buttons-notes-top, 0);
   background-color: var(--primary);
   color: var(--icon-color);
   display: none;
@@ -1637,6 +1637,18 @@ select {
   opacity: 0;
   transition: opacity 0.1s;
   z-index: 2;
+}
+
+/* THE MOBILE CHEVRONS COVER THE RULER TOO. These are the same two conditions that make the
+   otherwise-desktop-hidden controls visible below. In the Pro View their gradient and DOM hit box
+   begin at the ruler instead of the notes edge and grow by exactly its reported height; the
+   mini-timeline remains above them. The Compressed View has no ruler and never matches the modifier.
+   Renderer-reported custom properties keep CSS from carrying a second copy of the 20px band. */
+@media (hover: none) and (pointer: coarse), only screen and (max-width: 1000px) {
+  .composer-grid-pro .canvas-buttons {
+    height: calc(var(--canvas-buttons-notes-height, 0px) + var(--canvas-buttons-ruler-height, 0px));
+    top: var(--canvas-buttons-ruler-top, var(--canvas-buttons-notes-top, 0));
+  }
 }
 
 /* ==================================================================================

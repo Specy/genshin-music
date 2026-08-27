@@ -12,9 +12,16 @@
 // `height + TIMELINE_BAND_PADDING` in the Compressed View and the canvas' TOP in the Pro View; its
 // x and its width are the canvas' less the DOM buttons' footprint - see stripWidth()).
 // `this.height` is that region and not the canvas - see canvasHeight() for the only two places that
-// want the whole thing. WHICH END OF THE CANVAS EACH REGION IS AT is written exactly twice, in
-// positionNotesRegion and positionTimelineStrip; everything else in this class is stated in the
-// notes region's own coordinates and is unaware of the view.
+// want the whole thing. WHICH END OF THE CANVAS EACH REGION IS AT is written exactly three times, in
+// positionNotesRegion, positionTimelineStrip and positionColumnRuler; everything else in this class
+// is stated in the notes region's own coordinates and is unaware of the view.
+//
+// The Pro View has a THIRD region between those two: the Column Ruler's ~20px band (CONTEXT.md:
+// Column Ruler), a scale of the visible window marked with the timestamp each labelled column begins
+// at. It is that view's only click-to-select-column surface - a settled tap on the notes stage there
+// EDITS a cell. A press on it selects the column under it and sounds it, a drag along it is a Ruler
+// Scrub (the canvas holds still and the selection follows the finger), and the release is what
+// brings the canvas to the landed column - see ADR-0014 for why that recentring is the feature.
 //
 // Theme reaches this class via subscribeTheme(cb); ComposerCanvas.svelte separately derives the
 // handful of theme values its own DOM needs via $derived off the same ThemeProvider singleton.
@@ -107,15 +114,34 @@ import {
 } from './proViewNotes';
 import { ComposerCache, noteTextureKey, type ComposerCacheData } from './ComposerCache';
 import {
+  COLUMN_RULER_HEIGHT,
   TIMELINE_BAND_PADDING,
   TIMELINE_INSET_LEFT,
   TIMELINE_INSET_RIGHT,
   composerCanvasElementHeight,
   composerCanvasSize,
+  composerColumnRulerY,
   composerNotesRegionY,
   composerTimelineHeight,
   composerTimelineStripY,
 } from './composerCanvasGeometry';
+// THE COLUMN RULER'S CADENCE (CONTEXT.md: Column Ruler; spec 2026-08-27 §4), in the same pixi-free
+// shape proViewGeometry and composerInput are in: which columns of the top band carry a printed
+// timestamp, and what each one reads. Read on a `state.proView` branch and nowhere else - the
+// Compressed View has no ruler at all (its mini-timeline is at the BOTTOM, so "below the timeline"
+// does not parse there, and a stage tap already selects the column).
+//
+// `columnRulerBarLength` is deliberately NOT imported: it is a mirror of this class' own
+// counterLimit(), and the renderer passes counterLimit() itself as `barLength` rather than
+// re-deriving `beatMarks` through a second copy of the same three cases - the mirror exists so the
+// pure module can be exercised without this one, not so this one can call it.
+import {
+  COLUMN_RULER_BASE_LABEL_STEP,
+  COLUMN_RULER_LABEL_FONT_PX,
+  columnRulerLabelStep,
+  columnRulerLabels,
+  isColumnRulerLabel,
+} from './columnRuler';
 import {
   COMPOSER_TIMELINE_MINIMAP_CONFIG,
   ComposerTimelineMinimapBuilder,
@@ -309,6 +335,118 @@ const PRO_ARROW_CORNER_RADIUS = 3;
  */
 const PRO_ARROW_HIT_WIDTH = 48;
 const PRO_ARROW_HIT_HEIGHT = 32;
+
+/**
+ * WHAT THE COLUMN RULER IS DRAWN WITH (CONTEXT.md: Column Ruler; spec 2026-08-27 §4/§5).
+ *
+ * The band's HEIGHT and its y are composerCanvasGeometry's (COLUMN_RULER_HEIGHT,
+ * composerColumnRulerY - they are terms of the canvas' own sum, which the prerendered placeholder
+ * has to reproduce), and WHICH columns carry a reading is columnRuler.ts'. These are the third
+ * piece: the marks themselves. They live here rather than in that pure module for the reason every
+ * other draw constant in this file does - a tick height means nothing without the Graphics it is
+ * queued against, and columnRuler.ts is exercisable from plain vitest precisely because it holds no
+ * such number. The one number that crosses the line is COLUMN_RULER_LABEL_FONT_PX, which is over
+ * there because MIN_LABEL_SPACING_PX is DERIVED from it and a constant whose derivation lives in
+ * another file is a constant nobody re-derives when it moves.
+ *
+ * THE BAND HAS NO BACKING OF ITS OWN, and that is a decision rather than an omission. It is left as
+ * the canvas' clear colour - `primary`, which is also what the empty canvas past the last column
+ * shows - because that is the one colour on this canvas that is neither the mini-timeline's band
+ * flush above it (`layer('primary', 0.1)`) nor a column's own background below it, so the ruler
+ * reads as its own strip with no rectangle painted for it. REJECTED: the row-label strip's
+ * `layer('primary', 0.12)`, which is within a hair of the mini-timeline's 0.1 - the two bands would
+ * have merged into one 56px slab needing a hairline drawn between them purely to undo the fill.
+ * What that choice buys downstream is that `pro.stripText` is exactly the right ink here: the theme
+ * derives it as readable against `primary`, which is literally the surface these marks stand on.
+ *
+ * THE THREE MARKS, and spec §4 is explicit that there is no fourth:
+ *  - a MINOR tick every COLUMN_RULER_BASE_LABEL_STEP columns,
+ *  - a MAJOR tick at each labelled column (isColumnRulerLabel is both predicates - a major tick IS
+ *    a reading's tick),
+ *  - and NO PER-COLUMN TICKS. At 50 columns/canvas on a phone those are 8px apart and read as a
+ *    picket fence, and the notes grid immediately below already draws every column boundary - so a
+ *    per-column tick would be a second, fainter statement of a line the user can already see.
+ *
+ * BOTH TICKS ARE FLUSH WITH THE BAND'S BOTTOM EDGE and grow upward, so a tick's lower end lands
+ * exactly on the notes region's top edge and continues the column boundary drawn under it. That is
+ * the visible half of "a tick and its column are always at one x" - the arithmetic half is the
+ * strip's content carrying the same `notesColumnsContainer.x` offset (see syncColumnRuler).
+ *
+ * 4 and 8, over a 20px band: the major tick is a quarter of the band and the minor half of that, so
+ * the two are told apart by LENGTH at a glance while both stay clear of the label's line box, whose
+ * ~13px at COLUMN_RULER_LABEL_FONT_PX centred in the band runs 3.5..16.5. They overlap the major
+ * tick's 12..20 in y and never in x, which is what the gutter below is for.
+ */
+const COLUMN_RULER_TICK_WIDTH = 1;
+const COLUMN_RULER_MINOR_TICK_HEIGHT = 4;
+const COLUMN_RULER_MAJOR_TICK_HEIGHT = 8;
+/**
+ * The two ticks' alphas over `pro.stripText`. The minor tick is a subdivision mark and the major
+ * one belongs to a reading, so the pair is legible as a hierarchy before either is legible as a
+ * number - the same reason PRO_OCTAVE_BAND_ALPHA is the faintest of the zone's four.
+ */
+const COLUMN_RULER_MINOR_TICK_ALPHA = 0.35;
+const COLUMN_RULER_MAJOR_TICK_ALPHA = 0.7;
+/**
+ * HOW FAR RIGHT OF ITS TICK A TIMESTAMP IS PRINTED, in px, and the label is anchored at its LEFT
+ * edge (0, 0.5) rather than centred the way the row-label strip's are.
+ *
+ * Left-aligned because the reading names the tick's own position: a centred label straddles the
+ * mark it belongs to, and at scroll position 0 - where the leading 25% of the band is empty exactly
+ * as the notes region is - half of `0:00` would be printed out there, left of a column that has no
+ * time before it. Left-aligned, nothing is ever drawn left of column 0's tick and spec §5's "draw
+ * no negative times" is true of the pixels and not only of the arithmetic.
+ *
+ * Three px, which is the clearance MIN_LABEL_SPACING_PX' own derivation already accounts for: it
+ * budgets ~28px for the widest reading (`10:00` at this type size) plus an 18px gutter, so a label
+ * offset 3 ends at 31 with 15px of clear air before the next tick at 46.
+ */
+const COLUMN_RULER_LABEL_GUTTER_PX = 3;
+/**
+ * The timestamps' alpha. Just under full, so the readings sit a shade behind the notes they are a
+ * scale for - chrome, like the row-label strip's faint pitch names, rather than content.
+ */
+const COLUMN_RULER_LABEL_ALPHA = 0.85;
+/**
+ * THE CURSOR FLAG'S HALF-WIDTH, and it is PLAYHEAD_ARROW_HALF_WIDTH rather than a number of its own
+ * BECAUSE the ruler and playhead use the same triangular visual language. The flag is transient:
+ * it marks the column under a desktop mouse hover or an active Ruler Scrub, and is hidden at rest
+ * and after a touch release. It is drawn in both scroll modes and never becomes a second persistent
+ * selection indicator.
+ *
+ * A DOWN-POINTING TRIANGLE FILLING THE BAND, base on the band's top edge and apex on its bottom one,
+ * which is the notes region's top edge. Sharing PLAYHEAD_ARROW_HALF_WIDTH makes the hover/scrub
+ * feedback read as part of the same family as the playhead; the colour is `theme.playhead` for the
+ * same reason, and deliberately not a second read of `accent`.
+ */
+const COLUMN_RULER_CURSOR_HALF_WIDTH = PLAYHEAD_ARROW_HALF_WIDTH;
+/** A desktop mouse is only pointing; a press promotes the same flag to fully opaque. */
+const COLUMN_RULER_CURSOR_HOVER_ALPHA = 0.5;
+
+/**
+ * HOW OFTEN A RULER SCRUB MAY SOUND A COLUMN, in ms (CONTEXT.md: Ruler Scrub; spec §2/§6) - the one
+ * number in this file that is about the EARS rather than about pixels or about the hand.
+ *
+ * THE SELECTION IS NOT THROTTLED AND THE AUDIO IS. Every column the finger crosses is selected
+ * exactly, in order, because the selection is what the whole composer downstream reasons in terms of
+ * - the mark, the `song-info` readout, a running Duration Hold's span, the tools range a scrub
+ * sweeps out. What a sweep must not do is fire a preview per crossing: a fast drag across a wide
+ * canvas crosses ~50 columns in 200ms, and every one of them is a chord of `playSound` calls into
+ * the same voices, which is a wall of noise rather than a run through the song. So a crossing that
+ * lands inside this window is handed `ignoreAudio`, and the first one past it sounds - the column
+ * the finger is on NOW, never a queued one, so what you hear is always where you are.
+ *
+ * 50ms is ~20 columns a second, which is fast enough that a deliberate sweep still reads as a run
+ * (a demisemiquaver at 150bpm) and slow enough that each preview's attack is audible before the next
+ * one starts. It is compared against `now()` at the last SOUNDED crossing and not against a fixed
+ * grid, so a slow scrub - anything under 20 columns a second - sounds every single column it
+ * touches and pays nothing for the throttle existing.
+ *
+ * REJECTED (spec §2): a minimum DWELL, i.e. sound a column only once the finger has rested on it.
+ * That silences fast sweeps entirely, and a silent sweep is the gesture failing rather than the
+ * gesture being rate-limited. Also rejected: no limit at all, which is where this started.
+ */
+const RULER_SCRUB_AUDIO_MS = 50;
 
 /**
  * The cap put on the notes Application's Ticker while the song is playing. Stopped-song motion
@@ -522,7 +660,14 @@ interface ComposerRendererTheme {
    *
    * It is the SAME theme key as tailAccent - `accent`, which is what the current layer's span tails
    * are drawn in - so the line matches the layer being edited rather than being a colour of its
-   * own. They are separate fields because tailAccent has a second copy that moves at a different
+   * own.
+   *
+   * READ BY drawColumnRulerCursor TOO, and through THIS field rather than through `pro.accent`
+   * beside it, which holds the very same number: the ruler's transient hover/scrub triangle borrows
+   * the playhead's shape and colour. If the playhead is recoloured away from `accent`, this related
+   * pointer feedback must move with it rather than stay behind with the offscreen-zone arrow.
+   *
+   * They are separate fields because tailAccent has a second copy that moves at a different
    * moment (paintTailAccent), and this one does not: of drawPlayhead's three callers - init(),
    * recalculateCacheAndSizes and syncPlayheadVariant - the second is the theme path, so the usual
    * story is that the line and the pool are recoloured by the same call. The exception is a
@@ -555,6 +700,16 @@ interface ComposerRendererTheme {
     accent: number;
     /** The row-label strip's backing and the ink of the labels standing on it. */
     stripBackground: number;
+    /**
+     * ...and the COLUMN RULER'S ink as well, for its ticks and its timestamps alike.
+     *
+     * The reuse is exact rather than convenient: this is
+     * `getTextColorFromBackground(primary)` - the theme's own readable answer for text standing on
+     * `primary` - and the ruler's band is left as the canvas' clear colour, which IS `primary` (see
+     * COLUMN_RULER_TICK_WIDTH's block for why the band paints no backing of its own). The strip
+     * takes the same ink over its 0.12 layer of the same colour. A second field holding the same
+     * number would be a second thing to keep in step for no answer of its own.
+     */
     stripText: number;
   };
 }
@@ -873,6 +1028,23 @@ export interface ComposerRendererCallbacks {
      */
     timelineTop: number;
     /**
+     * THE COLUMN RULER'S BAND (CONTEXT.md: Column Ruler; spec 2026-08-27 §5) - its own top edge on
+     * the canvas and its own height - in the Pro View, and 0/0 in the Compressed one, which has no
+     * ruler at all.
+     *
+     * REPORTED FOR THE REASON THE STRIP'S TOP IS. ComposerCanvas.svelte reads both values to extend
+     * the mobile side chevrons over the ruler without re-deriving
+     * `TIMELINE_BAND_PADDING * 2 + timelineHeight` or copying the ruler's height. That second copy is
+     * exactly what this whole report exists to prevent, especially in a mobile-only branch.
+     *
+     * The three reported tops TILE the canvas with no gap and no overlap - `timelineTop +
+     * timelineHeight === rulerTop` and `rulerTop + rulerHeight === composerNotesRegionY(...)` in the
+     * Pro View - which is the property test/composerCanvasCss.test.ts checks of the geometry module
+     * and test/composerRenderer.test.ts checks of this report.
+     */
+    rulerTop: number;
+    rulerHeight: number;
+    /**
      * ONE ROW'S HEIGHT in the Pro View, 0 in the Compressed one - reported for the same reason the
      * strip's own top is: a DOM element over the canvas is positioned against it, and a second
      * statement of it could disagree.
@@ -929,6 +1101,8 @@ interface ProPaintGeometry {
   axis: ProViewAxis;
   cameraY: number;
   rowHeight: number;
+  /** Pixels above the notes region that remain visible through the translucent ruler. */
+  topBleed: number;
 }
 
 interface ColumnPaintParams {
@@ -1056,8 +1230,25 @@ type Motion =
    *
    * It is the one motion both modes reach. While smooth scrolling is OFF the handlers write it
    * through snapManualPosition, so it holds a whole column and moves once per column crossed.
+   *
+   * THE `ruler` SURFACE IS THE ONE THAT NEVER WRITES `position` (CONTEXT.md: Ruler Scrub; spec §6),
+   * and that omission IS the gesture rather than a gap in it. A Ruler Scrub holds the canvas STILL
+   * while the selection follows the finger, and "still" is not a state this class has: what it has
+   * is `syncScrollSchedule` returning at its first statement for as long as a drag runs, so every
+   * playback tick, snap and re-anchor is suspended and the frames go on painting whatever
+   * `position` holds. Entered once at the press with the position the canvas is already at and left
+   * alone, that is a canvas that does not move - for exactly as long as the finger is down, which
+   * is ADR-0014's "the suspension is bounded by the gesture". The release eases to `state.selected`
+   * and the invariant is back.
+   *
+   * REJECTED: a fourth `kind` for it, or a `frozen` flag beside the position. Both would put a
+   * second answer to "what is moving the canvas" in the union - and every branch that reasons about
+   * a drag (the hitarea deferrals, the wheel's abdication, the schedule's suspension, the repaint
+   * suppression update() lifts for this surface alone) wants exactly the drag's answer here. What
+   * distinguishes a Ruler Scrub from the other two is not what is moving the position; it is that
+   * nothing is.
    */
-  | { kind: 'dragging'; surface: 'stage' | 'timeline'; position: number };
+  | { kind: 'dragging'; surface: 'stage' | 'timeline' | 'ruler'; position: number };
 
 /**
  * ONE COLUMN'S WORTH OF PLAYHEAD TRAVEL, as an absolute wall-clock schedule: between `startMs` and
@@ -1183,6 +1374,14 @@ class ColumnView {
     this.container.alpha = 1;
     this.container.visible = true;
     this.background.texture = params.background;
+    //The Pro background has no baked horizontal rules (ComposerCache receives `columnLines: []`),
+    //so extending it vertically is a plain colour continuation rather than a stretched grid. It
+    //fills the area the translucent ruler reveals; the row-specific bands below decide which part
+    //of that continuation is shaded. Write the compressed values too because a pooled view owns
+    //the property for its whole lifetime.
+    const topBleed = params.pro?.topBleed ?? 0;
+    this.background.y = topBleed === 0 ? 0 : -topBleed;
+    this.background.height = sizes.height + topBleed;
     this.paintSelection(cache, params.isSelected, params.isToolsSelected);
     this.breakpointMarker.texture = cache.breakpoints[1];
     this.breakpointMarker.visible = params.isBreakpoint;
@@ -1232,6 +1431,8 @@ class ColumnView {
    * this axis is two to three screens tall, so a column's notes above or below the camera window get
    * no sprite at all. The window is the paint's own `cameraY`, which is exactly why a camera move
    * repaints the drawn columns rather than merely translating them - see ComposerRenderer.applyCameraY.
+   * Its TOP includes `pro.topBleed`: the Column Ruler is translucent and later in the scene, so a
+   * row remains visible behind that band until its bottom clears the ruler's top edge.
    */
   private paintProNotes(params: ColumnPaintParams, pro: ProPaintGeometry): void {
     const { cache, notes, instruments, currentLayer, songPitch, sizes } = params;
@@ -1249,7 +1450,7 @@ class ColumnView {
         rowHeight: pro.rowHeight,
         cameraY: pro.cameraY,
       });
-      if (y <= -pro.rowHeight || y >= sizes.height) continue;
+      if (y <= -pro.rowHeight - pro.topBleed || y >= sizes.height) continue;
       const mark = strandedNumbers.get(number);
       const texture =
         cache.notes[noteTextureKey(layerStatus, mark ?? 0)] ?? cache.notes[layerStatus];
@@ -1563,6 +1764,138 @@ export class ComposerRenderer {
   } | null = null;
   /** Everything the strip's labels are a function of, as one comparable string - see syncProStrip. */
   private proStripKey = '';
+
+  // ── the Column Ruler (CONTEXT.md: Column Ruler, Ruler Scrub; spec 2026-08-27) ─────────────────
+  //
+  // CONSTRUCTED IN BOTH VIEWS AND ATTACHED IN ONE, exactly as the Pro View's other layers above
+  // are, and for the same reason: field initialisers are what test/composerRenderer.test.ts reads
+  // its "the pool grew" signal against, so a container built inside init() would count as a pooled
+  // column view. Every method that touches any of these returns at once unless `state.proView` -
+  // that single boolean is the whole of what the Compressed View knows about the ruler, and it is
+  // what makes that view a byte-identical no-op here (nothing is added to its stage, and in
+  // particular nothing ever calls `clear()` on these, which would land in that file's global
+  // Graphics-clear count and be attributed to a column).
+  /**
+   * THE BAND'S PLACE ON THE ONE CANVAS: a plain container at `composerColumnRulerY`, a SIBLING of
+   * timelineStrip and notesColumnsContainer, so everything under it is written in band-local
+   * coordinates - `0..COLUMN_RULER_HEIGHT` in y, canvas x in x. The pattern timelineStrip already
+   * uses; see that field for the pixi rule it rests on (the world transform is inverted before
+   * `hitArea.contains` and applied when rendering children, so nothing below carries the offset).
+   *
+   * ITS x IS 0 AND NOT TIMELINE_INSET_LEFT, which is the one place the two strips part company.
+   * Those insets exist to clear the three DOM timeline buttons, and those buttons stand over the
+   * MINI-TIMELINE's band - a different 36.4px of canvas, flush above this one. Nothing floats over
+   * the ruler, so it spans the whole canvas (spec §6), and column 0's tick is at the same x as
+   * column 0's own left edge rather than 80px right of it.
+   *
+   * ADDED LATER THAN THE NOTES and before the row-label strip and timelineStrip. The first relation
+   * is hit order: pixi's EventBoundary walks children in REVERSE and returns on the first hit, so a
+   * press on the band wins over the note underneath it (spec §6). The row-label strip is
+   * `eventMode: none`, so putting it later changes only drawing: its backing and pitch labels cover
+   * the ruler at the far left. The timeline remains last and decides first over its own band. The
+   * exact sequence is asserted in test/composerRenderer.test.ts.
+   */
+  private readonly columnRulerStrip = new Container();
+  /**
+   * THE HALF OF THE BAND THAT SCROLLS: the ticks and the pooled timestamps, under a container whose
+   * x is `notesColumnsContainer.x` itself. That offset is the whole mechanism of "a tick and its
+   * column are always at one x" - the ruler's contents are written in COLUMN space (`index *
+   * columnWidth`), exactly as the notes region's are, and the one number that maps column space onto
+   * the canvas is written in one place and read here rather than recomputed (see syncColumnRuler).
+   *
+   * NOT ITS OWN RENDER GROUP, unlike notesColumnsContainer, which moves on the same frames. That
+   * one holds a few hundred sprites, so pixi's CPU transform pass was the reason for the group; this
+   * holds one Graphics and at most ~14 labels, which is well inside the "a few hundred matrix
+   * appends" the group was bought against - and a group costs a broken batch and an extra draw call
+   * whatever it holds. If the band ever gains a mark per column this is the field to revisit.
+   */
+  private readonly columnRulerContent = new Container();
+  /**
+   * The minor and major ticks, in ONE Graphics: two queued passes and two fills, so the two
+   * hierarchies cannot drift apart in colour and so a band with only labelled columns on it pays no
+   * fill for the minor set (drawColumnRulerTicks - the pattern paintProRowBands and drawProZone
+   * both use).
+   */
+  private readonly columnRulerTicks = new Graphics();
+  /**
+   * THE CURSOR FLAG, drawn ONCE at its own local origin and MOVED by its `x` - viewportGraphics'
+   * pattern, and for the same reason: `clear()` dirties a GraphicsContext and forces a geometry
+   * rebuild, so a mark that moves must not be redrawn to move. Its shape is a function of nothing
+   * but COLUMN_RULER_HEIGHT and the theme, so drawColumnRulerCursor runs from init() and from the
+   * resize/theme path and nowhere else, while syncColumnRuler writes where it stands.
+   */
+  private readonly columnRulerCursor = new Graphics();
+  /**
+   * THE POOLED TIMESTAMPS (spec §5). A pixi Text owns a rasterised texture and re-rasterises on
+   * every `text` write, so a band that moves with every scroll frame must not touch its labels per
+   * frame - the same rule, and the same mitigation, as the Pro View's row-label strip: grown on
+   * demand, never shrunk, re-set only when columnRulerKey below says the visible label SET moved.
+   *
+   * Indexed by POSITION IN THE LABEL ARRAY and not by column, unlike proStripLabels' `row - first`.
+   * That mapping is stable there because a row keeps its slot as the camera slides; here every slot
+   * is rewritten on every refill anyway (a refill happens exactly when something the labels are a
+   * function of moved, and a moved window changes which column every slot carries), so a slot is
+   * just "the i-th reading on screen" and the labels array's own order is what it means.
+   */
+  private readonly columnRulerLabelPool: Text[] = [];
+  /** How many of columnRulerLabelPool are currently shown; the rest are hidden, not destroyed. */
+  private columnRulerLabelsPainted = 0;
+  /**
+   * EVERYTHING THE BAND'S MARKS ARE A FUNCTION OF, as one comparable record - proStripKey's
+   * counterpart, and an object rather than a joined string for the one field that cannot be joined:
+   * `columns` is compared by IDENTITY, the way needsUnconditionalRepaint compares it.
+   *
+   * It is ONE key for the ticks AND the labels even though the ticks depend on strictly less (they
+   * are a function of the window, the ladder and the column width; the readings additionally depend
+   * on the ms grid). Two gates would save a `clear()` and ~14 rects on a bpm edit and cost a second
+   * thing that can be updated without the first - so the ticks ride along, and the tick Graphics'
+   * own clear count is a usable "the band was refilled" signal for exactly that reason.
+   *
+   * THE MS GRID IS IN IT AS ITS OWN THREE FIELDS - `columns`, `structureVersion`, `bpm` - which are
+   * precisely columnMsPrefixCache's key. A bpm edit moves no column's `version`, no scroll position
+   * and nothing needsUnconditionalRepaint compares, so without those three the ruler would go on
+   * printing the previous tempo's timestamps until something else happened to move the window.
+   */
+  private columnRulerKey: {
+    first: number;
+    last: number;
+    labelStep: number;
+    columnWidth: number;
+    columns: NoteColumn[];
+    structureVersion: number;
+    bpm: number;
+    ink: number;
+  } | null = null;
+  /**
+   * THE RULER SCRUB IN PROGRESS, or null for "no pointer is down on the band" (CONTEXT.md: Ruler
+   * Scrub; spec §6). stagePointer's counterpart for this surface, and it carries the three things a
+   * scrub is - who owns it, where it has got to, and when it last made a sound - and nothing else.
+   *
+   * `id` IS THE ONE-GESTURE-AT-A-TIME RULE, and it is here for the reason stagePointer's is rather
+   * than by symmetry: pixi dispatches per pointerId AND per mouse button, so "a second pointer" is a
+   * second finger on a touch screen or a right-button press during a left-button drag, and the
+   * composer has ONE scroll position and ONE selection - a second concurrent press on this band
+   * cannot be a second scrub, it can only walk this one's column and throttle. The FIRST press owns
+   * the band until it is released; every handler below compares before it acts. (The hitarea cannot
+   * make that call: pixi hands `contains` a point and no pointerId - see testRulerHitarea.)
+   *
+   * `column` IS WHAT THE SELECTION LAST TRACKED, and it is the field the moves are diffed against
+   * rather than `state.selected`. The two are the same column whenever the round-trip has landed,
+   * and they come apart for exactly one microtask after every crossing: `selectColumn` reaches
+   * Svelte and comes back as an update, so a second pointermove arriving inside that gap would read
+   * a stale `selected`, decide the column had changed again and re-publish it - once per event on a
+   * 1000Hz pointer, each one a full Svelte round-trip. It is also what the cursor flag is drawn from
+   * (columnRulerCursorX), so the mark under the finger is this record and never a value that has
+   * been through another object.
+   *
+   * `soundedAtMs` is the throttle's whole state - see RULER_SCRUB_AUDIO_MS. Seeded at the press,
+   * which SOUNDS, so the window opens closed and the first crossing of a slow scrub is already past
+   * it. On the shared now() timebase, like stagePointer.samples, so the tests drive it with the same
+   * fake clock everything else in this class is driven with.
+   */
+  private rulerPointer: { id: number; column: number; soundedAtMs: number } | null = null;
+  /** The last canvas x of a mouse over the ruler, or null when it is not being hovered. */
+  private rulerHoverX: number | null = null;
   /**
    * The View Lock this class is OPERATING UNDER, seeded from the constructor's state - the left-hand
    * side of the one transition that is a COMMAND rather than a description (see syncProView).
@@ -1961,10 +2294,6 @@ export class ComposerRenderer {
     //a sibling added after the columns, so it renders over them
     this.notesApp.stage.addChild(this.playheadGraphics);
     this.drawPlayhead();
-    //...and the strip ABOVE the playhead, because it is the one thing on this canvas that is not
-    //part of the grid: a line drawn through the row labels would make them unreadable, and the
-    //quarter-width playhead is nowhere near them anyway
-    if (this.state.proView) this.initProStrip();
     //R1's half of the mode gate that update() cannot cover: a renderer can paint a whole scene
     //without ever being handed a state, through subscribeTheme below
     this.playheadGraphics.visible = this.playheadIsVisible(this.state);
@@ -2003,10 +2332,21 @@ export class ComposerRenderer {
     this.initViewportClip();
     this.positionNotesRegion();
     this.positionTimelineStrip();
+    this.positionColumnRuler();
     //the locked framing, taken WITHOUT an ease: there is no previous frame for the camera to slide
     //away from, and the first paint must already show the current layer's zone centred - whatever
     //the View Lock says, since a camera that has never been anywhere is holding no pan to preserve
     if (this.state.proView) this.syncProCamera(this.state, 'frame');
+    //...and the Column Ruler's band between the two. It stays later than the notes container for
+    //hit order, while the row-label strip is added AFTER it below so the strip's backing and pitch
+    //labels own the ruler's upper-left corner instead of ticks drawing across them. Its marks are
+    //filled in by the first draw(), like every other pro layer's; only the cursor flag's shape is
+    //drawn here (see drawColumnRulerCursor).
+    if (this.state.proView) this.initColumnRuler();
+    //THE PITCH STRIP ABOVE THE RULER as well as above the playhead: both are canvas chrome, but the
+    //strip identifies the row under it and must stay uninterrupted through the ruler bleed. It is
+    //eventMode `none`, so drawing it later does not take the ruler's pointer surface away.
+    if (this.state.proView) this.initProStrip();
     //THE LAST child of the stage, which is what makes pixi hit-test the strip before the columns -
     //see the field. Draw order is free here, the two regions never overlapping in y.
     this.notesApp.stage.addChild(this.timelineStrip);
@@ -2125,6 +2465,7 @@ export class ComposerRenderer {
     oldApp.stage.removeChild(this.proArrowsGraphics);
     oldApp.stage.removeChild(this.playheadGraphics);
     oldApp.stage.removeChild(this.proStripContainer);
+    oldApp.stage.removeChild(this.columnRulerStrip);
     oldApp.stage.removeChild(this.timelineStrip);
 
     this.dropColumnPool();
@@ -2141,6 +2482,11 @@ export class ComposerRenderer {
     if (this.state.proView) replacement.stage.addChild(this.proZoneGraphics);
     if (this.state.proView) replacement.stage.addChild(this.proArrowsGraphics);
     replacement.stage.addChild(this.playheadGraphics);
+    //...the Column Ruler remaining after the notes for hit order, with the inert pitch strip after
+    //it for draw order. A renderer that survived a lost context must reproduce both relationships,
+    //not merely preserve all the same children. Their own children survived the swap - these
+    //containers belong to the renderer and not the Application.
+    if (this.state.proView) replacement.stage.addChild(this.columnRulerStrip);
     if (this.state.proView) replacement.stage.addChild(this.proStripContainer);
     replacement.stage.addChild(this.timelineStrip);
     replacement.ticker.remove(replacement.render, replacement);
@@ -2170,8 +2516,9 @@ export class ComposerRenderer {
       bodyHeight: sizes.height,
       inPreview: Boolean(this.state.inPreview),
       proView: this.state.proView,
-      //the strip's band comes off the window before the notes region gets what is left, so the two
-      //must be the same number here and in canvasHeight() below
+      //the strip's band - and, in the Pro View, the Column Ruler's with it - comes off the window
+      //before the notes region gets what is left, so this and canvasHeight() below must be handed
+      //the same timeline height AND the same view, or the region and the canvas disagree by a band
       timelineHeight: this.timelineHeight,
     });
     const columnWidth = nearestEven(width / this.numberOfColumnsPerCanvas);
@@ -2179,16 +2526,25 @@ export class ComposerRenderer {
   }
 
   /**
-   * THE WHOLE CANVAS: the notes region, then the band the mini-timeline sits in. The only two things
-   * that want this number are the Application's initial size and the resize - everything else in
-   * this class wants `this.height`, which is the notes region and is what every note's y, every
-   * tail, the cache's texture height, the playhead and the stage hitarea are stated against.
+   * THE WHOLE CANVAS: the notes region, the band the mini-timeline sits in, and the Column Ruler's
+   * band in the Pro View. The only two things that want this number are the Application's initial
+   * size and the resize - everything else in this class wants `this.height`, which is the notes
+   * region and is what every note's y, every tail, the cache's texture height, the playhead and the
+   * stage hitarea are stated against.
    *
    * It remains exactly the height the composer's canvas + timeline DIVs occupied before the merge:
    * the former two 0.2rem padding rows have moved inside timelineHeight, so the grid does not reflow.
+   *
+   * ...AND EXACTLY THE HEIGHT IT WAS BEFORE THE RULER, in both views. In the Compressed View the
+   * flag is false and every term is unchanged; in the Pro View computeCanvasSize already took
+   * COLUMN_RULER_HEIGHT off `this.height` (composerCanvasGeometry's proNotesRegionHeight), so
+   * putting it back here restores the same `100vh - inset` element and moves only the split inside
+   * it. THE FLAG IS NOT OPTIONAL HERE: this and positionNotesRegion are one layout statement in two
+   * halves, and a canvas sized without the band under a region placed below it loses the axis' last
+   * 20px off the bottom edge.
    */
   private canvasHeight(): number {
-    return composerCanvasElementHeight(this.height, this.timelineHeight);
+    return composerCanvasElementHeight(this.height, this.timelineHeight, this.state.proView);
   }
 
   /**
@@ -2205,6 +2561,28 @@ export class ComposerRenderer {
     this.timelineStrip.x = TIMELINE_INSET_LEFT;
     this.timelineStrip.y = composerTimelineStripY(this.state.proView, this.height);
     this.syncTimelineMinimapSpriteSize();
+  }
+
+  /**
+   * WHERE THE COLUMN RULER'S BAND SITS - flush under the mini-timeline's whole band, which in the
+   * Pro View is at the canvas' top (composerCanvasGeometry.composerColumnRulerY). The write that
+   * puts the ticks, the labels and the cursor flag in band-local coordinates, exactly as
+   * positionTimelineStrip does for the strip's own subtree.
+   *
+   * NO x, deliberately: the band is the whole canvas wide (spec §6), so its origin is the canvas'
+   * and nothing below has an inset to undo - see the columnRulerStrip field for why the
+   * TIMELINE_INSET_* the strip beside it carries do not apply here.
+   *
+   * WRITTEN IN BOTH VIEWS, like positionNotesRegion's pro layers: composerColumnRulerY answers only
+   * for the Pro View and takes no flag to say so, but in the Compressed View this container is not
+   * on the stage at all, so a y on it reaches no renderer. Called from init() and from the resize
+   * path beside positionTimelineStrip - `composerTimelineHeight()` is the only thing it is a
+   * function of and that is fixed at init(), so this moves nothing after the first call; it is here
+   * so that "where each region is" stays exactly one write per region rather than becoming a
+   * constant somebody has to notice is constant.
+   */
+  private positionColumnRuler(): void {
+    this.columnRulerStrip.y = composerColumnRulerY(this.timelineHeight);
   }
 
   /**
@@ -2401,7 +2779,12 @@ export class ComposerRenderer {
   /** What a column view needs to place its notes, or null in the Compressed View. */
   private proGeometry(): ProPaintGeometry | null {
     if (!this.state.proView) return null;
-    return { axis: this.proAxis(), cameraY: this.cameraY, rowHeight: this.proRowHeightPx() };
+    return {
+      axis: this.proAxis(),
+      cameraY: this.cameraY,
+      rowHeight: this.proRowHeightPx(),
+      topBleed: COLUMN_RULER_HEIGHT,
+    };
   }
 
   /** The current layer's instrument name and effective Basepoint - what the zone and the strip both ask. */
@@ -2674,24 +3057,29 @@ export class ComposerRenderer {
     const axis = this.proAxis();
     const rowHeight = this.proRowHeightPx();
     const height = this.height;
+    //The ruler paints no background of its own. Its translucent/transparent result is the Pro
+    //scene continuing behind it, so the zone overlay must cover the same negative-y bleed as the
+    //column backgrounds, row bands, notes and tails. Otherwise the undimmed column backing alone
+    //shows through here and looks like an opaque ruler fill laid over the dark overlay.
+    const surfaceTop = -COLUMN_RULER_HEIGHT;
     const top = rowForNumber(axis, zone.max) * rowHeight - this.cameraY;
     //the +1 is the bottom row's own height: the band ends at the BOTTOM edge of zone.min's row
     const bottom = (rowForNumber(axis, zone.min) + 1) * rowHeight - this.cameraY;
     const dimming = !(PRO_HIDE_OUT_OF_ZONE_OVERLAY_WHILE_PLAYING && this.state.isPlaying);
     let dimmed = false;
-    if (dimming && top > 0) {
-      graphics.rect(0, 0, this.width, Math.min(top, height));
+    if (dimming && top > surfaceTop) {
+      graphics.rect(0, surfaceTop, this.width, Math.min(top, height) - surfaceTop);
       dimmed = true;
     }
     if (dimming && bottom < height) {
-      const from = Math.max(0, bottom);
+      const from = Math.max(surfaceTop, bottom);
       graphics.rect(0, from, this.width, height - from);
       dimmed = true;
     }
     if (dimmed) graphics.fill({ color: 0x000000, alpha: PRO_OUT_OF_ZONE_ALPHA });
     let lined = false;
     for (const edge of [top, bottom]) {
-      if (edge < 0 || edge > height) continue;
+      if (edge < surfaceTop || edge > height) continue;
       graphics.rect(0, edge - PRO_ZONE_LINE_WIDTH / 2, this.width, PRO_ZONE_LINE_WIDTH);
       lined = true;
     }
@@ -2855,6 +3243,7 @@ export class ComposerRenderer {
       rowHeight,
       cameraY,
       notesRegionHeight: sizes.height,
+      topBleed: pro.topBleed,
     });
     const zone = this.proZone;
     const shade = this.theme.pro.shade;
@@ -2902,6 +3291,7 @@ export class ComposerRenderer {
       rowHeight,
       cameraY: this.cameraY,
       notesRegionHeight: this.height,
+      topBleed: COLUMN_RULER_HEIGHT,
     });
     const { name, pitch } = this.proCurrentTrack(this.state);
     //the strip's own width, from the statement the tap dispatch and the side chevron's inset also
@@ -2925,7 +3315,10 @@ export class ComposerRenderer {
     //GPU re-uploads for nothing. They have to be redrawn per camera move, because half of what they
     //draw is per ROW (see below) and rows slide continuously under a camera ease.
     this.proStripBackground.clear();
-    this.proStripBackground.rect(0, 0, width, this.height);
+    //Continue the strip itself behind the translucent ruler, not only the row labels and inert-row
+    //stripes below. The ruler is later in the scene, so these negative-y pixels remain underneath
+    //it and cannot leak over its chrome.
+    this.proStripBackground.rect(0, -COLUMN_RULER_HEIGHT, width, this.height + COLUMN_RULER_HEIGHT);
     this.proStripBackground.fill({
       color: this.theme.pro.stripBackground,
       alpha: PRO_STRIP_BACKGROUND_ALPHA,
@@ -2954,7 +3347,12 @@ export class ComposerRenderer {
     //...and an edge, so the strip reads as a strip rather than as a column whose notes went
     //missing: its backing is a layer of the primary colour, which on most themes is close to what
     //the empty canvas beside it already is
-    this.proStripBackground.rect(width - 1, 0, 1, this.height);
+    this.proStripBackground.rect(
+      width - 1,
+      -COLUMN_RULER_HEIGHT,
+      1,
+      this.height + COLUMN_RULER_HEIGHT
+    );
     this.proStripBackground.fill({ color: this.theme.pro.shade, alpha: 0.25 });
     const noteText = this.proNoteText(name, pitch);
     for (let row = first; row <= last; row++) {
@@ -2976,11 +3374,12 @@ export class ComposerRenderer {
       //only alignment that does not depend on which wording the user picked.
       label.x = width / 2;
       label.y = centre;
-      //a row whose LABEL no longer fits inside the region keeps its slot and stops being drawn (see
-      //the pool rule in this method's block). The test is the glyph's own box and not the row's
-      //centre: the strip is drawn last, over everything, so half a letter poking out of the region
-      //would land on the mini-timeline strip above it rather than being clipped by anything
-      label.visible = centre - fontSize / 2 >= 0 && centre + fontSize / 2 <= this.height;
+      //A row whose LABEL no longer touches the visible surface keeps its slot and stops being drawn
+      //(see the pool rule in this method's block). At the top that surface includes the translucent
+      //ruler, so the label remains until its bottom clears the ruler's top. The bottom has no such
+      //overlay and keeps the existing full-fit rule.
+      label.visible =
+        centre + fontSize / 2 > -COLUMN_RULER_HEIGHT && centre + fontSize / 2 <= this.height;
     }
     const painted = Math.max(0, last - first + 1);
     for (let i = painted; i < this.proStripPainted; i++) this.proStripLabels[i].visible = false;
@@ -2988,15 +3387,33 @@ export class ComposerRenderer {
   }
 
   /**
-   * Show or hide the zone's framing, the offscreen-note arrows and the row-label strip together -
-   * the columns' own gate, which all of them exist to frame. Writes in the Compressed View too,
-   * where none of these objects is on the stage: a `visible` on an unparented Graphics reaches no
-   * renderer.
+   * Show or hide the zone's framing, the offscreen-note arrows, the row-label strip and the Column
+   * Ruler's band together - the columns' own gate, which all of them exist to frame or to scale.
+   * Writes in the Compressed View too, where none of these objects is on the stage: a `visible` on
+   * an unparented Graphics reaches no renderer.
+   *
+   * THE RULER BELONGS IN HERE (spec §7): a recording blanks the notes stage, and a scale marked in
+   * the timestamps of columns nobody can see is a scale for nothing - so the band goes with the
+   * columns it scales, exactly as the zone's framing and the row-label strip do. `draw()` passes the
+   * same `Boolean(cacheData) && !isRecordingAudio` gate the columns take, and update()'s recording
+   * branch passes false directly.
+   *
+   * WHAT DOES NOT MOVE IS THE MINI-TIMELINE, which is hidden by a recording too - a rule that
+   * predates the ruler and is written in update()'s own branch, not here. Spec §7 reads "the
+   * mini-timeline stays up, unchanged"; only the second half of that is true of this code, and the
+   * ruler is not the change that would make the first half true. It is stated because it is the
+   * kind of sentence that looks like a bug report later: the strip's own gate is deliberately
+   * untouched by this phase.
    */
   private setProLayersVisible(visible: boolean): void {
     this.proZoneGraphics.visible = visible;
     this.proArrowsGraphics.visible = visible;
     this.proStripContainer.visible = visible;
+    this.columnRulerStrip.visible = visible;
+    if (!visible) {
+      this.rulerHoverX = null;
+      this.columnRulerCursor.visible = this.rulerPointer !== null;
+    }
   }
 
   /** One pooled label, grown on demand and never shrunk - the strip holds at most a screen of rows. */
@@ -3039,6 +3456,375 @@ export class ComposerRenderer {
     }
     const resolved = instrument;
     return (button: number) => resolved.getNoteText(button, this.state.noteNameType, pitch);
+  }
+
+  // ── the Column Ruler (CONTEXT.md: Column Ruler, Ruler Scrub; spec 2026-08-27 §5) ──────────────
+  //
+  // EVERY METHOD BELOW IS REACHED ONLY WITH `state.proView` SET - the two that are called from
+  // shared paths (syncColumnRuler from applyScrollPosition, drawColumnRulerCursor from the
+  // resize/theme path) test it themselves rather than making their callers do it, which is what
+  // keeps the Compressed View's paths free of a ruler branch entirely.
+  //
+  // WHAT IS DRAWN LIVES HERE AND WHAT IS PRESSED DOES NOT (spec §5 against §6). The band's input -
+  // testRulerHitarea and the three handleRuler* handlers - sits beside the mini-timeline's own,
+  // among the other pointer routing, because the questions it has to answer are that
+  // neighbourhood's: which surface a point reaches, which pointer owns a gesture, what a release
+  // settles. The one seam between the two halves is columnRulerCursorX below, which is where the
+  // flag stops being the playhead's and starts being the finger's.
+
+  /**
+   * The band's own container: the scrolling half first, so the FIXED cursor flag draws over the
+   * ticks and the timestamps it stands among rather than under them.
+   *
+   * TWO LAYERS AND NOT ONE, which is the same split the canvas itself is built on: the ticks and
+   * the readings live in COLUMN space and travel with `notesColumnsContainer.x`, while the cursor
+   * lives at a fixed x on the canvas and the columns pass under it (see PLAYHEAD_WIDTH's block for
+   * the coordinate system this mirrors). Written this way, a scroll frame moves two numbers -
+   * `columnRulerContent.x` and the cursor's - and touches nothing else on the band.
+   *
+   * THE BAND AS A WHOLE IS THE TARGET, and everything inside it is inert: `eventMode: 'static'`
+   * plus a hitArea on the strip, `interactiveChildren = false` so pixi never descends past it, and
+   * `'none'` on all three marks. That is notesColumnsContainer's own arrangement, and it is what
+   * makes "every column on the band is pressable" true of the EMPTY parts of it too - a press
+   * between two ticks, or on the 25% of the band that is blank at scroll position 0, resolves
+   * through the same columnAtCanvasX as a press on a tick. Were the marks targets, the answer would
+   * depend on whether a finger happened to land on a 1px tick or on a reading's glyph.
+   *
+   * The three listeners are registered on the STRIP for the same reason: they are the band's, not a
+   * mark's, and the strip is the one node whose local space is the band's own (its x is 0, its y is
+   * composerColumnRulerY), so `contains` is handed exactly the coordinates spec §6 states the hit
+   * area in - see testRulerHitarea.
+   */
+  private initColumnRuler(): void {
+    this.columnRulerStrip.eventMode = 'static';
+    this.columnRulerStrip.interactiveChildren = false;
+    this.columnRulerStrip.hitArea = this.testRulerHitarea;
+    this.columnRulerStrip.on('pointerdown', this.handleRulerDown);
+    this.columnRulerStrip.on('pointerup', this.handleRulerUp);
+    this.columnRulerStrip.on('pointermove', this.handleRulerSlide);
+    this.columnRulerStrip.on('pointerover', this.handleRulerHover);
+    this.columnRulerStrip.on('pointerout', this.handleRulerOut);
+    this.columnRulerContent.eventMode = 'none';
+    this.columnRulerTicks.eventMode = 'none';
+    this.columnRulerCursor.eventMode = 'none';
+    this.columnRulerCursor.visible = false;
+    this.columnRulerContent.addChild(this.columnRulerTicks);
+    this.columnRulerStrip.addChild(this.columnRulerContent);
+    this.columnRulerStrip.addChild(this.columnRulerCursor);
+    this.notesApp?.stage.addChild(this.columnRulerStrip);
+    this.drawColumnRulerCursor();
+  }
+
+  /**
+   * WHERE THE TRANSIENT CURSOR FLAG STANDS, in canvas x. An active scrub owns it first; otherwise a
+   * desktop hover resolves the current column under the stored pointer x. Re-resolving hover here
+   * matters when playback or an ease moves columns beneath a stationary mouse: the triangle stays
+   * under the pointer instead of following the column that happened to be there before the move.
+   *
+   * `playheadX + (column - scrollPosition) * columnWidth` is containerX()'s own
+   * expression solved for a column, i.e. the canvas x of that column's LEFT EDGE - the same edge
+   * the playhead uses. The scrub record supplies the column directly so its mark does not wait for
+   * a Svelte round-trip; with neither scrub nor hover, the returned x is inert because
+   * syncColumnRuler hides the Graphics.
+   */
+  private columnRulerCursorX(): number {
+    const column =
+      this.rulerPointer?.column ??
+      (this.rulerHoverX === null ? null : this.rulerColumnAt(this.rulerHoverX));
+    if (column === null) return this.playheadX();
+    return this.playheadX() + (column - this.scrollPosition) * this.columnSize.width;
+  }
+
+  /**
+   * THE CURSOR FLAG'S SHAPE, drawn once at the Graphics' own origin so that moving it costs an `x`
+   * write rather than a geometry rebuild - see the columnRulerCursor field, and viewportGraphics
+   * for the same trade on the mini-timeline.
+   *
+   * A down-pointing triangle spanning the band, its base on the band's top edge and its apex on the
+   * notes region's, sized off PLAYHEAD_ARROW_HALF_WIDTH and filled in `theme.playhead` - see
+   * COLUMN_RULER_CURSOR_HALF_WIDTH for why both of those are borrowed from the playhead rather than
+   * chosen here: hover/scrub feedback and the playhead deliberately read as one family.
+   *
+   * Called from init() and from recalculateCacheAndSizes, which are exactly drawPlayhead's own
+   * non-transport callers: the shape is a function of the band's height (fixed) and the theme, so
+   * the theme path is the only thing that can invalidate it. It does NOT move on a resize - the
+   * band's height is a constant on both platforms - but the theme reaches this class through that
+   * same debounced rebuild, so that is where it is redrawn.
+   */
+  private drawColumnRulerCursor(): void {
+    if (!this.state.proView) return;
+    const graphics = this.columnRulerCursor;
+    graphics.clear();
+    const half = COLUMN_RULER_CURSOR_HALF_WIDTH;
+    graphics.poly([-half, 0, half, 0, 0, COLUMN_RULER_HEIGHT]);
+    //Geometry is always opaque. Presentation alpha changes without rebuilding the Graphics:
+    //half while merely hovered, full while a Ruler Scrub owns the pointer.
+    graphics.fill({ color: this.theme.playhead, alpha: 1 });
+  }
+
+  /**
+   * THE BAND, BROUGHT INTO AGREEMENT WITH THE SCROLL - applyScrollPosition's Column Ruler half, and
+   * called from the three seams the notes region is painted from: the frame path
+   * (applyScrollPosition), the full repaint (drawNotesStage's pro branch), and the tempo flip
+   * (syncColumnRulerTempo, which is the one caller that reads the answer below).
+   *
+   * @returns whether the marks were actually REFILLED, i.e. whether the gate opened. Two of the
+   * three callers ignore it - they are already inside a paint that ends in a render - and the third
+   * is nothing but this answer: a tempo edit repaints nothing else in this class, so it has to know
+   * whether it owes the canvas a render.
+   *
+   * TWO NUMBERS PER CALL AND EVERYTHING ELSE BEHIND A GATE, which is spec §5's "never per frame" in
+   * one method:
+   *  - the scrolling content takes `notesColumnsContainer.x` - THE FIELD, read back, rather than a
+   *    second call to containerX(). The two agree today (both of that container's writers assign
+   *    containerX()), and reading the field is what makes them agree by construction instead: there
+   *    is one offset, the notes have it, and the ruler is told what it is. That is the whole of "a
+   *    tick and its column are always at one x", and it is also why nothing here has to reproduce
+   *    the empty leading quarter at scroll position 0 - the offset already puts column 0's tick at
+   *    `playheadX`, and the band is simply unmarked to the left of it because no column is there;
+   *  - the cursor takes columnRulerCursorX(), which is the one seam a Ruler Scrub moves.
+   * Everything below is gated on columnRulerKey: a scroll that stays inside one column, a playback
+   * tick, a camera ease, a note edit outside the labelled set - none of them changes a tick's
+   * position or a reading's string, and none of them may rasterise a Text.
+   *
+   * THE LADDER IS EVALUATED PER CALL and is two comparisons deep (columnRuler.columnRulerLabelStep
+   * steps while `labelStep * columnWidth < MIN_LABEL_SPACING_PX`, and at desktop widths the first
+   * test already passes). `counterLimit()` is handed to it as `barLength` rather than `beatMarks`
+   * being re-derived: columnRulerBarLength is a MIRROR of that method, and the mirror exists so the
+   * pure module can be tested without pixi, not so this class can take the long way round to its
+   * own answer.
+   *
+   * THE ms ACCESSOR IS THE ONE RULE HERE THAT IS NOT ARITHMETIC. It reads columnMsPrefix(), this
+   * class' own cumulative grid, which accumulates `msPerBeat * changer` left to right in the same
+   * order ComposedSong.#msPrefix does and is therefore bit-identical to it by construction. That is
+   * what makes `Math.round(prefix[i])` the SAME NUMBER as `ComposedSong.columnsDurationMs(0, i)`:
+   * that method is `roundTime(prefix[i]) - roundTime(prefix[0])` over the same grid, `prefix[0]` is
+   * 0, and `roundTime` is `Math.round`. Which is the exact ms the transport commits column `i` at.
+   * The ROUNDING IS PER ENDPOINT and never of a difference - that is the whole of ADR-0008. NEVER
+   * Utilities.calculateSongLength: it accumulates unrounded and is a second implementation, so a
+   * ruler marked from it drifts against the playhead standing on the column it labels - 43ms by
+   * column 236 at bpm 110, which test/columnRuler.test.ts pins. The `song-info` readout at the
+   * window's bottom prints the same grid for the selected column, so this is a correctness check a
+   * user can see.
+   */
+  private syncColumnRuler(): boolean {
+    if (!this.state.proView) return false;
+    this.columnRulerContent.x = this.notesColumnsContainer.x;
+    this.columnRulerCursor.visible = this.rulerPointer !== null || this.rulerHoverX !== null;
+    this.columnRulerCursor.alpha = this.rulerPointer !== null ? 1 : COLUMN_RULER_CURSOR_HOVER_ALPHA;
+    this.columnRulerCursor.x = this.columnRulerCursorX();
+    //the labels need pixi's Text, which this class takes by dynamic import on the pro branch alone
+    //(see proTextClass). Before it lands there is nothing to print; the ticks wait with it rather
+    //than being drawn into a band whose readings are still missing.
+    const TextClass = this.proTextClass;
+    if (!TextClass) return false;
+    const columnWidth = this.columnSize.width;
+    const { first, last } = this.visibleColumnRange();
+    const labelStep = columnRulerLabelStep({ columnWidth, barLength: this.counterLimit() });
+    const { columns, structureVersion, bpm } = this.state;
+    const ink = this.theme.pro.stripText;
+    const previous = this.columnRulerKey;
+    if (
+      previous &&
+      previous.first === first &&
+      previous.last === last &&
+      previous.labelStep === labelStep &&
+      previous.columnWidth === columnWidth &&
+      previous.columns === columns &&
+      previous.structureVersion === structureVersion &&
+      previous.bpm === bpm &&
+      previous.ink === ink
+    ) {
+      return false;
+    }
+    this.columnRulerKey = {
+      first,
+      last,
+      labelStep,
+      columnWidth,
+      columns,
+      structureVersion,
+      bpm,
+      ink,
+    };
+    this.drawColumnRulerTicks(first, last, labelStep, columnWidth, ink);
+    const prefix = this.columnMsPrefix();
+    const lastPrefix = prefix.length - 1;
+    const labels = columnRulerLabels({
+      first,
+      last,
+      labelStep,
+      //clamped exactly as columnDurationMs clamps the same prefix: `last` is already bounded by the
+      //song (visibleColumnRange clamps it to columns.length - 1), so this is a statement that the
+      //grid is only ever read inside itself and not a case that arises
+      columnStartMs: (index) => Math.round(prefix[clamp(index, 0, lastPrefix)]),
+    });
+    //THE STYLE IS REWRITTEN ONLY WHEN THE INK MOVED, and the string and the position on every
+    //refill. pixi guards `text` against a no-op write itself (AbstractText's setter returns early
+    //on an unchanged string), but a TextStyle write invalidates unconditionally - so the one input
+    //that changes without the label set changing gets the one test it needs.
+    const restyle = !previous || previous.ink !== ink;
+    //...AND EVERY SLOT THE LAST REFILL DID NOT PAINT, whose fill is whatever ink it was last SHOWN
+    //in rather than the current one. A theme edit reaches only the readings on screen when it
+    //lands - the loop below stops at `labels.length` - so a slot hidden across the flip and
+    //revealed by a later widening would print the previous theme's ink, which across a light/dark
+    //flip is white on white. syncProStrip has no such case because its restyle is gated on the
+    //WHOLE key (`first`/`last` included), so any growth of its painted count restyles by
+    //construction; this pool is indexed by position in the label array, which leaves the COUNT as
+    //the thing to compare. The added term costs a TextStyle write only on slots that already
+    //existed but were hidden - a brand-new slot is built with the current ink (columnRulerLabelAt).
+    const previouslyPainted = this.columnRulerLabelsPainted;
+    for (let i = 0; i < labels.length; i++) {
+      const label = this.columnRulerLabelAt(i, TextClass);
+      label.text = labels[i].text;
+      if (restyle || i >= previouslyPainted) label.style.fill = ink;
+      //LEFT-ANCHORED, a gutter right of its own tick, and centred in the band's height - see
+      //COLUMN_RULER_LABEL_GUTTER_PX for why this is not the row-label strip's centring
+      label.x = labels[i].index * columnWidth + COLUMN_RULER_LABEL_GUTTER_PX;
+      label.y = COLUMN_RULER_HEIGHT / 2;
+      label.visible = true;
+    }
+    //a reading that has left the window keeps its slot and stops being drawn, the row-label strip's
+    //rule: the pool grows to the widest band this canvas has ever shown and is never shrunk
+    for (let i = labels.length; i < this.columnRulerLabelsPainted; i++) {
+      this.columnRulerLabelPool[i].visible = false;
+    }
+    this.columnRulerLabelsPainted = labels.length;
+    return true;
+  }
+
+  /**
+   * A TEMPO EDIT REACHES THE BAND, and it is the one input to the readings that nothing else in
+   * this class would notice - syncPlayheadVariant's shape, on the flip and not on the frame.
+   *
+   * `bpm` changes no column's pixels, moves no `version` counter, is not in
+   * needsUnconditionalRepaint (see its closing paragraph, which puts `bpm` with `isPlaying` as a
+   * thing that changes the SCHEDULE rather than a column's appearance), and does not move
+   * `structureVersion` - ComposedSong writes it outside `#bumpStructure` precisely because it has no
+   * graph edit behind it. So a bpm edit on a stopped composer reaches update()'s closing `return`
+   * having repainted nothing at all, which was exactly right until the ruler existed and is exactly
+   * wrong now: every timestamp on the band is a function of the tempo, and the ruler would go on
+   * printing the previous one until something unrelated happened to move the drawn window.
+   *
+   * The other seven fields of columnRulerKey each already have a path: the window and the column
+   * width move only with a scroll or a resize, both of which sync; `beatMarks` and the `columns`
+   * identity are in needsUnconditionalRepaint; `structureVersion` takes the narrowed repaint; the
+   * ink arrives through recalculateCacheAndSizes. This closes the eighth.
+   *
+   * IT RENDERS ITSELF for the reason syncPlayheadVariant does: nothing else in the update is
+   * guaranteed to, and a tempo the band only shows once the user next scrolls is not a tempo edit
+   * they can see. Which is also why THE BAND'S OWN KEY IS THE DECIDER and not the `previous`
+   * comparison above it - that comparison is a cheap pre-filter for the thousands of updates that
+   * carry an unchanged tempo, and it cannot answer the FIRST update, where `previousUpdate` is null
+   * and the bpm may still differ from the one the constructor's state was built with. So the
+   * fallthrough asks syncColumnRuler, which consults the key it holds and reports whether it
+   * actually refilled; a first update carrying the tempo the band was already drawn at costs the
+   * ladder and a comparison, and no render at all.
+   *
+   * PLACED BEFORE syncScrollSchedule in update(), which keeps `scrollPosition` and the notes
+   * container's offset consistent with each other while this runs. An update that moves the tempo
+   * AND the selection therefore refills twice - once here for the old window, once from
+   * applyScrollPosition for the new one - which is correct both times and is the rarest pair of
+   * changes the composer can deliver in one update.
+   */
+  private syncColumnRulerTempo(
+    previous: ComposerRendererState | null,
+    next: ComposerRendererState
+  ): void {
+    if (!next.proView || next.isRecordingAudio) return;
+    if (previous && previous.bpm === next.bpm) return;
+    //the grid is three of columnRulerKey's own fields, so re-running the sync IS the notice - and it
+    //is the same call the frame path makes, so there is no second way for the band to be filled
+    if (!this.syncColumnRuler()) return;
+    if (this.contextLost || this.replacingLostRenderer) return;
+    this.notesApp?.render();
+  }
+
+  /**
+   * THE TICKS (spec §4): a MINOR tick every COLUMN_RULER_BASE_LABEL_STEP columns, a MAJOR tick at
+   * each labelled column, and nothing at all on the columns in between - see
+   * COLUMN_RULER_TICK_WIDTH's block for why there is no per-column tick.
+   *
+   * TWO PASSES AND TWO FILLS over one Graphics, which is this class' own idiom for a layer drawn in
+   * two weights (paintProRowBands' octave bands and inert rows, drawProZone's dim and its edge
+   * lines): each pass queues its rects and fills them together, and a pass that queued nothing
+   * fills nothing rather than issuing an empty draw.
+   *
+   * The two loops are INDEPENDENT rather than one loop with a branch, and the minor pass excludes
+   * the labelled columns rather than the major pass excluding the minor grid. `isColumnRulerLabel`
+   * is the definition of "carries a reading" - the ladder guarantees every step is a multiple of
+   * the base, so the label set is a subset of the minor grid today; stating each pass against its
+   * own predicate is what keeps that a property of the ladder rather than an assumption here.
+   *
+   * BOUNDED BY THE DRAWN WINDOW, which visibleColumnRange has already clamped to the song - so the
+   * band past the last column is unmarked, exactly as the canvas past the last column is empty, and
+   * the ruler never runs a scale over music that does not exist (paintProRowBands makes the same
+   * choice about the row bands, for the same reason).
+   */
+  private drawColumnRulerTicks(
+    first: number,
+    last: number,
+    labelStep: number,
+    columnWidth: number,
+    ink: number
+  ): void {
+    const graphics = this.columnRulerTicks;
+    graphics.clear();
+    let minor = false;
+    for (let index = first; index <= last; index++) {
+      if (index % COLUMN_RULER_BASE_LABEL_STEP !== 0) continue;
+      if (isColumnRulerLabel(index, labelStep)) continue;
+      graphics.rect(
+        index * columnWidth,
+        COLUMN_RULER_HEIGHT - COLUMN_RULER_MINOR_TICK_HEIGHT,
+        COLUMN_RULER_TICK_WIDTH,
+        COLUMN_RULER_MINOR_TICK_HEIGHT
+      );
+      minor = true;
+    }
+    if (minor) graphics.fill({ color: ink, alpha: COLUMN_RULER_MINOR_TICK_ALPHA });
+    let major = false;
+    for (let index = first; index <= last; index++) {
+      if (!isColumnRulerLabel(index, labelStep)) continue;
+      graphics.rect(
+        index * columnWidth,
+        COLUMN_RULER_HEIGHT - COLUMN_RULER_MAJOR_TICK_HEIGHT,
+        COLUMN_RULER_TICK_WIDTH,
+        COLUMN_RULER_MAJOR_TICK_HEIGHT
+      );
+      major = true;
+    }
+    if (major) graphics.fill({ color: ink, alpha: COLUMN_RULER_MAJOR_TICK_ALPHA });
+  }
+
+  /**
+   * One pooled timestamp, grown on demand and never shrunk - proStripLabelAt's counterpart, and the
+   * band holds at most a canvas of readings (~14 at the widest shipped `columnsPerCanvas`).
+   *
+   * The font size and the alpha are written HERE and never in the refill, because neither is a
+   * function of anything that moves: COLUMN_RULER_LABEL_FONT_PX is the constant
+   * MIN_LABEL_SPACING_PX is derived from, and the alpha is chrome's. Only `fill` follows the theme,
+   * and syncColumnRuler writes that on the one key that can change it.
+   */
+  private columnRulerLabelAt(index: number, TextClass: typeof Text): Text {
+    const existing = this.columnRulerLabelPool[index];
+    if (existing) return existing;
+    const label = new TextClass({
+      text: '',
+      style: {
+        fontFamily: 'Arial, Helvetica, sans-serif',
+        fontSize: COLUMN_RULER_LABEL_FONT_PX,
+        fill: this.theme.pro.stripText,
+      },
+    });
+    //LEFT edge, vertical middle: the reading names its tick's position and is printed beside it, so
+    //its left edge is the anchored end - see COLUMN_RULER_LABEL_GUTTER_PX
+    label.anchor.set(0, 0.5);
+    label.alpha = COLUMN_RULER_LABEL_ALPHA;
+    label.eventMode = 'none';
+    this.columnRulerLabelPool.push(label);
+    this.columnRulerContent.addChild(label);
+    return label;
   }
 
   /**
@@ -3267,6 +4053,7 @@ export class ComposerRenderer {
       //region (over it in the Pro View), and the notes region under the strip's band there
       this.positionNotesRegion();
       this.positionTimelineStrip();
+      this.positionColumnRuler();
       //...and the camera is re-taken WITHOUT an ease: the row height is derived from the notes
       //region, so a resize (or a theme rebuild, which comes through here too) restates the axis
       //under it, and sliding from a camera measured in the old rows would be a slide from nowhere.
@@ -3297,6 +4084,11 @@ export class ComposerRenderer {
       //rectangle is a column wide from there, so it takes the column width too), so every input
       //drawPlayhead reads just moved
       this.drawPlayhead();
+      //...and the Column Ruler's flag, which is the same mark one band higher: its SHAPE survives a
+      //resize (the band is a constant height on both platforms) and not a theme edit, and the theme
+      //reaches this class through this very rebuild. Where it STANDS is syncColumnRuler's, and the
+      //draw() below is what re-runs that with the new width.
+      this.drawColumnRulerCursor();
       this.notifyGeometry();
       // draw() rebuilds and explicitly repaints the static scenes after cache regeneration.
       this.draw();
@@ -4127,6 +4919,11 @@ export class ComposerRenderer {
     }
     this.syncOverlayColumn(cacheData);
     this.syncTimelineViewport();
+    //...and the Column Ruler with them, which is where the band gets its scroll offset: the ticks
+    //and the timestamps travel with the columns, so a frame that moved the notes and left the band
+    //behind would slide every reading off the column it names. A no-op in the Compressed View, and
+    //two number writes in the Pro one unless the drawn window itself moved - see syncColumnRuler.
+    this.syncColumnRuler();
     this.notesApp.render();
   }
 
@@ -5097,6 +5894,215 @@ export class ComposerRenderer {
     if (column !== this.state.selected) this.callbacks.selectColumn(column, true);
   };
 
+  // ── the Column Ruler's input (CONTEXT.md: Column Ruler, Ruler Scrub; spec 2026-08-27 §6) ───────
+  //
+  // THE PRO VIEW'S ONLY CLICK-TO-SELECT SURFACE, and that is the gap the whole feature was for: a
+  // settled tap on the notes stage EDITS a cell there (composerInput.stageReleaseIntent resolves it
+  // to 'cell-tap'), so before this band the only ways to change column in the Pro View were a stage
+  // drag, a mini-timeline scrub or the keyboard. The three handlers below are what make a press on
+  // the band reach the selection; the marks they are pressing are drawn by the section further up.
+  //
+  // GATED BY THE STAGE CHILD ALONE. None of these tests `state.proView`: the strip is added to the
+  // stage only in that view (see init and the columnRulerStrip field), so in the Compressed View
+  // there is no node to hit-test, no listener to fire, and these methods are unreachable rather than
+  // merely inert. That is the same shape the Pro View's other input has - `proTapTargetAt` is
+  // reached only from a branch stageReleaseIntent already decided.
+
+  /** The one column addressed by a ruler x, shared by hover, press and scrub. */
+  private rulerColumnAt(globalX: number): number {
+    return clamp(Math.floor(this.columnAtCanvasX(globalX)), 0, this.state.columns.length - 1);
+  }
+
+  /** A mouse hover previews the ruler's column resolution without selecting or sounding it. */
+  private handleRulerHover = (e: FederatedPointerEvent) => {
+    if (e.pointerType !== 'mouse') return;
+    const previous = this.rulerHoverX === null ? null : this.rulerColumnAt(this.rulerHoverX);
+    const column = this.rulerColumnAt(e.globalX);
+    this.rulerHoverX = e.globalX;
+    if (column === previous) return;
+    //A scrub already owns the same flag and repaints it from handleRulerSlide. Hover becomes the
+    //fallback when that pointer releases, so it needs no second render while the press is down.
+    if (!this.rulerPointer) this.syncRulerCursorMark();
+  };
+
+  /** Leaving the band removes mouse hover; an active scrub remains visible until release. */
+  private handleRulerOut = (e: FederatedPointerEvent) => {
+    if (e.pointerType !== 'mouse' || this.rulerHoverX === null) return;
+    this.rulerHoverX = null;
+    if (!this.rulerPointer) this.syncRulerCursorMark();
+  };
+
+  /**
+   * A POINTER GOING DOWN ON THE BAND: select the column under it, SOUND it, hold the canvas still.
+   *
+   * LIKE THE MINI-TIMELINE AND UNLIKE THE NOTES STAGE, the press IS the gesture - there is no slop
+   * wait, because a press on this band can only ever mean "that column": it cannot become an edit,
+   * a pan or a pinch, and a press that never moves is a tap on the column it landed on. So the drag
+   * motion is entered here, at the press, and the whole of what makes the canvas hold still is that
+   * nothing ever writes its `position` again (see the Motion type's `ruler` paragraph).
+   *
+   * WITH AUDIO, and unconditionally - `selectColumn` is called with no `ignoreAudio` and with no
+   * `column !== state.selected` guard, which is the one place this surface deliberately differs from
+   * every other gesture in this class. Re-pressing the column already selected must sound it again
+   * (spec §2): the band is an instrument you press to hear a column, so "you are already there" is
+   * not a reason to stay silent. Composer.svelte's own gates still apply and are what make the
+   * cross-cutting cases free - while the transport runs it returns before the preview, so a press is
+   * a silent seek; a muted or soloed-out track's notes never reach a voice inside `playSound`.
+   *
+   * THE SNAP GOES THROUGH THE ONE QUANTISER. `snapManualPosition` is the identity at every position
+   * this can be reached at while snapping (the invariant at Motion says the position is a whole
+   * column at every instant in that mode), and it is applied anyway so that every manual position in
+   * this class is written on the grid the mode asks for - handleStageDown's Catch applies it for the
+   * same reason and gets the same nothing out of it.
+   *
+   * IGNORED OUTRIGHT WHILE ANOTHER POINTER ALREADY OWNS THE BAND - see rulerPointer's `id`. The
+   * wheel's idle settle is cancelled for the reason handleTimelineDown cancels it: it would fire
+   * mid-gesture and move a canvas this gesture is holding still.
+   */
+  private handleRulerDown = (e: FederatedPointerEvent) => {
+    if (this.rulerPointer || this.state.isRecordingAudio) return;
+    this.cancelWheelSettle();
+    const column = this.rulerColumnAt(e.globalX);
+    //A mouse release stays a hover until pointerout; touch and pen have no persistent hover.
+    this.rulerHoverX = e.pointerType === 'mouse' ? e.globalX : null;
+    this.rulerPointer = { id: e.pointerId, column, soundedAtMs: this.now() };
+    //THE MOTION IS ENTERED BEFORE THE SELECTION IS PUBLISHED, which is an ordering claim and not a
+    //style: `selectColumn` is what suspends the schedule's authority over the canvas, and an update
+    //carrying the new column that arrived while the motion was still `resting` would take
+    //syncScrollSchedule's snap branch and slide the canvas onto it - the one thing this gesture
+    //promises not to do. Svelte's round-trip is a microtask, so no hand can produce that ordering;
+    //writing it the other way round would leave the promise resting on that fact.
+    this.enterMotion({
+      kind: 'dragging',
+      surface: 'ruler',
+      position: this.snapManualPosition(this.scrollPosition),
+    });
+    this.callbacks.selectColumn(column);
+    //the flag is under the finger from the press onwards, on this frame rather than after the
+    //round-trip above comes back - see syncRulerCursorMark
+    this.syncRulerCursorMark();
+  };
+
+  /**
+   * THE SCRUB (CONTEXT.md: Ruler Scrub): the selection follows the finger over a canvas that does
+   * not move.
+   *
+   * SELECTION TRACKS EVERY COLUMN AND THE SOUND IS SPARSE - spec §6's one sentence, and the two
+   * halves are separate statements here on purpose. The crossing test is against the scrub's OWN
+   * last column (rulerPointer.column) rather than against `state.selected`, for the reason that
+   * field's block gives; every crossing publishes, in order, with no column skipped however fast the
+   * pointer stream is. Only the `ignoreAudio` argument is throttled, so a sweep is a sparse run
+   * through the song rather than a wall of voices - see RULER_SCRUB_AUDIO_MS.
+   *
+   * NOTHING IS WRITTEN INTO THE MOTION. That is the entire mechanism of "the canvas holds still",
+   * and the omission is the code: `syncScrollSchedule` is already suspended for the length of any
+   * drag, so a `position` nobody moves is a canvas nobody moves.
+   *
+   * IT REPAINTS ITSELF, which the drag handlers above deliberately do not. They write a position and
+   * let the frame apply it; this one has no position to write, so the frame it would ride on paints
+   * nothing at all (motionPositionAt returns the same number every time). The mark's other half -
+   * the selected-column overlay - travels back through Svelte and lands in update(), which lifts its
+   * drag suppression for this surface alone; see the paragraph at that branch for why the two are
+   * different repaints rather than one.
+   */
+  private handleRulerSlide = (e: FederatedPointerEvent) => {
+    const pointer = this.rulerPointer;
+    if (!pointer) return this.handleRulerHover(e);
+    //...and only from the pointer that started the scrub - see rulerPointer's `id`
+    if (e.pointerId !== pointer.id) return;
+    const motion = this.motion;
+    if (motion.kind !== 'dragging' || motion.surface !== 'ruler') return;
+    const column = this.rulerColumnAt(e.globalX);
+    if (e.pointerType === 'mouse') {
+      const inside =
+        e.globalX >= 0 &&
+        e.globalX <= this.width &&
+        e.globalY >= this.columnRulerStrip.y &&
+        e.globalY <= this.columnRulerStrip.y + COLUMN_RULER_HEIGHT;
+      this.rulerHoverX = inside ? e.globalX : null;
+    }
+    if (column === pointer.column) return;
+    pointer.column = column;
+    const now = this.now();
+    //THE WINDOW IS RE-OPENED BY THE CROSSING THAT USES IT and not by the clock: a scrub that dwells
+    //for a second and then crosses one column sounds that column at once, because the last sound was
+    //a second ago - the throttle is a minimum GAP between previews, never a cadence they wait for.
+    const sounds = now - pointer.soundedAtMs >= RULER_SCRUB_AUDIO_MS;
+    if (sounds) pointer.soundedAtMs = now;
+    this.callbacks.selectColumn(column, !sounds);
+    this.syncRulerCursorMark();
+  };
+
+  /**
+   * THE RELEASE, which is what moves the canvas (CONTEXT.md: Ruler Scrub) - the recentring ADR-0014
+   * calls "the feature, not a side effect of it".
+   *
+   * `state.selected` AND NOT THE SCRUB'S OWN LANDED COLUMN, which are the same column at every
+   * instant a hand can produce and come apart in exactly one case worth having: a scrub made WHILE
+   * THE SONG PLAYS is a moving seek, and a finger that lands and then rests for a beat before
+   * lifting leaves the transport advancing `selected` underneath it. Easing to the finger's column
+   * there would drag the canvas backwards to a column the playhead has already left, and the next
+   * transport tick would immediately correct it. `selected` is the authority at rest (see the Motion
+   * type) and this is that rule applied to the one gesture whose target can go stale.
+   *
+   * NO `selectColumn` ON THE WAY OUT, unlike every other settle in this class. Those publish a
+   * ROUNDED landing the gesture never selected while it ran (a drag selects floors, the timeline
+   * selects floors, a wheel selects floors); a Ruler Scrub has already selected precisely the column
+   * it is settling on, at the crossing, so a publish here would be a second call carrying the number
+   * the composer already holds. What that costs is the `forceAnchor` those calls carry - and the
+   * one thing forceAnchor buys, re-anchoring playback on a release that lands on its own last
+   * published floor, this gesture has no case for: every crossing during playback already re-anchors
+   * (`jumped` is true by construction), and a press that never crossed anything never took the
+   * transport's ownership away.
+   *
+   * The event is optional for handleTimelineUp's reason: resetPointerDown has no pixi event to pass
+   * on for a pointercancel or a blur, and those must end the scrub regardless of which pointer they
+   * name. Clearing `rulerPointer` before the ease ends touch feedback immediately and hands a mouse
+   * back to its hover position - see columnRulerCursorX.
+   */
+  private handleRulerUp = (e?: FederatedPointerEvent) => {
+    //a release from a pointer that never owned the band is not this gesture ending - see
+    //rulerPointer's `id`
+    if (e && this.rulerPointer && e.pointerId !== this.rulerPointer.id) return;
+    this.rulerPointer = null;
+    const motion = this.motion;
+    if (motion.kind === 'dragging' && motion.surface === 'ruler') {
+      this.easeTo(clamp(this.state.selected, 0, this.state.columns.length - 1));
+    }
+    //Snap mode repaints during easeTo, but glide mode waits for its first frame. Apply the release
+    //state now: touch hides the flag; a mouse still over the band falls back to its hover column.
+    this.syncRulerCursorMark();
+  };
+
+  /**
+   * THE FLAG, MOVED UNDER THE POINTER - called when hover, scrub or release changes its transient
+   * position/visibility, and the one repaint in this class that a motion does not pay for.
+   *
+   * WHY IT CANNOT RIDE ON A FRAME. The frames are running (the scrub is a `dragging` motion, and the
+   * Ticker rule at Motion follows from that), but every one of them reads the same unmoved
+   * `motion.position` and returns without painting - which is exactly right, because the canvas is
+   * meant to hold still, and exactly why the flag has to ask for its own render. syncColumnRulerTempo
+   * is the same shape for the same reason: a change nothing else in the class would repaint.
+   *
+   * WHY IT CANNOT WAIT FOR update() EITHER. The selection round-trips through Svelte, so the earliest
+   * an update can carry the new column is the next microtask - a visible lag on a mark that is
+   * supposed to be pinned to a fingertip - and with `smoothScroll` ON there is no update that would
+   * paint it at all: `overlayColumn` is NO_OVERLAY_COLUMN in that mode and the scroll position has
+   * not moved, so update()'s repaint test is false however its drag suppression is written. The
+   * suppression lift over there is about the OVERLAY (the snap mode's mark), which this cannot draw
+   * because it does not know which column is losing it; the two repaints cover different marks and
+   * both are needed.
+   *
+   * syncColumnRuler and not a bare `columnRulerCursor.x` write, which would be overwritten by the
+   * next paint seam and would put a second statement of the flag's x in the class - see that method
+   * for the two numbers every call writes.
+   */
+  private syncRulerCursorMark(): void {
+    this.syncColumnRuler();
+    if (this.contextLost || this.replacingLostRenderer) return;
+    this.notesApp?.render();
+  }
+
   // Called by ComposerCanvas.svelte's prev/next-breakpoint buttons and its own
   // composer_canvas shortcut listener.
   //
@@ -5149,6 +6155,12 @@ export class ComposerRenderer {
    * hitarea answers every point while its drag runs - so a timeline drag never reaches this
    * container at all. That makes the stage child ORDER load-bearing rather than cosmetic;
    * test/composerRenderer.test.ts's mount() states it.
+   *
+   * THE COLUMN RULER'S BAND IS THE SECOND CONTAINER THAT ORDERING NOW CARRIES (spec §6). It sits
+   * between this one and the strip, so both halves above hold of it too: its band is above `y = 0`
+   * in this container's space and is therefore already outside the bound, and while a Ruler Scrub
+   * runs its hitarea answers every point - so a scrub can never also reach a column, whatever the
+   * finger wanders over. Which is why the ruler needed no exclusion here in either direction.
    */
   private testStageHitarea = {
     contains: (x: number, y: number) => {
@@ -5193,10 +6205,61 @@ export class ComposerRenderer {
       // were the first one's continuation, and the guards that reject it live in the handlers (see
       // stagePointer's `id` and timelinePointer) rather than here.
       if (this.stagePointer) return false;
+      //...AND WHILE A RULER SCRUB OWNS THE CANVAS, for the same reason and in the same direction:
+      //the ruler's band is flush UNDER this one, so a scrub whose finger drifts a few px upward
+      //crosses into the strip - and this container, being the LAST stage child, would claim the move
+      //and freeze the scrub until the finger came back down. It also declines the second finger a
+      //scrub cannot have (see rulerPointer's `id`), which is the same thing said about a different
+      //pointer. A no-op in the Compressed View, where `rulerPointer` is never written at all.
+      if (this.rulerPointer) return false;
       //same reason as the stage's, for the timeline's own drag
       const motion = this.motion;
       if (motion.kind === 'dragging' && motion.surface === 'timeline') return true;
       if (x < 0 || x > this.stripWidth() || y < 0 || y > this.timelineHeight) return false;
+      return true;
+    },
+  };
+
+  /**
+   * WHAT COUNTS AS A PRESS ON THE COLUMN RULER (spec §6): the band's own y range over the FULL width
+   * of the canvas.
+   *
+   * `x` and `y` arrive in the strip's own space, which pixi produces by inverting its world
+   * transform - so the band's y offset onto the canvas is already undone here and the bounds are
+   * `0..this.width` by `0..COLUMN_RULER_HEIGHT`, which is the band exactly. The x bound is the
+   * CANVAS' and is compared against `this.width` rather than against a container's, because the
+   * strip's own x is 0 (see the columnRulerStrip field) - band-local x and canvas x are the same
+   * number here, which is also what lets handleRulerDown hand `globalX` straight to
+   * columnAtCanvasX.
+   *
+   * NO TIMELINE_INSET_*, and that is the one place this parts company with the strip flush above it.
+   * Those insets exist to decline the two bands where the three DOM timeline buttons stand, and
+   * those buttons stand over the MINI-TIMELINE - a different 36.4px of canvas. Nothing floats over
+   * this band, so every column of it is pressable including the first and the last, which is what
+   * "the whole band is column-addressed at the same x-resolution as the notes below" means.
+   *
+   * DEFERRED WHILE A PRESS OWNS THE NOTES SURFACE, the deferral testTimelineHitarea documents,
+   * inherited here for the same load-bearing reason: this container is a LATER stage child than the
+   * notes columns, so pixi asks it FIRST, and without this a stage drag whose pointer wanders up
+   * into the band is claimed here and the drag freezes until the pointer comes back down. It is also
+   * what keeps the SECOND FINGER OF A DURATION HOLD on its documented path - with the popover open
+   * under a finger on the canvas, a second finger anywhere (this band included) scrolls the song
+   * (CONTEXT.md: Duration Hold), and that press has to reach handleStageDown's beginProHoldScroll
+   * rather than starting a scrub against the hand already holding the gesture. A hold opened from a
+   * KEY leaves no `stagePointer`, so a Ruler Scrub is free there and edits the span one column per
+   * crossing - the "from any source" rule, which needs no code on either side.
+   *
+   * ANSWERS EVERYTHING ONCE A SCRUB IS RUNNING, which is the stage's own rule and what puts this
+   * container on the composed path pixi dispatches the moves and the pointerup along: a scrub whose
+   * finger leaves the band - or the canvas - keeps tracking columns and still settles on release.
+   * The notes stage needs nothing to stay out of its way, because being asked SECOND is the whole of
+   * that: this returns true for every point while the scrub lasts, so the columns never see it.
+   */
+  private testRulerHitarea = {
+    contains: (x: number, y: number) => {
+      if (this.stagePointer) return false;
+      if (this.rulerPointer) return true;
+      if (x < 0 || x > this.width || y < 0 || y > COLUMN_RULER_HEIGHT) return false;
       return true;
     },
   };
@@ -5253,7 +6316,11 @@ export class ComposerRenderer {
       }
       return;
     }
-    const owner = this.stagePointer?.id ?? this.timelinePointer;
+    //THE THREE SURFACES' OWNERS, AS ONE NUMBER, which they can be because they are mutually
+    //exclusive by construction: each hitarea declines while either of the others holds a press, and
+    //each handler declines a pointer that is not its own. So at most one of these three is set, and
+    //the chain reads "whichever gesture is running, who owns it".
+    const owner = this.stagePointer?.id ?? this.timelinePointer ?? this.rulerPointer?.id ?? null;
     if (id !== null && owner !== null && id !== owner) return;
     //captured before the nulls for the reason handleStageUp captures: the Flick decision reads
     //the press record's samples
@@ -5266,6 +6333,13 @@ export class ComposerRenderer {
       : undefined;
     this.stagePointer = null;
     this.timelinePointer = null;
+    //Cancel/blur provides no subsequent pointerout, so a desktop hover cannot survive it. A normal
+    //pointerup keeps hover when the mouse is still over the band; pointerout owns leaving it.
+    if (e.type !== 'pointerup') this.rulerHoverX = null;
+    //...and the Column Ruler's, which is the one whose loss is VISIBLE beyond the frozen canvas: the
+    //cursor flag is drawn from this record (columnRulerCursorX), so a scrub the page forgot would
+    //leave the flag standing on the column the finger was over the last time anything painted
+    this.rulerPointer = null;
     //a gesture nothing else ended must not leave a hold counting down onto a canvas no finger is on
     this.cancelProLongPress();
     //...nor a Duration Hold running against a hand the page has forgotten. The scroll record goes
@@ -5274,8 +6348,13 @@ export class ComposerRenderer {
     this.endProHold();
     const motion = this.motion;
     if (motion.kind !== 'dragging') return;
-    if (motion.surface === 'stage') this.settleStageDrag(stageRelease);
-    else this.handleTimelineUp();
+    if (motion.surface === 'stage') return this.settleStageDrag(stageRelease);
+    //EXHAUSTIVE ON THE SURFACE, and stated as three branches rather than "stage or the other one":
+    //a `ruler` drag routed to handleTimelineUp would be declined there (that method returns unless
+    //the motion is the timeline's) and left `dragging` forever - which is the frozen canvas this
+    //whole listener exists to prevent, arriving through the listener itself.
+    if (motion.surface === 'ruler') return this.handleRulerUp();
+    this.handleTimelineUp();
   };
 
   private handleThemeChange = () => {
@@ -5316,6 +6395,14 @@ export class ComposerRenderer {
       timelinePadding: TIMELINE_BAND_PADDING,
       timelineHeight: this.timelineHeight,
       timelineTop: composerTimelineStripY(this.state.proView, this.height),
+      //THE RULER'S BAND, and 0/0 in the Compressed View - which is the shape `rowHeight` beside it
+      //already uses for "this view does not have one", rather than a nullable the template would
+      //have to unwrap. composerColumnRulerY answers only for the Pro View and takes no flag to say
+      //so (see its own block), so the branch is here, on the one boolean the whole band stands
+      //behind - and it is the SAME call positionColumnRuler places the container with, so the
+      //report and the drawing cannot disagree about where the band is.
+      rulerTop: this.state.proView ? composerColumnRulerY(this.timelineHeight) : 0,
+      rulerHeight: this.state.proView ? COLUMN_RULER_HEIGHT : 0,
       rowHeight: this.state.proView ? this.proRowHeightPx() : 0,
       hasCache: this.cache !== null,
     });
@@ -5374,6 +6461,10 @@ export class ComposerRenderer {
     //the LAST UPDATE, not the last paint - see the field for why the schedule needs the other one
     const previousUpdate = this.previousState;
     this.previousState = state;
+    //...and the Column Ruler's TEMPO flip, here for exactly the reason syncPlayheadVariant is:
+    //every early return below leaves the band as this update found it. Guarded on the flip inside,
+    //so this costs one comparison on the ticks it also sees.
+    this.syncColumnRulerTempo(previousUpdate, state);
     if (state.isRecordingAudio) {
       this.timelineMinimapWasPlaying = state.isPlaying;
       this.timelineMinimapPending = true;
@@ -5453,8 +6544,27 @@ export class ComposerRenderer {
     // frame's position test covers both. It is not a general claim - a selectColumn from somewhere
     // else while a pointer is down (the next_column shortcut) moves the mark with the canvas still,
     // and that repaints on the next drag move rather than at once.
+    //
+    // ...EXCEPT ON THE RULER, WHICH IS THE OPPOSITE CASE (CONTEXT.md: Ruler Scrub; spec §10's first
+    // risk). The suppression above is about a canvas that IS moving: the mark's new column is
+    // painted against pixels the frame has not yet shifted, so the highlight leads the canvas by one
+    // column for as long as the finger travels. A Ruler Scrub moves the selection over a canvas that
+    // is deliberately STILL - `motion.position` is never written for that surface - so there is no
+    // frame coming to reconcile anything with, no stale pixels to paint against, and nothing else
+    // that would ever repaint the mark: with the suppression left in place the overlay freezes on
+    // the column the scrub started from and unfreezes at the release. This is the one place the
+    // existing machinery does not simply extend, and lifting it for `surface === 'ruler'` alone is
+    // the whole of the extension - the stage's and the timeline's behaviour is byte-identical, since
+    // neither can reach this branch any more than it could before.
+    //
+    // WHAT THIS PAINTS IS THE OVERLAY, and the cursor flag rides along inside applyScrollPosition.
+    // The flag has already been moved by the crossing itself (syncRulerCursorMark, which is what
+    // covers the glide mode where this branch has nothing to notice: `overlayColumn` is
+    // NO_OVERLAY_COLUMN there and the scroll position has not moved either). The two repaints cover
+    // two different marks; see that method for why neither can do the other's half.
+    const draggingSurface = this.motion.kind === 'dragging' ? this.motion.surface : null;
     if (
-      this.motion.kind !== 'dragging' &&
+      (draggingSurface === null || draggingSurface === 'ruler') &&
       (previousScrollPosition !== this.scrollPosition ||
         this.paintedOverlayColumn !== this.overlayColumn)
     ) {
@@ -5750,7 +6860,7 @@ export class ComposerRenderer {
             rowHeight,
             cameraY: pro.cameraY,
           });
-          if (top <= -rowHeight || top >= sizes.height) continue;
+          if (top <= -rowHeight - pro.topBleed || top >= sizes.height) continue;
           y = top + (rowHeight - tailHeight) / 2;
         } else {
           //same canonical placement as the note sprite above - a tail must start under its own head
@@ -5884,6 +6994,12 @@ export class ComposerRenderer {
       this.drawProZone();
       this.drawProArrows();
       this.syncProStrip();
+      //...and the Column Ruler, which is the one of the four that is a function of the HORIZONTAL
+      //axis rather than the camera: it is here because this is where the container offset above has
+      //just been written and the drawn window is known, which is exactly what the band's own key is
+      //compared against. It is deliberately NOT in applyCameraY beside the other three - a camera
+      //ease moves nothing the ruler draws.
+      this.syncColumnRuler();
     }
     return true;
   }

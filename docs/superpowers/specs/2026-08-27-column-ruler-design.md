@@ -1,9 +1,20 @@
 # Column Ruler — Design
 
-Status: DESIGNED 2026-08-27 (grilling session). No code written. CONTEXT.md terms landed
+Status: IMPLEMENTED 2026-08-27 (phases A-D, uncommitted on Dev). CONTEXT.md terms landed
 (**Column Ruler**, **Ruler Scrub**); ADR-0014 records the scroll decision taken inside this
-design. Builds on the Pro View spec (2026-08-21) — this adds a third region to the canvas that
-spec laid out, and changes nothing about its axis, camera or cell editing.
+design.
+
+Built as written, with three corrections to the text found during implementation, each marked
+AS BUILT below: section 4's "the ladder almost never engages" is wrong at phone widths (a 360px
+phone at columnsPerCanvas 50 gives a 6px column, so a 4-column tick is 24px against the 46px need
+and the step becomes the bar); section 9's phase A "no UI change" could not be literally true,
+since implementing section 4's formulas necessarily reserves the band; and section 10's risk 1
+needed TWO fixes rather than one, because the overlay and the cursor flag are moved by different
+code paths. A post-implementation pass also made the flag transient (50%-alpha desktop hover,
+fully opaque scrub, hidden at rest) and extended every moving Pro row layer through the translucent
+ruler band: notes, tails, row shading, column backing, and the left pitch strip and its labels.
+Builds on the Pro View spec (2026-08-21) — this adds a third region to the canvas that spec laid
+out, and changes nothing about its axis, camera or cell editing.
 
 ## 1. Goal
 
@@ -21,7 +32,7 @@ the keyboard. The ruler is that missing surface; the timestamps are what it is m
 
 ## 2. Decisions (locked during grilling)
 
-- **Scope: Pro View only.** In the Compressed View the mini-timeline is at the *bottom*, so
+- **Scope: Pro View only.** In the Compressed View the mini-timeline is at the _bottom_, so
   "below the timeline" does not parse, and a stage tap there already selects the column.
 - **Press target: every column.** The whole band is column-addressed at the same x-resolution as
   the notes below. Labels are readings printed on it, not the buttons themselves.
@@ -40,12 +51,13 @@ the keyboard. The ruler is that missing surface; the timestamps are what it is m
   several columns to the left of the fingertip — a contradiction on a surface whose premise is
   "press this piece to hear that column".)
 - **Scrub audio is throttled to at most one column per ~50ms.** When the throttle opens, the
-  column the finger is on *now* sounds; columns crossed in between pass silently. A fast sweep is
+  column the finger is on _now_ sounds; columns crossed in between pass silently. A fast sweep is
   a sparse, blurred run through the song rather than ~100 voices in 200ms. (Rejected: a minimum
   dwell, which silences fast sweeps entirely; no limit at all.)
-- **The cursor is the playhead's flag** at the fixed `playheadX` (25% in the Pro View), travelling
-  only during a Ruler Scrub. See ADR-0014 — selecting a column always recentres the canvas, so a
-  cursor cannot be a free position indicator.
+- **The cursor is transient pointer feedback**: it marks an active Ruler Scrub on every device and
+  the column under a desktop mouse hover. Hover is 50% opacity; holding the pointer down makes it
+  fully opaque, distinguishing a preview from an active scrub. It is hidden at rest and after touch
+  release, so it does not duplicate the persistent selection/playhead mark.
 - **Height: ~20px, the same on desktop and mobile.** One height, no branch. Accepted knowingly:
   it is under the ~44px touch guideline, mitigated by the band being enormously wide even when
   thin, and by the mini-timeline above remaining the coarse alternative. (Rejected: ~30px on
@@ -101,15 +113,20 @@ In practice the ladder almost never engages — at desktop widths a 4-column tic
 a label needs ~46px including its gutter. What actually forces thinning is tempo, and after the
 "repeats accepted" decision, nothing does.
 
+**AS BUILT — that paragraph is wrong about phones.** Desktop at 1920 never steps up at any
+`columnsPerCanvas` option, as stated. But a 360px phone at `columnsPerCanvas` 50 gives a 6px
+column, so a 4-column tick is 24px against the 46px need and the step becomes the bar (12 or 16).
+The ladder is load-bearing on mobile, not a safety net.
+
 **Label anchoring**: `index % labelStep === 0`, so column 0 reads `0:00`. **Known cosmetic
 mismatch**: the canvas' existing "larger" background accent is `(index + 1) % 4 === 0`, i.e.
-columns 3, 7, 11 — the *last* column of each beat. So every label sits one column left of the
+columns 3, 7, 11 — the _last_ column of each beat. So every label sits one column left of the
 accent below it. Accepted (they are different markings at different heights); neither moves.
 
 **Ticks**: a minor tick every 4th column, a major tick at each labelled column, and **no
 per-column ticks** — at 50 columns/canvas on a phone those are 8px apart and read as a picket
-fence, and the notes grid below already draws every column boundary. A desktop hover highlight of
-the column-width cell under the cursor is what shows the press resolution.
+fence, and the notes grid below already draws every column boundary. The transient desktop hover
+flag at the addressed column's edge shows the press resolution.
 
 **Timestamps** come from `ComposedSong.columnsDurationMs(0, i)` — the ADR-0008
 boundary-differenced grid, offset 0, which is the exact ms the transport commits column `i` at.
@@ -127,17 +144,24 @@ selected column, which is a correctness check a user can see.
   as the notes region is — no negative times are drawn.
 - **Pooled `Text` objects for the labels**, updated only when the visible label set changes, never
   per frame — the same mitigation the Pro View's row-label strip already applies.
-- The cursor flag draws at `playheadX` at rest, and at the scrubbed column's x during a Ruler
-  Scrub. It draws in both smooth-scroll modes: with the setting on it caps the playhead line,
-  with it off it caps the selected-column overlay, and both are at the same x.
+- The cursor flag is hidden with neither scrub nor mouse hover. It draws at 50% opacity for desktop
+  hover and full opacity while pressed, at the addressed column's x in both smooth-scroll modes; a
+  stationary hover is re-resolved while the canvas moves so the flag remains under the pointer.
+- Pro note sprites, sustain tails, octave/inert row backgrounds, the column background, and the left
+  pitch strip and its labels use the ruler's height as top bleed. A row is culled only when its
+  bottom clears the ruler's top edge, not as soon as it clears the notes region's top edge.
+- The left pitch strip draws after the ruler, so its backing and row label remain uninterrupted in
+  the ruler's upper-left corner. It is pointer-inert, leaving the ruler's hit surface unchanged.
 - Theme colors through the existing `ThemeProvider` channel.
 - `onGeometryChange` gains the ruler's own top and height, for the same reason it already reports
-  the timeline's: the template must not hold a second copy of the number.
+  the timeline's: the template must not hold a second copy of the number. The mobile/coarse-pointer
+  side chevrons use those reported bounds to cover the ruler plus notes region while their desktop
+  bounds remain notes-only.
 
 ## 6. Input routing
 
 - `motion` gains a third dragging surface: `{ kind: 'dragging'; surface: 'stage' | 'timeline' |
-  'ruler'; position }`. **`motion.position` is never written for the ruler surface** — that is the
+'ruler'; position }`. **`motion.position` is never written for the ruler surface** — that is the
   whole mechanism of "the canvas holds still", since `syncScrollSchedule` returns at its first
   statement while `kind === 'dragging'` and the frames paint `motion.position`.
 - A `rulerPointer` mirroring `stagePointer`, including its one-gesture-at-a-time `id` rule.
@@ -149,7 +173,7 @@ selected column, which is a correctness check a user can see.
   load-bearing child-order rule `testTimelineHitarea` documents.
 - Press → select the column under x **with audio**, open the throttle window.
 - Move → resolve the column under x; when it changes, `selectColumn(col, /* ignoreAudio */
-  !throttleOpen)`. Selection tracks every column precisely; only the sounding is sparse.
+!throttleOpen)`. Selection tracks every column precisely; only the sounding is sparse.
 - Release → `easeTo(state.selected)`, clear `rulerPointer`.
 
 ## 7. Cross-cutting behaviors
@@ -200,10 +224,19 @@ selected column, which is a correctness check a user can see.
 - **The mark must repaint while the canvas holds still.** `update()` deliberately suppresses
   overlay/mark repaints while `motion.kind === 'dragging'`, because during a stage drag the
   canvas is moving and painting the mark early puts it on the new column against old pixels. A
-  Ruler Scrub is the opposite case — the canvas is *not* moving — so that suppression has to be
+  Ruler Scrub is the opposite case — the canvas is _not_ moving — so that suppression has to be
   lifted for `surface === 'ruler'` or the cursor freezes for the whole gesture. **This is the one
   place the existing machinery does not simply extend**, and it should be the first thing phase C
   proves with a test.
+  **AS BUILT — it needed two fixes, not one, because two different marks move.** Lifting the
+  suppression for `surface === 'ruler'` is what moves the selected-column OVERLAY. The cursor FLAG
+  is moved by a separate `syncRulerCursorMark()` called on the crossing itself, because in glide
+  mode `update()` has nothing to notice and would paint neither. Each is pinned by its own test.
+- **AS BUILT, found in review after phase C**: the pooled label restyle was gated on the ink having
+  moved alone, so a slot hidden across a theme edit and revealed by a later widening kept the dead
+  theme's ink — white on white across a light/dark flip. `syncProStrip` has no such case because
+  its restyle is gated on the whole key. Fixed by also restyling slots above the previous painted
+  count; pinned by "a reading hidden across a theme edit comes back in the NEW ink".
 - **Compressed View regression** while adding a `proView` parameter to
   `composerCanvasElementHeight` → the parameter defaults to the current behavior, and the
   CSS-agreement test is the gate.

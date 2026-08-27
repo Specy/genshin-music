@@ -426,6 +426,18 @@ describe('the visible row window', () => {
     expect(last - first + 1).toBe(REGION_ROWS + 1);
   });
 
+  it('includes rows still visible inside an optional top bleed', () => {
+    //At one whole row of bleed, row 3 only TOUCHES the extended window and remains outside. Row 4
+    //overlaps it exactly, while the bottom stays the notes region's ordinary bottom edge.
+    expect(
+      visibleRowRange({ ...geometry, cameraY: ROW * 5, topBleed: ROW })
+    ).toEqual({ first: 4, last: 5 + REGION_ROWS - 1 });
+    //Another half row makes row 3 genuinely overlap the translucent area.
+    expect(
+      visibleRowRange({ ...geometry, cameraY: ROW * 5, topBleed: ROW * 1.5 })
+    ).toEqual({ first: 3, last: 5 + REGION_ROWS - 1 });
+  });
+
   it('is the closed form of the overlap test it states, over the whole axis', () => {
     for (const cameraY of [0, 1, ROW / 3, ROW * 7, ROW * 7.5, maxCameraY(geometry)]) {
       const { first, last } = visibleRowRange({ ...geometry, cameraY });

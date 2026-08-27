@@ -29,6 +29,7 @@ import {describe, expect, it} from 'vitest'
 import {readFileSync} from 'node:fs'
 import {nearestEven} from '$core/utils/Utilities'
 import {
+    COLUMN_RULER_HEIGHT,
     COMPOSER_DESKTOP_MEDIA_QUERY,
     COMPOSER_MOBILE_MAX_WIDTH,
     PRO_KEYBOARD_SLIVER_PX,
@@ -40,6 +41,7 @@ import {
     composerCanvasCssSize,
     composerCanvasElementHeight,
     composerCanvasSize,
+    composerColumnRulerY,
     composerNotesRegionY,
     composerTimelineStripY,
     isComposerDesktopWidth,
@@ -759,10 +761,13 @@ describe('the Pro View canvas: the window it fills and the band it stops above',
                     proView: true,
                     timelineHeight,
                 })
-                const band = TIMELINE_BAND_PADDING * 2 + timelineHeight
+                //BOTH BANDS, restated rather than imported - the mini-timeline's and the Column
+                //Ruler's - because this is the side that has to fail when a term is added to
+                //composerCanvasElementHeight without the CSS form gaining it too.
+                const band = TIMELINE_BAND_PADDING * 2 + timelineHeight + COLUMN_RULER_HEIGHT
                 //THE FORMULA ITSELF, restated: the window, less the grid's padding and the sliver
-                //band, less the strip's band - with the floor `max()` reproduces on the CSS side
-                //(unlike nearestEven) so the two agree even where it engages.
+                //band, less the two bands above it - with the floor `max()` reproduces on the CSS
+                //side (unlike nearestEven) so the two agree even where it engages.
                 const expected = Math.max(2, viewport.height - PRO_INSET - band)
                 expect(evaluateCss(css.height, context) - band).toBeCloseTo(expected, 6)
                 expect(js.height).toBe(nearestEven(expected))
@@ -770,9 +775,29 @@ describe('the Pro View canvas: the window it fills and the band it stops above',
                 //THE LAYOUT SHIFT, which is what the placeholder is for, exactly as above: the
                 //wrapper is `max(floor, canvas)` before and after the canvas lands, and the pro
                 //height beats the `45vh + 14px` floor on every viewport taller than ~81px.
-                const jsCanvasHeight = composerCanvasElementHeight(js.height, timelineHeight)
+                const jsCanvasHeight = composerCanvasElementHeight(js.height, timelineHeight, true)
                 const placeholderHeight = evaluateCss(wrapper.get('min-height')!, context)
                 expect(placeholderHeight).toBeCloseTo(viewport.height - PRO_INSET, 6)
+
+                //THE RULER IS PAID FOR OUT OF THE NOTES REGION, NOT OUT OF THE CANVAS (ruler spec
+                //§4). The canvas ELEMENT is still exactly the window less the grid's padding and
+                //the sliver - which is why the placeholder above needed no ruler term of its own -
+                //and what the 20px came out of is the AXIS: this is the -2.4%-per-desktop-row bill
+                //COLUMN_RULER_HEIGHT's own docblock quotes. Both halves are stated below, because
+                //a change that took the band off the canvas instead would satisfy either alone.
+                const bandBeforeRuler = band - COLUMN_RULER_HEIGHT
+                const regionBeforeRuler = Math.max(
+                    2,
+                    viewport.height - PRO_INSET - bandBeforeRuler
+                )
+                //no viewport in this list is short enough to reach the 2px floor, and a row that
+                //did would be asserting `2 === 2 - 20` below rather than the shift
+                expect(regionBeforeRuler).toBeGreaterThan(2 + COLUMN_RULER_HEIGHT)
+                expect(expected).toBe(regionBeforeRuler - COLUMN_RULER_HEIGHT)
+                //...and nearestEven commutes with an EVEN shift - `2*round((x-20)/2)` is
+                //`2*round(x/2) - 20` exactly - so the canvas element the renderer resizes to is
+                //bit-identical to the one that shipped before the band existed, on every row here
+                expect(jsCanvasHeight).toBe(nearestEven(regionBeforeRuler) + bandBeforeRuler)
                 expect(
                     Math.abs(Math.max(placeholderHeight, jsCanvasHeight) - placeholderHeight)
                 ).toBeLessThanOrEqual(1)
@@ -838,34 +863,56 @@ describe('the Pro View canvas: the window it fills and the band it stops above',
         )
     })
 
-    it('puts the two regions at opposite ends of the same canvas, and tiles it either way', () => {
-        //THE PRO VIEW'S LAYOUT IN FULL: the same canvas height, with the strip and the notes region
-        //swapping places inside it. composerCanvasElementHeight takes no view for exactly that
-        //reason, and these two are what say which end each region is at.
+    it('puts the regions at opposite ends of the same canvas, and tiles it either way', () => {
+        //THE PRO VIEW'S LAYOUT IN FULL: the strip and the notes region swapping ends, and the
+        //Column Ruler's band between them in the view that has one. composerCanvasElementHeight
+        //took no view while the swap was the whole difference; the ruler is what made it take one,
+        //so the flag is passed here in both directions and the tiling below is what holds the
+        //three placements and that sum together.
         const notesHeight = 500
         for (const timelineHeight of [36.4, 31.4]) {
-            const canvas = composerCanvasElementHeight(notesHeight, timelineHeight)
+            const compressedCanvas = composerCanvasElementHeight(notesHeight, timelineHeight)
+            const proCanvas = composerCanvasElementHeight(notesHeight, timelineHeight, true)
+            //THE COMPRESSED VIEW IS A BYTE-IDENTICAL NO-OP: the default is the view, and the view
+            //is the arithmetic that shipped before the ruler existed
+            expect(composerCanvasElementHeight(notesHeight, timelineHeight, false)).toBe(
+                compressedCanvas
+            )
+            expect(compressedCanvas).toBe(notesHeight + TIMELINE_BAND_PADDING * 2 + timelineHeight)
+            //...and the Pro View pays for the band, exactly once
+            expect(proCanvas - compressedCanvas).toBe(COLUMN_RULER_HEIGHT)
             //compressed: notes from 0, strip below them - the formula the DOM button row used to
-            //carry inline (`height + timelinePadding`)
+            //carry inline (`height + timelinePadding`) - and NO RULER AT ALL (ruler spec §2)
             expect(composerNotesRegionY(false, timelineHeight)).toBe(0)
             expect(composerTimelineStripY(false, notesHeight)).toBe(
                 notesHeight + TIMELINE_BAND_PADDING
             )
-            //pro: strip at the top, notes region under its whole band
+            //pro: strip at the top, the ruler under its whole band, the notes region under both
             expect(composerTimelineStripY(true, notesHeight)).toBe(TIMELINE_BAND_PADDING)
-            expect(composerNotesRegionY(true, timelineHeight)).toBe(
+            expect(composerColumnRulerY(timelineHeight)).toBe(
                 TIMELINE_BAND_PADDING * 2 + timelineHeight
             )
-            //...and in BOTH views the two regions tile the canvas exactly, with neither overrunning
-            //it: a strip drawn past the bottom edge is invisible, and a notes region that does it
+            expect(composerNotesRegionY(true, timelineHeight)).toBe(
+                TIMELINE_BAND_PADDING * 2 + timelineHeight + COLUMN_RULER_HEIGHT
+            )
+            //...and in BOTH views the regions tile the canvas exactly, with none overrunning it: a
+            //strip drawn past the bottom edge is invisible, and a notes region that does it
             //silently loses its lowest rows
             for (const proView of [false, true]) {
+                const canvas = proView ? proCanvas : compressedCanvas
                 const notesY = composerNotesRegionY(proView, timelineHeight)
                 const stripY = composerTimelineStripY(proView, notesHeight)
                 expect(notesY + notesHeight).toBeLessThanOrEqual(canvas)
                 expect(stripY + timelineHeight).toBeLessThanOrEqual(canvas)
                 //disjoint: one starts where the other's band ends
                 expect(proView ? stripY + timelineHeight <= notesY : notesY + notesHeight <= stripY).toBe(true)
+                if (!proView) continue
+                //THE RULER'S BAND IS EXACTLY THE GAP the swap leaves: flush under the strip's band
+                //and flush above the notes region, with no dead pixels either side. A ruler drawn
+                //anywhere else is a band of canvas background nobody can press.
+                const rulerY = composerColumnRulerY(timelineHeight)
+                expect(rulerY).toBe(stripY + timelineHeight)
+                expect(rulerY + COLUMN_RULER_HEIGHT).toBe(notesY)
             }
         }
     })
@@ -884,17 +931,34 @@ describe('the Pro View canvas: the window it fills and the band it stops above',
         )
     })
 
-    it('holds the canvas side buttons to the notes region, which has moved down under the strip', () => {
-        //`.canvas-buttons` is `top: 0` in App.css, which is the notes region's top only in the
-        //Compressed View. The inline `top` is the override, and it comes from the same function the
-        //renderer places the region with rather than a second `proView ? ... : 0` in the template.
+    it('holds desktop side buttons to the notes, and stretches mobile ones over the ruler', () => {
+        //All four bounds are renderer-reported values on the common parent, so CSS can select the
+        //desktop notes-only box or the mobile ruler-plus-notes box without copying band arithmetic.
         expect(COMPOSER_CANVAS).toContain(
             'const notesTop = $derived(composerNotesRegionY(proView, timelineHeight));'
         )
-        expect(declarationsOf('.canvas-buttons').get('top')).toBe('0')
-        const chevrons = [...COMPOSER_CANVAS.matchAll(/style="height:\{height\}px;([^"]*)"/g)]
-        expect(chevrons).toHaveLength(2)
-        for (const chevron of chevrons) expect(chevron[1]).toContain('top:{notesTop}px;')
+        //Start the narrow tag reader at the first style directive: the callback before it contains
+        //an arrow `=>`, whose `>` would otherwise look like the opening tag's close to this
+        //deliberately simple text helper.
+        const parent = openTagContaining('style:--canvas-buttons-notes-top')
+        expect(parent).toContain('style:--canvas-buttons-notes-top={`${notesTop}px`}')
+        expect(parent).toContain('style:--canvas-buttons-notes-height={`${height}px`}')
+        expect(parent).toContain('style:--canvas-buttons-ruler-top={`${rulerTop}px`}')
+        expect(parent).toContain('style:--canvas-buttons-ruler-height={`${rulerHeight}px`}')
+
+        const buttons = declarationsOf('.canvas-buttons')
+        expect(buttons.get('top')).toBe('var(--canvas-buttons-notes-top, 0)')
+        expect(buttons.get('height')).toBe('var(--canvas-buttons-notes-height, 100%)')
+
+        const mobile = mediaBlock(
+            `(hover: none) and (pointer: coarse), only screen and (max-width: ${COMPOSER_MOBILE_MAX_WIDTH}px)`
+        )
+        expect(mobile).toContain(
+            'var(--canvas-buttons-notes-height, 0px) + var(--canvas-buttons-ruler-height, 0px)'
+        )
+        expect(mobile).toContain(
+            'top: var(--canvas-buttons-ruler-top, var(--canvas-buttons-notes-top, 0))'
+        )
     })
 })
 

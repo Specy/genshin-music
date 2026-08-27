@@ -192,6 +192,12 @@
   // at top:0 instead of under the notes region. Reported rather than derived from `height` for the
   // reason the whole report exists - one statement of the split, on the side that drew it.
   let timelineTop = $state(0);
+  // The ruler's reported bounds. Mobile side chevrons start at this top and add its height to the
+  // notes region, so their visible gradient and DOM hit target cover both surfaces. They remain
+  // notes-only on desktop; App.css chooses between the two bounds in the same media queries that
+  // reveal the buttons.
+  let rulerTop = $state(0);
+  let rulerHeight = $state(0);
   // ...and ONE ROW'S HEIGHT in the Pro View, which is the other number this template cannot derive:
   // it is a property of the current layer there (the row height fits that layer's Editable Zone,
   // capped at the game's note size), so it moves with an instrument swap and not only with the
@@ -301,6 +307,8 @@
             height = geometry.height;
             timelineHeight = geometry.timelineHeight;
             timelineTop = geometry.timelineTop;
+            rulerTop = geometry.rulerTop;
+            rulerHeight = geometry.rulerHeight;
             rowHeight = geometry.rowHeight;
             hasCache = geometry.hasCache;
           },
@@ -516,13 +524,16 @@
     class="canvas-relative"
     bind:this={canvasContainerEl}
     onpointerdowncapture={() => (pressDismissedOverlay = overlayDismissesClicks || songLocked)}
+    style:--canvas-buttons-notes-top={`${notesTop}px`}
+    style:--canvas-buttons-notes-height={`${height}px`}
+    style:--canvas-buttons-ruler-top={`${rulerTop}px`}
+    style:--canvas-buttons-ruler-height={`${rulerHeight}px`}
   >
     <!--
-      `height` is the NOTES region, and the inline height is what holds these chevrons to it:
-      `.canvas-buttons`' own `height: 100%` is 100% of `.canvas-relative`, which since the merge
-      holds the mini-timeline strip as well, so it would run them down over the strip. The inline
-      `top` is the other half of the same job in the Pro View, where the strip is at the canvas' TOP
-      and the region these stand on therefore starts below it rather than at 0.
+      `height`/`notesTop` are the NOTES region and remain the desktop chevrons' bounds. On mobile,
+      App.css switches the same custom properties to `rulerTop` and `height + rulerHeight`, so the
+      visible gradient and hit target also cover the ruler without reaching into the mini-timeline.
+      All four values come from the renderer report above; the template reproduces no band formula.
 
       Gated on the first geometry report for the same reason the timeline controls below are: that
       report only exists once the dynamic pixi import and Application.init() have resolved, and a
@@ -533,14 +544,14 @@
       <button
         onpointerdown={() => selectColumn(selected - 1)}
         class={['canvas-buttons', !isPlaying && 'canvas-buttons-visible']}
-        style="height:{height}px;top:{notesTop}px;left:{stripInset}px;padding-right:0.5rem;justify-content:flex-start;background:linear-gradient(90deg, rgba({sideButtonsRgb},0.80) 30%, rgba({sideButtonsRgb},0.30) 80%, rgba({sideButtonsRgb},0) 100%)"
+        style="left:{stripInset}px;padding-right:0.5rem;justify-content:flex-start;background:linear-gradient(90deg, rgba({sideButtonsRgb},0.80) 30%, rgba({sideButtonsRgb},0.30) 80%, rgba({sideButtonsRgb},0) 100%)"
       >
         {@render chevronLeftIcon()}
       </button>
       <button
         onpointerdown={() => selectColumn(selected + 1)}
         class={['canvas-buttons', !isPlaying && 'canvas-buttons-visible']}
-        style="height:{height}px;top:{notesTop}px;right:0;padding-left:0.5rem;justify-content:flex-end;background:linear-gradient(270deg, rgba({sideButtonsRgb},0.80) 30%, rgba({sideButtonsRgb},0.30) 80%, rgba({sideButtonsRgb},0) 100%)"
+        style="right:0;padding-left:0.5rem;justify-content:flex-end;background:linear-gradient(270deg, rgba({sideButtonsRgb},0.80) 30%, rgba({sideButtonsRgb},0.30) 80%, rgba({sideButtonsRgb},0) 100%)"
       >
         {@render chevronRightIcon()}
       </button>
