@@ -1,6 +1,6 @@
-// key/playId are incremented on every play/practice/approaching/switchMode/resetSong/restartSong
-// call - the Player/PlayerKeyboard components key off these to force a fresh render even when the
-// rest of state is unchanged.
+// key/playId are incremented on every play/practice/approaching/resetSong/restartSong call - the
+// Player/PlayerKeyboard components key off these to force a fresh render even when the rest of
+// state is unchanged.
 //
 // state.song holds a raw ComposedSong/RecordedSong class instance inside a $state-wrapped
 // object. $state's deep-reactivity only wraps plain objects/arrays (and Map/Set/Date) - a class
@@ -27,8 +27,8 @@ type PlayerStoreState = {
    * dispatch normally publishes them back as the Section the slider and the Sheet Frames draw -
    * the two are the same pair of numbers for every ordinary run. "Go to here" breaks that for one
    * run: it runs from an arbitrary frame (to the song's end, if the target is already past the
-   * Section) while the Section the user drew must stay exactly where it is. Set by the two commands
-   * that aim a run at a position rather than at the Section - `seek` and `switchMode`.
+   * Section) while the Section the user drew must stay exactly where it is. Set only by `seek`, the
+   * one command that aims a run at a position rather than at the Section.
    */
   preservesSection: boolean;
   /**
@@ -37,11 +37,12 @@ type PlayerStoreState = {
    * the run that is already going (play mode drops its transport and re-anchors from the cursor
    * through the seek path when it comes back, approaching just stops its tick).
    *
-   * PAUSE OUTLIVES A RE-AIM, NOT A RE-CHOICE. `play`/`practice`/`approaching`/`switchMode`/
-   * `resetSong` pick what runs and always clear it; `seek` and `restartSong` only move an existing
-   * run's range ("Go to here", a Section edit, a speed change) and CARRY IT THROUGH - a user who
-   * paused asked for silence, and re-aiming the sheet is not a request to hear it again. PlayerKeyboard's
-   * dispatch is what honours that: it sets the run up in full and leaves its clock stopped.
+   * PAUSE OUTLIVES A RE-AIM, NOT A RE-CHOICE. `play`/`practice`/`approaching`/`resetSong` pick what
+   * runs and always clear it - the mode switcher included, since it re-chooses through that same
+   * trio; `seek` and `restartSong` only move an existing run's range ("Go to here", a Section edit,
+   * a speed change) and CARRY IT THROUGH - a user who paused asked for silence, and re-aiming the
+   * sheet is not a request to hear it again. PlayerKeyboard's dispatch is what honours that: it sets
+   * the run up in full and leaves its clock stopped.
    */
   paused: boolean;
 };
@@ -200,29 +201,6 @@ class PlayerStore {
   };
   togglePause = () => {
     this.setPaused(!this.state.paused);
-  };
-  /**
-   * SEEK-SHAPED, BUT A RE-CHOICE. The mode switcher aims the run the same way `seek` does - it
-   * runs [start, end) and leaves the Section the user drew exactly where it is (`preservesSection`,
-   * ADR-0010), because switching mode mid-song is not a Section edit - but unlike a seek it changes
-   * WHAT runs, so it belongs with `play`/`practice`/`approaching` on the other question: `paused` is
-   * cleared, since a user asking for another mode is asking to hear/play it, not to keep the silence
-   * they asked of the previous one (see `paused`).
-   *
-   * `song` is deliberately untouched: the switcher only exists while a run is active, so the caller
-   * already guarantees a loaded song, and rewriting it would be a second answer to "which song".
-   */
-  switchMode = (eventType: 'play' | 'practice' | 'approaching', start: number, end: number) => {
-    this.prepareTransition();
-    this.setState({
-      eventType,
-      start,
-      end,
-      preservesSection: true,
-      paused: false,
-      key: this.state.key + 1,
-      playId: this.state.playId + 1,
-    });
   };
   /**
    * Restart the current run over [start, end) without publishing that range as the Section - see

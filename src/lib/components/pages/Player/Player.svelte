@@ -295,32 +295,33 @@
   }
 
   /**
-   * SWITCHING MODE IS A RE-CHOICE AIMED AT WHERE THE EAR IS (see `playerStore.switchMode`). The
-   * three modes are three ways of running the SAME song, so the switcher hands the current position
-   * to the new one instead of starting the song over: the Section the user drew, the speed and the
-   * sheet all stay as they are and only what the run asks of the user changes.
+   * SWITCHING MODE RUNS THE SECTION AGAIN IN THE NEW MODE, FROM ITS START (user decision
+   * 2026-08-27, replacing "carry on from where the ear is"). The three modes are three ways of
+   * running the SAME stretch of song, and the reason to reach for another one is almost always to
+   * take that stretch again differently - hear the passage you have been practising, then practise
+   * it again from the top - so landing part-way through it is the answer nobody wanted. The Section
+   * the user drew, the song and the speed all stay as they are; only what the run asks of the user
+   * changes, and it asks from the beginning.
    *
-   * Where to aim is the same question a mid-run pitch or page-size change asks, and gets the same
-   * answer: a run still in progress carries on from `current`, with seekToNote's rule for a cursor
-   * already at or past the Section's end (that one run reaches the song's end rather than being a
-   * dead run), while a finished run has no remainder to continue and starts from the Section's own
-   * start. The score and the sheet need nothing here - the dispatch bumps `key`, and PlayerKeyboard
-   * tears every run down through `stopSong` before building the next, which is what clears the
-   * pages and the score for an ordinary play/practice/approaching command too. So approaching
-   * entered mid-song scores from zero, and leaving it strands nothing.
+   * That makes it the SAME COMMAND the song menu's own rows issue, so it is issued through the same
+   * three store methods rather than a fourth of its own: a mode over [Section start, Section end),
+   * with the song already loaded. Everything downstream follows from the `key` bump - PlayerKeyboard
+   * tears the old run down through `stopSong` before building the new one, which is what clears the
+   * pages and the score - so approaching entered this way scores from zero and leaving it strands
+   * nothing.
    */
   function switchPlayMode(mode: 'play' | 'practice' | 'approaching') {
     if (!mounted) return;
     const type = playerStore.eventType;
     //nothing to switch to: no run is going, or the pressed mode is the one already running
     if (type === 'stop' || type === mode) return;
-    const { current, runEnd } = playerControlsStore.state;
-    if (runEnd > 0 && current < runEnd) {
-      const end = playerControlsStore.end;
-      playerStore.switchMode(mode, current, current >= end ? playerControlsStore.size : end);
-    } else {
-      playerStore.switchMode(mode, playerControlsStore.position, playerControlsStore.end);
-    }
+    const song = playerStore.song;
+    //`eventType !== 'stop'` already implies a loaded song; this is the type's version of that
+    if (!song) return;
+    const { position, end } = playerControlsStore;
+    if (mode === 'play') playerStore.play(song, position, end);
+    else if (mode === 'practice') playerStore.practice(song, position, end);
+    else playerStore.approaching(song, position, end);
   }
 
   async function onSongFinished() {

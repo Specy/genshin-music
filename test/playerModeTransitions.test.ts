@@ -127,7 +127,7 @@ describe('Player mode transition ownership', () => {
         playerStore.resetSong()
         playerControlsStore.clearPages()
         playerControlsStore.resetScore()
-        playerControlsStore.setState({position: 0, current: 0, size: 0, end: 0, runEnd: 0})
+        playerControlsStore.setState({position: 0, current: 0, sounded: -1, size: 0, end: 0, runEnd: 0})
 
         target = document.createElement('div')
         document.body.append(target)
@@ -907,7 +907,7 @@ describe('Player mode switcher', () => {
         playerStore.resetSong()
         playerControlsStore.clearPages()
         playerControlsStore.resetScore()
-        playerControlsStore.setState({position: 0, current: 0, size: 0, end: 0, runEnd: 0})
+        playerControlsStore.setState({position: 0, current: 0, sounded: -1, size: 0, end: 0, runEnd: 0})
 
         target = document.createElement('div')
         document.body.append(target)
@@ -945,37 +945,51 @@ describe('Player mode switcher', () => {
         return song
     }
 
-    it('re-aims a running mode at the cursor and leaves the Section exactly as drawn', async () => {
+    // SWITCHING RUNS THE SECTION AGAIN FROM ITS START (user decision 2026-08-27, replacing "carry
+    // on from where the ear is"): the reason to reach for another mode is to take the same stretch
+    // differently, so how far the run had got is not an input at all - which is why the two cases
+    // that used to be a branch answer identically below.
+    it('runs the Section again from its start rather than from where the ear had got to', async () => {
         await runPracticeSection(1, 3)
-        //where the ear is: one note into the Section, with the run still unfinished
+        //one note into the Section, with the run still unfinished
         playerControlsStore.setCurrent(2)
 
         pressMode('play')
 
         expect(playerStore.eventType).toBe('play')
-        expect(playerStore.state.start).toBe(2)
+        expect(playerStore.state.start).toBe(1)
         expect(playerStore.state.end).toBe(3)
-        //...and the range it runs is NOT published as the Section (ADR-0010)
-        expect(playerStore.state.preservesSection).toBe(true)
-        await vi.waitFor(() => expect(playerControlsStore.current).toBe(2))
+        //the run IS the Section, so the range is PUBLISHED as one rather than preserved beside it
+        //(ADR-0010) - the same thing an ordinary play command does
+        expect(playerStore.state.preservesSection).toBe(false)
+        await vi.waitFor(() => expect(playerControlsStore.current).toBe(1))
         expect(playerControlsStore.position).toBe(1)
         expect(playerControlsStore.end).toBe(3)
     })
 
-    it('starts a finished run over from the Section rather than from its own end', async () => {
+    it('answers the same for a finished run, whose cursor is parked on its own end', async () => {
         await runPracticeSection(1, 3)
-        //a run parks its cursor ON the exclusive end when it finishes - there is no remainder left
-        //to carry into the new mode
+        //a run parks its cursor ON the exclusive end when it finishes
         playerControlsStore.setCurrent(3)
 
         pressMode('play')
 
         expect(playerStore.state.start).toBe(1)
         expect(playerStore.state.end).toBe(3)
-        expect(playerStore.state.preservesSection).toBe(true)
+        expect(playerStore.state.preservesSection).toBe(false)
         await vi.waitFor(() => expect(playerControlsStore.current).toBe(1))
         expect(playerControlsStore.position).toBe(1)
         expect(playerControlsStore.end).toBe(3)
+    })
+
+    // The switcher keeps the song that is loaded - it re-chooses a MODE, never a song - which is the
+    // one thing separating it from the identical command the song menu's rows issue.
+    it('keeps the loaded song rather than reaching for another', async () => {
+        const song = await runPracticeSection(1, 3)
+
+        pressMode('play')
+
+        expect(playerStore.song).toBe(song)
     })
 
     // PAUSE OUTLIVES A RE-AIM, NOT A RE-CHOICE (PlayerStore's `paused`): asking for another mode is

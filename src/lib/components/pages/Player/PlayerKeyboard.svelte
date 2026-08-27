@@ -748,7 +748,7 @@
   }
 
   async function stopSong(): Promise<void> {
-    // This is the one teardown path for every play/practice/approach/switchMode/restart/stop transition.
+    // This is the one teardown path for every play/practice/approach/restart/stop transition.
     // Shared player state must be cleared here rather than by whichever destination happens to
     // overwrite it later: approach has a two-second preparation window, empty songs return early,
     // and the keyboard shortcut does not pass through PlayerSongControls' stop button.
@@ -995,8 +995,8 @@
 
     $effect(() => {
       // Reading key/playId here (values otherwise unused) makes this effect rerun on every
-      // play/practice/approaching/switchMode/restartSong/resetSong call, even when the song
-      // object is reference-equal.
+      // play/practice/approaching/restartSong/resetSong call, even when the song object is
+      // reference-equal.
       void playerStore.state.key;
       void playerStore.state.playId;
       // This debounce isn't just coalescing multiple fires into one - it defers past the
