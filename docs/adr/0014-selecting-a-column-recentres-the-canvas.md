@@ -15,7 +15,7 @@ Considered and rejected: **scroll-into-view — move the canvas only when the se
 
 ## Consequences
 
-- **The Column Ruler's cursor is the playhead's flag, not a position indicator.** It stands at `playheadX` at rest, travels only while a Ruler Scrub holds the canvas still, and returns home when the release settles the canvas. That return *is* the "press it and it scrolls to it" the ruler was asked for — the recentring is the feature, not a side effect of it.
+- **The Column Ruler's cursor is the playhead's flag, not a position indicator.** It stands at `playheadX` at rest, travels only while a Ruler Scrub holds the canvas still, and returns home when the release settles the canvas. That return _is_ the "press it and it scrolls to it" the ruler was asked for — the recentring is the feature, not a side effect of it.
 - **The ruler introduces no new scroll behavior.** A Compressed View column click has recentred the canvas since before the Pro View existed; the ruler is the same rule reaching a surface that did not have it.
 - **A Ruler Scrub is expressible only because a drag already suspends the invariant.** `syncScrollSchedule` returns at its first statement while `motion.kind === 'dragging'`, so a third `surface: 'ruler'` whose `motion.position` is never written gives "the canvas holds still while the selection moves" for free — and the release restores the invariant by easing to `selected`. The suspension is bounded by the gesture, which is what keeps it from being the decoupling above.
 - **If scroll-into-view is ever wanted, it is its own piece of work on the scroll model**, and this ADR is what it supersedes. It should not arrive as a flag on a surface.
