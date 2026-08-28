@@ -258,6 +258,17 @@ export const i18n_en = {
         'The number of beats per measure, 3/4 is 3 beats per measure, 4/4 is 4 beats per measure',
       composer_note_name_type: 'Note name type',
       composer_note_name_type_description: 'The type of text which will be written on the note',
+      composer_note_name_type_options: {
+          "Note name": "Note name",
+          "Keyboard layout": "Keyboard layout",
+          "Your Keyboard layout": "Your Keyboard layout",
+          "Do Re Mi": "Do Re Mi",
+          "ABC": "ABC",
+          "No Text": "No Text",
+          "Playstation": "PlayStation Keybinds",
+          "Switch": "Switch Keybinds",
+          "1 2 3": "1 2 3"
+      },
       composer_columns_per_canvas: 'Number of visible columns',
       composer_columns_per_canvas_description:
         'How many columns are visible at a time, more columns might cause lag',
@@ -285,6 +296,17 @@ export const i18n_en = {
       sheet_visualizer_note_name_type: 'Note name type',
       sheet_visualizer_note_name_type_description:
         'Which naming to write inside the notes, has no effect unless note names are shown',
+      sheet_visualizer_note_name_type_options: {
+          "Note name": "Note name",
+          "Keyboard layout": "Keyboard layout",
+          "Your Keyboard layout": "Your Keyboard layout",
+          "Do Re Mi": "Do Re Mi",
+          "ABC": "ABC",
+          "No Text": "No Text",
+          "Playstation": "PlayStation Keybinds",
+          "Switch": "Switch Keybinds",
+          "1 2 3": "1 2 3"
+      },
       sheet_visualizer_merge_empty_spaces: 'Merge empty spaces',
       sheet_visualizer_merge_empty_spaces_description:
         'Joins consecutive empty columns together, making the sheet shorter and easier to read',
@@ -325,6 +347,17 @@ export const i18n_en = {
       player_reverb_description: 'Makes it sound like you are in a cave',
       player_note_name_type: 'Note name type',
       player_note_name_type_description: 'The type of text which will be written on the note',
+      player_note_name_type_options: {
+          "Note name": "Note name",
+          "Keyboard layout": "Keyboard layout",
+          "Your Keyboard layout": "Your Keyboard layout",
+          "Do Re Mi": "Do Re Mi",
+          "ABC": "ABC",
+          "No Text": "No Text",
+          "Playstation": "PlayStation Keybinds",
+          "Switch": "Switch Keybinds",
+          "1 2 3": "1 2 3"
+      },
       player_keyboard_size: 'Keyboard size',
       player_keyboard_size_description: 'Scales the keyboard size',
       player_keyboard_y_position: 'Keyboard vertical position',
@@ -389,6 +422,17 @@ export const i18n_en = {
       zen_reverb_description: 'Makes it sound like you are in a cave',
       zen_note_name_type: 'Note name type',
       zen_note_name_type_description: 'The type of text which will be written on the note',
+      zen__note_name_type_options: {
+          "Note name": "Note name",
+          "Keyboard layout": "Keyboard layout",
+          "Your Keyboard layout": "Your Keyboard layout",
+          "Do Re Mi": "Do Re Mi",
+          "ABC": "ABC",
+          "No Text": "No Text",
+          "Playstation": "PlayStation Keybinds",
+          "Switch": "Switch Keybinds",
+          "1 2 3": "1 2 3"
+      },
       zen_keyboard_size: 'Keyboard size',
       zen_keyboard_size_description: 'Scales the keyboard size',
       zen_keyboard_y_position: 'Vertical position',
