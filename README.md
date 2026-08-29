@@ -1,10 +1,34 @@
-[![wakatime](https://wakatime.com/badge/user/f0147aa6-69b8-4142-806c-050d6fee026e/project/68da356a-cd0b-40cb-996c-0799e406179f.svg)](https://wakatime.com/badge/user/f0147aa6-69b8-4142-806c-050d6fee026e/project/68da356a-cd0b-40cb-996c-0799e406179f)
-
 # Welcome to Genshin music and Sky music nightly
 
 This repository holds the code of the two music apps for Genshin and Sky Cotl, you can see the published apps at [specy.app](https://specy.app)
-![Composer](docs/assets/composer.webp)
-![Player](docs/assets/player.webp)
+
+# A look at the apps
+
+Both apps are built from this one codebase, so the screenshots below are a mix of the two.
+
+Practice a song note by note:
+
+![The player in practice mode](docs/assets/player.webp)
+
+Write songs with as many instruments as you want in the composer:
+
+![The composer editing a multi instrument song](docs/assets/composer.webp)
+
+The same song in the PRO composer, shown with a different theme:
+
+![The PRO composer with the Sky Music theme](docs/assets/composer-pro.webp)
+
+Rhythm game charts, with tap and held notes, are written in the VSRG composer:
+
+![The VSRG composer editing a chart](docs/assets/vsrg-composer.webp)
+
+...and played in the VSRG player:
+
+![The VSRG player playing a chart](docs/assets/vsrg-player.webp)
+
+Every page follows the theme you pick, the zen keyboard here uses that same "Sky Music" theme:
+
+![The zen keyboard with the Sky Music theme](docs/assets/zen-keyboard.webp)
 
 # Looking for help in translation
 
@@ -31,7 +55,7 @@ Once you have a build, you can serve it locally with `npm run preview:genshin` o
 
 # Tech stack
 
-The app is built with SvelteKit 2 and Svelte 5 (using runes) in TypeScript, bundled with Vite and exported as a fully static site through `@sveltejs/adapter-static` - there is no runtime server. The Composer, VSRG Composer and VSRG Player pages render their canvases with raw pixi.js 8. Translations run on i18next, save data lives in the browser via ZangoDB (IndexedDB), and offline support/update checks are handled by a serwist service worker.
+The app is built with SvelteKit 2 and Svelte 5 in TypeScript. The Composer, VSRG Composer and VSRG Player pages render their canvases with pixi.js 8.
 
 # Repo layout
 
@@ -51,11 +75,6 @@ Genshin music and Sky music are derived from the same codebase.
 You can edit and add a new game by creating a new folder under `src/lib/games/` and registering it in `scripts/buildApp.js`. You can reuse the current keyboard layouts or create your own custom ones by editing the
 
 Each game's data lives in its own folder under `src/lib/games/<id>/`, and a build or dev run picks one of them at build time through the `$game` import alias, which points at that folder depending on the `PUBLIC_GAME` environment variable. Adding a new game means creating its `src/lib/games/<id>/` folder and registering it in `scripts/buildApp.js`.
-
-# Documentation
-
-You can find the documentation of the app [here](https://github.com/Specy/genshin-music/wiki)
-It is not very detailed but might help to understand how the format works.
 
 # How to contribute
 
