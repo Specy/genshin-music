@@ -2479,7 +2479,10 @@
 
   function moveNotesBy(amount: number, position: number | 'all') {
     if (songLocked) return;
-    song.moveNotesBy(selectedColumns, amount, position);
+    // ONE UNIT IS ONE ROW OF THE CANVAS IN FRONT OF THE USER (ADR-0015), and this call site is the
+    // only place that knows which canvas that is: the Pro View's rows are semitones, the Compressed
+    // View's are Song-Grid rows. `proView` already excludes the preview - see its declaration.
+    song.moveNotesBy(selectedColumns, amount, position, proView ? 'semitone' : 'row');
     changes++;
     resyncPlayback();
   }

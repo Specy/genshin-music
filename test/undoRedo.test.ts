@@ -48,8 +48,8 @@ function idOf(button: number): number {
  * of the default instrument. That makes the note that carries it a STRANDED NOTE: audible to
  * nothing, drawn dimmed, and skipped by every rewrite that works in Button space. It is in the
  * fixture because the rewrites treat it as an EXCEPTION (rewriteForSwap passes it through
- * untouched, moveNotesBy drops it off the grid instead of moving it), and an exception with no
- * fixture coverage is where an un-undoable write hides.
+ * untouched, moveNotesBy steps it along the periodic scale instead of through the instrument's own
+ * buttons - ADR-0015), and an exception with no fixture coverage is where an un-undoable write hides.
  */
 const STRANDED_ID = idOf(0) - 24
 

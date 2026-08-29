@@ -374,6 +374,28 @@ const pixi = vi.hoisted(() => {
             return this
         }
 
+        //the path builders, for outlines no primitive states exactly - the Column Ruler's flag is
+        //the only one so far (a rectangle rounded at the TOP corners only)
+        moveTo(x: number, y: number) {
+            this.ops.push(['moveTo', x, y])
+            return this
+        }
+
+        lineTo(x: number, y: number) {
+            this.ops.push(['lineTo', x, y])
+            return this
+        }
+
+        quadraticCurveTo(cpx: number, cpy: number, x: number, y: number) {
+            this.ops.push(['quadraticCurveTo', cpx, cpy, x, y])
+            return this
+        }
+
+        closePath() {
+            this.ops.push(['closePath'])
+            return this
+        }
+
         roundShape(points: {x: number, y: number}[], radius: number) {
             this.ops.push(['roundShape', points, radius])
             return this
@@ -7824,6 +7846,20 @@ describe('the Pro View pointer', () => {
         return [...zone.numbers].sort((a, b) => a - b)[Math.floor(zone.numbers.size / 2)]
     }
 
+    /**
+     * Whether a Note Number falls on an INERT row: inside the current layer's Editable Zone and
+     * voiced by no button of it. Those rows are the only ones paintProRowBands still shades since
+     * the octave alternation was retired (2026-08-29), so they are what a test that needs a row with
+     * a background of its own has to pick.
+     */
+    function isInertNumber(harness: {song: ComposedSong}, number: number): boolean {
+        const zone = editableZone(
+            harness.song.instruments[0].name,
+            effectiveTrackPitch(harness.song.instruments[0], harness.song.pitch)
+        )
+        return number >= zone.min && number <= zone.max && !zone.numbers.has(number)
+    }
+
     /** A throw fast enough to Coast, released on its last sampled point - PART EIGHT's own recipe. */
     async function throwAndCoast(
         harness: Awaited<ReturnType<typeof mountPro>>,
@@ -8113,22 +8149,21 @@ describe('the Pro View pointer', () => {
     it('keeps a whole row behind the ruler until it is completely above it', async () => {
         const harness = await mountPro({viewLocked: false})
         try {
-            //Choose a SHADED row with camera travel on both sides, then put a real current-layer
-            //note and span there. The octave band is the row's moving background; choosing it
-            //explicitly makes the same culling boundary observable for every layer of the row.
+            //Choose a row with camera travel on both sides, then put a real current-layer note and
+            //span there. It is deliberately NOT required to be a shaded row any more: the octave
+            //alternation was retired 2026-08-29, and everything the camera can bring to the top edge
+            //in this fixture is above the current layer's Editable Zone and so carries no band of
+            //its own. The row-band layer is checked at the first INERT row on screen instead - see
+            //the third assertion below.
             const maxCameraRows = harness.axis.rowCount - harness.height / harness.rowHeight
             const middleRow = Math.max(1, Math.floor(maxCameraRows / 2))
             const candidateRow = Array.from(
                 {length: Math.max(0, Math.floor(maxCameraRows) - 1)},
                 (_, index) => index + 1
             )
-                .sort((a, b) => Math.abs(a - middleRow) - Math.abs(b - middleRow))
-                .find(
-                    candidate =>
-                        Math.floor(numberForRow(harness.axis, candidate) / 12) % 2 === 0
-                )
+                .sort((a, b) => Math.abs(a - middleRow) - Math.abs(b - middleRow))[0]
             if (candidateRow === undefined)
-                throw new Error('fixture has no shaded row inside camera travel')
+                throw new Error('fixture has no row with camera travel on both sides')
             const number = numberForRow(harness.axis, candidateRow)
             harness.song.addNoteAt(SELECTED, 0, number, 3)
             harness.push()
@@ -8161,11 +8196,22 @@ describe('the Pro View pointer', () => {
             expect(
                 harness.tailRects().some(([, tailY]) => Math.abs(tailY - tailAtNotesEdge) < 0.000001)
             ).toBe(true)
+            //THE ROW-BAND LAYER, at the same camera: it shares the notes' `row * rowHeight - cameraY`
+            //arithmetic and is drawn into this same Graphics, so one band placed exactly is the
+            //whole of what the layer owes. The FIRST INERT ROW BELOW THE BOUNDARY is the probe -
+            //everything above it here is out of zone, where no band is drawn at all.
+            const inertRow = Array.from({length: harness.axis.rowCount - row - 1}, (_, i) => row + 1 + i)
+                .find(
+                    candidate =>
+                        isInertNumber(harness, numberForRow(harness.axis, candidate)) &&
+                        candidate * harness.rowHeight - cameraAtNotesEdge < harness.height
+                )
+            if (inertRow === undefined) throw new Error('no inert row on screen at this camera')
             expect(
                 harness.tailRects().some(
                     ([bandX, bandY, bandWidth, bandHeight]) =>
                         bandX === 0 &&
-                        Math.abs(bandY + harness.rowHeight) < 0.000001 &&
+                        Math.abs(bandY - (inertRow * harness.rowHeight - cameraAtNotesEdge)) < 0.000001 &&
                         bandWidth === COLUMN_WIDTH &&
                         bandHeight === harness.rowHeight
                 )
@@ -8755,10 +8801,14 @@ describe('the Column Ruler', () => {
     const MAJOR_TICK_ALPHA = 0.7
     const LABEL_GUTTER = 3
     const LABEL_ALPHA = 0.85
-    /** PLAYHEAD_ARROW_HALF_WIDTH, which the flag borrows so the two marks read as one family. */
-    const CURSOR_HALF_WIDTH = 6
-    const CURSOR_SHAPE_ALPHA = 1
-    const CURSOR_HOVER_ALPHA = 0.5
+    /** PLAYHEAD_ARROW_HALF_WIDTH, which the flag IS as wide as: one continuous pin, no shoulder. */
+    const FLAG_HALF_WIDTH = 6
+    /** COMPOSER_PLAYHEAD_CONFIG.borderRadius - the top corners' radius, the bottom two squared. */
+    const FLAG_CORNER_RADIUS = 4
+    const FLAG_SHAPE_ALPHA = 1
+    /** PLAYHEAD_ALPHA: the flag is the playhead's own, so it carries the playhead's alpha. */
+    const FLAG_ALPHA = 0.9
+    const FLAG_HOVER_ALPHA = 0.5
     /** PLAYHEAD_X_FRACTION.pro - the Pro View stands the playhead a QUARTER across (spec §6). */
     const PRO_PLAYHEAD_FRACTION = 0.25
 
@@ -8870,14 +8920,19 @@ describe('the Column Ruler', () => {
         //After the notes and before the inert pitch strip - see mountPro for both orderings.
         const band = proView ? app.stage.children[4] : null
         const content = band ? band.children[0] : null
-        const cursor = band
-            ? (band.children[1] as unknown as {
-                  ops: unknown[][]
-                  x: number
-                  visible: boolean
-                  alpha: number
-              })
-            : null
+        //THE BAND'S THREE CHILDREN since 2026-08-29: the scrolling content, the hover ghost, and the
+        //playhead's own flag last so a hovered column that is also the playhead's draws under it.
+        const flagNode = (index: number) =>
+            band
+                ? (band.children[index] as unknown as {
+                      ops: unknown[][]
+                      x: number
+                      visible: boolean
+                      alpha: number
+                  })
+                : null
+        const hoverFlag = flagNode(1)
+        const flag = flagNode(2)
         const ticks = content
             ? (content.children[0] as unknown as {ops: unknown[][], clears: number})
             : null
@@ -8970,10 +9025,14 @@ describe('the Column Ruler', () => {
             notesVisible: () => notesColumns.visible,
             contentX: () => content?.x ?? null,
             notesX: () => notesColumns.x,
-            cursorX: () => cursor?.x ?? null,
-            cursorVisible: () => cursor?.visible ?? false,
-            cursorAlpha: () => cursor?.alpha ?? null,
-            cursorOps: () => cursor?.ops ?? [],
+            flagX: () => flag?.x ?? null,
+            flagVisible: () => flag?.visible ?? false,
+            flagAlpha: () => flag?.alpha ?? null,
+            flagOps: () => flag?.ops ?? [],
+            hoverX: () => hoverFlag?.x ?? null,
+            hoverVisible: () => hoverFlag?.visible ?? false,
+            hoverAlpha: () => hoverFlag?.alpha ?? null,
+            hoverOps: () => hoverFlag?.ops ?? [],
             xOfColumn,
             hoverColumn(column: number) {
                 band?.emit('pointerover', {
@@ -9349,38 +9408,64 @@ describe('the Column Ruler', () => {
         }
     })
 
-    it('shows the cursor flag only over a desktop hover, in both scroll modes', async () => {
+    it('shows the hover ghost only over a desktop hover, in both scroll modes', async () => {
         for (const smoothScroll of [true, false]) {
             const harness = await mountRuler({smoothScroll})
             try {
-                expect(harness.cursorVisible()).toBe(false)
+                expect(harness.hoverVisible()).toBe(false)
                 const hovered = SELECTED + 2
                 harness.hoverColumn(hovered)
-                expect(harness.cursorVisible()).toBe(true)
-                expect(harness.cursorAlpha()).toBe(CURSOR_HOVER_ALPHA)
-                expect(harness.cursorX()).toBeCloseTo(
+                expect(harness.hoverVisible()).toBe(true)
+                expect(harness.hoverAlpha()).toBe(FLAG_HOVER_ALPHA)
+                expect(harness.hoverX()).toBeCloseTo(
                     harness.xOfColumn(hovered) - harness.columnWidth() / 2,
                     6
                 )
-                //A DOWN-POINTING TRIANGLE SPANNING THE BAND, drawn at the Graphics' OWN ORIGIN so
-                //that moving it for hover or a Ruler Scrub costs an `x` write
-                //rather than a GraphicsContext rebuild - viewportGraphics' own trade. Its apex is on
-                //the band's bottom edge, i.e. the notes region's top.
-                expect(harness.cursorOps()).toEqual([
-                    ['poly', [-CURSOR_HALF_WIDTH, 0, CURSOR_HALF_WIDTH, 0, 0, COLUMN_RULER_HEIGHT]],
-                    [
-                        'fill',
-                        {
-                            color: ThemeProvider.get('accent').rgbNumber(),
-                            alpha: CURSOR_SHAPE_ALPHA,
-                        },
-                    ],
-                ])
+                //THE SAME SHAPE THE PLAYHEAD'S FLAG IS, at a lower alpha: a rounded-top rectangle
+                //filling the band, drawn at the Graphics' OWN ORIGIN so that moving it costs an `x`
+                //write rather than a GraphicsContext rebuild - viewportGraphics' own trade. ONE
+                //closed subpath, traced by hand: `roundRect` rounds all four corners and squaring
+                //the bottom pair with a second primitive would overlap it, which pixi blends TWICE
+                //(see drawColumnRulerFlags). The bottom edge is square because it is a SEAM - the
+                //playhead's own arrowhead continues out of the band there.
+                const flagShape = [
+                    ['moveTo', -FLAG_HALF_WIDTH, COLUMN_RULER_HEIGHT],
+                    ['lineTo', -FLAG_HALF_WIDTH, FLAG_CORNER_RADIUS],
+                    ['quadraticCurveTo', -FLAG_HALF_WIDTH, 0, -FLAG_HALF_WIDTH + FLAG_CORNER_RADIUS, 0],
+                    ['lineTo', FLAG_HALF_WIDTH - FLAG_CORNER_RADIUS, 0],
+                    ['quadraticCurveTo', FLAG_HALF_WIDTH, 0, FLAG_HALF_WIDTH, FLAG_CORNER_RADIUS],
+                    ['lineTo', FLAG_HALF_WIDTH, COLUMN_RULER_HEIGHT],
+                    ['closePath'],
+                    ['fill', {color: ThemeProvider.get('accent').rgbNumber(), alpha: FLAG_SHAPE_ALPHA}],
+                ]
+                expect(harness.hoverOps()).toEqual(flagShape)
+                expect(harness.flagOps()).toEqual(flagShape)
                 harness.leaveRuler()
-                expect(harness.cursorVisible()).toBe(false)
+                expect(harness.hoverVisible()).toBe(false)
             } finally {
                 harness.destroy()
             }
+        }
+    })
+
+    it("stands the playhead's flag at the anchor at rest, and hides it in snap mode with the playhead", async () => {
+        //THE FLAG IS THE PLAYHEAD'S (ADR-0014, drawn literally since 2026-08-29), so at rest it
+        //stands where the playhead does - a quarter across in the Pro View - and it follows the
+        //playhead's own visibility: `playheadIsVisible` is false with smooth scrolling OFF, where
+        //the selected-column overlay is the mark instead and nothing hangs off the band.
+        const gliding = await mountRuler({smoothScroll: true})
+        try {
+            expect(gliding.flagVisible()).toBe(true)
+            expect(gliding.flagAlpha()).toBe(FLAG_ALPHA)
+            expect(gliding.flagX()).toBeCloseTo(gliding.geometry().width * PRO_PLAYHEAD_FRACTION, 6)
+        } finally {
+            gliding.destroy()
+        }
+        const snapping = await mountRuler({smoothScroll: false})
+        try {
+            expect(snapping.flagVisible()).toBe(false)
+        } finally {
+            snapping.destroy()
         }
     })
 
@@ -9438,6 +9523,8 @@ describe('the Column Ruler', () => {
 // container's own offset as the scroll position, the drawn overlay, and the flag's x. The audio
 // throttle is read off the `ignoreAudio` stream against this file's driven clock.
 describe('the Ruler Scrub', () => {
+    /** PLAYHEAD_ALPHA - the flag is the playhead's own, so it carries the playhead's alpha. */
+    const PLAYHEAD_ALPHA = 0.9
     /** PLAYHEAD_X_FRACTION.pro, restated as PART TEN restates it. */
     const PRO_PLAYHEAD_FRACTION = 0.25
 
@@ -9524,7 +9611,15 @@ describe('the Ruler Scrub', () => {
         expect(app.stage.children).toHaveLength(7)
         const notesColumns = app.stage.children[0]
         const band = app.stage.children[4]
-        const cursor = band.children[1] as unknown as {x: number, visible: boolean, alpha: number}
+        //the band's three children: content, hover ghost, the playhead's flag. The PLAYHEAD's line
+        //rides the same seam - it is stage child 1, moved by an `x` OFFSET from the anchor it was
+        //drawn at, so `playheadOffset` below is what says the whole mark travelled and not just the
+        //part standing in the band.
+        const hoverFlag = band.children[1] as unknown as {x: number, visible: boolean, alpha: number}
+        const flag = band.children[2] as unknown as {x: number, visible: boolean, alpha: number}
+        //stage child 3 in the Pro View: columns, the zone's framing, the offscreen-note arrows, the
+        //PLAYHEAD, the ruler's band, the row-label strip, the mini-timeline (see mountPro).
+        const playheadGraphics = app.stage.children[3] as unknown as {x: number, visible: boolean}
         const geometry = () => {
             if (!reported) throw new Error('the renderer reported no geometry')
             return reported
@@ -9571,9 +9666,13 @@ describe('the Ruler Scrub', () => {
                 selectColumnCalls.filter(call => !call.ignoreAudio).map(call => call.index),
             bandY: () => band.y,
             notesTop: () => notesColumns.y,
-            cursorX: () => cursor.x,
-            cursorVisible: () => cursor.visible,
-            cursorAlpha: () => cursor.alpha,
+            flagX: () => flag.x,
+            flagVisible: () => flag.visible,
+            flagAlpha: () => flag.alpha,
+            hoverVisible: () => hoverFlag.visible,
+            /** The playhead's bar and arrowheads, as their offset from the anchor they are drawn at. */
+            playheadOffset: () => playheadGraphics.x,
+            playheadVisible: () => playheadGraphics.visible,
             renders: () => app.renders,
             /** Where the canvas is, in columns, read back through the offset the frame writes. */
             scrollPosition: () => (playheadX() - notesColumns.x) / columnWidth(),
@@ -9759,8 +9858,10 @@ describe('the Ruler Scrub', () => {
             //which is `state.selected` by then.
             harness.release(harness.xOfColumn(SELECTED + 4))
             expect(harness.scrollPosition()).toBeCloseTo(SELECTED + 4, 6)
-            //A touch scrub has no hover state to preserve, so its flag ends with the gesture.
-            expect(harness.cursorVisible()).toBe(false)
+            //A touch scrub has no hover state to preserve, and in snap mode there is no playhead for
+            //the flag to be part of, so it ends with the gesture.
+            expect(harness.flagVisible()).toBe(false)
+            expect(harness.hoverVisible()).toBe(false)
         } finally {
             harness.destroy()
         }
@@ -9837,9 +9938,12 @@ describe('the Ruler Scrub', () => {
             harness.press(harness.xOfColumn(SELECTED))
             harness.push()
             expect(harness.overlayColumns()).toEqual([SELECTED])
-            expect(harness.cursorVisible()).toBe(true)
-            //A held ruler press is a committed scrub, distinct from the 50%-alpha mouse preview.
-            expect(harness.cursorAlpha()).toBe(1)
+            //THE FLAG IS THE MARK IN SNAP MODE, where `playheadIsVisible` is false and the bar and
+            //arrowheads are not drawn at all - without it the surface the finger is on would give
+            //back nothing. Full playhead alpha, distinct from the 50% mouse preview beside it.
+            expect(harness.flagVisible()).toBe(true)
+            expect(harness.playheadVisible()).toBe(false)
+            expect(harness.flagAlpha()).toBe(PLAYHEAD_ALPHA)
             const frozen = harness.scrollPosition()
             for (let step = 1; step <= 3; step++) {
                 harness.move(harness.xOfColumn(SELECTED + step))
@@ -9852,14 +9956,16 @@ describe('the Ruler Scrub', () => {
                 //...and THE FLAG, which is the other mark and comes from the crossing itself rather
                 //than from the update - at the scrubbed column's own left edge, which is where the
                 //playhead will be standing once the release has settled the canvas there
-                expect(harness.cursorX()).toBeCloseTo(harness.startOfColumn(SELECTED + step), 6)
+                expect(harness.flagX()).toBeCloseTo(harness.startOfColumn(SELECTED + step), 6)
             }
             //THE SUPPRESSION IS LIFTED FOR THIS SURFACE AND NO OTHER: a stage drag reaching the same
             //branch still waits for its frame, which the rows in PART SEVEN state.
             harness.release(harness.xOfColumn(SELECTED + 3))
             harness.push()
             expect(harness.overlayColumns()).toEqual([SELECTED + 3])
-            expect(harness.cursorVisible()).toBe(false)
+            //...and in snap mode the release takes the flag with it: the canvas arrived at once
+            //(easeTo settles outright there), so there is nothing left to ride home
+            expect(harness.flagVisible()).toBe(false)
         } finally {
             harness.destroy()
         }
@@ -9877,13 +9983,20 @@ describe('the Ruler Scrub', () => {
             expect(harness.overlayColumns()).toEqual([])
             const before = harness.renders()
             harness.move(harness.xOfColumn(SELECTED + 2))
-            expect(harness.cursorX()).toBeCloseTo(harness.startOfColumn(SELECTED + 2), 6)
+            expect(harness.flagX()).toBeCloseTo(harness.startOfColumn(SELECTED + 2), 6)
+            //THE WHOLE MARK TRAVELLED, not just the part standing in the band: the bar and its two
+            //arrowheads are moved by an OFFSET from the anchor they were drawn at, which is one
+            //property write against the GraphicsContext rebuild a redraw at a new centre would cost.
+            expect(harness.playheadOffset()).toBeCloseTo(
+                harness.startOfColumn(SELECTED + 2) - harness.playheadX(),
+                6
+            )
             expect(harness.renders()).toBeGreaterThan(before)
             //...and it is drawn BEFORE the round-trip, which is the point of it being the crossing's
             //own: a mark pinned to a fingertip cannot wait a microtask for Svelte
             expect(harness.selectColumnCalls.at(-1)?.index).toBe(SELECTED + 2)
             harness.push()
-            expect(harness.cursorX()).toBeCloseTo(harness.startOfColumn(SELECTED + 2), 6)
+            expect(harness.flagX()).toBeCloseTo(harness.startOfColumn(SELECTED + 2), 6)
             //A MOVE INSIDE ONE COLUMN REPAINTS NOTHING: the flag is column-addressed, so it moves
             //once per crossing and never per event (CONTEXT.md: Column Ruler - "no press lands
             //between two columns")
@@ -9909,7 +10022,7 @@ describe('the Ruler Scrub', () => {
             //would return at its first statement on every update after it, with the song playing on.
             harness.cancelPointer()
             expect(harness.scrollPosition()).toBeCloseTo(SELECTED + 2, 6)
-            expect(harness.cursorVisible()).toBe(false)
+            expect(harness.flagVisible()).toBe(false)
             //...and the canvas follows the selection again, which is the suspension being over
             harness.selectColumn(SELECTED + 6)
             harness.push()
@@ -9992,7 +10105,7 @@ describe('the Ruler Scrub', () => {
             harness.push()
             expect(harness.overlayColumns()).toEqual([atEdge + mid])
             //...and the flag stays pinned to the column under the finger while the canvas moves
-            expect(harness.cursorX()).toBeCloseTo(harness.startOfColumn(atEdge + mid), 6)
+            expect(harness.flagX()).toBeCloseTo(harness.startOfColumn(atEdge + mid), 6)
         } finally {
             harness.destroy()
         }

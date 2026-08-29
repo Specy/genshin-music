@@ -199,6 +199,62 @@ export function snapMidiToGridPeriodically(midiNote: number): {id: number, isAcc
 }
 
 /**
+ * The grid degree one step above/below `degree` on the PERIODIC scale — the pitch classes the Song
+ * Grid has rows for, repeating forever in both directions. Distances are measured in pitch-class
+ * space and a gap of 0 is skipped, so the answer is the STRICTLY next degree and `degree` itself
+ * never satisfies its own query. On a diatonic grid the step is 1 or 2 semitones; on a chromatic
+ * one it is always 1.
+ */
+function adjacentGridDegree(degree: number, direction: 1 | -1): number {
+    let distance = 12
+    for (const pitchClass of gridPitchClasses) {
+        const gap = direction === 1
+            ? positiveModulo(pitchClass - degree, 12)
+            : positiveModulo(degree - pitchClass, 12)
+        if (gap > 0 && gap < distance) distance = gap
+    }
+    return degree + direction * distance
+}
+
+/**
+ * A Note Number moved `steps` degrees along the game's own scale, CARRYING WHATEVER IT IS OFF BY —
+ * the composer move tool's answer for every note the row-and-button path cannot answer for (see
+ * ComposedSong.moveNotesBy).
+ *
+ * THE SCALE IS THE SONG GRID'S, EXTENDED BY OCTAVES, and that extension is the whole point: the
+ * grid is a bounded window (Genshin's 48–83, Sky's 60–84) and a note can sit anywhere on the axis.
+ * Asked for a row, `gridRowForNumber` CLAMPS such a note onto the grid's edge row, which is the
+ * right answer for drawing it and a destructive one for moving it — stepping from a clamped row
+ * lands the note wherever that row's neighbour is, octaves from where it was. Here the grid's pitch
+ * classes simply repeat, so a note above the grid steps by the same interval a note inside it would.
+ *
+ * ANCHOR PLUS ACCIDENTAL, and never a snap: the note's virtual nominal is split into the scale
+ * degree at or below it and the semitones it sits above that degree (0 for an on-scale note, 1 for
+ * an off-scale one), the DEGREE moves, and the accidental is re-added. So a C# steps to a D# and
+ * stays a semitone sharp however many times it is pushed — an imported chromatic line survives being
+ * nudged instead of being quantised onto the scale by its first move.
+ *
+ * IT WORKS IN VIRTUAL NOMINAL SPACE (`number − basepointOffset`) because the grid's degrees are
+ * nominal ids: at Basepoint Db the C button's number is 73, and stepping it as though 73 were the
+ * scale degree would move it by the wrong interval. The offset comes back off the answer.
+ *
+ * `steps` is signed (positive = up) and may be any integer; a grid with no pitch classes at all
+ * (impossible for a registry-validated game) answers the input unchanged rather than looping.
+ */
+export function scaleStepNumber(pitch: Pitch, number: number, steps: number): number {
+    if (!Number.isFinite(number) || gridPitchClasses.size === 0 || steps === 0) return number
+    const offset = basepointOffset(pitch)
+    const virtual = number - offset
+    const anchor = snapMidiToGridPeriodically(virtual).id
+    if (anchor === -1) return number
+    const accidental = virtual - anchor
+    const direction = steps > 0 ? 1 : -1
+    let degree = anchor
+    for (let step = 0; step < Math.abs(steps); step++) degree = adjacentGridDegree(degree, direction)
+    return degree + accidental + offset
+}
+
+/**
  * Where a note renders on a surface whose rows are its OWN track instrument's Buttons (the
  * player's approach/practice queue, the sheet visualizer): that instrument's Button at this
  * Basepoint, else — when the number is STRANDED there — the grid row it draws on, else -1

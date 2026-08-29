@@ -237,9 +237,9 @@ describe('rows', () => {
     //spans at least N semitones - it is the cap's own statement, not a shipped case).
     for (const perColumn of [21, 15]) {
       const cap = 460 / (perColumn + ROW_HEIGHT_FRAMING_ROWS);
-      //a 36-row frame (genshin's) fits at 460 / 38, under either cap
+      //a 36-row frame (genshin's) fits at 460 / 37, under either cap
       expect(proRowHeight({ notesRegionHeight: 460, perColumn, canonicalRowCount: 36 })).toBe(
-        460 / 38
+        460 / (36 + ROW_HEIGHT_FRAMING_ROWS)
       );
       //a 6-row one would want 460 / 8 and gets the cap instead
       expect(proRowHeight({ notesRegionHeight: 460, perColumn, canonicalRowCount: 6 })).toBe(cap);

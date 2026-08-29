@@ -34,7 +34,7 @@ import {clamp} from "../utils/Utilities"
 import {isFixedBreakpoint} from "./breakpoints"
 import {isLegacyAppName, LEGACY_NOTE_TABLES, type LegacyAppName, legacyIndexToId} from "./legacyNoteTables"
 import {type ConversionGame, findSimilarInstrument} from "./instrumentSimilarity"
-import {effectiveTrackPitch, gridRowForNumber, nominalToNumber, numberToButton} from "./noteIds"
+import {effectiveTrackPitch, gridRowForNumber, nominalToNumber, numberToButton, scaleStepNumber} from "./noteIds"
 import {basepointDelta, rewriteForBasepoint, rewriteForSwap} from "./noteNumberTransforms"
 
 // Used only by the retired old-format EXPORT (see the commented block beside serialize()); kept
@@ -44,6 +44,13 @@ import {basepointDelta, rewriteForBasepoint, rewriteForSwap} from "./noteNumberT
 //     time: number
 //     l?: number
 // }
+
+/**
+ * WHAT ONE UNIT OF moveNotesBy'S `amount` MEANS — the composer's statement of which canvas the user
+ * is looking at, since a row of the Compressed View is a Song-Grid row and a row of the Pro View is
+ * a semitone (ADR-0015). The song model never asks which view is open; it is told.
+ */
+export type NoteMoveUnit = 'row' | 'semitone'
 
 /** Shared shape of the LEGACY serialized versions (≤v3): index+layer columns, top-level instruments. */
 export type BaseSerializedComposedSong = SerializedSong & {
@@ -1889,56 +1896,76 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 5> 
     })
 
     /**
-     * Shift notes vertically on the Song Grid, one grid row per unit of `amount`
-     * (positive = up). A note's row is `gridRowForNumber`'s — the SAME rule the canvas
-     * draws by (ADR-0004/ADR-0007), so the tool moves notes exactly where the user sees
-     * them, off-scale strands included. The landing row's new Note Number is that row's
-     * canonical nominal carried onto the axis by the track's own instrument and
-     * Basepoint (nominalToNumber): the note lands sounding what that button sounds, and
-     * on a row its instrument cannot play it simply becomes stranded there — canonical
-     * row, dimmed — which is how the canvas already renders stranded notes.
+     * Shift notes vertically, one ROW OF THE CANVAS THE USER IS LOOKING AT per unit of
+     * `amount` (positive = up) — which is a Song-Grid row in the Compressed View and a
+     * semitone in the Pro View. `unit` is the caller's statement of which canvas that is
+     * (ADR-0015); the song model itself has no opinion about views, and the two units are
+     * the two rules below rather than a branch inside one.
      *
-     * Before ADR-0004 this read the own-instrument `displayButtonForId`, which put the
-     * tool in each note's OWN track Button space (nobody's rows: not the canvas's, not
+     * `'semitone'` IS THE WHOLE RULE ON ITS SIDE: `id + amount`, no instrument consulted,
+     * no grid consulted. The Pro View's rows ARE semitones, so this is that canvas' "one
+     * row" stated exactly. A note landing on a row its instrument cannot voice simply
+     * becomes stranded there, which is how that canvas already draws its inert rows.
+     *
+     * `'row'` HAS TWO PATHS, and which one a note takes is whether its own instrument can
+     * VOICE it:
+     *  - VOICED → the landing row's canonical nominal carried onto the axis by that
+     *    instrument and Basepoint (nominalToNumber). The button is the fact: a note on a
+     *    tuned instrument lands on the button that row prints, so Vintage-Lyre's Db button
+     *    catches the note stepped up from its C and the note stays playable.
+     *  - STRANDED → `scaleStepNumber`, which steps the game's own scale (extended by
+     *    octaves) and carries the note's accidental with it. It must NOT take the path
+     *    above: `nominalToNumber` re-derives the landing number from the instrument's
+     *    sounding table, and for a note that instrument cannot voice that is a teleport
+     *    into its register — a note at 72 on Sky's Contrabass (nominals 60–84, register C1)
+     *    stepped up used to land on 38, three octaves down. The row is wrong for it too:
+     *    `gridRowForNumber` CLAMPS a number past the grid's edge onto the edge row, so a
+     *    note above the grid stepped down used to snap onto the grid rather than move.
+     *
+     * NOTHING IS EVER DELETED (spec 2026-08-29). A note on the grid's top or bottom row
+     * pushed further leaves the grid and becomes stranded — dimmed, silent, and returned to
+     * exactly where it was by one push the other way, so the tool is reversible by its own
+     * inverse and not only by undo. The one refusal is the MIDI axis itself: a move that
+     * would leave 0..127 leaves the note where it is. (It DID delete, before this: notes
+     * with no landing row were dropped, which is what made pushing a selection up and back
+     * down lossy.)
+     *
+     * Before ADR-0004 the row came from the own-instrument `displayButtonForId`, which put
+     * the tool in each note's OWN track Button space (nobody's rows: not the canvas's, not
      * the keyboard's) and made a sub-grid track's notes (NightwindHorn, the drums) jump
-     * bands or vanish off a row that visibly had space above it. Notes pushed off the
-     * top or bottom of the grid are dropped.
+     * bands or vanish off a row that visibly had space above it.
      */
-    moveNotesBy(selectedColumns: number[], amount: number, layer: number | 'all') {
-        this.#asStep('moveNotesBy', () => this.#moveNotesBy(selectedColumns, amount, layer))
+    moveNotesBy(selectedColumns: number[], amount: number, layer: number | 'all', unit: NoteMoveUnit = 'row') {
+        this.#asStep('moveNotesBy', () => this.#moveNotesBy(selectedColumns, amount, layer, unit))
     }
 
     /** moveNotesBy's body; see its header. Split out only so the Step scope stays one readable line. */
-    #moveNotesBy(selectedColumns: number[], amount: number, layer: number | 'all') {
+    #moveNotesBy(selectedColumns: number[], amount: number, layer: number | 'all', unit: NoteMoveUnit) {
         //inverse of COMPOSER_NOTE_POSITIONS (slot -> row), built over GRID slots only:
         //sky's positions array carries trailing rows past the last Song-Grid row (see the
         //registry's canonicalNoteIds check), and a note must never land on one.
         const slotAtRow = new Map(CANONICAL_NOTE_IDS.map((_, slot) => [COMPOSER_NOTE_POSITIONS[slot], slot]))
-        const moveId = (note: ColumnNote): number | null => {
+        const moveId = (note: ColumnNote): number => {
             const instrument = this.instruments[note.trackIndex]
             const name = instrument?.name ?? ''
             const pitch = instrument?.pitch || this.pitch
-            const slot = gridRowForNumber(name, pitch, note.id).row
-            if (slot === -1) return null
-            //rows count downward on the canvas, so moving UP is a smaller row
-            const toSlot = slotAtRow.get(COMPOSER_NOTE_POSITIONS[slot] - amount)
-            if (toSlot === undefined) return null
-            return nominalToNumber(name, pitch, CANONICAL_NOTE_IDS[toSlot])
+            const moved = unit === 'semitone'
+                ? note.id + amount
+                : this.#rowStepNumber(name, pitch, note.id, amount, slotAtRow)
+            //THE ONE REFUSAL, and it is the axis and not the grid: a note that cannot move
+            //stays exactly where it is rather than being dropped or clamped onto a number it
+            //never asked for. Non-finite is unreachable from a stored song and is caught with it.
+            if (!Number.isFinite(moved) || moved < 0 || moved > 127) return note.id
+            return moved
         }
         if (layer === 'all') {
             selectedColumns.forEach(index => {
                 const column = this.#columns[index]
                 if (!column) return
-                const moved = column.notes.flatMap(note => {
-                    const newId = moveId(note)
-                    //dropped off the grid: its id is deliberately NOT written first, so the
-                    //columnNotesReplaced below is the only record that has to carry it back
-                    if (newId === null) return []
-                    this.#writeNoteField(note, 'id', newId)
-                    return [note]
-                })
-                if (moved.length !== column.notes.length) this.#writeColumnNotes(column, moved)
-                //merge collisions created by the shift
+                column.notes.forEach(note => this.#writeNoteField(note, 'id', moveId(note)))
+                //MERGE COLLISIONS CREATED BY THE SHIFT, and a diatonic step makes them: the scale's
+                //gaps are uneven, so a whole tone followed by a semitone lands two notes a semitone
+                //apart on one number (D#5 and E5 both step up to F5). The longest span wins.
                 const seen = new Map<string, ColumnNote>()
                 const kept = column.notes.filter(note => {
                     const key = `${note.trackIndex}-${note.id}`
@@ -1960,10 +1987,9 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 5> 
                     .sort((a, b) => amount < 0 ? a.id - b.id : b.id - a.id)
                 trackNotes.forEach(note => {
                     const newId = moveId(note)
-                    if (newId === null) {
-                        this.#removeNoteFrom(index, column, layer, note.id)
-                        return
-                    }
+                    //a note the axis refused to move is already where it is going; `findNote` below
+                    //would find the note ITSELF and merge it into nothing
+                    if (newId === note.id) return
                     const existing = column.findNote(layer, newId)
                     if (existing) {
                         this.#writeNoteField(existing, 'span', Math.max(existing.span, note.span))
@@ -1977,6 +2003,35 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 5> 
         //shifted notes can land inside another same-id note's span - and normalizeSpans() is
         //also what publishes this whole method
         this.normalizeSpans()
+    }
+
+    /**
+     * ONE NOTE, STEPPED BY `amount` SONG-GRID ROWS — moveNotesBy's `'row'` unit, and the fork its
+     * header describes: the button path for a note this instrument voices, `scaleStepNumber` for
+     * every other note.
+     *
+     * THE FALLBACK ALSO CATCHES THE GRID'S EDGE, which is why it is written as one `??` chain rather
+     * than as a stranded/voiced branch: a VOICED note on the top row has no landing row either, and
+     * before this it was the case that deleted notes. Stepping it on the periodic scale instead is
+     * what carries it off the grid intact — Genshin's B5 goes to C6, dimmed, and comes back to 83 on
+     * the next push down.
+     *
+     * `slotAtRow` is the caller's inverse of COMPOSER_NOTE_POSITIONS, built once per call.
+     */
+    #rowStepNumber(
+        name: string,
+        pitch: Pitch,
+        number: number,
+        amount: number,
+        slotAtRow: Map<number, number>
+    ): number {
+        if (numberToButton(name, pitch, number) !== -1) {
+            const slot = gridRowForNumber(name, pitch, number).row
+            //rows count downward on the canvas, so moving UP is a smaller row
+            const toSlot = slot === -1 ? undefined : slotAtRow.get(COMPOSER_NOTE_POSITIONS[slot] - amount)
+            if (toSlot !== undefined) return nominalToNumber(name, pitch, CANONICAL_NOTE_IDS[toSlot])
+        }
+        return scaleStepNumber(pitch, number, amount)
     }
 
     /**

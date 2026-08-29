@@ -10,7 +10,7 @@ import {
 } from './imports'
 import {buildComposedSong} from './builders'
 import {expectGolden, readFixture} from './golden'
-import {basepointOffset, gridRowForNumber, noteIdToButton} from '$core/Songs/noteIds'
+import {basepointOffset, gridRowForNumber, noteIdToButton, scaleStepNumber} from '$core/Songs/noteIds'
 import {rewriteForSwap} from '$core/Songs/noteNumberTransforms'
 import {isFixedBreakpoint, withFixedBreakpoints} from '$core/Songs/breakpoints'
 
@@ -755,6 +755,28 @@ function subGridInstrument(): (typeof INSTRUMENTS)[number] {
 }
 
 /**
+ * The game's most RETUNED instrument - one whose buttons sound something other than the nominals
+ * they print (genshin's Vintage-Lyre, whose D button sounds Db; sky's register-shifted Contrabass
+ * and Cello, whose printed 60-84 grid sounds an octave or three below). A SEARCH for the same
+ * reason subGridInstrument is one, and the widest so the pick is a melodic instrument.
+ *
+ * It is what makes "a stranded note is never re-voiced" testable without naming a game: on such an
+ * instrument the landing row's button carries a number that is nowhere near the note being moved,
+ * so the old rule's answer and the new one differ by octaves rather than by nothing.
+ */
+function retunedInstrument(): (typeof INSTRUMENTS)[number] {
+    const best = INSTRUMENTS.map((instrument) => ({
+        instrument,
+        retuned: INSTRUMENTS_DATA[instrument].notes.some((note) => note.sounding !== note.nominal),
+        width: INSTRUMENTS_DATA[instrument].notes.length,
+    }))
+        .filter((candidate) => candidate.retuned)
+        .sort((a, b) => b.width - a.width)[0]
+    if (!best) throw new Error('no instrument in this game is retuned')
+    return best.instrument
+}
+
+/**
  * ComposerTools' move-notes-up/down buttons (its `e` and `g` slots) call straight through to
  * moveNotesBy, so the rows it steps through have to be the rows the CANVAS drew - which since
  * ADR-0004 are Song Grid rows: a note's row is its Note Id's canonical slot, its instrument never
@@ -776,32 +798,96 @@ describe('moveNotesBy steps through the Song Grid rows the canvas draws', () => 
         song.moveNotesBy(CANONICAL_NOTE_IDS.map((_, slot) => slot), 1, 'all')
 
         CANONICAL_NOTE_IDS.forEach((id, slot) => {
-            const landed = idAtRow(gridRow(id) - 1)
+            //THE TOP ROW LEAVES THE GRID rather than being deleted (ADR-0015): there is no row above
+            //it, so it takes the periodic scale's next degree and becomes a strand one push away
+            //from home. Every other note lands on the row above, on both tracks.
+            const landed = idAtRow(gridRow(id) - 1) ?? scaleStepNumber('C', id, 1)
             const ids = song.columns[slot].notes.map((note) => note.id)
-            //only the top row has nowhere to go; every other note keeps its column, on both tracks
-            expect(ids).toEqual(landed === undefined ? [] : [landed, landed])
+            expect(ids).toEqual([landed, landed])
         })
     })
 
-    it('moves an OFF-SCALE note from the row it draws on, exactly like any other strand', () => {
-        //ADR-0007 phase D: an off-scale note is drawn on its NEAREST row, so the tool has to step
-        //from that row and not from wherever its raw number would sit. It lands on the target row's
-        //own Note Number, which is what un-strands it — the same landing every stranded note gets.
-        const instrument = INSTRUMENTS[0]
-        const offScale = Math.max(...CANONICAL_NOTE_IDS) + 1
-        const placement = gridRowForNumber(instrument, 'C', offScale)
-        expect(placement.stranded).toBe(true)
-        expect(placement.accidental).not.toBe(0)
-        const song = new ComposedSong('move off-scale', [instrument])
-        song.columns[0].addNote(0, offScale)
+    it('never deletes a note, and one push back returns the whole selection', () => {
+        //THE REVERSIBILITY THE NO-DELETE RULE BUYS (ADR-0015). Before it, the notes against the
+        //ceiling were dropped on the way up and there was nothing left to bring back down.
+        const song = new ComposedSong('round trip', [INSTRUMENTS[0]])
+        const before = CANONICAL_NOTE_IDS.map((id) => id)
+        before.forEach((id) => song.columns[0].addNote(0, id))
 
-        //DOWN one row: the nearest row is the grid's top, which has nothing above it
+        song.moveNotesBy([0], 1, 'all')
+        expect(song.columns[0].notes).toHaveLength(before.length)
         song.moveNotesBy([0], -1, 'all')
 
-        const landed = idAtRow(COMPOSER_NOTE_POSITIONS[placement.row] + 1)!
-        expect(song.columns[0].notes.map((note) => note.id)).toEqual([landed])
-        expect(gridRowForNumber(instrument, 'C', song.columns[0].notes[0].id))
-            .toEqual({row: CANONICAL_NOTE_IDS.indexOf(landed), stranded: false, accidental: 0})
+        expect(song.columns[0].notes.map((note) => note.id).sort((a, b) => a - b))
+            .toEqual([...before].sort((a, b) => a - b))
+    })
+
+    it('steps a STRANDED note along the scale instead of re-voicing it through the instrument', () => {
+        //THE REGISTER TELEPORT (ADR-0015). `nominalToNumber` answers with the landing row's BUTTON,
+        //which for a note that instrument cannot voice is a jump into its register - on sky's
+        //Contrabass (nominals 60-84, register C1) a note at 72 used to land on 38. A retuned
+        //instrument is the game-agnostic way to reach that: its buttons sound something other than
+        //the nominals they print, so a nominal it cannot voice has a button whose number is
+        //elsewhere. The note must move by the scale's own step and stay exactly as stranded as it was.
+        const instrument = retunedInstrument()
+        const notes = INSTRUMENTS_DATA[instrument].notes
+        const sounding = new Set(notes.map((note) => note.sounding))
+        const stranded = CANONICAL_NOTE_IDS
+            .filter((id) => !sounding.has(id))
+            //one with a row above it, so the row path would have had an answer to give
+            .find((id) => idAtRow(gridRow(id) - 1) !== undefined)
+        if (stranded === undefined) throw new Error('no stranded canonical id on a retuned instrument')
+        const song = new ComposedSong('move stranded', [instrument])
+        song.columns[0].addNote(0, stranded)
+
+        song.moveNotesBy([0], 1, 'all')
+
+        expect(song.columns[0].notes.map((note) => note.id)).toEqual([scaleStepNumber('C', stranded, 1)])
+        //and it moved by ONE SCALE STEP - never the octaves a register carries
+        expect(Math.abs(song.columns[0].notes[0].id - stranded)).toBeLessThanOrEqual(2)
+    })
+
+    it('steps a note past the grid by the scale, without clamping onto the grid edge', () => {
+        //A number ABOVE the grid has no row of its own: gridRowForNumber CLAMPS it onto the top row,
+        //which is right for drawing it and destructive for moving it (a 9-semitone drop, in Genshin).
+        //The periodic scale is what makes the step the same size it is anywhere else on the axis.
+        const song = new ComposedSong('move off-grid', [INSTRUMENTS[0]])
+        const aboveGrid = Math.max(...CANONICAL_NOTE_IDS) + 3
+        //`row` is the canonical SLOT (see gridRowForNumber), and the clamp is the whole premise:
+        //a number three semitones above the grid resolves to the grid's HIGHEST slot
+        expect(gridRowForNumber(INSTRUMENTS[0], 'C', aboveGrid).row)
+            .toBe(CANONICAL_NOTE_IDS.indexOf(Math.max(...CANONICAL_NOTE_IDS)))
+        song.columns[0].addNote(0, aboveGrid)
+
+        song.moveNotesBy([0], -1, 'all')
+
+        expect(song.columns[0].notes.map((note) => note.id)).toEqual([scaleStepNumber('C', aboveGrid, -1)])
+        expect(aboveGrid - song.columns[0].notes[0].id).toBeLessThanOrEqual(2)
+    })
+
+    it("the 'semitone' unit is one semitone, whatever the grid and the instrument say", () => {
+        //THE PRO VIEW'S ROW (ADR-0015). No grid row is consulted and no button is: the canvas whose
+        //rows these are is the chromatic one, so a note may land on a row its instrument cannot
+        //voice - which that canvas already draws as an inert row.
+        const song = new ComposedSong('semitones', [INSTRUMENTS[0]])
+        const id = CANONICAL_NOTE_IDS[Math.floor(CANONICAL_NOTE_IDS.length / 2)]
+        song.columns[0].addNote(0, id)
+
+        song.moveNotesBy([0], 1, 'all', 'semitone')
+        expect(song.columns[0].notes.map((note) => note.id)).toEqual([id + 1])
+        song.moveNotesBy([0], -1, 'all', 'semitone')
+        expect(song.columns[0].notes.map((note) => note.id)).toEqual([id])
+    })
+
+    it('refuses a move that would leave the MIDI axis, and keeps the note', () => {
+        const song = new ComposedSong('midi floor', [INSTRUMENTS[0]])
+        song.columns[0].addNote(0, 0)
+        song.columns[0].addNote(0, 127)
+
+        song.moveNotesBy([0], -1, 'all', 'semitone')
+        expect(song.columns[0].notes.map((note) => note.id)).toContain(0)
+        song.moveNotesBy([0], 1, 'all', 'semitone')
+        expect(song.columns[0].notes.map((note) => note.id)).toContain(127)
     })
 
     it('moves a single track without disturbing the others', () => {

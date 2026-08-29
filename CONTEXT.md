@@ -71,7 +71,7 @@ An instrument's _capability_ to keep sounding while a note is held and to stop s
 _Avoid_: hold (reserved for the VSRG gameplay mechanic — a scored held lane press, which exists independently of audio sustain)
 
 **Stranded Note**:
-A note whose Note Number the track's instrument cannot voice at the current Basepoint — including off-scale numbers that fall between the grid's rows. Skipped at playback, marked in the composer (nearest row, accidental hint), never silently rewritten; Basepoint changes move it with its track — never changing whether it strands, since the view moves with the notes — while instrument swaps pass it through and may un-strand it. Cross-game imports pass notes through as-is too (the swap to Similar Instruments may strand them, warned at import, never folded); only legacy files still remap, decoding through the frozen historic tables. MIDI import is the one path that REMOVES them rather than passing them through: a note the chosen instrument cannot voice is excluded unless the import is asked to keep it (the importer calls these out-of-range notes), and a note outside the Addressable Span is excluded either way.
+A note whose Note Number the track's instrument cannot voice at the current Basepoint — including off-scale numbers that fall between the grid's rows. Skipped at playback, marked in the composer (nearest row, accidental hint), never silently rewritten; Basepoint changes move it with its track — never changing whether it strands, since the view moves with the notes — while instrument swaps pass it through and may un-strand it. The composer's move tool steps one along the game's scale like any other note, never re-voicing it through the instrument that cannot play it, and creates one by pushing a note past what its instrument reaches. Cross-game imports pass notes through as-is too (the swap to Similar Instruments may strand them, warned at import, never folded); only legacy files still remap, decoding through the frozen historic tables. MIDI import is the one path that REMOVES them rather than passing them through: a note the chosen instrument cannot voice is excluded unless the import is asked to keep it (the importer calls these out-of-range notes), and a note outside the Addressable Span is excluded either way.
 
 **Similar Instrument**:
 The target game's curated counterpart for a source game's instrument — the one a track swaps to during cross-game conversion so the song keeps a comparable timbre. Unmapped instruments fall back to the target's default.
@@ -125,7 +125,7 @@ The press that opened the duration popover — on a keyboard key, a Pro View cel
 _Avoid_: drag-to-resize (suggests grabbing the tail and snapping it to a position — a Duration Hold only ever increments), snap-to-column
 
 **Ruler Scrub**:
-A drag along the Column Ruler. The canvas holds still and the selection follows the finger, sounding each column it passes — rate-limited, so a fast sweep is a sparse run through the song rather than every column it crossed at once. The exception is the two edge bands, over the < > column buttons: hold the finger in one and the canvas creeps toward the song's start or end — faster the deeper the push — while the selection rides the column passing under the held finger. The RELEASE is what moves the canvas: it settles on the column the finger landed on. While the song plays it sounds nothing and is a moving seek, like every other manual move.
+A drag along the Column Ruler. The canvas holds still and the selection follows the finger — the Playhead with it, standing on the column under the finger and riding the release's settle back to its anchor — sounding each column it passes, rate-limited, so a fast sweep is a sparse run through the song rather than every column it crossed at once. The exception is the two edge bands, over the < > column buttons: hold the finger in one and the canvas creeps toward the song's start or end — faster the deeper the push — while the selection rides the column passing under the held finger. The RELEASE is what moves the canvas: it settles on the column the finger landed on. While the song plays it sounds nothing and is a moving seek, like every other manual move.
 _Avoid_: scrubbing (alone — the minimap above scrubs silently and never carries the selection under the finger), drag-to-select
 
 ### Composer Editing
@@ -160,6 +160,10 @@ _Avoid_: visual sheet (the setting's name for the feature, not the surface)
 
 **Transport**:
 The engine that turns a song's columns into committed audio and advances the Sounding Column. Owns playback time; knows nothing about which notes sound — that stays with the composer.
+
+**Playhead**:
+The mark standing on the column the composer is on — the Sounding Column while the transport runs, the selected column at rest. A column's mark and not a place on the canvas: it normally stands at its anchor (the canvas' centre in the Compressed View, a quarter across in the Pro View) and the columns move under it, but a Ruler Scrub takes the selection off that anchor and the playhead goes with it. Absent entirely when smooth scrolling is off, where the selected column's own overlay marks it instead.
+_Avoid_: cursor (the ruler's hover mark), scroll position (the fractional coordinate under it)
 
 **Sounding Column**:
 The column whose notes the listener is hearing right now — what the selected column _means_ while the song plays. Every playback surface (keyboard flash, playhead, sustain recording, end-of-song) agrees on it by definition.

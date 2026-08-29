@@ -96,8 +96,9 @@ const MAX_TRACKS = 4
 /**
  * Mostly buttons of the default instrument; the rest are two octaves out, which on most tracks is
  * a STRANDED NOTE. Strands are in the pool deliberately - they are the exception path of every
- * rewrite in the class (moveNotesBy drops them off the grid instead of moving them, rewriteForSwap
- * passes them through), so an op sequence without any never reaches those branches.
+ * rewrite in the class (moveNotesBy steps them along the periodic scale rather than through the
+ * instrument's buttons - ADR-0015 - and rewriteForSwap passes them through), so an op sequence
+ * without any never reaches those branches.
  */
 function randomId(rng: Rng): number {
     if (rng.chance(0.12)) return rng.pick(NOTE_POOL) + (rng.chance(0.5) ? -24 : 24)

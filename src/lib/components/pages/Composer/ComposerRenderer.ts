@@ -209,11 +209,18 @@ const COMPOSER_NOTE_POSITIONS = game.notes.composerPositions;
 /**
  * THE PLAYHEAD, and the coordinate system the whole class is written in.
  *
- * A fixed vertical line at the canvas' horizontal centre. It is not a cursor that moves over the
+ * A vertical line at the canvas' horizontal centre. It is not a cursor that moves over the
  * columns - the columns move under IT, and where it crosses them is the START of the column the
  * composer is on. So `scrollPosition` (a FRACTIONAL column index, see the field) is by definition
  * the column-space coordinate under this line, and the container offset that realises it is
  * `playheadX - scrollPosition * columnWidth` - see containerX().
+ *
+ * IT LEAVES THAT ANCHOR IN EXACTLY ONE GESTURE (CONTEXT.md: Playhead, Ruler Scrub). A Ruler Scrub
+ * holds the canvas still and carries the selection under the finger, so the mark that means "the
+ * column you are on" travels with it and rides the release's ease back home - columnRulerFlagX
+ * decides where it stands, and syncColumnRuler moves this Graphics by `x` rather than redrawing it.
+ * The coordinate system above is untouched by that: `containerX()` still reads `playheadX()`, and
+ * during a scrub nothing moves the container at all.
  *
  * The LAYOUT is the same in both scroll modes: the offset puts the START of the scrolled-to column
  * at the centre either way. Before the playhead existed it put that column's RIGHT edge there, so
@@ -230,6 +237,11 @@ const COMPOSER_NOTE_POSITIONS = game.notes.composerPositions;
  * thin line over a busy grid of note icons and bar shading, and it is the only column marker in
  * glide mode; the arrowheads are
  * what make it findable at a glance without widening the bar enough to hide the notes beside it.
+ *
+ * ...AND IN THE PRO VIEW, A FLAG ABOVE IT: a rounded-top rectangle filling the Column Ruler's band,
+ * which the top arrowhead continues out of. It is drawn by drawColumnRulerFlags and lives in the
+ * ruler's own container rather than in this Graphics, because the band is a later child of the stage
+ * and a negative-y shape here would be drawn under its ticks. See COLUMN_RULER_FLAG_HALF_WIDTH.
  *
  * The colour is the theme's `accent` and comes through ComposerRendererTheme.playhead rather than
  * being read here - see that field, and note that the mark is redrawn only by drawPlayhead's three
@@ -281,7 +293,7 @@ const PRO_FAINT_LABEL_ALPHA = 0.45;
 const PRO_STRIP_BACKGROUND_ALPHA = 0.94;
 
 /**
- * THE FOUR ALPHAS OF THE EDITABLE ZONE'S DRAWING (CONTEXT.md: Editable Zone; spec §2).
+ * THE THREE ALPHAS OF THE EDITABLE ZONE'S DRAWING (CONTEXT.md: Editable Zone; spec §2).
  *
  * `OUT_OF_ZONE` is the overlay over everything the current layer cannot reach — it DIMS and never
  * hides, which is the rule the whole view rests on: another track's note, and a stranded one, stay
@@ -291,8 +303,9 @@ const PRO_STRIP_BACKGROUND_ALPHA = 0.94;
  *
  * `INERT_ROW` is the DAW black-key pattern, on the rows INSIDE the band that map to no button —
  * they belong to the zone and accept no note, so they are marked rather than dimmed away.
- * `OCTAVE_BAND` is the faint alternation that makes octave boundaries readable at a glance; it is
- * the subtlest of the four on purpose, since it covers half of every screen.
+ *
+ * There was a fourth, `OCTAVE_BAND` — a faint twelve-row alternation, retired 2026-08-29. See
+ * paintProRowBands for the seam it drew across the middle of the zone and why nothing replaced it.
  */
 const PRO_OUT_OF_ZONE_ALPHA = 0.35;
 /**
@@ -305,7 +318,6 @@ const PRO_OUT_OF_ZONE_ALPHA = 0.35;
  */
 const PRO_HIDE_OUT_OF_ZONE_OVERLAY_WHILE_PLAYING = true;
 const PRO_INERT_ROW_ALPHA = 0.2;
-const PRO_OCTAVE_BAND_ALPHA = 0.07;
 const PRO_ZONE_LINE_ALPHA = 0.9;
 /** The zone's two boundary lines, in px. */
 const PRO_ZONE_LINE_WIDTH = 2;
@@ -386,7 +398,7 @@ const COLUMN_RULER_MAJOR_TICK_HEIGHT = 8;
 /**
  * The two ticks' alphas over `pro.stripText`. The minor tick is a subdivision mark and the major
  * one belongs to a reading, so the pair is legible as a hierarchy before either is legible as a
- * number - the same reason PRO_OCTAVE_BAND_ALPHA is the faintest of the zone's four.
+ * number - the same reason PRO_INERT_ROW_ALPHA is the faintest mark the zone draws.
  */
 const COLUMN_RULER_MINOR_TICK_ALPHA = 0.35;
 const COLUMN_RULER_MAJOR_TICK_ALPHA = 0.7;
@@ -411,20 +423,35 @@ const COLUMN_RULER_LABEL_GUTTER_PX = 3;
  */
 const COLUMN_RULER_LABEL_ALPHA = 0.85;
 /**
- * THE CURSOR FLAG'S HALF-WIDTH, and it is PLAYHEAD_ARROW_HALF_WIDTH rather than a number of its own
- * BECAUSE the ruler and playhead use the same triangular visual language. The flag is transient:
- * it marks the column under a desktop mouse hover or an active Ruler Scrub, and is hidden at rest
- * and after a touch release. It is drawn in both scroll modes and never becomes a second persistent
- * selection indicator.
+ * THE PLAYHEAD'S FLAG: the part of the mark that stands in the Column Ruler's band (user, with the
+ * reference screenshot, 2026-08-29). ADR-0014 already called the band's mark "the playhead's flag,
+ * not a position indicator"; this is that sentence drawn literally, and it retires the down-pointing
+ * triangle that stood in for it.
  *
- * A DOWN-POINTING TRIANGLE FILLING THE BAND, base on the band's top edge and apex on its bottom one,
- * which is the notes region's top edge. Sharing PLAYHEAD_ARROW_HALF_WIDTH makes the hover/scrub
- * feedback read as part of the same family as the playhead; the colour is `theme.playhead` for the
- * same reason, and deliberately not a second read of `accent`.
+ * ONE CONTINUOUS PIN, which is what fixes the width: a rounded-top rectangle filling the 20px band,
+ * exactly as wide as the arrowhead's base (2 x PLAYHEAD_ARROW_HALF_WIDTH), so the straight sides run
+ * down into the taper with no shoulder and the whole mark has ONE width at every zoom. Only the TOP
+ * corners are rounded - the bottom edge is the notes region's top, where the existing arrowhead
+ * continues - and the radius is the playhead config's own, so the two marks the composer draws round
+ * their corners by the same number. The bar and the two arrowheads are unchanged: see drawPlayhead.
+ *
+ * WHERE IT STANDS is the one thing about the playhead that is not fixed. Normally it is `playheadX`,
+ * the anchor the whole coordinate system hangs off; while a Ruler Scrub owns the band it is the
+ * column under the finger, and the release rides it home - see columnRulerFlagX.
+ *
+ * IT IS DRAWN IN BOTH SCROLL MODES, and in SNAP mode it is the whole of the mark: `playheadIsVisible`
+ * is false there, so the flag alone marks a scrub's column while the bar and arrowheads stay hidden.
  */
-const COLUMN_RULER_CURSOR_HALF_WIDTH = PLAYHEAD_ARROW_HALF_WIDTH;
-/** A desktop mouse is only pointing; a press promotes the same flag to fully opaque. */
-const COLUMN_RULER_CURSOR_HOVER_ALPHA = 0.5;
+const COLUMN_RULER_FLAG_HALF_WIDTH = PLAYHEAD_ARROW_HALF_WIDTH;
+const COLUMN_RULER_FLAG_CORNER_RADIUS = COMPOSER_PLAYHEAD_CONFIG.borderRadius ?? 4;
+/**
+ * THE HOVER GHOST'S ALPHA. A desktop mouse over the band is asking "which column would I get", and
+ * the honest answer is the flag it would move here, drawn faint - the SAME shape at a lower alpha
+ * rather than a mark of its own, so nothing on the band means anything the playhead does not. It
+ * carries no bar and no arrowhead (see drawColumnRulerFlags), which is what keeps a hovered column
+ * from reading as a second playhead.
+ */
+const COLUMN_RULER_FLAG_HOVER_ALPHA = 0.5;
 
 /**
  * HOW OFTEN A RULER SCRUB MAY SOUND A COLUMN, in ms (CONTEXT.md: Ruler Scrub; spec §2/§6) - the one
@@ -665,7 +692,7 @@ interface ComposerRendererTheme {
    * are drawn in - so the line matches the layer being edited rather than being a colour of its
    * own.
    *
-   * READ BY drawColumnRulerCursor TOO, and through THIS field rather than through `pro.accent`
+   * READ BY drawColumnRulerFlags TOO, and through THIS field rather than through `pro.accent`
    * beside it, which holds the very same number: the ruler's transient hover/scrub triangle borrows
    * the playhead's shape and colour. If the playhead is recoloured away from `accent`, this related
    * pointer feedback must move with it rather than stay behind with the offscreen-zone arrow.
@@ -1842,13 +1869,19 @@ export class ComposerRenderer {
    */
   private readonly columnRulerTicks = new Graphics();
   /**
-   * THE CURSOR FLAG, drawn ONCE at its own local origin and MOVED by its `x` - viewportGraphics'
-   * pattern, and for the same reason: `clear()` dirties a GraphicsContext and forces a geometry
-   * rebuild, so a mark that moves must not be redrawn to move. Its shape is a function of nothing
-   * but COLUMN_RULER_HEIGHT and the theme, so drawColumnRulerCursor runs from init() and from the
-   * resize/theme path and nowhere else, while syncColumnRuler writes where it stands.
+   * THE PLAYHEAD'S FLAG and, behind it, the HOVER GHOST - two Graphics carrying the same shape at
+   * two alphas (COLUMN_RULER_FLAG_HALF_WIDTH). Both are drawn ONCE at their own local origin and
+   * MOVED by their `x` - viewportGraphics' pattern, and for the same reason: `clear()` dirties a
+   * GraphicsContext and forces a geometry rebuild, so a mark that moves must not be redrawn to move.
+   * The shape is a function of nothing but COLUMN_RULER_HEIGHT and the theme, so drawColumnRulerFlags
+   * runs from init() and from the resize/theme path and nowhere else, while syncColumnRuler writes
+   * where each one stands.
+   *
+   * THE GHOST IS THE EARLIER CHILD, so a hovered column that happens to be the playhead's own is
+   * drawn under it rather than washing it out.
    */
-  private readonly columnRulerCursor = new Graphics();
+  private readonly columnRulerHoverFlag = new Graphics();
+  private readonly columnRulerFlag = new Graphics();
   /**
    * THE POOLED TIMESTAMPS (spec §5). A pixi Text owns a rasterised texture and re-rasterises on
    * every `text` write, so a band that moves with every scroll frame must not touch its labels per
@@ -1910,7 +1943,7 @@ export class ComposerRenderer {
    * Svelte and comes back as an update, so a second pointermove arriving inside that gap would read
    * a stale `selected`, decide the column had changed again and re-publish it - once per event on a
    * 1000Hz pointer, each one a full Svelte round-trip. It is also what the cursor flag is drawn from
-   * (columnRulerCursorX), so the mark under the finger is this record and never a value that has
+   * (columnRulerFlagX), so the mark under the finger is this record and never a value that has
    * been through another object.
    *
    * `soundedAtMs` is the throttle's whole state - see RULER_SCRUB_AUDIO_MS. Seeded at the press,
@@ -1935,6 +1968,23 @@ export class ComposerRenderer {
    * over, on the same now() timebase as `soundedAtMs`.
    */
   private rulerPointer: RulerScrub | null = null;
+  /**
+   * WHETHER THE CANVAS IS EASING HOME FROM A RULER RELEASE - the second of columnRulerFlagX's two
+   * states, and the whole of what makes the playhead RIDE that ease instead of snapping to its
+   * anchor and marking whatever slides under it.
+   *
+   * A FLAG AND NOT A TEST ON `motion.kind === 'easing'`, which would have been free: every settle in
+   * this class eases, and during a DRAG's release `state.selected` is a sub-column away from the
+   * canvas' fractional position - so reading `selected` through those eases would make the playhead
+   * wobble by a fraction of a column on every drag and wheel. This ease is the one whose target the
+   * mark is already standing on.
+   *
+   * SET AFTER easeTo RATHER THAN BEFORE, and only if a motion actually began: `easeTo` is a no-op in
+   * snap mode (settleAt arrives at once, with nothing to ride) and when the canvas is already there.
+   * CLEARED BY enterMotion, settleAt and rest - which is every path out of a motion, so a gesture
+   * that interrupts the ease takes the flag with it and the ease's own arrival clears it too.
+   */
+  private rulerSettling = false;
   /** The last canvas x of a mouse over the ruler, or null when it is not being hovered. */
   private rulerHoverX: number | null = null;
   /**
@@ -2382,7 +2432,7 @@ export class ComposerRenderer {
     //hit order, while the row-label strip is added AFTER it below so the strip's backing and pitch
     //labels own the ruler's upper-left corner instead of ticks drawing across them. Its marks are
     //filled in by the first draw(), like every other pro layer's; only the cursor flag's shape is
-    //drawn here (see drawColumnRulerCursor).
+    //drawn here (see drawColumnRulerFlags).
     if (this.state.proView) this.initColumnRuler();
     //THE PITCH STRIP ABOVE THE RULER as well as above the playhead: both are canvas chrome, but the
     //strip identifies the row under it and must stay uninterrupted through the ruler bleed. It is
@@ -3260,14 +3310,22 @@ export class ComposerRenderer {
    * that sits between those two (a view's children are a fixed prefix plus note sprites, and pixi
    * draws them in array order).
    *
-   * TWO KINDS, both stated per row rather than per note:
-   *  - the OCTAVE ALTERNATION, twelve rows at a time, which is what makes the chromatic axis
-   *    readable at all - without it every row looks like every other and a user cannot tell a
-   *    fifth from a sixth by eye;
-   *  - the INERT ROWS INSIDE THE BAND: numbers between the zone's two lines that map to no button
-   *    (an instrument that skips a semitone, or one whose table has a hole). They are part of the
-   *    zone - framed and lit with it - and accept nothing, which is the DAW black-key pattern.
-   * Out-of-zone rows need neither: the overlay above covers them wholesale.
+   * ONE KIND, stated per row rather than per note: the INERT ROWS INSIDE THE BAND - numbers between
+   * the zone's two lines that map to no button (an instrument that skips a semitone, or one whose
+   * table has a hole). They are part of the zone - framed and lit with it - and accept nothing,
+   * which is the DAW black-key pattern. Out-of-zone rows need none of it: the overlay above covers
+   * them wholesale.
+   *
+   * THERE WAS A SECOND KIND AND IT IS GONE (user, 2026-08-29): a faint alternation twelve rows at a
+   * time, meant to make octave boundaries readable. What it actually produced was a seam ACROSS THE
+   * MIDDLE OF THE ZONE - the band's edge fell wherever an octave boundary did, and because the inert
+   * rows' own 0.2 swamped a 0.07 wash, the change showed only on the ADDABLE rows, so the rows a
+   * user is aiming at were two different shades above and below an arbitrary line. Nothing was lost
+   * with it: the inert pattern IS the octave landmark (the 2/3 black-key grouping is asymmetric, so
+   * C is always findable), and the row-label strip prints a pitch name on every row besides. If
+   * octave orientation is ever missed while the song plays - where the out-of-zone dim is dropped on
+   * purpose, so the two regions differ only by the zone's edge lines - the cheap thing to add back
+   * is a 1px line at each C, not a fill.
    *
    * PER COLUMN AND NOT ONCE FOR THE CANVAS, which also decides where the bands stop: they are drawn
    * exactly where the song's columns are, so the empty canvas beyond the last column stays empty
@@ -3288,14 +3346,6 @@ export class ComposerRenderer {
     });
     const zone = this.proZone;
     const shade = this.theme.pro.shade;
-    let banded = false;
-    for (let row = first; row <= last; row++) {
-      //12 rows per band, so the boundary between two bands IS an octave boundary
-      if (Math.floor(numberForRow(axis, row) / 12) % 2 !== 0) continue;
-      graphics.rect(0, row * rowHeight - cameraY, sizes.width, rowHeight);
-      banded = true;
-    }
-    if (banded) graphics.fill({ color: shade, alpha: PRO_OCTAVE_BAND_ALPHA });
     if (!zone) return;
     let inert = false;
     for (let row = first; row <= last; row++) {
@@ -3453,7 +3503,7 @@ export class ComposerRenderer {
     this.columnRulerStrip.visible = visible;
     if (!visible) {
       this.rulerHoverX = null;
-      this.columnRulerCursor.visible = this.rulerPointer !== null;
+      this.columnRulerHoverFlag.visible = false;
     }
   }
 
@@ -3502,7 +3552,7 @@ export class ComposerRenderer {
   // ── the Column Ruler (CONTEXT.md: Column Ruler, Ruler Scrub; spec 2026-08-27 §5) ──────────────
   //
   // EVERY METHOD BELOW IS REACHED ONLY WITH `state.proView` SET - the two that are called from
-  // shared paths (syncColumnRuler from applyScrollPosition, drawColumnRulerCursor from the
+  // shared paths (syncColumnRuler from applyScrollPosition, drawColumnRulerFlags from the
   // resize/theme path) test it themselves rather than making their callers do it, which is what
   // keeps the Compressed View's paths free of a ruler branch entirely.
   //
@@ -3510,7 +3560,7 @@ export class ComposerRenderer {
   // testRulerHitarea and the three handleRuler* handlers - sits beside the mini-timeline's own,
   // among the other pointer routing, because the questions it has to answer are that
   // neighbourhood's: which surface a point reaches, which pointer owns a gesture, what a release
-  // settles. The one seam between the two halves is columnRulerCursorX below, which is where the
+  // settles. The one seam between the two halves is columnRulerFlagX below, which is where the
   // flag stops being the playhead's and starts being the finger's.
 
   /**
@@ -3547,44 +3597,86 @@ export class ComposerRenderer {
     this.columnRulerStrip.on('pointerout', this.handleRulerOut);
     this.columnRulerContent.eventMode = 'none';
     this.columnRulerTicks.eventMode = 'none';
-    this.columnRulerCursor.eventMode = 'none';
-    this.columnRulerCursor.visible = false;
+    this.columnRulerHoverFlag.eventMode = 'none';
+    this.columnRulerHoverFlag.visible = false;
+    this.columnRulerHoverFlag.alpha = COLUMN_RULER_FLAG_HOVER_ALPHA;
+    this.columnRulerFlag.eventMode = 'none';
+    this.columnRulerFlag.visible = false;
+    this.columnRulerFlag.alpha = PLAYHEAD_ALPHA;
     this.columnRulerContent.addChild(this.columnRulerTicks);
     this.columnRulerStrip.addChild(this.columnRulerContent);
-    this.columnRulerStrip.addChild(this.columnRulerCursor);
+    this.columnRulerStrip.addChild(this.columnRulerHoverFlag);
+    this.columnRulerStrip.addChild(this.columnRulerFlag);
     this.notesApp?.stage.addChild(this.columnRulerStrip);
-    this.drawColumnRulerCursor();
+    this.drawColumnRulerFlags();
   }
 
   /**
-   * WHERE THE TRANSIENT CURSOR FLAG STANDS, in canvas x. An active scrub owns it first; otherwise a
-   * desktop hover resolves the current column under the stored pointer x. Re-resolving hover here
-   * matters when playback or an ease moves columns beneath a stationary mouse: the triangle stays
-   * under the pointer instead of following the column that happened to be there before the move.
-   *
-   * `playheadX + (column - scrollPosition) * columnWidth` is containerX()'s own
-   * expression solved for a column, i.e. the canvas x of that column's LEFT EDGE - the same edge
-   * the playhead uses. The scrub record supplies the column directly so its mark does not wait for
-   * a Svelte round-trip; with neither scrub nor hover, the returned x is inert because
-   * syncColumnRuler hides the Graphics.
+   * THE CANVAS X OF A COLUMN'S LEFT EDGE - containerX()'s own expression solved for a column, which
+   * is the edge the playhead stands on. The one arithmetic both flags and the playhead's offset are
+   * written from.
    */
-  private columnRulerCursorX(): number {
-    const column =
-      this.rulerPointer?.column ??
-      (this.rulerHoverX === null ? null : this.rulerColumnAt(this.rulerHoverX));
-    if (column === null) return this.playheadX();
+  private columnRulerColumnX(column: number): number {
     return this.playheadX() + (column - this.scrollPosition) * this.columnSize.width;
   }
 
   /**
-   * THE CURSOR FLAG'S SHAPE, drawn once at the Graphics' own origin so that moving it costs an `x`
-   * write rather than a geometry rebuild - see the columnRulerCursor field, and viewportGraphics
-   * for the same trade on the mini-timeline.
+   * WHERE THE PLAYHEAD STANDS, in canvas x - and it is the ONLY thing about the playhead that moves.
    *
-   * A down-pointing triangle spanning the band, its base on the band's top edge and its apex on the
-   * notes region's, sized off PLAYHEAD_ARROW_HALF_WIDTH and filled in `theme.playhead` - see
-   * COLUMN_RULER_CURSOR_HALF_WIDTH for why both of those are borrowed from the playhead rather than
-   * chosen here: hover/scrub feedback and the playhead deliberately read as one family.
+   * `playheadX()` at rest: the anchor the coordinate system hangs off, and the answer for every
+   * gesture in this class but one. A RULER SCRUB is the exception (CONTEXT.md: Ruler Scrub, Playhead)
+   * - it holds the canvas still and carries the selection under the finger, so the mark that means
+   * "the column you are on" has to go with it. Two states, in the order they occur:
+   *
+   *  - WHILE THE BAND OWNS A POINTER, the scrub's own column, taken from `rulerPointer` rather than
+   *    from `state.selected` so the mark does not wait for a Svelte round-trip. That is also what
+   *    carries the edge creep for free: the creep publishes its crossings through the same record.
+   *  - WHILE THE RELEASE SETTLES (`rulerSettling`), `state.selected` - so the playhead RIDES THE EASE
+   *    home instead of snapping to the anchor and marking whatever slides under it. The two
+   *    expressions agree exactly at the ease's last frame, where `scrollPosition === selected` makes
+   *    this `playheadX()`, so the mark never jumps at either end of the gesture.
+   *
+   * A HOVER IS NOT ONE OF THEM. Pointing at the band moves nothing; the ghost is a separate mark at
+   * columnRulerHoverX, and it is what tells the user a press WOULD bring the playhead here.
+   */
+  private columnRulerFlagX(): number {
+    const scrubbed = this.rulerPointer?.column;
+    if (scrubbed !== undefined) return this.columnRulerColumnX(scrubbed);
+    if (this.rulerSettling) return this.columnRulerColumnX(this.state.selected);
+    return this.playheadX();
+  }
+
+  /**
+   * WHERE THE HOVER GHOST STANDS - the column under a desktop mouse resting on the band, or null
+   * when there is none (touch, a pointer that has left, or a scrub, which owns the real flag and
+   * needs no preview of itself).
+   *
+   * RE-RESOLVED FROM THE STORED X rather than remembered as a column, which matters when playback or
+   * an ease moves columns beneath a stationary mouse: the ghost stays under the pointer instead of
+   * following the column that happened to be there when it arrived.
+   */
+  private columnRulerHoverX(): number | null {
+    if (this.rulerPointer || this.rulerHoverX === null) return null;
+    return this.columnRulerColumnX(this.rulerColumnAt(this.rulerHoverX));
+  }
+
+  /**
+   * THE FLAG'S SHAPE, drawn once into EACH of the two Graphics at their own origin so that moving
+   * either costs an `x` write rather than a geometry rebuild - see the columnRulerFlag field, and
+   * viewportGraphics for the same trade on the mini-timeline.
+   *
+   * A ROUNDED-TOP RECTANGLE FILLING THE BAND: `COLUMN_RULER_FLAG_HALF_WIDTH` either side of the
+   * column's left edge, from the band's top down to the notes region's, with the top two corners
+   * rounded and the bottom two square - the bottom edge is a seam and not an end, because the
+   * playhead's own arrowhead continues from it. Filled in `theme.playhead` rather than in a second
+   * read of `accent`, so recolouring the playhead recolours its flag with it.
+   *
+   * TWICE, AND NOT ONE CONTEXT SHARED BY TWO Graphics: the duplication is two roundRects on a path
+   * that runs at init, on a resize and on a theme change, and a shared GraphicsContext would make
+   * either object's future `clear()` silently empty the other.
+   *
+   * GEOMETRY IS ALWAYS OPAQUE and the difference between the two is `alpha`, written once at init
+   * (PLAYHEAD_ALPHA / COLUMN_RULER_FLAG_HOVER_ALPHA) and never per frame.
    *
    * Called from init() and from recalculateCacheAndSizes, which are exactly drawPlayhead's own
    * non-transport callers: the shape is a function of the band's height (fixed) and the theme, so
@@ -3592,15 +3684,28 @@ export class ComposerRenderer {
    * band's height is a constant on both platforms - but the theme reaches this class through that
    * same debounced rebuild, so that is where it is redrawn.
    */
-  private drawColumnRulerCursor(): void {
+  private drawColumnRulerFlags(): void {
     if (!this.state.proView) return;
-    const graphics = this.columnRulerCursor;
-    graphics.clear();
-    const half = COLUMN_RULER_CURSOR_HALF_WIDTH;
-    graphics.poly([-half, 0, half, 0, 0, COLUMN_RULER_HEIGHT]);
-    //Geometry is always opaque. Presentation alpha changes without rebuilding the Graphics:
-    //half while merely hovered, full while a Ruler Scrub owns the pointer.
-    graphics.fill({ color: this.theme.playhead, alpha: 1 });
+    const half = COLUMN_RULER_FLAG_HALF_WIDTH;
+    const radius = COLUMN_RULER_FLAG_CORNER_RADIUS;
+    for (const graphics of [this.columnRulerFlag, this.columnRulerHoverFlag]) {
+      graphics.clear();
+      //ONE CLOSED SUBPATH AND NOT `roundRect` PLUS A SQUARING `rect`, which is what this looked like
+      //first: pixi rounds all four corners, and pixi's batcher multiplies the object's alpha into
+      //each primitive's own vertices rather than compositing the Graphics as a group - so two
+      //overlapping primitives blend TWICE where they meet. At the hover ghost's 0.5 that seam prints
+      //at 0.75, a bright band across the flag's foot. Traced by hand, there is one region and one
+      //blend. Corners: quadratic curves off the two top corner points, the bottom two left square
+      //because that edge is a SEAM - the playhead's arrowhead continues out of it.
+      graphics.moveTo(-half, COLUMN_RULER_HEIGHT);
+      graphics.lineTo(-half, radius);
+      graphics.quadraticCurveTo(-half, 0, -half + radius, 0);
+      graphics.lineTo(half - radius, 0);
+      graphics.quadraticCurveTo(half, 0, half, radius);
+      graphics.lineTo(half, COLUMN_RULER_HEIGHT);
+      graphics.closePath();
+      graphics.fill({ color: this.theme.playhead, alpha: 1 });
+    }
   }
 
   /**
@@ -3623,7 +3728,9 @@ export class ComposerRenderer {
    *    tick and its column are always at one x", and it is also why nothing here has to reproduce
    *    the empty leading quarter at scroll position 0 - the offset already puts column 0's tick at
    *    `playheadX`, and the band is simply unmarked to the left of it because no column is there;
-   *  - the cursor takes columnRulerCursorX(), which is the one seam a Ruler Scrub moves.
+   *  - the FLAGS and the playhead's offset take columnRulerFlagX()/columnRulerHoverX(), which are
+   *    the one seam a Ruler Scrub moves - see syncPlayheadOffset for why the playhead's line is
+   *    moved from here at all rather than from a paint of its own.
    * Everything below is gated on columnRulerKey: a scroll that stays inside one column, a playback
    * tick, a camera ease, a note edit outside the labelled set - none of them changes a tick's
    * position or a reading's string, and none of them may rasterise a Text.
@@ -3649,11 +3756,28 @@ export class ComposerRenderer {
    * user can see.
    */
   private syncColumnRuler(): boolean {
-    if (!this.state.proView) return false;
+    if (!this.state.proView) {
+      //the offset is the playhead's and not the band's, so leaving the Pro View has to put it back
+      //rather than leave the Compressed View's mark standing wherever a scrub left this one
+      this.playheadGraphics.x = 0;
+      return false;
+    }
     this.columnRulerContent.x = this.notesColumnsContainer.x;
-    this.columnRulerCursor.visible = this.rulerPointer !== null || this.rulerHoverX !== null;
-    this.columnRulerCursor.alpha = this.rulerPointer !== null ? 1 : COLUMN_RULER_CURSOR_HOVER_ALPHA;
-    this.columnRulerCursor.x = this.columnRulerCursorX();
+    const flagX = this.columnRulerFlagX();
+    //THE FLAG IS THE MARK IN SNAP MODE. `playheadIsVisible` is false with smooth scrolling off, so
+    //the bar and its arrowheads are not drawn there at all; the band would then give a scrub no
+    //feedback whatsoever, on the one surface the finger is actually touching. So it is shown
+    //whenever the playhead is - and, beyond that, for as long as a scrub owns the band.
+    this.columnRulerFlag.visible =
+      !this.state.isRecordingAudio && (this.state.smoothScroll || this.rulerPointer !== null);
+    this.columnRulerFlag.x = flagX;
+    const hoverX = this.columnRulerHoverX();
+    this.columnRulerHoverFlag.visible = hoverX !== null;
+    if (hoverX !== null) this.columnRulerHoverFlag.x = hoverX;
+    //...AND THE BAR AND ARROWHEADS FOLLOW IT, as an offset from the anchor they were DRAWN at. One
+    //property write; redrawing them at a new centre would rebuild the GraphicsContext on every
+    //column a scrub crosses, which is the cost drawPlayhead's whole caller list exists to avoid.
+    this.playheadGraphics.x = flagX - this.playheadX();
     //the labels need pixi's Text, which this class takes by dynamic import on the pro branch alone
     //(see proTextClass). Before it lands there is nothing to print; the ticks wait with it rather
     //than being drawn into a band whose readings are still missing.
@@ -3787,8 +3911,8 @@ export class ComposerRenderer {
    * COLUMN_RULER_TICK_WIDTH's block for why there is no per-column tick.
    *
    * TWO PASSES AND TWO FILLS over one Graphics, which is this class' own idiom for a layer drawn in
-   * two weights (paintProRowBands' octave bands and inert rows, drawProZone's dim and its edge
-   * lines): each pass queues its rects and fills them together, and a pass that queued nothing
+   * two weights (drawProZone's dim and its edge lines, the row-label strip's backing and its inert
+   * stripes): each pass queues its rects and fills them together, and a pass that queued nothing
    * fills nothing rather than issuing an empty draw.
    *
    * The two loops are INDEPENDENT rather than one loop with a branch, and the minor pass excludes
@@ -4129,7 +4253,7 @@ export class ComposerRenderer {
       //resize (the band is a constant height on both platforms) and not a theme edit, and the theme
       //reaches this class through this very rebuild. Where it STANDS is syncColumnRuler's, and the
       //draw() below is what re-runs that with the new width.
-      this.drawColumnRulerCursor();
+      this.drawColumnRulerFlags();
       this.notifyGeometry();
       // draw() rebuilds and explicitly repaints the static scenes after cache regeneration.
       this.draw();
@@ -4760,6 +4884,9 @@ export class ComposerRenderer {
    */
   private enterMotion(next: Exclude<Motion, { kind: 'resting' }>): void {
     if (next.kind !== 'playback') this.scrollSegments.length = 0;
+    //ANY new motion ends the ruler's ride home, this method's own caller in handleRulerUp included -
+    //which is why that one sets the flag afterwards. See rulerSettling.
+    this.rulerSettling = false;
     this.motion = next;
     this.startMotionFrames();
   }
@@ -4774,6 +4901,7 @@ export class ComposerRenderer {
    * position moved.
    */
   private rest(): void {
+    this.rulerSettling = false;
     this.motion = { kind: 'resting' };
     this.stopMotionFrames();
     this.scrollSegments.length = 0;
@@ -4787,6 +4915,7 @@ export class ComposerRenderer {
    * assign `selected` and update() would apply it, so the disagreement cannot outlive one update.
    */
   private settleAt(position: number): void {
+    this.rulerSettling = false;
     this.motion = { kind: 'resting' };
     this.stopMotionFrames();
     this.scrollSegments.length = 0;
@@ -6226,8 +6355,9 @@ export class ComposerRenderer {
    *
    * The event is optional for handleTimelineUp's reason: resetPointerDown has no pixi event to pass
    * on for a pointercancel or a blur, and those must end the scrub regardless of which pointer they
-   * name. Clearing `rulerPointer` before the ease ends touch feedback immediately and hands a mouse
-   * back to its hover position - see columnRulerCursorX.
+   * name. Clearing `rulerPointer` before the ease is what hands the flag from the finger to
+   * `rulerSettling`'s `state.selected` - the same column, so the mark does not move on the lift -
+   * and hands a mouse back its hover ghost - see columnRulerFlagX and columnRulerHoverX.
    */
   private handleRulerUp = (e?: FederatedPointerEvent) => {
     //a release from a pointer that never owned the band is not this gesture ending - see
@@ -6237,9 +6367,14 @@ export class ComposerRenderer {
     const motion = this.motion;
     if (motion.kind === 'dragging' && motion.surface === 'ruler') {
       this.easeTo(clamp(this.state.selected, 0, this.state.columns.length - 1));
+      //THE PLAYHEAD RIDES THIS EASE HOME (CONTEXT.md: Playhead, Ruler Scrub). Set AFTER the call and
+      //only if one actually began - `easeTo` settles outright in snap mode and when the canvas is
+      //already there, and enterMotion clears the flag on its way in either way. See rulerSettling.
+      if (this.motion.kind === 'easing') this.rulerSettling = true;
     }
     //Snap mode repaints during easeTo, but glide mode waits for its first frame. Apply the release
-    //state now: touch hides the flag; a mouse still over the band falls back to its hover column.
+    //state now: touch drops the flag back to the anchor (or, in snap mode, hides it); a mouse still
+    //over the band gets its hover ghost back.
     this.syncRulerCursorMark();
   };
 
@@ -6265,7 +6400,7 @@ export class ComposerRenderer {
    * because it does not know which column is losing it; the two repaints cover different marks and
    * both are needed.
    *
-   * syncColumnRuler and not a bare `columnRulerCursor.x` write, which would be overwritten by the
+   * syncColumnRuler and not a bare `columnRulerFlag.x` write, which would be overwritten by the
    * next paint seam and would put a second statement of the flag's x in the class - see that method
    * for the two numbers every call writes.
    */
@@ -6509,7 +6644,7 @@ export class ComposerRenderer {
     //pointerup keeps hover when the mouse is still over the band; pointerout owns leaving it.
     if (e.type !== 'pointerup') this.rulerHoverX = null;
     //...and the Column Ruler's, which is the one whose loss is VISIBLE beyond the frozen canvas: the
-    //cursor flag is drawn from this record (columnRulerCursorX), so a scrub the page forgot would
+    //flag is drawn from this record (columnRulerFlagX), so a scrub the page forgot would
     //leave the flag standing on the column the finger was over the last time anything painted
     this.rulerPointer = null;
     //a gesture nothing else ended must not leave a hold counting down onto a canvas no finger is on

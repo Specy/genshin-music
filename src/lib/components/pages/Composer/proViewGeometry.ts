@@ -40,15 +40,23 @@ import {
 export const AXIS_PADDING_ROWS = 3;
 
 /**
- * THE FRAMING ROWS THE NOTES REGION IS TALLER THAN WHAT IT IS FRAMING, in rows (spec §4, as revised
- * 2026-08-21): one empty row above and one below, so nothing the region frames is ever drawn flush
- * against its edge.
+ * THE FRAMING ROWS THE NOTES REGION IS TALLER THAN WHAT IT IS FRAMING, in rows (spec §4, revised
+ * 2026-08-21 and again by the user 2026-08-29): ONE row of air in TOTAL, which `lockedCameraY`'s
+ * centring splits into HALF A ROW above the zone and half below — enough that nothing the region
+ * frames is drawn flush against its edge, and no more.
  *
- * It is the `+ 2` of BOTH terms of proRowHeight below — the canonical frame's fit and the cap the
+ * IT WAS 2 — a whole empty row at each end — and the row it bought back is the point of the change.
+ * The air at the ends carries nothing: it is out of every instrument's reach, so it holds no note
+ * and accepts none. Traded for row height it goes to the rows that do carry something, which is
+ * worth most exactly where it is scarcest: on a phone the canonical frame is ~11px a row, and one
+ * row of 36 back is about 3% on every one of them. Half a row still separates the zone's edge line
+ * from the region's own edge at any zoom, because both ends are stated in ROWS and scale with them.
+ *
+ * It is the `+ 1` of BOTH terms of proRowHeight below — the canonical frame's fit and the cap the
  * game's base layout puts on it — because it means the same thing in each: the frame is the band
- * plus a row of air at each end.
+ * plus its half-row of air at each end.
  */
-export const ROW_HEIGHT_FRAMING_ROWS = 2;
+export const ROW_HEIGHT_FRAMING_ROWS = 1;
 
 /**
  * THE VERTICAL ZOOM'S RANGE (spec §7, user revision 2026-08-22): what a pinch or a ctrl+wheel may
@@ -202,7 +210,7 @@ export function numberForRow(axis: ProViewAxis, row: number): number {
  * ONE ROW'S HEIGHT IN PX: THE GAME'S CANONICAL FRAME FITS, CAPPED AT THE GAME'S OWN NOTE SIZE
  * (spec §4, user revision 2026-08-27).
  *
- *     rowHeight = min(H / (canonicalRows + 2), H / (perColumn + 2))
+ *     rowHeight = min(H / (canonicalRows + 1), H / (perColumn + 1))
  *
  * `canonicalRows` is the WIDEST Editable Zone any instrument in the game has —
  * noteIds.widestInstrumentSpan(), a build-time game constant — so the row height is a property of
@@ -211,7 +219,7 @@ export function numberForRow(axis: ProViewAxis, row: number): number {
  * TWO REVISIONS STAND BEHIND THE FIRST TERM, and this one keeps what both were for:
  *  - 2026-08-21 replaced "the cap alone" because the Pro View draws a row per SEMITONE while
  *    `perColumn` counts BUTTONS: genshin's Lyre spans 36 semitones with its 21 buttons, so a region
- *    sized for 21 + 2 rows showed two thirds of it and the locked frame — whose whole promise is
+ *    sized for 21 framing rows showed two thirds of it and the locked frame — whose whole promise is
  *    "this is what this layer can play" — cut the instrument in half. That revision fitted the
  *    CURRENT layer's zone.
  *  - 2026-08-27 replaced the per-layer fit with the canonical one, because a fit that moved with
