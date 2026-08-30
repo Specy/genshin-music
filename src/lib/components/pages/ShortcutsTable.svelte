@@ -30,7 +30,11 @@
 {#snippet shortcutsTable(shortcuts: Map<string, Shortcut<string>>, style: string = '')}
   <table class="keys-table" {style}>
     <tbody>
-      {#each [...shortcuts.entries()] as [key, shortcut] (shortcut.name)}
+      <!-- Aliases are filtered out, and the keyed each is why it is not optional: an alias shares
+           its action's name (KeybindsStore, `Shortcut.alias`), so listing one would be a duplicate
+           {#each} key as well as a second row for a shortcut the reader already saw. The row shown
+           is the rebindable one, which is also the only one /keybinds can move. -->
+      {#each [...shortcuts.entries()].filter(([, s]) => !s.alias) as [key, shortcut] (shortcut.name)}
         <tr>
           <td>
             {@render keyBadge(key)}

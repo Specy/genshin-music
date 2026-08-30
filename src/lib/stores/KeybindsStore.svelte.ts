@@ -9,6 +9,13 @@ export type Shortcut<T extends string> = {
   name: T;
   holdable: boolean;
   description?: string;
+  /**
+   * A SECOND, FIXED COMBO FOR AN ACTION THAT ALREADY HAS ONE (see createAlias). It dispatches
+   * like any other entry - the surfaces only ever read `name` - but it is invisible to
+   * everything that treats a shortcut's name as its identity: the reverse map, the editor and
+   * the help tables, and `serialize`. That is what keeps "one name, one rebindable key" true.
+   */
+  alias?: boolean;
 };
 
 function createShortcut<T extends string>(
@@ -17,6 +24,20 @@ function createShortcut<T extends string>(
   description?: string
 ): Shortcut<T> {
   return { name, holdable: isHoldable, description } as const;
+}
+
+/**
+ * An extra combo for an action whose rebindable row is declared elsewhere in the same page.
+ * Cannot be rebound and is never shown, so rebinding the action moves its own row and leaves
+ * the alias where it is - which is the point: an alias is a convention (Ctrl+Shift+Z is redo
+ * everywhere) rather than a user preference.
+ */
+function createAlias<T extends string>(
+  name: T,
+  isHoldable: boolean,
+  description?: string
+): Shortcut<T> {
+  return { name, holdable: isHoldable, description, alias: true } as const;
 }
 
 const defaultShortcuts = {
@@ -40,19 +61,24 @@ const defaultShortcuts = {
     //UNDO/REDO (ADR-0013). Holdable: holding the combo walks the history step by step, which is
     //what the OS auto-repeat is for and what every editor does with it.
     //
-    //ONE COMBO PER ACTION, and it is a constraint of this store rather than a preference: a
-    //shortcut is identified BY NAME everywhere outside this map - `reverseShortcuts` is
-    //name -> key, `load()` restores a stored rebind by looking its name up in it, and
-    //ShortcutsTable keys its rows by name - so a second entry named `undo` would collide in all
-    //three (a duplicate {#key} at best, a rebind landing on the wrong entry at worst). The design
-    //asked for Ctrl+Y AND Ctrl+Shift+Z for redo plus Cmd aliases for mac; aliases need this store
-    //to identify a binding by KEY instead, which is a persistence change and not this phase's.
-    //Ctrl+Y covers redo, and mac users can rebind either row to their Cmd combo on /keybinds -
-    //the combo composer matches the whole set of keys down, so a two-modifier combo works, but
-    //only when it is pressed in the order the map states it (`ShiftLeft+KeyS` has always had the
-    //same rule).
+    //ONE REBINDABLE COMBO PER ACTION, and it is a constraint of this store rather than a
+    //preference: a shortcut is identified BY NAME everywhere outside this map - `reverseShortcuts`
+    //is name -> key, `load()` restores a stored rebind by looking its name up in it, and
+    //ShortcutsTable/ShortcutEditor key their rows by name - so a second *rebindable* entry named
+    //`redo` would collide in all three (a duplicate {#key} at best, a rebind landing on the wrong
+    //entry at worst). An ALIAS is the way around it (createAlias): it dispatches the same name and
+    //stays out of all three, so the name still resolves to exactly one rebindable key. Mac's Cmd
+    //combos would be MetaLeft aliases of the same kind; until then, rebind a row on /keybinds.
+    //
+    //BOTH MODIFIER ORDERS for Ctrl+Shift+Z, because a combo is matched against the keys currently
+    //down JOINED IN PRESS ORDER, not as a set - `ShiftLeft+KeyS` has always had that rule, and it
+    //is invisible for a one-modifier combo but not for two: whichever of Ctrl/Shift the user
+    //reaches for first, one of the two entries matches. Left-hand modifier codes only, like every
+    //other combo here (ControlRight has never been part of Ctrl+Z either).
     'ControlLeft+KeyZ': createShortcut('undo', true, 'undo_description'),
     'ControlLeft+KeyY': createShortcut('redo', true, 'redo_description'),
+    'ControlLeft+ShiftLeft+KeyZ': createAlias('redo', true, 'redo_description'),
+    'ShiftLeft+ControlLeft+KeyZ': createAlias('redo', true, 'redo_description'),
   },
   player: {
     Space: createShortcut('toggle_record', false, 'toggle_record_description'),
@@ -151,9 +177,17 @@ class KeyBinds {
     this.reverseShortcuts = this.getReverseShortcuts(this.shortcuts);
   }
 
+  // Aliases are skipped: this map is name -> key and an alias shares its action's name, so
+  // including one would overwrite the rebindable key it must never displace (getKeyOfShortcut
+  // would display it, and load() would restore stored rebinds against it).
   private getReverseShortcuts(of: Shortcuts) {
     const entries = Object.entries(of).map(([key, value]) => {
-      return [key, new SvelteMap([...value.entries()].map(([k, v]) => [v.name, k]))];
+      return [
+        key,
+        new SvelteMap(
+          [...value.entries()].filter(([, v]) => !v.alias).map(([k, v]) => [v.name, k])
+        ),
+      ];
     });
     return Object.fromEntries(entries);
   }
@@ -265,8 +299,14 @@ class KeyBinds {
     return {
       version: this.version,
       vsrg: cloneDeep(this.vsrg),
+      // Aliases are fixed and unrebindable, so there is nothing about them to persist - and
+      // leaving them out is what keeps `load()` simple: every entry it reads back names a
+      // rebindable shortcut, which is what getKeyOfShortcut() there can resolve.
       shortcuts: Object.fromEntries(
-        Object.entries(this.shortcuts).map(([key, value]) => [key, Object.fromEntries(value)])
+        Object.entries(this.shortcuts).map(([key, value]) => [
+          key,
+          Object.fromEntries([...value.entries()].filter(([, v]) => !v.alias)),
+        ])
       ) as SerializedKeybinds['shortcuts'],
     };
   }
