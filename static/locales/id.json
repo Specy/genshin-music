@@ -365,8 +365,7 @@
         "great": "Hebat",
         "good": "Bagus",
         "bad": "Buruk",
-        "miss": "Miss",
-        "combo": "Kombo"
+        "miss": "Miss"
     },
     "transfer": {
         "connecting_please_wait": "Menghubungkan harap tunggu...",

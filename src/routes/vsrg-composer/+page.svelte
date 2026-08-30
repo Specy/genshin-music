@@ -15,6 +15,7 @@
   import VsrgBottom from '$cmp/pages/VsrgComposer/VsrgBottom.svelte';
   import type { VsrgHitObjectType } from '$cmp/pages/VsrgComposer/VsrgBottom.svelte';
   import VsrgComposerCanvas from '$cmp/pages/VsrgComposer/VsrgComposerCanvas.svelte';
+  import VsrgGenerateDialog from '$cmp/pages/VsrgComposer/VsrgGenerateDialog.svelte';
   import {
     VsrgSong,
     type VsrgHitObject,
@@ -38,7 +39,7 @@
   import { songService } from '$core/Services/SongService';
   import { RecordedSong } from '$core/Songs/RecordedSong';
   import { ComposedSong } from '$core/Songs/ComposedSong.svelte';
-  import type { SerializedSong } from '$core/Songs/Song.svelte';
+  import type { SerializedSong, Song } from '$core/Songs/Song.svelte';
   import type { RecordedNote } from '$core/Songs/SongClasses';
   import { homeStore } from '$stores/HomeStore.svelte';
   import { setPageVisited } from '$stores/PageVisitStore.svelte';
@@ -117,6 +118,14 @@
   let isPlaying = $state(false);
   let lastCreatedHitObject: VsrgHitObject | null = $state(null);
   let audioSong: RecordedSong | null = $state(null);
+  /**
+   * The same background song BEFORE the flattening above, kept because a ComposedSong's
+   * `toRecordedSong()` builds a fresh song and copies no `id`. Generation needs the original for
+   * exactly that: `setAudioSong` stores the id and builds one track modifier per instrument off it,
+   * and refuses a background song that carries neither.
+   */
+  let audioSongOriginal: Song | null = $state(null);
+  let isGenerateVisible = $state(false);
   /**
    * `$state.raw`, same rule as `snapPoints` above: VsrgComposerRenderer.drawTimeline walks this on
    * every timeline draw. Same rule too - a writer assigns a whole new array, which is what the
@@ -524,6 +533,7 @@
     if (song === null) {
       vsrg.setAudioSong(null);
       audioSong = null;
+      audioSongOriginal = null;
       renderableNotes = [];
       return;
     }
@@ -536,6 +546,7 @@
       vsrg.setDurationFromNotes(parsed.notes);
       renderableNotes = vsrg.getRenderableNotes(parsed);
       audioSong = parsed;
+      audioSongOriginal = parsed;
       syncAudioSongInstruments();
       calculateSnapPoints();
     }
@@ -546,6 +557,7 @@
       vsrg.setAudioSong(parsed); //set as composed song because it's the original song
       renderableNotes = vsrg.getRenderableNotes(recorded);
       audioSong = recorded;
+      audioSongOriginal = parsed;
       syncAudioSongInstruments();
       calculateSnapPoints();
     }
@@ -684,45 +696,64 @@
   }
 
   function playHitObject(hitObject: VsrgHitObject, trackIndex: number) {
-    hitObject.notes.forEach((n) => {
+    const notes = hitObject.notes;
+    for (let i = 0; i < notes.length; i++) {
       //hold notes sustain for their hold length when the track's instrument supports it
       audioPlayer.pressNoteOfInstrument(
         trackIndex,
-        n,
+        notes[i],
         hitObject.isHeld ? hitObject.holdDuration : undefined
       );
-    });
+    }
   }
 
+  /**
+   * THE PLAYBACK AUDIO LOOP. It runs on the canvas's own tick (VsrgComposerRenderer.handleTick ->
+   * setTimestamp), BEFORE that tick draws - which is the ordering that matters, and the one the
+   * vsrg player does not have.
+   *
+   * Written as plain `for` loops rather than the `forEach` chains it replaced. Each of those built
+   * a closure per call, and this is per frame: at the default 48fps with three tracks that was
+   * ~300 short-lived closures a second on the path whose jitter is audible. What is left per tick
+   * is the arrays VsrgSong/RecordedSong.tickPlayback return, which belong to those classes and are
+   * shared with the vsrg player.
+   *
+   * NOT a transport, deliberately. ComposerTransport/PlayerTransport commit a 1s horizon ahead on
+   * the AudioContext clock (ADR-0006/ADR-0009), which is what would make these onsets
+   * sample-accurate instead of quantised to the tick - but VSRG's other half is interactive (a key
+   * press has to sound NOW, not on a horizon), so the two paths have to be designed to coexist
+   * rather than line-edited into one. Until then, what keeps the jitter down is the frame this
+   * tick shares having stopped allocating.
+   */
   function onTimestampChange(timestamp: number) {
     lastTimestamp = timestamp;
-    if (isPlaying) {
-      if (lastTimestamp >= vsrg.duration) {
-        isPlaying = false;
-        return;
+    if (!isPlaying) return;
+    if (lastTimestamp >= vsrg.duration) {
+      isPlaying = false;
+      return;
+    }
+    for (let i = 0; i < heldKeys.length; i++) {
+      if (!heldKeys[i]) continue;
+      const hitObject = pressedDownHitObjects[i];
+      if (!hitObject) continue;
+      const diff = timestamp - hitObject.timestamp;
+      //extendHeldHitObject deliberately publishes NOTHING - this runs every frame for as long
+      //as the key is down, and what shows the growing tail is the canvas, which is already
+      //redrawing on its own playback tick. See its comment in VsrgSong.svelte.ts.
+      if (diff > snapPointDuration) vsrg.extendHeldHitObject(hitObject, diff);
+    }
+    if (audioSong) {
+      const notes = audioSong.tickPlayback(timestamp);
+      for (let i = 0; i < notes.length; i++) {
+        const note = notes[i];
+        if (vsrg.trackModifiers[note.trackIndex]?.muted) continue;
+        audioPlaybackPlayer.pressNoteOfInstrument(note.trackIndex, note.id, note.duration);
       }
-      heldKeys.forEach((key, i) => {
-        if (key) {
-          const hitObject = pressedDownHitObjects[i];
-          if (!hitObject) return;
-          const diff = timestamp - hitObject.timestamp;
-          //extendHeldHitObject deliberately publishes NOTHING - this runs every frame for as long
-          //as the key is down, and what shows the growing tail is the canvas, which is already
-          //redrawing on its own playback tick. See its comment in VsrgSong.svelte.ts.
-          if (diff > snapPointDuration) vsrg.extendHeldHitObject(hitObject, diff);
-        }
-      });
-      if (audioSong) {
-        const notes = audioSong.tickPlayback(timestamp);
-        notes.forEach((n) => {
-          if (vsrg.trackModifiers[n.trackIndex]?.muted) return;
-          audioPlaybackPlayer.pressNoteOfInstrument(n.trackIndex, n.id, n.duration);
-        });
-      }
-      const tracks = vsrg.tickPlayback(timestamp);
-      tracks.forEach((track, index) =>
-        track.forEach((hitObject) => playHitObject(hitObject, index))
-      );
+    }
+    const tracks = vsrg.tickPlayback(timestamp);
+    for (let index = 0; index < tracks.length; index++) {
+      const track = tracks[index];
+      for (let i = 0; i < track.length; i++) playHitObject(track[i], index);
     }
   }
 
@@ -741,7 +772,8 @@
     forgetRemovedHitObjects();
   }
 
-  async function onSongOpen(song: VsrgSong) {
+  /** false when the unsaved-work question below was cancelled, i.e. nothing was opened. */
+  async function onSongOpen(song: VsrgSong): Promise<boolean> {
     if (changes !== 0) {
       let confirm = settings.autosave.value && vsrg.name !== 'Untitled';
       if (!confirm) {
@@ -749,13 +781,23 @@
           t('question:unsaved_song_save', { song_name: vsrg.name }),
           true
         );
-        if (promptResult === null) return;
+        if (promptResult === null) return false;
         confirm = promptResult;
       }
       if (confirm) {
-        if ((await saveSong()) === null) return;
+        if ((await saveSong()) === null) return false;
       }
     }
+    changes++;
+    await adoptSong(song);
+    return true;
+  }
+
+  /**
+   * Put a song on screen, question already settled. Split out of onSongOpen for the generator,
+   * which has a case where there is nothing to ask about - see openGeneratedSong.
+   */
+  async function adoptSong(song: VsrgSong) {
     settings.bpm = { ...settings.bpm, value: song.bpm };
     settings.keys = { ...settings.keys, value: song.keys };
     settings.pitch = { ...settings.pitch, value: song.pitch };
@@ -765,7 +807,6 @@
     //play-time-rate meaning was merely the wrong playback speed.
     audioPlayer.setBasePitch(song.pitch);
     updateSettings();
-    changes++;
     vsrg = song;
     snapPoint = song.snapPoint;
     selectedTrack = 0;
@@ -774,6 +815,24 @@
     const loadedAudioSong = await songsStore.getSongById(song.audioSongId);
     setAudioSong(loadedAudioSong);
     calculateSnapPoints();
+  }
+
+  /**
+   * Open a chart the generation dialog just made, having already written it to the library.
+   *
+   * A re-roll hands back the song that is ALREADY open - it overwrites the one it made and no
+   * other - and that song is generator-owned and unedited, so onSongOpen's unsaved-work question
+   * would be asking about work nobody did. Only a first generation, which displaces whatever the
+   * user had open, goes through it.
+   */
+  async function openGeneratedSong(song: VsrgSong) {
+    if (vsrg.id !== song.id) {
+      if (!(await onSongOpen(song))) return;
+    } else {
+      await adoptSong(song);
+    }
+    //what is on screen came straight back out of the library, so there is nothing unsaved about it
+    changes = 0;
   }
 
   //`duration` is a public $state field, so these two writes publish on their own - the canvas
@@ -863,6 +922,7 @@
       audioSong,
       trackModifiers: vsrg.trackModifiers,
       currentSongId: vsrg.id,
+      audioSongId: vsrg.audioSongId,
     }}
     functions={{
       setAudioSong,
@@ -871,8 +931,27 @@
       onSongOpen,
       onCreateSong: createNewSong,
       onTrackModifierChange,
+      onOpenGenerate: () => (isGenerateVisible = true),
     }}
   />
+  <!-- Rendered here rather than inside the menu, and mounted/unmounted by this {#if}: the mount is
+       the dialog's whole lifecycle, which is what makes closing it release ownership of the song it
+       created. It needs BOTH background songs - the original for its id and roster, the flattening
+       for the notes - so it cannot open without one. -->
+  {#if isGenerateVisible && audioSong !== null && audioSongOriginal !== null}
+    <VsrgGenerateDialog
+      data={{
+        audioSong: audioSongOriginal,
+        source: audioSong,
+        keys: settings.keys.value,
+        snapPoint,
+      }}
+      functions={{
+        onClose: () => (isGenerateVisible = false),
+        onOpenGenerated: openGeneratedSong,
+      }}
+    />
+  {/if}
   <div class="vsrg-page appear-on-mount">
     <VsrgTop
       {vsrg}

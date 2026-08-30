@@ -7,11 +7,19 @@
 
   let {
     data,
+    currentSongId,
     onClick,
   }: {
     data: SongStorable;
+    //the library id of the song currently loaded as the background, so its row shows as the chosen
+    //one - never the flattening's id, which a composed background does not have (see the page's
+    //`audioSongOriginal`).
+    currentSongId: string | null;
     onClick: (song: SerializedSong) => void;
   } = $props();
+
+  //the null guard matters: an unsaved song's id is null, and so is a storable row's in theory
+  const isCurrent = $derived(currentSongId !== null && data.id === currentSongId);
 
   async function selectAsAudioSong() {
     const song = await songService.getOneSerializedFromStorable(data);
@@ -29,7 +37,7 @@
 </script>
 
 <div
-  class={['song-row', hasTooltip(true)]}
+  class={['song-row', isCurrent && 'song-row-current', hasTooltip(true)]}
   onclick={selectAsAudioSong}
   onkeydown={handleKeydown}
   role="button"

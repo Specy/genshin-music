@@ -34,23 +34,54 @@ import {afterEach, describe, expect, it, vi} from 'vitest'
  * something only that recalculation does:
  *  - `renderer.resize` is called by calculateSizes and nothing else;
  *  - `renderer.generateTexture` by the cache build and nothing else;
- *  - clearing a pixi Container is done by the draw path and nothing else, and each of the three
- *    scene containers is cleared by the draw that owns it (drawKeys clears the keys container
- *    unconditionally; the tracks and timeline containers are cleared by their own draw, or by the
- *    branch that empties them when there is no cache). So they are counted SEPARATELY, per
- *    container: "what did it draw", not "did draw() run". That distinction is the whole value of
- *    this channel - a gate added inside draw() ("skip repainting the tracks while the graph has not
- *    moved") shows up as one column dropping to 0 while the others stay at 1, and a gate written
- *    against a field reached through the stable song is precisely this file's bug class. Collapsed
- *    to one boolean, such a gate was invisible here.
+ *  - `Application.render` by draw() and nothing else, which is what `autoStart: false` made
+ *    observable at all: the canvas no longer renders on pixi's own ticker, so a render IS a draw;
+ *  - clearing the KEYS container by drawKeys, which is the one scene still rebuilt wholesale;
  *  - `ThrottledEventLoop.changeMaxFps` by update()'s maxFps branch. It is the one decision that
- *    recalculates nothing and draws nothing, so the three channels above cannot see it at all, and
+ *    recalculates nothing and draws nothing, so the channels above cannot see it at all, and
  *    it went uncovered until a review sabotaged it and the suite stayed green.
  * calculateSizes() ends in generateCache(), which ends in draw(), so the branches nest: "sizes"
  * implies "cache" implies "draw", and update() draws unconditionally today, which is why every row
- * below expects all three scenes drawn once. A row expecting anything else would mean a real gate
- * had been added to that branch - a deliberate table edit, not something that can happen quietly.
+ * below expects exactly one render. A row expecting anything else would mean a real gate had been
+ * added to that branch - a deliberate table edit, not something that can happen quietly.
+ *
+ * THE `draws` COLUMN USED TO BE THREE NUMBERS - one per scene container, read off `removeChildren()`
+ * - and the pooling pass (2026-08-30) retired two of them, which is the table edit that header
+ * paragraph anticipated. The tracks and timeline scenes are now painted from slot pools that
+ * construct nothing and clear nothing on a steady-state frame, so "did that scene's draw run" has
+ * no structural signature left and, more to the point, stopped being the interesting question: a
+ * pooled draw is cheap and idempotent, and what matters is what ends up on screen. What replaces
+ * them:
+ *  - `renders`, which says the draw path ran at all, on every row;
+ *  - `keys`, which is now a real gate rather than an unconditional 1 - the keys are painted from
+ *    their own signature (orientation, key count, canvas geometry, playbar offset, theme, font),
+ *    so a row where they rebuild is a row where one of those moved, and every other row must be 0
+ *    or the per-frame text rasterization this pass removed has come back;
+ *  - THE POOL BLOCK at the bottom of this file, which is where "the scene was repainted without
+ *    being rebuilt" is actually pinned: it drives the renderer over a moving window twice and
+ *    asserts the second pass constructs and destroys nothing.
  */
+
+/**
+ * How the POOL is observed: a display object built after the harness has mounted means a pool grew,
+ * one destroyed means a pool was thrown away. The renderer builds its persistent scene containers
+ * and its per-pool layers in field initialisers and in init(), so everything constructed from the
+ * first draw onwards is either pool growth or the keys scene being rebuilt - and the keys are the
+ * only Graphics and, once the end-of-song buttons are off screen, the only Text.
+ *
+ * Sprites, Texts and Graphics each un-count the Container their own constructor ran, so the four
+ * numbers partition rather than overlap.
+ */
+const counters = vi.hoisted(() => ({
+    constructed: {containers: 0, sprites: 0, texts: 0, graphics: 0},
+    destroyed: {containers: 0, sprites: 0, texts: 0, graphics: 0},
+    reset() {
+        this.constructed = {containers: 0, sprites: 0, texts: 0, graphics: 0}
+        this.destroyed = {containers: 0, sprites: 0, texts: 0, graphics: 0}
+    },
+}))
+
+const NOTHING_BUILT = {containers: 0, sprites: 0, texts: 0, graphics: 0}
 
 const pixi = vi.hoisted(() => {
     class FakeTexture {
@@ -59,7 +90,10 @@ const pixi = vi.hoisted(() => {
 
     class FakeContainer {
         children: FakeContainer[] = []
-        eventMode = 'none'
+        //pixi's own default, and the distinction the hit-testing assertion below rests on: 'passive'
+        //is still hit-tested and resolves to the nearest interactive ancestor, while 'none' is
+        //pruned and lets the click reach whatever is behind it
+        eventMode = 'passive'
         hitArea: unknown
         visible = true
         x = 0
@@ -77,6 +111,10 @@ const pixi = vi.hoisted(() => {
         //every event this container was subscribed to; the harness reads it off the stage's own
         //children to tell the three scene containers apart without depending on their order
         readonly listeners: string[] = []
+
+        constructor() {
+            counters.constructed.containers++
+        }
 
         addChild<T extends FakeContainer>(...children: T[]): T {
             this.children.push(...children)
@@ -101,10 +139,31 @@ const pixi = vi.hoisted(() => {
             return this
         }
 
-        destroy() {}
+        //`children: true` recurses the way pixi's does, so a pool destroying one view container
+        //un-counts every sprite inside it and the two halves of the counter stay comparable
+        destroy(options?: {children?: boolean}) {
+            counters.destroyed.containers++
+            if (options?.children) {
+                const children = this.children
+                this.children = []
+                for (const child of children) child.destroy(options)
+            }
+        }
     }
 
     class FakeGraphics extends FakeContainer {
+        constructor() {
+            super()
+            counters.constructed.containers--
+            counters.constructed.graphics++
+        }
+
+        override destroy(options?: {children?: boolean}) {
+            super.destroy(options)
+            counters.destroyed.containers--
+            counters.destroyed.graphics++
+        }
+
         clear() { return this }
         rect() { return this }
         roundRect() { return this }
@@ -116,14 +175,31 @@ const pixi = vi.hoisted(() => {
     }
 
     class FakeSprite extends FakeContainer {
-        constructor(_texture: FakeTexture) {
+        //optional: the pooled sprites are constructed empty and given their texture by the paint
+        constructor(_texture?: FakeTexture) {
             super()
+            counters.constructed.containers--
+            counters.constructed.sprites++
+        }
+
+        override destroy(options?: {children?: boolean}) {
+            super.destroy(options)
+            counters.destroyed.containers--
+            counters.destroyed.sprites++
         }
     }
 
     class FakeText extends FakeContainer {
         constructor(_options: unknown) {
             super()
+            counters.constructed.containers--
+            counters.constructed.texts++
+        }
+
+        override destroy(options?: {children?: boolean}) {
+            super.destroy(options)
+            counters.destroyed.containers--
+            counters.destroyed.texts++
         }
     }
 
@@ -145,14 +221,18 @@ const pixi = vi.hoisted(() => {
             resize: vi.fn(),
             generateTexture: vi.fn(() => new FakeTexture()),
         }
-        initOptions: {preference?: string | string[]} | undefined
+        initOptions: {preference?: string | string[], autoStart?: boolean} | undefined
+        //the "did the draw path run" channel. Real pixi would also have this on a ticker; the
+        //renderer passes `autoStart: false` precisely so that it does not, which is why counting
+        //explicit calls here means anything
+        readonly render = vi.fn()
 
         constructor() {
             applications.push(this)
         }
 
-        //no ticker: this fake renders nothing, and the counters below are the only observation
-        async init(options?: {preference?: string | string[]}) {
+        //no ticker: this fake renders nothing, and the counters above are the only observation
+        async init(options?: {preference?: string | string[], autoStart?: boolean}) {
             this.initOptions = options
         }
 
@@ -212,6 +292,7 @@ import {assertNoLiveAliasing} from './noAliasing'
 import {captureVsrgSongState} from '$cmp/pages/VsrgComposer/vsrgSongRenderState'
 import {WEBGL_CONTEXT_RECOVERY_TIMEOUT_MS} from '$cmp/pixiContextRecovery'
 import {ThrottledEventLoop} from '$core/ThrottledEventLoop'
+import {vsrgComposerStore} from '$stores/VsrgComposerStore.svelte'
 import {
     VsrgComposerRenderer,
     type VsrgComposerRendererState,
@@ -247,30 +328,45 @@ function makeProps() {
 
 type Props = ReturnType<typeof makeProps>
 
-/**
- * What draw() repainted, one entry per scene container - the renderer's whole drawing surface, so a
- * scene that was NOT repainted is as visible here as one that was. See this file's header.
- */
-interface SceneDraws {
+/** What one update() reached. See this file's header for what each channel rides on. */
+interface Recalculated {
+    sizes: number
+    cache: number
+    fps: number
+    /** drawKeys() rebuilds, which is a GATE now and not an unconditional 1. */
     keys: number
-    tracks: number
-    timeline: number
+    /** draw() calls, i.e. explicit renders - the "did anything happen at all" channel. */
+    renders: number
 }
-
-/** What update() repaints today: all three scenes, once each. A row that differs would say so. */
-const EVERY_SCENE: SceneDraws = {keys: 1, tracks: 1, timeline: 1}
 
 interface Harness {
     song: VsrgSong
     props: Props
+    app: FakeApp
+    /** Every timestamp the renderer reported, in order - the playback clock's own output. */
+    timestamps: number[]
     /** Push the current song + props at the renderer and report what it recalculated. */
-    push(): {sizes: number, cache: number, fps: number, draws: SceneDraws}
+    push(): Recalculated
     destroy(): void
+}
+
+type FakeApp = (typeof pixi.applications)[number]
+type FakeNode = InstanceType<typeof pixi.Container>
+
+/** Everything below `node`, itself excluded - the scenes nest their per-pool layers a level deep. */
+function descendants(node: FakeNode): FakeNode[] {
+    return node.children.flatMap(child => [child, ...descendants(child)])
+}
+
+/** The pooled hit objects in a scene: the only thing in one that carries a `pointerdown`. */
+function hitObjectViews(scene: FakeNode): FakeNode[] {
+    return descendants(scene).filter(child => child.listeners.includes('pointerdown'))
 }
 
 async function mount(): Promise<Harness> {
     const song = makeSong()
     const props = makeProps()
+    const timestamps: number[] = []
     const state = (): VsrgComposerRendererState => ({...captureVsrgSongState(song), ...props})
     const container = document.createElement('div')
     document.body.appendChild(container)
@@ -279,7 +375,7 @@ async function mount(): Promise<Harness> {
         onKeyUp: () => {},
         onAddTime: () => {},
         onRemoveTime: () => {},
-        onTimestampChange: () => {},
+        onTimestampChange: (timestamp) => timestamps.push(timestamp),
         onSnapPointSelect: () => {},
         dragHitObject: () => {},
         releaseHitObject: () => {},
@@ -295,11 +391,14 @@ async function mount(): Promise<Harness> {
     return {
         song,
         props,
+        app,
+        timestamps,
         push() {
             const resizes = app.renderer.resize.mock.calls.length
             const textures = app.renderer.generateTexture.mock.calls.length
             const fpsCalls = changeMaxFps.mock.calls.length
-            const cleared = {keys: scenes.keys.clears, tracks: scenes.tracks.clears, timeline: scenes.timeline.clears}
+            const renders = app.render.mock.calls.length
+            const keyClears = scenes.keys.clears
             renderer.update(state())
             return {
                 sizes: app.renderer.resize.mock.calls.length - resizes,
@@ -307,13 +406,10 @@ async function mount(): Promise<Harness> {
                 //is being asserted, so collapse the count to 0 or 1
                 cache: app.renderer.generateTexture.mock.calls.length > textures ? 1 : 0,
                 fps: changeMaxFps.mock.calls.length - fpsCalls,
-                //NOT collapsed, unlike the two above: how many times each scene was repainted is
-                //the observation, so a skipped scene reads as 0 and a scene drawn twice reads as 2
-                draws: {
-                    keys: scenes.keys.clears - cleared.keys,
-                    tracks: scenes.tracks.clears - cleared.tracks,
-                    timeline: scenes.timeline.clears - cleared.timeline,
-                },
+                //NOT collapsed, unlike the cache above: a scene rebuilt twice in one update is as
+                //much of a finding as one skipped
+                keys: scenes.keys.clears - keyClears,
+                renders: app.render.mock.calls.length - renders,
             }
         },
         destroy() {
@@ -327,6 +423,7 @@ async function mount(): Promise<Harness> {
 afterEach(() => {
     vi.useRealTimers()
     pixi.applications.length = 0
+    counters.reset()
     document.body.replaceChildren()
 })
 
@@ -341,11 +438,12 @@ interface RecalculationCase {
     /** ThrottledEventLoop.changeMaxFps(), update()'s fourth decision and the only one that draws nothing. */
     fps: boolean
     /**
-     * draw(), per scene, reached either through the two above or on its own. EVERY_SCENE on every
-     * row today because update() ends in an unconditional draw() that repaints all three - see this
-     * file's header for why that is worth pinning rather than leaving implied.
+     * drawKeys(). TRUE on exactly the two rows that move one of the keys' own inputs - the key
+     * count and the orientation - and false everywhere else, the cache-rebuilding rows included:
+     * the keys borrow nothing from the texture cache, and a row that starts rebuilding them for a
+     * scaling or colour change has put a per-frame text rasterization back on the playback path.
      */
-    draws: SceneDraws
+    keys: boolean
 }
 
 const RECALCULATIONS: RecalculationCase[] = [
@@ -357,7 +455,7 @@ const RECALCULATIONS: RecalculationCase[] = [
         sizes: true,
         cache: true,
         fps: false,
-        draws: EVERY_SCENE,
+        keys: false,
     },
     {
         //the fourth input of needsSizes, and the one this table was missing: snapPointWidth is
@@ -371,7 +469,7 @@ const RECALCULATIONS: RecalculationCase[] = [
         sizes: true,
         cache: true,
         fps: false,
-        draws: EVERY_SCENE,
+        keys: false,
     },
     {
         //keyHeight/keyWidth are height/keys - a key-count change that does not recalculate draws
@@ -381,7 +479,7 @@ const RECALCULATIONS: RecalculationCase[] = [
         sizes: true,
         cache: true,
         fps: false,
-        draws: EVERY_SCENE,
+        keys: true,
     },
     {
         //not a song field at all, but it shares the diff: the textures are baked per orientation
@@ -392,7 +490,7 @@ const RECALCULATIONS: RecalculationCase[] = [
         sizes: false,
         cache: true,
         fps: false,
-        draws: EVERY_SCENE,
+        keys: true,
     },
     {
         //THE case the `trackColors` field exists for: VsrgTrackSettings mutates the VsrgTrack in
@@ -403,7 +501,7 @@ const RECALCULATIONS: RecalculationCase[] = [
         sizes: false,
         cache: true,
         fps: false,
-        draws: EVERY_SCENE,
+        keys: false,
     },
     {
         //a second `trackColors` case, and the one that decides whether hit objects get their own
@@ -413,7 +511,7 @@ const RECALCULATIONS: RecalculationCase[] = [
         sizes: false,
         cache: true,
         fps: false,
-        draws: EVERY_SCENE,
+        keys: false,
     },
     {
         what: 'the scaling changes',
@@ -423,7 +521,7 @@ const RECALCULATIONS: RecalculationCase[] = [
         sizes: true,
         cache: true,
         fps: false,
-        draws: EVERY_SCENE,
+        keys: false,
     },
     {
         //the row that makes the others mean something: update() always draws, so without this one
@@ -433,7 +531,7 @@ const RECALCULATIONS: RecalculationCase[] = [
         sizes: false,
         cache: false,
         fps: false,
-        draws: EVERY_SCENE,
+        keys: false,
     },
     {
         //the OTHER half of needsCache's trackColors test. The recolour and track-add rows above
@@ -445,7 +543,7 @@ const RECALCULATIONS: RecalculationCase[] = [
         sizes: false,
         cache: true,
         fps: false,
-        draws: EVERY_SCENE,
+        keys: false,
     },
     {
         //update()'s first decision, and the only one that recalculates nothing and draws nothing -
@@ -457,7 +555,7 @@ const RECALCULATIONS: RecalculationCase[] = [
         sizes: false,
         cache: false,
         fps: true,
-        draws: EVERY_SCENE,
+        keys: false,
     },
     {
         what: 'nothing changed',
@@ -465,15 +563,14 @@ const RECALCULATIONS: RecalculationCase[] = [
         sizes: false,
         cache: false,
         fps: false,
-        draws: EVERY_SCENE,
+        keys: false,
     },
 ]
 
 describe('VsrgComposerRenderer recalculates from a diff of two moments, on one stable song', () => {
     for (const testCase of RECALCULATIONS) {
-        const {keys, tracks, timeline} = testCase.draws
         const expected = `sizes=${testCase.sizes} cache=${testCase.cache} fps=${testCase.fps}`
-            + ` draws=keys:${keys} tracks:${tracks} timeline:${timeline}`
+            + ` keys=${testCase.keys}`
         it(`${testCase.what}: ${expected}`, async () => {
             const harness = await mount()
             try {
@@ -487,7 +584,9 @@ describe('VsrgComposerRenderer recalculates from a diff of two moments, on one s
                     sizes: testCase.sizes ? 1 : 0,
                     cache: testCase.cache ? 1 : 0,
                     fps: testCase.fps ? 1 : 0,
-                    draws: testCase.draws,
+                    keys: testCase.keys ? 1 : 0,
+                    //update() ends in an unconditional draw on every row - see this file's header
+                    renders: 1,
                 })
             } finally {
                 harness.destroy()
@@ -511,7 +610,8 @@ describe('VsrgComposerRenderer context recovery', () => {
                 sizes: 0,
                 cache: 0,
                 fps: 0,
-                draws: {keys: 0, tracks: 0, timeline: 0},
+                keys: 0,
+                renders: 0,
             })
 
             app.canvas.dispatchEvent(new Event('webglcontextrestored'))
@@ -540,6 +640,114 @@ describe('VsrgComposerRenderer context recovery', () => {
             const fallback = pixi.applications[pixi.applications.length - 1]
             expect(fallback).not.toBe(restarted)
             expect(fallback.initOptions?.preference).toBe('canvas')
+        } finally {
+            harness.destroy()
+        }
+    })
+})
+
+/**
+ * THE POOL, and the two things it is worth having: nothing is built per frame, and nothing renders
+ * when nothing happened.
+ *
+ * Both are stated over a MOVING window rather than a repeated identical draw, because a slot pool
+ * that only ever holds the same occupants proves nothing - the interesting frame is the one where
+ * the visible set has changed and the pool has to repaint slots instead of rebuilding them. The
+ * timestamp is moved through vsrgComposerStore, the seek COMMAND channel, which is the same
+ * setTimestamp -> draw path a playback tick takes.
+ *
+ * Each run drives the SAME sequence twice: the first pass is where the pools grow to their high
+ * water mark, and the second is the claim. Comparing two passes over one sequence, rather than
+ * asserting an absolute count, is what keeps this independent of the jsdom canvas geometry (which
+ * measures 0x0, so how many objects land inside the window is not something to hard-code).
+ */
+describe('VsrgComposerRenderer paints from pools and renders on demand', () => {
+    const WINDOW: number[] = [0, 250, 500, 750, 1000, 1500, 2000, 2500]
+
+    it('reuses its pooled display objects across a moving window instead of rebuilding them', async () => {
+        const harness = await mount()
+        try {
+            counters.reset()
+            for (const timestamp of WINDOW) vsrgComposerStore.emitEvent('timestampChange', timestamp)
+            //not vacuous: the first pass over the window IS where the pools are built
+            expect(counters.constructed.sprites).toBeGreaterThan(0)
+
+            counters.reset()
+            for (const timestamp of WINDOW) vsrgComposerStore.emitEvent('timestampChange', timestamp)
+            expect(counters.constructed).toEqual(NOTHING_BUILT)
+            expect(counters.destroyed).toEqual(NOTHING_BUILT)
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    /**
+     * The pooled hit object is ONE interactive container over six sprites, so every pixel it draws
+     * has to resolve to that container. A sprite set to 'none' is pruned from hit testing instead of
+     * absorbed, and since the container itself has no hitArea the click then falls past the whole
+     * view to the snap-point layer beneath - whose sprites tile the canvas - so a click on the
+     * selection ring's visible edge (drawn wider than the note, and so overhanging into the previous
+     * column) edited the song at a timestamp the user never pointed at.
+     */
+    it('keeps every part of a hit object hit-testable, so no click falls through to the grid', async () => {
+        const harness = await mount()
+        try {
+            const tracks = pixi.findScenes(harness.app.stage).tracks
+            //SWEPT rather than seeked once: jsdom measures the canvas at 0x0, so the window a draw
+            //culls to is a degenerate band whose bounds are the playbar offset rather than any
+            //screen width, and which timestamp brings makeSong's single object into it is geometry
+            //this test has no business pinning
+            let painted = 0
+            for (let timestamp = 1000; timestamp <= 1400; timestamp += 25) {
+                vsrgComposerStore.emitEvent('timestampChange', timestamp)
+                painted += hitObjectViews(tracks).filter(view => view.visible).length
+            }
+            expect(painted).toBeGreaterThan(0)
+            for (const view of hitObjectViews(tracks)) {
+                expect(view.children.length).toBeGreaterThan(0)
+                for (const part of descendants(view)) expect(part.eventMode).not.toBe('none')
+            }
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    it('renders exactly once per draw, and not at all while nothing is asking', async () => {
+        vi.useFakeTimers()
+        const harness = await mount()
+        try {
+            expect(harness.app.initOptions?.autoStart).toBe(false)
+            const before = harness.app.render.mock.calls.length
+            vsrgComposerStore.emitEvent('timestampChange', 1000)
+            expect(harness.app.render.mock.calls.length).toBe(before + 1)
+            //paused, so no clock is running and pixi's own ticker is not rendering behind our back
+            await vi.advanceTimersByTimeAsync(1000)
+            expect(harness.app.render.mock.calls.length).toBe(before + 1)
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    it('runs the playback clock only while playing, and starts it without jumping the song', async () => {
+        vi.useFakeTimers()
+        const harness = await mount()
+        try {
+            harness.props.isPlaying = true
+            harness.push()
+            const playing = harness.app.render.mock.calls.length
+            harness.timestamps.length = 0
+            await vi.advanceTimersByTimeAsync(500)
+            expect(harness.app.render.mock.calls.length).toBeGreaterThan(playing)
+            //ThrottledEventLoop.start() anchors `previousTickTime` on the run's own start time; the
+            //0 it used to anchor on made the first tick of a run advance the song by the epoch
+            expect(harness.timestamps.length).toBeGreaterThan(0)
+            expect(harness.timestamps[harness.timestamps.length - 1]).toBeLessThan(1000)
+
+            harness.props.isPlaying = false
+            harness.push()
+            const paused = harness.app.render.mock.calls.length
+            await vi.advanceTimersByTimeAsync(500)
+            expect(harness.app.render.mock.calls.length).toBe(paused)
         } finally {
             harness.destroy()
         }

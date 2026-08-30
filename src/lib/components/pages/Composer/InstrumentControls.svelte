@@ -348,8 +348,12 @@
     align-items: center;
   }
 
-  .instruments-button-wrapper :global(.new-instrument-button:hover) {
-    background-color: var(--primary-darken-10);
+  /* Pointer-only (see App.css's `.app-button:hover`): adding a layer keeps this button mounted at
+     the foot of the list, so on touch the darkened plate would stay behind after every tap. */
+  @media (hover: hover) {
+    .instruments-button-wrapper :global(.new-instrument-button:hover) {
+      background-color: var(--primary-darken-10);
+    }
   }
 
   .instruments-button-wrapper::-webkit-scrollbar-thumb {

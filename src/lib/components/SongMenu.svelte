@@ -294,7 +294,11 @@
       filter 0.2s;
   }
 
-  .create-folder:hover {
-    background-color: var(--create-folder-color);
+  /* Pointer-only (see App.css's `.app-button:hover`): the button stays mounted after it creates a
+     folder, so on touch a latched hover would leave this outlined button permanently filled in. */
+  @media (hover: hover) {
+    .create-folder:hover {
+      background-color: var(--create-folder-color);
+    }
   }
 </style>

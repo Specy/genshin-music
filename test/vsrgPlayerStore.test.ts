@@ -1,3 +1,4 @@
+import {readFileSync} from 'node:fs'
 import {beforeEach, describe, expect, it, vi} from 'vitest'
 import {vsrgPlayerStore} from '../src/lib/stores/VsrgPlayerStore.svelte'
 import {VsrgSong} from '../src/lib/core/Songs/VsrgSong.svelte'
@@ -63,6 +64,75 @@ describe('incrementScore (combo/score math)', () => {
     })
 })
 
+/**
+ * The peak combo a run reached, which is what the end-of-song panel prints where it used to print
+ * the live one. It is the only number on that panel that cannot be recomputed after the fact: the
+ * grade and the accuracy are derived from the tallies on every read (vsrgGrade.ts), but a combo is a
+ * property of the ORDER the judgments arrived in, and a tally is an unordered count.
+ *
+ * What silently breaks without these:
+ * - the peak goes down with the live combo. Both are written from the same local in incrementScore,
+ *   and that local is forced to 0 on a miss - so the panel would report the streak the run happened
+ *   to end on rather than its best, and 0 for every run whose last note was dropped, which is
+ *   exactly the reading this replaced.
+ * - the peak leaks into the next run. resetScore's literal is the only reset path there is (both
+ *   callers reach it: VsrgPlayerRenderer.onSongPick, which the panel's own Retry button ends at, and
+ *   the route's teardown), and a field left out of it is carried over by the Object.assign in
+ *   silence, so a fresh chart would open showing the previous one's best.
+ */
+describe('maxCombo (the peak a run reached)', () => {
+    it('keeps the peak across the miss that zeroes the live combo', () => {
+        vsrgPlayerStore.incrementScore('amazing')
+        vsrgPlayerStore.incrementScore('amazing')
+        expect(vsrgPlayerStore.score.maxCombo).toBe(2)
+
+        vsrgPlayerStore.incrementScore('miss')
+        expect(vsrgPlayerStore.score.combo).toBe(0)
+        expect(vsrgPlayerStore.score.maxCombo).toBe(2)
+    })
+
+    it('is never pulled down by a shorter streak that follows', () => {
+        vsrgPlayerStore.incrementScore('amazing')
+        vsrgPlayerStore.incrementScore('amazing')
+        vsrgPlayerStore.incrementScore('amazing')
+        vsrgPlayerStore.incrementScore('miss')
+        vsrgPlayerStore.incrementScore('good') // a new streak, one long
+        expect(vsrgPlayerStore.score.combo).toBe(1)
+        expect(vsrgPlayerStore.score.maxCombo).toBe(3)
+    })
+
+    it('rises again once the new streak passes the old peak', () => {
+        vsrgPlayerStore.incrementScore('amazing')
+        vsrgPlayerStore.incrementScore('miss')
+        vsrgPlayerStore.incrementScore('great')
+        vsrgPlayerStore.incrementScore('great')
+        expect(vsrgPlayerStore.score.maxCombo).toBe(2)
+    })
+
+    it('equals the final combo on a run with no misses', () => {
+        //`bad` is a judgment, not a break - only `miss` cuts the combo, so a run without one holds a
+        //single streak from its first note to its last and the two numbers have to agree
+        vsrgPlayerStore.incrementScore('amazing')
+        vsrgPlayerStore.incrementScore('bad')
+        vsrgPlayerStore.incrementScore('perfect')
+        expect(vsrgPlayerStore.score.combo).toBe(3)
+        expect(vsrgPlayerStore.score.maxCombo).toBe(3)
+    })
+
+    it('is back to 0 for a new run - the path Retry takes', () => {
+        vsrgPlayerStore.incrementScore('amazing')
+        vsrgPlayerStore.incrementScore('amazing')
+        vsrgPlayerStore.showScore()
+
+        vsrgPlayerStore.resetScore()
+        expect(vsrgPlayerStore.score.maxCombo).toBe(0)
+
+        //and the fresh run counts from there rather than resuming the old peak
+        vsrgPlayerStore.incrementScore('good')
+        expect(vsrgPlayerStore.score.maxCombo).toBe(1)
+    })
+})
+
 describe('resetScore (full-shape reset)', () => {
     it('resets every field back to its zero/empty shape, including scoreVisible and lastScore', () => {
         vsrgPlayerStore.incrementScore('amazing')
@@ -75,6 +145,7 @@ describe('resetScore (full-shape reset)', () => {
         expect(vsrgPlayerStore.score).toEqual({
             scoreVisible: false,
             combo: 0,
+            maxCombo: 0,
             score: 0,
             amazing: 0,
             perfect: 0,
@@ -242,5 +313,25 @@ describe('playSong / stopSong / showScore', () => {
         const before = {...vsrgPlayerStore.score}
         vsrgPlayerStore.showScore()
         expect(vsrgPlayerStore.score).toEqual({...before, scoreVisible: true})
+    })
+})
+
+// The two surfaces that print a combo read DIFFERENT fields now - the corner takes `lastScore.combo`
+// (the live streak) and the end-of-song panel takes `maxCombo` (the peak) - and only the panel's
+// carries a label. Nothing zeroes the corner one when a run ends: the 800ms timeout in
+// VsrgLatestScore blanks the judgment only, and `resetScore` does not run until the next song pick,
+// so without the guard below both numbers sit on screen at once, disagreeing.
+describe('only one combo is on screen once the run is over', () => {
+    it('the corner readout is gated on the result panel being closed', () => {
+        const latestScore = readFileSync(
+            'src/lib/components/pages/VsrgPlayer/VsrgLatestScore.svelte', 'utf8')
+        expect(latestScore).toMatch(/\{#if data\.combo > 0 && !vsrgPlayerStore\.score\.scoreVisible\}/)
+    })
+
+    it('the panel prints the peak, which is the only combo left up at that point', () => {
+        const panel = readFileSync(
+            'src/lib/components/pages/VsrgPlayer/VsrgPlayerScore.svelte', 'utf8')
+        expect(panel).toMatch(/vsrg_player:max_combo.*\}x/s)
+        expect(panel).not.toMatch(/vsrgPlayerStore\.score\.combo\b/)
     })
 })

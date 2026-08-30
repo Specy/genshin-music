@@ -18,17 +18,14 @@
   } = $props();
 
   const positionMap = { left: '-100%', right: '0', middle: '-50%' };
-
-  let buttonEl: HTMLButtonElement | undefined = $state();
 </script>
 
 <div class="help-tooltip" style="position:relative;{parentStyle}">
   <button
-    bind:this={buttonEl}
     class="help-tooltip-button"
     style={buttonStyle}
     aria-label="Help"
-    onclick={() => buttonEl?.focus()}
+    onclick={(e) => e.currentTarget.focus()}
   >
     <svg
       stroke="currentColor"
@@ -79,9 +76,15 @@
     transition: all 0.2s;
   }
 
-  .help-tooltip-button:hover {
-    transform: rotate(30deg);
-    filter: brightness(1.1);
+  /* Pointer-only (see App.css's `.app-button:hover` for the full reason): a tapped element keeps
+     matching `:hover` until the next tap lands elsewhere, and this button survives its own tap by
+     design, so on touch the `?` would simply stay lying at 30 degrees. The `:focus` rules below are
+     NOT guarded and must not be: on a phone they are the only way this tooltip opens. */
+  @media (hover: hover) {
+    .help-tooltip-button:hover {
+      transform: rotate(30deg);
+      filter: brightness(1.1);
+    }
   }
 
   .help-tooltip-content {
@@ -96,7 +99,11 @@
     padding: 0.3rem 0.6rem;
     border-radius: 0.4rem;
     font-size: 0.8rem;
-    z-index: 2;
+    /* Above the controls a card raises to sit over their own decorations - MultipleOptionSlider's
+       buttons are grid items at z-index 2 so its moving pill stays behind their labels, and a
+       tooltip that only TIES with them loses on DOM order and opens underneath. Deliberately small:
+       it still has to lose to the app's own layers, which start at the side menu's 15. */
+    z-index: 4;
     pointer-events: none;
   }
 

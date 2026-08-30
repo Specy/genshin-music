@@ -253,6 +253,7 @@ const COMPOSER_NOTE_POSITIONS = game.notes.composerPositions;
  * the Compressed View draws the rectangle instead.
  */
 const PLAYHEAD_WIDTH = 3;
+/** The BAR's alpha, and the Column Ruler flag's; the arrowheads are opaque - see drawPlayhead. */
 const PLAYHEAD_ALPHA = 0.9;
 /** Half-width and length of each arrowhead, in px. */
 const PLAYHEAD_ARROW_HALF_WIDTH = 6;
@@ -4143,8 +4144,10 @@ export class ComposerRenderer {
   }
 
   /**
-   * The bar and its two arrowheads, in ONE fill: three shapes queued against the same Graphics and
-   * filled together, so the colour and alpha cannot drift apart between them.
+   * The bar and its two arrowheads, in TWO fills of ONE colour: the bar at PLAYHEAD_ALPHA first,
+   * then both arrowheads over it, opaque. Filling all three together is what this looked like at
+   * first and it cannot be done - see the fills themselves - so the pairing that has to be held
+   * here is the COLOUR, which is read once into a local and used for both.
    *
    * Each arrowhead is a triangle whose apex points INWARDS along the bar - the top one down, the
    * bottom one up - with its base flush against the canvas edge, so nothing is drawn outside the
@@ -4178,7 +4181,18 @@ export class ComposerRenderer {
         alpha: PLAYHEAD_ALPHA,
       });
     } else {
+      const color = this.theme.playhead;
       this.playheadGraphics.rect(centre - PLAYHEAD_WIDTH / 2, 0, PLAYHEAD_WIDTH, bottom);
+      this.playheadGraphics.fill({ color, alpha: PLAYHEAD_ALPHA });
+      //TWO FILLS, BAR FIRST AND ARROWHEADS OPAQUE - do not merge them back into one call. Pixi's
+      //batcher triangulates each queued primitive on its own and bakes the fill's alpha into that
+      //primitive's vertices rather than compositing the Graphics as a group, so shapes filled
+      //TOGETHER still blend twice where they overlap: at 0.9 each, the bar's 3px column printed
+      //through the arrowheads at 0.99 against their 0.9 wings, a stripe that reads as the line
+      //being drawn ON TOP of its own triangles. A later fill is a later batch, and opaque the
+      //triangles cover that overlap outright instead of tinting it. drawColumnRulerFlags records
+      //the same trap at the ruler flag's foot - and that flag keeps its translucency, which it
+      //carries on the OBJECT (initColumnRuler), not from anything written here.
       this.playheadGraphics.poly([
         centre - PLAYHEAD_ARROW_HALF_WIDTH,
         0,
@@ -4195,7 +4209,8 @@ export class ComposerRenderer {
         centre,
         bottom - PLAYHEAD_ARROW_LENGTH,
       ]);
-      this.playheadGraphics.fill({ color: this.theme.playhead, alpha: PLAYHEAD_ALPHA });
+      //The two triangles never meet, so they are safe to share a fill with each other.
+      this.playheadGraphics.fill({ color, alpha: 1 });
     }
   }
 

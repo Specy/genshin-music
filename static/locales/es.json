@@ -365,8 +365,7 @@
     "great": "Excelente",
     "good": "Bueno",
     "bad": "Malo",
-    "miss": "Fallo",
-    "combo": "Combo"
+    "miss": "Fallo"
   },
   "transfer": {
     "connecting_please_wait": "Conectando, espera...",

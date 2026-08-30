@@ -66,6 +66,10 @@
   });
 </script>
 
+<!-- Rendered into VsrgPlayerCanvas's snippet slot, so the offsets below are the PLAY COLUMN's, not
+     the page's. Kept as one component rather than split per element: subscribeVsrgLatestScore
+     JSON.stringifies the whole score object on every mutation, and a held note mutates it every
+     300ms, so a second subscription would double that on the hottest path for no gain. -->
 <div
   bind:this={ref}
   style="transform:{styleTransform};color:{styleColor}"
@@ -75,42 +79,57 @@
     {t(`vsrg_player:${data.type}`)}
   {/if}
 </div>
+<!-- goes blank the moment the result panel opens: that panel prints the run's PEAK combo, while
+     this corner holds whatever the last judgment left behind (0 if the run ended on a miss), so
+     keeping both up puts two disagreeing numbers on screen with only one of them labelled. -->
 <div class="vsrg-floating-combo">
-  {#if data.combo > 0}
+  {#if data.combo > 0 && !vsrgPlayerStore.score.scoreVisible}
     {data.combo}x
   {/if}
 </div>
 
 <style>
+  /* z-index is load-bearing, not decoration: VsrgPlayerRenderer appends the pixi <canvas> to this
+     same wrapper AFTER this markup, and with both at z-index auto tree order wins, so a falling hit
+     object would paint straight over the readouts. The countdown gets away without one only
+     because the scene is still empty while it shows. */
   .vsrg-floating-score,
   .vsrg-floating-combo {
     position: absolute;
-    top: 70%;
-    width: 12rem;
-    left: calc(50% - 6rem);
+    z-index: 1;
     pointer-events: none;
-    text-align: center;
-    font-size: 2.4rem;
     font-weight: bold;
     text-shadow: 0 0 0.5rem #252525;
   }
 
-  .vsrg-floating-combo {
+  /* the judgment now takes the slot the combo vacated. Still a fixed-width centred box rather than
+     a full-width one: the pop animation rotates about the element's centre, and a box as wide as
+     the column would swing the text across it instead of tilting it in place. */
+  .vsrg-floating-score {
     top: 30%;
-    font-size: 3rem;
+    width: 12rem;
+    left: calc(50% - 6rem);
+    text-align: center;
+    font-size: 2.4rem;
+  }
+
+  /* the column's own top-left corner, which is only addressable from inside the canvas wrapper */
+  .vsrg-floating-combo {
+    top: 0.5rem;
+    left: 0.75rem;
+    text-align: left;
+    font-size: 2.4rem;
     opacity: 0.8;
   }
 
   @media only screen and (max-width: 920px) {
     .vsrg-floating-score {
+      top: 20%;
       font-size: 1.8rem;
-      top: 65%;
     }
 
     .vsrg-floating-combo {
-      top: 20%;
-      font-size: 2.4rem;
-      opacity: 0.8;
+      font-size: 1.8rem;
     }
   }
 </style>

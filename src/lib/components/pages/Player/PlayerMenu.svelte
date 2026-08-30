@@ -717,8 +717,12 @@
     justify-content: center;
   }
 
-  .library-search-btn:hover {
-    filter: brightness(1.1);
+  /* Pointer-only (see App.css's `.app-button:hover`): the button sits above its own results, so on
+     touch it would stay lit for the whole time the user spends reading them. */
+  @media (hover: hover) {
+    .library-search-btn:hover {
+      filter: brightness(1.1);
+    }
   }
 
   .library-search-songs-wrapper {

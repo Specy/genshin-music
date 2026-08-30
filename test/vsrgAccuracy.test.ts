@@ -25,8 +25,9 @@ function boundsAt(difficulty: number): VsrgAccuracyBounds {
 }
 
 /**
- * The windows this replaced, as they actually PLAYED — an osu!mania OD port shrunk a flat 2ms
- * per difficulty step, then capped by the renderer's hardcoded 150ms hit tolerance.
+ * The windows this replaced, as they actually PLAYED — a judgment-window model imported from
+ * another rhythm game, shrunk a flat 2ms per difficulty step, then capped by the renderer's
+ * hardcoded 150ms hit tolerance.
  *
  * The cap is the part that matters here. The nominal `bad` window was 168..186ms across the
  * difficulty range, all of it above 150, and a press further off than 150 never registered

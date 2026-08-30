@@ -99,7 +99,10 @@
     await keyboardAudioPlayer.syncInstruments(newSong.tracks.map((track) => track.instrument));
     logger.hidePill();
     song = newSong;
-    songDuration = newSong.getHighestNoteTime();
+    //the END of the last hit object, not the moment it starts: handleTick below turns this into
+    //the instant the run is over, and a chart closing on a long hold would otherwise be over while
+    //the key is still down
+    songDuration = newSong.getHighestHitObjectEnd();
     isPlaying = true;
     if (type === 'play') {
       vsrgPlayerStore.setLayout(keyBinds.getVsrgKeybinds(newSong.keys));
@@ -183,7 +186,12 @@
         {onSizeChange}
         {playHitObject}
         {isPlaying}
-      />
+      >
+        <!-- inside the canvas, not beside it: the combo sits in the play column's top-left corner
+             and the judgment pops up over the falling notes, neither of which is expressible
+             against <body>, which is what every other overlay on this page is positioned in. -->
+        <VsrgLatestScore />
+      </VsrgPlayerCanvas>
       <VsrgPlayerKeyboard
         keyboardLayout={settings.keyboardLayout.value}
         offset={canvasSizes.verticalOffset}
@@ -193,7 +201,6 @@
       />
     </div>
     <VsrgPlayerRight {song} {onStopSong} {onRetrySong} />
-    <VsrgLatestScore />
   </div>
 </AppBackground>
 

@@ -126,8 +126,13 @@
     background-size: cover;
   }
 
-  .theme-preview:hover {
-    filter: brightness(1.1);
+  /* Pointer-only (see App.css's `.app-button:hover`): applying a theme leaves its card mounted, so
+     on touch the last-tapped card would stay lit and read as selected - which the outline set
+     inline above already says, about a card that may well be a different one. */
+  @media (hover: hover) {
+    .theme-preview:hover {
+      filter: brightness(1.1);
+    }
   }
 
   .theme-preview-row {

@@ -533,3 +533,39 @@ describe('the vsrg composer re-seeds its placeholder song from the persisted set
         expect(basePitchArguments).toEqual(['loadedSettings.pitch.value', 'loadedSettings.pitch.value'])
     })
 })
+
+describe('a run ends when the last hit object is let go of, not when it starts', () => {
+    function songEndingOnAHold(holdDuration: number): VsrgSong {
+        const song = new VsrgSong('trailing hold')
+        song.keys = 6
+        const track = new VsrgTrack(INSTRUMENTS[0], 'lead')
+        const tap = new VsrgHitObject(0, 1000)
+        const hold = new VsrgHitObject(1, 4000)
+        hold.holdDuration = holdDuration
+        hold.isHeld = holdDuration > 0
+        track.hitObjects = [tap, hold]
+        song.initTracksForConstruction([track])
+        return song
+    }
+
+    it('a chart of taps ends on its last tap', () => {
+        expect(songEndingOnAHold(0).getHighestHitObjectEnd()).toBe(4000)
+    })
+
+    it('a trailing hold carries the end past the press that begins it', () => {
+        expect(songEndingOnAHold(6000).getHighestHitObjectEnd()).toBe(10000)
+    })
+
+    it('an empty song ends at 0 rather than -Infinity', () => {
+        expect(new VsrgSong('empty').getHighestHitObjectEnd()).toBe(0)
+    })
+
+    //the reason the method exists: the player page's end-of-run instant is this value plus a grace,
+    //and reading the press time instead put the result panel on screen mid-hold - the renderer's
+    //tick stops there, so the hold stopped paying out and its release scored a miss against a
+    //frozen timestamp, with the panel's own Grade and Max combo already showing
+    it('is what the player page measures the song by', () => {
+        const playerPage = readFileSync('src/routes/vsrg-player/+page.svelte', 'utf8')
+        expect(playerPage).toMatch(/songDuration = \w+\.getHighestHitObjectEnd\(\)/)
+    })
+})

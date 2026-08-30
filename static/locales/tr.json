@@ -365,8 +365,7 @@
         "great": "Harika",
         "good": "İyi",
         "bad": "Kötü",
-        "miss": "Eksik",
-        "combo": "Kombo"
+        "miss": "Eksik"
     },
     "transfer": {
         "connecting_please_wait": "Bağlanıyor, lütfen bekleyin...",

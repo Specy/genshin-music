@@ -179,9 +179,22 @@
     user-select: text;
   }
 
-  :global(.blog-nav a:hover) {
+  :global(.blog-article a) {
     color: var(--accent);
     text-decoration: underline;
+  }
+
+  /* Pointer-only (see App.css's `.app-button:hover`), for uniformity rather than a bug of its own:
+     every link this nav renders leads somewhere else - Posts/Player/Composer on a post page (:77),
+     Home/Player/Composer on the index (blog/+page.svelte's `indexNavChildren`) - so each tap
+     unmounts the nav with the page and the latched hover goes with it. The guard is what keeps
+     that a property of the ROUTING rather than of the rule: add a self-link here and the accent
+     and underline would otherwise sit on it until the reader tapped something else. */
+  @media (hover: hover) {
+    :global(.blog-nav a:hover) {
+      color: var(--accent);
+      text-decoration: underline;
+    }
   }
 
   .blog-article {

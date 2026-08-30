@@ -1386,7 +1386,7 @@ const VSRG_READERS: VsrgPublishCase[] = [
         run: song => void song.toOtherGame(APP_NAME === 'Genshin' ? 'Genshin' : 'Sky'),
     },
     {name: 'countStrandedNotes', publishes: [], run: song => void song.countStrandedNotes()},
-    {name: 'getHighestNoteTime', publishes: [], run: song => void song.getHighestNoteTime()},
+    {name: 'getHighestHitObjectEnd', publishes: [], run: song => void song.getHighestHitObjectEnd()},
     {name: 'getClosestBreakpoint', publishes: [], run: song => void song.getClosestBreakpoint(1000, 1)},
     {name: 'getRenderableNotes', publishes: [], run: song => void song.getRenderableNotes(buildRecordedSong())},
     {

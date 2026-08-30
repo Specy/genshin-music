@@ -428,6 +428,42 @@ export const i18n_en = {
     remove_background_song: 'Remove background song',
     click_to_add_time: 'Click to add time',
     click_to_remove_time: 'Click to remove time',
+    generate: {
+      open: 'Generate beatmap',
+      title: 'Generate beatmap',
+      source_song: 'Source song',
+      level: 'Chart level',
+      level_easy: 'Easy',
+      level_normal: 'Normal',
+      level_hard: 'Hard',
+      level_info:
+        'The difficulty to aim at. The generator lays a chart, measures how hard it is and retunes until the two agree. It also chooses which part to perform, so changing the level re-ticks the parts below.',
+      parts: 'Parts',
+      parts_info:
+        'The parts the chart plays. A part the chart covers completely is muted, and you perform it; anything else keeps playing in the background while the chart doubles it.',
+      part_notes: '{{notes}} notes',
+      part_proposed: 'Proposed: {{reasons}}',
+      part_will_be_doubled: 'Will be doubled',
+      reason_top_voice: 'highest voice',
+      reason_varied: 'most varied',
+      reason_present: 'plays throughout',
+      reason_dense: 'most notes',
+      lanes: 'Lanes',
+      run: 'Generate',
+      roll_again: 'Roll again',
+      outcome: 'Result',
+      rating: 'Rating: {{rating}}',
+      converged: 'Inside the {{level}} range.',
+      not_converged: 'Could not reach the {{level}} range, this is the closest it managed to get.',
+      performed: 'Performed (muted)',
+      doubled: 'Doubled (still playing)',
+      nothing: 'None',
+      //the generator's seed, worded for players rather than as the term: a roll draws a new one,
+      //and the same song with the same settings and the same number gives back the same chart
+      seed: 'Version number: {{seed}}',
+      failed: 'Could not generate a chart from this song',
+      generated_song_name: '{{song_name}} ({{level}})',
+    },
   },
   vsrg_player: {
     amazing: 'Amazing',
@@ -436,7 +472,10 @@ export const i18n_en = {
     good: 'Good',
     bad: 'Bad',
     miss: 'Miss',
-    combo: 'Combo', //combo counter, how do rythm games call it? is it kept as "combo"?
+    max_combo: 'Max combo', //the highest combo a finished run reached, shown in place of the live one
+    grade: 'Grade', //label above the letter (S+/S/A...) a finished run earned
+    accuracy: 'Accuracy',
+    retry: 'Retry',
   },
   transfer: {
     connecting_please_wait: 'Connecting please wait...',

@@ -758,9 +758,19 @@
     transition: all 0.1s linear;
   }
 
-  .page-redirect-wrapper :global(a:hover),
-  .page-redirect-wrapper :global(button:hover) {
-    filter: brightness(1.1);
+  /* Pointer-only (see App.css's `.app-button:hover`), and this one had to be guarded HERE: Svelte
+     scopes the wrapper half of the selector, so it lands at (0,3,1) and out-specifies the (0,2,0)
+     `.app-button:hover` guarded upstream - the Install button in the markup above is an AppButton,
+     so the upstream guard never reached it. Two controls in this wrapper survive their own tap and would
+     have kept the brightness afterwards: Install stays mounted when the native prompt is DISMISSED
+     (PwaStore.install only clears `installEvent` on `accepted`), and the specy.app link
+     preventDefaults itself to raise a confirm instead of navigating. The rest are AppLinks that
+     navigate away and unmount, which is why only those two ever showed it. */
+  @media (hover: hover) {
+    .page-redirect-wrapper :global(a:hover),
+    .page-redirect-wrapper :global(button:hover) {
+      filter: brightness(1.1);
+    }
   }
 
   .middle-size-pages-wrapper {

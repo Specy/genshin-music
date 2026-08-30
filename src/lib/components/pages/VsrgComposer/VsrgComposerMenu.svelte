@@ -32,6 +32,7 @@
   import HelpTooltip from '$cmp/utility/HelpTooltip.svelte';
   import Separator from '$cmp/Separator.svelte';
   import AppLink from '$cmp/AppLink.svelte';
+  import IconWandMagicSparkles from '~icons/fa6-solid/wand-magic-sparkles';
 
   let {
     data,
@@ -45,6 +46,10 @@
       // the id of the song open in the vsrg composer (null while it is unsaved), so its row in
       // the song list can show it is the one being edited
       currentSongId: string | null;
+      // the same idea for the background-song picker below: the LIBRARY id of the song playing
+      // under the chart (null when there is none). Not `audioSong.id` - `audioSong` is the
+      // flattening the page keeps for playback, and a composed background's carries no id.
+      audioSongId: string | null;
     };
     functions: {
       setAudioSong: (song: SerializedSong | null) => void;
@@ -57,6 +62,11 @@
         patch: VsrgTrackModifierPatch,
         recalculate: boolean
       ) => void;
+      // the generation dialog belongs to the PAGE, not to this menu: `.side-menu` is fixed and
+      // transformed (so it is the containing block for anything fixed inside it) and a
+      // `.menu-panel` is display:none unless selected, either of which would clip or destroy a
+      // dialog rendered here.
+      onOpenGenerate: () => void;
     };
   } = $props();
 
@@ -357,12 +367,31 @@
               {/each}
             </div>
           {/if}
+          <!-- Outside the {#if} above so it renders DISABLED without a background song rather
+               than vanishing: the button is what says generation exists at all. Closing the
+               sidebar is not cosmetic - clickOutside is mounted with ignoreFocusable, so a click
+               on a button inside the page-level dialog never counts as an outside click. -->
+          <Row justify="end" style="margin-top:0.4rem">
+            <AppButton
+              disabled={data.audioSong === null}
+              onclick={() => {
+                functions.onOpenGenerate();
+                isVisible = false;
+              }}
+            >
+              {#snippet icon()}
+                <IconWandMagicSparkles />
+              {/snippet}
+              {t('vsrg_composer:generate.open')}
+            </AppButton>
+          </Row>
           <SongMenu
             songs={songsStore.songs}
             exclude={excludedSongsForAudioPicker}
             style="margin-top:0.6rem"
             SongComponent={VsrgComposerAudioSongRow}
             componentProps={{
+              currentSongId: data.audioSongId,
               onClick: functions.setAudioSong,
             }}
           />

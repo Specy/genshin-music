@@ -45,8 +45,9 @@
       you can use the instruments to play sounds when a note is pressed.
     </li>
     <li>
-      <b class="blog-b">Difficulty</b>: This is just a number that will be used for the points in
-      your beatmap, it's your choice what difficulty to give.
+      <b class="blog-b">Difficulty</b>: This is how strict the timing is for whoever plays the
+      beatmap, from 1 to 10. A low difficulty leaves a wide margin around each note, a high one
+      wants you to be almost exactly on it.
     </li>
     <li>
       <b class="blog-b">Vertical Editor</b>: With this you can decide if either having the editor be

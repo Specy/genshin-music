@@ -177,6 +177,40 @@ _Avoid_: scheduled (says when it was decided, not whether it can still be taken 
 Pressing or selecting a track sounds that track's notes in the selected column, as taps — regardless of Mute and Solo, and silent while the song is playing.
 _Avoid_: preview (the column's own, which is every track at once and obeys Mute/Solo)
 
+### VSRG
+
+**Lane**:
+One of a VSRG chart's 4 or 6 vertical columns — the thing a key is bound to and a hit object falls down. A hit object's lane is stored as its `index`. A Lane is a position on the screen and nothing else: it carries no fixed pitch, no instrument, and no meaning that survives from one chart to the next.
+_Avoid_: key (that's the physical/on-screen key bound to a Lane), column (reserved for the composer's time grid), track (a VSRG track is an instrument, not a Lane)
+
+**Hit Object**:
+One scored press in a chart: a Lane, a timestamp, the Note Numbers it sounds when hit, and a hold duration (0 = a tap). Its notes are a set, so one press can sound a whole chord.
+
+**Backing**:
+What the audio song still sounds while the chart is played — every background track that is not muted. The listener hears the Backing whatever the player does; it is the part of the song the chart is not responsible for.
+
+**Performed Track**:
+A background track the chart has taken over: muted, so it makes no sound of its own, with every one of its notes carried by some Hit Object. Muting is _earned by coverage_ — a track whose notes the chart does not fully cover is never muted; it stays in the Backing and the chart doubles it instead. So a note is either performed by the player or sounded by the Backing, never neither. Coverage counts a note's sustain too, but only where the sustain is audible: turning a held note into a tap breaks coverage on an instrument whose config declares `sustain`, and costs nothing on one whose sound is a one-shot anyway.
+_Avoid_: muted track (states the mechanism, not the contract — a hand-muted track with no chart over it is silence, not a Performed Track)
+
+**Doubling**:
+What a chart does to a track it could not fully cover: the track keeps playing in the Backing and the Hit Objects sound the same notes in unison with it, so a press accents the music and a miss costs only score. The fallback whenever coverage is not earned — and, because nothing is riding on it, the mode in which the chart is free to be as sparse as it likes.
+_Avoid_: decoration (understates it — a Doubling still sounds the right notes at the right time)
+
+**Chart Level**:
+The generator's input knob: Easy, Normal, or Hard. It says how demanding a chart to aim for, not how hard the result turned out — that is the Rating. Its top end is deliberately short of the scale's top: the generator aims at charts that stay doable, and leaves the hardest band to hand authoring.
+
+**Rating**:
+How hard a chart actually is, 1–10, computed from its Hit Objects by the hardness metrics. A property of any chart, hand-made or generated, derived rather than authored — so it can never disagree with the notes it describes. Distinct from Judgment Difficulty: Rating says how hard the chart is to play, Judgment Difficulty says how forgiving the scoring is.
+_Avoid_: difficulty (taken — see Judgment Difficulty), star rating (another rhythm game's name for the same idea, not ours)
+
+**Strain**:
+The running load one Lane is under: it spikes when that Lane is pressed and decays with time, so repeated presses in one Lane pile up while the same count spread across Lanes does not. It is what makes Rating measure difficulty rather than note count, and it is per-Lane by definition — a chart's hardest moment is a moment some Lane is hot, not a moment the whole chart is busy.
+
+**Judgment Difficulty**:
+The 1–10 song setting that scales the judgment windows — how far off a press may land and still earn each rating. It is authored, saved with the song, and independent of both Chart Level and Rating: a hard chart may be scored leniently and an easy one strictly.
+_Avoid_: accuracy (that's the achieved result, not the setting)
+
 ### Shell
 
 **Home**:

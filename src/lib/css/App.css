@@ -203,16 +203,48 @@ input[type='number'] {
   color: var(--primary-text);
 }
 
-.app-button:hover {
-  filter: brightness(1.1);
+/* HOVER IS FOR POINTERS ONLY, AND THIS IS THE FIRST OF THE FOUR RULES IN THIS FILE THAT SAY SO -
+   `.menu-item`, `.tool`/`.tool-slim` and `.tools-button` are the others, each guarded where it
+   lives so it stays next to the rest of its own area; the component stylesheets that paint their
+   own hovers carry the same guard and a line back here. A touch screen does not simply lack hover,
+   it LATCHES it: the tapped element goes on matching `:hover` until a finger lands somewhere else,
+   so an unguarded hover rule paints a highlight that outlives the tap and reads as a button stuck
+   ON. `@media (hover: hover)` is the fix for a device whose pointer is a finger: it never matches
+   there, a mouse keeps every affordance it had, and the press below, which is `:active` and so
+   ends on release, is left as the one thing a tap paints. Same query the tooltips use
+   (Tooltip.svelte).
+
+   SCOPED TO THAT DEVICE AND KNOWINGLY SO: the query answers for the PRIMARY pointer, not for the
+   one that drove this gesture, so a touchscreen laptop or a tablet on a trackpad keyboard matches
+   it and the latch survives there. `any-hover` is no better, and no media feature reports the
+   input behind the current gesture - closing the hybrid case means stamping `pointerdown`'s
+   `pointerType` onto the root from JS and gating every rule below on that, which is more machinery
+   than the symptom is worth. So: someone testing on a hybrid and finding a tool still lit has not
+   found a broken guard, they have found this paragraph.
+
+   NOR IS THIS RULE A CHOKEPOINT for `.app-button`: it is only (0,2,0), and a component stylesheet
+   that paints the same buttons out-specifies it for free, since Svelte scopes one half of the
+   selector. HomeContent's `.page-redirect-wrapper` is the one that does, and so carries its own
+   copy of the guard - guarding here would not have reached it.
+
+   STATED ONCE, HERE, like the press it sits above: the other three carry a line back to this one.
+
+   No `:not(:disabled)` here, unlike the press below: a disabled AppButton has brightened under the
+   mouse for as long as this rule has existed, and guarding hover is not the moment to change it. */
+@media (hover: hover) {
+  .app-button:hover {
+    filter: brightness(1.1);
+  }
 }
 
 /* THE PRESS, which is the one state these buttons never had (user addition), and ONE rule for all
    of them: AppButton everywhere, the composer's right-hand CanvasTool column, and the tool panel's
    own grid. `:hover` says "this is a control" and a toggled class says "its state is ON" - neither
-   says "your click landed", and on touch there is no hover at all: the reset at the top of this
-   file clears `-webkit-tap-highlight-color`, so a tap on a phone used to leave the button looking
-   untouched until whatever it does finished. This is the whole of that feedback, everywhere.
+   says "your click landed", and on touch hover is no substitute either: it is guarded away just
+   above, because a tapped element latches it, which is a stuck highlight rather than feedback. The
+   reset at the top of this file clears `-webkit-tap-highlight-color` too, so a tap on a phone used
+   to leave the button looking untouched until whatever it does finished. This is the whole of that
+   feedback, everywhere.
 
    STATED ONCE AND NOT ONCE PER AREA, which is why composer selectors appear this far up the file:
    a press is one idiom, and three copies of it are three things to keep in step. `.tool:hover` and
@@ -410,13 +442,21 @@ a {
   width: 3px;
 }
 
+/* THE PANEL IS TRANSLUCENT ON PURPOSE, and it is what makes the blur below visible: `.side-menu-open`
+   already sets `--backdrop-amount: 4px` and runs `delayBackdrop`, but a fully opaque fill leaves
+   nothing for the filter to blur, so over a live canvas (composer, vsrg composer) the panel read as a
+   flat slab. `rgba(var(--<name>-rgb), <alpha>)` is how every other floating panel in the app spells
+   it - ComposerTools and MidiParser both use 0.9 - and the `-rgb` twin is minted per theme colour by
+   ThemeVars.svelte. It carries no alpha of its own, so a theme that authored one into its
+   `menu_background` lands on 0.9 here like all the others, which is also what keeps the text legible
+   on the two themes that had gone as far as 0.72. */
 .side-menu {
   width: var(--panel-size);
   border-radius: 0.3rem;
   border-top-left-radius: unset;
   border-bottom-left-radius: unset;
   height: 100%;
-  background-color: var(--menu-background);
+  background-color: rgba(var(--menu-background-rgb), 0.9);
   color: var(--menu-background-text);
   transform: scale(0.9) translateX(0);
   transition: all 0.3s;
@@ -459,8 +499,13 @@ a {
   align-items: center;
 }
 
-.menu-item:hover:not(:disabled) {
-  background-color: var(--primary-layer-15);
+/* Pointer-only for the reason given at `.app-button:hover`, and this rail is where a stuck
+   highlight would cost the most: it is mounted on every page, and its plate is one step off
+   `.menu-item-active`'s, so a tapped item would go on claiming its panel was open. */
+@media (hover: hover) {
+  .menu-item:hover:not(:disabled) {
+    background-color: var(--primary-layer-15);
+  }
 }
 
 /* A disabled menu item is the rail's home button sitting on the home page (SimpleMenu.svelte): it
@@ -1433,10 +1478,15 @@ select {
 }
 
 /* ...and the PRESSED one is the shared rule beside `.app-button`'s states, near the top of this
-   file - these buttons wear the same brightness and scale every other one does. */
-.tool:hover,
-.tool-slim:hover {
-  background-color: var(--primary-layer-15);
+   file - these buttons wear the same brightness and scale every other one does. POINTER-ONLY for
+   the reason given beside that same rule: this column stays on screen for the whole session, so a
+   latched hover would never be unmounted away, and its plate sits between off and `.tool-toggled`'s
+   ON. */
+@media (hover: hover) {
+  .tool:hover,
+  .tool-slim:hover {
+    background-color: var(--primary-layer-15);
+  }
 }
 
 select {
@@ -1531,9 +1581,13 @@ select {
   transition: transform 0.12s;
 }
 
-/* ...and PRESSED is the shared rule beside `.app-button`'s states, near the top of this file. */
-.tools-button:hover {
-  filter: brightness(1.1);
+/* ...and PRESSED is the shared rule beside `.app-button`'s states, near the top of this file, as
+   is the reason this one is POINTER-ONLY. `:disabled` below still has to cancel the lift for a
+   mouse; on touch there is now nothing left for it to cancel. */
+@media (hover: hover) {
+  .tools-button:hover {
+    filter: brightness(1.1);
+  }
 }
 
 .tools-button:disabled,

@@ -27,6 +27,10 @@ export type VsrgLatestScore = {
 export type VsrgPlayerScore = {
   scoreVisible: boolean;
   combo: number;
+  //stored rather than derived like grade and accuracy (vsrgGrade.ts), because the peak depends on
+  //the ORDER the judgments arrived in and the tallies are unordered counts - once a miss has zeroed
+  //`combo`, nothing left on the score object can say how high it had climbed.
+  maxCombo: number;
   score: number;
   amazing: number;
   perfect: number;
@@ -69,6 +73,7 @@ class VsrgPlayerStore {
   score: VsrgPlayerScore = $state({
     scoreVisible: false,
     combo: 0,
+    maxCombo: 0,
     score: 0,
 
     amazing: 0,
@@ -108,6 +113,7 @@ class VsrgPlayerStore {
       bad: 0,
       miss: 0,
       combo: 0,
+      maxCombo: 0,
       lastScore: {
         timestamp: 0,
         type: '',
@@ -121,6 +127,7 @@ class VsrgPlayerStore {
     Object.assign(this.score, {
       [type]: this.score[type] + 1,
       combo,
+      maxCombo: Math.max(this.score.maxCombo, combo),
       score: this.score.score + this.getScore(type) * combo,
       lastScore: {
         timestamp: Date.now(),

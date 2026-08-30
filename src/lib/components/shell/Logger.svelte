@@ -218,8 +218,12 @@
     transition: background-color 0.2s;
   }
 
-  .pill-button:hover {
-    background-color: var(--primary-layer-10);
+  /* Pointer-only (see App.css's `.app-button:hover`): an action does not dismiss the pill, so on
+     touch a tapped button would go on looking pressed for as long as the pill is up. */
+  @media (hover: hover) {
+    .pill-button:hover {
+      background-color: var(--primary-layer-10);
+    }
   }
 
   /* hidePill only flips visibility, so a dismissed pill keeps its contents through the fade-out;

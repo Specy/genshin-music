@@ -6,7 +6,7 @@ import type { BlogMetadata } from '../types';
 // so routes/blog/+page.svelte's card grid can import every post's metadata
 // without importing across route files - importing from another route risks
 // pulling that whole post's component/images into the index page's bundle.
-// Same split for all 8 posts.
+// Same split for every post.
 export const addToHomeScreenMetadata: BlogMetadata = {
   title: '⬇️ Add the app to the home screen',
   tags: ['Guide'],

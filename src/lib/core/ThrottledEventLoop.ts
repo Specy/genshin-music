@@ -48,7 +48,13 @@ export class ThrottledEventLoop {
         this.stop()
         this.startTime = Date.now()
         this.nextTick = Date.now()
-        this.previousTickTime = 0
+        // The one deviation from the byte-verbatim port above: old set this to 0, which makes the
+        // FIRST tick of a run hand the callback `currentTime - 0` - the whole epoch in ms - as its
+        // `sinceLast`. Both VSRG renderers integrate that into a playback timestamp, so a run
+        // started while playing would jump the song ~1.7e12 ms on its first frame. It was invisible
+        // only because start() was called once at mount and never again; anchoring on startTime is
+        // what makes start/stop per playback run safe (VsrgComposerRenderer.update).
+        this.previousTickTime = this.startTime
         this.duration = duration ?? Number.MAX_SAFE_INTEGER
         this.tick()
     }

@@ -99,8 +99,12 @@
     border-radius: 0.3rem;
   }
 
-  .combo-box-title-item:hover {
-    background-color: var(--primary-layer-10);
+  /* Pointer-only (see App.css's `.app-button:hover`): the trigger stays mounted under the open
+     list, so on touch it would hold the raised background for as long as the dropdown is up. */
+  @media (hover: hover) {
+    .combo-box-title-item:hover {
+      background-color: var(--primary-layer-10);
+    }
   }
 
   .combo-box-wrapper {
@@ -143,8 +147,13 @@
     border: none;
   }
 
-  .combo-box-item:hover:not(.combo-box-item-selected) {
-    background-color: var(--primary-layer-20);
+  /* Pointer-only, and here the `:not()` is the point: the rule exists to say "not the selected
+     one", so a latched hover on touch would leave an UNSELECTED item painted beside the selected
+     one and two rows would claim to be picked. */
+  @media (hover: hover) {
+    .combo-box-item:hover:not(.combo-box-item-selected) {
+      background-color: var(--primary-layer-20);
+    }
   }
 
   .combo-box-item:last-child {

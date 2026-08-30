@@ -365,8 +365,7 @@
         "great": "Great",
         "good": "Good",
         "bad": "Bad",
-        "miss": "Miss",
-        "combo": "Combo"
+        "miss": "Miss"
     },
     "transfer": {
         "connecting_please_wait": "正在連線，請稍候...",

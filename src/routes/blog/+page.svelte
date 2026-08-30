@@ -8,6 +8,7 @@
   import { midiDeviceMetadata } from '$cmp/blog/posts/connect-midi-device';
   import { aiTransposeMetadata } from '$cmp/blog/posts/video-audio-transpose';
   import { howUseVsrgComposerMetadata } from '$cmp/blog/posts/how-to-use-vsrg-composer';
+  import { createBeatmapMetadata } from '$cmp/blog/posts/how-to-create-a-beatmap';
 
   // posts/tags are computed once at module scope, not per-render. Array.prototype.sort is
   // spec-guaranteed stable since ES2019, so the 6 posts sharing the 2024/03/19 createdAt
@@ -22,6 +23,7 @@
     midiDeviceMetadata,
     aiTransposeMetadata,
     howUseVsrgComposerMetadata,
+    createBeatmapMetadata,
   ].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
 
   const tags = Array.from(new Set(posts.flatMap((p) => p.tags)));

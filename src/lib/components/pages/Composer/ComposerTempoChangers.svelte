@@ -89,7 +89,14 @@
     filter: brightness(1.1);
   }
 
-  .tempo-changers-wrapper button:focus {
+  /* `:focus-visible`, NOT `:focus`, and not a hover guard either: a tap focuses a `<button>` and
+     nothing here blurs it again, so plain `:focus` left the tapped changer at 1.3 - brighter than
+     any hover, and stuck until something else took focus. `:focus-visible` matches the keyboard
+     route and not the pointer one, which is exactly the split wanted: nothing is lost by dropping
+     it on tap, because WHICH changer is selected is said by the outline set inline in the markup
+     above, off `currentColumn.tempoChanger`. This lift is the keyboard's own where-am-I, and with
+     `outline: none` on `*` in App.css it is the only one these buttons have. */
+  .tempo-changers-wrapper button:focus-visible {
     filter: brightness(1.3);
   }
 

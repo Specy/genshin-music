@@ -44,11 +44,12 @@ export const MAX_VSRG_DIFFICULTY = 10
  * Judgment windows in ms at difficulty 1 — how far off a press may be and still earn each
  * rating. Widen these to make every difficulty more forgiving at once.
  *
- * These replace a port of osu!mania's OD windows ([16, 64, 97, 127, 188] shrunk by a flat
- * 2ms per difficulty step). That subtraction was absolute, so it moved every window by the
- * same 18ms across the whole 1..10 range and never touched `awesome` at all, which left
- * difficulty barely doing anything. Scaling is a proportion of the window instead, so a step
- * of difficulty costs more where the window is wide and less where it is already tight.
+ * These replace a judgment-window model imported from another rhythm game ([16, 64, 97, 127,
+ * 188] shrunk by a flat 2ms per difficulty step). That subtraction was absolute, so it moved
+ * every window by the same 18ms across the whole 1..10 range and never touched `awesome` at
+ * all, which left difficulty barely doing anything. Scaling is a proportion of the window
+ * instead, so a step of difficulty costs more where the window is wide and less where it is
+ * already tight.
  */
 const BASE_ACCURACY_BOUNDS: VsrgAccuracyBounds = [46, 120, 175, 230, 285]
 
@@ -337,9 +338,17 @@ export class VsrgSong extends Song<VsrgSong, SerializedVsrgSong, 3> {
         return obj?.type === 'vsrg'
     }
 
-    getHighestNoteTime() {
+    /**
+     * When the last hit object of the chart is finally let go of - a hold's END, not the moment it
+     * starts. The player page turns this into the instant a run is over, and a chart finishing on a
+     * long hold used to be called finished while the key was still down: the renderer's tick is
+     * gated on `isPlaying`, so the rest of that hold stopped paying out, and the release that came
+     * after it was judged against the timestamp the tick had frozen at (a miss landing on a result
+     * panel already on screen).
+     */
+    getHighestHitObjectEnd() {
         return this.tracks.reduce((max, track) => {
-            return track.hitObjects.reduce((max, note) => Math.max(max, note.timestamp), max)
+            return track.hitObjects.reduce((max, note) => Math.max(max, note.timestamp + note.holdDuration), max)
         }, 0)
     }
     setAudioSong(song: Song | null) {

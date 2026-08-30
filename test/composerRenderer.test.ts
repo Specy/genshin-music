@@ -2411,11 +2411,16 @@ function expectedTimeline(context: Context, geometry: Geometry): PaintedScene['t
  * meaningful beside the scroll offset: expectedNotesOffset says which column sits under this x, so
  * a playhead drawn at the wrong x would leave the offset formula right and the composer wrong.
  *
- * THREE SHAPES AND ONE FILL, in that order. The bar is centred ON the column boundary, so it
+ * THREE SHAPES AND TWO FILLS, in that order. The bar is centred ON the column boundary, so it
  * straddles it by 1.5px either side; each arrowhead is a triangle with its base flush against a
- * canvas edge and its apex pointing inwards along the bar, on the same centre. The single trailing
- * fill is a claim in its own right - three shapes filled together cannot drift apart in colour or
- * alpha the way three fills could.
+ * canvas edge and its apex pointing inwards along the bar, on the same centre.
+ *
+ * The SPLIT is a claim in its own right, and the reason the ops are compared as a sequence rather
+ * than as a set: pixi blends two primitives twice where they overlap even when one fill closes
+ * both, so the bar filled at 0.9 with the arrowheads queued behind it printed a brighter stripe
+ * down each triangle and the line read as standing on top of them. The bar's fill has to come
+ * FIRST and the arrowheads' has to be OPAQUE. Merged back into one call, or reordered, or given a
+ * translucent second alpha, the stripe returns and every other value in this scene stays right.
  *
  * The COLOUR is the `accent` PARAMETER, the same one expectedWindow paints the current layer's span
  * tails in - not a literal, and not a live read. The line and the tails are recoloured by the same
@@ -2449,9 +2454,10 @@ function expectedPlayhead(
         ]
         : [
             ['rect', centre - 1.5, 0, 3, height],
+            ['fill', {color: accent, alpha: 0.9}],
             ['poly', [centre - 6, 0, centre + 6, 0, centre, 8]],
             ['poly', [centre - 6, height, centre + 6, height, centre, height - 8]],
-            ['fill', {color: accent, alpha: 0.9}],
+            ['fill', {color: accent, alpha: 1}],
         ]
     return {
         ...expectedGraphicsChild(0, 0, ops),
@@ -4784,9 +4790,10 @@ describe('the smooth scroll', () => {
                 ]
                 : [
                     ['rect', centre - 1.5, 0, 3, height],
+                    ['fill', {color: ThemeProvider.get('accent').rgbNumber(), alpha: 0.9}],
                     ['poly', [centre - 6, 0, centre + 6, 0, centre, 8]],
                     ['poly', [centre - 6, height, centre + 6, height, centre, height - 8]],
-                    ['fill', {color: ThemeProvider.get('accent').rgbNumber(), alpha: 0.9}],
+                    ['fill', {color: ThemeProvider.get('accent').rgbNumber(), alpha: 1}],
                 ]
             expect(drawn().ops).toEqual(expectedOps)
 
@@ -7393,10 +7400,52 @@ describe('Playhead variant config', () => {
             const playhead = harness.paintedScene().notes.playhead
             expect(playhead.ops).toEqual([
                 ['rect', centre - 1.5, 0, 3, height],
+                ['fill', {color: ThemeProvider.get('accent').rgbNumber(), alpha: 0.9}],
                 ['poly', [centre - 6, 0, centre + 6, 0, centre, 8]],
                 ['poly', [centre - 6, height, centre + 6, height, centre, height - 8]],
-                ['fill', {color: ThemeProvider.get('accent').rgbNumber(), alpha: 0.9}],
+                ['fill', {color: ThemeProvider.get('accent').rgbNumber(), alpha: 1}],
             ])
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    /**
+     * THE LAYERING, read off the ops as a SEQUENCE rather than as a literal list - the row above
+     * already pins the geometry, and this one has to keep failing for the right reason after that
+     * geometry changes. What it guards is a bug the composer shipped with: pixi triangulates each
+     * queued primitive on its own and bakes the fill's alpha into that primitive's vertices, so
+     * shapes filled TOGETHER still blend twice where they overlap. At 0.9 each, the bar's 3px
+     * column printed through the arrowheads at 0.99 against their 0.9 wings - a stripe down each
+     * triangle that read as the line being drawn ON TOP of its own arrowheads.
+     *
+     * So the bar must be filled FIRST and the arrowheads must be OPAQUE. Order alone fixes
+     * nothing (two coats of one colour commute), which is why both halves are asserted here.
+     * Merging the two fills back into one as a "cleanup" is the regression this catches, and it
+     * is invisible in every other assertion in this file.
+     */
+    it('fills the bar first and lays the arrowheads over it opaque, in one colour', async () => {
+        COMPOSER_PLAYHEAD_CONFIG.variant = {
+            ...originalVariant,
+            compressed: {playing: 'line', standby: 'line'},
+        }
+        const harness = await mount()
+        try {
+            const ops = harness.paintedScene().notes.playhead.ops as unknown[][]
+            expect(ops.map(op => op[0])).toEqual(['rect', 'fill', 'poly', 'poly', 'fill'])
+            const [bar, arrows] = ops
+                .filter(op => op[0] === 'fill')
+                .map(op => op[1] as {color: number, alpha: number})
+            //the bar keeps the translucency it has always had, the same one the Column Ruler flag
+            //carries (PART TEN reads that flag's own alpha, which this must not move)
+            expect(bar.alpha).toBe(0.9)
+            //and the triangles are opaque, which is what covers the overlap outright instead of
+            //tinting it a second time
+            expect(arrows.alpha).toBe(1)
+            //ONE COLOUR ACROSS BOTH: the split is about alpha and order, and a second fill that
+            //stopped following the theme would leave the mark two-tone on a theme edit
+            expect(bar.color).toBe(ThemeProvider.get('accent').rgbNumber())
+            expect(arrows.color).toBe(bar.color)
         } finally {
             harness.destroy()
         }
@@ -7424,9 +7473,10 @@ describe('Playhead variant config', () => {
             const accent = ThemeProvider.get('accent').rgbNumber()
             const line = [
                 ['rect', centre - 1.5, 0, 3, height],
+                ['fill', {color: accent, alpha: 0.9}],
                 ['poly', [centre - 6, 0, centre + 6, 0, centre, 8]],
                 ['poly', [centre - 6, height, centre + 6, height, centre, height - 8]],
-                ['fill', {color: accent, alpha: 0.9}],
+                ['fill', {color: accent, alpha: 1}],
             ]
             const rectangle = [
                 ['roundRect', centre, 1.5, columnWidth, height - 3, 4],

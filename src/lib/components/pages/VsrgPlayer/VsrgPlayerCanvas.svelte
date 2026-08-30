@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import { onMount, type Snippet } from 'svelte';
   import { ThemeProvider } from '$core/theme/ThemeProvider.svelte';
   import type { VsrgHitObject } from '$core/Songs/VsrgSong.svelte';
   import type { VsrgPlayerRenderer, VsrgPlayerCanvasSizes } from './VsrgPlayerRenderer';
@@ -26,6 +26,11 @@
     onSizeChange: (sizes: VsrgPlayerCanvasSizes) => void;
     onTick: (timestamp: number) => void;
     playHitObject: (hitObject: VsrgHitObject, instrumentIndex: number) => void;
+    //overlays that must be positioned against the PLAY COLUMN rather than the viewport. This
+    //wrapper is `position:absolute`, so it is the containing block for whatever is rendered into
+    //it - the only place `top:0;left:0` lands on the canvas's own corner. Everything else in this
+    //page (the score readout, the stop/retry row) resolves against <body>, which App.css positions.
+    children?: Snippet;
   }
 
   let {
@@ -36,6 +41,7 @@
     onSizeChange,
     onTick,
     playHitObject,
+    children,
   }: VsrgPlayerCanvasProps = $props();
 
   let wrapperEl: HTMLDivElement | undefined;
@@ -96,6 +102,7 @@
   {#if countdownTime !== null}
     <VsrgPlayerCountDown time={countdownTime} />
   {/if}
+  {@render children?.()}
 </div>
 
 <style>
