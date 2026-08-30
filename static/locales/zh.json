@@ -338,6 +338,17 @@
             "song_settings": "歌曲设置",
             "composer_settings": "编曲器设置",
             "editor_settings": "编辑器设置"
+        },
+        "note_name_types": {
+            "Note name": "音符名称",
+            "Keyboard layout": "键盘布局",
+            "Your Keyboard layout": "你的键盘布局",
+            "Do Re Mi": "Do Re Mi",
+            "ABC": "ABC",
+            "No Text": "无文本",
+            "Playstation": "Playstation",
+            "Switch": "Switch",
+            "1 2 3": "1 2 3"
         }
     },
     "zen_keyboard": {
@@ -357,7 +368,39 @@
         "track_name": "音轨名称",
         "remove_background_song": "移除背景音乐",
         "click_to_add_time": "点击以添加时间",
-        "click_to_remove_time": "点击以移除时间"
+        "click_to_remove_time": "点击以移除时间",
+        "generate": {
+            "open": "生成谱面",
+            "title": "生成谱面",
+            "source_song": "源歌曲",
+            "level": "谱面等级",
+            "level_easy": "简单",
+            "level_normal": "普通",
+            "level_hard": "困难",
+            "level_info": "想要达到的难度。生成器会排布一份谱面，测量它的难度，并不断调整直到两者一致。它还会选择由你演奏的声部，因此更改等级会重新勾选下方的声部。",
+            "parts": "声部",
+            "parts_info": "谱面所使用的声部。被谱面完整覆盖的声部会被静音，由你来演奏；其余声部会继续在背景中播放，同时谱面与之重叠演奏。",
+            "part_notes": "{{notes}} 个音符",
+            "part_proposed": "推荐：{{reasons}}",
+            "part_will_be_doubled": "将被重叠演奏",
+            "reason_top_voice": "最高声部",
+            "reason_varied": "变化最多",
+            "reason_present": "全曲都在演奏",
+            "reason_dense": "音符最多",
+            "lanes": "轨道",
+            "run": "生成",
+            "roll_again": "重新生成",
+            "outcome": "结果",
+            "rating": "难度：{{rating}}",
+            "converged": "在 {{level}} 的范围内。",
+            "not_converged": "无法达到 {{level}} 的范围，这是最接近的结果。",
+            "performed": "由你演奏（已静音）",
+            "doubled": "重叠演奏（仍在播放）",
+            "nothing": "无",
+            "seed": "版本号：{{seed}}",
+            "failed": "无法根据这首歌曲生成谱面",
+            "generated_song_name": "{{song_name}}（{{level}}）"
+        }
     },
     "vsrg_player": {
         "amazing": "Amazing",
@@ -365,7 +408,11 @@
         "great": "Great",
         "good": "Good",
         "bad": "Bad",
-        "miss": "Miss"
+        "miss": "Miss",
+        "max_combo": "最大连击",
+        "grade": "评级",
+        "accuracy": "准确度",
+        "retry": "重试"
     },
     "transfer": {
         "connecting_please_wait": "正在连接，请稍候...",
@@ -514,6 +561,7 @@
         "page_not_found": "该页面未找到，点击此处返回首页。"
     },
     "backup": {
+        "unnamed_item": "未命名",
         "confirm_after_songs_validation_error": "验证某些歌曲时出错。您想继续下载吗？",
         "confirm_after_folders_validation_error": "验证某些文件夹时出错。是否要继续下载？",
         "confirm_after_themes_validation_error": "验证某些主题时出错。您想继续下载吗？",
@@ -572,6 +620,7 @@
         "clone_song": "克隆歌曲",
         "remove_breakpoint": "删除断点",
         "add_breakpoint": "添加断点",
+        "permanent_breakpoint": "歌曲的开头和结尾始终是断点",
         "cant_remove_all_layers": "你不能删除所有音层！",
         "cant_add_more_than_n_layers": "您不能添加超过 {{max_layers}} 层！",
         "ask_song_name_for_composed_song_version": "填写创作版本的歌曲名称，按取消忽略",

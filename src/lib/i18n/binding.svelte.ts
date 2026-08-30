@@ -44,6 +44,29 @@ export function language() {
 }
 
 /**
+ * Note name type label: the locale's `settings:note_name_types.<type>` entry ('Do Re Mi',
+ * 'Keyboard layout', ...) when present, else the value itself — which is English prose to begin
+ * with, so an untranslated locale shows what it always showed.
+ *
+ * ANYTHING ELSE PASSES STRAIGHT THROUGH, and that is what makes this safe to point at every
+ * option of a settings <select> (SettingsRow) rather than only at the four note-name-type ones:
+ * a number, a pitch name, the VSRG player's 'circles'/'line' — none of them are in the catalog,
+ * so each comes back as itself. Note name types are simply the only options translated so far.
+ *
+ * Keyed by VALUE rather than by which setting is being drawn, because the setting objects the
+ * settings pane hands to the row come out of localStorage as they were written (SettingsService
+ * replaces the defaults wholesale when the version matches), so a marker added to BaseSettings
+ * today would be missing for everyone who already has settings stored.
+ */
+export function tNoteNameType(type: string | number): string {
+  void binding.tick;
+  const key = `settings:note_name_types.${type}`;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- same narrowly scoped passthrough as `t` above
+  if (i18n.exists(key)) return i18n.t(key as any) as string;
+  return String(type);
+}
+
+/**
  * Instrument display name: the locale's `instruments:<name>` entry when present,
  * else the instrument's own config `displayName` (ADR-0003 — a new instrument
  * folder needs zero locale edits; translators catch up later), else the raw name

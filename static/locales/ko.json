@@ -338,6 +338,17 @@
       "player_practice_settings": "연습 모드 세팅",
       "sheet_visualizer_settings": "악보 설정"
     },
+    "note_name_types": {
+      "Note name": "노트 이름",
+      "Keyboard layout": "키보드 레이아웃",
+      "Your Keyboard layout": "내 키보드 레이아웃",
+      "Do Re Mi": "Do Re Mi",
+      "ABC": "ABC",
+      "No Text": "텍스트 없음",
+      "Playstation": "Playstation",
+      "Switch": "Switch",
+      "1 2 3": "1 2 3"
+    },
     "select_language": "언어 설정"
   },
   "zen_keyboard": {
@@ -357,7 +368,39 @@
     "track_name": "트랙 이름",
     "remove_background_song": "배경 음악 제거하기",
     "click_to_add_time": "클릭하여 현재 위치에 노트 추가하기",
-    "click_to_remove_time": "클릭하여 현재 위치에 노트 제거하기"
+    "click_to_remove_time": "클릭하여 현재 위치에 노트 제거하기",
+    "generate": {
+      "open": "채보 생성하기",
+      "title": "채보 생성하기",
+      "source_song": "원본 곡",
+      "level": "채보 레벨",
+      "level_easy": "쉬움",
+      "level_normal": "보통",
+      "level_hard": "어려움",
+      "level_info": "목표로 할 난이도입니다. 생성기가 채보를 만들고 난이도를 측정한 뒤, 둘이 일치할 때까지 다시 조정합니다. 연주할 파트도 함께 고르므로 레벨을 바꾸면 아래 파트 선택도 다시 정해집니다.",
+      "parts": "파트",
+      "parts_info": "채보가 사용하는 파트입니다. 채보가 완전히 담아낸 파트는 음소거되어 직접 연주하게 되고, 나머지는 배경으로 계속 재생되며 채보가 겹쳐서 연주합니다.",
+      "part_notes": "노트 {{notes}}개",
+      "part_proposed": "추천: {{reasons}}",
+      "part_will_be_doubled": "겹쳐서 연주됨",
+      "reason_top_voice": "가장 높은 성부",
+      "reason_varied": "가장 다양함",
+      "reason_present": "곡 전체에 걸쳐 연주됨",
+      "reason_dense": "노트가 가장 많음",
+      "lanes": "레인",
+      "run": "생성하기",
+      "roll_again": "다시 생성하기",
+      "outcome": "결과",
+      "rating": "난이도: {{rating}}",
+      "converged": "{{level}} 범위 안에 들어왔습니다.",
+      "not_converged": "{{level}} 범위에 도달하지 못했습니다. 이것이 가장 가까운 결과입니다.",
+      "performed": "직접 연주 (음소거)",
+      "doubled": "겹쳐서 연주 (계속 재생)",
+      "nothing": "없음",
+      "seed": "버전 번호: {{seed}}",
+      "failed": "이 곡으로는 채보를 생성할 수 없습니다",
+      "generated_song_name": "{{song_name}} ({{level}})"
+    }
   },
   "vsrg_player": {
     "amazing": "Amazing",
@@ -365,7 +408,11 @@
     "great": "Great",
     "good": "Good",
     "bad": "Bad",
-    "miss": "Miss"
+    "miss": "Miss",
+    "max_combo": "최대 콤보",
+    "grade": "등급",
+    "accuracy": "정확도",
+    "retry": "다시 하기"
   },
   "transfer": {
     "connecting_please_wait": "연결중입니다 잠시만 기다려주세요...",
@@ -514,6 +561,7 @@
     "page_not_found": "페이지가 존재하지 않습니다. 메인화면으로 돌아가기 위해 여기를 클릭해주세요"
   },
   "backup": {
+    "unnamed_item": "이름 없음",
     "confirm_after_songs_validation_error": "몇몇 곡들이 형식이 맞지 않아 오류가 발생했습니다. 계속해서 다운로드하고 싶으신가요?",
     "confirm_after_folders_validation_error": "몇몇의 폴더들이 형식이 맞지 않아 오류가 발생했습니다. 계속해서 다운로드하고 싶으신가요?",
     "confirm_after_themes_validation_error": "몇몇의 테마들이 형식이 맞지 않아 오류가 발생했습니다. 계속해서 다운로드하고 싶으신가요?",
@@ -572,6 +620,7 @@
     "clone_song": "곡 복제하기",
     "remove_breakpoint": "제어점 제거하기",
     "add_breakpoint": "제어점 추가하기",
+    "permanent_breakpoint": "곡의 시작과 끝은 항상 제어점입니다",
     "cant_remove_all_layers": "모든 레이어을 삭제할 수 없습니다!",
     "cant_add_more_than_n_layers": "{{max_layers}}개보다 더 많은 레이어을 만들 수 없습니다!",
     "ask_song_name_for_composed_song_version": "편곡본의 이름을 입력하세요. 취소를 눌러 건너뛰세요",

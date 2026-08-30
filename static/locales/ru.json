@@ -338,6 +338,17 @@
             "player_practice_settings": "Настройки практики",
             "sheet_visualizer_settings": "Настройки нотного листа"
         },
+        "note_name_types": {
+            "Note name": "Название ноты",
+            "Keyboard layout": "Раскладка клавиатуры",
+            "Your Keyboard layout": "Ваша раскладка клавиатуры",
+            "Do Re Mi": "Do Re Mi",
+            "ABC": "ABC",
+            "No Text": "Без текста",
+            "Playstation": "Playstation",
+            "Switch": "Switch",
+            "1 2 3": "1 2 3"
+        },
         "select_language": "Выбрать язык"
     },
     "zen_keyboard": {
@@ -357,7 +368,39 @@
         "track_name": "Track name",
         "remove_background_song": "Remove background song",
         "click_to_add_time": "Click to add time",
-        "click_to_remove_time": "Click to remove time"
+        "click_to_remove_time": "Click to remove time",
+        "generate": {
+            "open": "Создать карту",
+            "title": "Создать карту",
+            "source_song": "Исходная песня",
+            "level": "Уровень карты",
+            "level_easy": "Лёгкий",
+            "level_normal": "Обычный",
+            "level_hard": "Сложный",
+            "level_info": "Сложность, к которой нужно стремиться. Генератор составляет карту, измеряет её сложность и подстраивает до тех пор, пока они не совпадут. Он также выбирает партию, которую играете вы, поэтому смена уровня заново отмечает партии ниже.",
+            "parts": "Партии",
+            "parts_info": "Партии, которые использует карта. Партия, полностью покрытая картой, отключается, и вы играете её сами; остальные продолжают звучать в фоне, а карта их дублирует.",
+            "part_notes": "{{notes}} нот",
+            "part_proposed": "Предложено: {{reasons}}",
+            "part_will_be_doubled": "Будет продублирована",
+            "reason_top_voice": "самый высокий голос",
+            "reason_varied": "самая разнообразная",
+            "reason_present": "звучит на протяжении всей песни",
+            "reason_dense": "больше всего нот",
+            "lanes": "Дорожки",
+            "run": "Создать",
+            "roll_again": "Создать заново",
+            "outcome": "Результат",
+            "rating": "Сложность: {{rating}}",
+            "converged": "Попадает в диапазон «{{level}}».",
+            "not_converged": "Не удалось попасть в диапазон «{{level}}», это самый близкий результат.",
+            "performed": "Играете вы (без звука)",
+            "doubled": "Дублируется (продолжает звучать)",
+            "nothing": "Нет",
+            "seed": "Номер версии: {{seed}}",
+            "failed": "Не удалось создать карту из этой песни",
+            "generated_song_name": "{{song_name}} ({{level}})"
+        }
     },
     "vsrg_player": {
         "amazing": "Amazing",
@@ -365,7 +408,11 @@
         "great": "Great",
         "good": "Good",
         "bad": "Bad",
-        "miss": "Miss"
+        "miss": "Miss",
+        "max_combo": "Макс. комбо",
+        "grade": "Оценка",
+        "accuracy": "Точность",
+        "retry": "Заново"
     },
     "transfer": {
         "connecting_please_wait": "Соединение, пожалуйста подождите...",
@@ -514,6 +561,7 @@
         "page_not_found": "Страница не найдена, чтобы вернуться на главную нажмите здесь"
     },
     "backup": {
+        "unnamed_item": "Без названия",
         "confirm_after_songs_validation_error": "There were errors validating some songs. Do you want to continue downloading?",
         "confirm_after_folders_validation_error": "There were errors validating some folders. Do you want to continue downloading?",
         "confirm_after_themes_validation_error": "There were errors validating some themes. Do you want to continue downloading?",
@@ -572,6 +620,7 @@
         "clone_song": "Clone song",
         "remove_breakpoint": "Remove breakpoint",
         "add_breakpoint": "Add breakpoint",
+        "permanent_breakpoint": "Начало и конец песни всегда являются точками остановки",
         "cant_remove_all_layers": "You can't remove all layers!",
         "cant_add_more_than_n_layers": "You can't add more than {{max_layers}} layers!",
         "ask_song_name_for_composed_song_version": "Write the song name for the composed version, press cancel to ignore",

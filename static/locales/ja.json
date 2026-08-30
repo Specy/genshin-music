@@ -338,6 +338,17 @@
             "composer_settings": "コンポーザー設定",
             "editor_settings": "エディター設定",
             "sheet_visualizer_settings": "シート設定"
+        },
+        "note_name_types": {
+            "Note name": "音符名",
+            "Keyboard layout": "キーボードレイアウト",
+            "Your Keyboard layout": "自分のキーボードレイアウト",
+            "Do Re Mi": "Do Re Mi",
+            "ABC": "ABC",
+            "No Text": "テキストなし",
+            "Playstation": "Playstation",
+            "Switch": "Switch",
+            "1 2 3": "1 2 3"
         }
     },
     "zen_keyboard": {
@@ -357,7 +368,39 @@
         "track_name": "トラック名",
         "remove_background_song": "背景曲を削除",
         "click_to_add_time": "クリックして時間を追加",
-        "click_to_remove_time": "クリックして時間を削除"
+        "click_to_remove_time": "クリックして時間を削除",
+        "generate": {
+            "open": "譜面を生成",
+            "title": "譜面を生成",
+            "source_song": "元の曲",
+            "level": "譜面レベル",
+            "level_easy": "イージー",
+            "level_normal": "ノーマル",
+            "level_hard": "ハード",
+            "level_info": "目標とする難易度です。ジェネレーターは譜面を作り、その難しさを測り、両者が一致するまで調整を繰り返します。演奏するパートも選ぶため、レベルを変えると下のパートの選択もやり直されます。",
+            "parts": "パート",
+            "parts_info": "譜面が扱うパートです。譜面が完全にカバーしたパートはミュートされ、あなたが演奏します。それ以外は背景で鳴り続け、譜面がそれに重ねて演奏します。",
+            "part_notes": "{{notes}} ノーツ",
+            "part_proposed": "おすすめ: {{reasons}}",
+            "part_will_be_doubled": "重ねて演奏されます",
+            "reason_top_voice": "最も高い声部",
+            "reason_varied": "最も変化がある",
+            "reason_present": "全体を通して鳴る",
+            "reason_dense": "ノーツが最も多い",
+            "lanes": "レーン",
+            "run": "生成",
+            "roll_again": "もう一度生成",
+            "outcome": "結果",
+            "rating": "難易度: {{rating}}",
+            "converged": "{{level}} の範囲に収まりました。",
+            "not_converged": "{{level}} の範囲に届きませんでした。これが最も近い結果です。",
+            "performed": "演奏する（ミュート）",
+            "doubled": "重ねて演奏（再生は継続）",
+            "nothing": "なし",
+            "seed": "バージョン番号: {{seed}}",
+            "failed": "この曲から譜面を生成できませんでした",
+            "generated_song_name": "{{song_name}}（{{level}}）"
+        }
     },
     "vsrg_player": {
         "amazing": "Amazing",
@@ -365,7 +408,11 @@
         "great": "Great",
         "good": "Good",
         "bad": "Bad",
-        "miss": "Miss"
+        "miss": "Miss",
+        "max_combo": "最大コンボ",
+        "grade": "評価",
+        "accuracy": "精度",
+        "retry": "リトライ"
     },
     "transfer": {
         "connecting_please_wait": "接続中です。お待ちください...",
@@ -514,6 +561,7 @@
         "page_not_found": "ページが見つかりません。ここをクリックしてホームに戻ります。"
     },
     "backup": {
+        "unnamed_item": "名称未設定",
         "confirm_after_songs_validation_error": "一部の曲の検証中にエラーが発生しました。ダウンロードを続行しますか？",
         "confirm_after_folders_validation_error": "一部のフォルダの検証中にエラーが発生しました。ダウンロードを続行しますか？",
         "confirm_after_themes_validation_error": "一部のテーマの検証中にエラーが発生しました。ダウンロードを続行しますか？",
@@ -572,6 +620,7 @@
         "clone_song": "曲をクローン",
         "remove_breakpoint": "ブレークポイントを削除",
         "add_breakpoint": "ブレークポイントを追加",
+        "permanent_breakpoint": "曲の最初と最後は常にブレークポイントです",
         "cant_remove_all_layers": "すべてのレイヤーを削除することはできません！",
         "cant_add_more_than_n_layers": "{{max_layers}} 層以上追加することはできません！",
         "ask_song_name_for_composed_song_version": "作曲済みバージョンの曲名を入力してください。キャンセルすると無視されます",

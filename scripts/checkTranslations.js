@@ -1,31 +1,25 @@
 import clc from 'cli-color';
 import path from 'node:path';
 import { readdir, readFile } from 'node:fs/promises';
-import { createServer } from 'vite';
+import { LOCALES_DIR, loadEnglish } from './englishLocale.js';
 
 /**
  * Compares every translation in static/locales/ against the English locale and reports what
  * each one is missing.
  *
  * English is the source of truth and, unlike the others, is TypeScript
- * (src/lib/i18n/locales/en/index.ts - it is bundled into the app rather than fetched). It is
- * loaded through Vite's own SSR module loader rather than a hand-rolled TS strip: Vite is
- * already a devDependency, it handles the transform on any Node version, and the file stays
- * the single definition of the key set. `configFile: false` keeps the app's real Vite config
- * (and the SvelteKit plugin, which would want PUBLIC_GAME and a full game registry) out of it -
- * the locale file's only imports are type-only, so nothing needs alias resolution.
+ * (src/lib/i18n/locales/en/index.ts - it is bundled into the app rather than fetched); how it is
+ * loaded lives in englishLocale.js, shared with generateEnglishLocale.js.
  *
- * The set of languages checked is the set of files present in static/locales/. A language
- * declared in AVAILABLE_LANGUAGES with no file at all is therefore invisible here; that failure
- * is loud at runtime (the language simply won't load) and reading the declaration would mean
- * evaluating i18n.ts, which pulls in the game registry and SvelteKit's virtual modules.
+ * The set of languages checked is the set of files present in static/locales/, minus the
+ * generated en.json (checking English against itself is always 100%). A language declared in
+ * AVAILABLE_LANGUAGES with no file at all is therefore invisible here; that failure is loud at
+ * runtime (the language simply won't load) and reading the declaration would mean evaluating
+ * i18n.ts, which pulls in the game registry and SvelteKit's virtual modules.
  *
  * Usage: npm run check:translations [-- --strict]
  *   --strict  exit 1 when anything is missing (for CI); otherwise this only ever reports.
  */
-const ROOT = path.resolve(import.meta.dirname, '..');
-const ENGLISH_MODULE = '/src/lib/i18n/locales/en/index.ts';
-const LOCALES_DIR = path.join(ROOT, 'static/locales');
 
 /** Flattens nested namespaces to the dot-paths i18next addresses them by. */
 function flatten(source, prefix = '', out = new Map()) {
@@ -40,23 +34,6 @@ function flatten(source, prefix = '', out = new Map()) {
   return out;
 }
 
-async function loadEnglish() {
-  const server = await createServer({
-    configFile: false,
-    root: ROOT,
-    logLevel: 'error',
-    server: { middlewareMode: true },
-    appType: 'custom',
-  });
-  try {
-    const module = await server.ssrLoadModule(ENGLISH_MODULE);
-    if (!module.i18n_en) throw new Error(`${ENGLISH_MODULE} does not export i18n_en`);
-    return module.i18n_en;
-  } finally {
-    await server.close();
-  }
-}
-
 function reportKeys(label, keys, color) {
   if (keys.length === 0) return;
   console.log(color(`  ${label} (${keys.length})`));
@@ -66,7 +43,9 @@ function reportKeys(label, keys, color) {
 async function execute() {
   const strict = process.argv.includes('--strict');
   const english = flatten(await loadEnglish());
-  const files = (await readdir(LOCALES_DIR)).filter((file) => file.endsWith('.json')).sort();
+  const files = (await readdir(LOCALES_DIR))
+    .filter((file) => file.endsWith('.json') && file !== 'en.json')
+    .sort();
 
   console.log(
     clc.blue(`Checking ${files.length} translations against ${english.size} English keys\n`)

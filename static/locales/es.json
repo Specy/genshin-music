@@ -338,6 +338,17 @@
       "player_practice_settings": "Ajustes de práctica",
       "sheet_visualizer_settings": "Ajustes de la partitura"
     },
+    "note_name_types": {
+      "Note name": "Nombre de la nota",
+      "Keyboard layout": "Disposición del teclado",
+      "Your Keyboard layout": "Tu disposición del teclado",
+      "Do Re Mi": "Do Re Mi",
+      "ABC": "ABC",
+      "No Text": "Sin texto",
+      "Playstation": "Playstation",
+      "Switch": "Switch",
+      "1 2 3": "1 2 3"
+    },
     "select_language": "Seleccionar idioma"
   },
   "zen_keyboard": {
@@ -357,7 +368,39 @@
     "track_name": "Nombre de la pista",
     "remove_background_song": "Eliminar canción de fondo",
     "click_to_add_time": "Haz clic para añadir tiempo",
-    "click_to_remove_time": "Haz clic para quitar tiempo"
+    "click_to_remove_time": "Haz clic para quitar tiempo",
+    "generate": {
+      "open": "Generar mapa de notas",
+      "title": "Generar mapa de notas",
+      "source_song": "Canción de origen",
+      "level": "Nivel del mapa",
+      "level_easy": "Fácil",
+      "level_normal": "Normal",
+      "level_hard": "Difícil",
+      "level_info": "La dificultad a la que apuntar. El generador crea un mapa, mide lo difícil que es y lo reajusta hasta que ambos coinciden. También elige qué parte vas a interpretar, así que cambiar el nivel vuelve a marcar las partes de abajo.",
+      "parts": "Partes",
+      "parts_info": "Las partes que toca el mapa. Una parte que el mapa cubre por completo se silencia y la interpretas tú; el resto sigue sonando de fondo mientras el mapa la duplica.",
+      "part_notes": "{{notes}} notas",
+      "part_proposed": "Propuesta: {{reasons}}",
+      "part_will_be_doubled": "Se duplicará",
+      "reason_top_voice": "voz más aguda",
+      "reason_varied": "más variada",
+      "reason_present": "suena de principio a fin",
+      "reason_dense": "más notas",
+      "lanes": "Carriles",
+      "run": "Generar",
+      "roll_again": "Generar de nuevo",
+      "outcome": "Resultado",
+      "rating": "Dificultad: {{rating}}",
+      "converged": "Dentro del rango de {{level}}.",
+      "not_converged": "No se pudo alcanzar el rango de {{level}}, esto es lo más cerca que llegó.",
+      "performed": "Interpretadas (silenciadas)",
+      "doubled": "Duplicadas (siguen sonando)",
+      "nothing": "Ninguna",
+      "seed": "Número de versión: {{seed}}",
+      "failed": "No se pudo generar un mapa a partir de esta canción",
+      "generated_song_name": "{{song_name}} ({{level}})"
+    }
   },
   "vsrg_player": {
     "amazing": "Increíble",
@@ -365,7 +408,11 @@
     "great": "Excelente",
     "good": "Bueno",
     "bad": "Malo",
-    "miss": "Fallo"
+    "miss": "Fallo",
+    "max_combo": "Combo máximo",
+    "grade": "Calificación",
+    "accuracy": "Precisión",
+    "retry": "Reintentar"
   },
   "transfer": {
     "connecting_please_wait": "Conectando, espera...",
@@ -514,6 +561,7 @@
     "page_not_found": "No se encontró la página. Haz clic aquí para volver a la página de inicio"
   },
   "backup": {
+    "unnamed_item": "Sin nombre",
     "confirm_after_songs_validation_error": "Hubo errores al validar algunas canciones. ¿Quieres continuar descargando?",
     "confirm_after_folders_validation_error": "Hubo errores al validar algunas carpetas. ¿Quieres continuar descargando?",
     "confirm_after_themes_validation_error": "Hubo errores al validar algunos temas. ¿Quieres continuar descargando?",
@@ -572,6 +620,7 @@
     "clone_song": "Clonar canción",
     "remove_breakpoint": "Eliminar punto de salto",
     "add_breakpoint": "Añadir punto de salto",
+    "permanent_breakpoint": "El inicio y el final de la canción siempre son puntos de salto",
     "cant_remove_all_layers": "¡No puedes eliminar todas las capas!",
     "cant_add_more_than_n_layers": "¡No puedes agregar más de {{max_layers}} capas!",
     "ask_song_name_for_composed_song_version": "Escribe el nombre de la canción para la versión compuesta o pulsa Cancelar para ignorar",

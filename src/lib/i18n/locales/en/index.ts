@@ -1,5 +1,6 @@
 import type { InstrumentName } from '$core/types';
 import type { MIDIShortcutName } from '$core/utils/Utilities';
+import type { NoteNameType } from '$core/legacyConfig';
 import type { SettingsCategory } from '$core/types/SettingsPropriety';
 //TODO please look at the /public/locales folder to see the available languages
 
@@ -407,6 +408,27 @@ export const i18n_en = {
       player_practice_settings: 'Practice settings',
       sheet_visualizer_settings: 'Sheet settings',
     } satisfies Record<SettingsCategory, string>,
+    // THE LABELS ON A SETTINGS <select>'s OWN OPTIONS, keyed by the value the option carries -
+    // which is why the keys here read like English prose and must NOT be renamed: they are the
+    // stored setting values (NOTE_NAME_TYPES, from each game's config), not display strings.
+    // Note name types are the only translated options so far; the other selects offer numbers or
+    // pitch names, which need none (the VSRG player's 'circles'/'line' would want its own block).
+    // An option with no entry here falls back to its own value, so a locale that skips this block
+    // shows exactly what it showed before.
+    note_name_types: {
+      'Note name': 'Note name', //the note's musical name in the current pitch, e.g. C, D, E
+      'Keyboard layout': 'Keyboard layout', //the letter of the QWERTY key that plays the note
+      'Your Keyboard layout': 'Your Keyboard layout', //idem, but read from the user's own physical keyboard layout
+      'Do Re Mi': 'Do Re Mi', //solfège syllables; usually kept as-is, or written the way the language spells them
+      ABC: 'ABC', //letter note names
+      'No Text': 'No Text', //nothing written on the note at all
+      Playstation: 'Playstation', //the PlayStation controller button that plays the note (name of the console, keep as-is)
+      Switch: 'Switch', //the Nintendo Switch controller button that plays the note (name of the console, keep as-is)
+      '1 2 3': '1 2 3', //the note's number
+      // A note name type with no label here is a compile error: every value a game can put in
+      // this select must be translatable. Widen the type if a NON-note-name select ever wants
+      // its options translated through this same block.
+    } satisfies Record<NoteNameType, string>,
     select_language: 'Select language',
   },
 

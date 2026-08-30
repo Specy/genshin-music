@@ -338,6 +338,17 @@
             "song_settings": "歌曲設定",
             "composer_settings": "編曲器設定",
             "editor_settings": "編輯器設定"
+        },
+        "note_name_types": {
+            "Note name": "音符名稱",
+            "Keyboard layout": "鍵盤佈局",
+            "Your Keyboard layout": "你的鍵盤佈局",
+            "Do Re Mi": "Do Re Mi",
+            "ABC": "ABC",
+            "No Text": "無文字",
+            "Playstation": "Playstation",
+            "Switch": "Switch",
+            "1 2 3": "1 2 3"
         }
     },
     "zen_keyboard": {
@@ -357,7 +368,39 @@
         "track_name": "音軌名稱",
         "remove_background_song": "移除背景音樂",
         "click_to_add_time": "點擊以新增時間",
-        "click_to_remove_time": "點擊以移除時間"
+        "click_to_remove_time": "點擊以移除時間",
+        "generate": {
+            "open": "生成譜面",
+            "title": "生成譜面",
+            "source_song": "來源歌曲",
+            "level": "譜面等級",
+            "level_easy": "簡單",
+            "level_normal": "普通",
+            "level_hard": "困難",
+            "level_info": "想要達到嘅難度。生成器會排出一份譜面，量度佢有幾難，然後不斷調整到兩者一致。佢亦會揀邊個聲部由你演奏，所以改變等級會重新剔選下面嘅聲部。",
+            "parts": "聲部",
+            "parts_info": "譜面所用嘅聲部。被譜面完全涵蓋嘅聲部會被靜音，由你嚟演奏；其餘聲部會繼續喺背景播放，同時譜面會同佢重疊演奏。",
+            "part_notes": "{{notes}} 個音符",
+            "part_proposed": "推薦：{{reasons}}",
+            "part_will_be_doubled": "將會重疊演奏",
+            "reason_top_voice": "最高聲部",
+            "reason_varied": "變化最多",
+            "reason_present": "全曲都在演奏",
+            "reason_dense": "音符最多",
+            "lanes": "軌道",
+            "run": "生成",
+            "roll_again": "重新生成",
+            "outcome": "結果",
+            "rating": "難度：{{rating}}",
+            "converged": "喺 {{level}} 嘅範圍內。",
+            "not_converged": "無法達到 {{level}} 嘅範圍，呢個係最接近嘅結果。",
+            "performed": "由你演奏（已靜音）",
+            "doubled": "重疊演奏（仍在播放）",
+            "nothing": "無",
+            "seed": "版本號：{{seed}}",
+            "failed": "無法根據呢首歌曲生成譜面",
+            "generated_song_name": "{{song_name}}（{{level}}）"
+        }
     },
     "vsrg_player": {
         "amazing": "Amazing",
@@ -365,7 +408,11 @@
         "great": "Great",
         "good": "Good",
         "bad": "Bad",
-        "miss": "Miss"
+        "miss": "Miss",
+        "max_combo": "最大連擊",
+        "grade": "評級",
+        "accuracy": "準確度",
+        "retry": "重試"
     },
     "transfer": {
         "connecting_please_wait": "正在連接，請稍候...",
@@ -514,6 +561,7 @@
         "page_not_found": "該頁面未找到，點擊此處返回首頁。"
     },
     "backup": {
+        "unnamed_item": "未命名",
         "confirm_after_songs_validation_error": "驗證某些歌曲時出錯。您想繼續下載嗎？",
         "confirm_after_folders_validation_error": "驗證某些資料夾時出錯。是否要繼續下載？",
         "confirm_after_themes_validation_error": "驗證某些主題時出錯。您想繼續下載嗎？",
@@ -572,6 +620,7 @@
         "clone_song": "複製歌曲",
         "remove_breakpoint": "刪除斷點",
         "add_breakpoint": "新增斷點",
+        "permanent_breakpoint": "歌曲嘅開頭同結尾永遠都係斷點",
         "cant_remove_all_layers": "你不能刪除所有音層！",
         "cant_add_more_than_n_layers": "您不能新增超過 {{max_layers}} 層！",
         "ask_song_name_for_composed_song_version": "填寫創作版本的歌曲名稱，按取消忽略",

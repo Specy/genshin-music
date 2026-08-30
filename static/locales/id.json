@@ -338,6 +338,17 @@
             "composer_settings": "Pengaturan komposer",
             "editor_settings": "Pengaturan editor",
             "sheet_visualizer_settings": "Pengaturan lembar"
+        },
+        "note_name_types": {
+            "Note name": "Nama note",
+            "Keyboard layout": "Tata letak keyboard",
+            "Your Keyboard layout": "Tata letak keyboard Anda",
+            "Do Re Mi": "Do Re Mi",
+            "ABC": "ABC",
+            "No Text": "Tanpa teks",
+            "Playstation": "Playstation",
+            "Switch": "Switch",
+            "1 2 3": "1 2 3"
         }
     },
     "zen_keyboard": {
@@ -357,7 +368,39 @@
         "track_name": "Nama trek",
         "remove_background_song": "Hapus lagu latar belakang",
         "click_to_add_time": "Klik untuk menambahkan waktu",
-        "click_to_remove_time": "Klik untuk menghapus waktu"
+        "click_to_remove_time": "Klik untuk menghapus waktu",
+        "generate": {
+            "open": "Buat beatmap",
+            "title": "Buat beatmap",
+            "source_song": "Lagu sumber",
+            "level": "Level beatmap",
+            "level_easy": "Mudah",
+            "level_normal": "Normal",
+            "level_hard": "Sulit",
+            "level_info": "Tingkat kesulitan yang dituju. Generator menyusun beatmap, mengukur tingkat kesulitannya, lalu menyetel ulang sampai keduanya cocok. Generator juga memilih bagian mana yang kamu mainkan, jadi mengubah level akan mencentang ulang bagian-bagian di bawah.",
+            "parts": "Bagian",
+            "parts_info": "Bagian yang dimainkan beatmap. Bagian yang tercakup sepenuhnya akan dibisukan dan kamu yang memainkannya; sisanya tetap berbunyi di latar belakang sementara beatmap menggandakannya.",
+            "part_notes": "{{notes}} note",
+            "part_proposed": "Disarankan: {{reasons}}",
+            "part_will_be_doubled": "Akan digandakan",
+            "reason_top_voice": "suara tertinggi",
+            "reason_varied": "paling bervariasi",
+            "reason_present": "berbunyi sepanjang lagu",
+            "reason_dense": "note terbanyak",
+            "lanes": "Jalur",
+            "run": "Buat",
+            "roll_again": "Acak lagi",
+            "outcome": "Hasil",
+            "rating": "Tingkat kesulitan: {{rating}}",
+            "converged": "Berada dalam rentang {{level}}.",
+            "not_converged": "Tidak dapat mencapai rentang {{level}}, ini hasil yang paling mendekati.",
+            "performed": "Dimainkan (dibisukan)",
+            "doubled": "Digandakan (tetap berbunyi)",
+            "nothing": "Tidak ada",
+            "seed": "Nomor versi: {{seed}}",
+            "failed": "Tidak dapat membuat beatmap dari lagu ini",
+            "generated_song_name": "{{song_name}} ({{level}})"
+        }
     },
     "vsrg_player": {
         "amazing": "Menakjubkan",
@@ -365,7 +408,11 @@
         "great": "Hebat",
         "good": "Bagus",
         "bad": "Buruk",
-        "miss": "Miss"
+        "miss": "Miss",
+        "max_combo": "Kombo maks",
+        "grade": "Peringkat",
+        "accuracy": "Akurasi",
+        "retry": "Coba lagi"
     },
     "transfer": {
         "connecting_please_wait": "Menghubungkan harap tunggu...",
@@ -514,6 +561,7 @@
         "page_not_found": "Halaman tidak ditemukan, klik di sini untuk kembali ke halaman beranda"
     },
     "backup": {
+        "unnamed_item": "Tanpa nama",
         "confirm_after_songs_validation_error": "Ada kesalahan dalam memvalidasi beberapa lagu. Apakah Anda ingin melanjutkan pengunduhan?",
         "confirm_after_folders_validation_error": "Ada kesalahan dalam memvalidasi beberapa folder. Apakah Anda ingin melanjutkan pengunduhan?",
         "confirm_after_themes_validation_error": "Ada kesalahan dalam memvalidasi beberapa tema. Apakah Anda ingin melanjutkan pengunduhan?",
@@ -572,6 +620,7 @@
         "clone_song": "Klon lagu",
         "remove_breakpoint": "Hapus breakpoint",
         "add_breakpoint": "Tambah breakpoint",
+        "permanent_breakpoint": "Awal dan akhir lagu selalu menjadi breakpoint",
         "cant_remove_all_layers": "Anda tidak bisa menghapus semua lapisan!",
         "cant_add_more_than_n_layers": "Anda tidak dapat menambahkan lebih dari {{max_layers}} lapisan!",
         "ask_song_name_for_composed_song_version": "Tulis nama lagu untuk versi yang dikomposisikan, tekan batal untuk mengabaikan",

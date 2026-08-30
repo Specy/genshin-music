@@ -19,6 +19,7 @@
     "fix": "eslint --fix . && prettier --write .",
     "format:check": "prettier --check .",
     "check:translations": "node ./scripts/checkTranslations.js",
+    "generate:english-locale": "node ./scripts/generateEnglishLocale.js",
     "build:sky": "node ./scripts/buildApp.js Sky",
     "build:sky:analyze": "cross-env ANALYZE=true npm run build:sky",
     "build:genshin": "node ./scripts/buildApp.js Genshin",

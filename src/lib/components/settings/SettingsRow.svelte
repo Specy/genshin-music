@@ -7,7 +7,7 @@
   import SettingsInput from './SettingsInput.svelte';
   import SettingsSlider from './SettingsSlider.svelte';
   import InstrumentInput from './InstrumentInput.svelte';
-  import { t } from '$i18n/binding.svelte';
+  import { t, tNoteNameType } from '$i18n/binding.svelte';
   import type {
     SettingUpdate,
     SettingUpdateKey,
@@ -60,8 +60,12 @@
   </div>
   {#if data.type === 'select'}
     <SettingsSelect {data} onChange={update} value={data.value} objectKey={objKey}>
+      <!-- Note name types are the only options with a translation, and tNoteNameType hands back
+           anything else unchanged, so every select can go through it. The option's VALUE is never
+           translated: it stays the stored setting value the app switches on, and only the text
+           the user reads changes. -->
       {#each data.options as option (option)}
-        <option value={option}>{option}</option>
+        <option value={option}>{tNoteNameType(option)}</option>
       {/each}
     </SettingsSelect>
   {/if}

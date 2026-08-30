@@ -338,6 +338,17 @@
             "player_practice_settings": "Pratik ayarları",
             "sheet_visualizer_settings": "Nota sayfası ayarları"
         },
+        "note_name_types": {
+            "Note name": "Nota adı",
+            "Keyboard layout": "Klavye düzeni",
+            "Your Keyboard layout": "Kendi klavye düzenin",
+            "Do Re Mi": "Do Re Mi",
+            "ABC": "ABC",
+            "No Text": "Metin yok",
+            "Playstation": "Playstation",
+            "Switch": "Switch",
+            "1 2 3": "1 2 3"
+        },
         "select_language": "Dil seç"
     },
     "zen_keyboard": {
@@ -357,7 +368,39 @@
         "track_name": "Parça adı",
         "remove_background_song": "Arka plan müziğini kaldır",
         "click_to_add_time": "Zaman eklemek için tıkla",
-        "click_to_remove_time": "Zaman kaldırmak için tıkla"
+        "click_to_remove_time": "Zaman kaldırmak için tıkla",
+        "generate": {
+            "open": "Beatmap oluştur",
+            "title": "Beatmap oluştur",
+            "source_song": "Kaynak şarkı",
+            "level": "Beatmap seviyesi",
+            "level_easy": "Kolay",
+            "level_normal": "Normal",
+            "level_hard": "Zor",
+            "level_info": "Hedeflenen zorluk. Oluşturucu bir beatmap hazırlar, ne kadar zor olduğunu ölçer ve ikisi uyuşana kadar yeniden ayarlar. Ayrıca hangi partiyi çalacağını da seçer, bu yüzden seviyeyi değiştirmek aşağıdaki partileri yeniden işaretler.",
+            "parts": "Partiler",
+            "parts_info": "Beatmap’in çaldığı partiler. Beatmap’in tamamen kapsadığı parti susturulur ve onu sen çalarsın; geri kalanlar arka planda çalmaya devam ederken beatmap onları ikiye katlar.",
+            "part_notes": "{{notes}} nota",
+            "part_proposed": "Önerilen: {{reasons}}",
+            "part_will_be_doubled": "İkiye katlanacak",
+            "reason_top_voice": "en tiz ses",
+            "reason_varied": "en çeşitli",
+            "reason_present": "baştan sona çalıyor",
+            "reason_dense": "en çok nota",
+            "lanes": "Şeritler",
+            "run": "Oluştur",
+            "roll_again": "Yeniden oluştur",
+            "outcome": "Sonuç",
+            "rating": "Zorluk: {{rating}}",
+            "converged": "{{level}} aralığının içinde.",
+            "not_converged": "{{level}} aralığına ulaşılamadı, bu en yakın sonuç.",
+            "performed": "Çalınan (susturuldu)",
+            "doubled": "İkiye katlanan (çalmaya devam ediyor)",
+            "nothing": "Yok",
+            "seed": "Sürüm numarası: {{seed}}",
+            "failed": "Bu şarkıdan bir beatmap oluşturulamadı",
+            "generated_song_name": "{{song_name}} ({{level}})"
+        }
     },
     "vsrg_player": {
         "amazing": "Efsanevi",
@@ -365,7 +408,11 @@
         "great": "Harika",
         "good": "İyi",
         "bad": "Kötü",
-        "miss": "Eksik"
+        "miss": "Eksik",
+        "max_combo": "En yüksek kombo",
+        "grade": "Derece",
+        "accuracy": "Doğruluk",
+        "retry": "Yeniden dene"
     },
     "transfer": {
         "connecting_please_wait": "Bağlanıyor, lütfen bekleyin...",
@@ -514,6 +561,7 @@
         "page_not_found": "Sayfa bulunamadı, Ana sayfaya dönmek için buraya basın"
     },
     "backup": {
+        "unnamed_item": "Adsız",
         "confirm_after_songs_validation_error": "Bazı şarkılar doğrulanırken hata oluştu, İndirmeyi sürdürmek istediğinize emin misiniz?",
         "confirm_after_folders_validation_error": "Bazı klasörler doğrulanırken hata oluştu, İndirmeyi sürdürmek istediğinize emin misiniz?",
         "confirm_after_themes_validation_error": "Bazı temalar doğrulanırken hata oluştu, İndirmeyi sürdürmek istediğinize emin misiniz?",
@@ -572,6 +620,7 @@
         "clone_song": "Şarkıyı klonla",
         "remove_breakpoint": "Yer imini kaldır",
         "add_breakpoint": "Yer imi ekle",
+        "permanent_breakpoint": "Şarkının başı ve sonu her zaman yer imidir",
         "cant_remove_all_layers": "Tüm katmanları kaldıramazsın!",
         "cant_add_more_than_n_layers": "{{max_layers}} sayısından fazla katman ekleyemezsin!",
         "ask_song_name_for_composed_song_version": "Bestelenmiş versiyon için şarkı adı yaz, yazmak istemiyorsan iptale bas",

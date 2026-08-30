@@ -338,6 +338,17 @@
       "player_practice_settings": "Configurações de prática",
       "sheet_visualizer_settings": "Configurações da partitura"
     },
+    "note_name_types": {
+      "Note name": "Nome da nota",
+      "Keyboard layout": "Layout do teclado",
+      "Your Keyboard layout": "Seu layout do teclado",
+      "Do Re Mi": "Do Re Mi",
+      "ABC": "ABC",
+      "No Text": "Sem texto",
+      "Playstation": "Playstation",
+      "Switch": "Switch",
+      "1 2 3": "1 2 3"
+    },
     "select_language": "Selecionar idioma"
   },
   "zen_keyboard": {
@@ -357,7 +368,39 @@
     "track_name": "Nome da faixa",
     "remove_background_song": "Remover música de fundo",
     "click_to_add_time": "Clique para adicionar tempo",
-    "click_to_remove_time": "Clique para remover tempo"
+    "click_to_remove_time": "Clique para remover tempo",
+    "generate": {
+      "open": "Gerar beatmap",
+      "title": "Gerar beatmap",
+      "source_song": "Música de origem",
+      "level": "Nível do beatmap",
+      "level_easy": "Fácil",
+      "level_normal": "Normal",
+      "level_hard": "Difícil",
+      "level_info": "A dificuldade a ser alcançada. O gerador monta um beatmap, mede o quão difícil ele é e reajusta até que os dois combinem. Ele também escolhe qual parte você toca, então mudar o nível remarca as partes abaixo.",
+      "parts": "Partes",
+      "parts_info": "As partes que o beatmap toca. Uma parte totalmente coberta pelo beatmap é silenciada e você a toca; o resto continua tocando ao fundo enquanto o beatmap a dobra.",
+      "part_notes": "{{notes}} notas",
+      "part_proposed": "Sugerida: {{reasons}}",
+      "part_will_be_doubled": "Será dobrada",
+      "reason_top_voice": "voz mais aguda",
+      "reason_varied": "mais variada",
+      "reason_present": "toca do início ao fim",
+      "reason_dense": "mais notas",
+      "lanes": "Pistas",
+      "run": "Gerar",
+      "roll_again": "Gerar de novo",
+      "outcome": "Resultado",
+      "rating": "Dificuldade: {{rating}}",
+      "converged": "Dentro da faixa {{level}}.",
+      "not_converged": "Não foi possível alcançar a faixa {{level}}, este foi o resultado mais próximo.",
+      "performed": "Tocadas (silenciadas)",
+      "doubled": "Dobradas (ainda tocando)",
+      "nothing": "Nenhuma",
+      "seed": "Número da versão: {{seed}}",
+      "failed": "Não foi possível gerar um beatmap a partir desta música",
+      "generated_song_name": "{{song_name}} ({{level}})"
+    }
   },
   "vsrg_player": {
     "amazing": "Espetacular!",
@@ -365,7 +408,11 @@
     "great": "Ótimo",
     "good": "Bom",
     "bad": "Ruim",
-    "miss": "Errou"
+    "miss": "Errou",
+    "max_combo": "Combo máximo",
+    "grade": "Classificação",
+    "accuracy": "Precisão",
+    "retry": "Tentar de novo"
   },
   "transfer": {
     "connecting_please_wait": "Conectando, por favor aguarde...",
@@ -514,6 +561,7 @@
     "page_not_found": "A página não foi encontrada, clique aqui para voltar à página inicial"
   },
   "backup": {
+    "unnamed_item": "Sem nome",
     "confirm_after_songs_validation_error": "Houve erros ao validar algumas músicas. Deseja continuar baixando?",
     "confirm_after_folders_validation_error": "Houve erros ao validar algumas pastas. Deseja continuar baixando?",
     "confirm_after_themes_validation_error": "Houve erros ao validar alguns temas. Deseja continuar baixando?",
@@ -572,6 +620,7 @@
     "clone_song": "Clonar música",
     "remove_breakpoint": "Remover ponto de interrupção",
     "add_breakpoint": "Adicionar ponto de interrupção",
+    "permanent_breakpoint": "O início e o fim da música são sempre pontos de interrupção",
     "cant_remove_all_layers": "Você não pode remover todas as camadas!",
     "cant_add_more_than_n_layers": "Você não pode adicionar mais de {{max_layers}} camadas!",
     "ask_song_name_for_composed_song_version": "Digite o nome da música para a versão composta, pressione cancelar para ignorar",

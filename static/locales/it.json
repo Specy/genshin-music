@@ -338,6 +338,17 @@
       "player_practice_settings": "Impostazioni dell'esercitazione",
       "sheet_visualizer_settings": "Impostazioni dello spartito"
     },
+    "note_name_types": {
+      "Note name": "Nome della nota",
+      "Keyboard layout": "Disposizione della tastiera",
+      "Your Keyboard layout": "La tua disposizione della tastiera",
+      "Do Re Mi": "Do Re Mi",
+      "ABC": "ABC",
+      "No Text": "Nessun testo",
+      "Playstation": "Playstation",
+      "Switch": "Switch",
+      "1 2 3": "1 2 3"
+    },
     "select_language": "Seleziona lingua"
   },
   "zen_keyboard": {
@@ -357,7 +368,39 @@
     "track_name": "Nome della traccia",
     "remove_background_song": "Rimuovi il brano di sottofondo",
     "click_to_add_time": "Fai clic per aggiungere tempo",
-    "click_to_remove_time": "Fai clic per rimuovere tempo"
+    "click_to_remove_time": "Fai clic per rimuovere tempo",
+    "generate": {
+      "open": "Genera beatmap",
+      "title": "Genera beatmap",
+      "source_song": "Brano di origine",
+      "level": "Livello della mappa",
+      "level_easy": "Facile",
+      "level_normal": "Normale",
+      "level_hard": "Difficile",
+      "level_info": "La difficoltà a cui puntare. Il generatore crea una mappa, ne misura la difficoltà e la ritara finché le due non coincidono. Sceglie anche quale parte suonerai, quindi cambiare livello riseleziona le parti qui sotto.",
+      "parts": "Parti",
+      "parts_info": "Le parti che la mappa suona. Una parte coperta completamente dalla mappa viene silenziata e la suoni tu; tutto il resto continua a suonare in sottofondo mentre la mappa la raddoppia.",
+      "part_notes": "{{notes}} note",
+      "part_proposed": "Proposta: {{reasons}}",
+      "part_will_be_doubled": "Verrà raddoppiata",
+      "reason_top_voice": "voce più acuta",
+      "reason_varied": "più variata",
+      "reason_present": "suona dall’inizio alla fine",
+      "reason_dense": "più note",
+      "lanes": "Corsie",
+      "run": "Genera",
+      "roll_again": "Genera di nuovo",
+      "outcome": "Risultato",
+      "rating": "Difficoltà: {{rating}}",
+      "converged": "Rientra nell’intervallo {{level}}.",
+      "not_converged": "Non è stato possibile raggiungere l’intervallo {{level}}, questo è il risultato più vicino.",
+      "performed": "Suonate (silenziate)",
+      "doubled": "Raddoppiate (ancora in riproduzione)",
+      "nothing": "Nessuna",
+      "seed": "Numero di versione: {{seed}}",
+      "failed": "Impossibile generare una mappa da questo brano",
+      "generated_song_name": "{{song_name}} ({{level}})"
+    }
   },
   "vsrg_player": {
     "amazing": "Incredibile",
@@ -365,7 +408,11 @@
     "great": "Ottimo",
     "good": "Buono",
     "bad": "Male",
-    "miss": "Mancata"
+    "miss": "Mancata",
+    "max_combo": "Combo massima",
+    "grade": "Valutazione",
+    "accuracy": "Precisione",
+    "retry": "Riprova"
   },
   "transfer": {
     "connecting_please_wait": "Connessione in corso, attendi...",
@@ -514,6 +561,7 @@
     "page_not_found": "Pagina non trovata. Fai clic qui per tornare alla pagina iniziale"
   },
   "backup": {
+    "unnamed_item": "Senza nome",
     "confirm_after_songs_validation_error": "Si sono verificati errori durante la convalida di alcuni brani. Vuoi continuare con il download?",
     "confirm_after_folders_validation_error": "Si sono verificati errori durante la convalida di alcune cartelle. Vuoi continuare con il download?",
     "confirm_after_themes_validation_error": "Si sono verificati errori durante la convalida di alcuni temi. Vuoi continuare con il download?",
@@ -572,6 +620,7 @@
     "clone_song": "Duplica brano",
     "remove_breakpoint": "Rimuovi punto di salto",
     "add_breakpoint": "Aggiungi punto di salto",
+    "permanent_breakpoint": "L’inizio e la fine del brano sono sempre punti di salto",
     "cant_remove_all_layers": "Non puoi rimuovere tutti i livelli!",
     "cant_add_more_than_n_layers": "Non puoi aggiungere più di {{max_layers}} livelli!",
     "ask_song_name_for_composed_song_version": "Inserisci il nome del brano per la versione composta oppure premi Annulla per ignorare",
