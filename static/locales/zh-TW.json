@@ -1,6 +1,6 @@
 {
     "logs": {
-        "update_available": "發現新版本應用，是否重新整理介面進行更新？請關閉/重新整理其他開啟應用的選項卡。",
+        "update_available": "發現新版本應用，是否重新整理介面進行更新？請關閉/重新整理其他開啟應用的分頁。",
         "error_with_the_app": "程式出錯！",
         "loading_instruments": "載入樂器中...",
         "loading_song": "載入歌曲中...",
@@ -114,7 +114,7 @@
         "line": "橫線",
         "circle": "圓形",
         "add_new_instrument": "新增新樂器",
-        "reset": "重置",
+        "reset": "重設",
         "new": "新",
         "increment": "增加",
         "decrement": "減少"
@@ -233,8 +233,8 @@
             "composer_use_keyboard_side_buttons_description": "將切換下一列/上一列的按鈕新增在鍵盤右側/左側。",
             "composer_smooth_scroll": "平滑滾動",
             "composer_smooth_scroll_description": "播放時，畫布會跟隨節奏變換器連續平滑地劃過每一列，而不是直接跳到下一列。",
-            "composer_sync_tabs": "在所有選項卡中自動播放（僅限電腦）",
-            "composer_sync_tabs_description": "高階功能，它同步其他瀏覽器選項卡以同時播放。",
+            "composer_sync_tabs": "在所有分頁中自動播放（僅限電腦）",
+            "composer_sync_tabs_description": "高階功能，它同步其他瀏覽器分頁以同時播放。",
             "composer_pro_view": "PRO 作曲器",
             "composer_pro_view_description": "顯示每個半音，所有音符都在其真實音調上，您可以點選畫布新增或刪除音符",
             "sheet_visualizer_note_names": "顯示音符名稱",
@@ -418,7 +418,7 @@
         "connecting_please_wait": "正在連線，請稍候...",
         "error_connecting": "連線時出錯，請訪問域名，可能有變更日誌。",
         "import_data_from_other_domains_title": "從其他域匯入資料",
-        "import_data_from_other_domains_description": "在這裡您可以從應用程式的其他現有域匯入資料，選擇要匯入的域並單擊匯入，您將看到來自其他域的所有資料，您可以選擇一次全部匯入。或者只匯入您需要的內容。",
+        "import_data_from_other_domains_description": "在這裡您可以從應用程式的其他現有域匯入資料，選擇要匯入的域並點擊匯入，您將看到來自其他域的所有資料，您可以選擇一次全部匯入。或者只匯入您需要的內容。",
         "select_a_website_to_import_data": "選擇要從中匯入資料的網站",
         "data": "資料",
         "import_all": "全部匯入",
@@ -511,7 +511,7 @@
         "midi_layout_preset": "MIDI 佈局預設",
         "delete_midi_preset": "刪除預設",
         "create_midi_preset": "建立新預設",
-        "midi_note_selection_description": "單擊音符將其選中，然後按 MIDI 鍵盤將該音符分配給該琴鍵。您可以再次單擊它來更改它。",
+        "midi_note_selection_description": "點擊音符將其選中，然後按 MIDI 鍵盤將該音符分配給該琴鍵。您可以再次點擊它來更改它。",
         "midi_shortcuts": "MIDI 快捷鍵",
         "confirm_delete_preset": "您確定要刪除預設“{{preset_name}}”嗎？",
         "cannot_delete_builtin_preset": "無法刪除內建預設",
@@ -538,9 +538,9 @@
     },
     "error": {
         "confirm_delete_all_songs": "您確定要刪除所有歌曲嗎？",
-        "settings_reset_notice": "設定已重置",
+        "settings_reset_notice": "設定已重設",
         "error_page_description": "如果您意外地看到此頁面，則意味著發生了錯誤。您可以在此處下載或刪除您的歌曲——如果某首歌導致錯誤，請刪除它。如果您需要幫助，請加入我們的discord伺服器併發送下面的日誌檔案。",
-        "reset_settings": "重置設定",
+        "reset_settings": "重設設定",
         "delete_all_songs": "刪除所有歌曲",
         "error_logs": "錯誤日誌",
         "download_logs": "下載日誌"
@@ -550,8 +550,8 @@
     },
     "cache": {
         "cache": "快取",
-        "reset_cache": "重置快取",
-        "reset_cache_message": "此頁面將清除應用程式的快取。這將刪除所有快取的資料並重新載入頁面，它不會刪除您的歌曲或資料，只會刪除快取的資源。當您訪問此頁面時，程式自動清除快取。您也可以單擊下面的按鈕手動清除快取。",
+        "reset_cache": "重設快取",
+        "reset_cache_message": "此頁面將清除應用程式的快取。這將刪除所有快取的資料並重新載入頁面，它不會刪除您的歌曲或資料，只會刪除快取的資源。當您訪問此頁面時，程式自動清除快取。您也可以點擊下面的按鈕手動清除快取。",
         "clear_cache": "清除快取"
     },
     "changelog": {
@@ -580,7 +580,7 @@
         "action_cancelled": "操作已取消",
         "zipping_files": "壓縮檔案",
         "transfer_from_other_domain": "從其他域轉移",
-        "transfer_data_notice": "如果您想從應用程式的另一個域傳輸資料，請單擊此處。",
+        "transfer_data_notice": "如果您想從應用程式的另一個域傳輸資料，請點擊此處。",
         "transfer": "轉移",
         "backup_as": "備份為",
         "backup_advice": "確保時不時地建立備份，尤其是當您剛剛完成一首新歌曲時。 瀏覽器不應該刪除您的資料，特別是如果您安裝了該應用程式，但也不是萬無一失。",
@@ -726,7 +726,7 @@
             "li_6": "可以連線MIDI鍵盤來演奏"
         },
         "help": {
-            "question_mark_description": "將滑鼠懸停在按鈕上可檢視工具提示。單擊此按鈕 (?) 時，它將顯示更多資訊。",
+            "question_mark_description": "將滑鼠懸停在按鈕上可檢視工具提示。點擊此按鈕 (?) 時，它將顯示更多資訊。",
             "example_help": "幫助示例",
             "learn_how_to_use_player": "學習如何使用演奏器",
             "learn_how_to_use_composer": "學習如何使用作曲器",
@@ -1076,7 +1076,7 @@
             "change-2": "重寫了主頁以提高整體效能",
             "change-3": "新增了變更日誌頁面",
             "change-4": "新增了主頁和作曲器中的錄音功能",
-            "change-5": "新增了電腦版作曲器中的選項卡自動播放設定",
+            "change-5": "新增了電腦版作曲器中的分頁自動播放設定",
             "change-6": "新增了按下音符時的音符動畫",
             "change-7": "新增了可以從超連結更改背景圖片的可能性",
             "change-8": "更新了資訊頁面",
