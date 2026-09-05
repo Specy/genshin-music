@@ -12,7 +12,7 @@
       Since vesion V2.3 there has been the possibility to connect a MIDI keyboard to the app. This
       functionality is available everywhere except on Safari browsers.
     </p>
-    <Header margin="1rem 0">How to connect the MIDI device</Header>
+    <Header type="h2" textSize="2rem" margin="1rem 0">How to connect the MIDI device</Header>
     <p class="blog-p">
       To connect the MIDI keyboard to the app, get the appropriate cable to connect it to your
       device. If you are on android you might have to select the "midi" option in the USB connection
@@ -25,7 +25,7 @@
       app's keys. A default preset is provided, in case it does not match your keyboard, you can create
       a new preset and assign the keys as you wish.
     </p>
-    <Header margin="1rem 0">Create a new MIDI preset</Header>
+    <Header type="h2" textSize="2rem" margin="1rem 0">Create a new MIDI preset</Header>
     <p class="blog-p">
       To create a new midi preset click the "create new preset" button, you will be asked how to
       name it, once written, a new empty preset will be created. You now have to press the button of
@@ -37,7 +37,7 @@
       follow the same technique as the notes, click the button of the shortcut you want to map, and
       then press the corresponding key on your keyboard.
     </p>
-    <Header margin="1rem 0">Use your phone/pc as a MIDI keyboard</Header>
+    <Header type="h2" textSize="2rem" margin="1rem 0">Use your phone/pc as a MIDI keyboard</Header>
     <p class="blog-p">
       Using the app, you can turn your phone or pc into a MIDI keyboard, using the <AppLink
         href="/zen-keyboard">Zen Keyboard</AppLink

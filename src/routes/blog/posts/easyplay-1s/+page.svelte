@@ -8,7 +8,7 @@
 </script>
 
 <BaseBlogPost metadata={easyplay1sMetadata}>
-  <Header>What it is</Header>
+  <Header type="h2" textSize="2rem">What it is</Header>
 
   <p class="blog-p">
     The EASYPLAY 1s is a keyboard that uses the same layout as Sky Music Nightly, and you can use it
@@ -24,7 +24,7 @@
   <AppLink href="https://summertones-1.kckb.me/18287a61" class="blog-link">
     <BlogImage src="{base}/assets/blog/easyplay.webp" alt="Easyplay 1S" height="15rem" />
   </AppLink>
-  <Header>The features</Header>
+  <Header type="h2" textSize="2rem">The features</Header>
   <p class="blog-p">
     It is a MIDI keyboard which uses the same layout as Sky Music Nightly, the main features are:
   </p>
@@ -38,7 +38,7 @@
     It's made out of translucent black plastic with replaceable keycaps and rubber pads to prevent
     slipping.
   </p>
-  <Header>Demo video</Header>
+  <Header type="h2" textSize="2rem">Demo video</Header>
   <!-- old's own BlogIframe never had a title prop at all (BlogUl.tsx / this post's sole call
          site) - a pre-existing accessibility gap, preserved rather than fabricating a title old
          never had. -->

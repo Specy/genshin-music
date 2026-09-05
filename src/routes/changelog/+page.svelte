@@ -3,6 +3,7 @@
   import { base } from '$app/paths';
   import DefaultPage from '$cmp/shell/DefaultPage.svelte';
   import PageMetadata from '$cmp/shell/PageMetadata.svelte';
+  import PageHeading from '$cmp/shell/PageHeading.svelte';
   import SimpleMenu from '$cmp/shell/SimpleMenu.svelte';
   import MenuButton from '$cmp/menu/MenuButton.svelte';
   import AppButton from '$cmp/inputs/AppButton.svelte';
@@ -72,8 +73,9 @@
 <DefaultPage excludeMenu={true} menu={changelogMenu}>
   <PageMetadata
     text={`${t('home:changelog_name')} V${APP_VERSION}`}
-    description={`Changelog V${APP_VERSION}\n${CHANGELOG[0]?.changes.join(';')}`}
+    description={`Changelog V${APP_VERSION}. ${CHANGELOG[0]?.changes.join('; ')}`}
   />
+  <PageHeading text={`${t('home:changelog_name')} V${APP_VERSION}`} />
   <div class="changelog-page">
     <div class="changelog-page-title">
       {t('home:changelog_name')}

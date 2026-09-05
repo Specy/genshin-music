@@ -131,9 +131,9 @@
     <h1 class="onprint" style="color:black">
       {game.i18n.interpolation.APP_NAME} Music Nightly
     </h1>
-    <h1 class="onprint" style="color:black">
+    <h2 class="onprint" style="color:black">
       {currentSong ? currentSong?.name : ''}
-    </h1>
+    </h2>
     <div style="width:100%" class="noprint">
       <div class="sheet-header">
         <h2 class="sheet-title text-ellipsis" style="margin-top:0.8rem">

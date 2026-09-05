@@ -16,20 +16,20 @@
       Spotify's Basic Pitch
     </AppLink>.
   </p>
-  <Header margin="1rem 0">Warnings</Header>
+  <Header type="h2" textSize="2rem" margin="1rem 0">Warnings</Header>
   <p class="blog-p">
     This feature is to be used only as a last resort after you cannot find a MIDI song to transpose,
     or you can't do it by hand. It is not meant to create a perfect transposition, as the conversion
     is very difficult, but mostly as a starting point to help you transpose a song manually.
   </p>
 
-  <Header margin="1rem 0">Best practices</Header>
+  <Header type="h2" textSize="2rem" margin="1rem 0">Best practices</Header>
   <p class="blog-p">
     It is best if you can find a video/audio of a song that uses a single instrument, the piano is
     the easiest to convert. Even better if there is no background noise.
   </p>
 
-  <Header margin="1rem 0">How to</Header>
+  <Header type="h2" textSize="2rem" margin="1rem 0">How to</Header>
   <p class="blog-p">
     The transposition steps are very similar to the ones of MIDI transposition, if you want to see
     how to do that, visit the <AppLink href="/blog/posts/midi-transpose">

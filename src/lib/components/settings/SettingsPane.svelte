@@ -49,9 +49,9 @@
 
 {#each groups as group (group.category)}
   <div class="column">
-    <h1 class="settings-group-title">
+    <h2 class="settings-group-title">
       {t(`settings:category.${group.category}`)}
-    </h1>
+    </h2>
     {#each Object.entries(group.settings) as [key, setting] (key)}
       <fieldset class="settings-row-fieldset" disabled={songLocked && setting.songSetting}>
         <SettingsRow
