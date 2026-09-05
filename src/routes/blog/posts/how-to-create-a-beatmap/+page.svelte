@@ -19,7 +19,7 @@
     song, you can send it to someone else and they can play it too.
   </p>
 
-  <Header margin="1rem 0">The player</Header>
+  <Header type="h2" textSize="2rem" margin="1rem 0">The player</Header>
   <p class="blog-p">
     This is where a beatmap gets played. The lanes are in the middle, the keys you press are the
     circles in the two bottom corners, and the long bars are notes you have to keep held instead of
@@ -28,7 +28,7 @@
   </p>
   <BlogImage src="{base}/assets/blog/help-vsrg-beatmap.webp" alt="The VSRG player" />
 
-  <Header margin="1rem 0">The composer</Header>
+  <Header type="h2" textSize="2rem" margin="1rem 0">The composer</Header>
   <p class="blog-p">
     This is where a beatmap is made. Every row is one of the lanes, time goes from left to right,
     and you click on the grid to put a note where you want it. The circles are notes you tap once,
@@ -38,7 +38,7 @@
   </p>
   <BlogImage src="{base}/assets/blog/help-vsrg-beatmap-2.webp" alt="The VSRG composer" />
 
-  <Header margin="1rem 0">Choosing the song</Header>
+  <Header type="h2" textSize="2rem" margin="1rem 0">Choosing the song</Header>
   <p class="blog-p">
     A beatmap is always made for a song you already have in the app, so the first thing to do is
     open the settings menu of the VSRG composer and pick one under "Background Song". From then on
@@ -47,7 +47,7 @@
     it, that part is explained in the other post.
   </p>
 
-  <Header margin="1rem 0">Letting the app make the first version</Header>
+  <Header type="h2" textSize="2rem" margin="1rem 0">Letting the app make the first version</Header>
   <p class="blog-p">
     In that same menu there is a "Generate beatmap" button, greyed out until a song is picked. It
     makes a whole beatmap in one go, you say how hard you want it and which part of the song you
@@ -90,7 +90,7 @@
     own, none of them just disappear.
   </p>
 
-  <Header margin="1rem 0">Reading the result</Header>
+  <Header type="h2" textSize="2rem" margin="1rem 0">Reading the result</Header>
   <p class="blog-p">
     When it's finished, a "Result" box appears at the bottom of the window and the new beatmap is
     already open behind it, so you can close the window and listen to it straight away.
@@ -128,7 +128,7 @@
     generating again later will leave it alone.
   </p>
 
-  <Header margin="1rem 0">Placing the notes yourself</Header>
+  <Header type="h2" textSize="2rem" margin="1rem 0">Placing the notes yourself</Header>
   <p class="blog-p">
     You can also make the whole thing by hand, and even a generated beatmap usually wants a bit of
     fixing. The selector at the bottom left is where you choose what a click does, "Tap" adds a note
@@ -151,7 +151,7 @@
     the bottom right.
   </p>
 
-  <Header margin="1rem 0">Playing it</Header>
+  <Header type="h2" textSize="2rem" margin="1rem 0">Playing it</Header>
   <p class="blog-p">
     Once you're happy with it, go to the <AppLink href="/vsrg-player">VSRG player</AppLink>, open
     the song menu and pick your beatmap. You can press the keys on screen or on a keyboard, and if

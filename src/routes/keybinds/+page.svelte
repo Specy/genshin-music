@@ -2,6 +2,7 @@
   import { onMount } from 'svelte';
   import DefaultPage from '$cmp/shell/DefaultPage.svelte';
   import PageMetadata from '$cmp/shell/PageMetadata.svelte';
+  import PageHeading from '$cmp/shell/PageHeading.svelte';
   import BaseNote from '$cmp/BaseNote.svelte';
   import { KeyboardProvider } from '$lib/providers/KeyboardProvider';
   import type { KeyboardCode } from '$lib/providers/KeyboardProvider/KeyboardTypes';
@@ -94,6 +95,7 @@
     text={t('home:keybinds_or_midi_name')}
     description="Change the app keyboard keybinds and MIDI input keys"
   />
+  <PageHeading text={t('home:keybinds_or_midi_name')} />
   <Column gap="1rem" style="padding-bottom:1rem">
     <Card background="none" border="secondary" gap="0.8rem">
       <Header type="h2">

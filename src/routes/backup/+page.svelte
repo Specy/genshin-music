@@ -2,6 +2,7 @@
   import { onMount } from 'svelte';
   import DefaultPage from '$cmp/shell/DefaultPage.svelte';
   import PageMetadata from '$cmp/shell/PageMetadata.svelte';
+  import PageHeading from '$cmp/shell/PageHeading.svelte';
   import AppButton from '$cmp/inputs/AppButton.svelte';
   import AppLink from '$cmp/AppLink.svelte';
   import Row from '$cmp/layout/Row.svelte';
@@ -264,6 +265,7 @@
     text={t('home:backup_name')}
     description="Manage the backups in the app, download or import songs, themes, or all of them"
   />
+  <PageHeading text={t('home:backup_name')} />
   <div class="backup-page">
     <Column gap="1rem" style="padding-bottom:1rem">
       <Card background="none" border="secondary" gap="0.8rem">

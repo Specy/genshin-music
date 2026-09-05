@@ -2,6 +2,7 @@
   import { onMount } from 'svelte';
   import AppBackground from '$cmp/theme/AppBackground.svelte';
   import PageMetadata from '$cmp/shell/PageMetadata.svelte';
+  import PageHeading from '$cmp/shell/PageHeading.svelte';
   import VsrgPlayerMenu from '$cmp/pages/VsrgPlayer/VsrgPlayerMenu.svelte';
   import VsrgPlayerCanvas from '$cmp/pages/VsrgPlayer/VsrgPlayerCanvas.svelte';
   import VsrgPlayerKeyboard from '$cmp/pages/VsrgPlayer/VsrgPlayerKeyboard.svelte';
@@ -175,6 +176,7 @@
 
 <AppBackground page="Main">
   <PageMetadata text={t('home:vsrg_player_name')} description="Play or practice VSRG songs" />
+  <PageHeading text={t('home:vsrg_player_name')} />
   <VsrgPlayerMenu {settings} onSettingsUpdate={handleSettingChange} {onSongSelect} />
   <div class="vsrg-player-page appear-on-mount">
     <div class="vsrg-player-grid">

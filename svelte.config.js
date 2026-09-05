@@ -110,6 +110,14 @@ const config = {
       // same allowlist mechanism as the dead blog links above. Compared bare (never
       // base-prefixed): the bug IS the missing prefix, so it only ever surfaces as this
       // exact unprefixed path regardless of which base the build uses.
+      // Neither file is linked from anywhere in the app, so the crawler never reaches
+      // them on its own. Base-prefixed for the same reason the dead-link allowlist below
+      // is: on the *-no-root builds every prerendered path carries the subpath.
+      // Nothing links to the sitemap, so the crawler never reaches it on its own. Written
+      // base-RELATIVE, unlike the handleHttpError allowlist below: Kit prepends the
+      // configured base to each entry itself, and a base-prefixed one here builds
+      // /skyMusic/skyMusic/sitemap.xml and fails the *-no-root builds.
+      entries: ['*', '/sitemap.xml'],
       handleHttpError: ({ path, referrer, message }) => {
         const knownDeadLinks = [
           '/blog/midi-conversion',

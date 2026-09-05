@@ -139,7 +139,7 @@
     <PromotionCard alwaysVisible />
     <Column gap="1rem">
       <Row justify="between" align="center" gap="1rem" style="flex-wrap:wrap">
-        <Header>Posts</Header>
+        <Header type="h2" textSize="2rem">Posts</Header>
         <Row align="center" gap="0.5rem">
           <ComboBox
             items={selectedTags}
@@ -169,7 +169,7 @@
     <!-- The partners have no page of their own any more; this is where they live. Last on the
          index because the posts are what the page is for. -->
     <Column gap="1rem">
-      <Header>{t('home:partners_name')}</Header>
+      <Header type="h2" textSize="2rem">{t('home:partners_name')}</Header>
       <Partners />
     </Column>
   </Column>

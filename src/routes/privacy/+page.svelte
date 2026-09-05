@@ -2,6 +2,7 @@
   import { onMount } from 'svelte';
   import DefaultPage from '$cmp/shell/DefaultPage.svelte';
   import PageMetadata from '$cmp/shell/PageMetadata.svelte';
+  import PageHeading from '$cmp/shell/PageHeading.svelte';
   import { setPageVisited } from '$stores/PageVisitStore.svelte';
 
   // QUIRK: this whole page is hardcoded English, no t() calls anywhere - preserved as-is, not
@@ -13,6 +14,7 @@
 
 <DefaultPage>
   <PageMetadata text="Privacy" description="Privacy policy for the app" />
+  <PageHeading text="Privacy" />
   <span class="privacy-text">
     This website uses cookies to collect data about usage of the app through IP anonymized Google
     Analytics. We use this information to improve user experience and find how our users use the

@@ -16,6 +16,7 @@
   "meta": {
     "title": "Genshin Music Nightly",
     "description": "Genshin music, a website to play, practice and compose songs",
+    "canonicalOrigin": "https://genshin-music.specy.app",
     "themeColor": "#63aea7",
     "analytics": {
       "tagId": "G-T3TJDT2NFS",

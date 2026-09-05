@@ -323,9 +323,9 @@
 <div class="home-padded column">
   {#if alwaysShowTitle || breakpoint || !hasVisited}
     <div class="home-top">
-      <div class="home-title">
+      <h1 class="home-title">
         {game.meta.title}
-      </div>
+      </h1>
       <div class="home-top-text">
         {t('home:app_description', { APP_NAME })}
       </div>
@@ -407,10 +407,10 @@
         style="background-image:url('{base}/manifestData/composer.webp')"
       ></div>
       <div class="home-content-main" style="background-color:{cardBackground}">
-        <div class="home-content-title">
+        <h2 class="home-content-title">
           {@render faCompactDiscIcon()}
           {t('home:composer_name')}
-        </div>
+        </h2>
         <div class="home-content-text">
           {t('home:composer_description')}
         </div>
@@ -435,10 +435,10 @@
         style="background-image:url('{base}/manifestData/player.webp')"
       ></div>
       <div class="home-content-main" style="background-color:{cardBackground}">
-        <div class="home-content-title">
+        <h2 class="home-content-title">
           {@render bsMusicPlayerFillIcon()}
           {t('home:player_name')}
-        </div>
+        </h2>
         <div class="home-content-text">
           {t('home:player_description')}
         </div>
@@ -678,6 +678,9 @@
   }
 
   .home-content-title {
+    margin: 0;
+    font-size: inherit;
+    font-weight: inherit;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -819,6 +822,9 @@
 
   .home-title {
     font-size: 2rem;
+    margin: 0;
+    font-weight: bold;
+    line-height: 1.2;
   }
 
   .home-top-text {

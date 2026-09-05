@@ -9,6 +9,7 @@
   import { DEFAULT_VSRG_KEYS_MAP } from '$core/legacyConfig';
   import { t } from '$i18n/binding.svelte';
   import PageMetadata from '$cmp/shell/PageMetadata.svelte';
+  import PageHeading from '$cmp/shell/PageHeading.svelte';
   import DecoratedCard from '$cmp/layout/DecoratedCard.svelte';
   import VsrgComposerMenu from '$cmp/pages/VsrgComposer/VsrgComposerMenu.svelte';
   import VsrgTop from '$cmp/pages/VsrgComposer/VsrgTop.svelte';
@@ -915,6 +916,7 @@
     text={`${t('home:vsrg_composer_name')} - ${vsrg.name ?? 'Unnamed'}`}
     description="Create new VSRG songs using existing background songs and create your own beatmap for it."
   />
+  <PageHeading text={`${t('home:vsrg_composer_name')} - ${vsrg.name ?? 'Unnamed'}`} />
   <VsrgComposerMenu
     data={{
       settings,

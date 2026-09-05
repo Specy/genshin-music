@@ -13,7 +13,7 @@
     file for the song and use the MIDI transposing tools to convert it into a music sheet.
   </p>
 
-  <Header margin="1rem 0">Open a MIDI file</Header>
+  <Header type="h2" textSize="2rem" margin="1rem 0">Open a MIDI file</Header>
   <p class="blog-p">
     Once you found your MIDI file, visit the <AppLink href="/composer">composer</AppLink> and open the
     song menu.
@@ -26,7 +26,7 @@
     Audio transpose guide
   </AppLink>.
   <BlogImage src="{base}/assets/blog/midi-btn.webp" alt="MIDI button" />
-  <Header margin="1rem 0">Transpose a MIDI file</Header>
+  <Header type="h2" textSize="2rem" margin="1rem 0">Transpose a MIDI file</Header>
   <p class="blog-p">
     After having selected the file, you can start changing the import settings to best convert the
     song to the app sheet. The MIDI song doesn't perfectly match the music sheet of the app, so you

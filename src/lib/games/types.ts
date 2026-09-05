@@ -378,6 +378,7 @@ export interface GameDefinition {
   meta: {
     title: string; // '{name} Music Nightly'
     description: string; // per-game <meta> + manifest description
+    canonicalOrigin: string; // rel=canonical origin; PUBLIC_CANONICAL_ORIGIN overrides
     themeColor: string; // viewport theme-color (#63aea7 today, both games)
     analytics: { tagId: string; configId: string }; // per-game Google Analytics ids
     updateChannelKey: StorageId; // key into updates.json (= storageId)
