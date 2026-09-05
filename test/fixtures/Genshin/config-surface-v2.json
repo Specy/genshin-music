@@ -1,0 +1,2768 @@
+{
+  "appName": "Genshin",
+  "instruments": [
+    "Lyre",
+    "Vintage-Lyre",
+    "Zither",
+    "Old-Zither",
+    "Ukulele",
+    "LingeringEuphonia",
+    "LeapingSpiritPiano",
+    "HarmonicKey",
+    "DunDun",
+    "DjemDjemDrum",
+    "NightwindHorn"
+  ],
+  "instrumentsData": {
+    "DjemDjemDrum": {
+      "name": "DjemDjemDrum",
+      "displayName": "DjemDjem Drum",
+      "family": "percussive",
+      "midiName": "synth drum",
+      "shape": "genshin-2x4",
+      "notes": [
+        {
+          "file": "0.mp3",
+          "nominal": 60,
+          "baseNote": "C",
+          "pitched": false,
+          "sounding": 60,
+          "icon": "do"
+        },
+        {
+          "file": "1.mp3",
+          "nominal": 62,
+          "baseNote": "D",
+          "pitched": false,
+          "sounding": 62,
+          "icon": "re"
+        },
+        {
+          "file": "2.mp3",
+          "nominal": 64,
+          "baseNote": "E",
+          "pitched": false,
+          "sounding": 64,
+          "icon": "mi"
+        },
+        {
+          "file": "3.mp3",
+          "nominal": 65,
+          "baseNote": "F",
+          "pitched": false,
+          "sounding": 65,
+          "icon": "fa"
+        },
+        {
+          "file": "4.mp3",
+          "nominal": 67,
+          "baseNote": "G",
+          "pitched": false,
+          "sounding": 67,
+          "icon": "do"
+        },
+        {
+          "file": "5.mp3",
+          "nominal": 69,
+          "baseNote": "A",
+          "pitched": false,
+          "sounding": 69,
+          "icon": "re"
+        },
+        {
+          "file": "6.mp3",
+          "nominal": 71,
+          "baseNote": "B",
+          "pitched": false,
+          "sounding": 71,
+          "icon": "mi"
+        },
+        {
+          "file": "7.mp3",
+          "nominal": 72,
+          "baseNote": "C",
+          "pitched": false,
+          "sounding": 72,
+          "icon": "fa"
+        }
+      ]
+    },
+    "DunDun": {
+      "name": "DunDun",
+      "displayName": "DunDun",
+      "family": "percussive",
+      "midiName": "synth drum",
+      "fill": "#F99C55",
+      "clickColor": "#f5a262",
+      "shape": "genshin-2x4",
+      "notes": [
+        {
+          "file": "0.mp3",
+          "nominal": 60,
+          "baseNote": "C",
+          "pitched": false,
+          "sounding": 60,
+          "icon": "do"
+        },
+        {
+          "file": "1.mp3",
+          "nominal": 62,
+          "baseNote": "D",
+          "pitched": false,
+          "sounding": 62,
+          "icon": "re"
+        },
+        {
+          "file": "2.mp3",
+          "nominal": 64,
+          "baseNote": "E",
+          "pitched": false,
+          "sounding": 64,
+          "icon": "mi"
+        },
+        {
+          "file": "3.mp3",
+          "nominal": 65,
+          "baseNote": "F",
+          "pitched": false,
+          "sounding": 65,
+          "icon": "fa"
+        },
+        {
+          "file": "4.mp3",
+          "nominal": 67,
+          "baseNote": "G",
+          "pitched": false,
+          "sounding": 67,
+          "icon": "do"
+        },
+        {
+          "file": "5.mp3",
+          "nominal": 69,
+          "baseNote": "A",
+          "pitched": false,
+          "sounding": 69,
+          "icon": "re"
+        },
+        {
+          "file": "6.mp3",
+          "nominal": 71,
+          "baseNote": "B",
+          "pitched": false,
+          "sounding": 71,
+          "icon": "mi"
+        },
+        {
+          "file": "7.mp3",
+          "nominal": 72,
+          "baseNote": "C",
+          "pitched": false,
+          "sounding": 72,
+          "icon": "fa"
+        }
+      ]
+    },
+    "HarmonicKey": {
+      "name": "HarmonicKey",
+      "displayName": "Harmonic Keys",
+      "family": "piano",
+      "midiName": "acoustic grand piano",
+      "fill": "#dcb154",
+      "clickColor": "#e1cba3",
+      "shape": "genshin-3x7",
+      "sustain": {
+        "release": 0.5,
+        "minLength": 0.1,
+        "loopMode": "loop-continuous"
+      },
+      "notes": [
+        {
+          "file": "0.mp3",
+          "nominal": 72,
+          "baseNote": "C",
+          "pitched": true,
+          "sounding": 72,
+          "icon": "do"
+        },
+        {
+          "file": "1.mp3",
+          "nominal": 74,
+          "baseNote": "D",
+          "pitched": true,
+          "sounding": 74,
+          "icon": "re"
+        },
+        {
+          "file": "2.mp3",
+          "nominal": 76,
+          "baseNote": "E",
+          "pitched": true,
+          "sounding": 76,
+          "icon": "mi"
+        },
+        {
+          "file": "3.mp3",
+          "nominal": 77,
+          "baseNote": "F",
+          "pitched": true,
+          "sounding": 77,
+          "icon": "fa"
+        },
+        {
+          "file": "4.mp3",
+          "nominal": 79,
+          "baseNote": "G",
+          "pitched": true,
+          "sounding": 79,
+          "icon": "so"
+        },
+        {
+          "file": "5.mp3",
+          "nominal": 81,
+          "baseNote": "A",
+          "pitched": true,
+          "sounding": 81,
+          "icon": "la"
+        },
+        {
+          "file": "6.mp3",
+          "nominal": 83,
+          "baseNote": "B",
+          "pitched": true,
+          "sounding": 83,
+          "icon": "ti"
+        },
+        {
+          "file": "7.mp3",
+          "nominal": 60,
+          "baseNote": "C",
+          "pitched": true,
+          "sounding": 60,
+          "icon": "do"
+        },
+        {
+          "file": "8.mp3",
+          "nominal": 62,
+          "baseNote": "D",
+          "pitched": true,
+          "sounding": 62,
+          "icon": "re"
+        },
+        {
+          "file": "9.mp3",
+          "nominal": 64,
+          "baseNote": "E",
+          "pitched": true,
+          "sounding": 64,
+          "icon": "mi"
+        },
+        {
+          "file": "10.mp3",
+          "nominal": 65,
+          "baseNote": "F",
+          "pitched": true,
+          "sounding": 65,
+          "icon": "fa"
+        },
+        {
+          "file": "11.mp3",
+          "nominal": 67,
+          "baseNote": "G",
+          "pitched": true,
+          "sounding": 67,
+          "icon": "so"
+        },
+        {
+          "file": "12.mp3",
+          "nominal": 69,
+          "baseNote": "A",
+          "pitched": true,
+          "sounding": 69,
+          "icon": "la"
+        },
+        {
+          "file": "13.mp3",
+          "nominal": 71,
+          "baseNote": "B",
+          "pitched": true,
+          "sounding": 71,
+          "icon": "ti"
+        },
+        {
+          "file": "14.mp3",
+          "nominal": 48,
+          "baseNote": "C",
+          "pitched": true,
+          "sounding": 48,
+          "icon": "do"
+        },
+        {
+          "file": "15.mp3",
+          "nominal": 50,
+          "baseNote": "D",
+          "pitched": true,
+          "sounding": 50,
+          "icon": "re"
+        },
+        {
+          "file": "16.mp3",
+          "nominal": 52,
+          "baseNote": "E",
+          "pitched": true,
+          "sounding": 52,
+          "icon": "mi"
+        },
+        {
+          "file": "17.mp3",
+          "nominal": 53,
+          "baseNote": "F",
+          "pitched": true,
+          "sounding": 53,
+          "icon": "fa"
+        },
+        {
+          "file": "18.mp3",
+          "nominal": 55,
+          "baseNote": "G",
+          "pitched": true,
+          "sounding": 55,
+          "icon": "so"
+        },
+        {
+          "file": "19.mp3",
+          "nominal": 57,
+          "baseNote": "A",
+          "pitched": true,
+          "sounding": 57,
+          "icon": "la"
+        },
+        {
+          "file": "20.mp3",
+          "nominal": 59,
+          "baseNote": "B",
+          "pitched": true,
+          "sounding": 59,
+          "icon": "ti"
+        }
+      ]
+    },
+    "LeapingSpiritPiano": {
+      "name": "LeapingSpiritPiano",
+      "displayName": "Leaping Spirit Piano",
+      "family": "piano",
+      "midiName": "acoustic grand piano",
+      "fill": "#58afb9",
+      "clickColor": "#58afb9",
+      "shape": "genshin-3x7",
+      "sustain": {
+        "release": 0.3,
+        "minLength": 0.1,
+        "loopMode": "loop-continuous"
+      },
+      "notes": [
+        {
+          "file": "0.mp3",
+          "nominal": 72,
+          "baseNote": "C",
+          "pitched": true,
+          "sounding": 72,
+          "icon": "do"
+        },
+        {
+          "file": "1.mp3",
+          "nominal": 74,
+          "baseNote": "D",
+          "pitched": true,
+          "sounding": 74,
+          "icon": "re"
+        },
+        {
+          "file": "2.mp3",
+          "nominal": 76,
+          "baseNote": "E",
+          "pitched": true,
+          "sounding": 76,
+          "icon": "mi"
+        },
+        {
+          "file": "3.mp3",
+          "nominal": 77,
+          "baseNote": "F",
+          "pitched": true,
+          "sounding": 77,
+          "icon": "fa"
+        },
+        {
+          "file": "4.mp3",
+          "nominal": 79,
+          "baseNote": "G",
+          "pitched": true,
+          "sounding": 79,
+          "icon": "so"
+        },
+        {
+          "file": "5.mp3",
+          "nominal": 81,
+          "baseNote": "A",
+          "pitched": true,
+          "sounding": 81,
+          "icon": "la"
+        },
+        {
+          "file": "6.mp3",
+          "nominal": 83,
+          "baseNote": "B",
+          "pitched": true,
+          "sounding": 83,
+          "icon": "ti"
+        },
+        {
+          "file": "7.mp3",
+          "nominal": 60,
+          "baseNote": "C",
+          "pitched": true,
+          "sounding": 60,
+          "icon": "do"
+        },
+        {
+          "file": "8.mp3",
+          "nominal": 62,
+          "baseNote": "D",
+          "pitched": true,
+          "sounding": 62,
+          "icon": "re"
+        },
+        {
+          "file": "9.mp3",
+          "nominal": 64,
+          "baseNote": "E",
+          "pitched": true,
+          "sounding": 64,
+          "icon": "mi"
+        },
+        {
+          "file": "10.mp3",
+          "nominal": 65,
+          "baseNote": "F",
+          "pitched": true,
+          "sounding": 65,
+          "icon": "fa"
+        },
+        {
+          "file": "11.mp3",
+          "nominal": 67,
+          "baseNote": "G",
+          "pitched": true,
+          "sounding": 67,
+          "icon": "so"
+        },
+        {
+          "file": "12.mp3",
+          "nominal": 69,
+          "baseNote": "A",
+          "pitched": true,
+          "sounding": 69,
+          "icon": "la"
+        },
+        {
+          "file": "13.mp3",
+          "nominal": 71,
+          "baseNote": "B",
+          "pitched": true,
+          "sounding": 71,
+          "icon": "ti"
+        },
+        {
+          "file": "14.mp3",
+          "nominal": 48,
+          "baseNote": "C",
+          "pitched": true,
+          "sounding": 48,
+          "icon": "do"
+        },
+        {
+          "file": "15.mp3",
+          "nominal": 50,
+          "baseNote": "D",
+          "pitched": true,
+          "sounding": 50,
+          "icon": "re"
+        },
+        {
+          "file": "16.mp3",
+          "nominal": 52,
+          "baseNote": "E",
+          "pitched": true,
+          "sounding": 52,
+          "icon": "mi"
+        },
+        {
+          "file": "17.mp3",
+          "nominal": 53,
+          "baseNote": "F",
+          "pitched": true,
+          "sounding": 53,
+          "icon": "fa"
+        },
+        {
+          "file": "18.mp3",
+          "nominal": 55,
+          "baseNote": "G",
+          "pitched": true,
+          "sounding": 55,
+          "icon": "so"
+        },
+        {
+          "file": "19.mp3",
+          "nominal": 57,
+          "baseNote": "A",
+          "pitched": true,
+          "sounding": 57,
+          "icon": "la"
+        },
+        {
+          "file": "20.mp3",
+          "nominal": 59,
+          "baseNote": "B",
+          "pitched": true,
+          "sounding": 59,
+          "icon": "ti"
+        }
+      ]
+    },
+    "LingeringEuphonia": {
+      "name": "LingeringEuphonia",
+      "displayName": "Lingering Euphonia",
+      "family": "strings",
+      "midiName": "pizzicato strings",
+      "fill": "#9288d3",
+      "clickColor": "#9591df",
+      "shape": "genshin-3x7",
+      "notes": [
+        {
+          "file": "0.mp3",
+          "nominal": 72,
+          "baseNote": "C",
+          "pitched": false,
+          "sounding": 72,
+          "icon": "do"
+        },
+        {
+          "file": "1.mp3",
+          "nominal": 74,
+          "baseNote": "Dm",
+          "pitched": false,
+          "sounding": 74,
+          "icon": "re"
+        },
+        {
+          "file": "2.mp3",
+          "nominal": 76,
+          "baseNote": "Em",
+          "pitched": false,
+          "sounding": 76,
+          "icon": "mi"
+        },
+        {
+          "file": "3.mp3",
+          "nominal": 77,
+          "baseNote": "F",
+          "pitched": false,
+          "sounding": 77,
+          "icon": "fa"
+        },
+        {
+          "file": "4.mp3",
+          "nominal": 79,
+          "baseNote": "G",
+          "pitched": false,
+          "sounding": 79,
+          "icon": "so"
+        },
+        {
+          "file": "5.mp3",
+          "nominal": 81,
+          "baseNote": "Am",
+          "pitched": false,
+          "sounding": 81,
+          "icon": "la"
+        },
+        {
+          "file": "6.mp3",
+          "nominal": 83,
+          "baseNote": "G7",
+          "pitched": false,
+          "sounding": 83,
+          "icon": "ti"
+        },
+        {
+          "file": "7.mp3",
+          "nominal": 60,
+          "baseNote": "C",
+          "pitched": true,
+          "sounding": 60,
+          "icon": "do"
+        },
+        {
+          "file": "8.mp3",
+          "nominal": 62,
+          "baseNote": "D",
+          "pitched": true,
+          "sounding": 62,
+          "icon": "re"
+        },
+        {
+          "file": "9.mp3",
+          "nominal": 64,
+          "baseNote": "E",
+          "pitched": true,
+          "sounding": 64,
+          "icon": "mi"
+        },
+        {
+          "file": "10.mp3",
+          "nominal": 65,
+          "baseNote": "F",
+          "pitched": true,
+          "sounding": 65,
+          "icon": "fa"
+        },
+        {
+          "file": "11.mp3",
+          "nominal": 67,
+          "baseNote": "G",
+          "pitched": true,
+          "sounding": 67,
+          "icon": "so"
+        },
+        {
+          "file": "12.mp3",
+          "nominal": 69,
+          "baseNote": "A",
+          "pitched": true,
+          "sounding": 69,
+          "icon": "la"
+        },
+        {
+          "file": "13.mp3",
+          "nominal": 71,
+          "baseNote": "B",
+          "pitched": true,
+          "sounding": 71,
+          "icon": "ti"
+        },
+        {
+          "file": "14.mp3",
+          "nominal": 48,
+          "baseNote": "C",
+          "pitched": true,
+          "sounding": 48,
+          "icon": "do"
+        },
+        {
+          "file": "15.mp3",
+          "nominal": 50,
+          "baseNote": "D",
+          "pitched": true,
+          "sounding": 50,
+          "icon": "re"
+        },
+        {
+          "file": "16.mp3",
+          "nominal": 52,
+          "baseNote": "E",
+          "pitched": true,
+          "sounding": 52,
+          "icon": "mi"
+        },
+        {
+          "file": "17.mp3",
+          "nominal": 53,
+          "baseNote": "F",
+          "pitched": true,
+          "sounding": 53,
+          "icon": "fa"
+        },
+        {
+          "file": "18.mp3",
+          "nominal": 55,
+          "baseNote": "G",
+          "pitched": true,
+          "sounding": 55,
+          "icon": "so"
+        },
+        {
+          "file": "19.mp3",
+          "nominal": 57,
+          "baseNote": "A",
+          "pitched": true,
+          "sounding": 57,
+          "icon": "la"
+        },
+        {
+          "file": "20.mp3",
+          "nominal": 59,
+          "baseNote": "B",
+          "pitched": true,
+          "sounding": 59,
+          "icon": "ti"
+        }
+      ]
+    },
+    "Lyre": {
+      "name": "Lyre",
+      "displayName": "Lyre",
+      "family": "strings",
+      "midiName": "pizzicato strings",
+      "shape": "genshin-3x7",
+      "notes": [
+        {
+          "file": "0.mp3",
+          "nominal": 72,
+          "baseNote": "C",
+          "pitched": true,
+          "sounding": 72,
+          "icon": "do"
+        },
+        {
+          "file": "1.mp3",
+          "nominal": 74,
+          "baseNote": "D",
+          "pitched": true,
+          "sounding": 74,
+          "icon": "re"
+        },
+        {
+          "file": "2.mp3",
+          "nominal": 76,
+          "baseNote": "E",
+          "pitched": true,
+          "sounding": 76,
+          "icon": "mi"
+        },
+        {
+          "file": "3.mp3",
+          "nominal": 77,
+          "baseNote": "F",
+          "pitched": true,
+          "sounding": 77,
+          "icon": "fa"
+        },
+        {
+          "file": "4.mp3",
+          "nominal": 79,
+          "baseNote": "G",
+          "pitched": true,
+          "sounding": 79,
+          "icon": "so"
+        },
+        {
+          "file": "5.mp3",
+          "nominal": 81,
+          "baseNote": "A",
+          "pitched": true,
+          "sounding": 81,
+          "icon": "la"
+        },
+        {
+          "file": "6.mp3",
+          "nominal": 83,
+          "baseNote": "B",
+          "pitched": true,
+          "sounding": 83,
+          "icon": "ti"
+        },
+        {
+          "file": "7.mp3",
+          "nominal": 60,
+          "baseNote": "C",
+          "pitched": true,
+          "sounding": 60,
+          "icon": "do"
+        },
+        {
+          "file": "8.mp3",
+          "nominal": 62,
+          "baseNote": "D",
+          "pitched": true,
+          "sounding": 62,
+          "icon": "re"
+        },
+        {
+          "file": "9.mp3",
+          "nominal": 64,
+          "baseNote": "E",
+          "pitched": true,
+          "sounding": 64,
+          "icon": "mi"
+        },
+        {
+          "file": "10.mp3",
+          "nominal": 65,
+          "baseNote": "F",
+          "pitched": true,
+          "sounding": 65,
+          "icon": "fa"
+        },
+        {
+          "file": "11.mp3",
+          "nominal": 67,
+          "baseNote": "G",
+          "pitched": true,
+          "sounding": 67,
+          "icon": "so"
+        },
+        {
+          "file": "12.mp3",
+          "nominal": 69,
+          "baseNote": "A",
+          "pitched": true,
+          "sounding": 69,
+          "icon": "la"
+        },
+        {
+          "file": "13.mp3",
+          "nominal": 71,
+          "baseNote": "B",
+          "pitched": true,
+          "sounding": 71,
+          "icon": "ti"
+        },
+        {
+          "file": "14.mp3",
+          "nominal": 48,
+          "baseNote": "C",
+          "pitched": true,
+          "sounding": 48,
+          "icon": "do"
+        },
+        {
+          "file": "15.mp3",
+          "nominal": 50,
+          "baseNote": "D",
+          "pitched": true,
+          "sounding": 50,
+          "icon": "re"
+        },
+        {
+          "file": "16.mp3",
+          "nominal": 52,
+          "baseNote": "E",
+          "pitched": true,
+          "sounding": 52,
+          "icon": "mi"
+        },
+        {
+          "file": "17.mp3",
+          "nominal": 53,
+          "baseNote": "F",
+          "pitched": true,
+          "sounding": 53,
+          "icon": "fa"
+        },
+        {
+          "file": "18.mp3",
+          "nominal": 55,
+          "baseNote": "G",
+          "pitched": true,
+          "sounding": 55,
+          "icon": "so"
+        },
+        {
+          "file": "19.mp3",
+          "nominal": 57,
+          "baseNote": "A",
+          "pitched": true,
+          "sounding": 57,
+          "icon": "la"
+        },
+        {
+          "file": "20.mp3",
+          "nominal": 59,
+          "baseNote": "B",
+          "pitched": true,
+          "sounding": 59,
+          "icon": "ti"
+        }
+      ]
+    },
+    "NightwindHorn": {
+      "name": "NightwindHorn",
+      "displayName": "Nightwind Horn",
+      "family": "brass",
+      "midiName": "french horn",
+      "fill": "#dbb361",
+      "clickColor": "#dbb361",
+      "shape": "genshin-2x7",
+      "sustain": {
+        "release": 0.3,
+        "minLength": 0.2,
+        "loopMode": "loop-continuous"
+      },
+      "notes": [
+        {
+          "file": "m60.mp3",
+          "nominal": 60,
+          "baseNote": "C",
+          "pitched": true,
+          "sounding": 60,
+          "icon": "do"
+        },
+        {
+          "file": "m62.mp3",
+          "nominal": 62,
+          "baseNote": "D",
+          "pitched": true,
+          "sounding": 62,
+          "icon": "re"
+        },
+        {
+          "file": "m64.mp3",
+          "nominal": 64,
+          "baseNote": "E",
+          "pitched": true,
+          "sounding": 64,
+          "icon": "mi"
+        },
+        {
+          "file": "m65.mp3",
+          "nominal": 65,
+          "baseNote": "F",
+          "pitched": true,
+          "sounding": 65,
+          "icon": "fa"
+        },
+        {
+          "file": "m67.mp3",
+          "nominal": 67,
+          "baseNote": "G",
+          "pitched": true,
+          "sounding": 67,
+          "icon": "so"
+        },
+        {
+          "file": "m69.mp3",
+          "nominal": 69,
+          "baseNote": "A",
+          "pitched": true,
+          "sounding": 69,
+          "icon": "la"
+        },
+        {
+          "file": "m71.mp3",
+          "nominal": 71,
+          "baseNote": "B",
+          "pitched": true,
+          "sounding": 71,
+          "icon": "ti"
+        },
+        {
+          "file": "m48.mp3",
+          "nominal": 48,
+          "baseNote": "C",
+          "pitched": true,
+          "sounding": 48,
+          "icon": "do"
+        },
+        {
+          "file": "m50.mp3",
+          "nominal": 50,
+          "baseNote": "D",
+          "pitched": true,
+          "sounding": 50,
+          "icon": "re"
+        },
+        {
+          "file": "m52.mp3",
+          "nominal": 52,
+          "baseNote": "E",
+          "pitched": true,
+          "sounding": 52,
+          "icon": "mi"
+        },
+        {
+          "file": "m53.mp3",
+          "nominal": 53,
+          "baseNote": "F",
+          "pitched": true,
+          "sounding": 53,
+          "icon": "fa"
+        },
+        {
+          "file": "m55.mp3",
+          "nominal": 55,
+          "baseNote": "G",
+          "pitched": true,
+          "sounding": 55,
+          "icon": "so"
+        },
+        {
+          "file": "m57.mp3",
+          "nominal": 57,
+          "baseNote": "A",
+          "pitched": true,
+          "sounding": 57,
+          "icon": "la"
+        },
+        {
+          "file": "m59.mp3",
+          "nominal": 59,
+          "baseNote": "B",
+          "pitched": true,
+          "sounding": 59,
+          "icon": "ti"
+        }
+      ]
+    },
+    "Old-Zither": {
+      "name": "Old-Zither",
+      "displayName": "Old Zither",
+      "family": "strings",
+      "midiName": "pizzicato strings",
+      "fill": "#cdb68e",
+      "clickColor": "#ddcba8",
+      "shape": "genshin-3x7",
+      "notes": [
+        {
+          "file": "0.mp3",
+          "nominal": 72,
+          "baseNote": "C",
+          "pitched": true,
+          "sounding": 72,
+          "icon": "do"
+        },
+        {
+          "file": "1.mp3",
+          "nominal": 74,
+          "baseNote": "D",
+          "pitched": true,
+          "sounding": 74,
+          "icon": "re"
+        },
+        {
+          "file": "2.mp3",
+          "nominal": 76,
+          "baseNote": "E",
+          "pitched": true,
+          "sounding": 76,
+          "icon": "mi"
+        },
+        {
+          "file": "3.mp3",
+          "nominal": 77,
+          "baseNote": "F",
+          "pitched": true,
+          "sounding": 77,
+          "icon": "fa"
+        },
+        {
+          "file": "4.mp3",
+          "nominal": 79,
+          "baseNote": "G",
+          "pitched": true,
+          "sounding": 79,
+          "icon": "so"
+        },
+        {
+          "file": "5.mp3",
+          "nominal": 81,
+          "baseNote": "A",
+          "pitched": true,
+          "sounding": 81,
+          "icon": "la"
+        },
+        {
+          "file": "6.mp3",
+          "nominal": 83,
+          "baseNote": "B",
+          "pitched": true,
+          "sounding": 83,
+          "icon": "ti"
+        },
+        {
+          "file": "7.mp3",
+          "nominal": 60,
+          "baseNote": "C",
+          "pitched": true,
+          "sounding": 60,
+          "icon": "do"
+        },
+        {
+          "file": "8.mp3",
+          "nominal": 62,
+          "baseNote": "D",
+          "pitched": true,
+          "sounding": 62,
+          "icon": "re"
+        },
+        {
+          "file": "9.mp3",
+          "nominal": 64,
+          "baseNote": "E",
+          "pitched": true,
+          "sounding": 64,
+          "icon": "mi"
+        },
+        {
+          "file": "10.mp3",
+          "nominal": 65,
+          "baseNote": "F",
+          "pitched": true,
+          "sounding": 65,
+          "icon": "fa"
+        },
+        {
+          "file": "11.mp3",
+          "nominal": 67,
+          "baseNote": "G",
+          "pitched": true,
+          "sounding": 67,
+          "icon": "so"
+        },
+        {
+          "file": "12.mp3",
+          "nominal": 69,
+          "baseNote": "A",
+          "pitched": true,
+          "sounding": 69,
+          "icon": "la"
+        },
+        {
+          "file": "13.mp3",
+          "nominal": 71,
+          "baseNote": "B",
+          "pitched": true,
+          "sounding": 71,
+          "icon": "ti"
+        },
+        {
+          "file": "14.mp3",
+          "nominal": 48,
+          "baseNote": "C",
+          "pitched": true,
+          "sounding": 48,
+          "icon": "do"
+        },
+        {
+          "file": "15.mp3",
+          "nominal": 50,
+          "baseNote": "D",
+          "pitched": true,
+          "sounding": 50,
+          "icon": "re"
+        },
+        {
+          "file": "16.mp3",
+          "nominal": 52,
+          "baseNote": "E",
+          "pitched": true,
+          "sounding": 52,
+          "icon": "mi"
+        },
+        {
+          "file": "17.mp3",
+          "nominal": 53,
+          "baseNote": "F",
+          "pitched": true,
+          "sounding": 53,
+          "icon": "fa"
+        },
+        {
+          "file": "18.mp3",
+          "nominal": 55,
+          "baseNote": "G",
+          "pitched": true,
+          "sounding": 55,
+          "icon": "so"
+        },
+        {
+          "file": "19.mp3",
+          "nominal": 57,
+          "baseNote": "A",
+          "pitched": true,
+          "sounding": 57,
+          "icon": "la"
+        },
+        {
+          "file": "20.mp3",
+          "nominal": 59,
+          "baseNote": "B",
+          "pitched": true,
+          "sounding": 59,
+          "icon": "ti"
+        }
+      ]
+    },
+    "Ukulele": {
+      "name": "Ukulele",
+      "displayName": "Ukulele",
+      "family": "strings",
+      "midiName": "pizzicato strings",
+      "fill": "#4d719a",
+      "clickColor": "#6586d9",
+      "shape": "genshin-3x7",
+      "notes": [
+        {
+          "file": "0.mp3",
+          "nominal": 72,
+          "baseNote": "C",
+          "pitched": false,
+          "sounding": 84,
+          "icon": "do"
+        },
+        {
+          "file": "1.mp3",
+          "nominal": 74,
+          "baseNote": "Dm",
+          "pitched": false,
+          "sounding": 86,
+          "icon": "re"
+        },
+        {
+          "file": "2.mp3",
+          "nominal": 76,
+          "baseNote": "Em",
+          "pitched": false,
+          "sounding": 88,
+          "icon": "mi"
+        },
+        {
+          "file": "3.mp3",
+          "nominal": 77,
+          "baseNote": "F",
+          "pitched": false,
+          "sounding": 89,
+          "icon": "fa"
+        },
+        {
+          "file": "4.mp3",
+          "nominal": 79,
+          "baseNote": "G",
+          "pitched": false,
+          "sounding": 91,
+          "icon": "so"
+        },
+        {
+          "file": "5.mp3",
+          "nominal": 81,
+          "baseNote": "Am",
+          "pitched": false,
+          "sounding": 93,
+          "icon": "la"
+        },
+        {
+          "file": "6.mp3",
+          "nominal": 83,
+          "baseNote": "G7",
+          "pitched": false,
+          "sounding": 95,
+          "icon": "ti"
+        },
+        {
+          "file": "7.mp3",
+          "nominal": 60,
+          "baseNote": "C",
+          "pitched": true,
+          "sounding": 72,
+          "icon": "do"
+        },
+        {
+          "file": "8.mp3",
+          "nominal": 62,
+          "baseNote": "D",
+          "pitched": true,
+          "sounding": 74,
+          "icon": "re"
+        },
+        {
+          "file": "9.mp3",
+          "nominal": 64,
+          "baseNote": "E",
+          "pitched": true,
+          "sounding": 76,
+          "icon": "mi"
+        },
+        {
+          "file": "10.mp3",
+          "nominal": 65,
+          "baseNote": "F",
+          "pitched": true,
+          "sounding": 77,
+          "icon": "fa"
+        },
+        {
+          "file": "11.mp3",
+          "nominal": 67,
+          "baseNote": "G",
+          "pitched": true,
+          "sounding": 79,
+          "icon": "so"
+        },
+        {
+          "file": "12.mp3",
+          "nominal": 69,
+          "baseNote": "A",
+          "pitched": true,
+          "sounding": 81,
+          "icon": "la"
+        },
+        {
+          "file": "13.mp3",
+          "nominal": 71,
+          "baseNote": "B",
+          "pitched": true,
+          "sounding": 83,
+          "icon": "ti"
+        },
+        {
+          "file": "14.mp3",
+          "nominal": 48,
+          "baseNote": "C",
+          "pitched": true,
+          "sounding": 60,
+          "icon": "do"
+        },
+        {
+          "file": "15.mp3",
+          "nominal": 50,
+          "baseNote": "D",
+          "pitched": true,
+          "sounding": 62,
+          "icon": "re"
+        },
+        {
+          "file": "16.mp3",
+          "nominal": 52,
+          "baseNote": "E",
+          "pitched": true,
+          "sounding": 64,
+          "icon": "mi"
+        },
+        {
+          "file": "17.mp3",
+          "nominal": 53,
+          "baseNote": "F",
+          "pitched": true,
+          "sounding": 65,
+          "icon": "fa"
+        },
+        {
+          "file": "18.mp3",
+          "nominal": 55,
+          "baseNote": "G",
+          "pitched": true,
+          "sounding": 67,
+          "icon": "so"
+        },
+        {
+          "file": "19.mp3",
+          "nominal": 57,
+          "baseNote": "A",
+          "pitched": true,
+          "sounding": 69,
+          "icon": "la"
+        },
+        {
+          "file": "20.mp3",
+          "nominal": 59,
+          "baseNote": "B",
+          "pitched": true,
+          "sounding": 71,
+          "icon": "ti"
+        }
+      ]
+    },
+    "Vintage-Lyre": {
+      "name": "Vintage-Lyre",
+      "displayName": "Vintage Lyre",
+      "family": "strings",
+      "midiName": "pizzicato strings",
+      "fill": "#7FB363",
+      "clickColor": "#7FB363",
+      "shape": "genshin-3x7",
+      "notes": [
+        {
+          "file": "0.mp3",
+          "nominal": 72,
+          "baseNote": "C",
+          "pitched": true,
+          "sounding": 72,
+          "icon": "do"
+        },
+        {
+          "file": "1.mp3",
+          "nominal": 74,
+          "baseNote": "Db",
+          "pitched": true,
+          "sounding": 73,
+          "icon": "reb"
+        },
+        {
+          "file": "2.mp3",
+          "nominal": 76,
+          "baseNote": "Eb",
+          "pitched": true,
+          "sounding": 75,
+          "icon": "mib"
+        },
+        {
+          "file": "3.mp3",
+          "nominal": 77,
+          "baseNote": "F",
+          "pitched": true,
+          "sounding": 77,
+          "icon": "fa"
+        },
+        {
+          "file": "4.mp3",
+          "nominal": 79,
+          "baseNote": "G",
+          "pitched": true,
+          "sounding": 79,
+          "icon": "so"
+        },
+        {
+          "file": "5.mp3",
+          "nominal": 81,
+          "baseNote": "Ab",
+          "pitched": true,
+          "sounding": 80,
+          "icon": "lab"
+        },
+        {
+          "file": "6.mp3",
+          "nominal": 83,
+          "baseNote": "Bb",
+          "pitched": true,
+          "sounding": 82,
+          "icon": "tib"
+        },
+        {
+          "file": "7.mp3",
+          "nominal": 60,
+          "baseNote": "C",
+          "pitched": true,
+          "sounding": 60,
+          "icon": "do"
+        },
+        {
+          "file": "8.mp3",
+          "nominal": 62,
+          "baseNote": "D",
+          "pitched": true,
+          "sounding": 62,
+          "icon": "re"
+        },
+        {
+          "file": "9.mp3",
+          "nominal": 64,
+          "baseNote": "Eb",
+          "pitched": true,
+          "sounding": 63,
+          "icon": "mib"
+        },
+        {
+          "file": "10.mp3",
+          "nominal": 65,
+          "baseNote": "F",
+          "pitched": true,
+          "sounding": 65,
+          "icon": "fa"
+        },
+        {
+          "file": "11.mp3",
+          "nominal": 67,
+          "baseNote": "G",
+          "pitched": true,
+          "sounding": 67,
+          "icon": "so"
+        },
+        {
+          "file": "12.mp3",
+          "nominal": 69,
+          "baseNote": "A",
+          "pitched": true,
+          "sounding": 69,
+          "icon": "la"
+        },
+        {
+          "file": "13.mp3",
+          "nominal": 71,
+          "baseNote": "Bb",
+          "pitched": true,
+          "sounding": 70,
+          "icon": "tib"
+        },
+        {
+          "file": "14.mp3",
+          "nominal": 48,
+          "baseNote": "C",
+          "pitched": true,
+          "sounding": 48,
+          "icon": "do"
+        },
+        {
+          "file": "15.mp3",
+          "nominal": 50,
+          "baseNote": "D",
+          "pitched": true,
+          "sounding": 50,
+          "icon": "re"
+        },
+        {
+          "file": "16.mp3",
+          "nominal": 52,
+          "baseNote": "Eb",
+          "pitched": true,
+          "sounding": 51,
+          "icon": "mib"
+        },
+        {
+          "file": "17.mp3",
+          "nominal": 53,
+          "baseNote": "F",
+          "pitched": true,
+          "sounding": 53,
+          "icon": "fa"
+        },
+        {
+          "file": "18.mp3",
+          "nominal": 55,
+          "baseNote": "G",
+          "pitched": true,
+          "sounding": 55,
+          "icon": "so"
+        },
+        {
+          "file": "19.mp3",
+          "nominal": 57,
+          "baseNote": "A",
+          "pitched": true,
+          "sounding": 57,
+          "icon": "la"
+        },
+        {
+          "file": "20.mp3",
+          "nominal": 59,
+          "baseNote": "Bb",
+          "pitched": true,
+          "sounding": 58,
+          "icon": "tib"
+        }
+      ]
+    },
+    "Zither": {
+      "name": "Zither",
+      "displayName": "Zither",
+      "family": "strings",
+      "midiName": "pizzicato strings",
+      "fill": "#cdb68e",
+      "clickColor": "#ddcba8",
+      "shape": "genshin-3x7",
+      "notes": [
+        {
+          "file": "0.mp3",
+          "nominal": 72,
+          "baseNote": "C",
+          "pitched": true,
+          "sounding": 72,
+          "icon": "do"
+        },
+        {
+          "file": "1.mp3",
+          "nominal": 74,
+          "baseNote": "D",
+          "pitched": true,
+          "sounding": 74,
+          "icon": "re"
+        },
+        {
+          "file": "2.mp3",
+          "nominal": 76,
+          "baseNote": "E",
+          "pitched": true,
+          "sounding": 76,
+          "icon": "mi"
+        },
+        {
+          "file": "3.mp3",
+          "nominal": 77,
+          "baseNote": "F",
+          "pitched": true,
+          "sounding": 77,
+          "icon": "fa"
+        },
+        {
+          "file": "4.mp3",
+          "nominal": 79,
+          "baseNote": "G",
+          "pitched": true,
+          "sounding": 79,
+          "icon": "so"
+        },
+        {
+          "file": "5.mp3",
+          "nominal": 81,
+          "baseNote": "A",
+          "pitched": true,
+          "sounding": 81,
+          "icon": "la"
+        },
+        {
+          "file": "6.mp3",
+          "nominal": 83,
+          "baseNote": "B",
+          "pitched": true,
+          "sounding": 83,
+          "icon": "ti"
+        },
+        {
+          "file": "7.mp3",
+          "nominal": 60,
+          "baseNote": "C",
+          "pitched": true,
+          "sounding": 60,
+          "icon": "do"
+        },
+        {
+          "file": "8.mp3",
+          "nominal": 62,
+          "baseNote": "D",
+          "pitched": true,
+          "sounding": 62,
+          "icon": "re"
+        },
+        {
+          "file": "9.mp3",
+          "nominal": 64,
+          "baseNote": "E",
+          "pitched": true,
+          "sounding": 64,
+          "icon": "mi"
+        },
+        {
+          "file": "10.mp3",
+          "nominal": 65,
+          "baseNote": "F",
+          "pitched": true,
+          "sounding": 65,
+          "icon": "fa"
+        },
+        {
+          "file": "11.mp3",
+          "nominal": 67,
+          "baseNote": "G",
+          "pitched": true,
+          "sounding": 67,
+          "icon": "so"
+        },
+        {
+          "file": "12.mp3",
+          "nominal": 69,
+          "baseNote": "A",
+          "pitched": true,
+          "sounding": 69,
+          "icon": "la"
+        },
+        {
+          "file": "13.mp3",
+          "nominal": 71,
+          "baseNote": "B",
+          "pitched": true,
+          "sounding": 71,
+          "icon": "ti"
+        },
+        {
+          "file": "14.mp3",
+          "nominal": 48,
+          "baseNote": "C",
+          "pitched": true,
+          "sounding": 48,
+          "icon": "do"
+        },
+        {
+          "file": "15.mp3",
+          "nominal": 50,
+          "baseNote": "D",
+          "pitched": true,
+          "sounding": 50,
+          "icon": "re"
+        },
+        {
+          "file": "16.mp3",
+          "nominal": 52,
+          "baseNote": "E",
+          "pitched": true,
+          "sounding": 52,
+          "icon": "mi"
+        },
+        {
+          "file": "17.mp3",
+          "nominal": 53,
+          "baseNote": "F",
+          "pitched": true,
+          "sounding": 53,
+          "icon": "fa"
+        },
+        {
+          "file": "18.mp3",
+          "nominal": 55,
+          "baseNote": "G",
+          "pitched": true,
+          "sounding": 55,
+          "icon": "so"
+        },
+        {
+          "file": "19.mp3",
+          "nominal": 57,
+          "baseNote": "A",
+          "pitched": true,
+          "sounding": 57,
+          "icon": "la"
+        },
+        {
+          "file": "20.mp3",
+          "nominal": 59,
+          "baseNote": "B",
+          "pitched": true,
+          "sounding": 59,
+          "icon": "ti"
+        }
+      ]
+    }
+  },
+  "shapes": {
+    "genshin-3x7": {
+      "id": "genshin-3x7",
+      "capacity": 21,
+      "columns": 7,
+      "labels": {
+        "keyboard": [
+          "Q",
+          "W",
+          "E",
+          "R",
+          "T",
+          "Y",
+          "U",
+          "A",
+          "S",
+          "D",
+          "F",
+          "G",
+          "H",
+          "J",
+          "Z",
+          "X",
+          "C",
+          "V",
+          "B",
+          "N",
+          "M"
+        ],
+        "abc": [
+          "A1",
+          "A2",
+          "A3",
+          "A4",
+          "A5",
+          "A6",
+          "A7",
+          "B1",
+          "B2",
+          "B3",
+          "B4",
+          "B5",
+          "B6",
+          "B7",
+          "C1",
+          "C2",
+          "C3",
+          "C4",
+          "C5",
+          "C6",
+          "C7"
+        ],
+        "number": [
+          "1̇",
+          "2̇",
+          "3̇",
+          "4̇",
+          "5̇",
+          "6̇",
+          "7̇",
+          "1",
+          "2",
+          "3",
+          "4",
+          "5",
+          "6",
+          "7",
+          "1̣",
+          "2̣",
+          "3̣",
+          "4̣",
+          "5̣",
+          "6̣",
+          "7̣"
+        ],
+        "playstation": [
+          " ",
+          " ",
+          " ",
+          " ",
+          " ",
+          " ",
+          " ",
+          " ",
+          " ",
+          " ",
+          " ",
+          " ",
+          " ",
+          " ",
+          " ",
+          " ",
+          " ",
+          " ",
+          " ",
+          " ",
+          " "
+        ],
+        "switch": [
+          " ",
+          " ",
+          " ",
+          " ",
+          " ",
+          " ",
+          " ",
+          " ",
+          " ",
+          " ",
+          " ",
+          " ",
+          " ",
+          " ",
+          " ",
+          " ",
+          " ",
+          " ",
+          " ",
+          " ",
+          " "
+        ]
+      },
+      "noteShape": {
+        "kind": "circle"
+      }
+    },
+    "genshin-2x7": {
+      "id": "genshin-2x7",
+      "capacity": 14,
+      "columns": 7,
+      "labels": {
+        "keyboard": [
+          "A",
+          "S",
+          "D",
+          "F",
+          "G",
+          "H",
+          "J",
+          "Z",
+          "X",
+          "C",
+          "V",
+          "B",
+          "N",
+          "M"
+        ],
+        "abc": [
+          "B1",
+          "B2",
+          "B3",
+          "B4",
+          "B5",
+          "B6",
+          "B7",
+          "C1",
+          "C2",
+          "C3",
+          "C4",
+          "C5",
+          "C6",
+          "C7"
+        ],
+        "number": [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5",
+          "6",
+          "7",
+          "1̣",
+          "2̣",
+          "3̣",
+          "4̣",
+          "5̣",
+          "6̣",
+          "7̣"
+        ],
+        "playstation": [
+          " ",
+          " ",
+          " ",
+          " ",
+          " ",
+          " ",
+          " ",
+          " ",
+          " ",
+          " ",
+          " ",
+          " ",
+          " ",
+          " "
+        ],
+        "switch": [
+          " ",
+          " ",
+          " ",
+          " ",
+          " ",
+          " ",
+          " ",
+          " ",
+          " ",
+          " ",
+          " ",
+          " ",
+          " ",
+          " "
+        ]
+      },
+      "noteShape": {
+        "kind": "circle"
+      }
+    },
+    "genshin-2x4": {
+      "id": "genshin-2x4",
+      "capacity": 8,
+      "columns": 4,
+      "labels": {
+        "keyboard": [
+          "Q",
+          "W",
+          "E",
+          "R",
+          "A",
+          "S",
+          "D",
+          "F"
+        ],
+        "abc": [
+          "A1",
+          "A2",
+          "A3",
+          "A4",
+          "B1",
+          "B2",
+          "B3",
+          "B4"
+        ],
+        "number": [
+          "1",
+          "2",
+          "3",
+          "4",
+          "1̣",
+          "2̣",
+          "3̣",
+          "4̣"
+        ],
+        "playstation": [
+          "⟰",
+          "▲",
+          "⭅",
+          "◼",
+          "⟱",
+          "X",
+          "L2",
+          "R2"
+        ],
+        "switch": [
+          "⟰",
+          "X",
+          "⭅",
+          "Y",
+          "⟱",
+          "B",
+          "Zl",
+          "Zr"
+        ]
+      },
+      "noteShape": {
+        "kind": "circle"
+      }
+    }
+  },
+  "pitches": [
+    "C",
+    "Db",
+    "D",
+    "Eb",
+    "E",
+    "F",
+    "Gb",
+    "G",
+    "Ab",
+    "A",
+    "Bb",
+    "B"
+  ],
+  "tempoChangers": [
+    {
+      "id": 0,
+      "text": "1",
+      "changer": 1,
+      "color": 5332079
+    },
+    {
+      "id": 1,
+      "text": "1/2",
+      "changer": 0.5,
+      "color": 5338451
+    },
+    {
+      "id": 2,
+      "text": "1/4",
+      "changer": 0.25,
+      "color": 4410493
+    },
+    {
+      "id": 3,
+      "text": "1/8",
+      "changer": 0.125,
+      "color": 7818605
+    }
+  ],
+  "baseLayerLimit": 64,
+  "composerNotePositions": [
+    6,
+    5,
+    4,
+    3,
+    2,
+    1,
+    0,
+    13,
+    12,
+    11,
+    10,
+    9,
+    8,
+    7,
+    20,
+    19,
+    18,
+    17,
+    16,
+    15,
+    14
+  ],
+  "importNotePositions": [
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    0
+  ],
+  "notesCssClasses": {
+    "noteComposer": "note-composer",
+    "note": "note",
+    "noteAnimation": "note-animation",
+    "approachCircle": "approach-circle",
+    "noteName": "note-name"
+  },
+  "baseThemeConfig": {
+    "text": {
+      "light": "#eae8e6",
+      "dark": "#151414",
+      "note": "#aaaa82"
+    }
+  },
+  "noteNameTypes": [
+    "Note name",
+    "Keyboard layout",
+    "Your Keyboard layout",
+    "Do Re Mi",
+    "ABC",
+    "No Text",
+    "1 2 3"
+  ],
+  "midiBounds": {
+    "upper": 83,
+    "lower": 48
+  },
+  "midiPresets": [
+    {
+      "name": "default",
+      "notes": [
+        72,
+        74,
+        76,
+        77,
+        79,
+        81,
+        83,
+        60,
+        62,
+        64,
+        65,
+        67,
+        69,
+        71,
+        48,
+        50,
+        52,
+        53,
+        55,
+        57,
+        59
+      ]
+    }
+  ],
+  "notesPerColumn": 21,
+  "noteScale": {
+    "Cb": [
+      "Cb",
+      "Dbb",
+      "Db",
+      "Ebb",
+      "Eb",
+      "Fb",
+      "Gbb",
+      "Gb",
+      "Abb",
+      "Ab",
+      "Bbb",
+      "Bb"
+    ],
+    "C": [
+      "C",
+      "Db",
+      "D",
+      "Eb",
+      "E",
+      "F",
+      "Gb",
+      "G",
+      "Ab",
+      "A",
+      "Bb",
+      "B"
+    ],
+    "C#": [
+      "C#",
+      "D",
+      "D#",
+      "E",
+      "E#",
+      "F#",
+      "G",
+      "G#",
+      "A",
+      "A#",
+      "B",
+      "B#"
+    ],
+    "Db": [
+      "Db",
+      "Ebb",
+      "Eb",
+      "Fb",
+      "F",
+      "Gb",
+      "Abb",
+      "Ab",
+      "Bbb",
+      "Bb",
+      "Cb",
+      "C"
+    ],
+    "D": [
+      "D",
+      "Eb",
+      "E",
+      "F",
+      "F#",
+      "G",
+      "Ab",
+      "A",
+      "Bb",
+      "B",
+      "C",
+      "C#"
+    ],
+    "D#": [
+      "D#",
+      "E",
+      "E#",
+      "F#",
+      "F##",
+      "G#",
+      "A",
+      "A#",
+      "B",
+      "B#",
+      "C#",
+      "C##"
+    ],
+    "Eb": [
+      "Eb",
+      "Fb",
+      "F",
+      "Gb",
+      "G",
+      "Ab",
+      "Bbb",
+      "Bb",
+      "Cb",
+      "C",
+      "Db",
+      "D"
+    ],
+    "E": [
+      "E",
+      "F",
+      "F#",
+      "G",
+      "G#",
+      "A",
+      "Bb",
+      "B",
+      "C",
+      "C#",
+      "D",
+      "D#"
+    ],
+    "E#": [
+      "E#",
+      "F#",
+      "F##",
+      "G#",
+      "G##",
+      "A#",
+      "B",
+      "B#",
+      "C#",
+      "C##",
+      "D#",
+      "D##"
+    ],
+    "Fb": [
+      "Fb",
+      "Gbb",
+      "Gb",
+      "Abb",
+      "Ab",
+      "Bbb",
+      "Cbb",
+      "Cb",
+      "Dbb",
+      "Db",
+      "Ebb",
+      "Eb"
+    ],
+    "F": [
+      "F",
+      "Gb",
+      "G",
+      "Ab",
+      "A",
+      "Bb",
+      "Cb",
+      "C",
+      "Db",
+      "D",
+      "Eb",
+      "E"
+    ],
+    "F#": [
+      "F#",
+      "G",
+      "G#",
+      "A",
+      "A#",
+      "B",
+      "C",
+      "C#",
+      "D",
+      "D#",
+      "E",
+      "E#"
+    ],
+    "Gb": [
+      "Gb",
+      "Abb",
+      "Ab",
+      "Bbb",
+      "Bb",
+      "Cb",
+      "Dbb",
+      "Db",
+      "Ebb",
+      "Eb",
+      "Fb",
+      "F"
+    ],
+    "G": [
+      "G",
+      "Ab",
+      "A",
+      "Bb",
+      "B",
+      "C",
+      "Db",
+      "D",
+      "Eb",
+      "E",
+      "F",
+      "F#"
+    ],
+    "G#": [
+      "G#",
+      "A",
+      "A#",
+      "B",
+      "B#",
+      "C#",
+      "D",
+      "D#",
+      "E",
+      "E#",
+      "F#",
+      "F##"
+    ],
+    "Ab": [
+      "Ab",
+      "Bbb",
+      "Bb",
+      "Cb",
+      "C",
+      "Db",
+      "Ebb",
+      "Eb",
+      "Fb",
+      "F",
+      "Gb",
+      "G"
+    ],
+    "A": [
+      "A",
+      "Bb",
+      "B",
+      "C",
+      "C#",
+      "D",
+      "Eb",
+      "E",
+      "F",
+      "F#",
+      "G",
+      "G#"
+    ],
+    "A#": [
+      "A#",
+      "B",
+      "B#",
+      "C#",
+      "C##",
+      "D#",
+      "E",
+      "E#",
+      "F#",
+      "F##",
+      "G#",
+      "G##"
+    ],
+    "Bb": [
+      "Bb",
+      "Cb",
+      "C",
+      "Db",
+      "D",
+      "Eb",
+      "Fb",
+      "F",
+      "Gb",
+      "G",
+      "Ab",
+      "A"
+    ],
+    "B": [
+      "B",
+      "C",
+      "C#",
+      "D",
+      "D#",
+      "E",
+      "F",
+      "F#",
+      "G",
+      "G#",
+      "A",
+      "A#"
+    ],
+    "B#": [
+      "B#",
+      "C#",
+      "C##",
+      "D#",
+      "D##",
+      "E#",
+      "F#",
+      "F##",
+      "G#",
+      "G##",
+      "A#",
+      "A##"
+    ],
+    "": [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ]
+  },
+  "doReMiNoteScale": {
+    "Cb": [
+      "dob",
+      "rebb",
+      "reb",
+      "mibb",
+      "mib",
+      "fab",
+      "solbb",
+      "solb",
+      "labb",
+      "lab",
+      "tibb",
+      "tib"
+    ],
+    "C": [
+      "do",
+      "reb",
+      "re",
+      "mib",
+      "mi",
+      "fa",
+      "solb",
+      "sol",
+      "lab",
+      "la",
+      "tib",
+      "ti"
+    ],
+    "C#": [
+      "do#",
+      "re",
+      "re#",
+      "mi",
+      "mi#",
+      "fa#",
+      "sol",
+      "sol#",
+      "la",
+      "la#",
+      "ti",
+      "ti#"
+    ],
+    "Db": [
+      "reb",
+      "mibb",
+      "mib",
+      "fab",
+      "fa",
+      "solb",
+      "labb",
+      "lab",
+      "tibb",
+      "tib",
+      "dob",
+      "do"
+    ],
+    "D": [
+      "re",
+      "mib",
+      "mi",
+      "fa",
+      "fa#",
+      "sol",
+      "lab",
+      "la",
+      "tib",
+      "ti",
+      "do",
+      "do#"
+    ],
+    "D#": [
+      "re#",
+      "mi",
+      "mi#",
+      "fa#",
+      "fa##",
+      "sol#",
+      "la",
+      "la#",
+      "ti",
+      "ti#",
+      "do#",
+      "do##"
+    ],
+    "Eb": [
+      "mib",
+      "fab",
+      "fa",
+      "solb",
+      "sol",
+      "lab",
+      "tibb",
+      "tib",
+      "dob",
+      "do",
+      "reb",
+      "re"
+    ],
+    "E": [
+      "mi",
+      "fa",
+      "fa#",
+      "sol",
+      "sol#",
+      "la",
+      "tib",
+      "ti",
+      "do",
+      "do#",
+      "re",
+      "re#"
+    ],
+    "E#": [
+      "mi#",
+      "fa#",
+      "fa##",
+      "sol#",
+      "sol##",
+      "la#",
+      "ti",
+      "ti#",
+      "do#",
+      "do##",
+      "re#",
+      "re##"
+    ],
+    "Fb": [
+      "fab",
+      "solbb",
+      "solb",
+      "labb",
+      "lab",
+      "tibb",
+      "dobb",
+      "dob",
+      "rebb",
+      "reb",
+      "mibb",
+      "mib"
+    ],
+    "F": [
+      "fa",
+      "solb",
+      "sol",
+      "lab",
+      "la",
+      "tib",
+      "dob",
+      "do",
+      "reb",
+      "re",
+      "mib",
+      "mi"
+    ],
+    "F#": [
+      "fa#",
+      "sol",
+      "sol#",
+      "la",
+      "la#",
+      "ti",
+      "do",
+      "do#",
+      "re",
+      "re#",
+      "mi",
+      "mi#"
+    ],
+    "Gb": [
+      "solb",
+      "labb",
+      "lab",
+      "tibb",
+      "tib",
+      "dob",
+      "rebb",
+      "reb",
+      "mibb",
+      "mib",
+      "fab",
+      "fa"
+    ],
+    "G": [
+      "sol",
+      "lab",
+      "la",
+      "tib",
+      "ti",
+      "do",
+      "reb",
+      "re",
+      "mib",
+      "mi",
+      "fa",
+      "fa#"
+    ],
+    "G#": [
+      "sol#",
+      "la",
+      "la#",
+      "ti",
+      "ti#",
+      "do#",
+      "re",
+      "re#",
+      "mi",
+      "mi#",
+      "fa#",
+      "fa##"
+    ],
+    "Ab": [
+      "lab",
+      "tibb",
+      "tib",
+      "dob",
+      "do",
+      "reb",
+      "mibb",
+      "mib",
+      "fab",
+      "fa",
+      "solb",
+      "sol"
+    ],
+    "A": [
+      "la",
+      "tib",
+      "ti",
+      "do",
+      "do#",
+      "re",
+      "mib",
+      "mi",
+      "fa",
+      "fa#",
+      "sol",
+      "sol#"
+    ],
+    "A#": [
+      "la#",
+      "ti",
+      "ti#",
+      "do#",
+      "do##",
+      "re#",
+      "mi",
+      "mi#",
+      "fa#",
+      "fa##",
+      "sol#",
+      "sol##"
+    ],
+    "Bb": [
+      "tib",
+      "dob",
+      "do",
+      "reb",
+      "re",
+      "mib",
+      "fab",
+      "fa",
+      "solb",
+      "sol",
+      "lab",
+      "la"
+    ],
+    "B": [
+      "ti",
+      "do",
+      "do#",
+      "re",
+      "re#",
+      "mi",
+      "fa",
+      "fa#",
+      "sol",
+      "sol#",
+      "la",
+      "la#"
+    ],
+    "B#": [
+      "ti#",
+      "do#",
+      "do##",
+      "re#",
+      "re##",
+      "mi#",
+      "fa#",
+      "fa##",
+      "sol#",
+      "sol##",
+      "la#",
+      "la##"
+    ],
+    "": [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ]
+  }
+}

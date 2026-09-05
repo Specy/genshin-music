@@ -1,0 +1,13 @@
+{
+  "displayName": "Leaping Spirit Piano",
+  "family": "piano",
+  "midiName": "acoustic grand piano",
+  "fill": "#58afb9",
+  "clickColor": "#58afb9",
+  "shape": "genshin-3x7",
+  "sustain": {
+    "release": 0.3,
+    "minLength": 0.1
+  },
+  "notes": "standard-21"
+}

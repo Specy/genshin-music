@@ -1,0 +1,8 @@
+{
+  "displayName": "HandPan",
+  "family": "percussive",
+  "midiName": "steel drums",
+  "shape": "sky-2x4",
+  "register": "D3",
+  "notes": "handpan-8"
+}

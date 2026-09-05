@@ -1,0 +1,2217 @@
+/* ==================================================================================
+   THE GLOBAL STYLESHEET, and the only one +layout.svelte imports besides Utility.scss.
+
+   WHAT BELONGS HERE is now a stated rule rather than an accident of the port: a rule earns its
+   place in this file only when it CANNOT live in a component's own style block. In practice that
+   is five things.
+
+     1. Genuinely global ground: `:root` custom properties, `@font-face`, the bare element rules
+        (html/body/p/a/input/select/`*:not(input)`), the scrollbar, `@media print`.
+     2. Utility classes any component may spell into a `class` string: `.hidden`, `.selected`,
+        `.disabled`, `.red`, `.app-button*`, `.default-page`, `.default-content`, `.song-row`,
+        `.song-button`, `.keyboard-key` and friends.
+     3. Class names that come from DATA rather than markup - the note classes the games' configs
+        name (`game.notes.cssClasses` in each src/lib/games/<id>/shapes.ts) and the status strings in
+        src/lib/core/types.ts. Four different note components render these; no single component
+        owns them and Svelte's scoping cannot see them at all.
+     4. Systems whose markup is split across sibling component files, where per-file scoping has
+        nothing to bind to: the menu/rail system and the PORTRAIT SHELL block that re-lays it out,
+        and the composer's grid/canvas/Pro-View layout.
+     5. Rules test/composerCanvasCss.test.ts reads out of this file AS TEXT, because they are one
+        formula written down twice (here and in composerCanvasGeometry.ts). Moving one of those
+        breaks the test by design - that is the test doing its job, not a false positive.
+
+   EVERYTHING ELSE MOVED into the component that renders it. When you add a rule, put it in that
+   component's style block first and only fall back to this file if one of the five applies.
+
+   TWO TRAPS worth knowing before you move anything else out:
+     - Svelte scoping adds a `.svelte-<hash>` class to a selector, so a moved rule gains one class
+       of specificity. A rule that was deliberately LOSING to a later rule here will start winning.
+     - Component CSS is emitted AFTER this file (verified in the production bundle), so a moved
+       rule also wins equal-specificity ties on source order. Both effects push the same way.
+   ================================================================================== */
+:root {
+  --whitish: #ede5d8;
+  --hint-main: #949494;
+  --red: rgb(242 75 91);
+  --red-color: #ede5d8;
+  --red-bg: rgb(193 81 92);
+  --green: #358a55;
+  --orange: #dd8d46;
+  --text-dark: #151414;
+  --text-light: #d7d5d1;
+}
+
+@font-face {
+  font-family: Bonobo;
+  src: url('./../assets/font/BonoboBold.ttf');
+  font-display: swap;
+}
+
+@font-face {
+  font-family: RobotoSerif;
+  src: url('./../assets/font/RobotoSerif-Medium.ttf');
+  font-display: swap;
+}
+
+p {
+  font-family: RobotoSerif, serif;
+  opacity: 0.9;
+}
+
+.loading {
+  color: var(--background-text);
+  font-size: 2rem;
+  grid-row: 1;
+  grid-column: 2/-1;
+}
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+  overscroll-behavior-y: contain;
+  touch-action: pan-x pan-y;
+}
+
+body {
+  position: absolute;
+  -webkit-text-size-adjust: none;
+  background-color: var(--html-background);
+  color: var(--background-text);
+}
+
+.keyboard-key {
+  padding: 0.2rem 0.4rem;
+  border-radius: 0.2rem;
+  min-width: 2rem;
+  text-align: center;
+  margin-bottom: 0.1rem;
+  border: solid 0.1rem var(--primary);
+  background: var(--secondary);
+  color: var(--secondary-text);
+  width: 10rem;
+  display: inline-block;
+}
+
+input {
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+input[type='text'],
+input[type='number'] {
+  cursor: text;
+}
+
+*:not(input) {
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  box-sizing: border-box;
+  font-family: Bonobo, Arial;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.disabled {
+  filter: brightness(0.7);
+}
+
+.keyboard-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+}
+
+#__next {
+  min-height: 100%;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.app,
+.app-content {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  width: 100%;
+  /* NOTE: the shipped app (main:src/pages/App.css:117) also carries `height: 100%` here, and
+       the live deploy serves it. It is deliberately NOT repeated in this rule: under this port's
+       shell, `.app` is a flex item of `.theme-vars-root` (an auto-height flex row), so a
+       percentage height resolves against an indefinite parent and collapses `.app` to content
+       height - measured 338px instead of the full 720px viewport on /, /composer and every other
+       full-page route. Leaving it off lets `align-items: stretch` size `.app`, which is what the
+       live app's own definite-height ancestor chain achieved. The one place that genuinely needs
+       the explicit height is the theme page preview, where `.app` sits in a definite-height BLOCK
+       container instead - see `.theme-app-preview :global(.app)` in
+       src/routes/theme/+page.svelte's own style block. */
+  overflow: hidden;
+}
+
+.app-content {
+  z-index: 2;
+}
+
+.app-button {
+  background-color: var(--primary);
+  color: var(--primary-text);
+  border-radius: 0.2rem;
+  padding: 0.5rem 1rem;
+  border: none;
+  height: fit-content;
+  cursor: pointer;
+  min-width: 5rem;
+  /* `transform` is here for the RELEASE of the press below - a state rule's transition only runs on
+     the way into it, so without this the button would snap back out of `scale(0.97)` the instant
+     the finger left. 0.12s and not the 0.2s beside it: the settle reads as the button coming back,
+     not as an animation of its own. */
+  transition:
+    background-color 0.2s,
+    color 0.2s,
+    filter 0.2s,
+    transform 0.12s;
+}
+
+/* Only applied when AppButton is given an `icon` snippet: the icon sits closer
+   to the button's left edge than the label would, and the two need a gap. */
+.app-button-with-icon {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding-left: 0.5rem;
+}
+
+.icon-app-button {
+  width: unset;
+  min-width: unset;
+  padding: 0;
+}
+
+.link {
+  color: var(--background-text);
+}
+
+.app-button::placeholder {
+  color: var(--primary-text);
+}
+
+/* HOVER IS FOR POINTERS ONLY, AND THIS IS THE FIRST OF THE FOUR RULES IN THIS FILE THAT SAY SO -
+   `.menu-item`, `.tool`/`.tool-slim` and `.tools-button` are the others, each guarded where it
+   lives so it stays next to the rest of its own area; the component stylesheets that paint their
+   own hovers carry the same guard and a line back here. A touch screen does not simply lack hover,
+   it LATCHES it: the tapped element goes on matching `:hover` until a finger lands somewhere else,
+   so an unguarded hover rule paints a highlight that outlives the tap and reads as a button stuck
+   ON. `@media (hover: hover)` is the fix for a device whose pointer is a finger: it never matches
+   there, a mouse keeps every affordance it had, and the press below, which is `:active` and so
+   ends on release, is left as the one thing a tap paints. Same query the tooltips use
+   (Tooltip.svelte).
+
+   SCOPED TO THAT DEVICE AND KNOWINGLY SO: the query answers for the PRIMARY pointer, not for the
+   one that drove this gesture, so a touchscreen laptop or a tablet on a trackpad keyboard matches
+   it and the latch survives there. `any-hover` is no better, and no media feature reports the
+   input behind the current gesture - closing the hybrid case means stamping `pointerdown`'s
+   `pointerType` onto the root from JS and gating every rule below on that, which is more machinery
+   than the symptom is worth. So: someone testing on a hybrid and finding a tool still lit has not
+   found a broken guard, they have found this paragraph.
+
+   NOR IS THIS RULE A CHOKEPOINT for `.app-button`: it is only (0,2,0), and a component stylesheet
+   that paints the same buttons out-specifies it for free, since Svelte scopes one half of the
+   selector. HomeContent's `.page-redirect-wrapper` is the one that does, and so carries its own
+   copy of the guard - guarding here would not have reached it.
+
+   STATED ONCE, HERE, like the press it sits above: the other three carry a line back to this one.
+
+   No `:not(:disabled)` here, unlike the press below: a disabled AppButton has brightened under the
+   mouse for as long as this rule has existed, and guarding hover is not the moment to change it. */
+@media (hover: hover) {
+  .app-button:hover {
+    filter: brightness(1.1);
+  }
+}
+
+/* THE PRESS, which is the one state these buttons never had (user addition), and ONE rule for all
+   of them: AppButton everywhere, the composer's right-hand CanvasTool column, and the tool panel's
+   own grid. `:hover` says "this is a control" and a toggled class says "its state is ON" - neither
+   says "your click landed", and on touch hover is no substitute either: it is guarded away just
+   above, because a tapped element latches it, which is a stuck highlight rather than feedback. The
+   reset at the top of this file clears `-webkit-tap-highlight-color` too, so a tap on a phone used
+   to leave the button looking untouched until whatever it does finished. This is the whole of that
+   feedback, everywhere.
+
+   STATED ONCE AND NOT ONCE PER AREA, which is why composer selectors appear this far up the file:
+   a press is one idiom, and three copies of it are three things to keep in step. `.tool:hover` and
+   `.tools-button:hover` further down carry a breadcrumb back here.
+
+   FILTER AND TRANSFORM, AND DELIBERATELY NOT A BACKGROUND, for two reasons that both matter here:
+   AppButton paints its own `background-color` INLINE when given a `cssVar` (the theme page's
+   colour buttons), which no stylesheet rule can override, and every toggled state in this family
+   (`.app-button.active`, `.tool-toggled`, `.tools-button-highlighted`) wins its colours with
+   `!important` - so a pressed toggled button would go on looking exactly like an unpressed one.
+   Brightness and scale ride on top of whatever those painted.
+
+   `:not(:disabled)` because a disabled button takes no click: it already says so with `opacity`
+   and `not-allowed`, and a button that shrinks under the finger while doing nothing says the
+   opposite. */
+.app-button:not(:disabled):active,
+.tool:not(:disabled):active,
+.tool-slim:not(:disabled):active,
+.tools-button:not(:disabled):active {
+  filter: brightness(0.9);
+  transform: scale(0.98);
+  /* THE PRESS LANDS NOW AND THE RELEASE EASES BACK on the base rule's own 0.2s: a quick tap is
+     shorter than that fade, so on the way IN the feedback would arrive after the finger had gone.
+     The other two are restated rather than dropped because this replaces the whole shorthand, and
+     a button that toggles ON under the finger still has to crossfade its colours. */
+  transition:
+    background-color 0.2s,
+    color 0.2s,
+    filter 0.06s,
+    transform 0.06s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* the press is information, like the hold-release ring further down - so it keeps the brightness
+     drop and gives up only the movement, which is the decorative half of it */
+  .app-button:not(:disabled):active,
+  .tool:not(:disabled):active,
+  .tool-slim:not(:disabled):active,
+  .tools-button:not(:disabled):active {
+    transform: none;
+  }
+}
+
+.app-button.active {
+  background-color: var(--accent) !important;
+  color: var(--accent-text) !important;
+}
+
+.app-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.selected {
+  transition: all 0.3s;
+  background-color: var(--accent);
+  color: var(--accent-text);
+}
+
+.hidden {
+  display: none !important;
+}
+
+.red {
+  background-color: red;
+}
+
+a {
+  text-decoration: none;
+}
+
+.red-text {
+  color: rgb(255, 51, 74);
+  display: inline-block;
+}
+
+.settings-row-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.2rem;
+  justify-content: space-between;
+  margin: 0.4rem 0;
+  margin-bottom: 0.7rem;
+}
+
+/* width */
+::-webkit-scrollbar {
+  width: 5px;
+}
+
+/* Track */
+::-webkit-scrollbar-track {
+  background: none;
+}
+
+/* Handle */
+::-webkit-scrollbar-thumb {
+  background: var(--primary);
+  border-radius: 2px;
+}
+
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+.default-page {
+  display: flex;
+  max-height: 100%;
+  width: 100%;
+  padding: 2rem 20vw;
+  flex-direction: column;
+  color: var(--background-text);
+}
+
+.default-content {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.appear-on-mount {
+  animation: appear-default-page 0.6s;
+}
+
+@keyframes appear-default-page {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media only screen and (max-width: 920px) {
+  .default-page {
+    padding: 1rem var(--right-mobile-padding, 1.4rem) 1rem var(--left-mobile-padding, 5rem);
+  }
+}
+
+/* ==================================================================================
+   Menu system (sidebar + sliding side-panel). Old: src/components/shared/Menu/menu.module.scss.
+   Global here (not a scoped <style> block in any one component) because these classes are
+   shared across FIVE separate component files (src/lib/components/menu/MenuSidebar.svelte,
+   MenuItem.svelte, MenuButton.svelte, MenuPanelWrapper.svelte, MenuPanel.svelte, P3 Task 8) -
+   Svelte's per-file style scoping can't cover markup split across sibling component files the
+   way the old shared CSS Modules import did. Ported verbatim (2-space old indentation reflowed
+   to this file's 4-space convention); its own @media block is merged into the combined mobile
+   query near the end of this file instead of duplicated here.
+
+   EVERYTHING BELOW DESCRIBES THE LANDSCAPE LAYOUT (column at the left, panel sliding in from the
+   left). In portrait the same classes are re-laid-out as a bottom bar + bottom sheet - see the
+   "PORTRAIT SHELL" block further down, which overrides `.menu-wrapper`, `.menu`, `.menu-visible`,
+   `.side-menu` and `.side-menu-open` and must therefore stay after them in source order.
+   ================================================================================== */
+/* ONE LAYOUT FOR EVERY RAIL, stated here and nowhere else: the item that closes the panel (or, on
+   the home page, goes back) sits alone at the START of the rail, and everything else - the page's
+   own buttons and the home button that always ends the list - is one group at its END. A rail gets
+   the split by marking its first item `.menu-pinned-start` (below); a rail without such an item
+   simply has the whole group at the end. This used to be per-file inline styles on MenuSidebar's
+   `menuStyle` prop and on the items themselves, which meant seven files each spelling out the same
+   layout in whichever of the two equivalent ways (`justify-content: flex-end` + `margin-bottom` on
+   the first item, or `margin-top: auto` on the second group's first item) that file happened to
+   pick - and inline declarations no shared rule could re-lay-out for portrait without !important. */
+.menu {
+  width: var(--menu-size);
+  background-color: var(--primary);
+  height: 100%;
+  border-right: solid 2px var(--secondary);
+  gap: 0.5rem;
+  border-left: solid 2px var(--secondary);
+  align-items: center;
+  justify-content: flex-end;
+  flex-direction: column;
+  padding: 0.4rem 0;
+  max-height: 100%;
+  overflow-y: auto;
+  z-index: 15;
+  display: flex;
+  margin-left: -4rem;
+  transition: all 0.3s;
+}
+
+.menu-visible {
+  margin-left: 0;
+}
+
+.menu::-webkit-scrollbar-thumb {
+  background: var(--icon-color);
+  border-radius: 2px;
+}
+
+.menu::-webkit-scrollbar {
+  width: 3px;
+}
+
+/* THE PANEL IS TRANSLUCENT ON PURPOSE, and it is what makes the blur below visible: `.side-menu-open`
+   already sets `--backdrop-amount: 4px` and runs `delayBackdrop`, but a fully opaque fill leaves
+   nothing for the filter to blur, so over a live canvas (composer, vsrg composer) the panel read as a
+   flat slab. `rgba(var(--<name>-rgb), <alpha>)` is how every other floating panel in the app spells
+   it - ComposerTools and MidiParser both use 0.9 - and the `-rgb` twin is minted per theme colour by
+   ThemeVars.svelte. It carries no alpha of its own, so a theme that authored one into its
+   `menu_background` lands on 0.9 here like all the others, which is also what keeps the text legible
+   on the two themes that had gone as far as 0.72. */
+.side-menu {
+  width: var(--panel-size);
+  border-radius: 0.3rem;
+  border-top-left-radius: unset;
+  border-bottom-left-radius: unset;
+  height: 100%;
+  background-color: rgba(var(--menu-background-rgb), 0.9);
+  color: var(--menu-background-text);
+  transform: scale(0.9) translateX(0);
+  transition: all 0.3s;
+  opacity: 0;
+  padding: 1rem;
+  display: flex;
+  left: calc(var(--panel-size) * -1);
+  position: fixed;
+}
+
+.side-menu-open {
+  transform: scale(1) translateX(calc(var(--panel-size) + var(--menu-size)));
+  opacity: 1;
+  --backdrop-amount: 4px;
+  animation: delayBackdrop calc(0.3s * 1.2);
+  animation-fill-mode: forwards;
+}
+
+.menu-item {
+  background-color: var(--primary);
+  border: none;
+  width: 2.8rem;
+  height: 2.8rem;
+  min-height: 2.8rem;
+  border-radius: 0.5rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: var(--icon-color);
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.menu-item a {
+  color: var(--icon-color);
+  display: flex;
+  width: 100%;
+  height: 100%;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Pointer-only for the reason given at `.app-button:hover`, and this rail is where a stuck
+   highlight would cost the most: it is mounted on every page, and its plate is one step off
+   `.menu-item-active`'s, so a tapped item would go on claiming its panel was open. */
+@media (hover: hover) {
+  .menu-item:hover:not(:disabled) {
+    background-color: var(--primary-layer-15);
+  }
+}
+
+/* A disabled menu item is the rail's home button sitting on the home page (SimpleMenu.svelte): it
+   stays in place because the rail is recognised by it, so it must stop reading as pressable rather
+   than disappear. `:hover` still MATCHES a disabled button - the pointer events the button ignores
+   are clicks, not hover - hence excluding it from the rule above rather than relying on `disabled`
+   alone. Kept at full opacity: this is "you are already here", not "this is unavailable", and the
+   rail has too few items for a greyed-out one to read as anything but broken. */
+.menu-item:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.menu-item-active {
+  background-color: var(--primary-layer-20);
+}
+
+/* The rail's start slot (see `.menu` above): an auto margin on the side facing the rest eats all
+   the free space, so this item goes to the top and the others stay grouped at the bottom. At most
+   one item per rail carries it - two would split the free space between them and neither would be
+   at an edge. Turned through 90 degrees in the portrait block near the end of this file. */
+.menu-pinned-start {
+  margin-bottom: auto;
+}
+
+.menu-panel {
+  width: 100%;
+  display: none;
+  flex: 1;
+  flex-direction: column;
+}
+
+.menu-panel-visible {
+  display: flex;
+  animation: appearLeft 0.3s;
+}
+
+.menu-title {
+  font-size: 2rem;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1rem;
+}
+
+.panel-content-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  flex: 1;
+  overflow-y: scroll;
+  overflow-x: hidden;
+  margin-right: -0.5rem;
+  padding-right: 0.5rem;
+}
+
+.menu-wrapper {
+  position: fixed;
+  left: 0;
+  top: 0;
+  height: 100%;
+  min-height: 100%;
+  display: flex;
+  flex-direction: row;
+  z-index: 11;
+}
+
+@keyframes appearLeft {
+  from {
+    transform: translateX(-0.5rem) var(--existing-transform,);
+    opacity: 0.6;
+  }
+
+  to {
+    transform: translateX(0) var(--existing-transform,);
+    opacity: 1;
+  }
+}
+
+/* --menu-size/--panel-size root defaults + the bare .icon rule (menu items' icon size), pulled
+   forward from old src/components/pages/Player/menu.css ahead of the rest of that file (P3 Task 8):
+   its `:root` block is genuinely global - not Player-page-scoped - and P3 Task 8's own SimpleMenu
+   sidebar was unsized without it, so just these few lines moved here early. The rest of
+   Player/menu.css (.hamburger, .song-buttons-wrapper, etc.) was ported in full by Phase 4a Task 3
+   (see those blocks further down this same file) and is real Player-page styling - no longer
+   deferred. Its `.rotate-screen` block has since moved on again, into AppInit.svelte's own style
+   block, which is the only component that renders that overlay. */
+:root {
+  --menu-size: 4rem;
+  --panel-size: 40vw;
+  /* THE PRO VIEW'S BOTTOM BAND, and it is ONE row (CONTEXT.md: Pro View; user revision
+     2026-08-22): `--pro-sliver-height` is how much of the lowered keyboard sheet stays on screen,
+     it stands at the window's own bottom edge, and it is the whole of what the canvas stops above
+     (composerCanvasGeometry's PRO_CANVAS_INSET_PX). Bigger than it shipped as (1.5rem), because a
+     sliver is the only thing telling a user the keyboard is still there and where to tap for it.
+
+     THE SONG INFO RESERVES NOTHING ANY MORE. It had a row of its own here for one round
+     (`--pro-song-info-height: 1.75rem`, with the sheet standing ON it); the canvas gave up 28px of
+     axis for two lines of read-only text, and the sheet and its sliver stopped short of the
+     window's edge. It is an overlay at the very bottom again (`.song-info-pro`), under the sheet
+     rather than beside it - it may be covered, which is acceptable for text nothing is edited
+     through.
+
+     Here rather than on `.composer-grid-pro` because `.song-info` is a SIBLING of the composer grid
+     rather than a descendant of it. composerCanvasGeometry states this same number
+     (PRO_KEYBOARD_SLIVER_PX) and test/composerCanvasCss.test.ts reads the declaration back out of
+     this file, the way it does the timeline buttons' 2.2rem. */
+  --pro-sliver-height: 2.5rem;
+  /* HOW FAR THE RAISED SHEET'S SCRIM REACHES ABOVE THE SHEET, and it is a fade rather than a band:
+     the scrim covers the keyboard's own box (see `.composer-keyboard-wrapper::before`) and this is
+     the head above it the gradient dies out in, so the canvas over the sheet is dimmed by nothing.
+     Beside the sliver because the two together are the whole of the sheet's presence on the canvas. */
+  --pro-scrim-head: 5rem;
+  /* ...AND HOW FAR IT FADES OUT AT ITS TWO ENDS (user revision). The band is the canvas' own column
+     now rather than the whole window - see `--pro-scrim-inset-start`/`--pro-scrim-inset-end` on
+     `.composer-grid-pro` - and a band that stopped dead at those two edges would draw a vertical
+     line down the page where the layout has none. Each end dies out over this distance instead, the
+     way the head above dies out upward, so the shadow has no edge anywhere a user can find one.
+
+     A PROPORTION OF THE BAND AND NOT A DISTANCE (user revision), which is what makes this read as a
+     pool of shadow under the keys rather than a rectangle with softened corners: the column is over
+     1600px wide on a desktop window and the keyboard standing in it is a third of that, so there is
+     far more horizontal room to fade out in than a rem value would ever use. At 30% each end the
+     solid middle is the keyboard's own span and everything outside it is falloff - and stating it as
+     a percentage is what keeps that true on a phone, where the same band is 400px wide. */
+  --pro-scrim-flank: 30%;
+}
+
+.icon {
+  font-size: 1.5rem;
+}
+
+/* ==================================================================================
+   Home overlay (the launcher/welcome screen). Old: src/components/pages/Index/Home.css.
+   WHAT IS LEFT OF IT: two rules. The rest of the block now lives in the two components that
+   actually render it - HomeContent.svelte (the cards, the welcome copy, the redirect row, and
+   the 920px/portrait/max-height:460px overrides for all of them) and Home.svelte (`.home`,
+   `.home-visible`, `@keyframes home-appear`, `.close-home`). The block header used to claim the
+   whole thing had to be global because Home.svelte pushed these classes through child components
+   with no style block of their own; that stopped being true once HomeContent.svelte took over the
+   markup and grew its own. Where a class still lands on a child component's root, the moved rule
+   says so with `:global(...)`.
+
+   WHY `.middle-size-page` DID NOT GO WITH THEM, and it is not an oversight: the class rides an
+   AppLink that also carries Utility.scss's `.row`, and `display: grid` here vs `display: flex`
+   there are both one class. +layout.svelte imports App.css BEFORE Utility.scss, so `.row` wins
+   today and every grid declaration below is inert. Moving the rule into HomeContent.svelte would
+   flip that either way round - scoped adds a class and wins outright, and a bare `:global` still
+   wins because component CSS is emitted after both stylesheets - turning the card into a real
+   `1fr 1fr` grid. That is a layout change, not a refactor, so it stays here until someone decides
+   which of the two the card is meant to be.
+   ================================================================================== */
+.middle-size-page {
+  border-radius: 0.5rem;
+  display: grid;
+  align-items: center;
+  flex: 1;
+  max-width: 20rem;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  padding: 0.6rem 1rem;
+  color: var(--primary-text);
+  text-decoration: unset;
+  background-color: var(--primary);
+  transition: all 0.2s;
+}
+
+.middle-size-page:hover {
+  filter: brightness(1.1);
+  transform: scale(1.02);
+}
+
+@media only screen and (max-width: 920px) {
+  /* menu.module.scss's own mobile block */
+  .menu {
+    width: var(--menu-size);
+    gap: 0.4rem;
+    padding: 0.3rem 0;
+  }
+
+  .side-menu {
+    padding: 0.5rem;
+    --panel-size: 60vw;
+  }
+
+  .menu-item {
+    width: 2.8rem;
+    height: 2.8rem;
+  }
+
+  .menu-title {
+    display: none;
+    font-size: 1rem;
+    margin-bottom: 0.5rem;
+    justify-content: flex-start;
+  }
+
+  .panel-content-wrapper {
+    gap: 0.8rem;
+    margin-right: -0.3rem;
+    padding-right: 0.2rem;
+  }
+
+  /* Player/menu.css's own mobile --menu-size override (see the pulled-forward comment above) */
+  :root {
+    --menu-size: 3.6rem;
+  }
+}
+
+@media screen and (orientation: portrait) {
+}
+
+/* ==================================================================================
+   PORTRAIT SHELL: the menu rail becomes a bottom bar and its panel a bottom sheet.
+   The landscape layout (icon column at the left, panel sliding in from the left) is the app's
+   primary one and is NOT touched - everything here is inside the portrait query.
+
+   Keyed on ORIENTATION, not width, deliberately: a landscape phone is a small window that still
+   wants the rail on the left (the pages that only work that way are the ones the rotate warning
+   covers), while a portrait tablet is a wide window that still wants its thumb reach at the
+   bottom. This is the same axis the rotate warning above is keyed on, and the two are
+   complementary: on the five warned routes these rules still run, but the overlay covers the page
+   they reshape, so nobody sees the bar there.
+
+   It lands after the two `max-width: 920px` blocks above on purpose - `.menu`'s padding and
+   `.default-page`'s padding are both restated there at this same specificity, so source order is
+   what decides them on a phone.
+   ================================================================================== */
+@media screen and (orientation: portrait) {
+  /* The rail's fixed box is what moves to the bottom edge; the panel inside it is
+     `position: fixed` in its own right and is placed separately below.
+     `height: auto` (against the base rule's 100%/min-height 100%) so the box is exactly the bar it
+     contains - and collapses to nothing when a page menu hides its rail, the way the landscape
+     wrapper collapses to zero width when the column slides out. A fixed var(--menu-size) box would
+     stay behind as an invisible strip swallowing taps along the bottom of the page. */
+  .menu-wrapper {
+    top: auto;
+    bottom: 0;
+    width: 100%;
+    height: auto;
+    min-height: 0;
+  }
+
+  /* Icons in a row, scrolling sideways when there are more of them than the width fits (the
+     composer's rail runs to a dozen items). The landscape column hides itself by sliding LEFT
+     (`margin-left: -4rem`, released by `.menu-visible`); the bar has to hide downward instead, so
+     that lever is neutralised and re-hung on margin-bottom just below. */
+  .menu {
+    width: 100%;
+    height: var(--menu-size);
+    max-height: var(--menu-size);
+    flex-direction: row;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 0 0.4rem;
+    border-left: none;
+    border-right: none;
+    border-top: solid 2px var(--secondary);
+    margin-left: 0;
+    margin-bottom: calc(var(--menu-size) * -1);
+    /* The column's end (bottom) is the row's end (right), so `.menu`'s own `justify-content:
+       flex-end` already says the right thing here and is only restated for the `safe` keyword:
+       a bar with more icons than width must scroll from its START instead of clipping the leading
+       ones, and `safe` is what falls back to flex-start exactly in that overflow case (same reason
+       BlogImage uses it). Two declarations so a browser without `safe` drops this line and keeps
+       the plain flex-end above. */
+    justify-content: flex-end;
+    justify-content: safe flex-end;
+  }
+
+  .menu-visible {
+    margin-bottom: 0;
+  }
+
+  /* The scrollbar turned with the axis (the base rule sizes a vertical one). */
+  .menu::-webkit-scrollbar {
+    width: auto;
+    height: 3px;
+  }
+
+  /* The rail's split turns with it. `margin-bottom: auto` is the landscape lever (`.menu-pinned-
+     start`) and in a row it would drop that one icon off the bar's centre line instead of pushing
+     the others away, so it is cleared here and re-hung on `margin-right` - the start slot goes to
+     the left edge, the rest stay grouped at the right. Order matters: the `.menu > *` reset and
+     `.menu-pinned-start` have equal specificity, and this one has to be the later of the two.
+     `flex-shrink: 0` keeps the icons at full size once the row overflows into its own scroll. */
+  .menu > * {
+    margin-bottom: 0;
+    flex-shrink: 0;
+  }
+
+  .menu-pinned-start {
+    margin-right: auto;
+  }
+
+  .menu-item {
+    min-width: 2.8rem;
+  }
+
+  /* THE PANEL BECOMES A BOTTOM SHEET, by the landscape trick turned through 90 degrees: landscape
+     parks it one panel-width off the LEFT edge (`left: calc(var(--panel-size) * -1)`) and slides
+     it in by its own width plus the rail's; portrait parks it one full height BELOW the viewport
+     (`top: 100%`, so the sheet's top edge starts on the bottom edge) and slides it up by its own
+     height plus the bar's. Both states are reached through the base rule's `transition: all 0.3s`,
+     so the sheet animates in and out exactly as the side panel does.
+     `height: auto` + a 70vh cap makes the sheet hug short panels instead of always eating most of
+     the screen; `.panel-content-wrapper` (overflow-y: scroll, flex: 1) is what scrolls once the
+     content outgrows the cap. The rounded corners follow the edge it now enters from. */
+  .side-menu {
+    width: 100%;
+    left: 0;
+    right: 0;
+    top: 100%;
+    height: auto;
+    max-height: 70vh;
+    border-radius: 0.5rem 0.5rem 0 0;
+  }
+
+  .side-menu-open {
+    min-height: 60vh;
+    padding: 1rem;
+    transform: scale(1) translateY(calc(-100% - var(--menu-size)));
+  }
+
+  /* Page content must not end up under the bar. `.default-page` is the wrapper every de-warned
+     route renders through (DefaultPage.svelte, including the blog posts and the blog index), and
+     it is the one place the reserve can be stated once. */
+  .default-page {
+    padding-bottom: calc(var(--menu-size) + 1rem);
+  }
+}
+
+/* The phone tier's `.default-page` padding reserves 5rem on the LEFT for the icon rail
+   (`--left-mobile-padding`, set inline by DefaultPage). In portrait the rail is at the bottom and
+   that reserve is just a gutter down the side of every page, so the two sides go back to even.
+   Its own block rather than a rule in the portrait section above, because it must not touch the
+   wide-window portrait layout (a tablet keeps `.default-page`'s 20vw desktop margins). */
+@media only screen and (max-width: 920px) and (orientation: portrait) {
+  .default-page {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+}
+
+.hamburger,
+.hamburger-top {
+  position: absolute;
+  bottom: 0.5rem;
+  left: 0.5rem;
+  font-size: 1.5rem;
+  width: 2.5rem;
+  height: 2.5rem;
+  max-width: 6vw;
+  max-height: 6vw;
+  color: var(--icon-color);
+  background-color: var(--primary);
+  border-radius: 0.3rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+}
+
+.hamburger-top {
+  top: 0.5rem;
+  bottom: unset;
+}
+
+.songs-buttons-wrapper {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.2rem;
+}
+
+.inverted {
+  filter: invert(1);
+}
+
+.song-row {
+  display: flex;
+  flex: 1;
+  background-color: var(--primary);
+  border-radius: 0.3rem;
+  color: var(--primary-text);
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 0.4rem;
+  transition: all 0.2s;
+}
+
+.song-row-current {
+  background-color: var(--secondary);
+  color: var(--secondary-text);
+}
+
+.song-button {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: var(--primary);
+  color: var(--primary-text);
+  border-radius: 0.3rem;
+  height: 2rem;
+  width: 2rem;
+  font-size: 1rem;
+  border: none;
+  margin-right: 0.4rem;
+  cursor: pointer;
+  padding: 0;
+}
+
+.dropdown-select {
+  background-color: var(--primary);
+  padding: 0.4rem 0;
+  height: 100%;
+  flex: 1;
+  color: var(--primary-text);
+  border: none;
+}
+
+.song-name {
+  flex: 1;
+  cursor: pointer;
+  word-break: break-word;
+  display: flex;
+  height: 100%;
+  align-items: center;
+  font-size: 1rem;
+  margin-right: 0.45rem;
+}
+
+.song-name-input {
+  background-color: transparent;
+  font-size: 1rem;
+  font-family: Bonobo;
+  padding: 0;
+  margin: 0;
+  height: 100%;
+  border: none;
+  padding-left: 0.3rem;
+  cursor: pointer;
+}
+
+.song-rename {
+  outline: solid 2px var(--secondary);
+  border-radius: 0.2rem;
+  cursor: text;
+}
+
+.song-row-current .song-rename {
+  outline: solid 2px var(--primary);
+}
+
+.song-buttons-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* .keyboard: page-level styling for the keyboard surfaces. GEOMETRY (grid-template
+   columns/rows) moved to the Shape system (ADR-0003): GridShape.svelte sets it inline
+   from the instrument's Shape, and the old length-derived .keyboard-5/-4/-3/-7-2
+   variant classes died with it. */
+.keyboard {
+  display: grid;
+  width: fit-content;
+  margin-top: auto;
+  justify-items: center;
+  align-items: center;
+  margin-bottom: 2vh;
+  touch-action: none;
+}
+
+@media only screen and (max-width: 920px) {
+  .keyboard {
+    margin-bottom: 1vh;
+  }
+}
+
+.note,
+.note-composer,
+.note-sky,
+.note-composer-sky {
+  background-color: var(--note-background);
+  color: var(--note-background-text);
+  border-radius: 50%;
+  width: 6vw;
+  height: 6vw;
+  border: 0.5vw solid var(--note-border);
+  color: var(--accent);
+  font-size: 1.5rem;
+  font-weight: bold;
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: transform 0.1s;
+  cursor: pointer;
+  z-index: 10;
+  touch-action: none;
+  will-change: background-color, border-color, transform;
+}
+
+.note-sky,
+.note-composer-sky {
+  border-radius: 1.3vw;
+  border: 0.4vw solid transparent;
+  transform-origin: 50% 50%;
+  transition: all 0.1s;
+  user-select: none;
+}
+
+.note,
+.note-composer {
+  border: none;
+}
+
+.note-composer,
+.note-composer-sky {
+  transition: none;
+}
+
+.note img,
+.note-composer img,
+.note-sky img,
+.note-composer-sky img,
+.note svg,
+.note-composer svg,
+.note-sky svg,
+.note-composer-sky svg {
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  fill: var(--accent);
+}
+
+.note img,
+.note-composer img,
+.note svg,
+.note-composer svg {
+  position: absolute;
+  width: 80%;
+  height: 80%;
+  top: 5%;
+}
+
+.svg-note {
+  overflow: visible;
+}
+
+.note-sky .svg-note,
+.note-composer-sky .svg-note {
+  width: 80%;
+  height: 80%;
+}
+
+.note-composer .note-name {
+  bottom: 14% !important;
+  font-size: 0.7rem;
+}
+
+.genshin-border {
+  top: unset !important;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.click-event {
+  transform: scale(0.9);
+  background-color: var(--clicked-note);
+  border-color: var(--accent);
+}
+
+.click-event .svg-note {
+  fill: white !important; /* should change to the var(--accent-text) but would break existing themes */
+  stroke: white !important;
+}
+
+.note-red {
+  background-color: #f06565;
+  border-color: #d75c5c;
+  color: white;
+}
+
+.note-red .svg-b {
+  stroke: #f06565 !important;
+}
+
+.note-red .svg-note {
+  fill: white !important;
+  stroke: white !important;
+}
+
+.note-border-click {
+  border-color: var(--accent);
+}
+
+.note-name {
+  font-size: 0.8rem;
+  position: absolute;
+  bottom: 15%;
+  color: var(--note-background-text);
+  margin-left: auto;
+  margin-right: auto;
+  left: 0;
+  right: 0;
+}
+
+.note-name-sky {
+  position: absolute;
+  font-size: 1rem;
+  color: var(--note-background-text);
+}
+
+.button-hitbox,
+.button-hitbox-bigger {
+  background-color: transparent;
+  border: none;
+  padding: 0.25rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  user-select: none;
+  /* iOS long-press callout (copy/look-up) on held note buttons */
+  -webkit-touch-callout: none;
+}
+
+.button-hitbox-bigger {
+  padding: 0.35rem;
+}
+
+.approach-circle,
+.approach-circle-sky {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  border: 3px solid var(--accent);
+  border-radius: 50%;
+  animation: approach 1s linear;
+  transform-origin: 50% 50%;
+  pointer-events: none;
+  opacity: 0;
+  transform: scale(2.3);
+}
+
+.approach-circle-sky {
+  transform: scale(1.8);
+  border-radius: 2vw;
+}
+
+@keyframes approach {
+  0% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 0.3;
+  }
+  99% {
+    transform: scale(0.8);
+    opacity: 0.8;
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+}
+
+.note-animation,
+.note-animation-sky {
+  position: absolute;
+  border: 2px solid var(--accent);
+  border-radius: 50%;
+  animation: note-animation 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  animation-delay: 0.1s;
+  transform-origin: 50% 50%;
+  pointer-events: none;
+  opacity: 1;
+  z-index: 1;
+  transform: scale(0.8);
+  width: 6vw;
+  height: 6vw;
+}
+
+.note-animation-sky {
+  border-radius: 1.7vw;
+  animation: note-animation-sky 0.75s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  animation-delay: 0.15s;
+}
+
+@keyframes note-animation {
+  0% {
+    transform: scale(0.8);
+    opacity: 1;
+  }
+  70% {
+    transform: scale(1.45);
+    opacity: 0.2;
+  }
+  100% {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+}
+
+@keyframes note-animation-sky {
+  0% {
+    transform: scale(0.8);
+    opacity: 1;
+  }
+  70% {
+    transform: scale(1.25);
+    opacity: 0.1;
+  }
+  100% {
+    transform: scale(1.3);
+    opacity: 0;
+  }
+}
+
+@media only screen and (max-width: 920px) {
+  /* this query's own `.keyboard { margin-bottom: 1vh }` sub-rule is already pulled forward
+       above (P4a Task 3, alongside .keyboard/.keyboard-5 themselves) - omitted here to avoid
+       duplicating the same declaration twice in one stylesheet (same precedent as the
+       --menu-size comment elsewhere in this file). */
+  .keyboard-playback .click-event {
+    transform: unset; /*performance reasons for mobile*/
+  }
+
+  .note {
+    width: 6.7vw;
+    height: 6.7vw;
+    font-size: 1rem;
+    border-width: 4px;
+  }
+
+  .note-animation {
+    width: 6.7vw;
+    height: 6.7vw;
+  }
+
+  .note-animation-sky {
+    border-radius: 2.5vw;
+    width: 8.5vw;
+    height: 8.5vw;
+  }
+
+  .note-sky {
+    width: 8.5vw;
+    height: 8.5vw;
+    border-radius: 1.8vw;
+  }
+
+  .note-name-sky {
+    font-size: 0.8rem;
+  }
+
+  .note-name {
+    font-size: 0.6rem;
+    bottom: 10%;
+  }
+
+  @keyframes note-animation {
+    0% {
+      transform: scale(0.8);
+      opacity: 1;
+      border-width: 2px;
+    }
+    70% {
+      transform: scale(1.45);
+      opacity: 0.2;
+    }
+    100% {
+      transform: scale(1.5);
+      opacity: 0;
+      border-width: 2px;
+    }
+  }
+}
+
+.approach-wrong {
+  background-color: #d66969;
+  border-color: #b35555;
+}
+
+.approach-correct {
+  background-color: #60ad7e;
+  border-color: #358a55;
+}
+
+.approach-correct .svg-note,
+.approach-wrong .svg-note {
+  fill: white !important;
+  stroke: white !important;
+}
+
+@media only screen and (max-width: 800px) {
+  .note-animation {
+    border: 2px solid var(--accent);
+  }
+}
+
+/* pulled from composer/Composer.css (old: src/app/_client-pages/composer/Composer.css, 883
+   lines — globally imported in app/layout.tsx at import order 10, after Keyboard.css/menu.css,
+   before Theme.css/VsrgComposer.css/SheetVisualizer.css; applying app-wide like every other
+   pulled-forward block above, not just to the composer page) — P4c Task 2. */
+.canvas-wrapper {
+  /* THE PLACEHOLDER THE CANVAS LANDS INTO, so the page does not jump when it does. The composer
+     canvas arrives hundreds of ms late (ComposerCanvas.svelte awaits a dynamic pixi import and
+     Application.init()), and until then these two floors are the wrapper's whole size - measured at
+     90.4px narrower and 22.4px shorter than the canvas turns out to be at 1920x1080 on genshin.
+     `--composer-canvas-width/height` are the CSS rendering of ComposerRenderer.computeCanvasSize,
+     emitted by composerCanvasGeometry.composerCanvasCssSize and put on this element by
+     ComposerCanvas.svelte; test/composerCanvasCss.test.ts evaluates THESE TWO DECLARATIONS against
+     that function so the two forms of the formula cannot drift apart. The original floors stay
+     inside the max(): 78vw is the larger value below a ~643px viewport, and dropping it would
+     narrow the wrapper on phones. The 0px fallback makes an unset var degrade to exactly the old
+     rule (which is what the theme preview gets - see composerCanvasCssSize).
+     WHERE A FLOOR STILL WINS THE max() THE WRAPPER IS NOT THE CANVAS' SIZE, and that is unchanged
+     pre-existing behaviour rather than something these vars introduced: `45vh + 14px` beats
+     `45vh * 0.95 + 36.4px` for every viewport taller than 995.6px, so on sky (composerRowHeightScale
+     0.95) a 1440px-tall viewport leaves the wrapper 9.6px taller than the canvas element - a
+     transparent tail under the mini-timeline, not a layout shift, since the same value holds before
+     and after the canvas lands. test/composerCanvasCss.test.ts carries a 2560x1440 row for it. */
+  /* WHICH OF THE TWO WIDTHS ComposerCanvas.svelte PUTS ON THIS ELEMENT APPLIES - the mobile one
+     here, the desktop one in this file's `not all and (max-width: 1000px)` block. The choice lives
+     in CSS and not in the component for one reason: those are INLINE custom properties, so a
+     component that picked between them could only do it from `matchMedia`, which does not exist
+     during the prerender - the served HTML would carry the mobile width on every viewport and the
+     composer would jump ~79px wider when hydration finally ran (measured at 812ms in dev). */
+  --composer-canvas-width: var(--composer-canvas-width-mobile, 0px);
+  min-width: max(78vw, var(--composer-canvas-width, 0px));
+  min-height: max(calc(45vh + 14px), var(--composer-canvas-height, 0px));
+  justify-content: space-between;
+  display: flex;
+  border-radius: 0.4rem;
+  align-items: center;
+  flex-direction: column;
+  /* the containing block for .timeline-controls, which floats over the mini-timeline the composer
+     canvas draws at its own bottom */
+  position: relative;
+}
+
+.canvas-wrapper-in-preview {
+  min-width: unset;
+  min-height: unset;
+}
+
+.canvas-relative {
+  position: relative;
+  display: flex;
+  z-index: 0;
+  width: 100%;
+  flex: 1;
+  /* ALL FOUR corners: this one element spans the notes region and the mini-timeline below it now
+     that they share a canvas, so it carries the whole outer silhouette that used to be split
+     between its top corners and .timeline-wrapper-bg's bottom ones. `overflow: hidden` is what
+     clips the canvas bitmap to it. */
+  border-radius: 0.4rem;
+  overflow: hidden;
+}
+
+.canvas-relative canvas {
+  cursor: pointer !important;
+}
+
+select {
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' height='24' viewBox='0 0 24 24' width='24' fill='gray'%3E%3Cpath d='M0 0h24v24H0z' fill='none'/%3E%3Cpath d='M16.59 8.59L12 13.17 7.41 8.59 6 10l6 6 6-6z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: 100%;
+}
+
+.note-composer {
+  width: 5vw;
+  height: 5vw;
+  border-width: 0.4vw;
+  z-index: 2;
+}
+
+.note-composer-sky {
+  z-index: 2;
+}
+
+.composer-grid {
+  display: grid;
+  padding: 0.2rem;
+  grid-template-columns: min-content;
+  gap: 0.2rem;
+  grid-template-areas:
+    'a b b'
+    'a c c';
+}
+
+.song-info {
+  position: absolute;
+  bottom: 0.5vw;
+  left: calc(4rem + 0.5vw);
+  color: var(--background-text);
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.composer-keyboard-wrapper {
+  grid-area: c;
+  display: flex;
+  justify-content: center;
+  padding-bottom: 1vh;
+  position: absolute;
+  bottom: 0;
+  gap: 1.5rem;
+  left: 0;
+  width: 100%;
+}
+
+.composer-keyboard-wrapper .keyboard {
+  margin: unset;
+  z-index: 1;
+}
+
+.song-info div {
+  max-width: 23vw;
+  text-shadow: rgb(51 51 51) 0px 1px 5px;
+}
+
+.top-panel-composer {
+  display: flex;
+  flex-direction: row;
+}
+
+.tool-slim,
+.tool {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border: none;
+  border-radius: 0.3rem;
+  color: var(--icon-color);
+  background-color: var(--primary-darken-10);
+  /* `transform` is the RELEASE of the press (`.tool:not(:disabled):active`, up beside
+     `.app-button`'s own states): a state rule's transition only runs on the way INTO it, so without
+     this the button snaps back out of the press the instant the finger leaves. */
+  transition:
+    background-color 0.2s,
+    transform 0.12s;
+  cursor: pointer;
+  margin: 0;
+}
+
+/* The floor is what keeps this column usable on a laptop: 4vw is under 3.5rem on every viewport
+   narrower than 1400px, which is where the icons start running out of room. THE CANVAS IS THIS
+   COLUMN'S COMPLEMENT, so the floor belongs to both sides or the canvas slides under the column
+   exactly where it engages - composerCanvasGeometry states the same max()
+   (DESKTOP_TOOL_COLUMN_MIN_REM), and test/composerCanvasCss.test.ts reads this declaration to hold
+   the two together. Below the composer's mobile breakpoint the media block's `width: 100%` rules
+   instead, and the desktop formula is already scoped away from there. */
+.tool {
+  width: max(4vw, 3.5rem);
+}
+
+.tool-icon {
+  width: 1rem;
+  height: 100%;
+}
+
+/* ...and the PRESSED one is the shared rule beside `.app-button`'s states, near the top of this
+   file - these buttons wear the same brightness and scale every other one does. POINTER-ONLY for
+   the reason given beside that same rule: this column stays on screen for the whole session, so a
+   latched hover would never be unmounted away, and its plate sits between off and `.tool-toggled`'s
+   ON. */
+@media (hover: hover) {
+  .tool:hover,
+  .tool-slim:hover {
+    background-color: var(--primary-layer-15);
+  }
+}
+
+select {
+  cursor: pointer;
+}
+
+.not-saved {
+  background-color: var(--accent) !important;
+  color: var(--accent-text) !important;
+}
+
+.timeline-controls {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+  align-items: center;
+  position: absolute;
+  left: 0;
+  pointer-events: none;
+  /* THE LEFT AND RIGHT TERMS ARE LOAD-BEARING and must stay 0.2rem: composerCanvasGeometry's
+     TIMELINE_INSET_LEFT/RIGHT are `padding + button + gap + ...` worked out by hand from these very
+     numbers, and that is the band the pixi strip is drawn inside — widen either end here alone and
+     the strip runs under the buttons. The BOTTOM is free, and is 0.25rem (user request 2026-08-22)
+     because the row is not centred on what it looks centred against: `::before` puts a 1px boundary
+     line on ONE edge of this box, so equal padding leaves the icons visually low against it. */
+  padding: 0.2rem 0.2rem 0.25rem;
+  gap: 0.2rem;
+}
+
+/* One continuous boundary between the scrolling note grid and the denser minimap panel. This DOM
+   overlay spans the full canvas, including the timeline buttons, which is the whole reason it is
+   drawn here and not by pixi: those three buttons stand ON TOP of the canvas, so a line drawn
+   underneath them would run behind them and break for their width. `z-index: 1` is what puts it
+   over them in turn. */
+.timeline-controls::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto;
+  height: 1px;
+  z-index: 1;
+  pointer-events: none;
+  background-color: var(--primary-darken-10);
+}
+
+/* THE BUTTONS' OWN SURFACE, in the stylesheet (user revision 2026-08-22). It used to be an inline
+   `background-color` written by ComposerCanvas.svelte from `ThemeProvider.layer('primary', 0.1)`
+   with `.hex()` — deliberately alpha-STRIPPED, because these buttons no longer sit on the pixi
+   strip (it is inset out from under them) and a DOM background composites straight onto the page,
+   so a translucent theme would show the composer's backdrop through the icons. That is now accepted
+   in exchange for the buttons simply following the theme variable like every other control: on
+   "Sky Music" (primary alpha 0.72) they are translucent. Nothing depends on their opacity. */
+.timeline-button {
+  height: 100%;
+  padding: 0;
+  width: 2.2rem;
+  background-color: var(--primary);
+  flex-shrink: 0;
+  pointer-events: auto;
+  border: none;
+  color: var(--icon-color);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 0.3rem;
+  cursor: pointer;
+}
+
+.buttons-composer-wrapper,
+.buttons-composer-wrapper-right {
+  display: grid;
+  grid-template-rows: repeat(3, 1fr);
+  grid-template-columns: 1fr;
+  gap: 0.2rem;
+  margin-left: 0.2rem;
+}
+
+.buttons-composer-wrapper-right {
+  grid-template-rows: repeat(4, 1fr);
+}
+
+.tools-button {
+  background-color: var(--primary);
+  color: var(--primary-text);
+  border-radius: 0.3rem;
+  border: none;
+  justify-content: flex-start;
+  cursor: pointer;
+  font-size: 0.9rem;
+  padding: 0.55rem 0.8rem;
+  gap: 0.4rem;
+  /* the RELEASE of the press below, for the reason `.tool`'s own transition states it */
+  transition: transform 0.12s;
+}
+
+/* ...and PRESSED is the shared rule beside `.app-button`'s states, near the top of this file, as
+   is the reason this one is POINTER-ONLY. `:disabled` below still has to cancel the lift for a
+   mouse; on touch there is now nothing left for it to cancel. */
+@media (hover: hover) {
+  .tools-button:hover {
+    filter: brightness(1.1);
+  }
+}
+
+.tools-button:disabled,
+.tools-selection-row button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+  filter: unset;
+}
+
+.tools-button-highlighted {
+  background-color: var(--accent) !important;
+  color: var(--accent-text);
+}
+
+/* The selection scope sits ACROSS THE TOP of the panel rather than down its side, so its rule is the
+   panel's own horizontal divider - see the markup note in ComposerTools.svelte. It WRAPS because the
+   panel is only `min-width: 36vw` wide: on a narrow screen three buttons that refuse to wrap would
+   force the panel wider than the viewport instead. */
+.tools-selection-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  padding-bottom: 0.3rem;
+  border-bottom: solid 2px var(--secondary);
+}
+
+.tools-selection-row .app-button {
+  min-width: unset;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  padding: 0.5rem 0.7rem;
+}
+
+.tempo-changers-wrapper {
+  position: absolute;
+  color: var(--icon-color);
+  background-color: var(--primary-darken-10);
+  padding: 0.2rem;
+  right: 0.2rem;
+  border-radius: 0.3rem;
+  bottom: 0.2rem;
+  flex-direction: column;
+  width: 4rem;
+  gap: 0.2rem;
+  display: flex;
+  z-index: 3;
+}
+
+.tempo-changers-wrapper-hidden {
+  display: none;
+}
+
+.note-composer svg {
+  z-index: 2;
+}
+
+.composer-left-control {
+  grid-area: a;
+  width: 6.2rem;
+  height: calc(100vh - 5rem);
+}
+
+/* THE UNDO/REDO PAIR, one unit heavier than lucide ships them (2 -> 3, in the icons' own 24-unit
+   viewBox): at the 2rem square these two sit on in the transport column, lucide's default weight
+   reads noticeably thinner than the solid Font Awesome glyphs around it.
+
+   A PLAIN CSS DECLARATION IS THE WHOLE MECHANISM, and it is not a trick: SVG presentation
+   attributes participate in the cascade below every author rule, so `stroke-width: 3` here beats
+   the `stroke-width="2"` lucide writes onto the <g> that holds both paths. Nothing is rewritten at
+   build time and the icon is still imported as shipped.
+
+   WHAT WILL NOT WORK, in case this looks like the long way round: unplugin-icons' `iconCustomizer`
+   sets props on the OUTER <svg>, and lucide's own <g stroke-width="2"> shadows anything inherited
+   from there - so the config-level version of this silently does nothing. (Its `transform` hook is
+   documented to apply only to `custom` collections.)
+
+   The descendant selector rather than the <svg> itself, for that same reason - the weight has to
+   land on the element that carries the attribute. Elements drawn with `fill` and no stroke (the
+   button's tooltip ornaments) take the declaration and render identically. */
+.composer-history-buttons svg * {
+  stroke-width: 3;
+}
+
+.canvas-buttons {
+  height: var(--canvas-buttons-notes-height, 100%);
+  position: absolute;
+  min-width: 2.8rem;
+  top: var(--canvas-buttons-notes-top, 0);
+  background-color: var(--primary);
+  color: var(--icon-color);
+  display: none;
+  align-items: center;
+  cursor: pointer;
+  border: none;
+  padding: 0;
+  display: none;
+  font-size: 2rem;
+  opacity: 0;
+  transition: opacity 0.1s;
+  z-index: 2;
+}
+
+/* THE MOBILE CHEVRONS COVER THE RULER TOO. These are the same two conditions that make the
+   otherwise-desktop-hidden controls visible below. In the Pro View their gradient and DOM hit box
+   begin at the ruler instead of the notes edge and grow by exactly its reported height; the
+   mini-timeline remains above them. The Compressed View has no ruler and never matches the modifier.
+   Renderer-reported custom properties keep CSS from carrying a second copy of the 20px band. */
+@media (hover: none) and (pointer: coarse), only screen and (max-width: 1000px) {
+  .composer-grid-pro .canvas-buttons {
+    height: calc(var(--canvas-buttons-notes-height, 0px) + var(--canvas-buttons-ruler-height, 0px));
+    top: var(--canvas-buttons-ruler-top, var(--canvas-buttons-notes-top, 0));
+  }
+}
+
+/* ==================================================================================
+   THE COMPOSER'S PRO VIEW (CONTEXT.md: Pro View / Compressed View; spec §8).
+
+   ONE MODIFIER CLASS, `composer-grid-pro`, added by Composer.svelte when the `proView` setting is on
+   and never in /theme's preview. Everything below is a descendant of it, so the Compressed View is
+   what this file says everywhere else - with the setting off not one of these rules matches.
+
+   WHAT CHANGES, and it is vertical only: the canvas stops being a 45vh card with the keyboard under
+   it and becomes the window's whole leftover height, so the keyboard has nowhere left to stand and
+   becomes a bottom SHEET over it, and the tempo changers - which must stay reachable while that
+   sheet is down - move out of it into their own slot. The left play/roster column and the right
+   CanvasTool column keep their widths and their contents (the View Lock button is a fifth tool in
+   that column, not a new column).
+
+   THESE RULES SIT AFTER THE BASE COMPOSER RULES ON PURPOSE: `.song-info-pro` is a single-class
+   selector, exactly as specific as the `.song-info` it moves, so source order is what decides it.
+   ================================================================================== */
+.composer-grid-pro {
+  /* THE CANVAS' ROW TAKES THE WHOLE GRID. The base layout leaves both rows `auto`, and since the
+     keyboard (row `c`) is out of flow, `align-content: normal` splits the grid's free space evenly
+     between the two - which would leave the canvas' row visibly short of the window while
+     composerCanvasGeometry had already sized the canvas for all of it. `auto` and not `0` for the
+     second row: the popover and the keyboard are placed against it, and a zero track would still
+     work but says something this layout does not mean. */
+  grid-template-rows: 1fr auto;
+  /* THE GRID IS THE WINDOW, STATED (user revision 2026-08-22, the page-scroll fix). It was only
+     ASSUMED to be: composerCanvasGeometry's PRO_CANVAS_INSET_PX is written against "`.composer-grid`
+     is `100vh`", which held while nothing inside wanted more - `.app` is an `align-items: stretch`
+     flex row, so the grid was stretched to the window rather than fixed at it, and a child taller
+     than the window simply grew the whole shell (`.theme-vars-root` is `min-height: 100%`, auto
+     height) and scrolled the page by the difference. The composer's own tool column was that child
+     on any window where its six rows want more than the canvas row has (a 1280x800 desktop, an
+     850x420 landscape phone). With a DEFINITE height the `1fr` row is the leftover space rather
+     than the content's, which is what the two rules below can then cap against.
+     `100vh` and not `dvh`, for the reason composerCanvasGeometry's own height gives: the canvas is
+     sized against `100vh` and the two must be the same window. */
+  height: 100vh;
+  /* WHERE THE RAISED SHEET'S SCRIM STARTS AND ENDS (user revision), as insets from the keyboard
+     wrapper's own box - which is the composer grid's left edge and the window's right edge (the
+     base `.composer-keyboard-wrapper` rule and the desktop block's `left`/`width` between them).
+
+     THE BAND IS THE CANVAS' COLUMN AND NOT THE PAGE. Full-bleed it ran under the left play/roster
+     column and the right CanvasTool column as well, dimming chrome the sheet does not cover and
+     nothing is reading behind - so these two take that chrome back off each side and the shadow
+     stands under the surface the keyboard writes to, with `--pro-scrim-flank` of fade at each end.
+
+     THE TERMS ARE THIS FILE'S OWN, and they are the ones composerCanvasGeometry's
+     DESKTOP_CANVAS_INSET_PX is built from: `.composer-grid`'s 0.2rem padding and the 6.2rem
+     `.composer-left-control` with the grid's 0.2rem gap after it on the left;
+     `.buttons-composer-wrapper-right`'s 0.2rem margin-left, `.tool`'s own `max(4vw, 3.5rem)` and
+     that padding again on the right. Both are re-stated in the `max-width: 1000px` block, exactly
+     as the two widths they are written from are. */
+  --pro-scrim-inset-start: calc(6.2rem + 0.4rem);
+  --pro-scrim-inset-end: calc(max(4vw, 3.5rem) + 0.4rem);
+}
+
+.composer-grid-pro .canvas-wrapper {
+  /* THE WRAPPER IS THE CANVAS' OWN SIZE, not the row's. Its `min-height` is already exactly the
+     canvas element's height (composerCanvasCssSize's pro branch), so without this the flex row's
+     default `stretch` would add the sliver band back onto it and `.canvas-relative`'s `flex: 1`
+     would carry the rounded corners that much past the canvas' bottom edge. */
+  align-self: flex-start;
+}
+
+/* THE SEPARATOR BETWEEN THE TWO REGIONS, MOVED TO THE OTHER EDGE. `.timeline-controls::before` is a
+   1px line along the boundary between the scrolling note grid and the denser minimap panel, drawn in
+   the DOM so it also crosses the opaque timeline buttons. That boundary is the row's TOP in the
+   Compressed View and its BOTTOM here, where the strip is above the notes instead of below them -
+   left alone it would draw along the canvas' own top edge and mark nothing. */
+.composer-grid-pro .timeline-controls::before {
+  inset: auto 0 0;
+}
+
+.composer-grid-pro .buttons-composer-wrapper-right {
+  /* FIVE TOOLS AND THE TEMPO SLOT. The tools are capped rather than `1fr`: the row this column is
+     stretched to is the full-height canvas here, so equal fractions would make every tool ~200px
+     tall on a 1080p window. 8rem is what `repeat(4, 1fr)` came out as over the Compressed View's
+     45vh card, so the buttons keep the size they have always had and the column packs from the
+     top.
+
+     THE SIXTH ROW IS THE TEMPO CHANGERS' (phase E). `1fr` and not `auto` so it also swallows the
+     column's leftover height and holds them against its bottom edge; because a `1fr` row's minimum
+     is still its content, they keep their own height on a short window and the five `minmax(0, …)`
+     tools shrink toward them instead of being covered by them.
+
+     ...WHICH NEEDS THE COLUMN'S HEIGHT TO BE DEFINITE, and that is what the cap is for. With the
+     tempo slot IN FLOW the column's own content would otherwise size the flex row it sits in, and
+     the six rows would make that row - and the page - taller than the window instead of the tools
+     shrinking.
+
+     THE CAP IS ITS OWN ROW AND NOT A RESTATEMENT OF THE WINDOW (user revision 2026-08-22, the
+     page-scroll fix). It was `calc(100vh - 0.4rem)`, the grid's content box worked out by hand -
+     and that hand-derived number left out the grid's own 0.2rem ROW GAP, so on any window where the
+     column's content is taller than the canvas row (a 1280x800 desktop, a 850x420 landscape phone)
+     the `1fr` row took this cap as its automatic minimum and grew 3.2px PAST the window: body
+     scrollHeight came out at 100vh + 3.2 and the composer page scrolled by a hair. `100%` is the
+     same intent stated against the thing that actually decides it - the row this column stretches
+     in - and the `min-height: 0` on that row's grid item below is what makes the row a plain `1fr`
+     rather than something the content can grow. The tempo changers still sit at the window's bottom
+     and the canvas still ends higher, above the sliver. */
+  grid-template-rows: repeat(5, minmax(0, 8rem)) 1fr;
+  max-height: 100%;
+}
+
+/* THE CANVAS' ROW IS THE GRID'S LEFTOVER HEIGHT, FULL STOP - the other half of the scroll fix
+   above. A grid item's automatic minimum size is its content's, so the tool column beside the
+   canvas could make the `1fr` row taller than the free space the grid had for it, and a grid taller
+   than the window is a window that scrolls. Zero here says the row is what `1fr` resolved to and
+   the column shrinks its five capped tool rows to fit (that is what `minmax(0, 8rem)` is for),
+   which is the behaviour phase E designed and this is what makes it true at every window height. */
+.composer-grid-pro .top-panel-composer {
+  min-height: 0;
+}
+
+/* THE KEYBOARD AS A BOTTOM SHEET. Lowered is the default and the class is what raises it, so the
+   sheet is down for the first frame after mount rather than sliding up and back.
+
+   IT IS NEVER UNMOUNTED, which is the point of doing this with a transform: the keyboard goes on
+   receiving the same active-note flashes it does in the Compressed View while it is down, and a
+   raise costs no instrument reload. `transform`/`opacity` only, so the whole thing runs off the
+   compositor and never reflows the canvas beside it. */
+.composer-grid-pro .composer-keyboard-wrapper {
+  position: fixed;
+  z-index: 6;
+  /* THE SHEET STANDS AT THE WINDOW'S OWN BOTTOM EDGE (user revision 2026-08-22). It stood on the
+     song-info row for one round, which is what made the sliver stop 28px short of the edge; the
+     song info reserves nothing now, so the base rule's `bottom: 0` is what this wants and there is
+     nothing to override. `100%` in the translate below is the element's own height, so it puts the
+     sheet's TOP exactly at its box's bottom - i.e. at the window's. */
+  /* percentages in `translate` are of the element's OWN height, so this leaves exactly the sliver
+     showing whatever instrument (and therefore whatever keyboard height) is loaded */
+  transform: translateY(calc(100% - var(--pro-sliver-height)));
+  opacity: 0.3;
+  transition:
+    transform 0.28s ease,
+    opacity 0.28s ease;
+  /* the sliver's own tap is taken by `.composer-keyboard-sliver` in front of it, so a key cannot be
+     pressed by whoever meant to raise the sheet */
+  pointer-events: none;
+}
+
+/* RAISED IS A STATE CLASS ON THE GRID, not on the keyboard: the sheet is a property of the composer
+   layout rather than of the keyboard surface, and putting it here keeps ComposerKeyboard - which
+   renders three different wrappers (loading, recording, keys) - out of the question entirely.
+   Same specificity as the rule above, so it wins by sitting after it. */
+.composer-grid-pro-raised .composer-keyboard-wrapper {
+  transform: translateY(0);
+  opacity: 0.8;
+  /* THE SHEET TAKES ITS KEYS' PRESSES AND NOTHING ELSE'S. `auto` on the wrapper alone would make
+     its whole full-width flex box a hit target, so a tap on the empty air beside the keyboard - or
+     on the scrim's head above it - would be swallowed by a box with no control in it instead of
+     reaching the canvas and dismissing the sheet (see `.canvas-wrapper`'s cursor below). The
+     children are the keys, the two side chevrons and the recording UI; the ::before scrim is not
+     one of them and inherits the `none`. */
+  pointer-events: none;
+}
+
+.composer-grid-pro-raised .composer-keyboard-wrapper > * {
+  pointer-events: auto;
+}
+
+/* THE KEYS' MISS MARGIN (user revision 2026-08-22), which is the band of the keyboard's own box
+   that is NOT a key. The rule above hands the keyboard its presses; this widens what "the
+   keyboard" means by a finger's worth, so a press that lands just off the outermost key stops on
+   this padding and does nothing. Without it that same slip reaches the CANVAS underneath, where a
+   settled tap is the dismiss gesture (spec §7, composerInput.stageReleaseIntent) - so a
+   fat-fingered chord put the sheet away mid-edit.
+
+   RAISED ONLY, and that is why this is not on the base `.composer-grid-pro` rule: the lowered
+   sheet's sliver is the TOP `--pro-sliver-height` of the wrapper's box (see the transform above),
+   so 2rem of padding at the top while it is down would fill most of that band with empty air
+   instead of the keys it exists to show. Down there the whole wrapper is `pointer-events: none`
+   anyway, so there is no press for the margin to catch until the sheet is up.
+
+   NOTHING AT THE BOTTOM: that edge is the window's own - there is no canvas below the keys to slip
+   onto, and padding there would push the keys up off the sheet's foot. The flanks are wider than
+   the head because the miss that matters is horizontal: the rows' end keys have canvas beside them
+   at the same height, while above the top row the scrim's head is already there to aim by. */
+.composer-grid-pro-raised .composer-keyboard-wrapper .keyboard {
+  padding: 2rem 3rem 0 3rem;
+}
+
+/* THE SCRIM the raised sheet stands on: plain rgba and deliberately NO blur (a backdrop-filter over
+   a full-window canvas costs a full-screen readback every frame the canvas repaints).
+
+   THE SHEET'S OWN BAND AND NOT THE WINDOW, which is the whole of this rule. It was a fixed
+   `inset: 0` div over everything, and with the Pro View's canvas being the window that meant the
+   surface being edited spent every raise dimmed and unreachable. As the SHEET'S OWN pseudo-element
+   the band is the keyboard's box by construction - whatever instrument is loaded, whatever the
+   recording UI's height is - with `--pro-scrim-head` of gradient above it dying out to nothing, so
+   the canvas over the sheet is at full brightness and takes its own pointers (spec §8).
+
+   ...AND IT IS THE CANVAS' COLUMN ACROSS (user revision): the two insets take the composer's own
+   side columns off the band - see `--pro-scrim-inset-start`/`--pro-scrim-inset-end` above - so the
+   page-wide gradient is now the zone under the canvas alone, and `--pro-scrim-flank` of fade at
+   each end is what keeps that from being a hard vertical edge on the two chrome columns.
+
+   `z-index: -1` puts it behind the keys and still inside the wrapper's own stacking context (the
+   rule above gives it `position: fixed` and a z-index), so it is over the canvas and under every
+   key. Opacity-toggled rather than mounted and unmounted, so the fade runs in both directions. */
+.composer-grid-pro .composer-keyboard-wrapper::before {
+  content: '';
+  position: absolute;
+  inset: calc(-1 * var(--pro-scrim-head)) var(--pro-scrim-inset-end) 0 var(--pro-scrim-inset-start);
+  z-index: -1;
+  background: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 0.5) 0,
+    rgba(0, 0, 0, 0.5) calc(100% - var(--pro-scrim-head)),
+    rgba(0, 0, 0, 0) 100%
+  );
+  /* THE TWO ENDS FADE THE SAME WAY THE HEAD DOES, and it is a MASK rather than a second background
+     layer because backgrounds composite OVER one another and never multiply: a horizontal gradient
+     painted on top of this one would lighten the band's middle instead of thinning its ends. The
+     mask is the horizontal half of the shape, the gradient above is the vertical half, and the two
+     multiply where they meet - so the band's corners are the softest part of it, which is where the
+     chrome columns and the canvas' own top edge both are.
+     Prefixed as well for Safari below 15.4, where the unprefixed property does not exist and the
+     declaration would be dropped - leaving the band with hard ends rather than no scrim at all. */
+  -webkit-mask-image: linear-gradient(
+    to right,
+    rgba(0, 0, 0, 0) 0,
+    rgb(0, 0, 0) var(--pro-scrim-flank),
+    rgb(0, 0, 0) calc(100% - var(--pro-scrim-flank)),
+    rgba(0, 0, 0, 0) 100%
+  );
+  mask-image: linear-gradient(
+    to right,
+    rgba(0, 0, 0, 0) 0,
+    rgb(0, 0, 0) var(--pro-scrim-flank),
+    rgb(0, 0, 0) calc(100% - var(--pro-scrim-flank)),
+    rgba(0, 0, 0, 0) 100%
+  );
+  opacity: 0;
+  transition: opacity 0.28s ease;
+  pointer-events: none;
+}
+
+.composer-grid-pro-raised .composer-keyboard-wrapper::before {
+  opacity: 1;
+}
+
+/* THE DISMISS ZONE'S CURSOR needs no rule of its own, and that is worth writing down rather than
+   leaving as a hole: `.canvas-relative canvas` above is already `cursor: pointer !important` in
+   both views, so the canvas has always said "this is a surface you press". What hid it was the
+   backdrop - a full-window div with `cursor: default` between the mouse and the canvas - so
+   removing it is what makes the affordance visible while the sheet is up, and the pointer is gone
+   with the same gesture that puts the sheet down. */
+
+/* THE SLIVER'S TAP TARGET: the band of window the lowered sheet peeks into, as its own transparent
+   button in front of it. A button and not a click handler on the wrapper because the wrapper is the
+   KEYBOARD - a tap on it would otherwise press whichever key happened to be under the finger. */
+.composer-keyboard-sliver {
+  position: fixed;
+  left: 0;
+  /* the band the sheet really peeks into, which is the window's own bottom edge again (user
+     revision 2026-08-22) - see `.composer-grid-pro .composer-keyboard-wrapper`. The song info is an
+     overlay under this target rather than a row beside it, and a tap here raises the keyboard
+     rather than doing nothing to a song name. */
+  bottom: 0;
+  width: 100%;
+  height: var(--pro-sliver-height);
+  z-index: 2;
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+/* THE TEMPO CHANGERS AS THE TOOL COLUMN'S LAST ROW (phase E's mobile pass; Composer.svelte renders
+   them there in the Pro View). They stop being floated: `position: relative` in place of the base
+   rule's `absolute`, which is what puts them IN the column's flow as a row of it, `inset: auto`
+   because that rule's `right`/`bottom` would otherwise SHIFT a relatively-positioned box instead of
+   anchoring it, and the width is the column's.
+
+   WHY A ROW AND NOT A CORNER: floated, they were pinned to the window's bottom while the five tools
+   packed down from the top, so on a short window (a landscape phone at 850x420) the two met and the
+   tempo buttons covered the View Lock. In the grid they cannot: the `1fr` row takes its own content
+   height first and the tools shrink toward it.
+
+   AND NO z-index OF THEIR OWN ANY MORE (user revision). They carried an 8 to stand above the
+   full-window backdrop the raised sheet used to lay over the page; that element is gone - the sheet
+   paints its own scrim, which is the keyboard's band inside the canvas' column, behind the keys and
+   taking no pointers - so there is nothing left here to out-stack. The row paints in flow, where a
+   column of buttons beside the canvas belongs. */
+.composer-grid-pro .tempo-changers-wrapper {
+  position: relative;
+  inset: auto;
+  width: 100%;
+  align-self: end;
+  /* ...and it never widens the column it now lives in. A grid item's automatic minimum size is its
+     content's, so without this the "Tempo" caption would have made this column ~10px wider than the
+     Compressed View's - which is 10px it does not have below ~610px of window, where the canvas'
+     78vw and the roster column have already spent everything: the column would simply hang off the
+     right edge. Floated, the slot never asked the layout for width at all; a row has to be told. */
+  min-width: 0;
+}
+
+/* PLAYING HIDES THEM WITHOUT MOVING ANYTHING ELSE. The base rule is `display: none`, which was free
+   while the slot was floated and now collapses the grid row it lives in - so every tool above would
+   grow on play and shrink again on stop. Same disappearance, no reflow. */
+.composer-grid-pro .tempo-changers-wrapper-hidden {
+  display: flex;
+  visibility: hidden;
+}
+
+/* THE SONG'S NAME AND TIME, AS AN OVERLAY AT THE WINDOW'S VERY BOTTOM (user revision 2026-08-22).
+   It is what this is everywhere else in the app; what the Pro View changes is only its SHAPE.
+
+   IT RESERVES NO SPACE, which is the revision. For one round it was a 1.75rem ROW at the bottom of
+   the window with the canvas stopping above it and the sheet standing on it - 28px of axis, and a
+   sliver 28px short of the window's edge, spent on two lines of read-only text. The canvas has that
+   height back (composerCanvasGeometry's PRO_CANVAS_INSET_PX is the sliver alone now) and this
+   floats over its lowest rows again, which is what it does in every other view.
+
+   A ROW AND NOT A COLUMN, which is the shape kept from that round: the name and the time sit side
+   by side rather than stacked, so it covers one line of canvas instead of two. `left`/`width`
+   replace the base rule's corner offset so it spans the window, with the text kept clear of the
+   sidebar by the padding, and `.song-info div`'s own text-shadow is what keeps it legible over
+   whatever rows are under it.
+
+   NO z-index, deliberately: the sheet (6) and its sliver (7) are ABOVE this, so raising the
+   keyboard covers the song's name rather than printing it over the keys. Being covered is fine for
+   text nothing is edited through - it is the canvas underneath that has to stay reachable. */
+.song-info-pro {
+  padding-left: calc(4rem + 0.5vw);
+  flex-direction: row;
+  align-items: center;
+  gap: 0.6rem;
+  bottom: 0.6rem;
+  left: 0.4rem;
+}
+
+@media (hover: none) and (pointer: coarse) {
+  .canvas-buttons {
+    display: flex;
+  }
+
+  .canvas-buttons-visible {
+    display: flex;
+    opacity: 1;
+  }
+}
+
+@media only screen and (max-width: 1000px) {
+  .canvas-buttons {
+    display: flex;
+  }
+
+  .canvas-buttons-visible {
+    display: flex;
+    opacity: 1;
+  }
+
+  .buttons-composer-wrapper,
+  .buttons-composer-wrapper-right {
+    flex: 1;
+  }
+
+  .tools-button {
+    padding: 0.4rem 0.8rem;
+  }
+  .song-info div {
+    max-width: 20vw;
+  }
+
+  .song-info {
+    font-size: 0.9rem;
+  }
+
+  .song-info-pro {
+    left: 0;
+  }
+
+  .tool {
+    flex: 1;
+    width: 100%;
+    max-width: unset;
+  }
+
+  .button-hitbox {
+    padding: 0.7vh;
+  }
+
+  .note-composer {
+    width: 5.5vw;
+    height: 5.5vw;
+  }
+
+  .keyboard {
+    gap: 0rem;
+    grid-gap: 0rem;
+  }
+
+  .composer-grid {
+    width: 100%;
+  }
+
+  .composer-left-control {
+    width: 5.4rem;
+  }
+
+  /* THE PRO VIEW ON A PHONE. The bottom-sheet idiom needs nothing here - it is already what a
+     phone expects - so this is the ONE place the desktop numbers do not carry over: the tools
+     column's buttons are `flex: 1; width: 100%` in this block and its five rows would otherwise be
+     a fifth of the window each. The sixth row is the tempo slot's, exactly as on the desktop side.
+
+     4rem IS A CAP AND NOT A SIZE, which is what makes this survive a landscape phone: at 850x420
+     the column has ~374px for five tools and the tempo slot's ~148, so the tools resolve to ~45px
+     each rather than overflowing into it.
+
+     `--pro-sliver-height` is deliberately NOT re-declared here, tempting as a fatter thumb target
+     is: composerCanvasGeometry takes that band off the canvas' height as a build-time constant, and
+     a viewport-width-dependent value would make the canvas and the sheet overlap by the difference
+     at exactly the widths where the least room is going spare. */
+  .composer-grid-pro .buttons-composer-wrapper-right {
+    grid-template-rows: repeat(5, minmax(0, 4rem)) 1fr;
+  }
+
+  /* THE SCRIM'S BAND ON A PHONE (user revision): the same two terms as on the desktop side, with
+     THIS block's widths in them - `.composer-left-control` is 5.4rem here, and `.tool` is
+     `width: 100%`, so the tools column is whatever the canvas leaves of the row rather than a
+     stated width and there is nothing to subtract on that side. The band runs to the grid's own
+     0.2rem padding edge there (plus the column's 0.2rem margin-left), which is as close to the
+     canvas' right edge as this stylesheet can state it, and `--pro-scrim-flank` covers the rest. */
+  .composer-grid-pro {
+    --pro-scrim-inset-start: calc(5.4rem + 0.4rem);
+    --pro-scrim-inset-end: 0.4rem;
+  }
+}
+
+/* ==================================================================================
+   THE COMPOSER'S DESKTOP LAYOUT — a permanent sidebar column, and a canvas that fills what is left
+   of the window instead of a card centred in it.
+
+   THIS QUERY IS THE EXACT COMPLEMENT OF THE `max-width: 1000px` BLOCK ABOVE, which is where every
+   composer rule that reshapes the page for phones already lives. `not all and (max-width: 1000px)`
+   and not `(min-width: 1001px)`: the two agree on every integer viewport, but a fractional one
+   (browser zoom, fractional device pixel ratios) falls in the gap between `<= 1000` and `>= 1001`
+   and would match NEITHER block, leaving the composer with the desktop base rules and none of these
+   overrides. composerCanvasGeometry states the same boundary for the JS half of the canvas' size
+   (COMPOSER_MOBILE_MAX_WIDTH / COMPOSER_DESKTOP_MEDIA_QUERY) and test/composerCanvasCss.test.ts
+   reads the declarations below back out of this file, so the two halves cannot drift.
+
+   THE PREVIEW IS EXCLUDED throughout, by class rather than by `:not()` where it can be: /theme's
+   composer preview is a small box inside a scrolling page, so it keeps the centred layout and its
+   own hamburger. ComposerMenu.svelte drops `composer-menu-sidebar` there and Composer.svelte adds
+   `composer-grid-in-preview`, matching `.canvas-wrapper-in-preview`'s own exclusion.
+   ================================================================================== */
+@media not all and (max-width: 1000px) {
+  /* The strip is a COLUMN OF THE PAGE here, not an overlay over it: nothing opens it, so nothing
+     closes it either. ComposerMenu.svelte pins its `isVisible` true to match - this rule only
+     keeps the server-rendered markup from sliding in from -4rem when hydration flips that. */
+  .composer-menu-sidebar .menu {
+    margin-left: 0;
+  }
+
+  .composer-menu-sidebar .hamburger,
+  .composer-menu-sidebar .close-menu {
+    display: none;
+  }
+
+  /* Pushed clear of the strip rather than centred underneath it, with 0.1rem of air between the
+     two - composerCanvasGeometry's DESKTOP_SIDEBAR_GAP_REM, which takes that 1.6px out of the
+     canvas' width so the row still ends exactly at the right edge of the window.
+
+     `margin-right: auto` is what pins the grid there: it absorbs the row's free space so `.app`'s
+     `justify-content: center` has none left to re-centre the grid with, and in the overflow case
+     (the canvas is nearestEven-rounded, so it can exceed its CSS width by up to 1px) an auto margin
+     resolves to 0 and the overflow goes off the right, where `.app`'s `overflow: hidden` takes it -
+     never back over the sidebar. */
+  .composer-grid:not(.composer-grid-in-preview) {
+    margin-left: calc(var(--menu-size) + 0.1rem);
+    margin-right: auto;
+  }
+
+  /* THE PLACEHOLDER'S WIDTH, switched here rather than in the component - see `.canvas-wrapper`'s
+     own comment for why. Both custom properties are absent in the theme preview (composerCanvasCssSize
+     returns null there), so both branches degrade to the same `0px` and `.canvas-wrapper-in-preview`
+     unsets the floors anyway. */
+  .canvas-wrapper {
+    --composer-canvas-width: var(--composer-canvas-width-desktop, 0px);
+  }
+
+  /* ...and the keyboard centres itself in what is left of the window, not under the sidebar. It is
+     `position: absolute` with no positioned ancestor, so both of these are against the viewport. */
+  .composer-grid:not(.composer-grid-in-preview) .composer-keyboard-wrapper {
+    left: calc(var(--menu-size) + 0.1rem);
+    width: calc(100% - var(--menu-size) - 0.1rem);
+  }
+}
+
+@media only screen and (max-width: 600px) {
+  .song-info {
+    font-size: 0.8rem;
+  }
+
+  .tempo-changers-wrapper {
+    gap: 0.6vh;
+  }
+}
+
+/* pulled from sheet-visualizer/SheetVisualizer.css (old: globally imported in app/layout.tsx,
+   loaded on every page, not just sheet-visualizer) — P4b Task 2. Print-only body background,
+   kept global here for the same reason old was. */
+@media print {
+  body {
+    background-color: white !important;
+  }
+}

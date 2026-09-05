@@ -1,0 +1,53 @@
+{
+  "displayName": "Tuned Krill Horn",
+  "family": "brass",
+  "midiName": "french horn",
+  "shape": "sky-2x4",
+  "sustain": {
+    "release": 0.3,
+    "minLength": 0.2
+  },
+  "register": "F3",
+  "notes": [
+    {
+      "nominal": 65,
+      "baseNote": "F",
+      "icon": "dm"
+    },
+    {
+      "nominal": 67,
+      "baseNote": "G",
+      "icon": "cr"
+    },
+    {
+      "nominal": 69,
+      "baseNote": "A",
+      "icon": "cr"
+    },
+    {
+      "nominal": 71,
+      "baseNote": "B",
+      "icon": "dm"
+    },
+    {
+      "nominal": 72,
+      "baseNote": "C",
+      "icon": "dmcr"
+    },
+    {
+      "nominal": 74,
+      "baseNote": "D",
+      "icon": "dm"
+    },
+    {
+      "nominal": 76,
+      "baseNote": "E",
+      "icon": "cr"
+    },
+    {
+      "nominal": 77,
+      "baseNote": "F",
+      "icon": "cr"
+    }
+  ]
+}

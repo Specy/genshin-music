@@ -1,0 +1,178 @@
+{
+  "id": "sky",
+  "storageId": "Sky",
+  "display": {
+    "name": "Sky",
+    "company": {
+      "name": "thatgamecompany",
+      "shortName": "TGC"
+    },
+    "transferOrigins": [
+      "https://sky-music.specy.app",
+      "https://beta.sky-music.specy.app",
+      "https://specy.github.io/skyMusic"
+    ]
+  },
+  "meta": {
+    "title": "Sky Music Nightly",
+    "description": "Sky music nightly, a website to play, practice and compose songs",
+    "canonicalOrigin": "https://sky-music.specy.app",
+    "themeColor": "#63aea7",
+    "analytics": {
+      "tagId": "G-YEHPSLXGYT",
+      "configId": "G-YEHPSLXGYT"
+    },
+    "updateChannelKey": "Sky"
+  },
+  "notes": {
+    "perColumn": 15,
+    "perRow": 5,
+    "cssClasses": {
+      "noteComposer": "note-composer-sky",
+      "note": "note-sky",
+      "noteAnimation": "note-animation-sky",
+      "approachCircle": "approach-circle-sky",
+      "noteName": "note-name-sky"
+    },
+    "nameTypes": [
+      "Note name",
+      "Keyboard layout",
+      "Your Keyboard layout",
+      "Do Re Mi",
+      "ABC",
+      "No Text",
+      "Playstation",
+      "Switch",
+      "1 2 3"
+    ],
+    "canonicalNoteIds": [60, 62, 64, 65, 67, 69, 71, 72, 74, 76, 77, 79, 81, 83, 84],
+    "composerPositions": [14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0, 20, 19, 18, 17, 16, 15],
+    "importPositions": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14],
+    "animationDelayMs": 200,
+    "composerRowHeightScale": 0.95,
+    "defaultIcon": "cr",
+    "visualNameCasing": "uppercase"
+  },
+  "instruments": {
+    "list": [
+      "Piano",
+      "GrandPiano",
+      "Contrabass",
+      "Cello",
+      "Violin",
+      "Guitar",
+      "LightGuitar",
+      "Harp",
+      "Horn",
+      "KrillHorn",
+      "Trumpet",
+      "Saxophone",
+      "Pipa",
+      "WinterPiano",
+      "Xylophone",
+      "Flute",
+      "TransverseFlute",
+      "Panflute",
+      "Ocarina",
+      "MantaOcarina",
+      "Harmonica",
+      "Aurora",
+      "Kalimba",
+      "ToyUkulele",
+      "Drum",
+      "FortuneDrum",
+      "Cymbals",
+      "Bells",
+      "SmallBell",
+      "DunDun",
+      "HandPan",
+      "TriumphHandPan",
+      "SFX_SineSynth",
+      "SFX_BassSynth",
+      "SFX_ChimeSynth",
+      "SFX_TR-909",
+      "SFX_Dance",
+      "SFX_BirdCall",
+      "SFX_CrabCall",
+      "SFX_FishCall",
+      "SFX_SpiritMantaCall",
+      "SFX_JellyCall",
+      "SFX_MantaCall",
+      "SFX_MothCall"
+    ],
+    "defaultVolume": 100
+  },
+  "midi": {
+    "bounds": {
+      "upper": 84,
+      "lower": 60
+    },
+    "presets": [
+      {
+        "name": "default",
+        "notes": [60, 62, 64, 65, 67, 69, 71, 72, 74, 76, 77, 79, 81, 83, 84]
+      }
+    ]
+  },
+  "composer": {
+    "tempoChangers": [
+      {
+        "id": 0,
+        "text": "1",
+        "changer": 1,
+        "color": 5332079
+      },
+      {
+        "id": 1,
+        "text": "1/2",
+        "changer": 0.5,
+        "color": 5338451
+      },
+      {
+        "id": 2,
+        "text": "1/4",
+        "changer": 0.25,
+        "color": 4410493
+      },
+      {
+        "id": 3,
+        "text": "1/8",
+        "changer": 0.125,
+        "color": 7818605
+      }
+    ]
+  },
+  "themes": {
+    "baseConfig": {
+      "text": {
+        "light": "#eae8e6",
+        "dark": "#151414",
+        "note": "#eae8e6"
+      }
+    },
+    "defaultNoteBackground": "#495466"
+  },
+  "settings": {
+    "defaultNoteNameType": {
+      "composer": {
+        "desktop": "Note name",
+        "mobile": "Note name"
+      },
+      "player": {
+        "desktop": "Note name",
+        "mobile": "Note name"
+      },
+      "zen": {
+        "desktop": "No Text",
+        "mobile": "No Text"
+      },
+      "sheetVisualizer": "ABC"
+    }
+  },
+  "features": {
+    "hasNoteFrame": false
+  },
+  "i18n": {
+    "updateMessage": "Added new instruments: Harmonic Key (genshin)\nAdded new Layout: number layout"
+  }
+}

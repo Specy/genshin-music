@@ -1,55 +1,83 @@
-import {createAudioRecorderPolyfill} from "./MediaRecorderPolyfill";
-import {fileService} from "../Services/FileService";
+import { createAudioRecorderPolyfill } from './MediaRecorderPolyfill';
+import { fileService } from '$core/Services/FileService';
 
 export default class AudioRecorder {
-    node: MediaStreamAudioDestinationNode | null
-    recorder: MediaRecorder
-    audioContext: AudioContext
+  node: MediaStreamAudioDestinationNode | null;
+  recorder: MediaRecorder;
+  audioContext: AudioContext;
 
-    constructor(audioContext: AudioContext) {
-        this.audioContext = audioContext
-        this.node = audioContext.createMediaStreamDestination?.() ?? null
-        if (!("MediaRecorder" in window)) {
-            console.log("Audio recorder Polyfill")
-            // @ts-ignore
-            this.recorder = new (createAudioRecorderPolyfill(window.AudioContext || window.webkitAudioContext))(this.node?.stream!) as any as MediaRecorder
-        } else {
-            this.recorder = new MediaRecorder(this.node?.stream!)
-        }
+  constructor(audioContext: AudioContext) {
+    this.audioContext = audioContext;
+    this.node = audioContext.createMediaStreamDestination?.() ?? null;
+    // QUIRK: the two `this.node?.stream!` non-null assertions below are unsound on purpose -
+    // node is genuinely null when createMediaStreamDestination is unsupported. Preserves that
+    // pre-existing crash-on-unsupported-browser risk rather than adding a guard.
+    if (!('MediaRecorder' in window)) {
+      console.log('Audio recorder Polyfill');
+      this.recorder = new (createAudioRecorderPolyfill(
+        // @ts-expect-error window.webkitAudioContext (legacy Safari prefix) not in Window type definitions
+        window.AudioContext || window.webkitAudioContext
+      ))(this.node?.stream!) as unknown as MediaRecorder; // eslint-disable-line @typescript-eslint/no-non-null-asserted-optional-chain
+    } else {
+      this.recorder = new MediaRecorder(this.node?.stream!); // eslint-disable-line @typescript-eslint/no-non-null-asserted-optional-chain
     }
+  }
 
-    start() {
-        this.recorder.start()
-    }
+  start() {
+    this.recorder.start();
+  }
 
-    delete() {
-        this.node?.disconnect()
-        this.node = null
+  delete() {
+    // Disconnecting the MediaStreamAudioDestinationNode does not stop the MediaRecorder which is
+    // consuming its stream. During a context rebuild there is deliberately no blob to preserve,
+    // but the native recorder and its tracks still need a terminal transition before references
+    // are dropped or they can remain alive recording silence.
+    if (this.recorder.state !== 'inactive') {
+      try {
+        this.recorder.stop();
+      } catch {
+        // Teardown is idempotent and best-effort: another stop may already be queued.
+      }
     }
+    this.node?.stream.getTracks().forEach((track) => track.stop());
+    this.node?.disconnect();
+    this.node = null;
+  }
 
-    stop(): Promise<{
-        data: Blob,
-        toUrl: () => string
-    }> {
-        return new Promise(resolve => {
-            this.recorder.addEventListener('dataavailable', function (e) {
-                resolve({
-                    data: e.data,
-                    toUrl: () => {
-                        return URL.createObjectURL(e.data);
-                    }
-                })
-            }, {once: true})
-            this.recorder.stop()
-        })
-    }
+  stop(): Promise<{
+    data: Blob;
+    toUrl: () => string;
+  }> {
+    return new Promise((resolve) => {
+      // MediaRecorder.stop() throws InvalidStateError when it is not recording, which rejects
+      // this promise from inside the executor. Reachable without any misuse by a caller: a
+      // context rebuild replaces this recorder with a fresh, inactive one under a Player that
+      // still believes a recording is running, and its Stop then lands here.
+      if (this.recorder.state === 'inactive') {
+        resolve({ data: new Blob(), toUrl: () => '' });
+        return;
+      }
+      this.recorder.addEventListener(
+        'dataavailable',
+        function (e) {
+          resolve({
+            data: e.data,
+            toUrl: () => {
+              return URL.createObjectURL(e.data);
+            },
+          });
+        },
+        { once: true }
+      );
+      this.recorder.stop();
+    });
+  }
 
-    static async downloadBlob(urlBlob: Blob, fileName: string) {
-        return fileService.downloadBlobAsWav(urlBlob, fileName)
-    }
+  static async downloadBlob(urlBlob: Blob, fileName: string) {
+    return fileService.downloadBlobAsWav(urlBlob, fileName);
+  }
 
-    async download(urlBlob: Blob, fileName: string) {
-        return fileService.downloadBlobAsWav(urlBlob, fileName)
-    }
+  async download(urlBlob: Blob, fileName: string) {
+    return fileService.downloadBlobAsWav(urlBlob, fileName);
+  }
 }
-

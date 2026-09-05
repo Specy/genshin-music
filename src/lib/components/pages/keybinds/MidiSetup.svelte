@@ -1,0 +1,638 @@
+<script lang="ts">
+  import { onMount } from 'svelte';
+  import { game } from '$game';
+  import ShapeKeyboard from '$lib/games/shapes/ShapeKeyboard.svelte';
+  import BaseNote from '$cmp/BaseNote.svelte';
+  import MidiShortcut from './MidiShortcut.svelte';
+  import { logger } from '$stores/LoggerStore.svelte';
+  import type { MIDINote, MIDIShortcut as MIDIShortcutData } from '$core/utils/Utilities';
+  import type { InstrumentName } from '$core/types';
+  import type { MIDIPreset, Pitch } from '$lib/games/types';
+  import { MIDIProvider, type MIDIEvent } from '$lib/providers/MIDIProvider';
+  import { AudioProvider } from '$lib/providers/AudioProvider';
+  import { AudioPlayer } from '$lib/audio/AudioPlayer';
+  import { InstrumentData } from '$core/Songs/SongClasses';
+  import { Instrument } from '$lib/audio/Instrument.svelte';
+  import AppButton from '$cmp/inputs/AppButton.svelte';
+  import { asyncConfirm, asyncPrompt } from '$stores/AsyncPromptStore.svelte';
+  import Column from '$cmp/layout/Column.svelte';
+  import Header from '$cmp/header/Header.svelte';
+  import Separator from '$cmp/Separator.svelte';
+  import { t } from '$i18n/binding.svelte';
+
+  // mounted is an unmount-race guard, not just a redundant flag: loadInstrument below actively
+  // destroys a late-resolving AudioPlayer load when it resolves after unmount - real cleanup
+  // behavior, not decoration to remove.
+
+  // WebMidi is an ambient global namespace (@types/webmidi, referenced in src/app.d.ts); plain
+  // .ts files resolve it fine (typescript-eslint's recommended config turns off no-undef there,
+  // deferring to tsc), but .svelte script blocks go through eslint-plugin-svelte's own
+  // recommended config, which doesn't carry that same override - same gap fixed in AppInit.svelte's
+  // identical WebMidi.MIDIInput[] usage.
+  type MidiAccessStatus =
+    // eslint-disable-next-line no-undef
+    | { status: 'granted'; midiAccess: WebMidi.MIDIAccess }
+    | { status: 'denied' }
+    | { status: 'unsupported' }
+    | { status: 'pending' };
+
+  // The DEFAULT instrument (INSTRUMENTS[0] = game.instruments.list[0], i.e. the one `init()`
+  // loads into `audioPlayer` below). It owns everything about the grid this page draws: the
+  // Shape, the notes the Shape places, their glyphs, and the Note Id each button plays -
+  // a MIDI preset maps hardware keys onto THOSE buttons.
+  const baseInstrument = new Instrument();
+  // The Basepoint this page auditions at, in ONE place: the player is built at it, and every
+  // button's Note Number is asked for at it (ADR-0007 - the two must be the same value, or a
+  // press enters a number the engine then resolves against a different Basepoint). This page
+  // has no song and no pitch selector, so it is simply C; the layer it syncs below carries no
+  // override, so `playNoteOfInstrument` resolves the player's base.
+  const AUDITION_PITCH: Pitch = 'C';
+  const audioPlayer = new AudioPlayer(AUDITION_PITCH);
+  let mounted = true;
+
+  // QUIRK (load-bearing): MIDINote/MIDIShortcut are plain, non-reactive classes - their fields
+  // are mutated in place (e.g. note.status = ...) rather than through $state. $state does not
+  // deep-proxy class instances and skips notifying on a referentially-unchanged reassignment, so
+  // every `notes = [...notes]` / `shortcuts = [...MIDIProvider.settings.shortcuts]` below is
+  // forcing a fresh array reference to make the already-mutated elements visible again - it is
+  // not redundant spreading to "clean up". Removing any of these silently breaks reactivity for
+  // that update.
+  let notes: MIDINote[] = $state(MIDIProvider.notes);
+  let currentPreset = $state('default');
+  let midiAccess: MidiAccessStatus = $state({ status: 'pending' });
+  let shortcuts: MIDIShortcutData[] = $state(MIDIProvider.settings.shortcuts);
+  let presets: MIDIPreset[] = $state(MIDIProvider.getPresets());
+  let selectedNote: MIDINote | null = $state(null);
+  let selectedShortcut: string | null = $state(null);
+  // eslint-disable-next-line no-undef
+  let sources: WebMidi.MIDIInput[] = $state([]);
+  // Raises the overlay below: set only when the prompt-free handshake came back empty, which is
+  // exactly the "user never enabled MIDI" case.
+  let needsAccess = $state(false);
+
+  async function init() {
+    await loadInstrument(game.instruments.list[0]);
+    if (!('requestMIDIAccess' in navigator)) {
+      midiAccess = { status: 'unsupported' };
+      return connect();
+    }
+    const res = await MIDIProvider.init();
+    if (!res) {
+      // MIDIProvider.init() only reaches requestMIDIAccess when its persisted `enabled` setting
+      // is already on, so no access here means no prompt was shown - and none is shown from
+      // mount: the request waits behind the overlay's button instead of firing at everyone who
+      // opens this page. The preset init() just loaded is still read, so the grid the overlay
+      // blurs is the real one.
+      needsAccess = true;
+      return readSettings();
+    }
+    midiAccess = { status: 'granted', midiAccess: res };
+    connect();
+  }
+
+  /** The overlay's one button: the request the mount deliberately skipped, then the rest of what
+   * a granted mount does. */
+  async function requestAccess() {
+    const access = await MIDIProvider.requestAccess();
+    if (!mounted) return;
+    midiAccess = access ? { status: 'granted', midiAccess: access } : { status: 'denied' };
+    needsAccess = false;
+    connect();
+  }
+
+  function connect() {
+    MIDIProvider.addInputsListener(midiStateChange);
+    MIDIProvider.addListener(handleMidi);
+    sources = MIDIProvider.inputs;
+    readSettings();
+  }
+
+  function readSettings() {
+    notes = [...MIDIProvider.notes];
+    currentPreset = MIDIProvider.settings.selectedPreset;
+    shortcuts = [...MIDIProvider.settings.shortcuts];
+    presets = MIDIProvider.getPresets();
+  }
+
+  // eslint-disable-next-line no-undef
+  function midiStateChange(inputs: WebMidi.MIDIInput[]) {
+    if (!mounted) return;
+    sources = inputs;
+  }
+
+  function deselectNotes() {
+    notes.forEach((note) => {
+      note.status = note.midi < 0 ? 'wrong' : 'right';
+    });
+    notes = [...notes];
+  }
+
+  async function loadInstrument(name: InstrumentName) {
+    const result = await audioPlayer.syncInstruments([new InstrumentData({ name })]);
+    if (result.some((e) => !e)) return logger.error('Error loading instrument');
+    if (!mounted) return audioPlayer.destroy();
+  }
+
+  function checkIfMidiIsUsed(midi: number, type: 'all' | 'shortcuts' | 'notes') {
+    if (shortcuts.find((e) => e.midi === midi) && ['all', 'shortcuts'].includes(type)) return true;
+    if (notes.find((e) => e.midi === midi) && ['all', 'notes'].includes(type)) return true;
+    return false;
+  }
+
+  function loadPreset(name: string) {
+    MIDIProvider.loadPreset(name);
+    notes = [...MIDIProvider.notes];
+    currentPreset = name;
+  }
+
+  function handleMidi([eventType, note, velocity]: MIDIEvent) {
+    if (MIDIProvider.isDown(eventType) && velocity !== 0) {
+      if (selectedNote) {
+        if (checkIfMidiIsUsed(note, 'shortcuts'))
+          return logger.warn(t('keybinds:key_already_used'));
+        deselectNotes();
+        if (MIDIProvider.isPresetBuiltin(currentPreset))
+          return logger.warn(t('keybinds:cannot_edit_builtin_preset'));
+        MIDIProvider.updateNoteOfCurrentPreset(selectedNote.index, note, 'right');
+        selectedNote = null;
+        notes = [...MIDIProvider.notes];
+      }
+      if (selectedShortcut) {
+        const shortcut = shortcuts.find((e) => e.type === selectedShortcut);
+        if (checkIfMidiIsUsed(note, 'all')) return logger.warn(t('keybinds:key_already_used'));
+        if (shortcut) {
+          MIDIProvider.updateShortcut(shortcut.type, note, note < 0 ? 'wrong' : 'right');
+          shortcuts = [...MIDIProvider.settings.shortcuts];
+        }
+      }
+      const shortcut = shortcuts.find((e) => e.midi === note);
+      if (shortcut) {
+        MIDIProvider.updateShortcut(shortcut.type, note, 'clicked');
+        setTimeout(() => {
+          MIDIProvider.updateShortcut(shortcut.type, note, note < 0 ? 'wrong' : 'right');
+          shortcuts = [...MIDIProvider.settings.shortcuts];
+        }, 150);
+        shortcuts = [...MIDIProvider.settings.shortcuts];
+      }
+      const keyboardNotes = notes.filter((e) => e.midi === note);
+      keyboardNotes.forEach((keyboardNote) => {
+        // A preset slot is addressed by BUTTON (persisted MIDI settings stay button-keyed);
+        // the default instrument is what turns that Button into the Note Number the engine plays.
+        handleClick(
+          keyboardNote,
+          baseInstrument.getNoteFromIndex(keyboardNote.index)?.numberAt(AUDITION_PITCH),
+          true
+        );
+      });
+    }
+  }
+
+  /**
+   * Select (or animate) one preset slot and audition it. `number` is the Note Number the drawn
+   * button ENTERS at this page's Basepoint - the caller holds the note object the Shape gave it,
+   * so nothing here has to guess where the button lives; `undefined` when the slot maps to no
+   * note of the loaded instrument, in which case there is simply nothing to audition.
+   */
+  function handleClick(note: MIDINote, number: number | undefined, animate = false) {
+    if (!animate) deselectNotes();
+    note.status = 'clicked';
+    if (animate) {
+      setTimeout(() => {
+        note.status = note.midi < 0 ? 'wrong' : 'right';
+        notes = [...notes];
+      }, 200);
+      notes = [...notes];
+      selectedShortcut = null;
+    } else {
+      notes = [...notes];
+      selectedNote = note;
+      selectedShortcut = null;
+    }
+    playSound(number);
+  }
+
+  function handleShortcutClick(shortcut: string) {
+    deselectNotes();
+    if (selectedShortcut === shortcut) {
+      selectedShortcut = null;
+      selectedNote = null;
+      return;
+    }
+    selectedShortcut = shortcut;
+    selectedNote = null;
+  }
+
+  /**
+   * Audition one Note Number on the loaded instrument - the engine is Number-keyed since
+   * ADR-0007 (it resolves the number back to a button at the layer's Basepoint), so what is
+   * handed over here is `numberAt(AUDITION_PITCH)`, never the button's Nominal Id. The two
+   * coincide only for an untuned instrument at Basepoint C, which both games' first instrument
+   * happens to be - a tuned default would have auditioned the wrong key, or nothing at all.
+   */
+  function playSound(number: number | undefined) {
+    if (number === undefined) return;
+    audioPlayer.playNoteOfInstrument(0, number);
+  }
+
+  async function createPreset() {
+    while (true) {
+      const name = await asyncPrompt(t('keybinds:ask_preset_name'));
+      if (!name) return;
+      if (MIDIProvider.isPresetBuiltin(name) || presets.some((p) => p.name === name)) {
+        logger.warn(t('keybinds:already_existing_preset'));
+        continue;
+      }
+      // One empty slot per BUTTON of the instrument the grid draws, so a fresh preset always
+      // covers exactly the buttons the user can see (the built-in presets already do; this
+      // just stops a new preset from inheriting a stale length instead of the real one).
+      MIDIProvider.createPreset({ name, notes: baseInstrument.notes.map(() => -1) });
+      presets = MIDIProvider.getPresets();
+      loadPreset(name);
+      return;
+    }
+  }
+
+  async function deletePreset(name: string) {
+    if (MIDIProvider.isPresetBuiltin(name))
+      return logger.warn(t('keybinds:cannot_delete_builtin_preset'));
+    if (!(await asyncConfirm(t('keybinds:confirm_delete_preset', { preset_name: name })))) return;
+    MIDIProvider.deletePreset(name);
+    MIDIProvider.loadPreset('default');
+    presets = MIDIProvider.getPresets();
+    notes = [...MIDIProvider.notes];
+    currentPreset = 'default';
+  }
+
+  onMount(() => {
+    init();
+    return () => {
+      mounted = false;
+      audioPlayer.destroy();
+      MIDIProvider.removeInputsListener(midiStateChange);
+      MIDIProvider.removeListener(handleMidi);
+      AudioProvider.clear();
+    };
+  });
+</script>
+
+{#snippet faTrashIcon()}
+  <svg
+    stroke="currentColor"
+    fill="currentColor"
+    stroke-width="0"
+    viewBox="0 0 448 512"
+    height="1em"
+    width="1em"
+    xmlns="http://www.w3.org/2000/svg"
+    ><path
+      d="M432 32H312l-9.4-18.7A24 24 0 0 0 281.1 0H166.8a23.72 23.72 0 0 0-21.4 13.3L136 32H16A16 16 0 0 0 0 48v32a16 16 0 0 0 16 16h416a16 16 0 0 0 16-16V48a16 16 0 0 0-16-16zM53.2 467a48 48 0 0 0 47.9 45h245.8a48 48 0 0 0 47.9-45L416 128H32z"
+    /></svg
+  >
+{/snippet}
+
+{#snippet faPlusIcon()}
+  <svg
+    stroke="currentColor"
+    fill="currentColor"
+    stroke-width="0"
+    viewBox="0 0 448 512"
+    height="1em"
+    width="1em"
+    xmlns="http://www.w3.org/2000/svg"
+    ><path
+      d="M416 208H272V64c0-17.67-14.33-32-32-32h-32c-17.67 0-32 14.33-32 32v144H32c-17.67 0-32 14.33-32 32v32c0 17.67 14.33 32 32 32h144v144c0 17.67 14.33 32 32 32h32c17.67 0 32-14.33 32-32V304h144c17.67 0 32-14.33 32-32v-32c0-17.67-14.33-32-32-32z"
+    /></svg
+  >
+{/snippet}
+
+<!-- The wrapper is the overlay's positioning context, and reproduces the card's own column+gap so
+     splicing it in between changes nothing about the layout. -->
+<div class="midi-setup">
+  <Column gap="1rem">
+    <!-- These three label/value rows are hand-written `.row`s rather than <Row> components on
+         purpose: <Row> writes justify/align as INLINE styles, which no media query can override,
+         and the portrait rules below have to flip each of them from a side-by-side pair into a
+         stack. The classes carry exactly the declarations the props used to emit, so landscape
+         renders byte-for-byte what it did before. -->
+    <div class="row midi-info-row">
+      <div>{t('keybinds:midi_status')}:</div>
+      <div>{t(`keybinds:midi_access_${midiAccess.status}`)}</div>
+    </div>
+    <div class="row midi-info-row midi-devices-row">
+      {t('keybinds:connected_midi_devices')}:
+      <div class="row midi-sources">
+        {#if sources.length > 0}
+          {#each sources as source (source.id)}
+            <div class="midi-source">
+              {source.name} - {source.id}
+            </div>
+          {/each}
+        {:else}
+          {t('keybinds:no_connected_devices')}
+        {/if}
+      </div>
+    </div>
+    <Separator height="0.1rem" background="var(--secondary)" />
+    <div class="row midi-info-row midi-preset-row">
+      {t('keybinds:midi_layout_preset')}:
+      <div class="row midi-preset-controls">
+        <select
+          class="midi-select"
+          value={currentPreset}
+          onchange={(e) => loadPreset(e.currentTarget.value)}
+        >
+          <optgroup label="App presents">
+            {#each game.midi.presets as preset (preset.name)}
+              <option value={preset.name}>{preset.name}</option>
+            {/each}
+          </optgroup>
+          <optgroup label="Your presets">
+            {#each presets as preset (preset.name)}
+              <option value={preset.name}>{preset.name}</option>
+            {/each}
+          </optgroup>
+        </select>
+        <AppButton
+          onclick={() => deletePreset(currentPreset)}
+          class="flex items-center midi-preset-button"
+          style="gap:0.5rem"
+        >
+          {@render faTrashIcon()}
+          {t('keybinds:delete_midi_preset')}
+        </AppButton>
+        <AppButton
+          onclick={createPreset}
+          class="flex items-center midi-preset-button"
+          style="gap:0.5rem"
+        >
+          {@render faPlusIcon()}
+          {t('keybinds:create_midi_preset')}
+        </AppButton>
+      </div>
+    </div>
+    <div style="margin:0.5rem 0">
+      {t('keybinds:midi_note_selection_description')}
+    </div>
+  </Column>
+
+  <div class="midi-setup-content">
+    <!-- Two arrays meet here (ADR-0005 §1/§3). The Shape places the DEFAULT INSTRUMENT's notes -
+       those are the buttons a MIDI preset maps - and hands each one back with its Button; the
+       row's editable data is the preset's own MIDINote for that Button, since a preset slot IS
+       a Button (MIDIProvider persists settings that way). Nothing here assumes the two arrays
+       line up positionally on screen: the Button comes from the Shape.
+       The `notes` read below happens INSIDE the snippet, in this component's scope, so the
+       `notes = [...notes]` republishing above still reaches every button even though the
+       instrument's note array handed to the Shape never changes identity. -->
+    <ShapeKeyboard
+      shape={baseInstrument.shape}
+      notes={baseInstrument.notes}
+      class="keyboard midi-keyboard"
+      style="margin:1.5rem 0"
+    >
+      {#snippet button(instrumentNote, button)}
+        {@const note = notes[button]}
+        {#if note}
+          <BaseNote
+            handleClick={() => handleClick(note, instrumentNote.numberAt(AUDITION_PITCH))}
+            data={note}
+            noteImage={instrumentNote.icon}
+            noteText={note.midi < 0 ? 'N/A' : String(note.midi)}
+          />
+        {:else}
+          <!-- a button the loaded preset has no slot for: every shipped preset covers the whole
+             instrument, so this only shows up for a hand-edited/legacy short preset - the cell
+             stays empty rather than crashing or offering an unmappable button -->
+          <div></div>
+        {/if}
+      {/snippet}
+    </ShapeKeyboard>
+    <div class="midi-shortcuts-wrapper">
+      <!-- h3, not h1: this sits inside the keybinds page's MIDI card, under that card's own h2. -->
+      <Header type="h3" margin="1rem 0 0.5rem">
+        {t('keybinds:midi_shortcuts')}
+      </Header>
+      <div class="midi-shortcuts">
+        {#each shortcuts as shortcut (shortcut.type)}
+          <MidiShortcut
+            type={shortcut.type}
+            status={shortcut.status}
+            midi={shortcut.midi}
+            selected={selectedShortcut === shortcut.type}
+            onClick={handleShortcutClick}
+          />
+        {/each}
+      </div>
+    </div>
+  </div>
+
+  {#if needsAccess}
+    <div class="midi-access-overlay">
+      <AppButton onclick={requestAccess} class="midi-access-button">
+        {t('keybinds:enable_midi')}
+      </AppButton>
+    </div>
+  {/if}
+</div>
+
+<style>
+  /* QUIRK: the :global(.midi-shortcut*) rules below are REQUIRED, not a scoping violation to
+       "fix" - that class is threaded through MidiShortcut.svelte's own AppButton class prop,
+       landing on a <button> that its own template writes, which a plain scoped selector here could
+       never reach. */
+  .midi-setup {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+  }
+
+  /* The label/value rows. Each declaration below is the one the <Row> props these replaced used
+     to write inline (justify="between", gap, align="center"), moved into CSS so the portrait
+     block at the bottom of this file can restack them. */
+  .midi-info-row {
+    justify-content: space-between;
+  }
+
+  .midi-devices-row {
+    gap: 1rem;
+    align-items: center;
+  }
+
+  .midi-sources {
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  .midi-source {
+    border-radius: 0.3rem;
+    padding: 0.2rem 0.4rem;
+    border: solid 0.1rem var(--secondary);
+  }
+
+  .midi-preset-row {
+    gap: 0.5rem;
+  }
+
+  .midi-preset-controls {
+    gap: 0.5rem;
+  }
+
+  .midi-select {
+    width: 10rem;
+    border: none;
+    background-color: var(--primary);
+    height: 1.9rem;
+    border-radius: 0.2rem;
+    color: var(--primary-text);
+    text-align: left;
+    outline: none;
+    padding: 0.2rem;
+    padding-left: 0.5rem;
+  }
+
+  .midi-preset-controls .midi-select {
+    margin-left: 0.5rem;
+  }
+
+  /* Covers the card's content instead of replacing it: what the click unlocks stays legible
+     behind the blur, and nothing under it is reachable until then. */
+  .midi-access-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    /* above .note's own z-index: 10 - anything lower and the keyboard paints THROUGH the
+       overlay, unblurred and still clickable. */
+    z-index: 11;
+    border-radius: 0.4rem;
+    background-color: rgba(var(--menu-background-rgb), 0.4);
+    backdrop-filter: blur(4px);
+  }
+
+  /* :global() for the same reason as the .midi-shortcut* rules: the class rides AppButton's
+     class prop onto a <button> that component writes. */
+  :global(.midi-access-button) {
+    font-size: 1.2rem;
+    padding: 1rem 2rem;
+  }
+
+  .midi-setup-content {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    margin-top: auto;
+  }
+
+  .midi-shortcuts-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    flex: 1;
+  }
+
+  .midi-shortcuts {
+    display: flex;
+    gap: 0.2rem;
+    flex-wrap: wrap;
+    width: 100%;
+  }
+
+  :global(.midi-shortcut) {
+    margin: 0.2rem;
+    transition: all 0.1s;
+    padding: 0.2rem 0.5rem;
+    font-size: 1rem;
+  }
+
+  :global(.midi-shortcut.wrong) {
+    background-color: #d66969;
+  }
+
+  :global(.midi-shortcut.right) {
+    background-color: rgb(53, 138, 85);
+  }
+
+  :global(.midi-shortcut.clicked) {
+    transform: scale(0.95);
+    background-color: var(--secondary);
+  }
+
+  /* QUIRK: dead CSS - status only ever resolves to 'wrong'/'right'/'clicked' (MIDIShortcut's own
+       status union), never the literal "selected", so this rule can never match. Kept anyway
+       (unlike a since-omitted sibling dead rule targeting an equally-unused class, which would
+       have tripped svelte-check's unused-selector lint as a plain scoped selector - this one's
+       :global() wrapper exempts it from that check). Flagged, not fixed - don't wire "selected"
+       into the class string above to "make this work". */
+  :global(.midi-shortcut.selected) {
+    background-color: var(--accent);
+  }
+
+  /* PORTRAIT. A phone held upright gives this card ~330px of usable width, which is not enough
+     for any of the label/value pairs above to sit side by side - the preset row in particular
+     used to push the "create preset" button clean off the viewport and scroll the body. Every
+     pair stacks instead, the preset controls take the full width, and the note grid stops being
+     sized in vw (which shrinks with the viewport, exactly backwards for a touch target) and
+     instead fills whatever width the card has. */
+  @media (orientation: portrait) {
+    .midi-info-row {
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    /* beats .midi-devices-row's own align-items:center, which would centre the stacked value */
+    .midi-info-row.midi-devices-row {
+      align-items: flex-start;
+      gap: 0.25rem;
+    }
+
+    .midi-preset-controls {
+      width: 100%;
+      flex-wrap: wrap;
+    }
+
+    /* its own line: a 10rem select beside two buttons is what overflowed */
+    .midi-preset-controls .midi-select {
+      flex: 1 1 100%;
+      width: auto;
+      margin-left: 0;
+      height: 2.4rem;
+    }
+
+    /* the two buttons then share the line below it, half the width each */
+    .midi-preset-controls :global(.midi-preset-button) {
+      flex: 1 1 0;
+      min-width: 0;
+      justify-content: center;
+    }
+
+    /* The grid is `repeat(columns, 1fr)` (GridShape), so handing it the card's full width is all
+       it takes for the cells to divide that width evenly, whatever the Shape's column count is.
+       The note itself is the hitbox's only child - addressed structurally rather than by the
+       game's note class name, which is config data (game.notes.cssClasses.note).
+       The 26rem ceiling is for the other portrait viewport, a rotated monitor or a portrait
+       tablet: without it "fill the card" would blow the buttons up to 140px each there. */
+    :global(.keyboard.midi-keyboard) {
+      width: min(100%, 26rem);
+    }
+
+    :global(.midi-keyboard .button-hitbox-bigger) {
+      width: 100%;
+    }
+
+    :global(.midi-keyboard .button-hitbox-bigger > div) {
+      width: 100%;
+      height: auto;
+      aspect-ratio: 1;
+    }
+
+    /* ~2.5rem tall instead of ~1.7rem: these are the only mapping controls a phone user can
+       actually reach, since the keyboard shortcuts below them are desktop-only. */
+    :global(.midi-shortcut) {
+      padding: 0.5rem 0.7rem;
+    }
+  }
+</style>

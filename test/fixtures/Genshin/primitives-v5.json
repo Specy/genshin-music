@@ -1,0 +1,104 @@
+{
+  "fromLegacyColumn": {
+    "name": "Legacy column carrier",
+    "type": "composed",
+    "bpm": 220,
+    "pitch": "C",
+    "version": 5,
+    "folderId": null,
+    "data": {
+      "isComposed": true,
+      "isComposedVersion": true,
+      "appName": "Genshin"
+    },
+    "reverb": false,
+    "breakpoints": [],
+    "columnTempos": [
+      2
+    ],
+    "tracks": [
+      {
+        "instrument": {
+          "name": "Lyre",
+          "volume": 90,
+          "pitch": "",
+          "visible": true,
+          "icon": "border",
+          "alias": "",
+          "muted": false,
+          "solo": false,
+          "reverbOverride": null
+        },
+        "notes": [
+          [
+            0,
+            60
+          ],
+          [
+            0,
+            77
+          ]
+        ]
+      },
+      {
+        "instrument": {
+          "name": "Lyre",
+          "volume": 90,
+          "pitch": "",
+          "visible": true,
+          "icon": "circle",
+          "alias": "",
+          "muted": false,
+          "solo": false,
+          "reverbOverride": null
+        },
+        "notes": []
+      },
+      {
+        "instrument": {
+          "name": "Lyre",
+          "volume": 90,
+          "pitch": "",
+          "visible": true,
+          "icon": "line",
+          "alias": "",
+          "muted": false,
+          "solo": false,
+          "reverbOverride": null
+        },
+        "notes": [
+          [
+            0,
+            77
+          ]
+        ]
+      }
+    ],
+    "id": null
+  },
+  "columnNotes": [
+    {
+      "trackIndex": 0,
+      "id": 60,
+      "span": 1
+    },
+    {
+      "trackIndex": 1,
+      "id": 72,
+      "span": 4
+    }
+  ],
+  "recordedNote": [
+    65,
+    1234
+  ],
+  "recordedNoteWithDuration": [
+    65,
+    1234,
+    500
+  ],
+  "recordedNoteDefault": [
+    0,
+    0
+  ]
+}

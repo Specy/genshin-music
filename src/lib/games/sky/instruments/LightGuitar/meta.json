@@ -1,0 +1,12 @@
+{
+  "displayName": "Light Guitar",
+  "family": "guitar",
+  "midiName": "electric guitar (clean)",
+  "shape": "sky-3x5",
+  "sustain": {
+    "release": 0.35,
+    "minLength": 0.1
+  },
+  "register": "C3",
+  "notes": "standard-15"
+}

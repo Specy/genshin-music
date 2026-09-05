@@ -1,0 +1,5968 @@
+{
+  "appName": "Sky",
+  "instruments": [
+    "Piano",
+    "GrandPiano",
+    "Contrabass",
+    "Cello",
+    "Violin",
+    "Guitar",
+    "LightGuitar",
+    "Harp",
+    "Horn",
+    "KrillHorn",
+    "Trumpet",
+    "Saxophone",
+    "Pipa",
+    "WinterPiano",
+    "Xylophone",
+    "Flute",
+    "TransverseFlute",
+    "Panflute",
+    "Ocarina",
+    "MantaOcarina",
+    "Harmonica",
+    "Aurora",
+    "Kalimba",
+    "ToyUkulele",
+    "Drum",
+    "FortuneDrum",
+    "Cymbals",
+    "Bells",
+    "SmallBell",
+    "DunDun",
+    "HandPan",
+    "TriumphHandPan",
+    "SFX_SineSynth",
+    "SFX_BassSynth",
+    "SFX_ChimeSynth",
+    "SFX_TR-909",
+    "SFX_Dance",
+    "SFX_BirdCall",
+    "SFX_CrabCall",
+    "SFX_FishCall",
+    "SFX_SpiritMantaCall",
+    "SFX_JellyCall",
+    "SFX_MantaCall",
+    "SFX_MothCall"
+  ],
+  "instrumentsData": {
+    "Aurora": {
+      "name": "Aurora",
+      "displayName": "Aurora",
+      "family": "ensemble",
+      "midiName": "voice oohs",
+      "shape": "sky-3x5",
+      "sustain": {
+        "release": 0.4,
+        "minLength": 0.15,
+        "loopMode": "loop-continuous"
+      },
+      "notes": [
+        {
+          "file": "0.mp3",
+          "nominal": 60,
+          "baseNote": "C",
+          "pitched": true,
+          "sounding": 60,
+          "icon": "dmcr"
+        },
+        {
+          "file": "1.mp3",
+          "nominal": 62,
+          "baseNote": "D",
+          "pitched": true,
+          "sounding": 62,
+          "icon": "dm"
+        },
+        {
+          "file": "2.mp3",
+          "nominal": 64,
+          "baseNote": "E",
+          "pitched": true,
+          "sounding": 64,
+          "icon": "cr"
+        },
+        {
+          "file": "3.mp3",
+          "nominal": 65,
+          "baseNote": "F",
+          "pitched": true,
+          "sounding": 65,
+          "icon": "dm"
+        },
+        {
+          "file": "4.mp3",
+          "nominal": 67,
+          "baseNote": "G",
+          "pitched": true,
+          "sounding": 67,
+          "icon": "cr"
+        },
+        {
+          "file": "5.mp3",
+          "nominal": 69,
+          "baseNote": "A",
+          "pitched": true,
+          "sounding": 69,
+          "icon": "cr"
+        },
+        {
+          "file": "6.mp3",
+          "nominal": 71,
+          "baseNote": "B",
+          "pitched": true,
+          "sounding": 71,
+          "icon": "dm"
+        },
+        {
+          "file": "7.mp3",
+          "nominal": 72,
+          "baseNote": "C",
+          "pitched": true,
+          "sounding": 72,
+          "icon": "dmcr"
+        },
+        {
+          "file": "8.mp3",
+          "nominal": 74,
+          "baseNote": "D",
+          "pitched": true,
+          "sounding": 74,
+          "icon": "dm"
+        },
+        {
+          "file": "9.mp3",
+          "nominal": 76,
+          "baseNote": "E",
+          "pitched": true,
+          "sounding": 76,
+          "icon": "cr"
+        },
+        {
+          "file": "10.mp3",
+          "nominal": 77,
+          "baseNote": "F",
+          "pitched": true,
+          "sounding": 77,
+          "icon": "cr"
+        },
+        {
+          "file": "11.mp3",
+          "nominal": 79,
+          "baseNote": "G",
+          "pitched": true,
+          "sounding": 79,
+          "icon": "dm"
+        },
+        {
+          "file": "12.mp3",
+          "nominal": 81,
+          "baseNote": "A",
+          "pitched": true,
+          "sounding": 81,
+          "icon": "cr"
+        },
+        {
+          "file": "13.mp3",
+          "nominal": 83,
+          "baseNote": "B",
+          "pitched": true,
+          "sounding": 83,
+          "icon": "dm"
+        },
+        {
+          "file": "14.mp3",
+          "nominal": 84,
+          "baseNote": "C",
+          "pitched": true,
+          "sounding": 84,
+          "icon": "dmcr"
+        }
+      ]
+    },
+    "Bells": {
+      "name": "Bells",
+      "displayName": "Bells",
+      "family": "chromatic percussion",
+      "midiName": "tubular bells",
+      "shape": "sky-2x4",
+      "notes": [
+        {
+          "file": "0.mp3",
+          "nominal": 60,
+          "baseNote": "C",
+          "pitched": true,
+          "sounding": 60,
+          "icon": "cr"
+        },
+        {
+          "file": "1.mp3",
+          "nominal": 62,
+          "baseNote": "D",
+          "pitched": true,
+          "sounding": 62,
+          "icon": "dm"
+        },
+        {
+          "file": "2.mp3",
+          "nominal": 67,
+          "baseNote": "G",
+          "pitched": true,
+          "sounding": 67,
+          "icon": "cr"
+        },
+        {
+          "file": "3.mp3",
+          "nominal": 69,
+          "baseNote": "A",
+          "pitched": true,
+          "sounding": 69,
+          "icon": "dm"
+        },
+        {
+          "file": "4.mp3",
+          "nominal": 72,
+          "baseNote": "C",
+          "pitched": true,
+          "sounding": 72,
+          "icon": "cr"
+        },
+        {
+          "file": "5.mp3",
+          "nominal": 74,
+          "baseNote": "D",
+          "pitched": true,
+          "sounding": 74,
+          "icon": "dm"
+        },
+        {
+          "file": "6.mp3",
+          "nominal": 79,
+          "baseNote": "G",
+          "pitched": true,
+          "sounding": 79,
+          "icon": "cr"
+        },
+        {
+          "file": "7.mp3",
+          "nominal": 81,
+          "baseNote": "A",
+          "pitched": true,
+          "sounding": 81,
+          "icon": "dm"
+        }
+      ]
+    },
+    "Cello": {
+      "name": "Cello",
+      "displayName": "Cello",
+      "family": "strings",
+      "midiName": "cello",
+      "shape": "sky-3x5",
+      "sustain": {
+        "release": 0.3,
+        "minLength": 0.25,
+        "loopMode": "loop-continuous",
+        "loopCrossfade": 0.08
+      },
+      "notes": [
+        {
+          "file": "0.mp3",
+          "nominal": 60,
+          "baseNote": "C",
+          "pitched": true,
+          "sounding": 36,
+          "icon": "dmcr",
+          "loop": {
+            "start": 1.316893,
+            "end": 6.940975
+          }
+        },
+        {
+          "file": "1.mp3",
+          "nominal": 62,
+          "baseNote": "D",
+          "pitched": true,
+          "sounding": 38,
+          "icon": "dm",
+          "loop": {
+            "start": 2.047982,
+            "end": 5.823878
+          }
+        },
+        {
+          "file": "2.mp3",
+          "nominal": 64,
+          "baseNote": "E",
+          "pitched": true,
+          "sounding": 40,
+          "icon": "cr",
+          "loop": {
+            "start": 1.586145,
+            "end": 4.730658
+          }
+        },
+        {
+          "file": "3.mp3",
+          "nominal": 65,
+          "baseNote": "F",
+          "pitched": true,
+          "sounding": 41,
+          "icon": "dm",
+          "loop": {
+            "start": 2.07932,
+            "end": 6.3861
+          }
+        },
+        {
+          "file": "4.mp3",
+          "nominal": 67,
+          "baseNote": "G",
+          "pitched": true,
+          "sounding": 43,
+          "icon": "cr",
+          "loop": {
+            "start": 1.20161,
+            "end": 4.66068
+          }
+        },
+        {
+          "file": "5.mp3",
+          "nominal": 69,
+          "baseNote": "A",
+          "pitched": true,
+          "sounding": 45,
+          "icon": "cr",
+          "loop": {
+            "start": 2.081111,
+            "end": 6.591315
+          }
+        },
+        {
+          "file": "6.mp3",
+          "nominal": 71,
+          "baseNote": "B",
+          "pitched": true,
+          "sounding": 47,
+          "icon": "dm",
+          "loop": {
+            "start": 2.174354,
+            "end": 5.465873
+          }
+        },
+        {
+          "file": "7.mp3",
+          "nominal": 72,
+          "baseNote": "C",
+          "pitched": true,
+          "sounding": 48,
+          "icon": "dmcr",
+          "loop": {
+            "start": 0.959569,
+            "end": 7.883401
+          }
+        },
+        {
+          "file": "8.mp3",
+          "nominal": 74,
+          "baseNote": "D",
+          "pitched": true,
+          "sounding": 50,
+          "icon": "dm",
+          "loop": {
+            "start": 2.019206,
+            "end": 5.836417
+          }
+        },
+        {
+          "file": "9.mp3",
+          "nominal": 76,
+          "baseNote": "E",
+          "pitched": true,
+          "sounding": 52,
+          "icon": "cr",
+          "loop": {
+            "start": 0.93839,
+            "end": 5.159524
+          }
+        },
+        {
+          "file": "10.mp3",
+          "nominal": 77,
+          "baseNote": "F",
+          "pitched": true,
+          "sounding": 53,
+          "icon": "cr",
+          "loop": {
+            "start": 1.846032,
+            "end": 4.830068
+          }
+        },
+        {
+          "file": "11.mp3",
+          "nominal": 79,
+          "baseNote": "G",
+          "pitched": true,
+          "sounding": 55,
+          "icon": "dm",
+          "loop": {
+            "start": 1.530317,
+            "end": 6.591746
+          }
+        },
+        {
+          "file": "12.mp3",
+          "nominal": 81,
+          "baseNote": "A",
+          "pitched": true,
+          "sounding": 57,
+          "icon": "cr",
+          "loop": {
+            "start": 2.061814,
+            "end": 4.58839
+          }
+        },
+        {
+          "file": "13.mp3",
+          "nominal": 83,
+          "baseNote": "B",
+          "pitched": true,
+          "sounding": 59,
+          "icon": "dm",
+          "loop": {
+            "start": 1.867506,
+            "end": 5.170454
+          }
+        },
+        {
+          "file": "14.mp3",
+          "nominal": 84,
+          "baseNote": "C",
+          "pitched": true,
+          "sounding": 60,
+          "icon": "dmcr",
+          "loop": {
+            "start": 2.462744,
+            "end": 5.902925
+          }
+        }
+      ]
+    },
+    "Contrabass": {
+      "name": "Contrabass",
+      "displayName": "Contrabass",
+      "family": "guitar",
+      "midiName": "contrabass",
+      "shape": "sky-3x5",
+      "notes": [
+        {
+          "file": "0.mp3",
+          "nominal": 60,
+          "baseNote": "C",
+          "pitched": true,
+          "sounding": 24,
+          "icon": "dmcr"
+        },
+        {
+          "file": "1.mp3",
+          "nominal": 62,
+          "baseNote": "D",
+          "pitched": true,
+          "sounding": 26,
+          "icon": "dm"
+        },
+        {
+          "file": "2.mp3",
+          "nominal": 64,
+          "baseNote": "E",
+          "pitched": true,
+          "sounding": 28,
+          "icon": "cr"
+        },
+        {
+          "file": "3.mp3",
+          "nominal": 65,
+          "baseNote": "F",
+          "pitched": true,
+          "sounding": 29,
+          "icon": "dm"
+        },
+        {
+          "file": "4.mp3",
+          "nominal": 67,
+          "baseNote": "G",
+          "pitched": true,
+          "sounding": 31,
+          "icon": "cr"
+        },
+        {
+          "file": "5.mp3",
+          "nominal": 69,
+          "baseNote": "A",
+          "pitched": true,
+          "sounding": 33,
+          "icon": "cr"
+        },
+        {
+          "file": "6.mp3",
+          "nominal": 71,
+          "baseNote": "B",
+          "pitched": true,
+          "sounding": 35,
+          "icon": "dm"
+        },
+        {
+          "file": "7.mp3",
+          "nominal": 72,
+          "baseNote": "C",
+          "pitched": true,
+          "sounding": 36,
+          "icon": "dmcr"
+        },
+        {
+          "file": "8.mp3",
+          "nominal": 74,
+          "baseNote": "D",
+          "pitched": true,
+          "sounding": 38,
+          "icon": "dm"
+        },
+        {
+          "file": "9.mp3",
+          "nominal": 76,
+          "baseNote": "E",
+          "pitched": true,
+          "sounding": 40,
+          "icon": "cr"
+        },
+        {
+          "file": "10.mp3",
+          "nominal": 77,
+          "baseNote": "F",
+          "pitched": true,
+          "sounding": 41,
+          "icon": "cr"
+        },
+        {
+          "file": "11.mp3",
+          "nominal": 79,
+          "baseNote": "G",
+          "pitched": true,
+          "sounding": 43,
+          "icon": "dm"
+        },
+        {
+          "file": "12.mp3",
+          "nominal": 81,
+          "baseNote": "A",
+          "pitched": true,
+          "sounding": 45,
+          "icon": "cr"
+        },
+        {
+          "file": "13.mp3",
+          "nominal": 83,
+          "baseNote": "B",
+          "pitched": true,
+          "sounding": 47,
+          "icon": "dm"
+        },
+        {
+          "file": "14.mp3",
+          "nominal": 84,
+          "baseNote": "C",
+          "pitched": true,
+          "sounding": 48,
+          "icon": "dmcr"
+        }
+      ]
+    },
+    "Cymbals": {
+      "name": "Cymbals",
+      "displayName": "Cymbals",
+      "family": "percussive",
+      "midiName": "reverse cymbal",
+      "shape": "sky-2x2",
+      "notes": [
+        {
+          "file": "0.mp3",
+          "nominal": 60,
+          "baseNote": "C",
+          "pitched": false,
+          "sounding": 60,
+          "icon": "cr"
+        },
+        {
+          "file": "1.mp3",
+          "nominal": 62,
+          "baseNote": "D",
+          "pitched": false,
+          "sounding": 62,
+          "icon": "dm"
+        },
+        {
+          "file": "2.mp3",
+          "nominal": 64,
+          "baseNote": "E",
+          "pitched": false,
+          "sounding": 64,
+          "icon": "cr"
+        },
+        {
+          "file": "3.mp3",
+          "nominal": 65,
+          "baseNote": "F",
+          "pitched": false,
+          "sounding": 65,
+          "icon": "dm"
+        }
+      ]
+    },
+    "Drum": {
+      "name": "Drum",
+      "displayName": "Drum",
+      "family": "percussive",
+      "midiName": "synth drum",
+      "shape": "sky-2x4",
+      "notes": [
+        {
+          "file": "0.mp3",
+          "nominal": 60,
+          "baseNote": "C",
+          "pitched": false,
+          "sounding": 60,
+          "icon": "cr"
+        },
+        {
+          "file": "1.mp3",
+          "nominal": 62,
+          "baseNote": "D",
+          "pitched": false,
+          "sounding": 62,
+          "icon": "dm"
+        },
+        {
+          "file": "2.mp3",
+          "nominal": 64,
+          "baseNote": "E",
+          "pitched": false,
+          "sounding": 64,
+          "icon": "cr"
+        },
+        {
+          "file": "3.mp3",
+          "nominal": 65,
+          "baseNote": "F",
+          "pitched": false,
+          "sounding": 65,
+          "icon": "dm"
+        },
+        {
+          "file": "4.mp3",
+          "nominal": 67,
+          "baseNote": "G",
+          "pitched": false,
+          "sounding": 67,
+          "icon": "cr"
+        },
+        {
+          "file": "5.mp3",
+          "nominal": 69,
+          "baseNote": "A",
+          "pitched": false,
+          "sounding": 69,
+          "icon": "dm"
+        },
+        {
+          "file": "6.mp3",
+          "nominal": 71,
+          "baseNote": "B",
+          "pitched": false,
+          "sounding": 71,
+          "icon": "cr"
+        },
+        {
+          "file": "7.mp3",
+          "nominal": 72,
+          "baseNote": "C",
+          "pitched": false,
+          "sounding": 72,
+          "icon": "dm"
+        }
+      ]
+    },
+    "DunDun": {
+      "name": "DunDun",
+      "displayName": "DunDun",
+      "family": "percussive",
+      "midiName": "synth drum",
+      "shape": "sky-2x4",
+      "notes": [
+        {
+          "file": "0.mp3",
+          "nominal": 60,
+          "baseNote": "C",
+          "pitched": false,
+          "sounding": 60,
+          "icon": "cr"
+        },
+        {
+          "file": "1.mp3",
+          "nominal": 62,
+          "baseNote": "D",
+          "pitched": false,
+          "sounding": 62,
+          "icon": "dm"
+        },
+        {
+          "file": "2.mp3",
+          "nominal": 64,
+          "baseNote": "E",
+          "pitched": false,
+          "sounding": 64,
+          "icon": "cr"
+        },
+        {
+          "file": "3.mp3",
+          "nominal": 65,
+          "baseNote": "F",
+          "pitched": false,
+          "sounding": 65,
+          "icon": "dm"
+        },
+        {
+          "file": "4.mp3",
+          "nominal": 67,
+          "baseNote": "G",
+          "pitched": false,
+          "sounding": 67,
+          "icon": "cr"
+        },
+        {
+          "file": "5.mp3",
+          "nominal": 69,
+          "baseNote": "A",
+          "pitched": false,
+          "sounding": 69,
+          "icon": "dm"
+        },
+        {
+          "file": "6.mp3",
+          "nominal": 71,
+          "baseNote": "B",
+          "pitched": false,
+          "sounding": 71,
+          "icon": "cr"
+        },
+        {
+          "file": "7.mp3",
+          "nominal": 72,
+          "baseNote": "C",
+          "pitched": false,
+          "sounding": 72,
+          "icon": "dm"
+        }
+      ]
+    },
+    "Flute": {
+      "name": "Flute",
+      "displayName": "Flute",
+      "family": "pipe",
+      "midiName": "flute",
+      "shape": "sky-3x5",
+      "notes": [
+        {
+          "file": "0.mp3",
+          "nominal": 60,
+          "baseNote": "C",
+          "pitched": true,
+          "sounding": 60,
+          "icon": "dmcr"
+        },
+        {
+          "file": "1.mp3",
+          "nominal": 62,
+          "baseNote": "D",
+          "pitched": true,
+          "sounding": 62,
+          "icon": "dm"
+        },
+        {
+          "file": "2.mp3",
+          "nominal": 64,
+          "baseNote": "E",
+          "pitched": true,
+          "sounding": 64,
+          "icon": "cr"
+        },
+        {
+          "file": "3.mp3",
+          "nominal": 65,
+          "baseNote": "F",
+          "pitched": true,
+          "sounding": 65,
+          "icon": "dm"
+        },
+        {
+          "file": "4.mp3",
+          "nominal": 67,
+          "baseNote": "G",
+          "pitched": true,
+          "sounding": 67,
+          "icon": "cr"
+        },
+        {
+          "file": "5.mp3",
+          "nominal": 69,
+          "baseNote": "A",
+          "pitched": true,
+          "sounding": 69,
+          "icon": "cr"
+        },
+        {
+          "file": "6.mp3",
+          "nominal": 71,
+          "baseNote": "B",
+          "pitched": true,
+          "sounding": 71,
+          "icon": "dm"
+        },
+        {
+          "file": "7.mp3",
+          "nominal": 72,
+          "baseNote": "C",
+          "pitched": true,
+          "sounding": 72,
+          "icon": "dmcr"
+        },
+        {
+          "file": "8.mp3",
+          "nominal": 74,
+          "baseNote": "D",
+          "pitched": true,
+          "sounding": 74,
+          "icon": "dm"
+        },
+        {
+          "file": "9.mp3",
+          "nominal": 76,
+          "baseNote": "E",
+          "pitched": true,
+          "sounding": 76,
+          "icon": "cr"
+        },
+        {
+          "file": "10.mp3",
+          "nominal": 77,
+          "baseNote": "F",
+          "pitched": true,
+          "sounding": 77,
+          "icon": "cr"
+        },
+        {
+          "file": "11.mp3",
+          "nominal": 79,
+          "baseNote": "G",
+          "pitched": true,
+          "sounding": 79,
+          "icon": "dm"
+        },
+        {
+          "file": "12.mp3",
+          "nominal": 81,
+          "baseNote": "A",
+          "pitched": true,
+          "sounding": 81,
+          "icon": "cr"
+        },
+        {
+          "file": "13.mp3",
+          "nominal": 83,
+          "baseNote": "B",
+          "pitched": true,
+          "sounding": 83,
+          "icon": "dm"
+        },
+        {
+          "file": "14.mp3",
+          "nominal": 84,
+          "baseNote": "C",
+          "pitched": true,
+          "sounding": 84,
+          "icon": "dmcr"
+        }
+      ]
+    },
+    "FortuneDrum": {
+      "name": "FortuneDrum",
+      "displayName": "Fortune drum",
+      "family": "percussive",
+      "midiName": "taiko drum",
+      "shape": "sky-2x2",
+      "notes": [
+        {
+          "file": "0.mp3",
+          "nominal": 60,
+          "baseNote": "C",
+          "pitched": false,
+          "sounding": 60,
+          "icon": "cr"
+        },
+        {
+          "file": "1.mp3",
+          "nominal": 62,
+          "baseNote": "D",
+          "pitched": false,
+          "sounding": 62,
+          "icon": "dm"
+        },
+        {
+          "file": "2.mp3",
+          "nominal": 64,
+          "baseNote": "E",
+          "pitched": false,
+          "sounding": 64,
+          "icon": "cr"
+        },
+        {
+          "file": "3.mp3",
+          "nominal": 65,
+          "baseNote": "F",
+          "pitched": false,
+          "sounding": 65,
+          "icon": "dm"
+        }
+      ]
+    },
+    "GrandPiano": {
+      "name": "GrandPiano",
+      "displayName": "Grand Piano",
+      "family": "piano",
+      "midiName": "acoustic grand piano",
+      "shape": "sky-3x5",
+      "notes": [
+        {
+          "file": "0.mp3",
+          "nominal": 60,
+          "baseNote": "C",
+          "pitched": true,
+          "sounding": 60,
+          "icon": "dmcr"
+        },
+        {
+          "file": "1.mp3",
+          "nominal": 62,
+          "baseNote": "D",
+          "pitched": true,
+          "sounding": 62,
+          "icon": "dm"
+        },
+        {
+          "file": "2.mp3",
+          "nominal": 64,
+          "baseNote": "E",
+          "pitched": true,
+          "sounding": 64,
+          "icon": "cr"
+        },
+        {
+          "file": "3.mp3",
+          "nominal": 65,
+          "baseNote": "F",
+          "pitched": true,
+          "sounding": 65,
+          "icon": "dm"
+        },
+        {
+          "file": "4.mp3",
+          "nominal": 67,
+          "baseNote": "G",
+          "pitched": true,
+          "sounding": 67,
+          "icon": "cr"
+        },
+        {
+          "file": "5.mp3",
+          "nominal": 69,
+          "baseNote": "A",
+          "pitched": true,
+          "sounding": 69,
+          "icon": "cr"
+        },
+        {
+          "file": "6.mp3",
+          "nominal": 71,
+          "baseNote": "B",
+          "pitched": true,
+          "sounding": 71,
+          "icon": "dm"
+        },
+        {
+          "file": "7.mp3",
+          "nominal": 72,
+          "baseNote": "C",
+          "pitched": true,
+          "sounding": 72,
+          "icon": "dmcr"
+        },
+        {
+          "file": "8.mp3",
+          "nominal": 74,
+          "baseNote": "D",
+          "pitched": true,
+          "sounding": 74,
+          "icon": "dm"
+        },
+        {
+          "file": "9.mp3",
+          "nominal": 76,
+          "baseNote": "E",
+          "pitched": true,
+          "sounding": 76,
+          "icon": "cr"
+        },
+        {
+          "file": "10.mp3",
+          "nominal": 77,
+          "baseNote": "F",
+          "pitched": true,
+          "sounding": 77,
+          "icon": "cr"
+        },
+        {
+          "file": "11.mp3",
+          "nominal": 79,
+          "baseNote": "G",
+          "pitched": true,
+          "sounding": 79,
+          "icon": "dm"
+        },
+        {
+          "file": "12.mp3",
+          "nominal": 81,
+          "baseNote": "A",
+          "pitched": true,
+          "sounding": 81,
+          "icon": "cr"
+        },
+        {
+          "file": "13.mp3",
+          "nominal": 83,
+          "baseNote": "B",
+          "pitched": true,
+          "sounding": 83,
+          "icon": "dm"
+        },
+        {
+          "file": "14.mp3",
+          "nominal": 84,
+          "baseNote": "C",
+          "pitched": true,
+          "sounding": 84,
+          "icon": "dmcr"
+        }
+      ]
+    },
+    "Guitar": {
+      "name": "Guitar",
+      "displayName": "Guitar",
+      "family": "guitar",
+      "midiName": "acoustic guitar (steel)",
+      "shape": "sky-3x5",
+      "notes": [
+        {
+          "file": "0.mp3",
+          "nominal": 60,
+          "baseNote": "C",
+          "pitched": true,
+          "sounding": 48,
+          "icon": "dmcr"
+        },
+        {
+          "file": "1.mp3",
+          "nominal": 62,
+          "baseNote": "D",
+          "pitched": true,
+          "sounding": 50,
+          "icon": "dm"
+        },
+        {
+          "file": "2.mp3",
+          "nominal": 64,
+          "baseNote": "E",
+          "pitched": true,
+          "sounding": 52,
+          "icon": "cr"
+        },
+        {
+          "file": "3.mp3",
+          "nominal": 65,
+          "baseNote": "F",
+          "pitched": true,
+          "sounding": 53,
+          "icon": "dm"
+        },
+        {
+          "file": "4.mp3",
+          "nominal": 67,
+          "baseNote": "G",
+          "pitched": true,
+          "sounding": 55,
+          "icon": "cr"
+        },
+        {
+          "file": "5.mp3",
+          "nominal": 69,
+          "baseNote": "A",
+          "pitched": true,
+          "sounding": 57,
+          "icon": "cr"
+        },
+        {
+          "file": "6.mp3",
+          "nominal": 71,
+          "baseNote": "B",
+          "pitched": true,
+          "sounding": 59,
+          "icon": "dm"
+        },
+        {
+          "file": "7.mp3",
+          "nominal": 72,
+          "baseNote": "C",
+          "pitched": true,
+          "sounding": 60,
+          "icon": "dmcr"
+        },
+        {
+          "file": "8.mp3",
+          "nominal": 74,
+          "baseNote": "D",
+          "pitched": true,
+          "sounding": 62,
+          "icon": "dm"
+        },
+        {
+          "file": "9.mp3",
+          "nominal": 76,
+          "baseNote": "E",
+          "pitched": true,
+          "sounding": 64,
+          "icon": "cr"
+        },
+        {
+          "file": "10.mp3",
+          "nominal": 77,
+          "baseNote": "F",
+          "pitched": true,
+          "sounding": 65,
+          "icon": "cr"
+        },
+        {
+          "file": "11.mp3",
+          "nominal": 79,
+          "baseNote": "G",
+          "pitched": true,
+          "sounding": 67,
+          "icon": "dm"
+        },
+        {
+          "file": "12.mp3",
+          "nominal": 81,
+          "baseNote": "A",
+          "pitched": true,
+          "sounding": 69,
+          "icon": "cr"
+        },
+        {
+          "file": "13.mp3",
+          "nominal": 83,
+          "baseNote": "B",
+          "pitched": true,
+          "sounding": 71,
+          "icon": "dm"
+        },
+        {
+          "file": "14.mp3",
+          "nominal": 84,
+          "baseNote": "C",
+          "pitched": true,
+          "sounding": 72,
+          "icon": "dmcr"
+        }
+      ]
+    },
+    "HandPan": {
+      "name": "HandPan",
+      "displayName": "HandPan",
+      "family": "percussive",
+      "midiName": "steel drums",
+      "shape": "sky-2x4",
+      "notes": [
+        {
+          "file": "0.mp3",
+          "nominal": 62,
+          "baseNote": "D",
+          "pitched": true,
+          "sounding": 50,
+          "icon": "cr"
+        },
+        {
+          "file": "1.mp3",
+          "nominal": 69,
+          "baseNote": "A",
+          "pitched": true,
+          "sounding": 57,
+          "icon": "dm"
+        },
+        {
+          "file": "2.mp3",
+          "nominal": 72,
+          "baseNote": "C",
+          "pitched": true,
+          "sounding": 60,
+          "icon": "cr"
+        },
+        {
+          "file": "3.mp3",
+          "nominal": 74,
+          "baseNote": "D",
+          "pitched": true,
+          "sounding": 62,
+          "icon": "dm"
+        },
+        {
+          "file": "4.mp3",
+          "nominal": 77,
+          "baseNote": "F",
+          "pitched": true,
+          "sounding": 65,
+          "icon": "cr"
+        },
+        {
+          "file": "5.mp3",
+          "nominal": 79,
+          "baseNote": "G",
+          "pitched": true,
+          "sounding": 67,
+          "icon": "dm"
+        },
+        {
+          "file": "6.mp3",
+          "nominal": 81,
+          "baseNote": "A",
+          "pitched": true,
+          "sounding": 69,
+          "icon": "cr"
+        },
+        {
+          "file": "7.mp3",
+          "nominal": 84,
+          "baseNote": "C",
+          "pitched": true,
+          "sounding": 72,
+          "icon": "dm"
+        }
+      ]
+    },
+    "Harmonica": {
+      "name": "Harmonica",
+      "displayName": "Harmonica",
+      "family": "reed",
+      "midiName": "harmonica",
+      "shape": "sky-3x5",
+      "sustain": {
+        "release": 0.28,
+        "minLength": 0.15,
+        "loopMode": "loop-continuous"
+      },
+      "notes": [
+        {
+          "file": "0.mp3",
+          "nominal": 60,
+          "baseNote": "C",
+          "pitched": true,
+          "sounding": 60,
+          "icon": "dmcr"
+        },
+        {
+          "file": "1.mp3",
+          "nominal": 62,
+          "baseNote": "D",
+          "pitched": true,
+          "sounding": 62,
+          "icon": "dm"
+        },
+        {
+          "file": "2.mp3",
+          "nominal": 64,
+          "baseNote": "E",
+          "pitched": true,
+          "sounding": 64,
+          "icon": "cr"
+        },
+        {
+          "file": "3.mp3",
+          "nominal": 65,
+          "baseNote": "F",
+          "pitched": true,
+          "sounding": 65,
+          "icon": "dm"
+        },
+        {
+          "file": "4.mp3",
+          "nominal": 67,
+          "baseNote": "G",
+          "pitched": true,
+          "sounding": 67,
+          "icon": "cr"
+        },
+        {
+          "file": "5.mp3",
+          "nominal": 69,
+          "baseNote": "A",
+          "pitched": true,
+          "sounding": 69,
+          "icon": "cr"
+        },
+        {
+          "file": "6.mp3",
+          "nominal": 71,
+          "baseNote": "B",
+          "pitched": true,
+          "sounding": 71,
+          "icon": "dm"
+        },
+        {
+          "file": "7.mp3",
+          "nominal": 72,
+          "baseNote": "C",
+          "pitched": true,
+          "sounding": 72,
+          "icon": "dmcr"
+        },
+        {
+          "file": "8.mp3",
+          "nominal": 74,
+          "baseNote": "D",
+          "pitched": true,
+          "sounding": 74,
+          "icon": "dm"
+        },
+        {
+          "file": "9.mp3",
+          "nominal": 76,
+          "baseNote": "E",
+          "pitched": true,
+          "sounding": 76,
+          "icon": "cr"
+        },
+        {
+          "file": "10.mp3",
+          "nominal": 77,
+          "baseNote": "F",
+          "pitched": true,
+          "sounding": 77,
+          "icon": "cr"
+        },
+        {
+          "file": "11.mp3",
+          "nominal": 79,
+          "baseNote": "G",
+          "pitched": true,
+          "sounding": 79,
+          "icon": "dm"
+        },
+        {
+          "file": "12.mp3",
+          "nominal": 81,
+          "baseNote": "A",
+          "pitched": true,
+          "sounding": 81,
+          "icon": "cr"
+        },
+        {
+          "file": "13.mp3",
+          "nominal": 83,
+          "baseNote": "B",
+          "pitched": true,
+          "sounding": 83,
+          "icon": "dm"
+        },
+        {
+          "file": "14.mp3",
+          "nominal": 84,
+          "baseNote": "C",
+          "pitched": true,
+          "sounding": 84,
+          "icon": "dmcr"
+        }
+      ]
+    },
+    "Harp": {
+      "name": "Harp",
+      "displayName": "Harp",
+      "family": "strings",
+      "midiName": "orchestral harp",
+      "shape": "sky-3x5",
+      "notes": [
+        {
+          "file": "0.mp3",
+          "nominal": 60,
+          "baseNote": "C",
+          "pitched": true,
+          "sounding": 48,
+          "icon": "dmcr"
+        },
+        {
+          "file": "1.mp3",
+          "nominal": 62,
+          "baseNote": "D",
+          "pitched": true,
+          "sounding": 50,
+          "icon": "dm"
+        },
+        {
+          "file": "2.mp3",
+          "nominal": 64,
+          "baseNote": "E",
+          "pitched": true,
+          "sounding": 52,
+          "icon": "cr"
+        },
+        {
+          "file": "3.mp3",
+          "nominal": 65,
+          "baseNote": "F",
+          "pitched": true,
+          "sounding": 53,
+          "icon": "dm"
+        },
+        {
+          "file": "4.mp3",
+          "nominal": 67,
+          "baseNote": "G",
+          "pitched": true,
+          "sounding": 55,
+          "icon": "cr"
+        },
+        {
+          "file": "5.mp3",
+          "nominal": 69,
+          "baseNote": "A",
+          "pitched": true,
+          "sounding": 57,
+          "icon": "cr"
+        },
+        {
+          "file": "6.mp3",
+          "nominal": 71,
+          "baseNote": "B",
+          "pitched": true,
+          "sounding": 59,
+          "icon": "dm"
+        },
+        {
+          "file": "7.mp3",
+          "nominal": 72,
+          "baseNote": "C",
+          "pitched": true,
+          "sounding": 60,
+          "icon": "dmcr"
+        },
+        {
+          "file": "8.mp3",
+          "nominal": 74,
+          "baseNote": "D",
+          "pitched": true,
+          "sounding": 62,
+          "icon": "dm"
+        },
+        {
+          "file": "9.mp3",
+          "nominal": 76,
+          "baseNote": "E",
+          "pitched": true,
+          "sounding": 64,
+          "icon": "cr"
+        },
+        {
+          "file": "10.mp3",
+          "nominal": 77,
+          "baseNote": "F",
+          "pitched": true,
+          "sounding": 65,
+          "icon": "cr"
+        },
+        {
+          "file": "11.mp3",
+          "nominal": 79,
+          "baseNote": "G",
+          "pitched": true,
+          "sounding": 67,
+          "icon": "dm"
+        },
+        {
+          "file": "12.mp3",
+          "nominal": 81,
+          "baseNote": "A",
+          "pitched": true,
+          "sounding": 69,
+          "icon": "cr"
+        },
+        {
+          "file": "13.mp3",
+          "nominal": 83,
+          "baseNote": "B",
+          "pitched": true,
+          "sounding": 71,
+          "icon": "dm"
+        },
+        {
+          "file": "14.mp3",
+          "nominal": 84,
+          "baseNote": "C",
+          "pitched": true,
+          "sounding": 72,
+          "icon": "dmcr"
+        }
+      ]
+    },
+    "Horn": {
+      "name": "Horn",
+      "displayName": "Horn",
+      "family": "brass",
+      "midiName": "tuba",
+      "shape": "sky-3x5",
+      "notes": [
+        {
+          "file": "0.mp3",
+          "nominal": 60,
+          "baseNote": "C",
+          "pitched": true,
+          "sounding": 36,
+          "icon": "dmcr"
+        },
+        {
+          "file": "1.mp3",
+          "nominal": 62,
+          "baseNote": "D",
+          "pitched": true,
+          "sounding": 38,
+          "icon": "dm"
+        },
+        {
+          "file": "2.mp3",
+          "nominal": 64,
+          "baseNote": "E",
+          "pitched": true,
+          "sounding": 40,
+          "icon": "cr"
+        },
+        {
+          "file": "3.mp3",
+          "nominal": 65,
+          "baseNote": "F",
+          "pitched": true,
+          "sounding": 41,
+          "icon": "dm"
+        },
+        {
+          "file": "4.mp3",
+          "nominal": 67,
+          "baseNote": "G",
+          "pitched": true,
+          "sounding": 43,
+          "icon": "cr"
+        },
+        {
+          "file": "5.mp3",
+          "nominal": 69,
+          "baseNote": "A",
+          "pitched": true,
+          "sounding": 45,
+          "icon": "cr"
+        },
+        {
+          "file": "6.mp3",
+          "nominal": 71,
+          "baseNote": "B",
+          "pitched": true,
+          "sounding": 47,
+          "icon": "dm"
+        },
+        {
+          "file": "7.mp3",
+          "nominal": 72,
+          "baseNote": "C",
+          "pitched": true,
+          "sounding": 48,
+          "icon": "dmcr"
+        },
+        {
+          "file": "8.mp3",
+          "nominal": 74,
+          "baseNote": "D",
+          "pitched": true,
+          "sounding": 50,
+          "icon": "dm"
+        },
+        {
+          "file": "9.mp3",
+          "nominal": 76,
+          "baseNote": "E",
+          "pitched": true,
+          "sounding": 52,
+          "icon": "cr"
+        },
+        {
+          "file": "10.mp3",
+          "nominal": 77,
+          "baseNote": "F",
+          "pitched": true,
+          "sounding": 53,
+          "icon": "cr"
+        },
+        {
+          "file": "11.mp3",
+          "nominal": 79,
+          "baseNote": "G",
+          "pitched": true,
+          "sounding": 55,
+          "icon": "dm"
+        },
+        {
+          "file": "12.mp3",
+          "nominal": 81,
+          "baseNote": "A",
+          "pitched": true,
+          "sounding": 57,
+          "icon": "cr"
+        },
+        {
+          "file": "13.mp3",
+          "nominal": 83,
+          "baseNote": "B",
+          "pitched": true,
+          "sounding": 59,
+          "icon": "dm"
+        },
+        {
+          "file": "14.mp3",
+          "nominal": 84,
+          "baseNote": "C",
+          "pitched": true,
+          "sounding": 60,
+          "icon": "dmcr"
+        }
+      ]
+    },
+    "Kalimba": {
+      "name": "Kalimba",
+      "displayName": "Kalimba",
+      "family": "piano",
+      "midiName": "bright acoustic piano",
+      "shape": "sky-3x5",
+      "notes": [
+        {
+          "file": "0.mp3",
+          "nominal": 60,
+          "baseNote": "C",
+          "pitched": true,
+          "sounding": 60,
+          "icon": "dmcr"
+        },
+        {
+          "file": "1.mp3",
+          "nominal": 62,
+          "baseNote": "D",
+          "pitched": true,
+          "sounding": 62,
+          "icon": "dm"
+        },
+        {
+          "file": "2.mp3",
+          "nominal": 64,
+          "baseNote": "E",
+          "pitched": true,
+          "sounding": 64,
+          "icon": "cr"
+        },
+        {
+          "file": "3.mp3",
+          "nominal": 65,
+          "baseNote": "F",
+          "pitched": true,
+          "sounding": 65,
+          "icon": "dm"
+        },
+        {
+          "file": "4.mp3",
+          "nominal": 67,
+          "baseNote": "G",
+          "pitched": true,
+          "sounding": 67,
+          "icon": "cr"
+        },
+        {
+          "file": "5.mp3",
+          "nominal": 69,
+          "baseNote": "A",
+          "pitched": true,
+          "sounding": 69,
+          "icon": "cr"
+        },
+        {
+          "file": "6.mp3",
+          "nominal": 71,
+          "baseNote": "B",
+          "pitched": true,
+          "sounding": 71,
+          "icon": "dm"
+        },
+        {
+          "file": "7.mp3",
+          "nominal": 72,
+          "baseNote": "C",
+          "pitched": true,
+          "sounding": 72,
+          "icon": "dmcr"
+        },
+        {
+          "file": "8.mp3",
+          "nominal": 74,
+          "baseNote": "D",
+          "pitched": true,
+          "sounding": 74,
+          "icon": "dm"
+        },
+        {
+          "file": "9.mp3",
+          "nominal": 76,
+          "baseNote": "E",
+          "pitched": true,
+          "sounding": 76,
+          "icon": "cr"
+        },
+        {
+          "file": "10.mp3",
+          "nominal": 77,
+          "baseNote": "F",
+          "pitched": true,
+          "sounding": 77,
+          "icon": "cr"
+        },
+        {
+          "file": "11.mp3",
+          "nominal": 79,
+          "baseNote": "G",
+          "pitched": true,
+          "sounding": 79,
+          "icon": "dm"
+        },
+        {
+          "file": "12.mp3",
+          "nominal": 81,
+          "baseNote": "A",
+          "pitched": true,
+          "sounding": 81,
+          "icon": "cr"
+        },
+        {
+          "file": "13.mp3",
+          "nominal": 83,
+          "baseNote": "B",
+          "pitched": true,
+          "sounding": 83,
+          "icon": "dm"
+        },
+        {
+          "file": "14.mp3",
+          "nominal": 84,
+          "baseNote": "C",
+          "pitched": true,
+          "sounding": 84,
+          "icon": "dmcr"
+        }
+      ]
+    },
+    "KrillHorn": {
+      "name": "KrillHorn",
+      "displayName": "Tuned Krill Horn",
+      "family": "brass",
+      "midiName": "french horn",
+      "shape": "sky-2x4",
+      "sustain": {
+        "release": 0.3,
+        "minLength": 0.2,
+        "loopMode": "loop-continuous"
+      },
+      "notes": [
+        {
+          "file": "0.mp3",
+          "nominal": 65,
+          "baseNote": "F",
+          "pitched": true,
+          "sounding": 53,
+          "icon": "dm"
+        },
+        {
+          "file": "1.mp3",
+          "nominal": 67,
+          "baseNote": "G",
+          "pitched": true,
+          "sounding": 55,
+          "icon": "cr"
+        },
+        {
+          "file": "2.mp3",
+          "nominal": 69,
+          "baseNote": "A",
+          "pitched": true,
+          "sounding": 57,
+          "icon": "cr"
+        },
+        {
+          "file": "3.mp3",
+          "nominal": 71,
+          "baseNote": "B",
+          "pitched": true,
+          "sounding": 59,
+          "icon": "dm"
+        },
+        {
+          "file": "4.mp3",
+          "nominal": 72,
+          "baseNote": "C",
+          "pitched": true,
+          "sounding": 60,
+          "icon": "dmcr"
+        },
+        {
+          "file": "5.mp3",
+          "nominal": 74,
+          "baseNote": "D",
+          "pitched": true,
+          "sounding": 62,
+          "icon": "dm"
+        },
+        {
+          "file": "6.mp3",
+          "nominal": 76,
+          "baseNote": "E",
+          "pitched": true,
+          "sounding": 64,
+          "icon": "cr"
+        },
+        {
+          "file": "7.mp3",
+          "nominal": 77,
+          "baseNote": "F",
+          "pitched": true,
+          "sounding": 65,
+          "icon": "cr"
+        }
+      ]
+    },
+    "LightGuitar": {
+      "name": "LightGuitar",
+      "displayName": "Light Guitar",
+      "family": "guitar",
+      "midiName": "electric guitar (clean)",
+      "shape": "sky-3x5",
+      "sustain": {
+        "release": 0.35,
+        "minLength": 0.1,
+        "loopMode": "loop-continuous"
+      },
+      "notes": [
+        {
+          "file": "0.mp3",
+          "nominal": 60,
+          "baseNote": "C",
+          "pitched": true,
+          "sounding": 48,
+          "icon": "dmcr"
+        },
+        {
+          "file": "1.mp3",
+          "nominal": 62,
+          "baseNote": "D",
+          "pitched": true,
+          "sounding": 50,
+          "icon": "dm"
+        },
+        {
+          "file": "2.mp3",
+          "nominal": 64,
+          "baseNote": "E",
+          "pitched": true,
+          "sounding": 52,
+          "icon": "cr"
+        },
+        {
+          "file": "3.mp3",
+          "nominal": 65,
+          "baseNote": "F",
+          "pitched": true,
+          "sounding": 53,
+          "icon": "dm"
+        },
+        {
+          "file": "4.mp3",
+          "nominal": 67,
+          "baseNote": "G",
+          "pitched": true,
+          "sounding": 55,
+          "icon": "cr"
+        },
+        {
+          "file": "5.mp3",
+          "nominal": 69,
+          "baseNote": "A",
+          "pitched": true,
+          "sounding": 57,
+          "icon": "cr"
+        },
+        {
+          "file": "6.mp3",
+          "nominal": 71,
+          "baseNote": "B",
+          "pitched": true,
+          "sounding": 59,
+          "icon": "dm"
+        },
+        {
+          "file": "7.mp3",
+          "nominal": 72,
+          "baseNote": "C",
+          "pitched": true,
+          "sounding": 60,
+          "icon": "dmcr"
+        },
+        {
+          "file": "8.mp3",
+          "nominal": 74,
+          "baseNote": "D",
+          "pitched": true,
+          "sounding": 62,
+          "icon": "dm"
+        },
+        {
+          "file": "9.mp3",
+          "nominal": 76,
+          "baseNote": "E",
+          "pitched": true,
+          "sounding": 64,
+          "icon": "cr"
+        },
+        {
+          "file": "10.mp3",
+          "nominal": 77,
+          "baseNote": "F",
+          "pitched": true,
+          "sounding": 65,
+          "icon": "cr"
+        },
+        {
+          "file": "11.mp3",
+          "nominal": 79,
+          "baseNote": "G",
+          "pitched": true,
+          "sounding": 67,
+          "icon": "dm"
+        },
+        {
+          "file": "12.mp3",
+          "nominal": 81,
+          "baseNote": "A",
+          "pitched": true,
+          "sounding": 69,
+          "icon": "cr"
+        },
+        {
+          "file": "13.mp3",
+          "nominal": 83,
+          "baseNote": "B",
+          "pitched": true,
+          "sounding": 71,
+          "icon": "dm"
+        },
+        {
+          "file": "14.mp3",
+          "nominal": 84,
+          "baseNote": "C",
+          "pitched": true,
+          "sounding": 72,
+          "icon": "dmcr"
+        }
+      ]
+    },
+    "MantaOcarina": {
+      "name": "MantaOcarina",
+      "displayName": "Manta Ocarina",
+      "family": "pipe",
+      "midiName": "pan flute",
+      "shape": "sky-3x5",
+      "notes": [
+        {
+          "file": "0.mp3",
+          "nominal": 60,
+          "baseNote": "C",
+          "pitched": true,
+          "sounding": 60,
+          "icon": "dmcr"
+        },
+        {
+          "file": "1.mp3",
+          "nominal": 62,
+          "baseNote": "D",
+          "pitched": true,
+          "sounding": 62,
+          "icon": "dm"
+        },
+        {
+          "file": "2.mp3",
+          "nominal": 64,
+          "baseNote": "E",
+          "pitched": true,
+          "sounding": 64,
+          "icon": "cr"
+        },
+        {
+          "file": "3.mp3",
+          "nominal": 65,
+          "baseNote": "F",
+          "pitched": true,
+          "sounding": 65,
+          "icon": "dm"
+        },
+        {
+          "file": "4.mp3",
+          "nominal": 67,
+          "baseNote": "G",
+          "pitched": true,
+          "sounding": 67,
+          "icon": "cr"
+        },
+        {
+          "file": "5.mp3",
+          "nominal": 69,
+          "baseNote": "A",
+          "pitched": true,
+          "sounding": 69,
+          "icon": "cr"
+        },
+        {
+          "file": "6.mp3",
+          "nominal": 71,
+          "baseNote": "B",
+          "pitched": true,
+          "sounding": 71,
+          "icon": "dm"
+        },
+        {
+          "file": "7.mp3",
+          "nominal": 72,
+          "baseNote": "C",
+          "pitched": true,
+          "sounding": 72,
+          "icon": "dmcr"
+        },
+        {
+          "file": "8.mp3",
+          "nominal": 74,
+          "baseNote": "D",
+          "pitched": true,
+          "sounding": 74,
+          "icon": "dm"
+        },
+        {
+          "file": "9.mp3",
+          "nominal": 76,
+          "baseNote": "E",
+          "pitched": true,
+          "sounding": 76,
+          "icon": "cr"
+        },
+        {
+          "file": "10.mp3",
+          "nominal": 77,
+          "baseNote": "F",
+          "pitched": true,
+          "sounding": 77,
+          "icon": "cr"
+        },
+        {
+          "file": "11.mp3",
+          "nominal": 79,
+          "baseNote": "G",
+          "pitched": true,
+          "sounding": 79,
+          "icon": "dm"
+        },
+        {
+          "file": "12.mp3",
+          "nominal": 81,
+          "baseNote": "A",
+          "pitched": true,
+          "sounding": 81,
+          "icon": "cr"
+        },
+        {
+          "file": "13.mp3",
+          "nominal": 83,
+          "baseNote": "B",
+          "pitched": true,
+          "sounding": 83,
+          "icon": "dm"
+        },
+        {
+          "file": "14.mp3",
+          "nominal": 84,
+          "baseNote": "C",
+          "pitched": true,
+          "sounding": 84,
+          "icon": "dmcr"
+        }
+      ]
+    },
+    "Ocarina": {
+      "name": "Ocarina",
+      "displayName": "Ocarina",
+      "family": "pipe",
+      "midiName": "pan flute",
+      "shape": "sky-3x5",
+      "notes": [
+        {
+          "file": "0.mp3",
+          "nominal": 60,
+          "baseNote": "C",
+          "pitched": true,
+          "sounding": 60,
+          "icon": "dmcr"
+        },
+        {
+          "file": "1.mp3",
+          "nominal": 62,
+          "baseNote": "D",
+          "pitched": true,
+          "sounding": 62,
+          "icon": "dm"
+        },
+        {
+          "file": "2.mp3",
+          "nominal": 64,
+          "baseNote": "E",
+          "pitched": true,
+          "sounding": 64,
+          "icon": "cr"
+        },
+        {
+          "file": "3.mp3",
+          "nominal": 65,
+          "baseNote": "F",
+          "pitched": true,
+          "sounding": 65,
+          "icon": "dm"
+        },
+        {
+          "file": "4.mp3",
+          "nominal": 67,
+          "baseNote": "G",
+          "pitched": true,
+          "sounding": 67,
+          "icon": "cr"
+        },
+        {
+          "file": "5.mp3",
+          "nominal": 69,
+          "baseNote": "A",
+          "pitched": true,
+          "sounding": 69,
+          "icon": "cr"
+        },
+        {
+          "file": "6.mp3",
+          "nominal": 71,
+          "baseNote": "B",
+          "pitched": true,
+          "sounding": 71,
+          "icon": "dm"
+        },
+        {
+          "file": "7.mp3",
+          "nominal": 72,
+          "baseNote": "C",
+          "pitched": true,
+          "sounding": 72,
+          "icon": "dmcr"
+        },
+        {
+          "file": "8.mp3",
+          "nominal": 74,
+          "baseNote": "D",
+          "pitched": true,
+          "sounding": 74,
+          "icon": "dm"
+        },
+        {
+          "file": "9.mp3",
+          "nominal": 76,
+          "baseNote": "E",
+          "pitched": true,
+          "sounding": 76,
+          "icon": "cr"
+        },
+        {
+          "file": "10.mp3",
+          "nominal": 77,
+          "baseNote": "F",
+          "pitched": true,
+          "sounding": 77,
+          "icon": "cr"
+        },
+        {
+          "file": "11.mp3",
+          "nominal": 79,
+          "baseNote": "G",
+          "pitched": true,
+          "sounding": 79,
+          "icon": "dm"
+        },
+        {
+          "file": "12.mp3",
+          "nominal": 81,
+          "baseNote": "A",
+          "pitched": true,
+          "sounding": 81,
+          "icon": "cr"
+        },
+        {
+          "file": "13.mp3",
+          "nominal": 83,
+          "baseNote": "B",
+          "pitched": true,
+          "sounding": 83,
+          "icon": "dm"
+        },
+        {
+          "file": "14.mp3",
+          "nominal": 84,
+          "baseNote": "C",
+          "pitched": true,
+          "sounding": 84,
+          "icon": "dmcr"
+        }
+      ]
+    },
+    "Panflute": {
+      "name": "Panflute",
+      "displayName": "Panflute",
+      "family": "pipe",
+      "midiName": "pan flute",
+      "shape": "sky-3x5",
+      "notes": [
+        {
+          "file": "0.mp3",
+          "nominal": 60,
+          "baseNote": "C",
+          "pitched": true,
+          "sounding": 60,
+          "icon": "dmcr"
+        },
+        {
+          "file": "1.mp3",
+          "nominal": 62,
+          "baseNote": "D",
+          "pitched": true,
+          "sounding": 62,
+          "icon": "dm"
+        },
+        {
+          "file": "2.mp3",
+          "nominal": 64,
+          "baseNote": "E",
+          "pitched": true,
+          "sounding": 64,
+          "icon": "cr"
+        },
+        {
+          "file": "3.mp3",
+          "nominal": 65,
+          "baseNote": "F",
+          "pitched": true,
+          "sounding": 65,
+          "icon": "dm"
+        },
+        {
+          "file": "4.mp3",
+          "nominal": 67,
+          "baseNote": "G",
+          "pitched": true,
+          "sounding": 67,
+          "icon": "cr"
+        },
+        {
+          "file": "5.mp3",
+          "nominal": 69,
+          "baseNote": "A",
+          "pitched": true,
+          "sounding": 69,
+          "icon": "cr"
+        },
+        {
+          "file": "6.mp3",
+          "nominal": 71,
+          "baseNote": "B",
+          "pitched": true,
+          "sounding": 71,
+          "icon": "dm"
+        },
+        {
+          "file": "7.mp3",
+          "nominal": 72,
+          "baseNote": "C",
+          "pitched": true,
+          "sounding": 72,
+          "icon": "dmcr"
+        },
+        {
+          "file": "8.mp3",
+          "nominal": 74,
+          "baseNote": "D",
+          "pitched": true,
+          "sounding": 74,
+          "icon": "dm"
+        },
+        {
+          "file": "9.mp3",
+          "nominal": 76,
+          "baseNote": "E",
+          "pitched": true,
+          "sounding": 76,
+          "icon": "cr"
+        },
+        {
+          "file": "10.mp3",
+          "nominal": 77,
+          "baseNote": "F",
+          "pitched": true,
+          "sounding": 77,
+          "icon": "cr"
+        },
+        {
+          "file": "11.mp3",
+          "nominal": 79,
+          "baseNote": "G",
+          "pitched": true,
+          "sounding": 79,
+          "icon": "dm"
+        },
+        {
+          "file": "12.mp3",
+          "nominal": 81,
+          "baseNote": "A",
+          "pitched": true,
+          "sounding": 81,
+          "icon": "cr"
+        },
+        {
+          "file": "13.mp3",
+          "nominal": 83,
+          "baseNote": "B",
+          "pitched": true,
+          "sounding": 83,
+          "icon": "dm"
+        },
+        {
+          "file": "14.mp3",
+          "nominal": 84,
+          "baseNote": "C",
+          "pitched": true,
+          "sounding": 84,
+          "icon": "dmcr"
+        }
+      ]
+    },
+    "Piano": {
+      "name": "Piano",
+      "displayName": "Piano",
+      "family": "piano",
+      "midiName": "acoustic grand piano",
+      "shape": "sky-3x5",
+      "notes": [
+        {
+          "file": "0.mp3",
+          "nominal": 60,
+          "baseNote": "C",
+          "pitched": true,
+          "sounding": 60,
+          "icon": "dmcr"
+        },
+        {
+          "file": "1.mp3",
+          "nominal": 62,
+          "baseNote": "D",
+          "pitched": true,
+          "sounding": 62,
+          "icon": "dm"
+        },
+        {
+          "file": "2.mp3",
+          "nominal": 64,
+          "baseNote": "E",
+          "pitched": true,
+          "sounding": 64,
+          "icon": "cr"
+        },
+        {
+          "file": "3.mp3",
+          "nominal": 65,
+          "baseNote": "F",
+          "pitched": true,
+          "sounding": 65,
+          "icon": "dm"
+        },
+        {
+          "file": "4.mp3",
+          "nominal": 67,
+          "baseNote": "G",
+          "pitched": true,
+          "sounding": 67,
+          "icon": "cr"
+        },
+        {
+          "file": "5.mp3",
+          "nominal": 69,
+          "baseNote": "A",
+          "pitched": true,
+          "sounding": 69,
+          "icon": "cr"
+        },
+        {
+          "file": "6.mp3",
+          "nominal": 71,
+          "baseNote": "B",
+          "pitched": true,
+          "sounding": 71,
+          "icon": "dm"
+        },
+        {
+          "file": "7.mp3",
+          "nominal": 72,
+          "baseNote": "C",
+          "pitched": true,
+          "sounding": 72,
+          "icon": "dmcr"
+        },
+        {
+          "file": "8.mp3",
+          "nominal": 74,
+          "baseNote": "D",
+          "pitched": true,
+          "sounding": 74,
+          "icon": "dm"
+        },
+        {
+          "file": "9.mp3",
+          "nominal": 76,
+          "baseNote": "E",
+          "pitched": true,
+          "sounding": 76,
+          "icon": "cr"
+        },
+        {
+          "file": "10.mp3",
+          "nominal": 77,
+          "baseNote": "F",
+          "pitched": true,
+          "sounding": 77,
+          "icon": "cr"
+        },
+        {
+          "file": "11.mp3",
+          "nominal": 79,
+          "baseNote": "G",
+          "pitched": true,
+          "sounding": 79,
+          "icon": "dm"
+        },
+        {
+          "file": "12.mp3",
+          "nominal": 81,
+          "baseNote": "A",
+          "pitched": true,
+          "sounding": 81,
+          "icon": "cr"
+        },
+        {
+          "file": "13.mp3",
+          "nominal": 83,
+          "baseNote": "B",
+          "pitched": true,
+          "sounding": 83,
+          "icon": "dm"
+        },
+        {
+          "file": "14.mp3",
+          "nominal": 84,
+          "baseNote": "C",
+          "pitched": true,
+          "sounding": 84,
+          "icon": "dmcr"
+        }
+      ]
+    },
+    "Pipa": {
+      "name": "Pipa",
+      "displayName": "Pipa",
+      "family": "reed",
+      "midiName": "oboe",
+      "shape": "sky-3x5",
+      "notes": [
+        {
+          "file": "0.mp3",
+          "nominal": 60,
+          "baseNote": "C",
+          "pitched": true,
+          "sounding": 48,
+          "icon": "dmcr"
+        },
+        {
+          "file": "1.mp3",
+          "nominal": 62,
+          "baseNote": "D",
+          "pitched": true,
+          "sounding": 50,
+          "icon": "dm"
+        },
+        {
+          "file": "2.mp3",
+          "nominal": 64,
+          "baseNote": "E",
+          "pitched": true,
+          "sounding": 52,
+          "icon": "cr"
+        },
+        {
+          "file": "3.mp3",
+          "nominal": 65,
+          "baseNote": "F",
+          "pitched": true,
+          "sounding": 53,
+          "icon": "dm"
+        },
+        {
+          "file": "4.mp3",
+          "nominal": 67,
+          "baseNote": "G",
+          "pitched": true,
+          "sounding": 55,
+          "icon": "cr"
+        },
+        {
+          "file": "5.mp3",
+          "nominal": 69,
+          "baseNote": "A",
+          "pitched": true,
+          "sounding": 57,
+          "icon": "cr"
+        },
+        {
+          "file": "6.mp3",
+          "nominal": 71,
+          "baseNote": "B",
+          "pitched": true,
+          "sounding": 59,
+          "icon": "dm"
+        },
+        {
+          "file": "7.mp3",
+          "nominal": 72,
+          "baseNote": "C",
+          "pitched": true,
+          "sounding": 60,
+          "icon": "dmcr"
+        },
+        {
+          "file": "8.mp3",
+          "nominal": 74,
+          "baseNote": "D",
+          "pitched": true,
+          "sounding": 62,
+          "icon": "dm"
+        },
+        {
+          "file": "9.mp3",
+          "nominal": 76,
+          "baseNote": "E",
+          "pitched": true,
+          "sounding": 64,
+          "icon": "cr"
+        },
+        {
+          "file": "10.mp3",
+          "nominal": 77,
+          "baseNote": "F",
+          "pitched": true,
+          "sounding": 65,
+          "icon": "cr"
+        },
+        {
+          "file": "11.mp3",
+          "nominal": 79,
+          "baseNote": "G",
+          "pitched": true,
+          "sounding": 67,
+          "icon": "dm"
+        },
+        {
+          "file": "12.mp3",
+          "nominal": 81,
+          "baseNote": "A",
+          "pitched": true,
+          "sounding": 69,
+          "icon": "cr"
+        },
+        {
+          "file": "13.mp3",
+          "nominal": 83,
+          "baseNote": "B",
+          "pitched": true,
+          "sounding": 71,
+          "icon": "dm"
+        },
+        {
+          "file": "14.mp3",
+          "nominal": 84,
+          "baseNote": "C",
+          "pitched": true,
+          "sounding": 72,
+          "icon": "dmcr"
+        }
+      ]
+    },
+    "SFX_BassSynth": {
+      "name": "SFX_BassSynth",
+      "displayName": "Bass Synth",
+      "family": "bass",
+      "midiName": "synth bass 1",
+      "shape": "sky-2x4",
+      "notes": [
+        {
+          "file": "0.mp3",
+          "nominal": 60,
+          "baseNote": "C",
+          "pitched": true,
+          "sounding": 36,
+          "icon": "dmcr"
+        },
+        {
+          "file": "1.mp3",
+          "nominal": 62,
+          "baseNote": "D",
+          "pitched": true,
+          "sounding": 38,
+          "icon": "dm"
+        },
+        {
+          "file": "2.mp3",
+          "nominal": 64,
+          "baseNote": "E",
+          "pitched": true,
+          "sounding": 40,
+          "icon": "cr"
+        },
+        {
+          "file": "3.mp3",
+          "nominal": 65,
+          "baseNote": "F",
+          "pitched": true,
+          "sounding": 41,
+          "icon": "dm"
+        },
+        {
+          "file": "4.mp3",
+          "nominal": 67,
+          "baseNote": "G",
+          "pitched": true,
+          "sounding": 43,
+          "icon": "cr"
+        },
+        {
+          "file": "5.mp3",
+          "nominal": 69,
+          "baseNote": "A",
+          "pitched": true,
+          "sounding": 45,
+          "icon": "dm"
+        },
+        {
+          "file": "6.mp3",
+          "nominal": 71,
+          "baseNote": "B",
+          "pitched": true,
+          "sounding": 47,
+          "icon": "cr"
+        },
+        {
+          "file": "7.mp3",
+          "nominal": 72,
+          "baseNote": "C",
+          "pitched": true,
+          "sounding": 48,
+          "icon": "dmcr"
+        }
+      ]
+    },
+    "SFX_BirdCall": {
+      "name": "SFX_BirdCall",
+      "displayName": "Bird Call",
+      "family": "percussive",
+      "midiName": "synth drum",
+      "shape": "sky-3x5",
+      "notes": [
+        {
+          "file": "0.mp3",
+          "nominal": 60,
+          "baseNote": "C",
+          "pitched": true,
+          "sounding": 60,
+          "icon": "dmcr"
+        },
+        {
+          "file": "1.mp3",
+          "nominal": 62,
+          "baseNote": "D",
+          "pitched": true,
+          "sounding": 62,
+          "icon": "dm"
+        },
+        {
+          "file": "2.mp3",
+          "nominal": 64,
+          "baseNote": "E",
+          "pitched": true,
+          "sounding": 64,
+          "icon": "cr"
+        },
+        {
+          "file": "3.mp3",
+          "nominal": 65,
+          "baseNote": "F",
+          "pitched": true,
+          "sounding": 65,
+          "icon": "dm"
+        },
+        {
+          "file": "4.mp3",
+          "nominal": 67,
+          "baseNote": "G",
+          "pitched": true,
+          "sounding": 67,
+          "icon": "cr"
+        },
+        {
+          "file": "5.mp3",
+          "nominal": 69,
+          "baseNote": "A",
+          "pitched": true,
+          "sounding": 69,
+          "icon": "cr"
+        },
+        {
+          "file": "6.mp3",
+          "nominal": 71,
+          "baseNote": "B",
+          "pitched": true,
+          "sounding": 71,
+          "icon": "dm"
+        },
+        {
+          "file": "7.mp3",
+          "nominal": 72,
+          "baseNote": "C",
+          "pitched": true,
+          "sounding": 72,
+          "icon": "dmcr"
+        },
+        {
+          "file": "8.mp3",
+          "nominal": 74,
+          "baseNote": "D",
+          "pitched": true,
+          "sounding": 74,
+          "icon": "dm"
+        },
+        {
+          "file": "9.mp3",
+          "nominal": 76,
+          "baseNote": "E",
+          "pitched": true,
+          "sounding": 76,
+          "icon": "cr"
+        },
+        {
+          "file": "10.mp3",
+          "nominal": 77,
+          "baseNote": "F",
+          "pitched": true,
+          "sounding": 77,
+          "icon": "cr"
+        },
+        {
+          "file": "11.mp3",
+          "nominal": 79,
+          "baseNote": "G",
+          "pitched": true,
+          "sounding": 79,
+          "icon": "dm"
+        },
+        {
+          "file": "12.mp3",
+          "nominal": 81,
+          "baseNote": "A",
+          "pitched": true,
+          "sounding": 81,
+          "icon": "cr"
+        },
+        {
+          "file": "13.mp3",
+          "nominal": 83,
+          "baseNote": "B",
+          "pitched": true,
+          "sounding": 83,
+          "icon": "dm"
+        },
+        {
+          "file": "14.mp3",
+          "nominal": 84,
+          "baseNote": "C",
+          "pitched": true,
+          "sounding": 84,
+          "icon": "dmcr"
+        }
+      ]
+    },
+    "SFX_ChimeSynth": {
+      "name": "SFX_ChimeSynth",
+      "displayName": "Chime Synth",
+      "family": "percussive",
+      "midiName": "tubular bells",
+      "shape": "sky-2x4",
+      "notes": [
+        {
+          "file": "0.mp3",
+          "nominal": 60,
+          "baseNote": "C",
+          "pitched": true,
+          "sounding": 84,
+          "icon": "dmcr"
+        },
+        {
+          "file": "1.mp3",
+          "nominal": 62,
+          "baseNote": "D",
+          "pitched": true,
+          "sounding": 86,
+          "icon": "dm"
+        },
+        {
+          "file": "2.mp3",
+          "nominal": 64,
+          "baseNote": "E",
+          "pitched": true,
+          "sounding": 88,
+          "icon": "cr"
+        },
+        {
+          "file": "3.mp3",
+          "nominal": 65,
+          "baseNote": "F",
+          "pitched": true,
+          "sounding": 89,
+          "icon": "dm"
+        },
+        {
+          "file": "4.mp3",
+          "nominal": 67,
+          "baseNote": "G",
+          "pitched": true,
+          "sounding": 91,
+          "icon": "cr"
+        },
+        {
+          "file": "5.mp3",
+          "nominal": 69,
+          "baseNote": "A",
+          "pitched": true,
+          "sounding": 93,
+          "icon": "dm"
+        },
+        {
+          "file": "6.mp3",
+          "nominal": 71,
+          "baseNote": "B",
+          "pitched": true,
+          "sounding": 95,
+          "icon": "cr"
+        },
+        {
+          "file": "7.mp3",
+          "nominal": 72,
+          "baseNote": "C",
+          "pitched": true,
+          "sounding": 96,
+          "icon": "dmcr"
+        }
+      ]
+    },
+    "SFX_CrabCall": {
+      "name": "SFX_CrabCall",
+      "displayName": "Crab Call",
+      "family": "percussive",
+      "midiName": "synth drum",
+      "shape": "sky-3x5",
+      "notes": [
+        {
+          "file": "0.mp3",
+          "nominal": 60,
+          "baseNote": "C",
+          "pitched": true,
+          "sounding": 60,
+          "icon": "dmcr"
+        },
+        {
+          "file": "1.mp3",
+          "nominal": 62,
+          "baseNote": "D",
+          "pitched": true,
+          "sounding": 62,
+          "icon": "dm"
+        },
+        {
+          "file": "2.mp3",
+          "nominal": 64,
+          "baseNote": "E",
+          "pitched": true,
+          "sounding": 64,
+          "icon": "cr"
+        },
+        {
+          "file": "3.mp3",
+          "nominal": 65,
+          "baseNote": "F",
+          "pitched": true,
+          "sounding": 65,
+          "icon": "dm"
+        },
+        {
+          "file": "4.mp3",
+          "nominal": 67,
+          "baseNote": "G",
+          "pitched": true,
+          "sounding": 67,
+          "icon": "cr"
+        },
+        {
+          "file": "5.mp3",
+          "nominal": 69,
+          "baseNote": "A",
+          "pitched": true,
+          "sounding": 69,
+          "icon": "cr"
+        },
+        {
+          "file": "6.mp3",
+          "nominal": 71,
+          "baseNote": "B",
+          "pitched": true,
+          "sounding": 71,
+          "icon": "dm"
+        },
+        {
+          "file": "7.mp3",
+          "nominal": 72,
+          "baseNote": "C",
+          "pitched": true,
+          "sounding": 72,
+          "icon": "dmcr"
+        },
+        {
+          "file": "8.mp3",
+          "nominal": 74,
+          "baseNote": "D",
+          "pitched": true,
+          "sounding": 74,
+          "icon": "dm"
+        },
+        {
+          "file": "9.mp3",
+          "nominal": 76,
+          "baseNote": "E",
+          "pitched": true,
+          "sounding": 76,
+          "icon": "cr"
+        },
+        {
+          "file": "10.mp3",
+          "nominal": 77,
+          "baseNote": "F",
+          "pitched": true,
+          "sounding": 77,
+          "icon": "cr"
+        },
+        {
+          "file": "11.mp3",
+          "nominal": 79,
+          "baseNote": "G",
+          "pitched": true,
+          "sounding": 79,
+          "icon": "dm"
+        },
+        {
+          "file": "12.mp3",
+          "nominal": 81,
+          "baseNote": "A",
+          "pitched": true,
+          "sounding": 81,
+          "icon": "cr"
+        },
+        {
+          "file": "13.mp3",
+          "nominal": 83,
+          "baseNote": "B",
+          "pitched": true,
+          "sounding": 83,
+          "icon": "dm"
+        },
+        {
+          "file": "14.mp3",
+          "nominal": 84,
+          "baseNote": "C",
+          "pitched": true,
+          "sounding": 84,
+          "icon": "dmcr"
+        }
+      ]
+    },
+    "SFX_Dance": {
+      "name": "SFX_Dance",
+      "displayName": "Dance",
+      "family": "percussive",
+      "midiName": "synth drum",
+      "shape": "sky-2x3",
+      "notes": [
+        {
+          "file": "0.mp3",
+          "nominal": 60,
+          "baseNote": "",
+          "pitched": false,
+          "sounding": 60,
+          "icon": "cr"
+        },
+        {
+          "file": "1.mp3",
+          "nominal": 62,
+          "baseNote": "",
+          "pitched": false,
+          "sounding": 62,
+          "icon": "dm"
+        },
+        {
+          "file": "2.mp3",
+          "nominal": 64,
+          "baseNote": "",
+          "pitched": false,
+          "sounding": 64,
+          "icon": "cr"
+        },
+        {
+          "file": "3.mp3",
+          "nominal": 65,
+          "baseNote": "",
+          "pitched": false,
+          "sounding": 65,
+          "icon": "cr"
+        },
+        {
+          "file": "4.mp3",
+          "nominal": 67,
+          "baseNote": "",
+          "pitched": false,
+          "sounding": 67,
+          "icon": "dm"
+        },
+        {
+          "file": "5.mp3",
+          "nominal": 69,
+          "baseNote": "",
+          "pitched": false,
+          "sounding": 69,
+          "icon": "cr"
+        }
+      ]
+    },
+    "SFX_FishCall": {
+      "name": "SFX_FishCall",
+      "displayName": "Fish Call",
+      "family": "percussive",
+      "midiName": "synth drum",
+      "shape": "sky-3x5",
+      "notes": [
+        {
+          "file": "0.mp3",
+          "nominal": 60,
+          "baseNote": "C",
+          "pitched": true,
+          "sounding": 48,
+          "icon": "dmcr"
+        },
+        {
+          "file": "1.mp3",
+          "nominal": 62,
+          "baseNote": "D",
+          "pitched": true,
+          "sounding": 50,
+          "icon": "dm"
+        },
+        {
+          "file": "2.mp3",
+          "nominal": 64,
+          "baseNote": "E",
+          "pitched": true,
+          "sounding": 52,
+          "icon": "cr"
+        },
+        {
+          "file": "3.mp3",
+          "nominal": 65,
+          "baseNote": "F",
+          "pitched": true,
+          "sounding": 53,
+          "icon": "dm"
+        },
+        {
+          "file": "4.mp3",
+          "nominal": 67,
+          "baseNote": "G",
+          "pitched": true,
+          "sounding": 55,
+          "icon": "cr"
+        },
+        {
+          "file": "5.mp3",
+          "nominal": 69,
+          "baseNote": "A",
+          "pitched": true,
+          "sounding": 57,
+          "icon": "cr"
+        },
+        {
+          "file": "6.mp3",
+          "nominal": 71,
+          "baseNote": "B",
+          "pitched": true,
+          "sounding": 59,
+          "icon": "dm"
+        },
+        {
+          "file": "7.mp3",
+          "nominal": 72,
+          "baseNote": "C",
+          "pitched": true,
+          "sounding": 60,
+          "icon": "dmcr"
+        },
+        {
+          "file": "8.mp3",
+          "nominal": 74,
+          "baseNote": "D",
+          "pitched": true,
+          "sounding": 62,
+          "icon": "dm"
+        },
+        {
+          "file": "9.mp3",
+          "nominal": 76,
+          "baseNote": "E",
+          "pitched": true,
+          "sounding": 64,
+          "icon": "cr"
+        },
+        {
+          "file": "10.mp3",
+          "nominal": 77,
+          "baseNote": "F",
+          "pitched": true,
+          "sounding": 65,
+          "icon": "cr"
+        },
+        {
+          "file": "11.mp3",
+          "nominal": 79,
+          "baseNote": "G",
+          "pitched": true,
+          "sounding": 67,
+          "icon": "dm"
+        },
+        {
+          "file": "12.mp3",
+          "nominal": 81,
+          "baseNote": "A",
+          "pitched": true,
+          "sounding": 69,
+          "icon": "cr"
+        },
+        {
+          "file": "13.mp3",
+          "nominal": 83,
+          "baseNote": "B",
+          "pitched": true,
+          "sounding": 71,
+          "icon": "dm"
+        },
+        {
+          "file": "14.mp3",
+          "nominal": 84,
+          "baseNote": "C",
+          "pitched": true,
+          "sounding": 72,
+          "icon": "dmcr"
+        }
+      ]
+    },
+    "SFX_JellyCall": {
+      "name": "SFX_JellyCall",
+      "displayName": "Jelly Call",
+      "family": "percussive",
+      "midiName": "synth drum",
+      "shape": "sky-3x5",
+      "notes": [
+        {
+          "file": "0.mp3",
+          "nominal": 60,
+          "baseNote": "C",
+          "pitched": true,
+          "sounding": 48,
+          "icon": "dmcr"
+        },
+        {
+          "file": "1.mp3",
+          "nominal": 62,
+          "baseNote": "D",
+          "pitched": true,
+          "sounding": 50,
+          "icon": "dm"
+        },
+        {
+          "file": "2.mp3",
+          "nominal": 64,
+          "baseNote": "E",
+          "pitched": true,
+          "sounding": 52,
+          "icon": "cr"
+        },
+        {
+          "file": "3.mp3",
+          "nominal": 65,
+          "baseNote": "F",
+          "pitched": true,
+          "sounding": 53,
+          "icon": "dm"
+        },
+        {
+          "file": "4.mp3",
+          "nominal": 67,
+          "baseNote": "G",
+          "pitched": true,
+          "sounding": 55,
+          "icon": "cr"
+        },
+        {
+          "file": "5.mp3",
+          "nominal": 69,
+          "baseNote": "A",
+          "pitched": true,
+          "sounding": 57,
+          "icon": "cr"
+        },
+        {
+          "file": "6.mp3",
+          "nominal": 71,
+          "baseNote": "B",
+          "pitched": true,
+          "sounding": 59,
+          "icon": "dm"
+        },
+        {
+          "file": "7.mp3",
+          "nominal": 72,
+          "baseNote": "C",
+          "pitched": true,
+          "sounding": 60,
+          "icon": "dmcr"
+        },
+        {
+          "file": "8.mp3",
+          "nominal": 74,
+          "baseNote": "D",
+          "pitched": true,
+          "sounding": 62,
+          "icon": "dm"
+        },
+        {
+          "file": "9.mp3",
+          "nominal": 76,
+          "baseNote": "E",
+          "pitched": true,
+          "sounding": 64,
+          "icon": "cr"
+        },
+        {
+          "file": "10.mp3",
+          "nominal": 77,
+          "baseNote": "F",
+          "pitched": true,
+          "sounding": 65,
+          "icon": "cr"
+        },
+        {
+          "file": "11.mp3",
+          "nominal": 79,
+          "baseNote": "G",
+          "pitched": true,
+          "sounding": 67,
+          "icon": "dm"
+        },
+        {
+          "file": "12.mp3",
+          "nominal": 81,
+          "baseNote": "A",
+          "pitched": true,
+          "sounding": 69,
+          "icon": "cr"
+        },
+        {
+          "file": "13.mp3",
+          "nominal": 83,
+          "baseNote": "B",
+          "pitched": true,
+          "sounding": 71,
+          "icon": "dm"
+        },
+        {
+          "file": "14.mp3",
+          "nominal": 84,
+          "baseNote": "C",
+          "pitched": true,
+          "sounding": 72,
+          "icon": "dmcr"
+        }
+      ]
+    },
+    "SFX_MantaCall": {
+      "name": "SFX_MantaCall",
+      "displayName": "Manta Call",
+      "family": "percussive",
+      "midiName": "synth drum",
+      "shape": "sky-3x5",
+      "notes": [
+        {
+          "file": "0.mp3",
+          "nominal": 60,
+          "baseNote": "C",
+          "pitched": true,
+          "sounding": 48,
+          "icon": "dmcr"
+        },
+        {
+          "file": "1.mp3",
+          "nominal": 62,
+          "baseNote": "D",
+          "pitched": true,
+          "sounding": 50,
+          "icon": "dm"
+        },
+        {
+          "file": "2.mp3",
+          "nominal": 64,
+          "baseNote": "E",
+          "pitched": true,
+          "sounding": 52,
+          "icon": "cr"
+        },
+        {
+          "file": "3.mp3",
+          "nominal": 65,
+          "baseNote": "F",
+          "pitched": true,
+          "sounding": 53,
+          "icon": "dm"
+        },
+        {
+          "file": "4.mp3",
+          "nominal": 67,
+          "baseNote": "G",
+          "pitched": true,
+          "sounding": 55,
+          "icon": "cr"
+        },
+        {
+          "file": "5.mp3",
+          "nominal": 69,
+          "baseNote": "A",
+          "pitched": true,
+          "sounding": 57,
+          "icon": "cr"
+        },
+        {
+          "file": "6.mp3",
+          "nominal": 71,
+          "baseNote": "B",
+          "pitched": true,
+          "sounding": 59,
+          "icon": "dm"
+        },
+        {
+          "file": "7.mp3",
+          "nominal": 72,
+          "baseNote": "C",
+          "pitched": true,
+          "sounding": 60,
+          "icon": "dmcr"
+        },
+        {
+          "file": "8.mp3",
+          "nominal": 74,
+          "baseNote": "D",
+          "pitched": true,
+          "sounding": 62,
+          "icon": "dm"
+        },
+        {
+          "file": "9.mp3",
+          "nominal": 76,
+          "baseNote": "E",
+          "pitched": true,
+          "sounding": 64,
+          "icon": "cr"
+        },
+        {
+          "file": "10.mp3",
+          "nominal": 77,
+          "baseNote": "F",
+          "pitched": true,
+          "sounding": 65,
+          "icon": "cr"
+        },
+        {
+          "file": "11.mp3",
+          "nominal": 79,
+          "baseNote": "G",
+          "pitched": true,
+          "sounding": 67,
+          "icon": "dm"
+        },
+        {
+          "file": "12.mp3",
+          "nominal": 81,
+          "baseNote": "A",
+          "pitched": true,
+          "sounding": 69,
+          "icon": "cr"
+        },
+        {
+          "file": "13.mp3",
+          "nominal": 83,
+          "baseNote": "B",
+          "pitched": true,
+          "sounding": 71,
+          "icon": "dm"
+        },
+        {
+          "file": "14.mp3",
+          "nominal": 84,
+          "baseNote": "C",
+          "pitched": true,
+          "sounding": 72,
+          "icon": "dmcr"
+        }
+      ]
+    },
+    "SFX_MothCall": {
+      "name": "SFX_MothCall",
+      "displayName": "Moth Call",
+      "family": "percussive",
+      "midiName": "synth drum",
+      "shape": "sky-3x5",
+      "notes": [
+        {
+          "file": "0.mp3",
+          "nominal": 60,
+          "baseNote": "C",
+          "pitched": true,
+          "sounding": 48,
+          "icon": "dmcr"
+        },
+        {
+          "file": "1.mp3",
+          "nominal": 62,
+          "baseNote": "D",
+          "pitched": true,
+          "sounding": 50,
+          "icon": "dm"
+        },
+        {
+          "file": "2.mp3",
+          "nominal": 64,
+          "baseNote": "E",
+          "pitched": true,
+          "sounding": 52,
+          "icon": "cr"
+        },
+        {
+          "file": "3.mp3",
+          "nominal": 65,
+          "baseNote": "F",
+          "pitched": true,
+          "sounding": 53,
+          "icon": "dm"
+        },
+        {
+          "file": "4.mp3",
+          "nominal": 67,
+          "baseNote": "G",
+          "pitched": true,
+          "sounding": 55,
+          "icon": "cr"
+        },
+        {
+          "file": "5.mp3",
+          "nominal": 69,
+          "baseNote": "A",
+          "pitched": true,
+          "sounding": 57,
+          "icon": "cr"
+        },
+        {
+          "file": "6.mp3",
+          "nominal": 71,
+          "baseNote": "B",
+          "pitched": true,
+          "sounding": 59,
+          "icon": "dm"
+        },
+        {
+          "file": "7.mp3",
+          "nominal": 72,
+          "baseNote": "C",
+          "pitched": true,
+          "sounding": 60,
+          "icon": "dmcr"
+        },
+        {
+          "file": "8.mp3",
+          "nominal": 74,
+          "baseNote": "D",
+          "pitched": true,
+          "sounding": 62,
+          "icon": "dm"
+        },
+        {
+          "file": "9.mp3",
+          "nominal": 76,
+          "baseNote": "E",
+          "pitched": true,
+          "sounding": 64,
+          "icon": "cr"
+        },
+        {
+          "file": "10.mp3",
+          "nominal": 77,
+          "baseNote": "F",
+          "pitched": true,
+          "sounding": 65,
+          "icon": "cr"
+        },
+        {
+          "file": "11.mp3",
+          "nominal": 79,
+          "baseNote": "G",
+          "pitched": true,
+          "sounding": 67,
+          "icon": "dm"
+        },
+        {
+          "file": "12.mp3",
+          "nominal": 81,
+          "baseNote": "A",
+          "pitched": true,
+          "sounding": 69,
+          "icon": "cr"
+        },
+        {
+          "file": "13.mp3",
+          "nominal": 83,
+          "baseNote": "B",
+          "pitched": true,
+          "sounding": 71,
+          "icon": "dm"
+        },
+        {
+          "file": "14.mp3",
+          "nominal": 84,
+          "baseNote": "C",
+          "pitched": true,
+          "sounding": 72,
+          "icon": "dmcr"
+        }
+      ]
+    },
+    "SFX_SineSynth": {
+      "name": "SFX_SineSynth",
+      "displayName": "Sine Synth",
+      "family": "synth lead",
+      "midiName": "lead 1 (square)",
+      "shape": "sky-2x4",
+      "notes": [
+        {
+          "file": "0.mp3",
+          "nominal": 60,
+          "baseNote": "C",
+          "pitched": true,
+          "sounding": 72,
+          "icon": "dmcr"
+        },
+        {
+          "file": "1.mp3",
+          "nominal": 62,
+          "baseNote": "D",
+          "pitched": true,
+          "sounding": 74,
+          "icon": "dm"
+        },
+        {
+          "file": "2.mp3",
+          "nominal": 64,
+          "baseNote": "E",
+          "pitched": true,
+          "sounding": 76,
+          "icon": "cr"
+        },
+        {
+          "file": "3.mp3",
+          "nominal": 65,
+          "baseNote": "F",
+          "pitched": true,
+          "sounding": 77,
+          "icon": "dm"
+        },
+        {
+          "file": "4.mp3",
+          "nominal": 67,
+          "baseNote": "G",
+          "pitched": true,
+          "sounding": 79,
+          "icon": "cr"
+        },
+        {
+          "file": "5.mp3",
+          "nominal": 69,
+          "baseNote": "A",
+          "pitched": true,
+          "sounding": 81,
+          "icon": "dm"
+        },
+        {
+          "file": "6.mp3",
+          "nominal": 71,
+          "baseNote": "B",
+          "pitched": true,
+          "sounding": 83,
+          "icon": "cr"
+        },
+        {
+          "file": "7.mp3",
+          "nominal": 72,
+          "baseNote": "C",
+          "pitched": true,
+          "sounding": 84,
+          "icon": "dmcr"
+        }
+      ]
+    },
+    "SFX_SpiritMantaCall": {
+      "name": "SFX_SpiritMantaCall",
+      "displayName": "Spirit Manta Call",
+      "family": "percussive",
+      "midiName": "synth drum",
+      "shape": "sky-3x5",
+      "notes": [
+        {
+          "file": "0.mp3",
+          "nominal": 60,
+          "baseNote": "C",
+          "pitched": true,
+          "sounding": 48,
+          "icon": "dmcr"
+        },
+        {
+          "file": "1.mp3",
+          "nominal": 62,
+          "baseNote": "D",
+          "pitched": true,
+          "sounding": 50,
+          "icon": "dm"
+        },
+        {
+          "file": "2.mp3",
+          "nominal": 64,
+          "baseNote": "E",
+          "pitched": true,
+          "sounding": 52,
+          "icon": "cr"
+        },
+        {
+          "file": "3.mp3",
+          "nominal": 65,
+          "baseNote": "F",
+          "pitched": true,
+          "sounding": 53,
+          "icon": "dm"
+        },
+        {
+          "file": "4.mp3",
+          "nominal": 67,
+          "baseNote": "G",
+          "pitched": true,
+          "sounding": 55,
+          "icon": "cr"
+        },
+        {
+          "file": "5.mp3",
+          "nominal": 69,
+          "baseNote": "A",
+          "pitched": true,
+          "sounding": 57,
+          "icon": "cr"
+        },
+        {
+          "file": "6.mp3",
+          "nominal": 71,
+          "baseNote": "B",
+          "pitched": true,
+          "sounding": 59,
+          "icon": "dm"
+        },
+        {
+          "file": "7.mp3",
+          "nominal": 72,
+          "baseNote": "C",
+          "pitched": true,
+          "sounding": 60,
+          "icon": "dmcr"
+        },
+        {
+          "file": "8.mp3",
+          "nominal": 74,
+          "baseNote": "D",
+          "pitched": true,
+          "sounding": 62,
+          "icon": "dm"
+        },
+        {
+          "file": "9.mp3",
+          "nominal": 76,
+          "baseNote": "E",
+          "pitched": true,
+          "sounding": 64,
+          "icon": "cr"
+        },
+        {
+          "file": "10.mp3",
+          "nominal": 77,
+          "baseNote": "F",
+          "pitched": true,
+          "sounding": 65,
+          "icon": "cr"
+        },
+        {
+          "file": "11.mp3",
+          "nominal": 79,
+          "baseNote": "G",
+          "pitched": true,
+          "sounding": 67,
+          "icon": "dm"
+        },
+        {
+          "file": "12.mp3",
+          "nominal": 81,
+          "baseNote": "A",
+          "pitched": true,
+          "sounding": 69,
+          "icon": "cr"
+        },
+        {
+          "file": "13.mp3",
+          "nominal": 83,
+          "baseNote": "B",
+          "pitched": true,
+          "sounding": 71,
+          "icon": "dm"
+        },
+        {
+          "file": "14.mp3",
+          "nominal": 84,
+          "baseNote": "C",
+          "pitched": true,
+          "sounding": 72,
+          "icon": "dmcr"
+        }
+      ]
+    },
+    "SFX_TR-909": {
+      "name": "SFX_TR-909",
+      "displayName": "TR-909",
+      "family": "percussive",
+      "midiName": "synth drum",
+      "shape": "sky-2x4",
+      "notes": [
+        {
+          "file": "0.mp3",
+          "nominal": 60,
+          "baseNote": "C",
+          "pitched": false,
+          "sounding": 60,
+          "icon": "dmcr"
+        },
+        {
+          "file": "1.mp3",
+          "nominal": 62,
+          "baseNote": "D",
+          "pitched": false,
+          "sounding": 62,
+          "icon": "dm"
+        },
+        {
+          "file": "2.mp3",
+          "nominal": 64,
+          "baseNote": "E",
+          "pitched": false,
+          "sounding": 64,
+          "icon": "cr"
+        },
+        {
+          "file": "3.mp3",
+          "nominal": 65,
+          "baseNote": "F",
+          "pitched": false,
+          "sounding": 65,
+          "icon": "dm"
+        },
+        {
+          "file": "4.mp3",
+          "nominal": 67,
+          "baseNote": "G",
+          "pitched": false,
+          "sounding": 67,
+          "icon": "cr"
+        },
+        {
+          "file": "5.mp3",
+          "nominal": 69,
+          "baseNote": "A",
+          "pitched": false,
+          "sounding": 69,
+          "icon": "dm"
+        },
+        {
+          "file": "6.mp3",
+          "nominal": 71,
+          "baseNote": "B",
+          "pitched": false,
+          "sounding": 71,
+          "icon": "cr"
+        },
+        {
+          "file": "7.mp3",
+          "nominal": 72,
+          "baseNote": "C",
+          "pitched": false,
+          "sounding": 72,
+          "icon": "dmcr"
+        }
+      ]
+    },
+    "Saxophone": {
+      "name": "Saxophone",
+      "displayName": "Saxophone",
+      "family": "reed",
+      "midiName": "alto sax",
+      "shape": "sky-3x5",
+      "sustain": {
+        "release": 0.28,
+        "minLength": 0.15,
+        "loopMode": "loop-continuous"
+      },
+      "notes": [
+        {
+          "file": "0.mp3",
+          "nominal": 60,
+          "baseNote": "C",
+          "pitched": true,
+          "sounding": 48,
+          "icon": "dmcr"
+        },
+        {
+          "file": "1.mp3",
+          "nominal": 62,
+          "baseNote": "D",
+          "pitched": true,
+          "sounding": 50,
+          "icon": "dm"
+        },
+        {
+          "file": "2.mp3",
+          "nominal": 64,
+          "baseNote": "E",
+          "pitched": true,
+          "sounding": 52,
+          "icon": "cr"
+        },
+        {
+          "file": "3.mp3",
+          "nominal": 65,
+          "baseNote": "F",
+          "pitched": true,
+          "sounding": 53,
+          "icon": "dm"
+        },
+        {
+          "file": "4.mp3",
+          "nominal": 67,
+          "baseNote": "G",
+          "pitched": true,
+          "sounding": 55,
+          "icon": "cr"
+        },
+        {
+          "file": "5.mp3",
+          "nominal": 69,
+          "baseNote": "A",
+          "pitched": true,
+          "sounding": 57,
+          "icon": "cr"
+        },
+        {
+          "file": "6.mp3",
+          "nominal": 71,
+          "baseNote": "B",
+          "pitched": true,
+          "sounding": 59,
+          "icon": "dm"
+        },
+        {
+          "file": "7.mp3",
+          "nominal": 72,
+          "baseNote": "C",
+          "pitched": true,
+          "sounding": 60,
+          "icon": "dmcr"
+        },
+        {
+          "file": "8.mp3",
+          "nominal": 74,
+          "baseNote": "D",
+          "pitched": true,
+          "sounding": 62,
+          "icon": "dm"
+        },
+        {
+          "file": "9.mp3",
+          "nominal": 76,
+          "baseNote": "E",
+          "pitched": true,
+          "sounding": 64,
+          "icon": "cr"
+        },
+        {
+          "file": "10.mp3",
+          "nominal": 77,
+          "baseNote": "F",
+          "pitched": true,
+          "sounding": 65,
+          "icon": "cr"
+        },
+        {
+          "file": "11.mp3",
+          "nominal": 79,
+          "baseNote": "G",
+          "pitched": true,
+          "sounding": 67,
+          "icon": "dm"
+        },
+        {
+          "file": "12.mp3",
+          "nominal": 81,
+          "baseNote": "A",
+          "pitched": true,
+          "sounding": 69,
+          "icon": "cr"
+        },
+        {
+          "file": "13.mp3",
+          "nominal": 83,
+          "baseNote": "B",
+          "pitched": true,
+          "sounding": 71,
+          "icon": "dm"
+        },
+        {
+          "file": "14.mp3",
+          "nominal": 84,
+          "baseNote": "C",
+          "pitched": true,
+          "sounding": 72,
+          "icon": "dmcr"
+        }
+      ]
+    },
+    "SmallBell": {
+      "name": "SmallBell",
+      "displayName": "Small bell",
+      "family": "chromatic percussion",
+      "midiName": "tinkle bell",
+      "shape": "sky-2x4",
+      "notes": [
+        {
+          "file": "0.mp3",
+          "nominal": 60,
+          "baseNote": "C",
+          "pitched": true,
+          "sounding": 60,
+          "icon": "cr"
+        },
+        {
+          "file": "1.mp3",
+          "nominal": 62,
+          "baseNote": "D",
+          "pitched": true,
+          "sounding": 62,
+          "icon": "dm"
+        },
+        {
+          "file": "2.mp3",
+          "nominal": 67,
+          "baseNote": "G",
+          "pitched": true,
+          "sounding": 67,
+          "icon": "cr"
+        },
+        {
+          "file": "3.mp3",
+          "nominal": 69,
+          "baseNote": "A",
+          "pitched": true,
+          "sounding": 69,
+          "icon": "dm"
+        },
+        {
+          "file": "4.mp3",
+          "nominal": 72,
+          "baseNote": "C",
+          "pitched": true,
+          "sounding": 72,
+          "icon": "cr"
+        },
+        {
+          "file": "5.mp3",
+          "nominal": 74,
+          "baseNote": "D",
+          "pitched": true,
+          "sounding": 74,
+          "icon": "dm"
+        },
+        {
+          "file": "6.mp3",
+          "nominal": 79,
+          "baseNote": "G",
+          "pitched": true,
+          "sounding": 79,
+          "icon": "cr"
+        },
+        {
+          "file": "7.mp3",
+          "nominal": 81,
+          "baseNote": "A",
+          "pitched": true,
+          "sounding": 81,
+          "icon": "dm"
+        }
+      ]
+    },
+    "ToyUkulele": {
+      "name": "ToyUkulele",
+      "displayName": "Toy Ukulele",
+      "family": "guitar",
+      "midiName": "acoustic guitar (nylon)",
+      "shape": "sky-3x5",
+      "notes": [
+        {
+          "file": "0.mp3",
+          "nominal": 60,
+          "baseNote": "C",
+          "pitched": true,
+          "sounding": 48,
+          "icon": "dmcr"
+        },
+        {
+          "file": "1.mp3",
+          "nominal": 62,
+          "baseNote": "D",
+          "pitched": true,
+          "sounding": 50,
+          "icon": "dm"
+        },
+        {
+          "file": "2.mp3",
+          "nominal": 64,
+          "baseNote": "E",
+          "pitched": true,
+          "sounding": 52,
+          "icon": "cr"
+        },
+        {
+          "file": "3.mp3",
+          "nominal": 65,
+          "baseNote": "F",
+          "pitched": true,
+          "sounding": 53,
+          "icon": "dm"
+        },
+        {
+          "file": "4.mp3",
+          "nominal": 67,
+          "baseNote": "G",
+          "pitched": true,
+          "sounding": 55,
+          "icon": "cr"
+        },
+        {
+          "file": "5.mp3",
+          "nominal": 69,
+          "baseNote": "A",
+          "pitched": true,
+          "sounding": 57,
+          "icon": "cr"
+        },
+        {
+          "file": "6.mp3",
+          "nominal": 71,
+          "baseNote": "B",
+          "pitched": true,
+          "sounding": 59,
+          "icon": "dm"
+        },
+        {
+          "file": "7.mp3",
+          "nominal": 72,
+          "baseNote": "C",
+          "pitched": true,
+          "sounding": 60,
+          "icon": "dmcr"
+        },
+        {
+          "file": "8.mp3",
+          "nominal": 74,
+          "baseNote": "D",
+          "pitched": true,
+          "sounding": 62,
+          "icon": "dm"
+        },
+        {
+          "file": "9.mp3",
+          "nominal": 76,
+          "baseNote": "E",
+          "pitched": true,
+          "sounding": 64,
+          "icon": "cr"
+        },
+        {
+          "file": "10.mp3",
+          "nominal": 77,
+          "baseNote": "F",
+          "pitched": true,
+          "sounding": 65,
+          "icon": "cr"
+        },
+        {
+          "file": "11.mp3",
+          "nominal": 79,
+          "baseNote": "G",
+          "pitched": true,
+          "sounding": 67,
+          "icon": "dm"
+        },
+        {
+          "file": "12.mp3",
+          "nominal": 81,
+          "baseNote": "A",
+          "pitched": true,
+          "sounding": 69,
+          "icon": "cr"
+        },
+        {
+          "file": "13.mp3",
+          "nominal": 83,
+          "baseNote": "B",
+          "pitched": true,
+          "sounding": 71,
+          "icon": "dm"
+        },
+        {
+          "file": "14.mp3",
+          "nominal": 84,
+          "baseNote": "C",
+          "pitched": true,
+          "sounding": 72,
+          "icon": "dmcr"
+        }
+      ]
+    },
+    "TransverseFlute": {
+      "name": "TransverseFlute",
+      "displayName": "Transverse flute",
+      "family": "pipe",
+      "midiName": "flute",
+      "shape": "sky-3x5",
+      "sustain": {
+        "release": 0.28,
+        "minLength": 0.15,
+        "loopMode": "loop-continuous"
+      },
+      "notes": [
+        {
+          "file": "0.mp3",
+          "nominal": 60,
+          "baseNote": "C",
+          "pitched": true,
+          "sounding": 60,
+          "icon": "dmcr"
+        },
+        {
+          "file": "1.mp3",
+          "nominal": 62,
+          "baseNote": "D",
+          "pitched": true,
+          "sounding": 62,
+          "icon": "dm"
+        },
+        {
+          "file": "2.mp3",
+          "nominal": 64,
+          "baseNote": "E",
+          "pitched": true,
+          "sounding": 64,
+          "icon": "cr"
+        },
+        {
+          "file": "3.mp3",
+          "nominal": 65,
+          "baseNote": "F",
+          "pitched": true,
+          "sounding": 65,
+          "icon": "dm"
+        },
+        {
+          "file": "4.mp3",
+          "nominal": 67,
+          "baseNote": "G",
+          "pitched": true,
+          "sounding": 67,
+          "icon": "cr"
+        },
+        {
+          "file": "5.mp3",
+          "nominal": 69,
+          "baseNote": "A",
+          "pitched": true,
+          "sounding": 69,
+          "icon": "cr"
+        },
+        {
+          "file": "6.mp3",
+          "nominal": 71,
+          "baseNote": "B",
+          "pitched": true,
+          "sounding": 71,
+          "icon": "dm"
+        },
+        {
+          "file": "7.mp3",
+          "nominal": 72,
+          "baseNote": "C",
+          "pitched": true,
+          "sounding": 72,
+          "icon": "dmcr"
+        },
+        {
+          "file": "8.mp3",
+          "nominal": 74,
+          "baseNote": "D",
+          "pitched": true,
+          "sounding": 74,
+          "icon": "dm"
+        },
+        {
+          "file": "9.mp3",
+          "nominal": 76,
+          "baseNote": "E",
+          "pitched": true,
+          "sounding": 76,
+          "icon": "cr"
+        },
+        {
+          "file": "10.mp3",
+          "nominal": 77,
+          "baseNote": "F",
+          "pitched": true,
+          "sounding": 77,
+          "icon": "cr"
+        },
+        {
+          "file": "11.mp3",
+          "nominal": 79,
+          "baseNote": "G",
+          "pitched": true,
+          "sounding": 79,
+          "icon": "dm"
+        },
+        {
+          "file": "12.mp3",
+          "nominal": 81,
+          "baseNote": "A",
+          "pitched": true,
+          "sounding": 81,
+          "icon": "cr"
+        },
+        {
+          "file": "13.mp3",
+          "nominal": 83,
+          "baseNote": "B",
+          "pitched": true,
+          "sounding": 83,
+          "icon": "dm"
+        },
+        {
+          "file": "14.mp3",
+          "nominal": 84,
+          "baseNote": "C",
+          "pitched": true,
+          "sounding": 84,
+          "icon": "dmcr"
+        }
+      ]
+    },
+    "TriumphHandPan": {
+      "name": "TriumphHandPan",
+      "displayName": "Triumph HandPan",
+      "family": "percussive",
+      "midiName": "steel drums",
+      "shape": "sky-2x4",
+      "notes": [
+        {
+          "file": "0.mp3",
+          "nominal": 62,
+          "baseNote": "D",
+          "pitched": true,
+          "sounding": 50,
+          "icon": "cr"
+        },
+        {
+          "file": "1.mp3",
+          "nominal": 69,
+          "baseNote": "A",
+          "pitched": true,
+          "sounding": 57,
+          "icon": "dm"
+        },
+        {
+          "file": "2.mp3",
+          "nominal": 72,
+          "baseNote": "C",
+          "pitched": true,
+          "sounding": 60,
+          "icon": "cr"
+        },
+        {
+          "file": "3.mp3",
+          "nominal": 74,
+          "baseNote": "D",
+          "pitched": true,
+          "sounding": 62,
+          "icon": "dm"
+        },
+        {
+          "file": "4.mp3",
+          "nominal": 77,
+          "baseNote": "F",
+          "pitched": true,
+          "sounding": 65,
+          "icon": "cr"
+        },
+        {
+          "file": "5.mp3",
+          "nominal": 79,
+          "baseNote": "G",
+          "pitched": true,
+          "sounding": 67,
+          "icon": "dm"
+        },
+        {
+          "file": "6.mp3",
+          "nominal": 81,
+          "baseNote": "A",
+          "pitched": true,
+          "sounding": 69,
+          "icon": "cr"
+        },
+        {
+          "file": "7.mp3",
+          "nominal": 84,
+          "baseNote": "C",
+          "pitched": true,
+          "sounding": 72,
+          "icon": "dm"
+        }
+      ]
+    },
+    "Trumpet": {
+      "name": "Trumpet",
+      "displayName": "Trumpet",
+      "family": "brass",
+      "midiName": "trumpet",
+      "shape": "sky-3x5",
+      "notes": [
+        {
+          "file": "0.mp3",
+          "nominal": 60,
+          "baseNote": "C",
+          "pitched": true,
+          "sounding": 60,
+          "icon": "dmcr"
+        },
+        {
+          "file": "1.mp3",
+          "nominal": 62,
+          "baseNote": "D",
+          "pitched": true,
+          "sounding": 62,
+          "icon": "dm"
+        },
+        {
+          "file": "2.mp3",
+          "nominal": 64,
+          "baseNote": "E",
+          "pitched": true,
+          "sounding": 64,
+          "icon": "cr"
+        },
+        {
+          "file": "3.mp3",
+          "nominal": 65,
+          "baseNote": "F",
+          "pitched": true,
+          "sounding": 65,
+          "icon": "dm"
+        },
+        {
+          "file": "4.mp3",
+          "nominal": 67,
+          "baseNote": "G",
+          "pitched": true,
+          "sounding": 67,
+          "icon": "cr"
+        },
+        {
+          "file": "5.mp3",
+          "nominal": 69,
+          "baseNote": "A",
+          "pitched": true,
+          "sounding": 69,
+          "icon": "cr"
+        },
+        {
+          "file": "6.mp3",
+          "nominal": 71,
+          "baseNote": "B",
+          "pitched": true,
+          "sounding": 71,
+          "icon": "dm"
+        },
+        {
+          "file": "7.mp3",
+          "nominal": 72,
+          "baseNote": "C",
+          "pitched": true,
+          "sounding": 72,
+          "icon": "dmcr"
+        },
+        {
+          "file": "8.mp3",
+          "nominal": 74,
+          "baseNote": "D",
+          "pitched": true,
+          "sounding": 74,
+          "icon": "dm"
+        },
+        {
+          "file": "9.mp3",
+          "nominal": 76,
+          "baseNote": "E",
+          "pitched": true,
+          "sounding": 76,
+          "icon": "cr"
+        },
+        {
+          "file": "10.mp3",
+          "nominal": 77,
+          "baseNote": "F",
+          "pitched": true,
+          "sounding": 77,
+          "icon": "cr"
+        },
+        {
+          "file": "11.mp3",
+          "nominal": 79,
+          "baseNote": "G",
+          "pitched": true,
+          "sounding": 79,
+          "icon": "dm"
+        },
+        {
+          "file": "12.mp3",
+          "nominal": 81,
+          "baseNote": "A",
+          "pitched": true,
+          "sounding": 81,
+          "icon": "cr"
+        },
+        {
+          "file": "13.mp3",
+          "nominal": 83,
+          "baseNote": "B",
+          "pitched": true,
+          "sounding": 83,
+          "icon": "dm"
+        },
+        {
+          "file": "14.mp3",
+          "nominal": 84,
+          "baseNote": "C",
+          "pitched": true,
+          "sounding": 84,
+          "icon": "dmcr"
+        }
+      ]
+    },
+    "Violin": {
+      "name": "Violin",
+      "displayName": "Violin",
+      "family": "strings",
+      "midiName": "violin",
+      "shape": "sky-3x5",
+      "sustain": {
+        "release": 0.32,
+        "minLength": 0.2,
+        "loopMode": "loop-continuous"
+      },
+      "notes": [
+        {
+          "file": "0.mp3",
+          "nominal": 60,
+          "baseNote": "C",
+          "pitched": true,
+          "sounding": 60,
+          "icon": "dmcr"
+        },
+        {
+          "file": "1.mp3",
+          "nominal": 62,
+          "baseNote": "D",
+          "pitched": true,
+          "sounding": 62,
+          "icon": "dm"
+        },
+        {
+          "file": "2.mp3",
+          "nominal": 64,
+          "baseNote": "E",
+          "pitched": true,
+          "sounding": 64,
+          "icon": "cr"
+        },
+        {
+          "file": "3.mp3",
+          "nominal": 65,
+          "baseNote": "F",
+          "pitched": true,
+          "sounding": 65,
+          "icon": "dm"
+        },
+        {
+          "file": "4.mp3",
+          "nominal": 67,
+          "baseNote": "G",
+          "pitched": true,
+          "sounding": 67,
+          "icon": "cr"
+        },
+        {
+          "file": "5.mp3",
+          "nominal": 69,
+          "baseNote": "A",
+          "pitched": true,
+          "sounding": 69,
+          "icon": "cr"
+        },
+        {
+          "file": "6.mp3",
+          "nominal": 71,
+          "baseNote": "B",
+          "pitched": true,
+          "sounding": 71,
+          "icon": "dm"
+        },
+        {
+          "file": "7.mp3",
+          "nominal": 72,
+          "baseNote": "C",
+          "pitched": true,
+          "sounding": 72,
+          "icon": "dmcr"
+        },
+        {
+          "file": "8.mp3",
+          "nominal": 74,
+          "baseNote": "D",
+          "pitched": true,
+          "sounding": 74,
+          "icon": "dm"
+        },
+        {
+          "file": "9.mp3",
+          "nominal": 76,
+          "baseNote": "E",
+          "pitched": true,
+          "sounding": 76,
+          "icon": "cr"
+        },
+        {
+          "file": "10.mp3",
+          "nominal": 77,
+          "baseNote": "F",
+          "pitched": true,
+          "sounding": 77,
+          "icon": "cr"
+        },
+        {
+          "file": "11.mp3",
+          "nominal": 79,
+          "baseNote": "G",
+          "pitched": true,
+          "sounding": 79,
+          "icon": "dm"
+        },
+        {
+          "file": "12.mp3",
+          "nominal": 81,
+          "baseNote": "A",
+          "pitched": true,
+          "sounding": 81,
+          "icon": "cr"
+        },
+        {
+          "file": "13.mp3",
+          "nominal": 83,
+          "baseNote": "B",
+          "pitched": true,
+          "sounding": 83,
+          "icon": "dm"
+        },
+        {
+          "file": "14.mp3",
+          "nominal": 84,
+          "baseNote": "C",
+          "pitched": true,
+          "sounding": 84,
+          "icon": "dmcr"
+        }
+      ]
+    },
+    "WinterPiano": {
+      "name": "WinterPiano",
+      "displayName": "Winter Piano",
+      "family": "piano",
+      "midiName": "bright acoustic piano",
+      "shape": "sky-3x5",
+      "notes": [
+        {
+          "file": "0.mp3",
+          "nominal": 60,
+          "baseNote": "C",
+          "pitched": true,
+          "sounding": 72,
+          "icon": "dmcr"
+        },
+        {
+          "file": "1.mp3",
+          "nominal": 62,
+          "baseNote": "D",
+          "pitched": true,
+          "sounding": 74,
+          "icon": "dm"
+        },
+        {
+          "file": "2.mp3",
+          "nominal": 64,
+          "baseNote": "E",
+          "pitched": true,
+          "sounding": 76,
+          "icon": "cr"
+        },
+        {
+          "file": "3.mp3",
+          "nominal": 65,
+          "baseNote": "F",
+          "pitched": true,
+          "sounding": 77,
+          "icon": "dm"
+        },
+        {
+          "file": "4.mp3",
+          "nominal": 67,
+          "baseNote": "G",
+          "pitched": true,
+          "sounding": 79,
+          "icon": "cr"
+        },
+        {
+          "file": "5.mp3",
+          "nominal": 69,
+          "baseNote": "A",
+          "pitched": true,
+          "sounding": 81,
+          "icon": "cr"
+        },
+        {
+          "file": "6.mp3",
+          "nominal": 71,
+          "baseNote": "B",
+          "pitched": true,
+          "sounding": 83,
+          "icon": "dm"
+        },
+        {
+          "file": "7.mp3",
+          "nominal": 72,
+          "baseNote": "C",
+          "pitched": true,
+          "sounding": 84,
+          "icon": "dmcr"
+        },
+        {
+          "file": "8.mp3",
+          "nominal": 74,
+          "baseNote": "D",
+          "pitched": true,
+          "sounding": 86,
+          "icon": "dm"
+        },
+        {
+          "file": "9.mp3",
+          "nominal": 76,
+          "baseNote": "E",
+          "pitched": true,
+          "sounding": 88,
+          "icon": "cr"
+        },
+        {
+          "file": "10.mp3",
+          "nominal": 77,
+          "baseNote": "F",
+          "pitched": true,
+          "sounding": 89,
+          "icon": "cr"
+        },
+        {
+          "file": "11.mp3",
+          "nominal": 79,
+          "baseNote": "G",
+          "pitched": true,
+          "sounding": 91,
+          "icon": "dm"
+        },
+        {
+          "file": "12.mp3",
+          "nominal": 81,
+          "baseNote": "A",
+          "pitched": true,
+          "sounding": 93,
+          "icon": "cr"
+        },
+        {
+          "file": "13.mp3",
+          "nominal": 83,
+          "baseNote": "B",
+          "pitched": true,
+          "sounding": 95,
+          "icon": "dm"
+        },
+        {
+          "file": "14.mp3",
+          "nominal": 84,
+          "baseNote": "C",
+          "pitched": true,
+          "sounding": 96,
+          "icon": "dmcr"
+        }
+      ]
+    },
+    "Xylophone": {
+      "name": "Xylophone",
+      "displayName": "Xylophone",
+      "family": "chromatic percussion",
+      "midiName": "xylophone",
+      "shape": "sky-3x5",
+      "notes": [
+        {
+          "file": "0.mp3",
+          "nominal": 60,
+          "baseNote": "C",
+          "pitched": true,
+          "sounding": 72,
+          "icon": "dmcr"
+        },
+        {
+          "file": "1.mp3",
+          "nominal": 62,
+          "baseNote": "D",
+          "pitched": true,
+          "sounding": 74,
+          "icon": "dm"
+        },
+        {
+          "file": "2.mp3",
+          "nominal": 64,
+          "baseNote": "E",
+          "pitched": true,
+          "sounding": 76,
+          "icon": "cr"
+        },
+        {
+          "file": "3.mp3",
+          "nominal": 65,
+          "baseNote": "F",
+          "pitched": true,
+          "sounding": 77,
+          "icon": "dm"
+        },
+        {
+          "file": "4.mp3",
+          "nominal": 67,
+          "baseNote": "G",
+          "pitched": true,
+          "sounding": 79,
+          "icon": "cr"
+        },
+        {
+          "file": "5.mp3",
+          "nominal": 69,
+          "baseNote": "A",
+          "pitched": true,
+          "sounding": 81,
+          "icon": "cr"
+        },
+        {
+          "file": "6.mp3",
+          "nominal": 71,
+          "baseNote": "B",
+          "pitched": true,
+          "sounding": 83,
+          "icon": "dm"
+        },
+        {
+          "file": "7.mp3",
+          "nominal": 72,
+          "baseNote": "C",
+          "pitched": true,
+          "sounding": 84,
+          "icon": "dmcr"
+        },
+        {
+          "file": "8.mp3",
+          "nominal": 74,
+          "baseNote": "D",
+          "pitched": true,
+          "sounding": 86,
+          "icon": "dm"
+        },
+        {
+          "file": "9.mp3",
+          "nominal": 76,
+          "baseNote": "E",
+          "pitched": true,
+          "sounding": 88,
+          "icon": "cr"
+        },
+        {
+          "file": "10.mp3",
+          "nominal": 77,
+          "baseNote": "F",
+          "pitched": true,
+          "sounding": 89,
+          "icon": "cr"
+        },
+        {
+          "file": "11.mp3",
+          "nominal": 79,
+          "baseNote": "G",
+          "pitched": true,
+          "sounding": 91,
+          "icon": "dm"
+        },
+        {
+          "file": "12.mp3",
+          "nominal": 81,
+          "baseNote": "A",
+          "pitched": true,
+          "sounding": 93,
+          "icon": "cr"
+        },
+        {
+          "file": "13.mp3",
+          "nominal": 83,
+          "baseNote": "B",
+          "pitched": true,
+          "sounding": 95,
+          "icon": "dm"
+        },
+        {
+          "file": "14.mp3",
+          "nominal": 84,
+          "baseNote": "C",
+          "pitched": true,
+          "sounding": 96,
+          "icon": "dmcr"
+        }
+      ]
+    }
+  },
+  "shapes": {
+    "sky-3x5": {
+      "id": "sky-3x5",
+      "capacity": 15,
+      "columns": 5,
+      "labels": {
+        "keyboard": [
+          "Q",
+          "W",
+          "E",
+          "R",
+          "T",
+          "A",
+          "S",
+          "D",
+          "F",
+          "G",
+          "Z",
+          "X",
+          "C",
+          "V",
+          "B"
+        ],
+        "abc": [
+          "A1",
+          "A2",
+          "A3",
+          "A4",
+          "A5",
+          "B1",
+          "B2",
+          "B3",
+          "B4",
+          "B5",
+          "C1",
+          "C2",
+          "C3",
+          "C4",
+          "C5"
+        ],
+        "number": [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5",
+          "6",
+          "7",
+          "1̇",
+          "2̇",
+          "3̇",
+          "4̇",
+          "5̇",
+          "6̇",
+          "7̇",
+          "1̇̇"
+        ],
+        "playstation": [
+          "L2",
+          "R2",
+          "⟱",
+          "X",
+          "⭅",
+          "◼",
+          "⟰",
+          "▲",
+          "⭆",
+          "⬤",
+          "L1",
+          "R1",
+          "❰L",
+          "❰R",
+          "L❱"
+        ],
+        "switch": [
+          "Zl",
+          "Zr",
+          "⟱",
+          "B",
+          "⭅",
+          "Y",
+          "⟰",
+          "X",
+          "⭆",
+          "A",
+          "L",
+          "R",
+          "❰L",
+          "❰R",
+          "L❱"
+        ]
+      },
+      "noteShape": {
+        "kind": "rounded-rect",
+        "cornerRatio": 0.21
+      }
+    },
+    "sky-2x4": {
+      "id": "sky-2x4",
+      "capacity": 8,
+      "columns": 4,
+      "labels": {
+        "keyboard": [
+          "Q",
+          "W",
+          "E",
+          "R",
+          "A",
+          "S",
+          "D",
+          "F"
+        ],
+        "abc": [
+          "A1",
+          "A2",
+          "A3",
+          "A4",
+          "B1",
+          "B2",
+          "B3",
+          "B4"
+        ],
+        "number": [
+          "1",
+          "2",
+          "3",
+          "4",
+          "1̣",
+          "2̣",
+          "3̣",
+          "4̣"
+        ],
+        "playstation": [
+          "⟰",
+          "▲",
+          "⭅",
+          "◼",
+          "⟱",
+          "X",
+          "L2",
+          "R2"
+        ],
+        "switch": [
+          "⟰",
+          "X",
+          "⭅",
+          "Y",
+          "⟱",
+          "B",
+          "Zl",
+          "Zr"
+        ]
+      },
+      "noteShape": {
+        "kind": "rounded-rect",
+        "cornerRatio": 0.21
+      }
+    },
+    "sky-2x3": {
+      "id": "sky-2x3",
+      "capacity": 6,
+      "columns": 3,
+      "labels": {
+        "keyboard": [
+          "Q",
+          "W",
+          "E",
+          "A",
+          "S",
+          "D"
+        ],
+        "abc": [
+          "A1",
+          "A2",
+          "A3",
+          "B1",
+          "B2",
+          "B3"
+        ],
+        "number": [
+          "1",
+          "2",
+          "3",
+          "1̇",
+          "2̇",
+          "3̇"
+        ],
+        "playstation": [
+          "⟰",
+          "▲",
+          "⭅",
+          "⟱",
+          "X",
+          "L2"
+        ],
+        "switch": [
+          "Zl",
+          "Zr",
+          "⟱",
+          "Y",
+          "⟰",
+          "X"
+        ]
+      },
+      "noteShape": {
+        "kind": "rounded-rect",
+        "cornerRatio": 0.21
+      }
+    },
+    "sky-2x2": {
+      "id": "sky-2x2",
+      "capacity": 4,
+      "columns": 2,
+      "labels": {
+        "keyboard": [
+          "Q",
+          "W",
+          "A",
+          "S"
+        ],
+        "abc": [
+          "A1",
+          "A2",
+          "B1",
+          "B2"
+        ],
+        "number": [
+          "1",
+          "2",
+          "1̣",
+          "2̣"
+        ],
+        "playstation": [
+          "⟰",
+          "▲",
+          "⟱",
+          "X"
+        ],
+        "switch": [
+          "⟰",
+          "X",
+          "⟱",
+          "B"
+        ]
+      },
+      "noteShape": {
+        "kind": "rounded-rect",
+        "cornerRatio": 0.21
+      }
+    }
+  },
+  "pitches": [
+    "C",
+    "Db",
+    "D",
+    "Eb",
+    "E",
+    "F",
+    "Gb",
+    "G",
+    "Ab",
+    "A",
+    "Bb",
+    "B"
+  ],
+  "tempoChangers": [
+    {
+      "id": 0,
+      "text": "1",
+      "changer": 1,
+      "color": 5332079
+    },
+    {
+      "id": 1,
+      "text": "1/2",
+      "changer": 0.5,
+      "color": 5338451
+    },
+    {
+      "id": 2,
+      "text": "1/4",
+      "changer": 0.25,
+      "color": 4410493
+    },
+    {
+      "id": 3,
+      "text": "1/8",
+      "changer": 0.125,
+      "color": 7818605
+    }
+  ],
+  "baseLayerLimit": 64,
+  "composerNotePositions": [
+    14,
+    13,
+    12,
+    11,
+    10,
+    9,
+    8,
+    7,
+    6,
+    5,
+    4,
+    3,
+    2,
+    1,
+    0,
+    20,
+    19,
+    18,
+    17,
+    16,
+    15
+  ],
+  "importNotePositions": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14
+  ],
+  "notesCssClasses": {
+    "noteComposer": "note-composer-sky",
+    "note": "note-sky",
+    "noteAnimation": "note-animation-sky",
+    "approachCircle": "approach-circle-sky",
+    "noteName": "note-name-sky"
+  },
+  "baseThemeConfig": {
+    "text": {
+      "light": "#eae8e6",
+      "dark": "#151414",
+      "note": "#eae8e6"
+    }
+  },
+  "noteNameTypes": [
+    "Note name",
+    "Keyboard layout",
+    "Your Keyboard layout",
+    "Do Re Mi",
+    "ABC",
+    "No Text",
+    "Playstation",
+    "Switch",
+    "1 2 3"
+  ],
+  "midiBounds": {
+    "upper": 84,
+    "lower": 60
+  },
+  "midiPresets": [
+    {
+      "name": "default",
+      "notes": [
+        60,
+        62,
+        64,
+        65,
+        67,
+        69,
+        71,
+        72,
+        74,
+        76,
+        77,
+        79,
+        81,
+        83,
+        84
+      ]
+    }
+  ],
+  "notesPerColumn": 15,
+  "noteScale": {
+    "Cb": [
+      "Cb",
+      "Dbb",
+      "Db",
+      "Ebb",
+      "Eb",
+      "Fb",
+      "Gbb",
+      "Gb",
+      "Abb",
+      "Ab",
+      "Bbb",
+      "Bb"
+    ],
+    "C": [
+      "C",
+      "Db",
+      "D",
+      "Eb",
+      "E",
+      "F",
+      "Gb",
+      "G",
+      "Ab",
+      "A",
+      "Bb",
+      "B"
+    ],
+    "C#": [
+      "C#",
+      "D",
+      "D#",
+      "E",
+      "E#",
+      "F#",
+      "G",
+      "G#",
+      "A",
+      "A#",
+      "B",
+      "B#"
+    ],
+    "Db": [
+      "Db",
+      "Ebb",
+      "Eb",
+      "Fb",
+      "F",
+      "Gb",
+      "Abb",
+      "Ab",
+      "Bbb",
+      "Bb",
+      "Cb",
+      "C"
+    ],
+    "D": [
+      "D",
+      "Eb",
+      "E",
+      "F",
+      "F#",
+      "G",
+      "Ab",
+      "A",
+      "Bb",
+      "B",
+      "C",
+      "C#"
+    ],
+    "D#": [
+      "D#",
+      "E",
+      "E#",
+      "F#",
+      "F##",
+      "G#",
+      "A",
+      "A#",
+      "B",
+      "B#",
+      "C#",
+      "C##"
+    ],
+    "Eb": [
+      "Eb",
+      "Fb",
+      "F",
+      "Gb",
+      "G",
+      "Ab",
+      "Bbb",
+      "Bb",
+      "Cb",
+      "C",
+      "Db",
+      "D"
+    ],
+    "E": [
+      "E",
+      "F",
+      "F#",
+      "G",
+      "G#",
+      "A",
+      "Bb",
+      "B",
+      "C",
+      "C#",
+      "D",
+      "D#"
+    ],
+    "E#": [
+      "E#",
+      "F#",
+      "F##",
+      "G#",
+      "G##",
+      "A#",
+      "B",
+      "B#",
+      "C#",
+      "C##",
+      "D#",
+      "D##"
+    ],
+    "Fb": [
+      "Fb",
+      "Gbb",
+      "Gb",
+      "Abb",
+      "Ab",
+      "Bbb",
+      "Cbb",
+      "Cb",
+      "Dbb",
+      "Db",
+      "Ebb",
+      "Eb"
+    ],
+    "F": [
+      "F",
+      "Gb",
+      "G",
+      "Ab",
+      "A",
+      "Bb",
+      "Cb",
+      "C",
+      "Db",
+      "D",
+      "Eb",
+      "E"
+    ],
+    "F#": [
+      "F#",
+      "G",
+      "G#",
+      "A",
+      "A#",
+      "B",
+      "C",
+      "C#",
+      "D",
+      "D#",
+      "E",
+      "E#"
+    ],
+    "Gb": [
+      "Gb",
+      "Abb",
+      "Ab",
+      "Bbb",
+      "Bb",
+      "Cb",
+      "Dbb",
+      "Db",
+      "Ebb",
+      "Eb",
+      "Fb",
+      "F"
+    ],
+    "G": [
+      "G",
+      "Ab",
+      "A",
+      "Bb",
+      "B",
+      "C",
+      "Db",
+      "D",
+      "Eb",
+      "E",
+      "F",
+      "F#"
+    ],
+    "G#": [
+      "G#",
+      "A",
+      "A#",
+      "B",
+      "B#",
+      "C#",
+      "D",
+      "D#",
+      "E",
+      "E#",
+      "F#",
+      "F##"
+    ],
+    "Ab": [
+      "Ab",
+      "Bbb",
+      "Bb",
+      "Cb",
+      "C",
+      "Db",
+      "Ebb",
+      "Eb",
+      "Fb",
+      "F",
+      "Gb",
+      "G"
+    ],
+    "A": [
+      "A",
+      "Bb",
+      "B",
+      "C",
+      "C#",
+      "D",
+      "Eb",
+      "E",
+      "F",
+      "F#",
+      "G",
+      "G#"
+    ],
+    "A#": [
+      "A#",
+      "B",
+      "B#",
+      "C#",
+      "C##",
+      "D#",
+      "E",
+      "E#",
+      "F#",
+      "F##",
+      "G#",
+      "G##"
+    ],
+    "Bb": [
+      "Bb",
+      "Cb",
+      "C",
+      "Db",
+      "D",
+      "Eb",
+      "Fb",
+      "F",
+      "Gb",
+      "G",
+      "Ab",
+      "A"
+    ],
+    "B": [
+      "B",
+      "C",
+      "C#",
+      "D",
+      "D#",
+      "E",
+      "F",
+      "F#",
+      "G",
+      "G#",
+      "A",
+      "A#"
+    ],
+    "B#": [
+      "B#",
+      "C#",
+      "C##",
+      "D#",
+      "D##",
+      "E#",
+      "F#",
+      "F##",
+      "G#",
+      "G##",
+      "A#",
+      "A##"
+    ],
+    "": [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ]
+  },
+  "doReMiNoteScale": {
+    "Cb": [
+      "dob",
+      "rebb",
+      "reb",
+      "mibb",
+      "mib",
+      "fab",
+      "solbb",
+      "solb",
+      "labb",
+      "lab",
+      "tibb",
+      "tib"
+    ],
+    "C": [
+      "do",
+      "reb",
+      "re",
+      "mib",
+      "mi",
+      "fa",
+      "solb",
+      "sol",
+      "lab",
+      "la",
+      "tib",
+      "ti"
+    ],
+    "C#": [
+      "do#",
+      "re",
+      "re#",
+      "mi",
+      "mi#",
+      "fa#",
+      "sol",
+      "sol#",
+      "la",
+      "la#",
+      "ti",
+      "ti#"
+    ],
+    "Db": [
+      "reb",
+      "mibb",
+      "mib",
+      "fab",
+      "fa",
+      "solb",
+      "labb",
+      "lab",
+      "tibb",
+      "tib",
+      "dob",
+      "do"
+    ],
+    "D": [
+      "re",
+      "mib",
+      "mi",
+      "fa",
+      "fa#",
+      "sol",
+      "lab",
+      "la",
+      "tib",
+      "ti",
+      "do",
+      "do#"
+    ],
+    "D#": [
+      "re#",
+      "mi",
+      "mi#",
+      "fa#",
+      "fa##",
+      "sol#",
+      "la",
+      "la#",
+      "ti",
+      "ti#",
+      "do#",
+      "do##"
+    ],
+    "Eb": [
+      "mib",
+      "fab",
+      "fa",
+      "solb",
+      "sol",
+      "lab",
+      "tibb",
+      "tib",
+      "dob",
+      "do",
+      "reb",
+      "re"
+    ],
+    "E": [
+      "mi",
+      "fa",
+      "fa#",
+      "sol",
+      "sol#",
+      "la",
+      "tib",
+      "ti",
+      "do",
+      "do#",
+      "re",
+      "re#"
+    ],
+    "E#": [
+      "mi#",
+      "fa#",
+      "fa##",
+      "sol#",
+      "sol##",
+      "la#",
+      "ti",
+      "ti#",
+      "do#",
+      "do##",
+      "re#",
+      "re##"
+    ],
+    "Fb": [
+      "fab",
+      "solbb",
+      "solb",
+      "labb",
+      "lab",
+      "tibb",
+      "dobb",
+      "dob",
+      "rebb",
+      "reb",
+      "mibb",
+      "mib"
+    ],
+    "F": [
+      "fa",
+      "solb",
+      "sol",
+      "lab",
+      "la",
+      "tib",
+      "dob",
+      "do",
+      "reb",
+      "re",
+      "mib",
+      "mi"
+    ],
+    "F#": [
+      "fa#",
+      "sol",
+      "sol#",
+      "la",
+      "la#",
+      "ti",
+      "do",
+      "do#",
+      "re",
+      "re#",
+      "mi",
+      "mi#"
+    ],
+    "Gb": [
+      "solb",
+      "labb",
+      "lab",
+      "tibb",
+      "tib",
+      "dob",
+      "rebb",
+      "reb",
+      "mibb",
+      "mib",
+      "fab",
+      "fa"
+    ],
+    "G": [
+      "sol",
+      "lab",
+      "la",
+      "tib",
+      "ti",
+      "do",
+      "reb",
+      "re",
+      "mib",
+      "mi",
+      "fa",
+      "fa#"
+    ],
+    "G#": [
+      "sol#",
+      "la",
+      "la#",
+      "ti",
+      "ti#",
+      "do#",
+      "re",
+      "re#",
+      "mi",
+      "mi#",
+      "fa#",
+      "fa##"
+    ],
+    "Ab": [
+      "lab",
+      "tibb",
+      "tib",
+      "dob",
+      "do",
+      "reb",
+      "mibb",
+      "mib",
+      "fab",
+      "fa",
+      "solb",
+      "sol"
+    ],
+    "A": [
+      "la",
+      "tib",
+      "ti",
+      "do",
+      "do#",
+      "re",
+      "mib",
+      "mi",
+      "fa",
+      "fa#",
+      "sol",
+      "sol#"
+    ],
+    "A#": [
+      "la#",
+      "ti",
+      "ti#",
+      "do#",
+      "do##",
+      "re#",
+      "mi",
+      "mi#",
+      "fa#",
+      "fa##",
+      "sol#",
+      "sol##"
+    ],
+    "Bb": [
+      "tib",
+      "dob",
+      "do",
+      "reb",
+      "re",
+      "mib",
+      "fab",
+      "fa",
+      "solb",
+      "sol",
+      "lab",
+      "la"
+    ],
+    "B": [
+      "ti",
+      "do",
+      "do#",
+      "re",
+      "re#",
+      "mi",
+      "fa",
+      "fa#",
+      "sol",
+      "sol#",
+      "la",
+      "la#"
+    ],
+    "B#": [
+      "ti#",
+      "do#",
+      "do##",
+      "re#",
+      "re##",
+      "mi#",
+      "fa#",
+      "fa##",
+      "sol#",
+      "sol##",
+      "la#",
+      "la##"
+    ],
+    "": [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ]
+  }
+}

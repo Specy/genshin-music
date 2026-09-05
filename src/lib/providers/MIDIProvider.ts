@@ -1,0 +1,231 @@
+import { settingsService } from '$core/Services/SettingsService';
+import type { MidiSettingsType } from '$core/BaseSettings';
+import { debounce, MIDINote, type MIDINoteStatus } from '$core/utils/Utilities';
+import { MIDI_PRESETS, type MIDIPreset } from '$core/legacyConfig';
+
+export enum PresetMidi {
+  Start = 250,
+  Continue = 251,
+  Stop = 252,
+}
+
+export type MIDIEvent = [eventType: number, note: number, velocity: number];
+type MIDICallback = (event: MIDIEvent, preset?: PresetMidi) => void;
+type InputsCallback = (inputs: WebMidi.MIDIInput[]) => void;
+
+export class MIDIListener {
+  private listeners: MIDICallback[] = [];
+  private inputsListeners: InputsCallback[] = [];
+  MIDIAccess: WebMidi.MIDIAccess | null = null;
+  connectedMidiSources: WebMidi.MIDIInput[] = [];
+  settings: MidiSettingsType;
+  notes: MIDINote[] = [];
+  inputs: WebMidi.MIDIInput[] = [];
+
+  constructor() {
+    this.settings = settingsService.getDefaultMIDISettings();
+  }
+
+  init = async (): Promise<WebMidi.MIDIAccess | null> => {
+    this.settings = settingsService.getMIDISettings();
+    this.loadPreset(this.settings.selectedPreset);
+    if (!this.settings.enabled) return null;
+    if (this.MIDIAccess) return this.MIDIAccess;
+    const access = await this.requestAccess();
+    if (access) {
+      this.handleMIDIState(access);
+    }
+    return access;
+  };
+  requestAccess = async (): Promise<WebMidi.MIDIAccess | null> => {
+    try {
+      if ('requestMIDIAccess' in navigator) {
+        const access = await navigator.requestMIDIAccess();
+        this.handleMIDIState(access);
+        this.settings.enabled = true;
+        this.saveSettings();
+        return access;
+      } else {
+        console.warn('Midi not available');
+        return null;
+      }
+    } catch (e) {
+      console.error(e);
+      return null;
+    }
+  };
+  destroy = () => {
+    this.listeners = [];
+    this.inputs = [];
+    this.MIDIAccess?.removeEventListener('statechange', this.reloadMidiAccess);
+    // @ts-expect-error currentMIDISource is not a declared field on this class
+    // QUIRK: always undefined at runtime (dead reference, preserved bug-for-bug) - this makes
+    // the line above a permanent no-op, so setSourcesAndConnect's midimessage listeners are
+    // never actually detached here.
+    this.currentMIDISource?.removeEventListener('midimessage', this.handleEvent);
+    this.MIDIAccess = null;
+  };
+
+  private handleMIDIState = (e: WebMidi.MIDIAccess) => {
+    this.MIDIAccess?.removeEventListener('statechange', this.reloadMidiAccess);
+    this.MIDIAccess = e;
+    e.addEventListener('statechange', this.reloadMidiAccess);
+    const midiInputs = Array.from(this.MIDIAccess.inputs.values());
+    this.setSourcesAndConnect(midiInputs);
+    this.setAndDispatchInputs(midiInputs);
+  };
+  reloadMidiAccess = () => {
+    if (this.MIDIAccess) this.handleMIDIState(this.MIDIAccess);
+    this.setAndDispatchInputs(this.inputs);
+  };
+  private setAndDispatchInputs = (inputs: WebMidi.MIDIInput[]) => {
+    this.inputs = inputs;
+    this.dispatchInputsChange();
+  };
+  private dispatchInputsChange = debounce(() => {
+    this.inputsListeners.forEach((l) => l(this.inputs));
+  }, 50);
+  disconnectCurrentSources = () => {
+    this.connectedMidiSources.forEach((s) =>
+      s.removeEventListener('midimessage', this.handleEvent)
+    );
+    this.connectedMidiSources = [];
+  };
+  setSourcesAndConnect = (sources: WebMidi.MIDIInput[]) => {
+    this.disconnectCurrentSources();
+    this.connectedMidiSources = sources;
+    sources.forEach((s) => s.addEventListener('midimessage', this.handleEvent));
+  };
+  getCurrentPreset = () => {
+    return this.settings.presets[this.settings.selectedPreset];
+  };
+  loadPreset = (name: string) => {
+    const values = Object.values(this.settings.presets);
+    const preset = values.find((p) => p.name === name) ?? MIDI_PRESETS.find((p) => p.name === name);
+    if (preset) {
+      this.settings.selectedPreset = name;
+      this.notes = preset.notes.map((midi, i) => {
+        return new MIDINote(i, midi);
+      });
+      this.saveSettings();
+    } else {
+      throw new Error(
+        `No preset with name "${name}" found! "${values.map((p) => p.name).join(', ')}" available`
+      );
+    }
+  };
+  updateNoteOfCurrentPreset = (index: number, midi: number, status?: MIDINoteStatus) => {
+    const savedNote = this.notes[index];
+    if (savedNote) {
+      savedNote.setMidi(midi);
+      savedNote.status = status ?? savedNote.status;
+      const preset = this.getCurrentPreset();
+      if (!preset) throw new Error('No preset with this name found!');
+      preset.notes[index] = midi;
+    }
+    this.saveSettings();
+    return savedNote;
+  };
+  isPresetBuiltin = (name: string) => {
+    return MIDI_PRESETS.some((p) => p.name === name);
+  };
+  deletePreset = (name: string) => {
+    delete this.settings.presets[name];
+    this.saveSettings();
+  };
+  createPreset = (preset: MIDIPreset) => {
+    this.settings.presets[preset.name] = preset;
+    this.saveSettings();
+  };
+  getPresets = () => {
+    return Object.values(this.settings.presets);
+  };
+  getNotesOfMIDIevent = (midi: number) => {
+    return this.notes.filter((n) => n.midi === midi);
+  };
+  updateShortcut = (shortcutType: string, midi: number, status?: MIDINoteStatus) => {
+    const savedNote = this.settings.shortcuts.find((s) => s.type === shortcutType);
+    if (savedNote) {
+      savedNote.midi = midi;
+      savedNote.status = status ?? savedNote.status;
+    }
+    this.saveSettings();
+    return savedNote;
+  };
+  setSettings = (settings: MidiSettingsType) => {
+    this.settings = settings;
+    this.saveSettings();
+  };
+  saveSettings = () => {
+    settingsService.updateMIDISettings(this.settings);
+  };
+  broadcastEvent = (event: MIDIEvent) => {
+    this.MIDIAccess?.outputs.forEach((output) => {
+      output.send(event);
+    });
+  };
+  /**
+   * The two halves of a REAL key gesture, for surfaces that know when the finger lands and when it
+   * lifts (the zen keyboard driving another app over wired MIDI). They replaced a single
+   * fire-and-forget "click" that sent note-on and a note-off on a fixed 500ms timer — a receiver
+   * using this app as a controller never saw how long the key was actually held, which is exactly
+   * what a sustain-recording composer on the other end needs to see (user, 2026-08-22).
+   */
+  broadcastNoteDown = (note: number) => {
+    this.broadcastEvent([0x90, note, 127]);
+  };
+  broadcastNoteUp = (note: number) => {
+    this.broadcastEvent([0x80, note, 0]);
+  };
+  handleEvent = (e: WebMidi.MIDIMessageEvent) => {
+    const { data } = e;
+    const event = [data[0], data[1], data[2]] as MIDIEvent;
+    let preset: PresetMidi | undefined;
+    switch (event[0]) {
+      case PresetMidi.Start:
+        preset = PresetMidi.Start;
+        break;
+      case PresetMidi.Continue:
+        preset = PresetMidi.Continue;
+        break;
+      case PresetMidi.Stop:
+        preset = PresetMidi.Stop;
+        break;
+    }
+    this.listeners.forEach((l) => l(event, preset));
+  };
+  //any of the channels
+  isUp = (code: number) => {
+    return code > 127 && code < 144;
+  };
+  isDown = (code: number) => {
+    return code > 143 && code < 160;
+  };
+  /**
+   * The two ways a keyboard says "note off": a real note-off, or the running-status alias every
+   * controller is allowed to send instead — a note-ON carrying velocity 0. A surface that only
+   * tests `isUp` misses the second and leaves the note held forever on those devices.
+   */
+  isNoteRelease = (code: number, velocity: number) => {
+    return this.isUp(code) || (this.isDown(code) && velocity === 0);
+  };
+
+  addListener = (listener: MIDICallback) => {
+    this.listeners.push(listener);
+  };
+  addInputsListener = (listener: InputsCallback) => {
+    this.inputsListeners.push(listener);
+  };
+  removeInputsListener = (listener: InputsCallback) => {
+    this.inputsListeners = this.inputsListeners.filter((l) => l !== listener);
+  };
+  removeListener = (listener: MIDICallback) => {
+    this.listeners = this.listeners.filter((l) => l !== listener);
+  };
+  clear = () => {
+    this.listeners = [];
+    this.inputsListeners = [];
+  };
+}
+
+export const MIDIProvider = new MIDIListener();

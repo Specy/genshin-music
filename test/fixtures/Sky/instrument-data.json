@@ -1,0 +1,50 @@
+{
+  "defaults": {
+    "name": "Piano",
+    "volume": 100,
+    "pitch": "",
+    "visible": true,
+    "icon": "circle",
+    "alias": "",
+    "muted": false,
+    "solo": false,
+    "reverbOverride": null
+  },
+  "custom": {
+    "name": "Piano",
+    "volume": 55,
+    "pitch": "F",
+    "visible": false,
+    "icon": "line",
+    "alias": "my alias",
+    "muted": true,
+    "solo": false,
+    "reverbOverride": true
+  },
+  "roundtrip": {
+    "name": "Piano",
+    "volume": 55,
+    "pitch": "F",
+    "visible": false,
+    "icon": "line",
+    "alias": "my alias",
+    "muted": true,
+    "solo": false,
+    "reverbOverride": true
+  },
+  "fromEmpty": {
+    "name": "Piano",
+    "volume": 100,
+    "pitch": "",
+    "visible": true,
+    "icon": "circle",
+    "alias": "",
+    "muted": false,
+    "solo": false,
+    "reverbOverride": null
+  },
+  "noteIcons": [
+    2,
+    3
+  ]
+}

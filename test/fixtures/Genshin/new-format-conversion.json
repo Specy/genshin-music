@@ -1,0 +1,71 @@
+{
+  "name": "Sky v4 import",
+  "type": "composed",
+  "bpm": 220,
+  "pitch": "C",
+  "version": 5,
+  "folderId": null,
+  "data": {
+    "isComposed": true,
+    "isComposedVersion": true,
+    "appName": "Genshin"
+  },
+  "reverb": false,
+  "breakpoints": [
+    0
+  ],
+  "columnTempos": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "tracks": [
+    {
+      "instrument": {
+        "name": "Lyre",
+        "volume": 100,
+        "pitch": "",
+        "visible": true,
+        "icon": "circle",
+        "alias": "",
+        "muted": false,
+        "solo": false,
+        "reverbOverride": null
+      },
+      "notes": [
+        [
+          0,
+          84,
+          5
+        ],
+        [
+          2,
+          72
+        ]
+      ]
+    },
+    {
+      "instrument": {
+        "name": "HarmonicKey",
+        "volume": 100,
+        "pitch": "",
+        "visible": true,
+        "icon": "circle",
+        "alias": "",
+        "muted": false,
+        "solo": false,
+        "reverbOverride": null
+      },
+      "notes": [
+        [
+          1,
+          79
+        ]
+      ]
+    }
+  ],
+  "id": null
+}

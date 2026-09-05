@@ -1,49 +1,33 @@
-import { execSync } from 'child_process'
-import fse from 'fs-extra'
-import clc from "cli-color";
-import urlJoin from 'url-join'
+import clc from 'cli-color';
+import { execSync } from 'child_process';
+import { prepareGameStatic } from './gameStatic.js';
 
-const publicPath = './public'
-const skyPath = './src/appData/sky'
-const genshinPath = './src/appData/genshin'
-const chosenApp = process.argv[2]
+const GAMES = {
+  Sky: { id: 'sky' },
+  Genshin: { id: 'genshin' },
+};
+const chosenApp = process.argv[2];
+const date = new Date();
+// Phase 5 Task 1: src/service-worker.ts reads PUBLIC_SW_VERSION via `$env/static/public`,
+// which is a hard build error if the name is absent from process.env at all — unlike
+// scripts/buildApp.js (which this mirrors), a missing value here can't just "quietly
+// interpolate as undefined" the way old's raw env read did, so dev mode needs a real value
+// set too, not only production builds.
+const SW_VERSION = `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}_${date.getHours()}-${date.getMinutes()}`;
 
 if (!['Genshin', 'Sky'].includes(chosenApp)) {
-    console.error('Please specify an app name [Sky/Genshin]')
-    process.exit(1)
+  console.error('Please specify an app name [Sky/Genshin]');
+  process.exit(1);
 }
-
 
 async function execute() {
-    await fse.copy(chosenApp === "Sky" ? skyPath : genshinPath, publicPath, { overwrite: true })
-    updateManifest("")
-    if (process.platform === 'win32') {
-        console.log(clc.yellow.bold("Starting on windows"))
-        execSync(`set NEXT_PUBLIC_APP_NAME=${chosenApp}&& npm run dev`, { stdio: 'inherit' })
-    } else {
-        console.log(clc.yellow.bold("Starting on linux"))
-        execSync(`NEXT_PUBLIC_APP_NAME=${chosenApp} npm run dev`, { stdio: 'inherit' })
-    }
+  const { id } = GAMES[chosenApp];
+  await prepareGameStatic(id, '');
+  console.log(clc.yellow.bold(`Starting ${chosenApp} dev server`));
+  execSync('npm run dev', {
+    stdio: 'inherit',
+    env: { ...process.env, PUBLIC_GAME: id, PUBLIC_SW_VERSION: SW_VERSION },
+  });
 }
 
-async function updateManifest(basePath) {
-    try {
-        const manifest = await fse.readJson('./public/manifest.json')
-        if (manifest.icons) manifest.icons = manifest.icons.map(icon => ({ ...icon, src: urlJoin(basePath, icon.src) }))
-        if (manifest.start_url) manifest.start_url = basePath
-        if (manifest.screenshots) manifest.screenshots = manifest.screenshots.map(screenshot => ({ ...screenshot, src: urlJoin(basePath, screenshot.src) }))
-        if (manifest.file_handlers) {
-            manifest.file_handlers = manifest.file_handlers.map(handler => {
-                const icons = handler.icons.map(icon => ({ ...icon, src: urlJoin(basePath, icon.src) }))
-                const action = basePath || "."
-                return { ...handler, icons, action }
-            })
-        }
-        await fse.writeFile('./public/manifest.json', JSON.stringify(manifest, null, 2))
-    } catch (e) {
-        console.log(clc.red("[Error]: There was an error updating the manifest"))
-        console.error(e)
-        process.exit(1)
-    }
-}
-execute()
+execute();
