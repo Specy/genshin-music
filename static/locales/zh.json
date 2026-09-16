@@ -851,13 +851,13 @@
         "SFX_ChimeSynth": "合成铃音",
         "SFX_TR-909": "TR-909",
         "SFX_Dance": "舞步",
-        "SFX_BirdCall": "白鸟之声",
-        "SFX_CrabCall": "小蟹之声",
-        "SFX_FishCall": "大鱼之声",
-        "SFX_SpiritMantaCall": "光鲲之声",
-        "SFX_JellyCall": "水母之声",
-        "SFX_MantaCall": "遥鲲之声",
-        "SFX_MothCall": "幼童之声"
+        "SFX_BirdCall": "鸟叫",
+        "SFX_CrabCall": "螃蟹叫",
+        "SFX_FishCall": "鱼叫",
+        "SFX_SpiritMantaCall": "光鲲叫",
+        "SFX_JellyCall": "水母叫",
+        "SFX_MantaCall": "遥鲲叫",
+        "SFX_MothCall": "幼童叫"
     },
     "versions": {
         "4-0-0": {
