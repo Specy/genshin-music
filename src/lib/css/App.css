@@ -54,6 +54,12 @@
   font-display: swap;
 }
 
+@font-face {
+  font-family: JianpuNDS;
+  src: url('./../assets/font/jpfont-nds.otf');
+  font-display: swap;
+}
+
 p {
   font-family: RobotoSerif, serif;
   opacity: 0.9;
