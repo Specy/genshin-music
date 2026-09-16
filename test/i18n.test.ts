@@ -1,6 +1,6 @@
 import {describe, expect, it} from 'vitest'
 import {readFileSync, readdirSync} from 'node:fs'
-import {join} from 'node:path'
+import {join, sep} from 'node:path'
 import {i18n, isLanguageLoaded, setI18nLanguage} from '../src/lib/i18n/i18n'
 
 describe('i18n core', () => {
@@ -40,17 +40,43 @@ describe('interpolation hands values through unescaped, and Svelte is what escap
      * risk is a `{@html}` added later over a `t(...)` - which is exactly the edit this catches and
      * a per-surface test would not.
      */
+    /**
+     * ALLOWLISTED, and the bar for adding to this list is high: the value must be machine
+     * generated and escaped at the point of interpolation, never a translated or
+     * user-supplied string.
+     *
+     * HomePage.svelte emits the page's schema.org JSON-LD, which has to be a real <script>
+     * element - <svelte:element this="script"> renders nothing in Svelte, and a literal
+     * <script> in a component is taken as its instance script, so {@html} is the only way.
+     * Its payload comes from game.json via seo.ts's serializeJsonLd, which escapes < > and
+     * & so nothing interpolated can close the tag.
+     */
+    const HTML_ALLOWED = new Set(['src/lib/components/shell/HomePage.svelte'])
+
     it('no component renders anything with {@html}', () => {
         const offenders: string[] = []
         const walk = (dir: string) => {
             for (const entry of readdirSync(dir, {withFileTypes: true})) {
                 const path = join(dir, entry.name)
                 if (entry.isDirectory()) walk(path)
-                else if (entry.name.endsWith('.svelte') && readFileSync(path, 'utf8').includes('{@html'))
+                else if (
+                    entry.name.endsWith('.svelte') &&
+                    readFileSync(path, 'utf8').includes('{@html') &&
+                    !HTML_ALLOWED.has(path.split(sep).join('/'))
+                )
                     offenders.push(path)
             }
         }
         walk('src')
         expect(offenders).toEqual([])
+    })
+
+    it('no allowlisted {@html} interpolates a translated string', () => {
+        for (const path of HTML_ALLOWED) {
+            const source = readFileSync(path, 'utf8')
+            for (const [, expression] of source.matchAll(/\{@html ([\s\S]*?)\}\n/g)) {
+                expect(expression, `${path} interpolates t() into {@html}`).not.toMatch(/\bt\(/)
+            }
+        }
     })
 })

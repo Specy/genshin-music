@@ -22,7 +22,7 @@
     the <AppLink href="/vsrg-player">VSRG player</AppLink>. You will have to press the notes in time
     to earn more points.
   </p>
-  <Header margin="1rem 0">How to setup a beatmap</Header>
+  <Header type="h2" textSize="2rem" margin="1rem 0">How to setup a beatmap</Header>
   <p class="blog-p">
     When creating a beatmap, you first have to choose which song the beatmap is for, and set some
     settings related to it. Let's start off exploring all the settings in the VSRG composer!
@@ -85,7 +85,7 @@
     <li>Mutes the layer</li>
   </ol>
 
-  <Header margin="1rem 0">How to use the composer</Header>
+  <Header type="h2" textSize="2rem" margin="1rem 0">How to use the composer</Header>
   <p class="blog-p">
     Once finished setting up the song and settings, you can start actually composing the beatmap. To
     do actions on the canvas you can click the boxes, you have 3 actions you can do, add a "tap" hit
@@ -141,7 +141,7 @@
     </li>
   </ol>
   {#if !globalConfigStore.state.IS_MOBILE}
-    <Header margin="1rem 0">VSRG Composer shortcuts</Header>
+    <Header type="h2" textSize="2rem" margin="1rem 0">VSRG Composer shortcuts</Header>
 
     <p class="blog-p">
       The VSRG composer has some shortcuts you can use, if you want to change them, go to the <AppLink

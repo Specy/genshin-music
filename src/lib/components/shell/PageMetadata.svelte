@@ -18,6 +18,7 @@
 
 <svelte:head>
   <title>{text}</title>
+  <meta property="og:title" content={text} />
   {#if description}
     <meta name="description" content={description} />
     <meta property="og:description" content={description} />

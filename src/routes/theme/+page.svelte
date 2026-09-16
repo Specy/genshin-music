@@ -3,6 +3,7 @@
   import cloneDeep from 'lodash.clonedeep';
   import DefaultPage from '$cmp/shell/DefaultPage.svelte';
   import PageMetadata from '$cmp/shell/PageMetadata.svelte';
+  import PageHeading from '$cmp/shell/PageHeading.svelte';
   import AppButton from '$cmp/inputs/AppButton.svelte';
   import FilePicker, { type FileElement } from '$cmp/inputs/FilePicker.svelte';
   import Column from '$cmp/layout/Column.svelte';
@@ -117,6 +118,7 @@
     text={t('home:themes_name')}
     description="Change the theme of the app, set all colors and backgrounds, make elements translucent and share/import themes"
   />
+  <PageHeading text={t('home:themes_name')} />
   <Column gap="1rem" style="padding-bottom:1rem">
     <div>
       <Header type="h2">

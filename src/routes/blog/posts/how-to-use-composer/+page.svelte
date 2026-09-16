@@ -61,7 +61,7 @@
       BPM of your song
     </li>
   </ol>
-  <Header>Composer Tools</Header>
+  <Header type="h2" textSize="2rem">Composer Tools</Header>
   <!-- QUIRK: /blog/midi-conversion and /blog/ai-conversion below are broken links - the real
          routes are /blog/posts/midi-transpose and /blog/posts/video-audio-transpose. Preserved
          from old, not fixed. -->
@@ -222,7 +222,7 @@
     <li>This will move the layer one position up or down, just used to organise layers.</li>
   </ol>
   {#if !globalConfigStore.state.IS_MOBILE}
-    <Header margin="1rem 0">Composer shortcuts</Header>
+    <Header type="h2" textSize="2rem" margin="1rem 0">Composer shortcuts</Header>
     <p class="blog-p">
       The composer has some shortcuts you can use, if you want to change them, go to the <AppLink
         href="/keybinds">keybinds page</AppLink

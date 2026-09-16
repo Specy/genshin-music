@@ -168,6 +168,14 @@ export type GameJson = {
   meta: {
     title: string;
     description: string;
+    /**
+     * The origin this game's pages want to be ranked as. Every build of a game — the
+     * per-game Cloudflare deploys, the subpath `-no-root` builds, the beta — serves the
+     * same content, so each one points crawlers back at this single origin instead of
+     * competing with the others. PUBLIC_CANONICAL_ORIGIN overrides it, which is the one
+     * change the eventual single-domain deploy needs.
+     */
+    canonicalOrigin: string;
     themeColor: string;
     analytics: { tagId: string; configId: string };
     updateChannelKey: StorageId;

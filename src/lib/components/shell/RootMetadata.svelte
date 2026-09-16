@@ -1,6 +1,19 @@
 <script lang="ts">
   import { base } from '$app/paths';
+  import { page } from '$app/state';
   import { IS_BETA } from '$lib/env';
+  import { CANONICAL_ORIGIN } from '$lib/seo';
+  import { appPathname } from '$lib/utils/appPathname';
+
+  // One canonical per page, which is why it lives here and not in PageMetadata: several
+  // routes mount more than one of those on purpose (routes/theme/+page.svelte), and Svelte
+  // dedupes <title> but not <link>.
+  //
+  // The same pages are served from the per-game domain, the /skyMusic and /genshinMusic
+  // subpath builds and the beta; all of them name the game's own canonical origin so the
+  // copies consolidate onto it instead of competing. appPathname drops the base, which is
+  // exactly the part that differs between those builds.
+  let canonicalUrl = $derived(`${CANONICAL_ORIGIN}${appPathname(page.url.pathname)}`);
 
   // Carries every root-level head element old's metadata cascade produced
   // EXCEPT <title>/<meta name="description"> and the favicon - see the two
@@ -28,6 +41,8 @@
 </script>
 
 <svelte:head>
+  <link rel="canonical" href={canonicalUrl} />
+  <meta property="og:url" content={canonicalUrl} />
   <link rel="manifest" href="{base}/manifest.json" />
   <link rel="apple-touch-icon" href="{base}/logo192.png" />
   {#if IS_BETA}

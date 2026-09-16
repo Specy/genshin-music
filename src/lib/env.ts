@@ -15,3 +15,11 @@
 // `PUBLIC_IS_BETA=true npm run build:genshin` + grepping the emitted output for the
 // inlined `true`.
 export const IS_BETA = import.meta.env.PUBLIC_IS_BETA === 'true';
+
+// PUBLIC_CANONICAL_ORIGIN overrides each game's own `meta.canonicalOrigin` (game.json).
+// Unset in every build today, so each game canonicalises to its own production origin;
+// the single-domain deploy sets it once and every page follows. Read through
+// import.meta.env for the same reason IS_BETA is: $env/static/public hard-errors on an
+// import that is not present in the environment, which an optional var never is.
+export const CANONICAL_ORIGIN_OVERRIDE = import.meta.env.PUBLIC_CANONICAL_ORIGIN as
+  string | undefined;

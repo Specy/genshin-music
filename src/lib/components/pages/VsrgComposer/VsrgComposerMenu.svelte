@@ -300,9 +300,9 @@
         <SettingsPane settings={data.settings} onUpdate={functions.handleSettingChange} />
         <div class="column vsrg-select-song-wrapper">
           <Row align="center">
-            <h1 class="settings-group-title row-centered">
+            <h2 class="settings-group-title row-centered">
               {t('vsrg_composer:background_song')}
-            </h1>
+            </h2>
             <HelpTooltip
               buttonStyle="width:1.2rem;height:1.2rem;margin-left:0.5rem"
               position="middle"

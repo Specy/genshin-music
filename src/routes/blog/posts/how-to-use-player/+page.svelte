@@ -32,7 +32,7 @@
              preserved bug as how-to-use-composer.tsx's equivalent link. -->
   </p>
 
-  <Header margin="1rem 0">How to use the player</Header>
+  <Header type="h2" textSize="2rem" margin="1rem 0">How to use the player</Header>
   {#if APP_NAME !== 'Genshin'}
     <p class="blog-p">
       The images below are from the genshin version of the app, but the functionality is the same
@@ -108,7 +108,7 @@
       which is not this one.
     </li>
   </ol>
-  <Header margin="1rem 0">Player settings</Header>
+  <Header type="h2" textSize="2rem" margin="1rem 0">Player settings</Header>
   <BlogImage src="{base}/assets/blog/help-player-3.webp" alt="Player settings" />
   <ol class="blog-ol">
     <li>
@@ -159,7 +159,7 @@
     </li>
   </ol>
   {#if !globalConfigStore.state.IS_MOBILE}
-    <Header>Player shortcuts</Header>
+    <Header type="h2" textSize="2rem">Player shortcuts</Header>
     <p class="blog-p">
       The player has some shortcuts you can use, if you want to change them, go to the <AppLink
         href="/keybinds">keybinds page</AppLink

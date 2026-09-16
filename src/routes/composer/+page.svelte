@@ -4,6 +4,8 @@
   import AppBackground from '$cmp/theme/AppBackground.svelte';
   import Composer from '$cmp/pages/Composer/Composer.svelte';
   import { setPageVisited } from '$stores/PageVisitStore.svelte';
+  import PageHeading from '$cmp/shell/PageHeading.svelte';
+  import { t } from '$i18n/binding.svelte';
 
   // QUIRK (load-bearing - read before "fixing" this): page.url.searchParams ($app/state) throws
   // during svelte-kit's prerender crawl on a page with prerendering enabled (this whole app
@@ -27,5 +29,6 @@
 </script>
 
 <AppBackground page="Composer">
+  <PageHeading text={t('home:composer_name')} />
   <Composer {songId} {showMidi} />
 </AppBackground>

@@ -2,6 +2,7 @@
   import { onMount } from 'svelte';
   import DefaultPage from '$cmp/shell/DefaultPage.svelte';
   import PageMetadata from '$cmp/shell/PageMetadata.svelte';
+  import PageHeading from '$cmp/shell/PageHeading.svelte';
   import AppButton from '$cmp/inputs/AppButton.svelte';
   import SongMenu from '$cmp/SongMenu.svelte';
   import ErrorSongRow from '$cmp/pages/ErrorSongRow.svelte';
@@ -67,6 +68,7 @@
     text={t('common:error')}
     description="View the errors that happened in the app to send bug reports and to try to recover your songs"
   />
+  <PageHeading text={t('common:error')} />
   <div style="text-align:center">
     {t('error:error_page_description')}
     <a href="https://discord.gg/Arsf65YYHq" target="_blank" rel="noreferrer" class="discord-link">

@@ -1,3 +1,7 @@
 # https://www.robotstxt.org/robotstxt.html
 User-agent: *
 Disallow:
+
+# Absolute by spec. Always the game's canonical origin, never the deployed one: the
+# subpath and beta builds serve these same pages and point crawlers back here too.
+Sitemap: https://sky-music.specy.app/sitemap.xml

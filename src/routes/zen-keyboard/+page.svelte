@@ -7,6 +7,7 @@
   import ZenKeypad from '$cmp/pages/ZenKeyboard/ZenKeypad.svelte';
   import ZenKeyboardMenu from '$cmp/pages/ZenKeyboard/ZenKeyboardMenu.svelte';
   import PageMetadata from '$cmp/shell/PageMetadata.svelte';
+  import PageHeading from '$cmp/shell/PageHeading.svelte';
   import { ZenKeyboardSettings, type ZenKeyboardSettingsDataType } from '$core/BaseSettings';
   import { Instrument, type ObservableNote } from '$lib/audio/Instrument.svelte';
   import { metronome } from '$lib/audio/Metronome';
@@ -198,6 +199,7 @@
     text={t('home:zen_keyboard_name')}
     description="The simplest keyboard in the app, focus only on playing manually with all the features of the player, instrument and pitch selection, animations and metronome"
   />
+  <PageHeading text={t('home:zen_keyboard_name')} />
   <ZenKeyboardMenu
     {settings}
     {isMetronomePlaying}
