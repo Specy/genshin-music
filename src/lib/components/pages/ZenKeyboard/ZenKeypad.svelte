@@ -67,7 +67,7 @@
 <ShapeKeyboard
   shape={instrument.shape}
   notes={zenKeyboardStore.keyboard}
-  class={cssBase}
+  class ={ ` ${cssBase} ${noteNameType === '1 2 3' ? ' jianpu-mode' : '' } ` }
   style="transform:scale({scale / 100}) translateY({verticalOffset}px);margin-top:unset"
 >
   {#snippet button(note, button)}
