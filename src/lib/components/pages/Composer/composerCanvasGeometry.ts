@@ -386,8 +386,13 @@ export function composerColumnRulerY(timelineHeight: number): number {
 }
 
 /**
- * THE PRO VIEW'S NOTES REGION: everything the window has left once the composer's own chrome, the
+ * THE PRO VIEW'S NOTES REGION: everything the FRAME has left once the composer's own chrome, the
  * mini-timeline's band and the Column Ruler's are taken off it (spec §6; ruler spec §4).
+ *
+ * The frame is the window on the composer route and /theme's preview card in the preview - see
+ * composerCanvasSize's `frameHeight`. Everything below is written in the route's terms because that
+ * is where the CSS half of the formula has to agree with it; the preview simply hands a smaller
+ * number in.
  *
  * Stated once here because composerCanvasSize and composerCanvasCssSize below are two renderings of
  * it - the CSS one adds the bands back and emits `max(bands + floor, 100vh - inset)`, which is this
@@ -404,10 +409,10 @@ export function composerColumnRulerY(timelineHeight: number): number {
  * COLUMN_RULER_HEIGHT's own docblock quotes. No caller had to be told; the row height is a function
  * of this number and follows it.
  */
-function proNotesRegionHeight(bodyHeight: number, timelineHeight: number): number {
+function proNotesRegionHeight(frameHeight: number, timelineHeight: number): number {
   return Math.max(
     PRO_MIN_NOTES_HEIGHT_PX,
-    bodyHeight * (PRO_CANVAS_HEIGHT_VH / 100) -
+    frameHeight * (PRO_CANVAS_HEIGHT_VH / 100) -
       PRO_CANVAS_INSET_PX -
       //BOTH bands, as one term, so the split between the regions is stated in one place - and with
       //`proView` hard-coded true because this function is the pro branch: there is no compressed
@@ -436,16 +441,33 @@ export function composerCanvasSize(input: {
   inPreview: boolean;
   /** CONTEXT.md: Pro View. The canvas fills the window's leftover height instead of a 45vh card. */
   proView?: boolean;
+  /**
+   * THE BOX THE COMPOSER IS LAID OUT IN, when that is not the window: /theme's preview, whose
+   * composer is the same component inside a 70vh card on a scrolling page. The PRO branch is the
+   * only one that reads it - that view's whole claim is "the canvas is what the frame leaves"
+   * (App.css's `.composer-grid-pro`, `height: 100vh` on the route and `100%` in the preview), so
+   * the frame has to be named wherever it is not `100vh`.
+   *
+   * Defaults to `bodyHeight`, which IS the frame on the composer route (see PRO_CANVAS_INSET_PX's
+   * own note on why `.composer-grid` is exactly the window there). The preview supplies its card's
+   * measured height instead; until it has one the window's is used and the canvas overruns the
+   * card, which ComposerCanvas.svelte corrects by asking the renderer to re-size as soon as the
+   * measurement lands.
+   */
+  frameHeight?: number;
   rowHeightScale?: number;
   timelineHeight?: number;
 }): { width: number; height: number } {
   const scale = input.rowHeightScale ?? game.notes.composerRowHeightScale;
   //the desktop layout is the composer page's, not the theme preview's - see composerCanvasCssSize
   const fillsWindow = !input.inPreview && isComposerDesktopWidth(input.bodyWidth);
-  //...and so is the Pro View: /theme's preview is a small box inside a scrolling page, where a
-  //canvas sized to the WINDOW would overrun it entirely. The two gates are separate reads of the
-  //same flag rather than one, because the preview's own shrink below applies to both views.
-  const proView = Boolean(input.proView) && !input.inPreview;
+  //THE PRO VIEW IS NOT EXCLUDED FROM THE PREVIEW ANY MORE (2026-09-18). It was, because a canvas
+  //sized to the WINDOW would overrun the little box it lives in - so /theme showed the Compressed
+  //View to a user who composes in the Pro one, and the Normal/Pro slider in the preview's own menu
+  //moved the persisted setting while the preview under it did not move at all. What that exclusion
+  //was really standing in for is `frameHeight`: the view fills ITS frame, and the preview's frame
+  //is the card rather than the window.
+  const proView = Boolean(input.proView);
   let width = nearestEven(
     fillsWindow
       ? input.bodyWidth - desktopToolColumnWidth(input.bodyWidth) - DESKTOP_CANVAS_INSET_PX
@@ -458,7 +480,10 @@ export function composerCanvasSize(input: {
     //height (proViewGeometry.proRowHeight) divides this region by the rows it is framing rather
     //than deriving a note size from the game's Song-Grid layout at all.
     height = nearestEven(
-      proNotesRegionHeight(input.bodyHeight, input.timelineHeight ?? composerTimelineHeight())
+      proNotesRegionHeight(
+        input.frameHeight ?? input.bodyHeight,
+        input.timelineHeight ?? composerTimelineHeight()
+      )
     );
   } else {
     height = nearestEven(input.bodyHeight * (CANVAS_HEIGHT_VH / 100));
@@ -467,9 +492,16 @@ export function composerCanvasSize(input: {
   if (input.inPreview) {
     const narrow = input.bodyWidth < PREVIEW_NARROW_BODY;
     width = nearestEven(width * (narrow ? PREVIEW_WIDTH_FACTOR_NARROW : PREVIEW_WIDTH_FACTOR_WIDE));
-    height = nearestEven(
-      height * (narrow ? PREVIEW_HEIGHT_FACTOR_NARROW : PREVIEW_HEIGHT_FACTOR_WIDE)
-    );
+    //...AND THE HEIGHT SHRINK IS THE COMPRESSED VIEW'S ALONE. These factors are what fits a
+    //window-sized card into the preview's box; the pro branch above was handed the box itself, so
+    //shrinking it again would leave the canvas short of the frame it is defined as filling - with
+    //the keyboard sheet still standing at the box's own bottom edge and a band of nothing between
+    //the two.
+    if (!proView) {
+      height = nearestEven(
+        height * (narrow ? PREVIEW_HEIGHT_FACTOR_NARROW : PREVIEW_HEIGHT_FACTOR_WIDE)
+      );
+    }
   }
   return { width, height };
 }

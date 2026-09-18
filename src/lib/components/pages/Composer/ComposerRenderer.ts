@@ -846,6 +846,16 @@ export interface ComposerRendererState {
   // size of both canvases. Composer.svelte passes it as a static prop, which is the reason
   // needsUnconditionalRepaint does not compare it.
   inPreview?: boolean;
+  /**
+   * THE PREVIEW CARD'S MEASURED HEIGHT, in px, and only /theme sends one (composerCanvasSize's
+   * `frameHeight`): the Pro View fills the box the composer is laid out in, which is the window on
+   * the composer route and that card in the preview.
+   *
+   * It is on the state object for the canvas' $effect to read like every other input, but update()
+   * does not act on it - a changed frame is a RESIZE, and ComposerCanvas.svelte calls
+   * recalculateCacheAndSizes for it, which re-reads the state this holds.
+   */
+  previewHeight?: number;
   /** ComposerSettings' `beatMarks`, as a number: decides the light/dark bar-group alternation. */
   beatMarks: number;
   /**
@@ -856,8 +866,8 @@ export interface ComposerRendererState {
    */
   columnsPerCanvas: number;
   /**
-   * ComposerSettings' `proView` (CONTEXT.md: Pro View / Compressed View), already ANDed with
-   * `!inPreview` by ComposerCanvas.svelte.
+   * ComposerSettings' `proView` (CONTEXT.md: Pro View / Compressed View), as the user has it -
+   * /theme's preview included, where the frame the view fills is `previewHeight` above.
    *
    * Read like `columnsPerCanvas` is - once, for geometry - because it arrives the same way: a flip
    * remounts this class through the parent's `{#key}`, since the canvas' size, the ComposerCache's
@@ -2608,6 +2618,10 @@ export class ComposerRenderer {
       bodyHeight: sizes.height,
       inPreview: Boolean(this.state.inPreview),
       proView: this.state.proView,
+      //THE FRAME THE PRO VIEW FILLS, which is the window everywhere except /theme's preview - and
+      //there it is the card, whose height only that page can measure (see the state field). Left
+      //undefined off the preview so the body rect above stays the single reading on the route.
+      frameHeight: this.state.inPreview ? this.state.previewHeight : undefined,
       //the strip's band - and, in the Pro View, the Column Ruler's with it - comes off the window
       //before the notes region gets what is left, so this and canvasHeight() below must be handed
       //the same timeline height AND the same view, or the region and the canvas disagree by a band
@@ -4214,7 +4228,17 @@ export class ComposerRenderer {
     }
   }
 
-  private recalculateCacheAndSizes = () => {
+  /**
+   * THE RESIZE PATH: the window's `resize` listener, and the one call the outside makes into it.
+   *
+   * PUBLIC BECAUSE THE FRAME CAN MOVE WITHOUT THE WINDOW DOING SO. /theme's preview lays this
+   * composer out in a card, and the Pro View's canvas is sized against that card
+   * (computeCanvasSize's `frameHeight`) - so when the measurement lands, or changes, there is no
+   * window event for this to arrive on and ComposerCanvas.svelte calls it directly. Its own 50ms
+   * debounce is what makes that safe to call from an effect: the state object carrying the new
+   * height is written by the update() beside it, long before this reads it.
+   */
+  public recalculateCacheAndSizes = () => {
     if (this.contextLost || this.replacingLostRenderer || this.destroyed) return;
     if (this.cacheRecalculateDebounce) clearTimeout(this.cacheRecalculateDebounce);
     this.cacheRecalculateDebounce = setTimeout(() => {
@@ -6958,7 +6982,9 @@ export class ComposerRenderer {
    * first changes the schedule, and the second is one Graphics with its own redraw-on-the-flip path
    * (syncPlayheadVariant) that repaints no column at all, so putting it here would buy a full
    * window repaint per play press and nothing else. See its field. `bpm` is the same shape of
-   * thing. `inPreview`,
+   * thing. `previewHeight` decides the Pro View's canvas height in /theme's preview and reaches it
+   * through the RESIZE path instead - ComposerCanvas.svelte calls recalculateCacheAndSizes when the
+   * card's measurement moves, exactly as the window's own resize does. `inPreview`,
    * `columnsPerCanvas` and `proView` all decide geometry, and `inPreview` decides a great deal of it
    * (it scales both canvas dimensions in computeCanvasSize, so it moves every column's x, every
    * note's y and the size of both canvases) - but none of them reaches update() as a CHANGE:
