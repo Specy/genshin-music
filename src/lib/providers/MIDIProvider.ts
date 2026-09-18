@@ -11,22 +11,22 @@ export enum PresetMidi {
 
 export type MIDIEvent = [eventType: number, note: number, velocity: number];
 type MIDICallback = (event: MIDIEvent, preset?: PresetMidi) => void;
-type InputsCallback = (inputs: WebMidi.MIDIInput[]) => void;
+type InputsCallback = (inputs: MIDIInput[]) => void;
 
 export class MIDIListener {
   private listeners: MIDICallback[] = [];
   private inputsListeners: InputsCallback[] = [];
-  MIDIAccess: WebMidi.MIDIAccess | null = null;
-  connectedMidiSources: WebMidi.MIDIInput[] = [];
+  MIDIAccess: MIDIAccess | null = null;
+  connectedMidiSources: MIDIInput[] = [];
   settings: MidiSettingsType;
   notes: MIDINote[] = [];
-  inputs: WebMidi.MIDIInput[] = [];
+  inputs: MIDIInput[] = [];
 
   constructor() {
     this.settings = settingsService.getDefaultMIDISettings();
   }
 
-  init = async (): Promise<WebMidi.MIDIAccess | null> => {
+  init = async (): Promise<MIDIAccess | null> => {
     this.settings = settingsService.getMIDISettings();
     this.loadPreset(this.settings.selectedPreset);
     if (!this.settings.enabled) return null;
@@ -37,7 +37,7 @@ export class MIDIListener {
     }
     return access;
   };
-  requestAccess = async (): Promise<WebMidi.MIDIAccess | null> => {
+  requestAccess = async (): Promise<MIDIAccess | null> => {
     try {
       if ('requestMIDIAccess' in navigator) {
         const access = await navigator.requestMIDIAccess();
@@ -66,7 +66,7 @@ export class MIDIListener {
     this.MIDIAccess = null;
   };
 
-  private handleMIDIState = (e: WebMidi.MIDIAccess) => {
+  private handleMIDIState = (e: MIDIAccess) => {
     this.MIDIAccess?.removeEventListener('statechange', this.reloadMidiAccess);
     this.MIDIAccess = e;
     e.addEventListener('statechange', this.reloadMidiAccess);
@@ -78,7 +78,7 @@ export class MIDIListener {
     if (this.MIDIAccess) this.handleMIDIState(this.MIDIAccess);
     this.setAndDispatchInputs(this.inputs);
   };
-  private setAndDispatchInputs = (inputs: WebMidi.MIDIInput[]) => {
+  private setAndDispatchInputs = (inputs: MIDIInput[]) => {
     this.inputs = inputs;
     this.dispatchInputsChange();
   };
@@ -91,7 +91,7 @@ export class MIDIListener {
     );
     this.connectedMidiSources = [];
   };
-  setSourcesAndConnect = (sources: WebMidi.MIDIInput[]) => {
+  setSourcesAndConnect = (sources: MIDIInput[]) => {
     this.disconnectCurrentSources();
     this.connectedMidiSources = sources;
     sources.forEach((s) => s.addEventListener('midimessage', this.handleEvent));
@@ -177,8 +177,13 @@ export class MIDIListener {
   broadcastNoteUp = (note: number) => {
     this.broadcastEvent([0x80, note, 0]);
   };
-  handleEvent = (e: WebMidi.MIDIMessageEvent) => {
+  handleEvent = (e: MIDIMessageEvent) => {
     const { data } = e;
+    //`data` IS NULLABLE in the standard type (lib.dom's `Uint8Array<ArrayBuffer> | null`, which is
+    //what the spec says a MIDIMessageEvent constructed with no init holds) - a real message from a
+    //port always carries its bytes, so this is a type guard rather than a case anything reaches.
+    //The retired @types/webmidi declared it non-null, which is why the line below never needed one.
+    if (!data) return;
     const event = [data[0], data[1], data[2]] as MIDIEvent;
     let preset: PresetMidi | undefined;
     switch (event[0]) {
