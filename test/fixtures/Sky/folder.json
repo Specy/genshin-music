@@ -1,0 +1,26 @@
+{
+  "named": {
+    "type": "folder",
+    "id": "abc-123",
+    "name": "My folder",
+    "filterType": "alphabetical"
+  },
+  "defaults": {
+    "type": "folder",
+    "id": null,
+    "name": "Unnamed folder",
+    "filterType": "date-created"
+  },
+  "roundtrip": {
+    "type": "folder",
+    "id": "abc-123",
+    "name": "My folder",
+    "filterType": "alphabetical"
+  },
+  "fromPartial": {
+    "type": "folder",
+    "id": null,
+    "name": "only name",
+    "filterType": "date-created"
+  }
+}

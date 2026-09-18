@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" href="%sveltekit.assets%/favicon.ico" />
+    <!-- P5 Task 4: full byte-match of old rootViewport (src/app/site-metadata.ts:23-29 on
+         migration/next16-react19), incl. minimum-scale/maximum-scale/user-scalable=no (pinch-zoom
+         disabled). Previously this only carried width=device-width, initial-scale=1, a real
+         parity gap that left pinch-zoom enabled where old disabled it. -->
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no"
+    />
+    %sveltekit.head%
+  </head>
+  <body data-sveltekit-preload-data="hover">
+    <div style="display: contents">%sveltekit.body%</div>
+  </body>
+</html>

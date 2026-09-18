@@ -1,0 +1,260 @@
+<!doctype html>
+<meta charset="utf-8" />
+<title>Audio loop analysis</title>
+<style>
+  body {
+    font: 14px system-ui;
+    margin: 24px;
+  }
+  pre {
+    white-space: pre-wrap;
+  }
+  button {
+    margin: 2px;
+  }
+</style>
+<h1>Audio loop analysis</h1>
+<p id="status">Analyzing…</p>
+<div id="audition"></div>
+<pre id="output"></pre>
+<script type="module">
+  const params = new URLSearchParams(location.search);
+  const numberParam = (name, fallback) => {
+    const raw = params.get(name);
+    if (raw === null || raw.trim() === '') return fallback;
+    const value = Number(raw);
+    return Number.isFinite(value) ? value : fallback;
+  };
+  const root = params.get('root') ?? '/src/lib/games/sky/instruments/Cello';
+  const count = numberParam('count', 15);
+  const files = params.has('files')
+    ? params.get('files').split(',')
+    : Array.from({ length: count }, (_, index) => `${index}.mp3`);
+  const defaultMidi = [60, 62, 64, 65, 67, 69, 71, 72, 74, 76, 77, 79, 81, 83, 84];
+  const midi = params.get('midi')?.split(',').map(Number) ?? defaultMidi;
+  const sampleRate = numberParam('sampleRate', 48000);
+  const top = numberParam('top', 6);
+  const search = {
+    startMin: numberParam('startMin', 0.48),
+    startMax: numberParam('startMax', 1.15),
+    endMin: numberParam('endMin', 0.7),
+    endMax: numberParam('endMax', 1.75),
+    loopMin: numberParam('loopMin', 0.12),
+    loopMax: numberParam('loopMax', 0.68),
+  };
+  const status = document.querySelector('#status');
+  const output = document.querySelector('#output');
+  const audition = document.querySelector('#audition');
+
+  function analyse(data, rate, midiNote) {
+    const duration = data.length / rate;
+    const fundamental = 440 * 2 ** ((midiNote - 69) / 12);
+    const alpha = 1 - Math.exp((-2 * Math.PI * Math.min(fundamental * 1.35, 1600)) / rate);
+    const phaseSignal = new Float32Array(data.length);
+    let stage1 = 0;
+    let stage2 = 0;
+    for (let i = 0; i < data.length; i++) {
+      stage1 += alpha * (data[i] - stage1);
+      stage2 += alpha * (stage1 - stage2);
+      phaseSignal[i] = stage2;
+    }
+
+    const rms = (centre, radius) => {
+      let sum = 0;
+      let samples = 0;
+      for (
+        let i = Math.max(0, centre - radius);
+        i < Math.min(data.length, centre + radius);
+        i += 8
+      ) {
+        sum += data[i] ** 2;
+        samples++;
+      }
+      return Math.sqrt(sum / Math.max(1, samples));
+    };
+
+    // Keep every comparison window inside the decoded PCM. Query parameters are
+    // literal seconds; do not silently replace a deliberately later search window
+    // with a percentage of the file duration.
+    const comparisonRadius = Math.round(rate * 0.06);
+    const refinementRadius = Math.round((rate / fundamental) * 0.3);
+    const safeMargin = Math.max(comparisonRadius, refinementRadius + 2);
+    const frameAt = (seconds) =>
+      Math.max(safeMargin, Math.min(data.length - safeMargin - 1, Math.round(seconds * rate)));
+    const startMin = frameAt(search.startMin);
+    const startMax = frameAt(search.startMax);
+    const endMin = frameAt(search.endMin);
+    const endMax = frameAt(search.endMax);
+    const starts = [];
+    const ends = [];
+    const minimumGap = (rate / fundamental) * 0.58;
+    let lastCrossing = -Infinity;
+
+    for (let i = startMin; i <= endMax; i++) {
+      if (!(phaseSignal[i - 1] <= 0 && phaseSignal[i] > 0 && i - lastCrossing >= minimumGap))
+        continue;
+      lastCrossing = i;
+      let frame = i;
+      let strongestSlope = -Infinity;
+      for (let j = i - refinementRadius; j <= i + refinementRadius; j++) {
+        if (data[j - 1] <= 0 && data[j] > 0) {
+          const slope = data[j + 1] - data[j - 1];
+          if (slope > strongestSlope) {
+            strongestSlope = slope;
+            frame = j;
+          }
+        }
+      }
+      const point = {
+        frame,
+        slope: data[frame + 1] - data[frame - 1],
+        rms5: rms(frame, Math.round(rate * 0.005)),
+        rms40: rms(frame, Math.round(rate * 0.04)),
+      };
+      if (frame <= startMax) starts.push(point);
+      if (frame >= endMin) ends.push(point);
+    }
+
+    let shortlist = [];
+    const trim = () => {
+      shortlist.sort((a, b) => a.featureScore - b.featureScore);
+      shortlist.length = Math.min(shortlist.length, 2500);
+    };
+    for (const start of starts) {
+      for (const end of ends) {
+        const loopLength = (end.frame - start.frame) / rate;
+        if (loopLength < search.loopMin || loopLength > search.loopMax) continue;
+        const levelRatio =
+          (Math.min(start.rms40, end.rms40) + 1e-7) / (Math.max(start.rms40, end.rms40) + 1e-7);
+        if (levelRatio < 0.84) continue;
+        const slopeError =
+          Math.abs(start.slope - end.slope) /
+          Math.max(Math.abs(start.slope), Math.abs(end.slope), 1e-7);
+        const levelError = Math.abs(start.rms5 - end.rms5) / Math.max(start.rms5, end.rms5, 1e-7);
+        const boundaryError =
+          Math.abs(data[end.frame - 1] - data[start.frame]) /
+          Math.max((start.rms5 + end.rms5) * 0.5, 1e-7);
+        if (slopeError > 0.55 || levelError > 0.24 || boundaryError > 0.08) continue;
+        const featureScore = slopeError * 0.55 + levelError * 0.35 + boundaryError * 0.1;
+        shortlist.push({ start, end, levelRatio, boundaryError, featureScore });
+        if (shortlist.length >= 10000) trim();
+      }
+    }
+    trim();
+
+    const radius = comparisonRadius;
+    for (const candidate of shortlist) {
+      let nearError = 0;
+      let wideError = 0;
+      let reference = 0;
+      for (let offset = -radius; offset <= radius; offset += 4) {
+        const a = data[candidate.start.frame + offset];
+        const b = data[candidate.end.frame + offset];
+        const delta = a - b;
+        const seconds = Math.abs(offset) / rate;
+        const weight = seconds <= 0.012 ? 4 : seconds <= 0.03 ? 2 : 0.5;
+        wideError += delta ** 2 * weight;
+        reference += (a ** 2 + b ** 2) * 0.5 * weight;
+        if (seconds <= 0.012) nearError += delta ** 2;
+      }
+      candidate.waveError = wideError / Math.max(reference, 1e-12);
+      candidate.nearError = nearError / Math.max(reference, 1e-12);
+      candidate.score = candidate.waveError + candidate.featureScore * 0.018;
+    }
+    shortlist.sort((a, b) => a.score - b.score);
+
+    const distinct = [];
+    for (const candidate of shortlist) {
+      if (
+        distinct.every(
+          (other) =>
+            Math.abs(other.start.frame - candidate.start.frame) > rate * 0.025 ||
+            Math.abs(other.end.frame - candidate.end.frame) > rate * 0.025
+        )
+      )
+        distinct.push(candidate);
+      if (distinct.length >= top) break;
+    }
+
+    const secondsAt = (frame) => Math.round((frame * 1_000_000) / rate) / 1_000_000;
+    return distinct.map((candidate) => ({
+      startFrame: candidate.start.frame,
+      endFrame: candidate.end.frame,
+      start: secondsAt(candidate.start.frame),
+      end: secondsAt(candidate.end.frame),
+      length: secondsAt(candidate.end.frame - candidate.start.frame),
+      waveError: candidate.waveError,
+      nearError: candidate.nearError,
+      levelRatio: candidate.levelRatio,
+      boundaryError: candidate.boundaryError,
+      spliceDelta: data[candidate.end.frame - 1] - data[candidate.start.frame],
+    }));
+  }
+
+  try {
+    const context = new AudioContext({ sampleRate });
+    const buffers = [];
+    const results = [];
+    for (let index = 0; index < files.length; index++) {
+      status.textContent = `Analyzing ${index + 1}/${files.length}: ${files[index]}`;
+      const encoded = await fetch(`${root}/${files[index]}`).then((response) => {
+        if (!response.ok)
+          throw new Error(`${response.status} ${response.statusText}: ${response.url}`);
+        return response.arrayBuffer();
+      });
+      const buffer = await context.decodeAudioData(encoded);
+      buffers.push(buffer);
+      results.push({
+        file: files[index],
+        midi: midi[index] ?? midi.at(-1) ?? 60,
+        sampleRate: buffer.sampleRate,
+        frames: buffer.length,
+        duration: buffer.duration,
+        candidates: analyse(buffer.getChannelData(0), buffer.sampleRate, midi[index] ?? 60),
+      });
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    }
+
+    let playing = null;
+    const stop = document.createElement('button');
+    stop.textContent = 'Stop audition';
+    stop.onclick = () => {
+      try {
+        playing?.stop();
+      } catch {}
+      playing = null;
+    };
+    audition.append(stop, document.createElement('br'));
+    results.forEach((result, noteIndex) => {
+      result.candidates.forEach((candidate, candidateIndex) => {
+        const button = document.createElement('button');
+        button.textContent = `${result.file} #${candidateIndex + 1}: ${candidate.start}–${candidate.end}`;
+        button.onclick = async () => {
+          await context.resume();
+          try {
+            playing?.stop();
+          } catch {}
+          const source = context.createBufferSource();
+          source.buffer = buffers[noteIndex];
+          source.loop = true;
+          source.loopStart = candidate.start;
+          source.loopEnd = candidate.end;
+          source.connect(context.destination);
+          source.start();
+          playing = source;
+        };
+        audition.append(button);
+      });
+      audition.append(document.createElement('br'));
+    });
+
+    window.analysisResults = results;
+    output.textContent = JSON.stringify(results, null, 2);
+    status.textContent = `Done: ${files.length} file(s). Audition candidates before authoring metadata.`;
+    document.title = 'DONE';
+  } catch (error) {
+    output.textContent = String(error?.stack ?? error);
+    status.textContent = 'Analysis failed';
+    document.title = 'ERROR';
+  }
+</script>

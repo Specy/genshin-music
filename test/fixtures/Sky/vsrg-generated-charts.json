@@ -1,0 +1,1734 @@
+{
+  "composed-easy-4keys": {
+    "rating": 2,
+    "performed": [],
+    "doubled": [
+      1
+    ],
+    "attempts": 2,
+    "converged": true,
+    "song": {
+      "name": "new-format-composed-genshin",
+      "type": "vsrg",
+      "bpm": 220,
+      "pitch": "C",
+      "version": 3,
+      "keys": 4,
+      "data": {
+        "isComposed": false,
+        "isComposedVersion": false,
+        "appName": "Sky"
+      },
+      "id": null,
+      "audioSongId": "composed-source",
+      "folderId": null,
+      "duration": 60000,
+      "tracks": [
+        {
+          "instrument": {
+            "name": "Piano",
+            "volume": 100,
+            "pitch": "",
+            "visible": true,
+            "icon": "circle",
+            "alias": "",
+            "muted": false,
+            "solo": false,
+            "reverbOverride": null
+          },
+          "hitObjects": [
+            [
+              2,
+              0,
+              0,
+              [
+                69
+              ]
+            ],
+            [
+              3,
+              273,
+              0,
+              [
+                71
+              ]
+            ],
+            [
+              2,
+              1091,
+              0,
+              [
+                69
+              ]
+            ],
+            [
+              3,
+              1364,
+              0,
+              [
+                71
+              ]
+            ],
+            [
+              0,
+              2386,
+              0,
+              [
+                74,
+                83
+              ]
+            ],
+            [
+              1,
+              2659,
+              0,
+              [
+                76,
+                84
+              ]
+            ]
+          ],
+          "color": "#ffffff"
+        }
+      ],
+      "instruments": [],
+      "trackModifiers": [
+        {
+          "hidden": false,
+          "muted": false,
+          "alias": "Piano"
+        },
+        {
+          "hidden": false,
+          "muted": false,
+          "alias": "Piano"
+        },
+        {
+          "hidden": false,
+          "muted": false,
+          "alias": "Piano"
+        }
+      ],
+      "breakpoints": [],
+      "difficulty": 5,
+      "snapPoint": 1
+    }
+  },
+  "composed-normal-4keys": {
+    "rating": 5.1,
+    "performed": [],
+    "doubled": [
+      1
+    ],
+    "attempts": 1,
+    "converged": true,
+    "song": {
+      "name": "new-format-composed-genshin",
+      "type": "vsrg",
+      "bpm": 220,
+      "pitch": "C",
+      "version": 3,
+      "keys": 4,
+      "data": {
+        "isComposed": false,
+        "isComposedVersion": false,
+        "appName": "Sky"
+      },
+      "id": null,
+      "audioSongId": "composed-source",
+      "folderId": null,
+      "duration": 60000,
+      "tracks": [
+        {
+          "instrument": {
+            "name": "Piano",
+            "volume": 100,
+            "pitch": "",
+            "visible": true,
+            "icon": "circle",
+            "alias": "",
+            "muted": false,
+            "solo": false,
+            "reverbOverride": null
+          },
+          "hitObjects": [
+            [
+              2,
+              0,
+              0,
+              [
+                69
+              ]
+            ],
+            [
+              3,
+              273,
+              0,
+              [
+                71
+              ]
+            ],
+            [
+              2,
+              545,
+              0,
+              [
+                72
+              ]
+            ],
+            [
+              3,
+              682,
+              0,
+              [
+                74
+              ]
+            ],
+            [
+              2,
+              818,
+              0,
+              [
+                76
+              ]
+            ],
+            [
+              0,
+              1091,
+              0,
+              [
+                69
+              ]
+            ],
+            [
+              1,
+              1364,
+              0,
+              [
+                71
+              ]
+            ],
+            [
+              3,
+              1773,
+              0,
+              [
+                76
+              ]
+            ],
+            [
+              2,
+              2045,
+              0,
+              [
+                69
+              ]
+            ],
+            [
+              3,
+              2045,
+              0,
+              [
+                77
+              ]
+            ],
+            [
+              2,
+              2386,
+              0,
+              [
+                74
+              ]
+            ],
+            [
+              3,
+              2386,
+              0,
+              [
+                83
+              ]
+            ],
+            [
+              2,
+              2659,
+              0,
+              [
+                76
+              ]
+            ],
+            [
+              3,
+              2659,
+              0,
+              [
+                84
+              ]
+            ]
+          ],
+          "color": "#ffffff"
+        }
+      ],
+      "instruments": [],
+      "trackModifiers": [
+        {
+          "hidden": false,
+          "muted": false,
+          "alias": "Piano"
+        },
+        {
+          "hidden": false,
+          "muted": false,
+          "alias": "Piano"
+        },
+        {
+          "hidden": false,
+          "muted": false,
+          "alias": "Piano"
+        }
+      ],
+      "breakpoints": [],
+      "difficulty": 5,
+      "snapPoint": 1
+    }
+  },
+  "composed-hard-4keys": {
+    "rating": 6.3,
+    "performed": [],
+    "doubled": [
+      1
+    ],
+    "attempts": 2,
+    "converged": true,
+    "song": {
+      "name": "new-format-composed-genshin",
+      "type": "vsrg",
+      "bpm": 220,
+      "pitch": "C",
+      "version": 3,
+      "keys": 4,
+      "data": {
+        "isComposed": false,
+        "isComposedVersion": false,
+        "appName": "Sky"
+      },
+      "id": null,
+      "audioSongId": "composed-source",
+      "folderId": null,
+      "duration": 60000,
+      "tracks": [
+        {
+          "instrument": {
+            "name": "Piano",
+            "volume": 100,
+            "pitch": "",
+            "visible": true,
+            "icon": "circle",
+            "alias": "",
+            "muted": false,
+            "solo": false,
+            "reverbOverride": null
+          },
+          "hitObjects": [
+            [
+              2,
+              0,
+              0,
+              [
+                69
+              ]
+            ],
+            [
+              3,
+              273,
+              0,
+              [
+                71
+              ]
+            ],
+            [
+              2,
+              545,
+              0,
+              [
+                72
+              ]
+            ],
+            [
+              3,
+              682,
+              0,
+              [
+                74
+              ]
+            ],
+            [
+              2,
+              818,
+              0,
+              [
+                76
+              ]
+            ],
+            [
+              0,
+              1091,
+              0,
+              [
+                69
+              ]
+            ],
+            [
+              1,
+              1364,
+              0,
+              [
+                71
+              ]
+            ],
+            [
+              2,
+              1432,
+              0,
+              [
+                72
+              ]
+            ],
+            [
+              3,
+              1500,
+              0,
+              [
+                74
+              ]
+            ],
+            [
+              2,
+              1773,
+              0,
+              [
+                76
+              ]
+            ],
+            [
+              2,
+              2045,
+              0,
+              [
+                69
+              ]
+            ],
+            [
+              3,
+              2045,
+              0,
+              [
+                77
+              ]
+            ],
+            [
+              0,
+              2114,
+              0,
+              [
+                72
+              ]
+            ],
+            [
+              1,
+              2114,
+              0,
+              [
+                81
+              ]
+            ],
+            [
+              1,
+              2386,
+              0,
+              [
+                74
+              ]
+            ],
+            [
+              2,
+              2386,
+              0,
+              [
+                83
+              ]
+            ],
+            [
+              2,
+              2659,
+              0,
+              [
+                76
+              ]
+            ],
+            [
+              3,
+              2659,
+              0,
+              [
+                84
+              ]
+            ]
+          ],
+          "color": "#ffffff"
+        }
+      ],
+      "instruments": [],
+      "trackModifiers": [
+        {
+          "hidden": false,
+          "muted": false,
+          "alias": "Piano"
+        },
+        {
+          "hidden": false,
+          "muted": false,
+          "alias": "Piano"
+        },
+        {
+          "hidden": false,
+          "muted": false,
+          "alias": "Piano"
+        }
+      ],
+      "breakpoints": [],
+      "difficulty": 5,
+      "snapPoint": 1
+    }
+  },
+  "composed-easy-6keys": {
+    "rating": 2,
+    "performed": [],
+    "doubled": [
+      1
+    ],
+    "attempts": 2,
+    "converged": true,
+    "song": {
+      "name": "new-format-composed-genshin",
+      "type": "vsrg",
+      "bpm": 220,
+      "pitch": "C",
+      "version": 3,
+      "keys": 6,
+      "data": {
+        "isComposed": false,
+        "isComposedVersion": false,
+        "appName": "Sky"
+      },
+      "id": null,
+      "audioSongId": "composed-source",
+      "folderId": null,
+      "duration": 60000,
+      "tracks": [
+        {
+          "instrument": {
+            "name": "Piano",
+            "volume": 100,
+            "pitch": "",
+            "visible": true,
+            "icon": "circle",
+            "alias": "",
+            "muted": false,
+            "solo": false,
+            "reverbOverride": null
+          },
+          "hitObjects": [
+            [
+              3,
+              0,
+              0,
+              [
+                69
+              ]
+            ],
+            [
+              4,
+              273,
+              0,
+              [
+                71
+              ]
+            ],
+            [
+              3,
+              1091,
+              0,
+              [
+                69
+              ]
+            ],
+            [
+              4,
+              1364,
+              0,
+              [
+                71
+              ]
+            ],
+            [
+              2,
+              2386,
+              0,
+              [
+                74,
+                83
+              ]
+            ],
+            [
+              3,
+              2659,
+              0,
+              [
+                76,
+                84
+              ]
+            ]
+          ],
+          "color": "#ffffff"
+        }
+      ],
+      "instruments": [],
+      "trackModifiers": [
+        {
+          "hidden": false,
+          "muted": false,
+          "alias": "Piano"
+        },
+        {
+          "hidden": false,
+          "muted": false,
+          "alias": "Piano"
+        },
+        {
+          "hidden": false,
+          "muted": false,
+          "alias": "Piano"
+        }
+      ],
+      "breakpoints": [],
+      "difficulty": 5,
+      "snapPoint": 1
+    }
+  },
+  "composed-normal-6keys": {
+    "rating": 5.6,
+    "performed": [],
+    "doubled": [
+      1
+    ],
+    "attempts": 1,
+    "converged": true,
+    "song": {
+      "name": "new-format-composed-genshin",
+      "type": "vsrg",
+      "bpm": 220,
+      "pitch": "C",
+      "version": 3,
+      "keys": 6,
+      "data": {
+        "isComposed": false,
+        "isComposedVersion": false,
+        "appName": "Sky"
+      },
+      "id": null,
+      "audioSongId": "composed-source",
+      "folderId": null,
+      "duration": 60000,
+      "tracks": [
+        {
+          "instrument": {
+            "name": "Piano",
+            "volume": 100,
+            "pitch": "",
+            "visible": true,
+            "icon": "circle",
+            "alias": "",
+            "muted": false,
+            "solo": false,
+            "reverbOverride": null
+          },
+          "hitObjects": [
+            [
+              3,
+              0,
+              0,
+              [
+                69
+              ]
+            ],
+            [
+              4,
+              273,
+              0,
+              [
+                71
+              ]
+            ],
+            [
+              5,
+              545,
+              0,
+              [
+                72
+              ]
+            ],
+            [
+              4,
+              682,
+              0,
+              [
+                74
+              ]
+            ],
+            [
+              5,
+              818,
+              0,
+              [
+                76
+              ]
+            ],
+            [
+              3,
+              1091,
+              0,
+              [
+                69
+              ]
+            ],
+            [
+              4,
+              1364,
+              0,
+              [
+                71
+              ]
+            ],
+            [
+              4,
+              1773,
+              0,
+              [
+                76
+              ]
+            ],
+            [
+              4,
+              2045,
+              0,
+              [
+                69
+              ]
+            ],
+            [
+              5,
+              2045,
+              0,
+              [
+                77
+              ]
+            ],
+            [
+              4,
+              2386,
+              0,
+              [
+                74
+              ]
+            ],
+            [
+              5,
+              2386,
+              0,
+              [
+                83
+              ]
+            ],
+            [
+              4,
+              2659,
+              0,
+              [
+                76
+              ]
+            ],
+            [
+              5,
+              2659,
+              0,
+              [
+                84
+              ]
+            ]
+          ],
+          "color": "#ffffff"
+        }
+      ],
+      "instruments": [],
+      "trackModifiers": [
+        {
+          "hidden": false,
+          "muted": false,
+          "alias": "Piano"
+        },
+        {
+          "hidden": false,
+          "muted": false,
+          "alias": "Piano"
+        },
+        {
+          "hidden": false,
+          "muted": false,
+          "alias": "Piano"
+        }
+      ],
+      "breakpoints": [],
+      "difficulty": 5,
+      "snapPoint": 1
+    }
+  },
+  "composed-hard-6keys": {
+    "rating": 6,
+    "performed": [],
+    "doubled": [
+      1
+    ],
+    "attempts": 1,
+    "converged": true,
+    "song": {
+      "name": "new-format-composed-genshin",
+      "type": "vsrg",
+      "bpm": 220,
+      "pitch": "C",
+      "version": 3,
+      "keys": 6,
+      "data": {
+        "isComposed": false,
+        "isComposedVersion": false,
+        "appName": "Sky"
+      },
+      "id": null,
+      "audioSongId": "composed-source",
+      "folderId": null,
+      "duration": 60000,
+      "tracks": [
+        {
+          "instrument": {
+            "name": "Piano",
+            "volume": 100,
+            "pitch": "",
+            "visible": true,
+            "icon": "circle",
+            "alias": "",
+            "muted": false,
+            "solo": false,
+            "reverbOverride": null
+          },
+          "hitObjects": [
+            [
+              3,
+              0,
+              0,
+              [
+                69
+              ]
+            ],
+            [
+              4,
+              273,
+              0,
+              [
+                71
+              ]
+            ],
+            [
+              5,
+              545,
+              0,
+              [
+                72
+              ]
+            ],
+            [
+              4,
+              682,
+              0,
+              [
+                74
+              ]
+            ],
+            [
+              5,
+              818,
+              0,
+              [
+                76
+              ]
+            ],
+            [
+              3,
+              1091,
+              0,
+              [
+                69
+              ]
+            ],
+            [
+              4,
+              1364,
+              0,
+              [
+                71
+              ]
+            ],
+            [
+              5,
+              1500,
+              0,
+              [
+                74
+              ]
+            ],
+            [
+              4,
+              1773,
+              0,
+              [
+                76
+              ]
+            ],
+            [
+              4,
+              2045,
+              0,
+              [
+                69
+              ]
+            ],
+            [
+              5,
+              2045,
+              0,
+              [
+                77
+              ]
+            ],
+            [
+              4,
+              2386,
+              0,
+              [
+                74
+              ]
+            ],
+            [
+              5,
+              2386,
+              0,
+              [
+                83
+              ]
+            ],
+            [
+              4,
+              2659,
+              0,
+              [
+                76
+              ]
+            ],
+            [
+              5,
+              2659,
+              0,
+              [
+                84
+              ]
+            ]
+          ],
+          "color": "#ffffff"
+        }
+      ],
+      "instruments": [],
+      "trackModifiers": [
+        {
+          "hidden": false,
+          "muted": false,
+          "alias": "Piano"
+        },
+        {
+          "hidden": false,
+          "muted": false,
+          "alias": "Piano"
+        },
+        {
+          "hidden": false,
+          "muted": false,
+          "alias": "Piano"
+        }
+      ],
+      "breakpoints": [],
+      "difficulty": 5,
+      "snapPoint": 1
+    }
+  },
+  "recorded-easy-4keys": {
+    "rating": 1.8,
+    "performed": [],
+    "doubled": [
+      0
+    ],
+    "attempts": 2,
+    "converged": true,
+    "song": {
+      "name": "new-format-recorded",
+      "type": "vsrg",
+      "bpm": 220,
+      "pitch": "C",
+      "version": 3,
+      "keys": 4,
+      "data": {
+        "isComposed": false,
+        "isComposedVersion": false,
+        "appName": "Sky"
+      },
+      "id": null,
+      "audioSongId": "recorded-source",
+      "folderId": null,
+      "duration": 60000,
+      "tracks": [
+        {
+          "instrument": {
+            "name": "Piano",
+            "volume": 100,
+            "pitch": "",
+            "visible": true,
+            "icon": "circle",
+            "alias": "",
+            "muted": false,
+            "solo": false,
+            "reverbOverride": null
+          },
+          "hitObjects": [
+            [
+              2,
+              100,
+              0,
+              [
+                60
+              ]
+            ],
+            [
+              3,
+              420,
+              0,
+              [
+                62
+              ]
+            ],
+            [
+              1,
+              1526,
+              0,
+              [
+                69
+              ]
+            ],
+            [
+              2,
+              1832,
+              0,
+              [
+                71
+              ]
+            ],
+            [
+              2,
+              2668,
+              0,
+              [
+                76
+              ]
+            ]
+          ],
+          "color": "#ffffff"
+        }
+      ],
+      "instruments": [],
+      "trackModifiers": [
+        {
+          "hidden": false,
+          "muted": false,
+          "alias": "Piano"
+        }
+      ],
+      "breakpoints": [],
+      "difficulty": 5,
+      "snapPoint": 1
+    }
+  },
+  "recorded-normal-4keys": {
+    "rating": 4.2,
+    "performed": [
+      0
+    ],
+    "doubled": [],
+    "attempts": 1,
+    "converged": true,
+    "song": {
+      "name": "new-format-recorded",
+      "type": "vsrg",
+      "bpm": 220,
+      "pitch": "C",
+      "version": 3,
+      "keys": 4,
+      "data": {
+        "isComposed": false,
+        "isComposedVersion": false,
+        "appName": "Sky"
+      },
+      "id": null,
+      "audioSongId": "recorded-source",
+      "folderId": null,
+      "duration": 60000,
+      "tracks": [
+        {
+          "instrument": {
+            "name": "Piano",
+            "volume": 100,
+            "pitch": "",
+            "visible": true,
+            "icon": "circle",
+            "alias": "",
+            "muted": false,
+            "solo": false,
+            "reverbOverride": null
+          },
+          "hitObjects": [
+            [
+              2,
+              100,
+              0,
+              [
+                60
+              ]
+            ],
+            [
+              3,
+              420,
+              0,
+              [
+                62
+              ]
+            ],
+            [
+              2,
+              676,
+              0,
+              [
+                64
+              ]
+            ],
+            [
+              3,
+              968,
+              0,
+              [
+                65
+              ]
+            ],
+            [
+              2,
+              1212,
+              0,
+              [
+                67
+              ]
+            ],
+            [
+              3,
+              1526,
+              0,
+              [
+                69
+              ]
+            ],
+            [
+              2,
+              1832,
+              0,
+              [
+                71
+              ]
+            ],
+            [
+              3,
+              2124,
+              0,
+              [
+                72
+              ]
+            ],
+            [
+              2,
+              2425,
+              0,
+              [
+                74
+              ]
+            ],
+            [
+              3,
+              2668,
+              0,
+              [
+                76
+              ]
+            ]
+          ],
+          "color": "#ffffff"
+        }
+      ],
+      "instruments": [],
+      "trackModifiers": [
+        {
+          "hidden": false,
+          "muted": true,
+          "alias": "Piano"
+        }
+      ],
+      "breakpoints": [],
+      "difficulty": 5,
+      "snapPoint": 1
+    }
+  },
+  "recorded-hard-4keys": {
+    "rating": 4.2,
+    "performed": [
+      0
+    ],
+    "doubled": [],
+    "attempts": 4,
+    "converged": false,
+    "song": {
+      "name": "new-format-recorded",
+      "type": "vsrg",
+      "bpm": 220,
+      "pitch": "C",
+      "version": 3,
+      "keys": 4,
+      "data": {
+        "isComposed": false,
+        "isComposedVersion": false,
+        "appName": "Sky"
+      },
+      "id": null,
+      "audioSongId": "recorded-source",
+      "folderId": null,
+      "duration": 60000,
+      "tracks": [
+        {
+          "instrument": {
+            "name": "Piano",
+            "volume": 100,
+            "pitch": "",
+            "visible": true,
+            "icon": "circle",
+            "alias": "",
+            "muted": false,
+            "solo": false,
+            "reverbOverride": null
+          },
+          "hitObjects": [
+            [
+              2,
+              100,
+              0,
+              [
+                60
+              ]
+            ],
+            [
+              3,
+              420,
+              0,
+              [
+                62
+              ]
+            ],
+            [
+              2,
+              676,
+              0,
+              [
+                64
+              ]
+            ],
+            [
+              3,
+              968,
+              0,
+              [
+                65
+              ]
+            ],
+            [
+              2,
+              1212,
+              0,
+              [
+                67
+              ]
+            ],
+            [
+              3,
+              1526,
+              0,
+              [
+                69
+              ]
+            ],
+            [
+              2,
+              1832,
+              0,
+              [
+                71
+              ]
+            ],
+            [
+              3,
+              2124,
+              0,
+              [
+                72
+              ]
+            ],
+            [
+              2,
+              2425,
+              0,
+              [
+                74
+              ]
+            ],
+            [
+              3,
+              2668,
+              0,
+              [
+                76
+              ]
+            ]
+          ],
+          "color": "#ffffff"
+        }
+      ],
+      "instruments": [],
+      "trackModifiers": [
+        {
+          "hidden": false,
+          "muted": true,
+          "alias": "Piano"
+        }
+      ],
+      "breakpoints": [],
+      "difficulty": 5,
+      "snapPoint": 1
+    }
+  },
+  "recorded-easy-6keys": {
+    "rating": 2.9,
+    "performed": [],
+    "doubled": [
+      0
+    ],
+    "attempts": 1,
+    "converged": true,
+    "song": {
+      "name": "new-format-recorded",
+      "type": "vsrg",
+      "bpm": 220,
+      "pitch": "C",
+      "version": 3,
+      "keys": 6,
+      "data": {
+        "isComposed": false,
+        "isComposedVersion": false,
+        "appName": "Sky"
+      },
+      "id": null,
+      "audioSongId": "recorded-source",
+      "folderId": null,
+      "duration": 60000,
+      "tracks": [
+        {
+          "instrument": {
+            "name": "Piano",
+            "volume": 100,
+            "pitch": "",
+            "visible": true,
+            "icon": "circle",
+            "alias": "",
+            "muted": false,
+            "solo": false,
+            "reverbOverride": null
+          },
+          "hitObjects": [
+            [
+              3,
+              100,
+              0,
+              [
+                60
+              ]
+            ],
+            [
+              4,
+              420,
+              0,
+              [
+                62
+              ]
+            ],
+            [
+              5,
+              676,
+              0,
+              [
+                64
+              ]
+            ],
+            [
+              4,
+              1212,
+              0,
+              [
+                67
+              ]
+            ],
+            [
+              5,
+              1526,
+              0,
+              [
+                69
+              ]
+            ],
+            [
+              4,
+              1832,
+              0,
+              [
+                71
+              ]
+            ],
+            [
+              5,
+              2425,
+              0,
+              [
+                74
+              ]
+            ],
+            [
+              4,
+              2668,
+              0,
+              [
+                76
+              ]
+            ]
+          ],
+          "color": "#ffffff"
+        }
+      ],
+      "instruments": [],
+      "trackModifiers": [
+        {
+          "hidden": false,
+          "muted": false,
+          "alias": "Piano"
+        }
+      ],
+      "breakpoints": [],
+      "difficulty": 5,
+      "snapPoint": 1
+    }
+  },
+  "recorded-normal-6keys": {
+    "rating": 4.1,
+    "performed": [
+      0
+    ],
+    "doubled": [],
+    "attempts": 1,
+    "converged": true,
+    "song": {
+      "name": "new-format-recorded",
+      "type": "vsrg",
+      "bpm": 220,
+      "pitch": "C",
+      "version": 3,
+      "keys": 6,
+      "data": {
+        "isComposed": false,
+        "isComposedVersion": false,
+        "appName": "Sky"
+      },
+      "id": null,
+      "audioSongId": "recorded-source",
+      "folderId": null,
+      "duration": 60000,
+      "tracks": [
+        {
+          "instrument": {
+            "name": "Piano",
+            "volume": 100,
+            "pitch": "",
+            "visible": true,
+            "icon": "circle",
+            "alias": "",
+            "muted": false,
+            "solo": false,
+            "reverbOverride": null
+          },
+          "hitObjects": [
+            [
+              3,
+              100,
+              0,
+              [
+                60
+              ]
+            ],
+            [
+              4,
+              420,
+              0,
+              [
+                62
+              ]
+            ],
+            [
+              5,
+              676,
+              0,
+              [
+                64
+              ]
+            ],
+            [
+              4,
+              968,
+              0,
+              [
+                65
+              ]
+            ],
+            [
+              5,
+              1212,
+              0,
+              [
+                67
+              ]
+            ],
+            [
+              4,
+              1526,
+              0,
+              [
+                69
+              ]
+            ],
+            [
+              5,
+              1832,
+              0,
+              [
+                71
+              ]
+            ],
+            [
+              4,
+              2124,
+              0,
+              [
+                72
+              ]
+            ],
+            [
+              5,
+              2425,
+              0,
+              [
+                74
+              ]
+            ],
+            [
+              4,
+              2668,
+              0,
+              [
+                76
+              ]
+            ]
+          ],
+          "color": "#ffffff"
+        }
+      ],
+      "instruments": [],
+      "trackModifiers": [
+        {
+          "hidden": false,
+          "muted": true,
+          "alias": "Piano"
+        }
+      ],
+      "breakpoints": [],
+      "difficulty": 5,
+      "snapPoint": 1
+    }
+  },
+  "recorded-hard-6keys": {
+    "rating": 4.1,
+    "performed": [
+      0
+    ],
+    "doubled": [],
+    "attempts": 4,
+    "converged": false,
+    "song": {
+      "name": "new-format-recorded",
+      "type": "vsrg",
+      "bpm": 220,
+      "pitch": "C",
+      "version": 3,
+      "keys": 6,
+      "data": {
+        "isComposed": false,
+        "isComposedVersion": false,
+        "appName": "Sky"
+      },
+      "id": null,
+      "audioSongId": "recorded-source",
+      "folderId": null,
+      "duration": 60000,
+      "tracks": [
+        {
+          "instrument": {
+            "name": "Piano",
+            "volume": 100,
+            "pitch": "",
+            "visible": true,
+            "icon": "circle",
+            "alias": "",
+            "muted": false,
+            "solo": false,
+            "reverbOverride": null
+          },
+          "hitObjects": [
+            [
+              3,
+              100,
+              0,
+              [
+                60
+              ]
+            ],
+            [
+              4,
+              420,
+              0,
+              [
+                62
+              ]
+            ],
+            [
+              5,
+              676,
+              0,
+              [
+                64
+              ]
+            ],
+            [
+              4,
+              968,
+              0,
+              [
+                65
+              ]
+            ],
+            [
+              5,
+              1212,
+              0,
+              [
+                67
+              ]
+            ],
+            [
+              4,
+              1526,
+              0,
+              [
+                69
+              ]
+            ],
+            [
+              5,
+              1832,
+              0,
+              [
+                71
+              ]
+            ],
+            [
+              4,
+              2124,
+              0,
+              [
+                72
+              ]
+            ],
+            [
+              5,
+              2425,
+              0,
+              [
+                74
+              ]
+            ],
+            [
+              4,
+              2668,
+              0,
+              [
+                76
+              ]
+            ]
+          ],
+          "color": "#ffffff"
+        }
+      ],
+      "instruments": [],
+      "trackModifiers": [
+        {
+          "hidden": false,
+          "muted": true,
+          "alias": "Piano"
+        }
+      ],
+      "breakpoints": [],
+      "difficulty": 5,
+      "snapPoint": 1
+    }
+  }
+}

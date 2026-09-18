@@ -1,0 +1,153 @@
+{
+  "recorded": {
+    "name": "Old recorded",
+    "type": "recorded",
+    "folderId": null,
+    "instruments": [
+      {
+        "name": "Piano",
+        "volume": 100,
+        "pitch": "",
+        "visible": true,
+        "icon": "circle",
+        "alias": "",
+        "muted": false,
+        "reverbOverride": null
+      },
+      {
+        "name": "Piano",
+        "volume": 100,
+        "pitch": "",
+        "visible": true,
+        "icon": "circle",
+        "alias": "",
+        "muted": false,
+        "reverbOverride": null
+      }
+    ],
+    "version": 2,
+    "pitch": "C",
+    "bpm": 220,
+    "reverb": false,
+    "data": {
+      "isComposed": false,
+      "isComposedVersion": false,
+      "appName": "Sky"
+    },
+    "notes": [
+      [
+        0,
+        0,
+        "1"
+      ],
+      [
+        1,
+        100,
+        "1"
+      ],
+      [
+        5,
+        200,
+        "2"
+      ],
+      [
+        2,
+        300,
+        "1"
+      ],
+      [
+        4,
+        400,
+        "3"
+      ]
+    ],
+    "id": null
+  },
+  "composed": {
+    "name": "Old composed",
+    "type": "composed",
+    "bpm": 220,
+    "pitch": "C",
+    "version": 3,
+    "folderId": null,
+    "data": {
+      "isComposed": true,
+      "isComposedVersion": true,
+      "appName": "Sky"
+    },
+    "reverb": false,
+    "breakpoints": [
+      0
+    ],
+    "instruments": [
+      {
+        "name": "Piano",
+        "volume": 100,
+        "pitch": "",
+        "visible": true,
+        "icon": "circle",
+        "alias": "",
+        "muted": false,
+        "reverbOverride": null
+      },
+      {
+        "name": "Piano",
+        "volume": 100,
+        "pitch": "",
+        "visible": true,
+        "icon": "circle",
+        "alias": "",
+        "muted": false,
+        "reverbOverride": null
+      }
+    ],
+    "columns": [
+      [
+        2,
+        [
+          [
+            0,
+            "1"
+          ]
+        ]
+      ],
+      [
+        2,
+        [
+          [
+            1,
+            "1"
+          ]
+        ]
+      ],
+      [
+        2,
+        [
+          [
+            5,
+            "2"
+          ]
+        ]
+      ],
+      [
+        2,
+        [
+          [
+            2,
+            "1"
+          ]
+        ]
+      ],
+      [
+        0,
+        [
+          [
+            4,
+            "3"
+          ]
+        ]
+      ]
+    ],
+    "id": null
+  }
+}

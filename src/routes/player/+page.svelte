@@ -1,0 +1,19 @@
+<script lang="ts">
+  import { onMount } from 'svelte';
+  import AppBackground from '$cmp/theme/AppBackground.svelte';
+  import Player from '$cmp/pages/Player/Player.svelte';
+  import { setPageVisited } from '$stores/PageVisitStore.svelte';
+  import PageHeading from '$cmp/shell/PageHeading.svelte';
+  import { t } from '$i18n/binding.svelte';
+
+  // AppBackground is wired at the route level (not inside Player.svelte itself) - page-visit
+  // tracking lives here too; Player.svelte owns its own reactive t() binding internally.
+  onMount(() => {
+    setPageVisited('player');
+  });
+</script>
+
+<AppBackground page="Main">
+  <PageHeading text={t('home:player_name')} />
+  <Player />
+</AppBackground>

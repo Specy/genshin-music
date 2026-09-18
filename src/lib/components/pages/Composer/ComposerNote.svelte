@@ -1,0 +1,318 @@
+<script module lang="ts">
+  import { game } from '$game';
+  import type { LayerStatus } from '$core/Songs/Layer';
+
+  // Precomputes a LayerStatus (bit pattern 0-15) -> CSS class string lookup, e.g. layer=5
+  // (bits 1+3 set) -> "layer-1 layer-3".
+  // QUIRK: the join emits empty tokens, so a layer=0 note's class string carries trailing spaces — reproduced byte-for-byte, do not normalise it. The map covers 0-15 only; LayerStatus also permits 16, which old never produced and this deliberately does not widen to.
+  const classNameMap = new Map<LayerStatus, string>(
+    new Array(16).fill(0).map((_, i) => {
+      const layers = i
+        .toString(2)
+        .split('')
+        .map((x) => parseInt(x))
+        .reverse();
+      const className = `${game.notes.cssClasses.noteComposer} ${layers.map((x, idx) => (x === 1 ? `layer-${idx + 1}` : '')).join(' ')}`;
+      return [i as LayerStatus, className] as const;
+    })
+  );
+</script>
+
+<script lang="ts">
+  import { ThemeProvider } from '$core/theme/ThemeProvider.svelte';
+  import { preventDefault } from '$core/utils/Utilities';
+  import type { InstrumentName } from '$core/types';
+  import type { ObservableNote } from '$lib/audio/Instrument.svelte';
+  import type { NoteImage } from '$lib/games/types';
+  import GenshinNoteBorder from '$cmp/GenshinNoteBorder.svelte';
+  import SvgNote from '$cmp/SvgNote.svelte';
+  import { suppressNativeTouch } from '$cmp/suppressNativeTouch';
+  //THE ONE LONG-PRESS TIMING, shared with the Pro View's canvas, which opens the same popover from
+  //the same hold (spec §12: no new thresholds) - see composerInput.
+  import { COMPOSER_LONG_PRESS_MS } from './composerInput';
+
+  let {
+    data,
+    layer,
+    instrument,
+    clickAction,
+    releaseAction,
+    longPressAction,
+    dragAction,
+    registerElement,
+    held = false,
+    locked = false,
+    noteText,
+    noteImage,
+  }: {
+    data: ObservableNote;
+    layer: LayerStatus;
+    instrument: InstrumentName;
+    /** Pointer pressed the button. The pointerId identifies the FINGER, which is what a held note is owned by. */
+    clickAction: (data: ObservableNote, pointerId: number) => void;
+    /** Pointer released/left the button — completes the press gesture (short press). */
+    releaseAction?: (data: ObservableNote, pointerId: number) => void;
+    /** Held COMPOSER_LONG_PRESS_MS without release — opens the duration popover for this note, anchored to the button element (live element so the popover can follow resizes). */
+    longPressAction?: (data: ObservableNote, anchor: HTMLElement) => void;
+    /** Pointer moved while the long press is still held — signed horizontal travel in px from where the press began. */
+    dragAction?: (data: ObservableNote, deltaX: number) => void;
+    /**
+     * This key's element, published on mount and withdrawn (null) on unmount — NOT a gesture. A hold
+     * started on the physical keyboard has no element of its own to anchor its duration popover to,
+     * so it borrows the on-screen key wearing the same letter (Composer.svelte's physicalKeyAnchor).
+     */
+    registerElement?: (data: ObservableNote, element: HTMLElement | null) => void;
+    /** The current column is covered by this button's note span on the current layer. */
+    held?: boolean;
+    /** MIDI import keeps the key audible but makes its editing gesture read-only. */
+    locked?: boolean;
+    noteText: string;
+    noteImage: NoteImage;
+  } = $props();
+
+  let longPressTimeout: ReturnType<typeof setTimeout> | 0 = 0;
+  let buttonElement: HTMLButtonElement | undefined = $state();
+  //where the still-unreleased press began, and whether it has already turned into a long
+  //press — together they are what makes the moves below a duration drag rather than drift
+  let pressOriginX = 0;
+  let longPressFired = false;
+  /** The pointer currently pressing this button, if any — the gesture's owner (see endPress). */
+  let activePointerId: number | null = null;
+
+  function startLongPress() {
+    if (!longPressAction || locked) return;
+    clearTimeout(longPressTimeout);
+    longPressTimeout = setTimeout(() => {
+      longPressTimeout = 0;
+      if (!buttonElement || locked) return;
+      longPressFired = true;
+      longPressAction(data, buttonElement);
+    }, COMPOSER_LONG_PRESS_MS);
+  }
+
+  function endPress(pointerId: number) {
+    //Only the pointer that pressed may end the press. pointerleave fires for pointers that
+    //never pressed at all (a mouse merely crossing the button while a finger or a key holds
+    //this note), and that stray release used to cut the real holder's sound.
+    if (activePointerId !== pointerId) return;
+    activePointerId = null;
+    clearTimeout(longPressTimeout);
+    longPressTimeout = 0;
+    longPressFired = false;
+    releaseAction?.(data, pointerId);
+  }
+
+  //THE KEY PUBLISHES ITSELF (see registerElement): re-runs if the button element or the note it
+  //stands for is replaced, and the cleanup withdraws the pair it registered rather than "this
+  //note's entry", so a re-run cannot delete the registration it has just made.
+  $effect(() => {
+    const element = buttonElement;
+    const note = data;
+    if (!registerElement || !element) return;
+    registerElement(note, element);
+    return () => registerElement(note, null);
+  });
+
+  //A held note outlives the pointer events of a button that can be destroyed under it: the
+  //keyboard is swapped out wholesale while audio-recording, and re-created when the layer's
+  //instrument changes. No pointer event is delivered then, so the release has to come from here.
+  $effect(() => {
+    return () => {
+      if (activePointerId !== null) endPress(activePointerId);
+    };
+  });
+
+  let colors = $state({
+    note_background: ThemeProvider.get('note_background').desaturate(0.6).toString(),
+    isAccentDefault: ThemeProvider.isDefault('accent'),
+  });
+
+  $effect(() => {
+    const color = ThemeProvider.get('note_background').desaturate(0.6);
+    colors = {
+      note_background: color.isDark()
+        ? color.lighten(0.45).toString()
+        : color.darken(0.18).toString(),
+      isAccentDefault: ThemeProvider.isDefault('accent'),
+    };
+  });
+
+  const className = $derived(classNameMap.get(layer) ?? game.notes.cssClasses.noteComposer);
+</script>
+
+<button
+  bind:this={buttonElement}
+  {@attach suppressNativeTouch}
+  onpointerdown={(e) => {
+    preventDefault(e);
+    //keep this pointer's moves and its release on THIS button once the finger/cursor wanders
+    //off it, which a duration drag immediately does: touch captures implicitly, mouse does not.
+    //Boundary events are held back until the capture is released, so `onpointerleave` below
+    //still ends the press — after the pointerup that already did, and it no-ops there.
+    //A second pointer landing on a button someone is already holding takes it over — but the
+    //displaced one must be RELEASED first. Its own pointerup is about to be swallowed by the
+    //ownership guard in endPress, and with held notes refcounted per id (HeldNoteRegistry) a
+    //swallowed release is a voice that never stops and a span that keeps growing.
+    if (activePointerId !== null && activePointerId !== e.pointerId) endPress(activePointerId);
+    buttonElement?.setPointerCapture(e.pointerId);
+    pressOriginX = e.clientX;
+    longPressFired = false;
+    activePointerId = e.pointerId;
+    clickAction(data, e.pointerId);
+    startLongPress();
+  }}
+  onpointermove={(e) => {
+    //only once the long press has fired: before that the press is still a tap, and the
+    //keyboard is a surface fingers legitimately rest on
+    if (longPressFired && activePointerId === e.pointerId) {
+      dragAction?.(data, e.clientX - pressOriginX);
+    }
+  }}
+  onpointerup={(e) => endPress(e.pointerId)}
+  onpointerleave={(e) => endPress(e.pointerId)}
+  onpointercancel={(e) => endPress(e.pointerId)}
+  class={['button-hitbox', locked && 'composer-note-locked']}
+  aria-disabled={locked}
+  oncontextmenu={preventDefault}
+>
+  <div class={className}>
+    {#if game.features.hasNoteFrame}
+      <GenshinNoteBorder fill={colors.note_background} class="genshin-border" />
+    {/if}
+    <SvgNote
+      name={noteImage}
+      color={colors.isAccentDefault ? game.instruments.data[instrument]?.fill : undefined}
+      background="var(--note-background)"
+    />
+    <div class="layer-3-ball-bigger"></div>
+    <div class="layer-4-line"></div>
+    {#if held}
+      <div
+        style="z-index:2;position:absolute;bottom:6%;left:20%;right:20%;height:0.25rem;border-radius:0.2rem;background-color:var(--accent);pointer-events:none"
+      ></div>
+    {/if}
+    <div class={game.features.hasNoteFrame ? 'note-name' : 'note-name-sky'}>
+      {noteText}
+    </div>
+  </div>
+</button>
+
+<style>
+  /* Read-only, not natively disabled: a locked key still auditions through its guarded handler. */
+  .composer-note-locked {
+    opacity: 0.65;
+    cursor: not-allowed;
+  }
+
+  /* ------------------------------------------------------------------------------------------
+     THE LAYER MARKS, moved out of App.css: every rule below is rooted in a class this component
+     puts on its own note element, and no other component renders any of them.
+
+     `layer-1`..`layer-4` are not spelled anywhere in this file's markup - classNameMap up top
+     builds them into ONE string per LayerStatus - so Svelte cannot narrow these selectors and just
+     scopes them to this component's elements, which is exactly right: the note div is one of them.
+     What it genuinely cannot reach are the descendants a CHILD renders, and those halves are
+     `:global(...)`: `.genshin-border` is the class this file hands to GenshinNoteBorder, and
+     `.svg-note`/`.svg-b` live inside the game's own glyph components (SvgNote -> notes.svgGlyphs).
+
+     `.note-composer` ITSELF STAYS IN App.css, together with `.note-composer svg`: it is one of the
+     four note classes the game config names (notes.cssClasses), so its sizing/border/transition
+     rules are written as one group with `.note`/`.note-sky`/`.note-composer-sky` and cannot travel
+     here. Only the `.layer-*` half of the block moved.
+
+     `.layer-3-ball` (the pre-"bigger" ball, grouped with `.layer-3-ball-bigger` in two of the rules
+     below) carried no markup anywhere and was dropped rather than moved. */
+
+  /* Ahead of the layer rules because that is where App.css had it. Inert either way - nothing
+     below sets `bottom` - but it is the order the cascade had. */
+  @media only screen and (max-width: 920px) {
+    .note-composer .note-name {
+      bottom: 10% !important;
+    }
+  }
+
+  .layer-1 {
+    background-color: var(--composer-main-layer) !important;
+    border-color: var(--composer-main-layer-layer-20) !important;
+  }
+
+  .layer-1 .note-name-sky {
+    color: var(--composer-main-layer-text) !important;
+  }
+
+  .layer-2 :global(.svg-b) {
+    stroke: var(--composer-secondary-layer) !important;
+  }
+
+  .layer-1 :global(.svg-b) {
+    stroke: var(--composer-main-layer) !important;
+  }
+
+  .layer-1 :global(.svg-note) {
+    fill: var(--composer-main-layer-text) !important;
+    stroke: var(--composer-main-layer-text) !important;
+  }
+
+  .layer-1 :global(.genshin-border) {
+    fill: var(--composer-main-layer-text) !important;
+    stroke: var(--composer-main-layer-text) !important;
+  }
+
+  .layer-1 .note-name {
+    color: var(--composer-main-layer-text) !important;
+  }
+
+  .layer-2,
+  .layer-2 :global(.genshin-border) {
+    border-color: var(--composer-secondary-layer) !important;
+    fill: var(--composer-secondary-layer) !important;
+    stroke: var(--composer-secondary-layer) !important;
+  }
+
+  .layer-3-ball-bigger {
+    position: absolute;
+    background-color: var(--composer-secondary-layer);
+    width: 1.5vw;
+    height: 1.5vw;
+    border-radius: 50%;
+    visibility: hidden;
+  }
+
+  .layer-4-line {
+    height: 25%;
+    width: 100%;
+    position: absolute;
+    background-color: var(--composer-secondary-layer);
+    border-radius: 0.2vw;
+    visibility: hidden;
+  }
+
+  .layer-4 .note-name-sky,
+  .layer-3 .note-name-sky {
+    color: var(--composer-secondary-layer-text) !important;
+  }
+
+  .note-composer.layer-3 :global(.svg-note),
+  .note-composer.layer-4 :global(.svg-note) {
+    fill: var(--composer-main-layer-text) !important;
+    stroke: var(--composer-main-layer-text) !important;
+  }
+
+  .layer-3 .layer-3-ball-bigger {
+    visibility: visible;
+  }
+
+  .layer-4 .layer-4-line {
+    visibility: visible;
+  }
+
+  .layer-3-ball-bigger {
+    width: 2.6vw;
+    height: 2.6vw;
+  }
+
+  .note-composer .layer-3-ball-bigger {
+    width: 3vw;
+    height: 3vw;
+  }
+</style>

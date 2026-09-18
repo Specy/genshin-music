@@ -1,0 +1,56 @@
+{
+  "displayName": "TR-909",
+  "family": "percussive",
+  "midiName": "synth drum",
+  "shape": "sky-2x4",
+  "notes": [
+    {
+      "nominal": 60,
+      "baseNote": "C",
+      "pitched": false,
+      "icon": "dmcr"
+    },
+    {
+      "nominal": 62,
+      "baseNote": "D",
+      "pitched": false,
+      "icon": "dm"
+    },
+    {
+      "nominal": 64,
+      "baseNote": "E",
+      "pitched": false,
+      "icon": "cr"
+    },
+    {
+      "nominal": 65,
+      "baseNote": "F",
+      "pitched": false,
+      "icon": "dm"
+    },
+    {
+      "nominal": 67,
+      "baseNote": "G",
+      "pitched": false,
+      "icon": "cr"
+    },
+    {
+      "nominal": 69,
+      "baseNote": "A",
+      "pitched": false,
+      "icon": "dm"
+    },
+    {
+      "nominal": 71,
+      "baseNote": "B",
+      "pitched": false,
+      "icon": "cr"
+    },
+    {
+      "nominal": 72,
+      "baseNote": "C",
+      "pitched": false,
+      "icon": "dmcr"
+    }
+  ]
+}

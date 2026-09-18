@@ -15,23 +15,24 @@ jobs:
     name: Deploy
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
+        uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: 20.2.0
+          node-version: 24.18.0
+          cache: 'npm'
       - name: Build
-        run: npm i && npm run build:all
+        run: npm install && npm run build:all
         env:
           CI: false
       - name: Publish Genshin Music Nightly
-        uses: cloudflare/wrangler-action@3.0.0
+        uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CF_PAGES_TOKEN }}
           accountId: ${{ secrets.CF_ACCOUNT_ID }}
-          command: pages publish ./build/genshinMusic --project-name=genshin-music-nightly
+          command: pages deploy ./build/genshinMusic --project-name=genshin-music-nightly
       - name: Publish Sky Music Nightly
-        uses: cloudflare/wrangler-action@3.0.0
+        uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CF_PAGES_TOKEN }}
           accountId: ${{ secrets.CF_ACCOUNT_ID }}
-          command: pages publish ./build/skyMusic --project-name=sky-music-nightly
+          command: pages deploy ./build/skyMusic --project-name=sky-music-nightly

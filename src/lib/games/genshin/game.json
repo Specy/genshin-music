@@ -1,0 +1,147 @@
+{
+  "id": "genshin",
+  "storageId": "Genshin",
+  "display": {
+    "name": "Genshin",
+    "company": {
+      "name": "HoYoverse",
+      "shortName": "HoYoverse"
+    },
+    "transferOrigins": [
+      "https://genshin-music.specy.app",
+      "https://beta.genshin-music.specy.app",
+      "https://specy.github.io/genshinMusic"
+    ]
+  },
+  "meta": {
+    "title": "Genshin Music Nightly",
+    "description": "Genshin music, a website to play, practice and compose songs",
+    "canonicalOrigin": "https://genshin-music.specy.app",
+    "themeColor": "#63aea7",
+    "analytics": {
+      "tagId": "G-T3TJDT2NFS",
+      "configId": "G-BSC3PC58G4"
+    },
+    "updateChannelKey": "Genshin"
+  },
+  "notes": {
+    "perColumn": 21,
+    "perRow": 7,
+    "cssClasses": {
+      "noteComposer": "note-composer",
+      "note": "note",
+      "noteAnimation": "note-animation",
+      "approachCircle": "approach-circle",
+      "noteName": "note-name"
+    },
+    "nameTypes": [
+      "Note name",
+      "Keyboard layout",
+      "Your Keyboard layout",
+      "Do Re Mi",
+      "ABC",
+      "No Text",
+      "1 2 3"
+    ],
+    "canonicalNoteIds": [
+      72, 74, 76, 77, 79, 81, 83, 60, 62, 64, 65, 67, 69, 71, 48, 50, 52, 53, 55, 57, 59
+    ],
+    "composerPositions": [6, 5, 4, 3, 2, 1, 0, 13, 12, 11, 10, 9, 8, 7, 20, 19, 18, 17, 16, 15, 14],
+    "importPositions": [14, 15, 16, 17, 18, 19, 20, 7, 8, 9, 10, 11, 12, 13, 0],
+    "animationDelayMs": 100,
+    "composerRowHeightScale": 1,
+    "defaultIcon": "do",
+    "visualNameCasing": "lowercase"
+  },
+  "instruments": {
+    "list": [
+      "Lyre",
+      "Vintage-Lyre",
+      "Zither",
+      "Old-Zither",
+      "Ukulele",
+      "LingeringEuphonia",
+      "LeapingSpiritPiano",
+      "HarmonicKey",
+      "DunDun",
+      "DjemDjemDrum",
+      "NightwindHorn"
+    ],
+    "defaultVolume": 90
+  },
+  "midi": {
+    "bounds": {
+      "upper": 83,
+      "lower": 48
+    },
+    "presets": [
+      {
+        "name": "default",
+        "notes": [
+          72, 74, 76, 77, 79, 81, 83, 60, 62, 64, 65, 67, 69, 71, 48, 50, 52, 53, 55, 57, 59
+        ]
+      }
+    ]
+  },
+  "composer": {
+    "tempoChangers": [
+      {
+        "id": 0,
+        "text": "1",
+        "changer": 1,
+        "color": 5332079
+      },
+      {
+        "id": 1,
+        "text": "1/2",
+        "changer": 0.5,
+        "color": 5338451
+      },
+      {
+        "id": 2,
+        "text": "1/4",
+        "changer": 0.25,
+        "color": 4410493
+      },
+      {
+        "id": 3,
+        "text": "1/8",
+        "changer": 0.125,
+        "color": 7818605
+      }
+    ]
+  },
+  "themes": {
+    "baseConfig": {
+      "text": {
+        "light": "#eae8e6",
+        "dark": "#151414",
+        "note": "#aaaa82"
+      }
+    },
+    "defaultNoteBackground": "#fff9ef"
+  },
+  "settings": {
+    "defaultNoteNameType": {
+      "composer": {
+        "desktop": "Keyboard layout",
+        "mobile": "Do Re Mi"
+      },
+      "player": {
+        "desktop": "Keyboard layout",
+        "mobile": "Do Re Mi"
+      },
+      "zen": {
+        "desktop": "Keyboard layout",
+        "mobile": "Do Re Mi"
+      },
+      "sheetVisualizer": "Keyboard layout"
+    }
+  },
+  "features": {
+    "hasNoteFrame": true
+  },
+  "i18n": {
+    "updateMessage": "Added new instruments: Harmonic Key (genshin)\nAdded new Layout: number layout"
+  }
+}

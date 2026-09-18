@@ -1,0 +1,51 @@
+{
+  "name": "Sky vsrg import",
+  "type": "vsrg",
+  "bpm": 140,
+  "pitch": "C",
+  "version": 2,
+  "keys": 4,
+  "data": {
+    "isComposed": false,
+    "isComposedVersion": false,
+    "appName": "Sky"
+  },
+  "id": null,
+  "audioSongId": null,
+  "folderId": null,
+  "duration": 5000,
+  "tracks": [
+    {
+      "instrument": {
+        "name": "DunDun",
+        "volume": 100,
+        "pitch": "",
+        "visible": true,
+        "icon": "border",
+        "alias": "",
+        "muted": false,
+        "reverbOverride": null
+      },
+      "hitObjects": [
+        [
+          0,
+          500,
+          0,
+          []
+        ],
+        [
+          2,
+          1200,
+          300,
+          []
+        ]
+      ],
+      "color": "#FFFFFF"
+    }
+  ],
+  "instruments": [],
+  "trackModifiers": [],
+  "breakpoints": [],
+  "difficulty": 5,
+  "snapPoint": 1
+}

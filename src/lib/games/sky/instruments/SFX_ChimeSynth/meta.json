@@ -1,0 +1,8 @@
+{
+  "displayName": "Chime Synth",
+  "family": "percussive",
+  "midiName": "tubular bells",
+  "shape": "sky-2x4",
+  "register": "C6",
+  "notes": "synth-8"
+}

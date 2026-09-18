@@ -1,0 +1,9 @@
+build/
+.svelte-kit/
+node_modules/
+static/
+test/
+.claude/
+.superpowers/
+src/lib/core/
+package-lock.json
