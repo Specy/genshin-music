@@ -183,7 +183,11 @@
         <div class="loading">Loading...</div>
       </div>
     {:else}
-      <ShapeKeyboard shape={data.keyboard.shape} notes={data.keyboard.notes} class="keyboard">
+      <ShapeKeyboard 
+        shape={data.keyboard.shape}
+        notes={data.keyboard.notes} 
+        class = {data.noteNameType === '1 2 3' ? 'keyboard jianpu-mode' : 'keyboard' }
+      >
         <!-- Payload (ADR-0005 §3): the note itself, plus its BUTTON — never a bare slot the
              surface would have to resolve back into a note. The note goes straight to
              ComposerNote and back out through the handlers; the Button only addresses this

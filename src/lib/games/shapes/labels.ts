@@ -54,13 +54,13 @@ export const STANDARD_21_LABELS: ShapeLabels = {
     'C7',
   ],
   number: [
-    '1̇',
-    '2̇',
-    '3̇',
-    '4̇',
-    '5̇',
-    '6̇',
-    '7̇',
+    '1\'',
+    '2\'',
+    '3\'',
+    '4\'',
+    '5\'',
+    '6\'',
+    '7\'',
     '1',
     '2',
     '3',
@@ -68,13 +68,13 @@ export const STANDARD_21_LABELS: ShapeLabels = {
     '5',
     '6',
     '7',
-    '1̣',
-    '2̣',
-    '3̣',
-    '4̣',
-    '5̣',
-    '6̣',
-    '7̣',
+    '1q',
+    '2q',
+    '3q',
+    '4q',
+    '5q',
+    '6q',
+    '7q',
   ],
   playstation: [
     ' ',
@@ -142,7 +142,7 @@ export const STANDARD_14_LOW_LABELS: ShapeLabels = {
 export const STANDARD_15_LABELS: ShapeLabels = {
   keyboard: ['Q', 'W', 'E', 'R', 'T', 'A', 'S', 'D', 'F', 'G', 'Z', 'X', 'C', 'V', 'B'],
   abc: ['A1', 'A2', 'A3', 'A4', 'A5', 'B1', 'B2', 'B3', 'B4', 'B5', 'C1', 'C2', 'C3', 'C4', 'C5'],
-  number: ['1', '2', '3', '4', '5', '6', '7', '1̇', '2̇', '3̇', '4̇', '5̇', '6̇', '7̇', '1̇̇'],
+  number: ['1', '2', '3', '4', '5', '6', '7', '1\'', '2\'', '3\'', '4\'', '5\'', '6\'', '7\'', '1"'],
   playstation: ['L2', 'R2', '⟱', 'X', '⭅', '◼', '⟰', '▲', '⭆', '⬤', 'L1', 'R1', '❰L', '❰R', 'L❱'],
   switch: ['Zl', 'Zr', '⟱', 'B', '⭅', 'Y', '⟰', 'X', '⭆', 'A', 'L', 'R', '❰L', '❰R', 'L❱'],
 };
@@ -151,7 +151,7 @@ export const STANDARD_15_LABELS: ShapeLabels = {
 export const DRUMS_8_LABELS: ShapeLabels = {
   keyboard: ['Q', 'W', 'E', 'R', 'A', 'S', 'D', 'F'],
   abc: ['A1', 'A2', 'A3', 'A4', 'B1', 'B2', 'B3', 'B4'],
-  number: ['1', '2', '3', '4', '1̣', '2̣', '3̣', '4̣'],
+  number: ['1', '2', '3', '4', '1q', '2q', '3q', '4q'],
   playstation: ['⟰', '▲', '⭅', '◼', '⟱', 'X', 'L2', 'R2'],
   switch: ['⟰', 'X', '⭅', 'Y', '⟱', 'B', 'Zl', 'Zr'],
 };
@@ -176,7 +176,7 @@ export const DRUMS_4_LABELS: ShapeLabels = {
 export const SFX_6_LABELS: ShapeLabels = {
   keyboard: ['Q', 'W', 'E', 'A', 'S', 'D'],
   abc: ['A1', 'A2', 'A3', 'B1', 'B2', 'B3'],
-  number: ['1', '2', '3', '1̇', '2̇', '3̇'],
+  number: ['1', '2', '3', '1\'', '2\'', '3\''],
   playstation: ['⟰', '▲', '⭅', '⟱', 'X', 'L2'],
   switch: ['Zl', 'Zr', '⟱', 'Y', '⟰', 'X'],
 };

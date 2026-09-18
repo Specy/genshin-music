@@ -1186,7 +1186,9 @@
    */
   const buttonNotes = $derived(playerStore.keyboard.slice(0, buttonCount));
   const keyboardClass = $derived(
-    'keyboard' + (playerStore.eventType === 'play' ? ' keyboard-playback' : '')
+    'keyboard' + 
+      (playerStore. eventType === 'play' ? ' keyboard-playback' : '' ) +
+      (data. noteNameType === '1 2 3' ? ' jianpu-mode' : '' )
   );
   // $derived.by (not bare $derived(expr)) is required: TypeScript narrows mode to its
   // initializer literal ('play') at this point, since no synchronous code reassigns it first -

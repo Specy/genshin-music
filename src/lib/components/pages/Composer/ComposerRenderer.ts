@@ -2386,6 +2386,7 @@ export class ComposerRenderer {
     //every note (they dim what the current layer cannot reach) and UNDER the playhead, which marks
     //the column being edited and must stay legible through the dimming.
     if (this.state.proView) {
+    
       this.proZoneGraphics.eventMode = 'none';
       this.notesApp.stage.addChild(this.proZoneGraphics);
       //...and the offscreen-note arrows over the dim, so pointing at a note outside the zone is
@@ -2474,6 +2475,21 @@ export class ComposerRenderer {
     this.themeDispose = subscribeTheme(this.handleThemeChange);
     // subscribeTheme's callback fires synchronously once before returning, which already
     // calls recalculateCacheAndSizes via handleThemeChange - no separate call needed here.
+
+    // The Pro View strip rasterises its row labels into pixi Text textures, which do not
+    // re-render when a webfont finishes loading. "1 2 3" notation needs the NDS font, so once it
+    // arrives force one strip re-raster so labels painted in the fallback get the real glyphs.
+    if (this.state.proView) {
+      new FontFaceObserver('JianpuNDS')
+        .load()
+        .then(() => {
+          this.proStripKey = '';
+          this.draw();
+        })
+        .catch(() => {
+          // Deliberately silent - a missing font falls back to the sans-serif stack.
+        });
+    }
   }
 
   private async createNotesApplication(
@@ -3468,6 +3484,12 @@ export class ComposerRenderer {
         const resolved = proRowLabel(number, numberToButton(name, pitch, number), noteText);
         label.text = resolved.text;
         label.style.fontSize = resolved.faint ? fontSize * PRO_FAINT_LABEL_SCALE : fontSize;
+        // The label is the SAME string the on-screen key draws, so "1 2 3" notation reaches the
+        // canvas strip too - and its zero-width ', " and q marks only line up in the NDS font.
+        label.style.fontFamily =
+          this.state.noteNameType === '1 2 3'
+            ? 'JianpuNDS, Arial, Helvetica, sans-serif'
+            : 'Arial, Helvetica, sans-serif';
         label.style.fill = this.theme.pro.stripText;
         label.alpha = resolved.faint ? PRO_FAINT_LABEL_ALPHA : 1;
       }

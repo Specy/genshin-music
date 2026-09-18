@@ -54,6 +54,12 @@
   font-display: swap;
 }
 
+@font-face {
+  font-family: JianpuNDS;
+  src: url('./../assets/font/jpfont-nds.otf');
+  font-display: swap;
+}
+
 p {
   font-family: RobotoSerif, serif;
   opacity: 0.9;
@@ -1118,7 +1124,7 @@ a {
 
 .note-name-sky {
   position: absolute;
-  font-size: 1rem;
+  font-size: 1.4rem;
   color: var(--note-background-text);
 }
 
@@ -1176,6 +1182,11 @@ a {
     opacity: 0;
     transform: scale(0.8);
   }
+}
+
+.jianpu-mode .note-name
+.jianpu-mode .note-name-sky{
+   font-family: JianpuNDS, serlif;
 }
 
 .note-animation,
