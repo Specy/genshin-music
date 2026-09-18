@@ -49,6 +49,12 @@
     selected: number;
     currentLayer: number;
     inPreview?: boolean;
+    /**
+     * /theme's preview card, as measured height in px - the frame the Pro View fills there, where
+     * the composer route's frame is the window (composerCanvasGeometry's `frameHeight`). 0 until
+     * the page has measured it, and 0 off the preview entirely.
+     */
+    previewHeight?: number;
     settings: ComposerSettingsDataType;
     breakpoints: number[];
     selectedColumns: number[];
@@ -139,6 +145,7 @@
     selected,
     currentLayer,
     inPreview,
+    previewHeight = 0,
     settings,
     breakpoints,
     selectedColumns,
@@ -226,11 +233,12 @@
   // `--composer-canvas-width` - see composerCanvasCssSize. Choosing here instead (from a
   // `matchMedia` read) put the desktop breakpoint somewhere no browser could evaluate before
   // hydration, and the composer opened 79px narrow for the ~800ms until it ran.
-  // CONTEXT.md: Pro View. ANDed with `!inPreview` HERE, once, so everything downstream - the CSS
-  // placeholder, the renderer's state, composerCanvasSize's own branch - is handed a flag that is
-  // already false in /theme's composer preview, where a canvas sized to the WINDOW would overrun
-  // the little box it lives in.
-  const proView = $derived(Boolean(settings.proView.value) && !inPreview);
+  // CONTEXT.md: Pro View. The persisted setting as the user has it, /theme's composer preview
+  // INCLUDED (2026-09-18): the preview used to AND this with `!inPreview`, because a canvas sized
+  // to the WINDOW would overrun the little box it lives in - so the preview showed the Compressed
+  // View to a pro user and the preview menu's own Normal/Pro slider moved the setting without
+  // moving the preview. The box is handed over as `previewHeight` instead, and the view fills it.
+  const proView = $derived(Boolean(settings.proView.value));
   const cssSize = $derived(composerCanvasCssSize({ inPreview: Boolean(inPreview), proView }));
   // ...and where the notes region starts inside the canvas box, which is what the two side chevrons
   // below are held to. The same function ComposerRenderer places the region with, given the same
@@ -269,6 +277,7 @@
           selected,
           currentLayer,
           inPreview,
+          previewHeight,
           beatMarks: Number(settings.beatMarks.value),
           columnsPerCanvas: Number(settings.columnsPerCanvas.value),
           proView,
@@ -391,6 +400,9 @@
       selected,
       currentLayer,
       inPreview,
+      // The preview card's height, read HERE per this effect's dependency rule. update() does
+      // nothing with it - a moved frame is a resize, which the effect below asks the renderer for.
+      previewHeight,
       beatMarks: Number(settings.beatMarks.value),
       columnsPerCanvas: Number(settings.columnsPerCanvas.value),
       // Read here like every other scalar, per the rule above, even though the renderer only takes
@@ -416,6 +428,29 @@
       bpm: Number(settings.bpm.value),
       smoothScroll: Boolean(settings.smoothScroll.value),
     });
+  });
+
+  // A MOVED PREVIEW CARD IS A RESIZE, and it is the only one that reaches this canvas through no
+  // window event of its own: /theme lays the composer out in a card, the Pro View's canvas is sized
+  // against that card (composerCanvasGeometry's `frameHeight`), and the card is measured by a
+  // ResizeObserver on the page rather than by anything this renderer listens to.
+  //
+  // WHAT IT COVERS, both of them orderings rather than events:
+  //  - the FIRST measurement arriving after the renderer does. In practice it does not - the card
+  //    is mounted and measured with the theme page, while this canvas waits on a dynamic pixi
+  //    import before it is constructed at all - but nothing enforces that order, and a renderer
+  //    built while `previewHeight` was still 0 would size the Pro View's canvas to the WINDOW and
+  //    overrun the card until something else resized it;
+  //  - a window resize that changes the card. Both sides hear it, and the renderer's own listener
+  //    may well run its pass before the observer has published the card's new height - so this is
+  //    the pass that reads the settled one. Its 50ms debounce collapses the two into one.
+  //
+  // It asks for a re-size without passing anything because the effect above has already written the
+  // new height onto the state object that computeCanvasSize reads.
+  $effect(() => {
+    const frame = previewHeight;
+    if (!renderer || !inPreview || frame <= 0) return;
+    renderer.recalculateCacheAndSizes();
   });
 </script>
 

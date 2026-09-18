@@ -36,6 +36,16 @@
 
   let selectedProp = $state<ThemeKeys | ''>('');
   let selectedPagePreview = $state<'player' | 'composer'>('player');
+  /**
+   * THE PREVIEW CARD'S OWN HEIGHT, and the composer preview is the only thing that needs it: the
+   * Pro View sizes its canvas to the box the composer is laid out in, which is the WINDOW on
+   * /composer and this card here (Composer.svelte's `previewHeight`). Nothing inside that component
+   * can measure a box it does not own, so this page - which does - states it.
+   *
+   * `clientHeight` and not the border box: the card's 4px dashed border is outside `.app`, which is
+   * what `.theme-app-preview :global(.app) { height: 100% }` below sizes the composer against.
+   */
+  let previewHeight = $state(0);
 
   async function handleChange(name: ThemeKeys, value: string) {
     if (!theme.isEditable()) {
@@ -225,7 +235,7 @@
       <Header type="h2">
         {t('theme:preview')}
       </Header>
-      <div class="theme-app-preview">
+      <div class="theme-app-preview" bind:clientHeight={previewHeight}>
         <AppButton
           class="box-shadow"
           toggled={true}
@@ -241,7 +251,7 @@
           </AppBackground>
         {:else}
           <AppBackground page="Composer">
-            <Composer inPreview />
+            <Composer inPreview {previewHeight} />
           </AppBackground>
         {/if}
       </div>

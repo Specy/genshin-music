@@ -1708,9 +1708,11 @@ select {
 /* ==================================================================================
    THE COMPOSER'S PRO VIEW (CONTEXT.md: Pro View / Compressed View; spec §8).
 
-   ONE MODIFIER CLASS, `composer-grid-pro`, added by Composer.svelte when the `proView` setting is on
-   and never in /theme's preview. Everything below is a descendant of it, so the Compressed View is
-   what this file says everywhere else - with the setting off not one of these rules matches.
+   ONE MODIFIER CLASS, `composer-grid-pro`, added by Composer.svelte whenever the `proView` setting
+   is on - /theme's preview included, where it lands beside `composer-grid-in-preview` and the short
+   block at the end of this section restates the frame as that page's card. Everything below is a
+   descendant of it, so the Compressed View is what this file says everywhere else - with the
+   setting off not one of these rules matches.
 
    WHAT CHANGES, and it is vertical only: the canvas stops being a 45vh card with the keyboard under
    it and becomes the window's whole leftover height, so the keyboard has nowhere left to stand and
@@ -2036,6 +2038,59 @@ select {
   gap: 0.6rem;
   bottom: 0.6rem;
   left: 0.4rem;
+}
+
+/* ----------------------------------------------------------------------------------
+   THE PRO VIEW INSIDE /theme's PREVIEW CARD (2026-09-18).
+
+   THE VIEW IS NOT EXCLUDED FROM THE PREVIEW ANY MORE. It was - `composer-grid-pro` was ANDed with
+   `!inPreview` in Composer.svelte - and the cost was a theme page that showed a pro user the
+   Compressed View, with the Normal/Pro slider in the preview's own menu writing the persisted
+   setting while the preview under it did not move at all.
+
+   WHAT THE EXCLUSION WAS REALLY STANDING IN FOR IS THE FRAME, and these three rules are all of it.
+   Every viewport-anchored declaration above says "the window" because on /composer the window IS
+   the box this layout is laid out in; in the preview that box is the card, which is `position:
+   relative` with `overflow: hidden` (the theme page's own `.theme-app-preview`), so each one is
+   restated against the card here. The JS half is Composer.svelte's `previewHeight`, measured by
+   that page and handed to composerCanvasGeometry as the height the canvas fills.
+
+   Both classes, so these cannot reach the composer route: `composer-grid-in-preview` is only ever
+   added beside `composer-grid-pro`, never instead of it. */
+.composer-grid-pro.composer-grid-in-preview {
+  /* the card, not `100vh` - and it resolves because the card's `.app` is given `height: 100%` by
+     the theme page, so this percentage has a definite box to be 100% of */
+  height: 100%;
+}
+
+/* THE SHEET AND ITS SLIVER STAND AT THE CARD'S BOTTOM EDGE, not the window's. `fixed` put both at
+   the foot of the browser window - metres of page below the preview on a scrolling route - so the
+   keyboard left the card entirely and the sliver became a band across the page. `absolute` hands
+   them the card as their containing block, which is what the base `.composer-keyboard-wrapper` rule
+   (`bottom: 0; left: 0; width: 100%`) has always resolved against in this preview; the transform,
+   the opacity and the scrim above are untouched and keep working from there. */
+.composer-grid-pro.composer-grid-in-preview .composer-keyboard-wrapper,
+.composer-grid-pro.composer-grid-in-preview .composer-keyboard-sliver {
+  position: absolute;
+}
+
+/* THE ROSTER COLUMN IS THE CARD TOO. `.composer-left-control` is `calc(100vh - 5rem)`, which is
+   820px against a 1440x900 window and ~200px taller than the card it is drawn in.
+
+   IT COST NOTHING IN THE COMPRESSED VIEW, which is why it stood: the column's CONTENT (transport,
+   undo/redo, the track roster, the add button) is a few hundred px, so the overrun was empty box
+   and nothing looked clipped. The Pro View is where an empty box has consequences - the grid's
+   first row is `1fr`, whose minimum is its content, so an 820px item makes that row 820px inside a
+   622px grid and everything sized against the row goes with it: measured, the CanvasTool column
+   grew 612 -> 817px and the tempo changers pinned to its last row landed 28px BELOW the card,
+   where `overflow: hidden` takes them.
+
+   `100%` is the row this is placed in - the frame's row in the Pro View, the stretched auto row in
+   the Compressed one - so the column is the card either way.
+
+   IN THE PREVIEW ONLY: the route's own `100vh - 5rem` is left exactly as it is. */
+.composer-grid-in-preview .composer-left-control {
+  height: 100%;
 }
 
 @media (hover: none) and (pointer: coarse) {
