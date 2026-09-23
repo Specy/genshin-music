@@ -832,6 +832,7 @@
         "Harmonica": "Harmonica",
         "Aurora": "Aurora",
         "NightwindHorn": "Nightwind Horn",
+        "Vodyanitsa": "Vodyanitsa",
         "Kalimba": "Kalimba",
         "ToyUkulele": "Toy Ukulele",
         "Drum": "Drum",
@@ -872,7 +873,7 @@
             "change-9": "Отмена и повтор действий в секвенсоре, с сочетаниями клавиш Ctrl+Z и Ctrl+Y",
             "change-10": "В Sky добавлено одиннадцать инструментов: виолончель, скрипка, саксофон, губная гармоника, поперечная флейта, маленький колокольчик, барабан удачи, Cymbals, Krill Horn, Tuned Krill Horn и Triumph HandPan. Aurora и Light Guitar теперь поддерживают длительные ноты.",
             "change-11": "В Genshin добавлен Nightwind Horn",
-            "change-12": "Другие исправления ошибок и улучшения"
+            "change-13": "Другие исправления ошибок и улучшения"
         },
         "3-7-0": {
             "title": "Новые инструменты (Genshin)",

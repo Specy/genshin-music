@@ -960,6 +960,7 @@ export const i18n_en = {
     DjemDjemDrum: 'DjemDjem Drum',
     DunDun: 'DunDun',
     NightwindHorn: 'Nightwind Horn',
+    Vodyanitsa: 'Vodyanitsa',
     Piano: 'Piano',
     Contrabass: 'Contrabass',
     Cello: 'Cello',
@@ -1024,7 +1025,8 @@ export const i18n_en = {
       'change-10':
         'Added eleven instruments to Sky: Cello, Violin, Saxophone, Harmonica, Transverse Flute, Small Bell, Fortune Drum, Cymbals, Krill Horn, Tuned Krill Horn and Triumph HandPan. The Aurora and the Light Guitar are now sustained.',
       'change-11': 'Added the Nightwind Horn to Genshin',
-      'change-12': 'Other bug fixes and improvements',
+      'change-12': "Added Vodyanitsa's singing voice to Genshin",
+      'change-13': 'Other bug fixes and improvements',
     },
     '3-7-0': {
       title: 'New instruments (Genshin)',

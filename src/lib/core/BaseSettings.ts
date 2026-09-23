@@ -193,7 +193,7 @@ export type PlayerSettingsDataType = {
 export type PlayerSettingsType = BaseSettings<PlayerSettingsDataType>
 export const PlayerSettings = {
     other: {
-        settingVersion: APP_NAME + 91 //change when instrument is added
+        settingVersion: APP_NAME + 92 //change when instrument is added
     },
     data: {
         instrument: {
@@ -722,7 +722,7 @@ export const SheetVisualizerSettings = {
 
 export const ZenKeyboardSettings = {
     other: {
-        settingVersion: APP_NAME + 35 //change when instrument is added
+        settingVersion: APP_NAME + 36 //change when instrument is added
     },
     data: {
         instrument: {

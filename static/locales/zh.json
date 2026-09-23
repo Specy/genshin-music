@@ -836,6 +836,7 @@
         "Harmonica": "口琴",
         "Aurora": "欧若拉",
         "NightwindHorn": "晚风圆号",
+        "Vodyanitsa": "Vodyanitsa",
         "Kalimba": "拇指琴",
         "ToyUkulele": "玩具尤克里里",
         "Drum": "鼓组",
@@ -872,7 +873,7 @@
             "change-9": "作曲器支持撤销与重做，快捷键为 Ctrl+Z 和 Ctrl+Y",
             "change-10": "已为 光遇 添加十一种乐器：大提琴、小提琴、萨克斯、口琴、横笛、小铃铛、福鼓、镲、Krill Horn、Tuned Krill Horn 和 胜利手碟。欧若拉 和 电吉他 现在支持延音。",
             "change-11": "已为 原神 添加 晚风圆号",
-            "change-12": "其他问题修复和改进"
+            "change-13": "其他问题修复和改进"
         },
         "3-7-0": {
             "title": "新乐器(原神)",

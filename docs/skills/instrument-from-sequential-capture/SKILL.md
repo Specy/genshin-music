@@ -42,7 +42,10 @@ node docs/skills/instrument-from-sequential-capture/scripts/extract-notes.mjs \
 ```
 
 - `--expect` fails loudly on a miscount — tune `--on-db/--off-db/--gap-s` for
-  noisy or bleed-heavy captures rather than accepting a wrong split.
+  noisy or bleed-heavy captures rather than accepting a wrong split. Extra
+  presses after the last button (test notes) are real segments, not a tuning
+  problem: cut the capture before them first (decode, keep the first N seconds
+  as WAV — Vodyanitsa's capture was cut this way).
 - `--midi` is the authored Note Ids in capture order. Omit it to use rounded
   detected pitch, then CHECK the printed ids — they are identity (ADR-0001) and
   must be unique and inside the game's Song Grid for composer/import to work.
@@ -117,7 +120,8 @@ maybe a third of the work):
    `games/shapes/labels.ts` (every label array length must equal capacity —
    `defineGame` throws otherwise). Prefer slicing an existing set when the
    layout is a sub-grid, so keys/octave marks stay canonical (see
-   `STANDARD_14_LOW_LABELS`).
+   `STANDARD_14_LOW_LABELS` / `STANDARD_14_HIGH_LABELS`: slice the rows the
+   instrument's Nominal Ids occupy).
 3. `game.json` → `instruments.list` (menu order).
 4. i18n: key in `src/lib/i18n/locales/en/index.ts` `instruments`, and insert
    the same key into **every** `static/locales/*.json` (anchor the insertion on
@@ -130,7 +134,9 @@ maybe a third of the work):
 7. Tests: instrument count in `test/smoke.test.ts`; add the name to the
    POST_FREEZE sets in `test/gameDefinitionConsistency.test.ts` AND
    `test/configSurface.test.ts` (post-freeze instruments never join the v1
-   freeze).
+   freeze). A `family` the game's roster didn't have yet re-routes MIDI-import
+   suggestions for it and its General MIDI neighbours: update that game's
+   `EXPECTED_FAMILY_OUTCOMES` in `test/midiInstrumentSuggestion.test.ts`.
 8. `npm run test:update-fixtures`, then `npm test`, `npm run check`,
    `npm run build:<game>` (the build exercises registry validation at
    prerender and copies the samples).

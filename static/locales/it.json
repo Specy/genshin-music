@@ -810,6 +810,7 @@
     "DjemDjemDrum": "Tamburo Djem Djem",
     "DunDun": "DunDun",
     "NightwindHorn": "Corno della brezza notturna",
+    "Vodyanitsa": "Vodyanitsa",
     "Piano": "Pianoforte",
     "Contrabass": "Contrabbasso",
     "Cello": "Violoncello",
@@ -872,7 +873,7 @@
       "change-9": "Annulla e ripristina nel compositore, con le scorciatoie Ctrl+Z e Ctrl+Y",
       "change-10": "Aggiunti undici strumenti a Sky: violoncello, violino, sassofono, armonica, flauto traverso, campanella, tamburo della fortuna, Cymbals, Krill Horn, Tuned Krill Horn e Triumph HandPan. Aurora e la chitarra luminosa ora supportano le note sostenute.",
       "change-11": "Aggiunto il Corno della brezza notturna a Genshin",
-      "change-12": "Altre correzioni di bug e migliorie"
+      "change-13": "Altre correzioni di bug e migliorie"
     },
     "3-7-0": {
       "title": "Nuovi strumenti (Genshin)",

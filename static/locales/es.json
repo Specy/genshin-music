@@ -810,6 +810,7 @@
     "DjemDjemDrum": "Tambor Yemyem",
     "DunDun": "DunDun",
     "NightwindHorn": "Trompa cefironocturna",
+    "Vodyanitsa": "Vodyanitsa",
     "Piano": "Piano",
     "Contrabass": "Contrabajo",
     "Cello": "Violonchelo",
@@ -872,7 +873,7 @@
       "change-9": "Deshacer y rehacer en el compositor, con los atajos Ctrl+Z y Ctrl+Y",
       "change-10": "Se han añadido once instrumentos a Sky: violonchelo, violín, saxofón, armónica, flauta travesera, campanilla, tambor de la fortuna, Cymbals, Krill Horn, Tuned Krill Horn y Triumph HandPan. Aurora y la Guitarra luminosa ahora tienen notas sostenidas.",
       "change-11": "Se ha añadido la Trompa cefironocturna a Genshin",
-      "change-12": "Otras correcciones de errores y mejoras"
+      "change-13": "Otras correcciones de errores y mejoras"
     },
     "3-7-0": {
       "title": "Nuevos instrumentos (Genshin)",

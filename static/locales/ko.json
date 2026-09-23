@@ -832,6 +832,7 @@
     "Harmonica": "하모니카",
     "Aurora": "Aurora",
     "NightwindHorn": "Nightwind Horn",
+    "Vodyanitsa": "Vodyanitsa",
     "Kalimba": "칼림바",
     "ToyUkulele": "장난감 우크렐레",
     "Drum": "드럼",
@@ -872,7 +873,7 @@
       "change-9": "작곡 모드에서 실행 취소와 다시 실행 지원 (Ctrl+Z, Ctrl+Y 단축키)",
       "change-10": "Sky에 열한 가지 악기를 추가했습니다: 첼로, 바이올린, 색소폰, 하모니카, 가로 피리, 작은 종, 복 북, Cymbals, Krill Horn, Tuned Krill Horn, Triumph HandPan. 오로라와 라이트 기타도 이제 음을 지속할 수 있습니다.",
       "change-11": "Genshin에 Nightwind Horn 추가",
-      "change-12": "기타 버그 수정 및 개선"
+      "change-13": "기타 버그 수정 및 개선"
     },
     "3-7-0": {
       "title": "새로운 악기 추가 (원신)",
