@@ -19,7 +19,9 @@ describe('environment smoke test', () => {
         // Sky +1 on 2026-08-24: TriumphHandPan (Season of Performance, the Sanctuary
         // Handpan reimagined — same 8 notes as HandPan, hollower shell, in-game capture)
         // Sky +1 on 2026-08-24: KrillHorn — that roar pitch-shifted onto a tuned 2x4 octave.
-        expect(INSTRUMENTS.length).toBe(APP_NAME === 'Genshin' ? 11 : 44)
+        // Genshin +1 on 2026-09-23: `Vodyanitsa` (the 7.1 character's a cappella voice, in-game
+        // capture, loopless sustain)
+        expect(INSTRUMENTS.length).toBe(APP_NAME === 'Genshin' ? 12 : 44)
     })
 
     it('NoteLayer bit operations work', () => {

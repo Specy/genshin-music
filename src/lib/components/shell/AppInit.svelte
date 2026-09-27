@@ -384,12 +384,7 @@
   // through i18n - not something to translate as a "fix".
   onMount(() => {
     let sources = MIDIProvider.inputs;
-    // `.svelte` script blocks go through eslint-plugin-svelte's own
-    // config (not typescript-eslint's no-undef override), so WebMidi (an
-    // ambient global, @types/webmidi) needs an explicit disable here even
-    // though plain .ts files (e.g. MIDIProvider.ts) resolve it fine.
-    // eslint-disable-next-line no-undef
-    const cb = (inputs: WebMidi.MIDIInput[]) => {
+    const cb = (inputs: MIDIInput[]) => {
       if (sources.length > inputs.length) logger.warn('MIDI device disconnected');
       else if (inputs.length > 0) logger.warn('MIDI device connected');
       sources = inputs;

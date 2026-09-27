@@ -1,0 +1,98 @@
+{
+  "displayName": "Vodyanitsa",
+  "family": "ensemble",
+  "midiName": "voice oohs",
+  "fill": "#4a9ede",
+  "clickColor": "#7ab8e8",
+  "shape": "genshin-2x7-high",
+  "sustain": {
+    "release": 0.8,
+    "minLength": 0.1
+  },
+  "notes": [
+    {
+      "file": "m72.mp3",
+      "nominal": 72,
+      "baseNote": "C",
+      "icon": "do"
+    },
+    {
+      "file": "m74.mp3",
+      "nominal": 74,
+      "baseNote": "D",
+      "icon": "re"
+    },
+    {
+      "file": "m76.mp3",
+      "nominal": 76,
+      "baseNote": "E",
+      "icon": "mi"
+    },
+    {
+      "file": "m77.mp3",
+      "nominal": 77,
+      "baseNote": "F",
+      "icon": "fa"
+    },
+    {
+      "file": "m79.mp3",
+      "nominal": 79,
+      "baseNote": "G",
+      "icon": "so"
+    },
+    {
+      "file": "m81.mp3",
+      "nominal": 81,
+      "baseNote": "A",
+      "icon": "la"
+    },
+    {
+      "file": "m83.mp3",
+      "nominal": 83,
+      "baseNote": "B",
+      "icon": "ti"
+    },
+    {
+      "file": "m60.mp3",
+      "nominal": 60,
+      "baseNote": "C",
+      "icon": "do"
+    },
+    {
+      "file": "m62.mp3",
+      "nominal": 62,
+      "baseNote": "D",
+      "icon": "re"
+    },
+    {
+      "file": "m64.mp3",
+      "nominal": 64,
+      "baseNote": "E",
+      "icon": "mi"
+    },
+    {
+      "file": "m65.mp3",
+      "nominal": 65,
+      "baseNote": "F",
+      "icon": "fa"
+    },
+    {
+      "file": "m67.mp3",
+      "nominal": 67,
+      "baseNote": "G",
+      "icon": "so"
+    },
+    {
+      "file": "m69.mp3",
+      "nominal": 69,
+      "baseNote": "A",
+      "icon": "la"
+    },
+    {
+      "file": "m71.mp3",
+      "nominal": 71,
+      "baseNote": "B",
+      "icon": "ti"
+    }
+  ]
+}

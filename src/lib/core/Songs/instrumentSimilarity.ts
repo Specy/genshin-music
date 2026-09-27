@@ -27,14 +27,15 @@ export const SIMILAR_INSTRUMENTS = {
         'DunDun': {Sky: 'DunDun'},
         'DjemDjemDrum': {Sky: 'Drum'},
         'NightwindHorn': {Sky: 'Horn'},
+        'Vodyanitsa': {Sky: 'Aurora'},
     },
     Sky: {
         'Piano': {Genshin: 'LeapingSpiritPiano'},
         'GrandPiano': {Genshin: 'LeapingSpiritPiano'},
         'WinterPiano': {Genshin: 'LeapingSpiritPiano'},
         'Harp': {Genshin: 'Lyre'},
-        'Aurora': {Genshin: 'Lyre'},
-        'Aurora_Short': {Genshin: 'Lyre'},
+        'Aurora': {Genshin: 'Vodyanitsa'},
+        'Aurora_Short': {Genshin: 'Vodyanitsa'},
         'Guitar': {Genshin: 'Ukulele'},
         'LightGuitar': {Genshin: 'Ukulele'},
         'ToyUkulele': {Genshin: 'Ukulele'},
@@ -54,7 +55,7 @@ export const SIMILAR_INSTRUMENTS = {
         'Trumpet': {Genshin: 'NightwindHorn'},
         'Saxophone': {Genshin: 'NightwindHorn'},
         'Harmonica': {Genshin: 'NightwindHorn'},
-        //other winds/voice/SFX have no Genshin counterpart yet — omitted entries fall
+        //other winds/SFX have no Genshin counterpart yet — omitted entries fall
         //back to the target default (Flute, TransverseFlute, Panflute, Ocarina,
         //MantaOcarina, SFX_*). The bowed strings join them: Genshin has no bowed
         //instrument, so Cello/Violin fall back the same way Contrabass already does.

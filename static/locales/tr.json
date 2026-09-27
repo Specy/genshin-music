@@ -832,6 +832,7 @@
         "Harmonica": "Mızıka",
         "Aurora": "Aurora",
         "NightwindHorn": "Nightwind Horn",
+        "Vodyanitsa": "Vodyanitsa",
         "Kalimba": "Kalimba",
         "ToyUkulele": "Oyuncak Ukulele",
         "Drum": "Davul",
@@ -872,7 +873,7 @@
             "change-9": "Besteleyicide geri alma ve yineleme, Ctrl+Z ve Ctrl+Y kısayollarıyla",
             "change-10": "Sky'a on bir enstrüman eklendi: Çello, Keman, Saksofon, Mızıka, Yan Flüt, Küçük Çan, Şans Davulu, Cymbals, Krill Horn, Tuned Krill Horn ve Triumph HandPan. Aurora ve Light Guitar artık uzatılan notaları destekliyor.",
             "change-11": "Genshin'e Nightwind Horn eklendi",
-            "change-12": "Diğer hata düzeltmeleri ve iyileştirmeler"
+            "change-13": "Diğer hata düzeltmeleri ve iyileştirmeler"
         },
         "3-7-0": {
             "title": "Yeni enstrümanlar (Genshin)",

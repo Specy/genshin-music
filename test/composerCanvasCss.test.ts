@@ -57,6 +57,14 @@ const COMPOSER_CANVAS = readFileSync(
 //the fourth link of the chain, and only for the Pro View: the modifier class and the `{#key}` that
 //remounts the renderer on a flip both live in the PARENT, not in the canvas component
 const COMPOSER = readFileSync('src/lib/components/pages/Composer/Composer.svelte', 'utf8')
+//...and two more links, for the Pro View's FRAME alone (the box the canvas fills, which is the
+//window on /composer and the card in /theme's preview): the renderer, which chooses what to measure
+//it against, and the theme page, which is the only thing that can measure that card.
+const COMPOSER_RENDERER = readFileSync(
+    'src/lib/components/pages/Composer/ComposerRenderer.ts',
+    'utf8'
+)
+const THEME_PAGE = readFileSync('src/routes/theme/+page.svelte', 'utf8')
 
 /**
  * One element's markup, from the attribute that identifies it to the `>` that closes the open tag.
@@ -847,20 +855,79 @@ describe('the Pro View canvas: the window it fills and the band it stops above',
         }
     }
 
-    it('keeps the theme preview on the Compressed View, canvas and placeholder alike', () => {
-        //A canvas sized to the WINDOW inside /theme's little composer box would overrun the page it
-        //is previewed in, so `proView` is declined there on both sides - and the CSS side returns
-        //null in preview regardless, which is what leaves that route on its old floors.
-        expect(composerCanvasCssSize({inPreview: true, proView: true})).toBeNull()
-        const preview = {bodyWidth: 1920, bodyHeight: 1080, inPreview: true, timelineHeight: 36.4}
-        expect(composerCanvasSize({...preview, proView: true})).toEqual(
-            composerCanvasSize(preview)
+    it('gives the theme preview the Pro View too, framed by the card instead of the window', () => {
+        //THE PREVIEW FOLLOWS THE SETTING (2026-09-18). It used to decline the Pro View outright -
+        //`proView && !inPreview`, because a canvas sized to the WINDOW would overrun the little box
+        //it lives in - so /theme showed a pro user the Compressed View, and the Normal/Pro slider
+        //in the preview's OWN menu wrote the persisted setting while the preview did not move.
+        //What that exclusion stood in for is the FRAME, which is the window on /composer and the
+        //card here: both components read the setting as it is, and the card's measured height is
+        //what the pro branch fills.
+        for (const source of [COMPOSER, COMPOSER_CANVAS]) {
+            expect(source).toContain('const proView = $derived(Boolean(settings.proView.value));')
+        }
+        //...measured by the page that owns the card, and handed to the composer as one prop - the
+        //whole chain, since nothing inside that component can measure a box it does not own
+        expect(THEME_PAGE).toContain('bind:clientHeight={previewHeight}')
+        expect(THEME_PAGE).toContain('<Composer inPreview {previewHeight} />')
+        expect(COMPOSER).toContain('{previewHeight}')
+        expect(COMPOSER_CANVAS).toContain('previewHeight,')
+        //...and the renderer, which holds the other end of it: the body rect stays the reading on
+        //the route, and only the preview replaces the height the pro branch is measured against
+        expect(COMPOSER_RENDERER).toContain(
+            'frameHeight: this.state.inPreview ? this.state.previewHeight : undefined,'
         )
-        //...and ComposerCanvas.svelte is where that AND lives, once, so every consumer downstream -
-        //the placeholder, the renderer's state, the geometry module's own branch - is handed the
-        //same already-excluded flag
-        expect(COMPOSER_CANVAS).toContain(
-            'const proView = $derived(Boolean(settings.proView.value) && !inPreview);'
+
+        const timelineHeight = 36.4
+        const preview = {bodyWidth: 1920, bodyHeight: 1080, inPreview: true, timelineHeight}
+        //THE CARD IS FILLED EXACTLY, which is the same statement the route's own pro branch makes
+        //about the window: the canvas ELEMENT plus the grid's two 0.2rem padding rows plus the band
+        //the lowered keyboard sheet peeks into IS the frame, to within nearestEven's 1px.
+        for (const frameHeight of [622, 400, 880]) {
+            const notes = composerCanvasSize({...preview, proView: true, frameHeight}).height
+            const element = composerCanvasElementHeight(notes, timelineHeight, true)
+            const chrome = 0.2 * ROOT_FONT_SIZE * 2 + PRO_KEYBOARD_SLIVER_PX
+            expect(Math.abs(frameHeight - (element + chrome))).toBeLessThanOrEqual(1)
+        }
+        //...AND THE PREVIEW'S OWN HEIGHT SHRINK IS THE COMPRESSED VIEW'S ALONE. Those factors are
+        //what fits a window-sized card into the box; the pro branch was handed the box itself, so
+        //shrinking it again would leave the canvas short of the frame it is defined as filling.
+        expect(
+            composerCanvasSize({...preview, proView: true, frameHeight: preview.bodyHeight}).height
+        ).toBe(composerCanvasSize({...preview, inPreview: false, proView: true}).height)
+        //...while the WIDTH is shrunk in both views, because the Pro View changes nothing about it
+        expect(composerCanvasSize({...preview, proView: true}).width).toBe(
+            composerCanvasSize(preview).width
+        )
+        //The PLACEHOLDER still declines the preview, which is unchanged and independent: the
+        //floors it feeds are unset there anyway (`.canvas-wrapper-in-preview`), so the preview
+        //keeps its 0x0 placeholder in either view.
+        expect(composerCanvasCssSize({inPreview: true, proView: true})).toBeNull()
+
+        //THE STYLESHEET'S HALF OF THE FRAME, restated against the card by three rules and nothing
+        //else - every other viewport-anchored declaration in the Pro View block is written against
+        //the window because on /composer the window IS this box.
+        expect(declarationsOf('.composer-grid-pro').get('height')).toBe('100vh')
+        expect(declarationsOf('.composer-grid-pro.composer-grid-in-preview').get('height')).toBe(
+            '100%'
+        )
+        //the sheet and the band it peeks into stand at the CARD's bottom edge, not the window's
+        expect(declarationsOf('.composer-keyboard-sliver').get('position')).toBe('fixed')
+        expect(
+            declarationsOf('.composer-grid-pro .composer-keyboard-wrapper').get('position')
+        ).toBe('fixed')
+        expect(
+            declarationsOf(
+                '.composer-grid-pro.composer-grid-in-preview .composer-keyboard-wrapper,\n' +
+                    '.composer-grid-pro.composer-grid-in-preview .composer-keyboard-sliver'
+            ).get('position')
+        ).toBe('absolute')
+        //...and the roster column is the card too: `calc(100vh - 5rem)` is ~200px taller than it,
+        //and in the Pro View the grid's `1fr` row takes its minimum from exactly this content - so
+        //an over-tall column pushes the tool column and the tempo changers off the card's edge.
+        expect(declarationsOf('.composer-left-control').get('height')).toBe('calc(100vh - 5rem)')
+        expect(declarationsOf('.composer-grid-in-preview .composer-left-control').get('height')).toBe(
+            '100%'
         )
     })
 
@@ -925,11 +992,10 @@ describe('the Pro View canvas: the window it fills and the band it stops above',
         //re-derives. An array literal here would be a fresh identity on every evaluation, which is
         //not what `{#key}` compares.
         expect(COMPOSER).toContain('{#key `${settings.columnsPerCanvas.value}|${proView}`}')
-        //...and the modifier class that reshapes the page around it, never in the preview
+        //...and the modifier class that reshapes the page around it, in the preview as well as on
+        //the route (see the frame test above for what the preview restates)
         expect(COMPOSER).toContain(`proView && 'composer-grid-pro',`)
-        expect(COMPOSER).toContain(
-            'const proView = $derived(Boolean(settings.proView.value) && !inPreview);'
-        )
+        expect(COMPOSER).toContain('const proView = $derived(Boolean(settings.proView.value));')
     })
 
     it('holds desktop side buttons to the notes, and stretches mobile ones over the ruler', () => {

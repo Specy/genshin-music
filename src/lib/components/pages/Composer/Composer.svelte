@@ -93,10 +93,18 @@
     songId = null,
     showMidi = false,
     inPreview = false,
+    previewHeight = 0,
   }: {
     songId?: string | null;
     showMidi?: boolean;
     inPreview?: boolean;
+    /**
+     * /theme's preview card, measured by that page in px. The Pro View fills the frame the composer
+     * is laid out in - the window on this route, the card there - and nothing inside this component
+     * can measure a box it does not own, so the page states it (composerCanvasGeometry's
+     * `frameHeight`). 0 off the preview, and 0 until the first measurement lands.
+     */
+    previewHeight?: number;
   } = $props();
 
   let settings: ComposerSettingsDataType = $state(settingsService.getDefaultComposerSettings());
@@ -216,14 +224,19 @@
   // Its normal change accounting still runs, but autosave must not race that explicit question.
   let suppressAutoSave = false;
   /**
-   * CONTEXT.md: Pro View. The persisted setting, ANDed with `!inPreview` once here so every
-   * consumer below - the grid modifier, the canvas' `{#key}`, the keyboard's sheet, the tempo
-   * changers' placement - is asking the same question. /theme's composer preview keeps the
-   * Compressed View: it is a small box inside a scrolling page, and a canvas sized to the WINDOW
-   * would overrun it (`.canvas-wrapper-in-preview` and `composer-grid-in-preview` are the same
-   * exclusion).
+   * CONTEXT.md: Pro View. The persisted setting, read once here so every consumer below - the grid
+   * modifier, the canvas' `{#key}`, the keyboard's sheet, the tempo changers' placement - is asking
+   * the same question.
+   *
+   * /theme's composer preview IS included (2026-09-18). It was ANDed with `!inPreview`, because the
+   * view's canvas is sized to the window and would have overrun the little box the preview lives
+   * in - so a user who composes in the Pro View was shown the Compressed one, and the Normal/Pro
+   * slider in the preview's OWN menu wrote the persisted setting while the preview under it did not
+   * move. What that exclusion stood in for is the frame: the view fills the box it is laid out in,
+   * and the preview states that box's height (`previewHeight` above, App.css's
+   * `.composer-grid-pro.composer-grid-in-preview`).
    */
-  const proView = $derived(Boolean(settings.proView.value) && !inPreview);
+  const proView = $derived(Boolean(settings.proView.value));
   /**
    * Whether the Pro View's keyboard sheet is up. EPHEMERAL and never persisted (spec §5): every
    * composer mount starts with it lowered, and it means nothing at all in the Compressed View,
@@ -2824,8 +2837,11 @@
      the window, neither of which fits a small box inside a scrolling page (same exclusion as
      `.canvas-wrapper-in-preview` and ComposerMenu's `composer-menu-sidebar`). -->
 <!-- `composer-grid-pro` is the Pro View's whole DOM difference (CONTEXT.md; App.css's own PRO VIEW
-     block): the canvas' row takes the window, the keyboard becomes a bottom sheet over it and the
-     tempo changers get their own slot. `proView` already excludes the preview - see its declaration. -->
+     block): the canvas' row takes the frame, the keyboard becomes a bottom sheet over it and the
+     tempo changers get their own slot. IT IS LIVE IN THE PREVIEW TOO - the two classes land
+     together there, and App.css's `.composer-grid-pro.composer-grid-in-preview` block is what makes
+     the frame the preview's card instead of the window (`height: 100%`, and a sheet anchored to the
+     card rather than fixed to the viewport). -->
 <div
   class={[
     'composer-grid',
@@ -2936,6 +2952,7 @@
           selected={song.selected}
           currentLayer={layer}
           {inPreview}
+          {previewHeight}
           {settings}
           breakpoints={song.breakpoints}
           {selectedColumns}

@@ -138,6 +138,21 @@ export const STANDARD_14_LOW_LABELS: ShapeLabels = {
   switch: STANDARD_21_LABELS.switch.slice(7),
 };
 
+/**
+ * The 2×7 upper keyboard (14 buttons) — Genshin's two-octave instruments that
+ * sit on the top of the grid (Vodyanitsa, C4–B5): the UPPER two rows of the
+ * 3×7, sliced from it so the Q-row/A-row keys and the over-dot/plain number
+ * octaves stay byte-identical with the buttons' canonical grid rows (top +
+ * middle octave). The mirror of STANDARD_14_LOW_LABELS.
+ */
+export const STANDARD_14_HIGH_LABELS: ShapeLabels = {
+  keyboard: STANDARD_21_LABELS.keyboard.slice(0, 14),
+  abc: STANDARD_21_LABELS.abc.slice(0, 14),
+  number: STANDARD_21_LABELS.number.slice(0, 14),
+  playstation: STANDARD_21_LABELS.playstation.slice(0, 14),
+  switch: STANDARD_21_LABELS.switch.slice(0, 14),
+};
+
 /** The 3×5 standard keyboard (15 buttons) — Sky main instruments. */
 export const STANDARD_15_LABELS: ShapeLabels = {
   keyboard: ['Q', 'W', 'E', 'R', 'T', 'A', 'S', 'D', 'F', 'G', 'Z', 'X', 'C', 'V', 'B'],

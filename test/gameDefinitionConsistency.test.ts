@@ -74,6 +74,8 @@ describe('frozen legacy note tables match the live instrument data (transcriptio
             'TriumphHandPan',
             //Sky, 2026-08-24: the SFX_KrillHorn roar pitch-shifted to 8 tuned buttons
             'KrillHorn',
+            //Genshin, 2026-09-23: the 7.1 character's a cappella voice, in-game capture
+            'Vodyanitsa',
         ])
         for (const name of INSTRUMENTS) {
             if (POST_FREEZE_INSTRUMENTS.has(name)) continue

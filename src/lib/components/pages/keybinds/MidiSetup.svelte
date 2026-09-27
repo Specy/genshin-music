@@ -24,14 +24,8 @@
   // destroys a late-resolving AudioPlayer load when it resolves after unmount - real cleanup
   // behavior, not decoration to remove.
 
-  // WebMidi is an ambient global namespace (@types/webmidi, referenced in src/app.d.ts); plain
-  // .ts files resolve it fine (typescript-eslint's recommended config turns off no-undef there,
-  // deferring to tsc), but .svelte script blocks go through eslint-plugin-svelte's own
-  // recommended config, which doesn't carry that same override - same gap fixed in AppInit.svelte's
-  // identical WebMidi.MIDIInput[] usage.
   type MidiAccessStatus =
-    // eslint-disable-next-line no-undef
-    | { status: 'granted'; midiAccess: WebMidi.MIDIAccess }
+    | { status: 'granted'; midiAccess: MIDIAccess }
     | { status: 'denied' }
     | { status: 'unsupported' }
     | { status: 'pending' };
@@ -64,8 +58,7 @@
   let presets: MIDIPreset[] = $state(MIDIProvider.getPresets());
   let selectedNote: MIDINote | null = $state(null);
   let selectedShortcut: string | null = $state(null);
-  // eslint-disable-next-line no-undef
-  let sources: WebMidi.MIDIInput[] = $state([]);
+  let sources: MIDIInput[] = $state([]);
   // Raises the overlay below: set only when the prompt-free handshake came back empty, which is
   // exactly the "user never enabled MIDI" case.
   let needsAccess = $state(false);
@@ -114,8 +107,7 @@
     presets = MIDIProvider.getPresets();
   }
 
-  // eslint-disable-next-line no-undef
-  function midiStateChange(inputs: WebMidi.MIDIInput[]) {
+  function midiStateChange(inputs: MIDIInput[]) {
     if (!mounted) return;
     sources = inputs;
   }

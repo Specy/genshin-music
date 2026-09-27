@@ -834,6 +834,7 @@
         "Harmonica": "ハーモニカ",
         "Aurora": "オーロラ",
         "NightwindHorn": "Nightwind Horn",
+        "Vodyanitsa": "Vodyanitsa",
         "Kalimba": "カリンバ",
         "ToyUkulele": "おもちゃのウクレレ",
         "Drum": "ドラム",
@@ -872,7 +873,7 @@
             "change-9": "コンポーザーで元に戻す/やり直しができるようになりました（Ctrl+Z と Ctrl+Y のショートカット）",
             "change-10": "Skyに11の楽器を追加しました：チェロ、ヴァイオリン、サックス、ハーモニカ、横笛、小さなベル、福鼓、Cymbals、Krill Horn、Tuned Krill Horn、Triumph HandPan。オーロラとライトギターがサステイン対応になりました。",
             "change-11": "GenshinにNightwind Hornを追加しました",
-            "change-12": "その他のバグ修正と改善"
+            "change-13": "その他のバグ修正と改善"
         },
         "3-7-0": {
             "title": "新しい楽器と翻訳",
