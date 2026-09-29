@@ -706,7 +706,8 @@
         "move_down": "向下移动",
         "move_up": "向上移动",
         "merge_up": "向上合并",
-        "merge_down": "向下合并"
+        "merge_down": "向下合并",
+        "variant": "Variant"
     },
     "tutorials": {
         "composer": {
@@ -858,6 +859,13 @@
         "SFX_JellyCall": "水母之声",
         "SFX_MantaCall": "遥鲲之声",
         "SFX_MothCall": "幼童之声"
+    },
+    "instrument_variants": {
+        "Aurora": {
+            "ah": "Ah",
+            "eh": "Eh",
+            "oo": "Oo"
+        }
     },
     "versions": {
         "4-0-0": {

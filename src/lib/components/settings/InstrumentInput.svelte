@@ -1,12 +1,16 @@
 <script lang="ts">
   import type { InstrumentName } from '$core/types';
   import type {
+    SettingInstrumentSettingsUpdate,
     SettingUpdate,
     SettingUpdateKey,
     SettingVolumeUpdate,
     SettingsInstrument,
   } from '$core/types/SettingsPropriety';
   import InstrumentSelect from '../inputs/InstrumentSelect.svelte';
+  import Select from '../inputs/Select.svelte';
+  import { tVariant } from '$i18n/binding.svelte';
+  import { resolveInstrumentSettings, variantSettingOf } from '$lib/games/instrumentSettings';
 
   let {
     data,
@@ -14,6 +18,7 @@
     onVolumeChange,
     onVolumeComplete,
     onInstrumentPick,
+    onSettingsPick,
     objectKey,
     instrument,
   }: {
@@ -24,7 +29,25 @@
     onVolumeChange: (value: number) => void;
     onVolumeComplete: (data: SettingVolumeUpdate) => void;
     onInstrumentPick: (data: SettingUpdate) => void;
+    /** Where a Variant pick goes; without it no Variant picker is shown. */
+    onSettingsPick?: (data: SettingInstrumentSettingsUpdate) => void;
   } = $props();
+
+  // The keyboard's own Variant (ADR-0017), for an instrument whose config declares one. The stored
+  // settings may predate the field or name another instrument's ids: resolving them against this
+  // instrument's declaration is what turns either into the default.
+  const variant = $derived(variantSettingOf(instrument));
+  const variantValue = $derived(
+    variant ? String(resolveInstrumentSettings(instrument, data.settings)[variant.id]) : ''
+  );
+
+  function handleVariant(e: Event & { currentTarget: EventTarget & HTMLSelectElement }) {
+    if (!variant) return;
+    onSettingsPick?.({
+      key: objectKey,
+      settings: { ...(data.settings ?? {}), [variant.id]: e.currentTarget.value },
+    });
+  }
 
   // MUST be `oninput`, not `onchange`, below: `onchange` only fires once
   // the value is committed, so `onpointerup` (handleVolumePick) would fire
@@ -57,6 +80,13 @@
     class="select"
     style="text-align:left;padding-left:0.4rem;"
   />
+  {#if variant && onSettingsPick}
+    <Select value={variantValue} onchange={handleVariant} style="margin-top:0.2rem">
+      {#each variant.definition.options as option (option.id)}
+        <option value={option.id}>{tVariant(instrument, option.id)}</option>
+      {/each}
+    </Select>
+  {/if}
   <input
     type="range"
     min={1}

@@ -706,7 +706,8 @@
     "move_down": "아래로 내리기",
     "move_up": "위로 올리기",
     "merge_up": "위로 병합",
-    "merge_down": "아래로 병합"
+    "merge_down": "아래로 병합",
+    "variant": "Variant"
   },
   "tutorials": {
     "composer": {
@@ -858,6 +859,13 @@
     "LingeringEuphonia": "여음",
     "LeapingSpiritPiano": "리듬 건반",
     "HarmonicKey": "화음 건반"
+  },
+  "instrument_variants": {
+    "Aurora": {
+      "ah": "Ah",
+      "eh": "Eh",
+      "oo": "Oo"
+    }
   },
   "versions": {
     "4-0-0": {

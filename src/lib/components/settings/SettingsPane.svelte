@@ -2,6 +2,7 @@
   import SettingsRow from './SettingsRow.svelte';
   import { t } from '$i18n/binding.svelte';
   import type {
+    SettingInstrumentSettingsUpdate,
     SettingUpdate,
     SettingUpdateKey,
     SettingVolumeUpdate,
@@ -12,12 +13,15 @@
   let {
     settings,
     changeVolume,
+    changeInstrumentSettings,
     onUpdate,
     songLocked = false,
     hiddenSettings = [],
   }: {
     settings: Record<string, SettingsPropriety>;
     changeVolume?: (data: SettingVolumeUpdate) => void;
+    /** A free-play keyboard's Variant pick (its own channel, like volume). */
+    changeInstrumentSettings?: (data: SettingInstrumentSettingsUpdate) => void;
     onUpdate: (data: SettingUpdate) => void;
     /** Disable only settings serialized into the open song during a MIDI import session. */
     songLocked?: boolean;
@@ -58,6 +62,7 @@
           objKey={key as SettingUpdateKey}
           data={setting}
           {changeVolume}
+          {changeInstrumentSettings}
           update={onUpdate}
         />
       </fieldset>

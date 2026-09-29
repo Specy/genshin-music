@@ -17,7 +17,8 @@
 <script lang="ts">
   import type { Pitch } from '$lib/games/types';
   import { InstrumentData } from '$core/Songs/SongClasses';
-  import { t, tInstrument } from '$i18n/binding.svelte';
+  import { t, tInstrument, tVariant } from '$i18n/binding.svelte';
+  import { resolveInstrumentSettings, variantSettingOf } from '$lib/games/instrumentSettings';
   import { clickOutside } from '$lib/utils/clickOutside';
   import AppButton from '$cmp/inputs/AppButton.svelte';
   import PitchSelect from '$cmp/inputs/PitchSelect.svelte';
@@ -121,6 +122,15 @@
    * left able to see what moved.
    */
   const edited = (changes: Partial<InstrumentData>) => instrument.clone().set(changes);
+
+  // Shown only for an instrument that declares a Variant (ADR-0017) - read from config, never
+  // from which instrument this is.
+  const variant = $derived(instrument ? variantSettingOf(instrument.name) : undefined);
+  const variantValue = $derived(
+    instrument && variant
+      ? String(resolveInstrumentSettings(instrument.name, instrument.settings)[variant.id])
+      : ''
+  );
 </script>
 
 {#if !instrument}
@@ -154,9 +164,27 @@
         style="width:8rem"
         selected={instrument.name}
         {disabled}
-        onChange={(name) => onChange(edited({ name }))}
+        onChange={(name) => onChange(instrument.withInstrument(name))}
       />
     </div>
+    {#if variant}
+      <div class="row space-between items-center">
+        {t('instrument_settings:variant')}
+        <Select
+          style="padding:0.3rem;width:8rem"
+          onchange={(e) =>
+            onChange(
+              edited({ settings: { ...instrument.settings, [variant.id]: e.currentTarget.value } })
+            )}
+          value={variantValue}
+          {disabled}
+        >
+          {#each variant.definition.options as option (option.id)}
+            <option value={option.id}>{tVariant(instrument.name, option.id)}</option>
+          {/each}
+        </Select>
+      </div>
+    {/if}
     <div class="row space-between items-center">
       {t('common:pitch')}
       <PitchSelect

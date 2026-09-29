@@ -706,7 +706,8 @@
         "move_down": "Aşağı kaydır",
         "move_up": "Yukarı kaydır",
         "merge_up": "Yukarı birleştir",
-        "merge_down": "Aşağı birleştir"
+        "merge_down": "Aşağı birleştir",
+        "variant": "Variant"
     },
     "tutorials": {
         "composer": {
@@ -858,6 +859,13 @@
         "LingeringEuphonia": "Hiç Bitmeyen Ezgi",
         "LeapingSpiritPiano": "Sıçrayan Ruh Piyanosu",
         "HarmonicKey": "Harmonik Klavye"
+    },
+    "instrument_variants": {
+        "Aurora": {
+            "ah": "Ah",
+            "eh": "Eh",
+            "oo": "Oo"
+        }
     },
     "versions": {
         "4-0-0": {

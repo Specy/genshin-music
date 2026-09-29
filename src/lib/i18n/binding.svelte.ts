@@ -79,3 +79,20 @@ export function tInstrument(name: string): string {
   if (i18n.exists(key)) return i18n.t(key as any) as string;
   return INSTRUMENTS_DATA[name]?.displayName ?? name;
 }
+
+/**
+ * Variant option label (ADR-0017): the locale's `instrument_variants:<instrument>.<option>`
+ * entry when present, else the option's own config `label` (the displayName pattern, so a new
+ * Variant needs zero locale edits), else the raw option id. Registry ids never hold '.' or ':',
+ * which is what makes them safe as key path segments here.
+ */
+export function tVariant(instrument: string, option: string): string {
+  void binding.tick;
+  const key = `instrument_variants:${instrument}.${option}`;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- same narrowly scoped passthrough as `t` above
+  if (i18n.exists(key)) return i18n.t(key as any) as string;
+  const variant = Object.values(INSTRUMENTS_DATA[instrument]?.settings ?? {}).find(
+    (setting) => setting.kind === 'variant'
+  );
+  return variant?.options.find((candidate) => candidate.id === option)?.label ?? option;
+}

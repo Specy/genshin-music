@@ -21,7 +21,11 @@
   import { ComposedSong } from '$core/Songs/ComposedSong.svelte';
   import { RecordedSong } from '$core/Songs/RecordedSong';
   import type { SerializedSong, SongStorable, SongType } from '$core/Songs/Song.svelte';
-  import type { SettingUpdate, SettingVolumeUpdate } from '$core/types/SettingsPropriety';
+  import type {
+    SettingInstrumentSettingsUpdate,
+    SettingUpdate,
+    SettingVolumeUpdate,
+  } from '$core/types/SettingsPropriety';
   import type { PlayerSettingsDataType } from '$core/BaseSettings';
   import { isAudioFormat, isMidiFormat, isVideoFormat } from '$core/utils/Utilities';
   import { clickOutside } from '$lib/utils/clickOutside';
@@ -59,6 +63,7 @@
     renameSong: (newName: string, id: string) => void;
     handleSettingChange: (override: SettingUpdate) => void;
     changeVolume: (override: SettingVolumeUpdate) => void;
+    changeInstrumentSettings: (update: SettingInstrumentSettingsUpdate) => void;
     exportSongAudio: (song: SongStorable) => void;
   };
 
@@ -542,6 +547,7 @@
         <SettingsPane
           settings={data.settings}
           changeVolume={functions.changeVolume}
+          changeInstrumentSettings={functions.changeInstrumentSettings}
           onUpdate={functions.handleSettingChange}
         />
         <Separator background="var(--secondary)" height="0.1rem" verticalMargin="0.5rem" />

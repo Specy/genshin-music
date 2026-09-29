@@ -54,7 +54,7 @@
     </div>
     <div class="midi-track-center">
       <InstrumentSelect
-        onChange={(name) => onChange(index, { instrument: data.instrument.clone().set({ name }) })}
+        onChange={(name) => onChange(index, { instrument: data.instrument.withInstrument(name) })}
         selected={data.instrument.name}
         style="margin-left:0.2rem;padding-right:1.5rem"
       />

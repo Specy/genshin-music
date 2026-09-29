@@ -706,7 +706,8 @@
         "move_down": "下に移動",
         "move_up": "上に移動",
         "merge_up": "上に統合",
-        "merge_down": "下に統合"
+        "merge_down": "下に統合",
+        "variant": "Variant"
     },
     "tutorials": {
         "composer": {
@@ -858,6 +859,13 @@
         "SFX_MothCall": "蛾の鳴き声",
         "GrandPiano": "グランドピアノ",
         "HarmonicKey": "諧律のチェンバロ"
+    },
+    "instrument_variants": {
+        "Aurora": {
+            "ah": "Ah",
+            "eh": "Eh",
+            "oo": "Oo"
+        }
     },
     "versions": {
         "4-0-0": {

@@ -14,19 +14,25 @@
   import IconButton from '$cmp/inputs/IconButton.svelte';
   import FloatingSelection from '$cmp/utility/FloatingSelection.svelte';
   import type { ZenKeyboardSettingsDataType } from '$core/BaseSettings';
-  import type { SettingUpdate, SettingVolumeUpdate } from '$core/types/SettingsPropriety';
+  import type {
+    SettingInstrumentSettingsUpdate,
+    SettingUpdate,
+    SettingVolumeUpdate,
+  } from '$core/types/SettingsPropriety';
 
   let {
     settings,
     isMetronomePlaying,
     handleSettingChange,
     onVolumeChange,
+    onInstrumentSettingsChange,
     setIsMetronomePlaying,
   }: {
     settings: ZenKeyboardSettingsDataType;
     isMetronomePlaying: boolean;
     handleSettingChange: (setting: SettingUpdate) => void;
     onVolumeChange: (data: SettingVolumeUpdate) => void;
+    onInstrumentSettingsChange: (update: SettingInstrumentSettingsUpdate) => void;
     setIsMetronomePlaying: (val: boolean) => void;
   } = $props();
 
@@ -236,7 +242,12 @@
   {#snippet panel()}
     <MenuPanelWrapper>
       <MenuPanel title={t('menu:settings')} id="Settings">
-        <SettingsPane {settings} onUpdate={handleSettingChange} changeVolume={onVolumeChange} />
+        <SettingsPane
+          {settings}
+          onUpdate={handleSettingChange}
+          changeVolume={onVolumeChange}
+          changeInstrumentSettings={onInstrumentSettingsChange}
+        />
       </MenuPanel>
     </MenuPanelWrapper>
   {/snippet}

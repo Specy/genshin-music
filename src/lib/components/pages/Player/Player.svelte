@@ -37,7 +37,11 @@
   } from '$lib/games/instrumentSettings';
   import type { Pitch } from '$core/legacyConfig';
   import type { PlayerSettingsDataType } from '$core/BaseSettings';
-  import type { SettingUpdate, SettingVolumeUpdate } from '$core/types/SettingsPropriety';
+  import type {
+    SettingInstrumentSettingsUpdate,
+    SettingUpdate,
+    SettingVolumeUpdate,
+  } from '$core/types/SettingsPropriety';
 
   let settings: PlayerSettingsDataType = $state(settingsService.getDefaultPlayerSettings());
   let instruments: Instrument[] = $state([new Instrument(game.instruments.list[0])]);
@@ -207,6 +211,20 @@
 
   function setHasSong(data: boolean) {
     hasSong = data;
+  }
+
+  /**
+   * The user's own keyboard Variant (ADR-0017). Saved either way, heard now only in free play:
+   * while a song is loaded its tracks bring their own settings, and the stop-time restore picks
+   * this one up, the way the user's pitch and reverb come back.
+   */
+  function changeInstrumentSettings(update: SettingInstrumentSettingsUpdate) {
+    if (update.key !== 'instrument') return;
+    settings.instrument = { ...settings.instrument, settings: update.settings };
+    updateSettings();
+    if (playerStore.eventType === 'stop') {
+      loadInstrument(settings.instrument.value, settings.instrument.settings);
+    }
   }
 
   function changeVolume(obj: SettingVolumeUpdate) {
@@ -696,6 +714,7 @@
     removeSong,
     handleSettingChange,
     changeVolume,
+    changeInstrumentSettings,
     renameSong,
     exportSongAudio,
   }}

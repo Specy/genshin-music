@@ -706,7 +706,8 @@
         "move_down": "Move down",
         "move_up": "Move up",
         "merge_up": "Объединить вверх",
-        "merge_down": "Объединить вниз"
+        "merge_down": "Объединить вниз",
+        "variant": "Variant"
     },
     "tutorials": {
         "composer": {
@@ -858,6 +859,13 @@
         "LingeringEuphonia": "Lingering Euphonia",
         "LeapingSpiritPiano": "Leaping Spirit Piano",
         "HarmonicKey": "Harmonic Key"
+    },
+    "instrument_variants": {
+        "Aurora": {
+            "ah": "Ah",
+            "eh": "Eh",
+            "oo": "Oo"
+        }
     },
     "versions": {
         "4-0-0": {

@@ -10,17 +10,17 @@ export type SerializedLocale = {
 
 export const I18N_VERSIONS = {
   en: 11,
-  es: 11,
-  zh: 11,
-  id: 11,
-  it: 11,
-  pt: 11,
-  ru: 11,
-  tr: 11,
-  'zh-HK': 11,
-  'zh-TW': 11,
-  ja: 11,
-  ko: 11,
+  es: 12,
+  zh: 12,
+  id: 12,
+  it: 12,
+  pt: 12,
+  ru: 12,
+  tr: 12,
+  'zh-HK': 12,
+  'zh-TW': 12,
+  ja: 12,
+  ko: 12,
 } satisfies Record<AppLanguage, number>;
 
 class I18nCache {

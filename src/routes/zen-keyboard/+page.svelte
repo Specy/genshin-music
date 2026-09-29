@@ -18,7 +18,11 @@
   import { zenKeyboardStore } from '$stores/ZenKeyboardStore.svelte';
   import { setPageVisited } from '$stores/PageVisitStore.svelte';
   import type { InstrumentName } from '$core/types';
-  import type { SettingUpdate, SettingVolumeUpdate } from '$core/types/SettingsPropriety';
+  import type {
+    SettingInstrumentSettingsUpdate,
+    SettingUpdate,
+    SettingVolumeUpdate,
+  } from '$core/types/SettingsPropriety';
 
   let settings: ZenKeyboardSettingsDataType = $state(ZenKeyboardSettings.data);
   let instrument: Instrument = $state(new Instrument());
@@ -199,6 +203,14 @@
     if (midiSentIds.delete(note.id)) MIDIProvider.broadcastNoteUp(note.id);
   }
 
+  /** The keyboard's Variant (ADR-0017): a new engine for the new samples, and remembered. */
+  function onInstrumentSettingsChange(update: SettingInstrumentSettingsUpdate) {
+    if (update.key !== 'instrument') return;
+    settings.instrument = { ...settings.instrument, settings: update.settings };
+    instrument = new Instrument(settings.instrument.value, settings.instrument.settings);
+    updateSettings(settings);
+  }
+
   function onVolumeChange(data: SettingVolumeUpdate) {
     instrument.changeVolume(data.value);
   }
@@ -215,6 +227,7 @@
     {isMetronomePlaying}
     setIsMetronomePlaying={(val) => (isMetronomePlaying = val)}
     {onVolumeChange}
+    {onInstrumentSettingsChange}
     {handleSettingChange}
   />
   <div class="flex-centered">

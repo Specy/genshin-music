@@ -100,3 +100,11 @@ export type SettingVolumeUpdate = {
     key: SettingUpdateKey
     value: number
 }
+/**
+ * A free-play keyboard's Instrument Settings changed (ADR-0017/0018) - its own channel, like
+ * volume, because every settings handler copies only `value` from a SettingUpdate.
+ */
+export type SettingInstrumentSettingsUpdate = {
+    key: SettingUpdateKey
+    settings: InstrumentSettingValues
+}

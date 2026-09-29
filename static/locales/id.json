@@ -706,7 +706,8 @@
         "move_down": "Geser ke bawah",
         "move_up": "Geser ke Atas",
         "merge_up": "Gabung ke atas",
-        "merge_down": "Gabung ke bawah"
+        "merge_down": "Gabung ke bawah",
+        "variant": "Variant"
     },
     "tutorials": {
         "composer": {
@@ -858,6 +859,13 @@
         "LingeringEuphonia": "Lingering Euphonia",
         "LeapingSpiritPiano": "Leaping Spirit Piano",
         "HarmonicKey": "Harmonic Key"
+    },
+    "instrument_variants": {
+        "Aurora": {
+            "ah": "Ah",
+            "eh": "Eh",
+            "oo": "Oo"
+        }
     },
     "versions": {
         "4-0-0": {

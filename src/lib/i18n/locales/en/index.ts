@@ -850,6 +850,8 @@ export const i18n_en = {
     move_up: 'Move up',
     merge_up: 'Merge up',
     merge_down: 'Merge down',
+    // the row that picks one of an instrument's alternative recordings (e.g. Aurora's sung vowels)
+    variant: 'Variant',
   },
 
   tutorials: {
@@ -1009,6 +1011,16 @@ export const i18n_en = {
     LeapingSpiritPiano: 'Leaping Spirit Piano',
     HarmonicKey: 'Harmonic Keys',
   } satisfies Record<InstrumentName, string>,
+  // Variant option labels by instrument, then option id (ADR-0017). Any locale may leave one out:
+  // the option's English label from the instrument's config shows instead.
+  instrument_variants: {
+    // sung vowels: "Ah" as in "father", "Eh" as in "bed", "Oo" as in "food"
+    Aurora: {
+      ah: 'Ah',
+      eh: 'Eh',
+      oo: 'Oo',
+    },
+  },
   versions: {
     '4-0-0': {
       title: 'New app, sustained notes, smooth scrolling, new instruments',

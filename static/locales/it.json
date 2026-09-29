@@ -706,7 +706,8 @@
     "move_down": "Sposta verso il basso",
     "move_up": "Sposta verso l'alto",
     "merge_up": "Unisci sopra",
-    "merge_down": "Unisci sotto"
+    "merge_down": "Unisci sotto",
+    "variant": "Variant"
   },
   "tutorials": {
     "composer": {
@@ -858,6 +859,13 @@
     "LingeringEuphonia": "Eufonia persistente",
     "LeapingSpiritPiano": "Pianoforte dello spirito balzante",
     "HarmonicKey": "Tasti armonici"
+  },
+  "instrument_variants": {
+    "Aurora": {
+      "ah": "Ah",
+      "eh": "Eh",
+      "oo": "Oo"
+    }
   },
   "versions": {
     "4-0-0": {

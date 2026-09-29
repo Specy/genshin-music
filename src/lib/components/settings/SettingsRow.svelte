@@ -9,6 +9,7 @@
   import InstrumentInput from './InstrumentInput.svelte';
   import { t, tNoteNameType } from '$i18n/binding.svelte';
   import type {
+    SettingInstrumentSettingsUpdate,
     SettingUpdate,
     SettingUpdateKey,
     SettingVolumeUpdate,
@@ -20,11 +21,13 @@
     update,
     objKey,
     changeVolume,
+    changeInstrumentSettings,
   }: {
     data: SettingsPropriety;
     update: (data: SettingUpdate) => void;
     objKey: SettingUpdateKey;
     changeVolume?: (data: SettingVolumeUpdate) => void;
+    changeInstrumentSettings?: (data: SettingInstrumentSettingsUpdate) => void;
   } = $props();
 
   // A writable $derived: reading `currentValue` tracks `data.value`, but
@@ -88,6 +91,7 @@
     <InstrumentInput
       {volume}
       onInstrumentPick={update}
+      onSettingsPick={changeInstrumentSettings}
       onVolumeChange={(v) => (volume = v)}
       onVolumeComplete={changeVolume}
       instrument={data.value}
