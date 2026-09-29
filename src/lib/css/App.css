@@ -43,7 +43,7 @@
   /* Shared by page text and canvas labels; keep these tokens for future font choices. */
   --font-main: Vollkorn, serif;
   --font-reading: Vollkorn, serif;
-  --font-weight-main: 750;
+  --font-weight-main: 700;
 }
 
 /* The bundled Vollkorn files have normalized glyph and line metrics; see
@@ -143,6 +143,8 @@ html {
 button,
 input,
 select,
+select option,
+select optgroup,
 textarea {
   font-family: inherit;
   font-weight: inherit;
