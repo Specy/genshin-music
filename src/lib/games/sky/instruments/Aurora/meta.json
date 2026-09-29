@@ -7,5 +7,73 @@
     "release": 0.4,
     "minLength": 0.15
   },
-  "notes": "standard-15"
+  "notes": "standard-15",
+  "settings": {
+    "variant": {
+      "kind": "variant",
+      "default": "ah",
+      "options": {
+        "ah": {
+          "label": "Ah",
+          "files": [
+            "C4-C.mp3",
+            "D4-B.mp3",
+            "E4-C.mp3",
+            "F4-A.mp3",
+            "G4-A.mp3",
+            "A4-A.mp3",
+            "B4-C.mp3",
+            "C5-A.mp3",
+            "D5-C.mp3",
+            "E5-B.mp3",
+            "F5-A.mp3",
+            "G5-A.mp3",
+            "A5-B.mp3",
+            "B5-A.mp3",
+            "C6-A.mp3"
+          ]
+        },
+        "eh": {
+          "label": "Eh",
+          "files": [
+            "C4-B.mp3",
+            "D4-A.mp3",
+            "E4-B.mp3",
+            "F4-B.mp3",
+            "G4-B.mp3",
+            "A4-D.mp3",
+            "B4-A.mp3",
+            "C5-C.mp3",
+            "D5-D.mp3",
+            "E5-E.mp3",
+            "F5-B.mp3",
+            "G5-B.mp3",
+            "A5-A.mp3",
+            "B5-A.mp3",
+            "C6-A.mp3"
+          ]
+        },
+        "oo": {
+          "label": "Oo",
+          "files": [
+            "C4-C.mp3",
+            "D4-C.mp3",
+            "E4-A.mp3",
+            "F4-B.mp3",
+            "G4-A.mp3",
+            "A4-B.mp3",
+            "B4-B.mp3",
+            "C5-A.mp3",
+            "D5-A.mp3",
+            "E5-B.mp3",
+            "F5-B.mp3",
+            "G5-B.mp3",
+            "A5-A.mp3",
+            "B5-A.mp3",
+            "C6-A.mp3"
+          ]
+        }
+      }
+    }
+  }
 }

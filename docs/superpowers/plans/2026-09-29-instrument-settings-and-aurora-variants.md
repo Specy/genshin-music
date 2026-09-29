@@ -35,11 +35,11 @@ Glossary: **Take**, **Variant**, **Instrument Setting**, **Setting Kind** in `CO
   i18n overrides, following the `displayName` pattern.
 - Take picks, one letter per note from C4 to C6, using the catalog letters in `new-aurora/variants/CATALOG.md`:
 
-  | | C4 | D4 | E4 | F4 | G4 | A4 | B4 | C5 | D5 | E5 | F5 | G5 | A5 | B5 | C6 |
-  |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-  | `ah` (default) | C | B | C | A | A | A | C | A | C | B | A | A | B | A | A |
-  | `eh` | B | A | B | B | B | D | A | C | D | E | B | B | A | A | A |
-  | `oo` | C | C | A | B | A | B | B | A | A | B | B | B | A | A | A |
+  |                | C4  | D4  | E4  | F4  | G4  | A4  | B4  | C5  | D5  | E5  | F5  | G5  | A5  | B5  | C6  |
+  | -------------- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+  | `ah` (default) | C   | B   | C   | A   | A   | A   | C   | A   | C   | B   | A   | A   | B   | A   | A   |
+  | `eh`           | B   | A   | B   | B   | B   | D   | A   | C   | D   | E   | B   | B   | A   | A   | A   |
+  | `oo`           | C   | C   | A   | B   | A   | B   | B   | A   | A   | B   | B   | B   | A   | A   | A   |
 
   That is 33 distinct Takes. Where Variants share a Take, it was chosen deliberately for blend (the user kept these
   picks after seeing the overlap).
@@ -63,7 +63,7 @@ Glossary: **Take**, **Variant**, **Instrument Setting**, **Setting Kind** in `CO
   - `AudioPlayer.ts:49`
   - `OfflineSongRenderer.ts:51-60,407`
 - **Never reload an engine in place.** A second `load()` creates a new gain node (`Instrument.svelte.ts:627`), and the old node stays registered with AudioProvider. A Variant change means a new engine plus `dispose()`, exactly like an instrument swap.
-- **`registry.ts` must stay JSON-only and service-worker-safe.** Setting Kind *behavior* (controls, loading) never gets
+- **`registry.ts` must stay JSON-only and service-worker-safe.** Setting Kind _behavior_ (controls, loading) never gets
   imported there. Only ids and data validation do.
 - **Do not bump `settingVersion`.** A bump replaces the user's whole stored settings blob with defaults
   (`SettingsService.ts:59-79`). New fields are optional and read with a fallback, following the existing
@@ -82,6 +82,7 @@ Glossary: **Take**, **Variant**, **Instrument Setting**, **Setting Kind** in `CO
 ## Files touched (complete list)
 
 Config and samples
+
 - `src/lib/games/schema.ts`, `src/lib/games/types.ts`, `src/lib/games/registry.ts`
 - `src/lib/games/instrumentSettings.ts` (**new**: the resolver; see 1.5; in `games/` rather than `core/`, which is excluded from lint and format)
 - `scripts/gameStatic.js`
@@ -89,14 +90,17 @@ Config and samples
 - `docs/adding-instruments-and-games.md`, `docs/skills/instrument-from-sequential-capture/SKILL.md`
 
 Song model
+
 - `src/lib/core/Songs/SongClasses.ts`, `ComposedSong.svelte.ts`, `RecordedSong.ts`, `VsrgSong.svelte.ts`,
   `midiTrackRoster.ts`
 
 Audio
+
 - `src/lib/audio/Instrument.svelte.ts`, `src/lib/audio/AudioPlayer.ts`, `src/lib/audio/OfflineSongRenderer.ts`
 - `src/lib/components/pages/Composer/ComposerInstrumentSynchronizer.ts`
 
 UI
+
 - `src/lib/components/pages/Composer/InstrumentSettingsPopup.svelte`
 - `src/lib/components/pages/Composer/MidiParser/TrackInfo.svelte`
 - `src/lib/components/pages/VsrgComposer/VsrgTrackSettings.svelte`, `src/routes/vsrg-composer/+page.svelte`
@@ -106,10 +110,12 @@ UI
 - `src/lib/core/types/SettingsPropriety.ts`
 
 i18n
+
 - `src/lib/i18n/locales/en/index.ts`, `src/lib/i18n/binding.svelte.ts`, `src/lib/i18n/i18nCache.ts`
 - `static/locales/*.json`
 
 Tests
+
 - new: `test/instrumentSettings.test.ts`
 - extended:
   - `test/gameConfig.test.ts`, `test/serializePlain.test.ts`, `test/undoRedo.test.ts`
@@ -355,12 +361,14 @@ into pooled buffers in place (:609-621, :657-659), and the key-per-engine model 
 ### 4.3 Tests
 
 Extend these four tests:
+
 - `audioPlayerDiffing.test.ts` (:101, :116)
 - `composerNewSongInstrumentSync.test.ts` (:144, :250, :310)
 - `offlineRenderer.test.ts` (:216)
 - `audioContextRebuild.test.ts` (:223)
 
 Cases to cover:
+
 - The same name with a different Variant gets a different engine and different buffers.
 - The same name and Variant reuses the engine.
 - A context rebuild keeps the Variant.

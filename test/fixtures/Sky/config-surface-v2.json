@@ -60,7 +60,7 @@
       },
       "notes": [
         {
-          "file": "0.mp3",
+          "file": "C4-C.mp3",
           "nominal": 60,
           "baseNote": "C",
           "pitched": true,
@@ -68,7 +68,7 @@
           "icon": "dmcr"
         },
         {
-          "file": "1.mp3",
+          "file": "D4-B.mp3",
           "nominal": 62,
           "baseNote": "D",
           "pitched": true,
@@ -76,7 +76,7 @@
           "icon": "dm"
         },
         {
-          "file": "2.mp3",
+          "file": "E4-C.mp3",
           "nominal": 64,
           "baseNote": "E",
           "pitched": true,
@@ -84,7 +84,7 @@
           "icon": "cr"
         },
         {
-          "file": "3.mp3",
+          "file": "F4-A.mp3",
           "nominal": 65,
           "baseNote": "F",
           "pitched": true,
@@ -92,7 +92,7 @@
           "icon": "dm"
         },
         {
-          "file": "4.mp3",
+          "file": "G4-A.mp3",
           "nominal": 67,
           "baseNote": "G",
           "pitched": true,
@@ -100,7 +100,7 @@
           "icon": "cr"
         },
         {
-          "file": "5.mp3",
+          "file": "A4-A.mp3",
           "nominal": 69,
           "baseNote": "A",
           "pitched": true,
@@ -108,7 +108,7 @@
           "icon": "cr"
         },
         {
-          "file": "6.mp3",
+          "file": "B4-C.mp3",
           "nominal": 71,
           "baseNote": "B",
           "pitched": true,
@@ -116,7 +116,7 @@
           "icon": "dm"
         },
         {
-          "file": "7.mp3",
+          "file": "C5-A.mp3",
           "nominal": 72,
           "baseNote": "C",
           "pitched": true,
@@ -124,7 +124,7 @@
           "icon": "dmcr"
         },
         {
-          "file": "8.mp3",
+          "file": "D5-C.mp3",
           "nominal": 74,
           "baseNote": "D",
           "pitched": true,
@@ -132,7 +132,7 @@
           "icon": "dm"
         },
         {
-          "file": "9.mp3",
+          "file": "E5-B.mp3",
           "nominal": 76,
           "baseNote": "E",
           "pitched": true,
@@ -140,7 +140,7 @@
           "icon": "cr"
         },
         {
-          "file": "10.mp3",
+          "file": "F5-A.mp3",
           "nominal": 77,
           "baseNote": "F",
           "pitched": true,
@@ -148,7 +148,7 @@
           "icon": "cr"
         },
         {
-          "file": "11.mp3",
+          "file": "G5-A.mp3",
           "nominal": 79,
           "baseNote": "G",
           "pitched": true,
@@ -156,7 +156,7 @@
           "icon": "dm"
         },
         {
-          "file": "12.mp3",
+          "file": "A5-B.mp3",
           "nominal": 81,
           "baseNote": "A",
           "pitched": true,
@@ -164,7 +164,7 @@
           "icon": "cr"
         },
         {
-          "file": "13.mp3",
+          "file": "B5-A.mp3",
           "nominal": 83,
           "baseNote": "B",
           "pitched": true,
@@ -172,14 +172,85 @@
           "icon": "dm"
         },
         {
-          "file": "14.mp3",
+          "file": "C6-A.mp3",
           "nominal": 84,
           "baseNote": "C",
           "pitched": true,
           "sounding": 84,
           "icon": "dmcr"
         }
-      ]
+      ],
+      "settings": {
+        "variant": {
+          "kind": "variant",
+          "default": "ah",
+          "options": [
+            {
+              "id": "ah",
+              "label": "Ah",
+              "files": [
+                "C4-C.mp3",
+                "D4-B.mp3",
+                "E4-C.mp3",
+                "F4-A.mp3",
+                "G4-A.mp3",
+                "A4-A.mp3",
+                "B4-C.mp3",
+                "C5-A.mp3",
+                "D5-C.mp3",
+                "E5-B.mp3",
+                "F5-A.mp3",
+                "G5-A.mp3",
+                "A5-B.mp3",
+                "B5-A.mp3",
+                "C6-A.mp3"
+              ]
+            },
+            {
+              "id": "eh",
+              "label": "Eh",
+              "files": [
+                "C4-B.mp3",
+                "D4-A.mp3",
+                "E4-B.mp3",
+                "F4-B.mp3",
+                "G4-B.mp3",
+                "A4-D.mp3",
+                "B4-A.mp3",
+                "C5-C.mp3",
+                "D5-D.mp3",
+                "E5-E.mp3",
+                "F5-B.mp3",
+                "G5-B.mp3",
+                "A5-A.mp3",
+                "B5-A.mp3",
+                "C6-A.mp3"
+              ]
+            },
+            {
+              "id": "oo",
+              "label": "Oo",
+              "files": [
+                "C4-C.mp3",
+                "D4-C.mp3",
+                "E4-A.mp3",
+                "F4-B.mp3",
+                "G4-A.mp3",
+                "A4-B.mp3",
+                "B4-B.mp3",
+                "C5-A.mp3",
+                "D5-A.mp3",
+                "E5-B.mp3",
+                "F5-B.mp3",
+                "G5-B.mp3",
+                "A5-A.mp3",
+                "B5-A.mp3",
+                "C6-A.mp3"
+              ]
+            }
+          ]
+        }
+      }
     },
     "Bells": {
       "name": "Bells",
