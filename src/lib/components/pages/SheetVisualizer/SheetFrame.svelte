@@ -11,6 +11,7 @@
   import { SUSTAIN_VISUAL_THRESHOLD_MS } from '$core/legacyConfig';
   import type { Chunk } from '$core/Songs/VisualSong';
   import type { NoteNameType } from '$lib/games/types';
+  import { noteLabelForDisplay } from '$lib/games/jianpu';
   import { cn, cs } from '$core/utils/Utilities';
 
   // One note-grid "frame" tile - the small per-chunk sheet-music preview block rendered under
@@ -61,7 +62,11 @@
 </script>
 
 <div
-  class={cn('frame-outer-smaller', [chunk.notes.length === 0, 'visualizer-ball'])}
+  class={cn(
+    'frame-outer-smaller',
+    [chunk.notes.length === 0, 'visualizer-ball'],
+    [keyboardLayout === '1 2 3', 'jianpu-mode']
+  )}
   style={borderColor ? `border-color:${borderColor}` : ''}
 >
   {#if chunk.notes.length === 0}
@@ -73,7 +78,12 @@
           class={note.held ? 'frame-note-s frame-note-held' : 'frame-note-s'}
           style="grid-row:{note.row};grid-column:{note.column}"
         >
-          {hasText ? baseInstrument.getNoteText(note.button, keyboardLayout, 'C') : ''}
+          {hasText
+            ? noteLabelForDisplay(
+                baseInstrument.getNoteText(note.button, keyboardLayout, 'C'),
+                keyboardLayout
+              )
+            : ''}
         </div>
       {/each}
     </div>

@@ -109,6 +109,14 @@
     U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 
+@font-face {
+  font-family: XVACLE;
+  src: url('./../assets/font/XVACLE-Regular.ttf') format('truetype');
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
 .loading {
   color: var(--background-text);
   font-size: 2rem;
@@ -1187,6 +1195,13 @@ a {
   position: absolute;
   font-size: 1rem;
   color: var(--note-background-text);
+}
+
+.jianpu-mode .note-name,
+.jianpu-mode .note-name-sky,
+.jianpu-mode .frame-note-s {
+  font-family: XVACLE, serif;
+  font-weight: normal;
 }
 
 .button-hitbox,

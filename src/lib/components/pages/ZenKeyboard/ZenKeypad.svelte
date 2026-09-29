@@ -8,6 +8,7 @@
 
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { noteLabelForDisplay } from '$lib/games/jianpu';
   import { zenKeyboardStore } from '$stores/ZenKeyboardStore.svelte';
   import { createKeyboardListener } from '$stores/KeybindsStore.svelte';
   import type { Instrument, ObservableNote } from '$lib/audio/Instrument.svelte';
@@ -67,14 +68,17 @@
 <ShapeKeyboard
   shape={instrument.shape}
   notes={zenKeyboardStore.keyboard}
-  class={cssBase}
+  class={cssBase + (noteNameType === '1 2 3' ? ' jianpu-mode' : '')}
   style="transform:scale({scale / 100}) translateY({verticalOffset}px);margin-top:unset"
 >
   {#snippet button(note, button)}
     <ZenNote
       keyPadding={keySpacing}
       instrumentName={instrument.name}
-      noteText={instrument.getNoteText(button, noteNameType, pitch)}
+      noteText={noteLabelForDisplay(
+        instrument.getNoteText(button, noteNameType, pitch),
+        noteNameType
+      )}
       noteImage={note.noteImage}
       {note}
       onClick={onNoteClick}

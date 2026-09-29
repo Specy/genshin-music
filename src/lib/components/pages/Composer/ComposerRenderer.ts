@@ -33,6 +33,7 @@
 // callbacks carry user input the same way round - a pointer on either region becomes a selectColumn
 // or a toggleBreakpoint.
 import { game } from '$game';
+import { noteLabelForDisplay } from '$lib/games/jianpu';
 import { isMobile } from 'is-mobile';
 import type { ColorInstance } from 'color';
 import {
@@ -1826,6 +1827,8 @@ export class ComposerRenderer {
   } | null = null;
   /** Everything the strip's labels are a function of, as one comparable string - see syncProStrip. */
   private proStripKey = '';
+  private jianpuFontRequested = false;
+  private jianpuFontReady = false;
 
   // ── the Column Ruler (CONTEXT.md: Column Ruler, Ruler Scrub; spec 2026-08-27) ─────────────────
   //
@@ -3390,6 +3393,22 @@ export class ComposerRenderer {
   private syncProStrip(): void {
     const TextClass = this.proTextClass;
     if (!TextClass) return;
+    if (this.state.noteNameType === '1 2 3' && !this.jianpuFontRequested && document.fonts) {
+      this.jianpuFontRequested = true;
+      // Pixi rasterises Text once. Rebuild the labels after the bundled font loads, including when
+      // the user switches to numbered notation after the renderer was created.
+      void document.fonts
+        .load('16px XVACLE', '1zx')
+        .then((faces) => {
+          if (this.destroyed || faces.length === 0) return;
+          this.jianpuFontReady = true;
+          this.proStripKey = '';
+          this.draw();
+        })
+        .catch(() => {
+          // Keep the readable Unicode labels if the font cannot load.
+        });
+    }
     const axis = this.proAxis();
     const rowHeight = this.proRowHeightPx();
     const { first, last } = visibleRowRange({
@@ -3466,8 +3485,15 @@ export class ComposerRenderer {
       const label = this.proStripLabelAt(row - first, TextClass);
       if (rebuild) {
         const resolved = proRowLabel(number, numberToButton(name, pitch, number), noteText);
-        label.text = resolved.text;
+        label.text = noteLabelForDisplay(
+          resolved.text,
+          this.jianpuFontReady ? this.state.noteNameType : 'Note name'
+        );
         label.style.fontSize = resolved.faint ? fontSize * PRO_FAINT_LABEL_SCALE : fontSize;
+        label.style.fontFamily =
+          this.state.noteNameType === '1 2 3' && this.jianpuFontReady && !resolved.faint
+            ? 'XVACLE, Arial, Helvetica, sans-serif'
+            : 'Arial, Helvetica, sans-serif';
         label.style.fill = this.theme.pro.stripText;
         label.alpha = resolved.faint ? PRO_FAINT_LABEL_ALPHA : 1;
       }

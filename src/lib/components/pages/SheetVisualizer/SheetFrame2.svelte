@@ -10,6 +10,7 @@
   import { game } from '$game';
   import type { TempoChunk } from '$core/Songs/VisualSong';
   import type { NoteNameType } from '$lib/games/types';
+  import { noteLabelForDisplay } from '$lib/games/jianpu';
 
   // The tempo-bracketed sheet-music frame row the sheet-visualizer page renders - one call per
   // `VisualSong` chunk, each producing 1+ column tiles (tempo-changer brackets can group several
@@ -76,7 +77,12 @@
 </script>
 
 {#each columnsWithNotes as { column, filledNotes, outerStyle }, i (i)}
-  <div class="frame-outer-background" style={outerStyle}>
+  <div
+    class={keyboardLayout === '1 2 3'
+      ? 'frame-outer-background jianpu-mode'
+      : 'frame-outer-background'}
+    style={outerStyle}
+  >
     <div class={['frame-outer', column.notes.length === 0 && 'visualizer-ball']}>
       <!-- Dead code, deliberately kept inert (disabled in old too, never rendered either
                  way): a never-finished "emptyAhead" hourglass-icon counter. Not a cleanup miss -
@@ -90,7 +96,12 @@
               class={f.held ? 'frame-note-s frame-note-held' : 'frame-note-s'}
               style="grid-row:{f.gridRow};grid-column:{f.gridColumn};--selected-note-background:var(--sheet-row-color-{f.rowIndex})"
             >
-              {f && hasText ? baseInstrument.getNoteText(f.cell, keyboardLayout, 'C') : ''}
+              {f && hasText
+                ? noteLabelForDisplay(
+                    baseInstrument.getNoteText(f.cell, keyboardLayout, 'C'),
+                    keyboardLayout
+                  )
+                : ''}
             </div>
           {/each}
         </div>

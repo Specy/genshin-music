@@ -16,6 +16,7 @@
 
 <script lang="ts">
   import { game } from '$game';
+  import { noteLabelForDisplay } from '$lib/games/jianpu';
   import type { NoteNameType, Pitch } from '$lib/games/types';
   import {
     computeButtonLayerStatuses,
@@ -183,7 +184,11 @@
         <div class="loading">Loading...</div>
       </div>
     {:else}
-      <ShapeKeyboard shape={data.keyboard.shape} notes={data.keyboard.notes} class="keyboard">
+      <ShapeKeyboard
+        shape={data.keyboard.shape}
+        notes={data.keyboard.notes}
+        class={data.noteNameType === '1 2 3' ? 'keyboard jianpu-mode' : 'keyboard'}
+      >
         <!-- Payload (ADR-0005 §3): the note itself, plus its BUTTON — never a bare slot the
              surface would have to resolve back into a note. The note goes straight to
              ComposerNote and back out through the handlers; the Button only addresses this
@@ -195,7 +200,10 @@
             <ComposerNote
               layer={layerStatuses.get(i) ?? 0}
               data={note}
-              noteText={data.keyboard.getNoteText(i, data.noteNameType, data.pitch)}
+              noteText={noteLabelForDisplay(
+                data.keyboard.getNoteText(i, data.noteNameType, data.pitch),
+                data.noteNameType
+              )}
               instrument={data.keyboard.name}
               noteImage={note.icon}
               clickAction={functions.handleClick}

@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount, untrack } from 'svelte';
   import { game } from '$game';
+  import { noteLabelForDisplay } from '$lib/games/jianpu';
   import {
     SPEED_CHANGERS,
     SUSTAIN_VISUAL_THRESHOLD_MS,
@@ -1186,7 +1187,9 @@
    */
   const buttonNotes = $derived(playerStore.keyboard.slice(0, buttonCount));
   const keyboardClass = $derived(
-    'keyboard' + (playerStore.eventType === 'play' ? ' keyboard-playback' : '')
+    'keyboard' +
+      (playerStore.eventType === 'play' ? ' keyboard-playback' : '') +
+      (data.noteNameType === '1 2 3' ? ' jianpu-mode' : '')
   );
   // $derived.by (not bare $derived(expr)) is required: TypeScript narrows mode to its
   // initializer literal ('play') at this point, since no synchronous code reassigns it first -
@@ -1219,7 +1222,10 @@
         approachingNotes={approachingNotes[buttonIndex] ?? []}
         {handleClick}
         {handleRelease}
-        noteText={displayInstrument.getNoteText(buttonIndex, data.noteNameType, data.pitch)}
+        noteText={noteLabelForDisplay(
+          displayInstrument.getNoteText(buttonIndex, data.noteNameType, data.pitch),
+          data.noteNameType
+        )}
       />
     {/snippet}
   </ShapeKeyboard>
