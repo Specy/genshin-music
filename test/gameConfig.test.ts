@@ -9,10 +9,16 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import { gamesMeta, nearestChromaticMatch, normalizeNotes, parseNoteName } from '$lib/games/registry';
+import {
+  gamesMeta,
+  nearestChromaticMatch,
+  normalizeInstrumentSettings,
+  normalizeNotes,
+  parseNoteName,
+} from '$lib/games/registry';
 import { BASE_NOTE_PITCH_CLASSES, BASE_NOTES } from '$lib/games/types';
 import { baseNoteText, DO_RE_MI_NOTE_SCALE, NOTE_SCALE, PITCHES } from '$core/sharedConfig';
-import type { NoteMetaJson } from '$lib/games/schema';
+import type { InstrumentMetaJson, NoteMetaJson } from '$lib/games/schema';
 import { game } from '$game';
 
 const GAMES_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'src', 'lib', 'games');
@@ -33,6 +39,26 @@ describe('game folders (all games, via the registry)', () => {
             fs.existsSync(path.join(dir, note.file)),
             `${gameId}/${instrument.name}/${note.file}`
           ).toBe(true);
+        }
+      }
+    }
+  });
+
+  it("every Variant option's samples are on disk (ADR-0017)", () => {
+    // A note's `file` is only the DEFAULT option's sample; the other options' Takes are
+    // copied by gameStatic.js too, and would 404 as silence if one were missing.
+    for (const [gameId, meta] of Object.entries(gamesMeta)) {
+      for (const instrument of Object.values(meta.instruments)) {
+        for (const setting of Object.values(instrument.settings ?? {})) {
+          const dir = path.join(GAMES_DIR, gameId, 'instruments', instrument.name);
+          for (const option of setting.options) {
+            for (const file of option.files) {
+              expect(
+                fs.existsSync(path.join(dir, file)),
+                `${gameId}/${instrument.name} ${option.id}: ${file}`
+              ).toBe(true);
+            }
+          }
         }
       }
     }
@@ -311,6 +337,71 @@ describe('registry rejections around note identity (ADR-0007)', () => {
     // where the assigned button sits an octave above a scale the register lifts by one
     const collidable = [note({ nominal: 60 }), note({ nominal: 72, baseNote: '', pitched: false })];
     expect(withRegister(collidable, 'C5')().map((n) => n.sounding)).toEqual([72, 84]);
+  });
+});
+
+describe('declared Instrument Settings (ADR-0017/0018)', () => {
+  // Drives the validator buildGameMeta runs, on declarations the shipped data must never hold.
+  const authored: NoteMetaJson[] = [
+    { nominal: 60, baseNote: 'C', icon: 'do' },
+    { nominal: 62, baseNote: 'D', icon: 're' },
+  ];
+  const notes = normalizeNotes('test', authored, {});
+  const variant = (
+    options: Record<string, { label: string; files: string[] }> = {
+      ah: { label: 'Ah', files: ['C-a.mp3', 'D-a.mp3'] },
+      oo: { label: 'Oo', files: ['C-a.mp3', 'D-o.mp3'] },
+    },
+    fallback = 'ah'
+  ): InstrumentMetaJson['settings'] => ({ variant: { kind: 'variant', default: fallback, options } });
+  const normalize =
+    (settings: InstrumentMetaJson['settings'], name = 'Voice', notesAuthored = authored) =>
+    () =>
+      normalizeInstrumentSettings('test', name, settings, notesAuthored, notes);
+
+  it('an instrument that declares nothing is left exactly as it was', () => {
+    const result = normalize(undefined)();
+    expect(result.settings).toBeUndefined();
+    expect(result.notes).toBe(notes);
+  });
+
+  it('a Variant: options in declared order, notes take the default option’s files', () => {
+    const result = normalize(variant(undefined, 'oo'))();
+    expect(result.settings).toEqual({
+      variant: {
+        kind: 'variant',
+        default: 'oo',
+        options: [
+          { id: 'ah', label: 'Ah', files: ['C-a.mp3', 'D-a.mp3'] },
+          { id: 'oo', label: 'Oo', files: ['C-a.mp3', 'D-o.mp3'] },
+        ],
+      },
+    });
+    expect(result.notes.map((note) => note.file)).toEqual(['C-a.mp3', 'D-o.mp3']);
+    // shared Take, same Button: allowed (the user's picks share Takes on purpose)
+    expect(result.notes[0].nominal).toBe(60);
+  });
+
+  it('rejects an unknown kind, ids that cannot be song data or i18n keys, and empty declarations', () => {
+    expect(normalize({ vibrato: { kind: 'vibrato' } } as never)).toThrow(/unknown kind/);
+    expect(normalize({ Variant: variant()!.variant })).toThrow(/setting id/);
+    expect(normalize(variant({ 'a.h': { label: 'Ah', files: ['1.mp3', '2.mp3'] }, oo: { label: 'Oo', files: ['3.mp3', '4.mp3'] } }))).toThrow(/option id/);
+    expect(normalize({})).toThrow(/at least one setting/);
+    expect(normalize(variant(), 'Voice.v2')).toThrow(/folder name/);
+  });
+
+  it('rejects a Variant that cannot resolve every button to one sample', () => {
+    expect(normalize(variant({ ah: { label: 'Ah', files: ['a.mp3', 'b.mp3'] } }))).toThrow(/at least two options/);
+    expect(normalize(variant(undefined, 'eh'))).toThrow(/default "eh"/);
+    expect(normalize(variant({ ah: { label: 'Ah', files: ['a.mp3'] }, oo: { label: 'Oo', files: ['c.mp3', 'd.mp3'] } }))).toThrow(/one sample per button/);
+    expect(normalize(variant({ ah: { label: '', files: ['a.mp3', 'b.mp3'] }, oo: { label: 'Oo', files: ['c.mp3', 'd.mp3'] } }))).toThrow(/label/);
+    expect(normalize(variant({ ah: { label: 'Ah', files: ['a.mp3', 'x/b.mp3'] }, oo: { label: 'Oo', files: ['c.mp3', 'd.mp3'] } }))).toThrow(/must match/);
+  });
+
+  it('rejects a Take reused on another Button, and notes that name their own files', () => {
+    expect(normalize(variant({ ah: { label: 'Ah', files: ['a.mp3', 'b.mp3'] }, oo: { label: 'Oo', files: ['b.mp3', 'd.mp3'] } }))).toThrow(/belongs to one Button/);
+    const withFile: NoteMetaJson[] = [{ ...authored[0], file: 'own.mp3' }, authored[1]];
+    expect(normalize(variant(), 'Voice', withFile)).toThrow(/names its own file/);
   });
 });
 

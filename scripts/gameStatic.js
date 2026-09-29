@@ -37,15 +37,29 @@ async function prepareGameAudio(id) {
     if (!Array.isArray(notes)) {
       throw new Error(`[gameStatic] ${id}/${name}: unknown notes preset "${meta.notes}"`);
     }
-    for (let i = 0; i < notes.length; i++) {
-      const file = notes[i].file ?? `${i}.mp3`;
-      assertSafeSegment(`${id}/${name}`, `note ${i} file`, file);
+    for (const file of sampleFiles(meta, notes)) {
+      assertSafeSegment(`${id}/${name}`, 'sample file', file);
       await fse.copy(
         `${instrumentsDir}/${name}/${file}`,
         `./static/assets/audio/${id}/${name}/${file}`
       );
     }
   }
+}
+
+/**
+ * Every sample an instrument can play. An instrument with a Variant (ADR-0017) takes each
+ * button's file from the chosen option, so every option's files ship (a Take shared by two
+ * options once) and its notes' own `file` defaults do not; any other instrument plays
+ * exactly its notes' files (`<index>.mp3` unless named). Mirrors games/registry.ts, which
+ * validates the same declarations when the app evaluates.
+ */
+function sampleFiles(meta, notes) {
+  const variant = Object.values(meta.settings ?? {}).find((setting) => setting?.kind === 'variant');
+  if (variant) {
+    return new Set(Object.values(variant.options ?? {}).flatMap((option) => option.files ?? []));
+  }
+  return new Set(notes.map((note, i) => note.file ?? `${i}.mp3`));
 }
 
 /**

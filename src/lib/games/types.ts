@@ -304,6 +304,31 @@ export type ShapeDefinition = {
   assign?: (notes: readonly ShapeNote[]) => readonly number[];
 };
 
+/** The Setting Kinds the app implements (ADR-0018). First-party only: an instrument opts in by id. */
+export const SETTING_KINDS = ['variant'] as const;
+export type SettingKind = (typeof SETTING_KINDS)[number];
+
+/** One Variant option, normalized: `files[i]` is Button i's sample. */
+export type VariantOption = {
+  /** Stored in songs — permanent, like an instrument name. */
+  id: string;
+  /** English display fallback; i18n overrides it (instrument_variants namespace). */
+  label: string;
+  files: readonly string[];
+};
+
+/** A declared Variant (ADR-0017), normalized. `options` is in menu order. */
+export type VariantSettingDefinition = {
+  kind: 'variant';
+  default: string;
+  options: readonly VariantOption[];
+};
+
+export type InstrumentSettingDefinition = VariantSettingDefinition;
+
+/** An instrument's declared settings by setting id. Plain data (structured-cloneable). */
+export type InstrumentSettingsDefinition = Readonly<Record<string, InstrumentSettingDefinition>>;
+
 /** A fully-normalized instrument: what the app consumes at runtime. */
 export type InstrumentDefinition = {
   /** Folder name = runtime key = audio URL segment = what songs reference. */
@@ -316,7 +341,13 @@ export type InstrumentDefinition = {
   clickColor?: string;
   shape: ShapeId;
   sustain?: InstrumentSustain;
+  /**
+   * Button order. For an instrument with a Variant, each note's `file` is the DEFAULT
+   * option's sample, so readers that never think about Variants still get a real file.
+   */
   notes: readonly InstrumentNote[];
+  /** Declared Instrument Settings (ADR-0018); present only when the instrument declares any. */
+  settings?: InstrumentSettingsDefinition;
 };
 
 export type TempoChanger = {

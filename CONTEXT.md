@@ -57,6 +57,22 @@ The game-canonical rows×columns note grid that song-wide surfaces (composer can
 **Unlisted Instrument**:
 An instrument a game ships (fully loadable by songs and the engine) but hides from its instrument menus.
 
+**Take**:
+One distinct recording of one Button's note. The game may hold several Takes for a Button and pick among them at random on each press; the app never does — it plays the Take its Variant names.
+_Avoid_: variation (ambiguous with Variant), sample (says nothing about which recording)
+
+**Variant**:
+A named choice of exactly one Take per Button, declared by an instrument that has alternative recordings — Aurora's sung vowels Ah (its default), Eh and Oo. A Variant is a setting of its one instrument, never an instrument of its own: the instrument's name stays the same whichever Variant sounds. Its label names the character of the whole set, not a promise about every Button: Takes are picked for how they sound together, so two Variants may share a Take — by necessity where a Button has fewer Takes than there are Variants, or by choice where a shared Take blends better. It is chosen per Track and saved with the song (ADR-0017); a free-play keyboard keeps its own in the user's settings, and a Track that names none plays the instrument's default.
+_Avoid_: variation, voice (ambiguous with the audio engine's voices), sub-instrument
+
+**Instrument Setting**:
+A value an instrument declares for itself (its Setting Kind and default live in the instrument's config) that each Track using it stores in the song — Variant is the first. It belongs to its instrument: swapping the Track's instrument resets it to the new instrument's default. Only declared settings qualify: what every Track has whatever its instrument (volume, reverb, Mute, Solo, Basepoint) stays a property of the Track and is not an Instrument Setting.
+_Avoid_: track settings (the UI panel shows both kinds side by side), instrument options, preset
+
+**Setting Kind**:
+A kind of Instrument Setting the app implements — its control and its effect on the sound — that an instrument opts into by declaring a setting of it, naming the kind by id. Variant is one. Every kind is first-party code: a kind only one instrument uses is still an app kind, never code an instrument brings with it (ADR-0018).
+_Avoid_: plugin, custom setting, setting type (ambiguous with a value's data type)
+
 ### Songs
 
 **Track**:

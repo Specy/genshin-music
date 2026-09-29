@@ -30,7 +30,9 @@ production build at prerender** with a message naming the game/instrument.
 2. Drop the samples in, one per button. Default naming is `0.mp3 … N-1.mp3`
    (button order); other names work via the per-note `file` field as long as they
    match `[A-Za-z0-9._-]+` (file names go verbatim into URLs and copy paths — the
-   registry rejects `/`, `#`, `?`, `%`, spaces, `..`).
+   registry rejects `/`, `#`, `?`, `%`, spaces, `..`). An instrument recorded in
+   several alternative takes per button declares a **Variant** instead (below):
+   then each option names one sample per button.
 3. Write `meta.json`:
 
 ```json
@@ -65,6 +67,7 @@ production build at prerender** with a message naming the game/instrument.
 | `sustain`     | no       | `{ release, crossfade?, loopCrossfade?, loopMode?, minLength?, loop }` |
 | `register`    | no       | absolute pitch of the lowest Pitched Button ("C1") — see below         |
 | `notes`       | yes      | a preset name from `presets.json` **or** an inline array of notes      |
+| `settings`    | no       | declared Instrument Settings by id — today only a Variant (below)      |
 
 Each note (inline or in a preset) is:
 
@@ -158,6 +161,36 @@ Additionally:
 - Prefer WAV (or FLAC) over MP3 for sustained samples: MP3 encoder padding
   shifts decoded sample positions per browser, which moves tuned loop points.
 
+**Variants** (`settings`, ADR-0017/0018): alternative recordings of the whole
+instrument, chosen per track and saved with the song. Aurora's sung vowels are
+the worked example (`sky/instruments/Aurora/`):
+
+```json
+"settings": {
+  "variant": {
+    "kind": "variant",
+    "default": "ah",
+    "options": {
+      "ah": { "label": "Ah", "files": ["C4-C.mp3", "D4-B.mp3", "…one per button"] },
+      "eh": { "label": "Eh", "files": ["C4-B.mp3", "…"] }
+    }
+  }
+}
+```
+
+- The setting id (`variant`) and option ids (`ah`, `eh`) are stored in songs:
+  permanent, like the folder name, and limited to `[a-z][a-z0-9_-]*`.
+- `label` is the English fallback; locales override it under
+  `instrument_variants.<Name>.<option>`.
+- Every option lists exactly one sample per button, in button order. Options may
+  share a sample for the same button, never across buttons. With a Variant the
+  notes name no `file` of their own: the chosen option owns every sample.
+- A track that names no Variant (every song saved before it existed) plays
+  `default`; saving then records it. Swapping a track to another instrument
+  resets its settings to that instrument's defaults.
+- Everything else about the instrument (Shape, notes, sustain) is shared by all
+  options: a Variant changes which files sound, nothing else.
+
 **Note Presets** (`presets.json`): named note arrays for the tables most
 instruments share (`standard-21`, `drums-8`, …). If your instrument deviates in
 any per-note field, inline the whole array instead — verbose but explicit.
@@ -213,7 +246,8 @@ selects the default game per build. All games' JSON metadata is always bundled
 
 Samples live next to their meta.json, but URLs are **locked** to
 `/assets/audio/<game>/<Name>/<file>`: `scripts/gameStatic.js` copies exactly the
-files the meta.jsons reference into `static/assets/audio/` (gitignored overlay)
+files the meta.jsons reference — every Variant option's, for an instrument that
+declares one — into `static/assets/audio/` (gitignored overlay)
 on every dev/build run, and cleans other games' overlay dirs first. Only the
 active game's audio ships in its build. Extra files in an instrument folder
 (READMEs, sources) are never copied.
@@ -225,5 +259,6 @@ active game's audio ships in its build. Extra files in an instrument folder
 | unknown preset name / shape / glyph | dev server + prod build (module-eval throw)   |
 | listed instrument without a folder  | dev server + prod build                       |
 | missing sample file                 | `npm test` (`gameConfig.test.ts`) + 404 check |
+| malformed Variant declaration       | dev server + prod build (module-eval throw)   |
 | more notes than the Shape holds     | dev server + prod build                       |
 | value drift during refactors        | `configSurface.test.ts` golden fixtures       |

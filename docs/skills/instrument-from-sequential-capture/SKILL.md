@@ -106,6 +106,16 @@ node docs/skills/instrument-from-sequential-capture/scripts/add-gapless-tag.mjs 
   with `docs/skills/audio-loop-analysis`, author `loop`/`loopMode` per
   `docs/skills/recording-sustained-instruments`.
 
+## Several takes per button?
+
+Some in-game instruments play one of several recordings per button at random
+(Sky's Voice of AURORA: 1–5 Takes per button, never the same one twice in a row).
+Split the capture per press, group presses into Takes by whole-note waveform
+correlation, then offer named sets of Takes as a **Variant** of the one instrument
+(`settings` in meta.json, `docs/adding-instruments-and-games.md`), never as sibling
+instruments: song files keep an instrument name forever (ADR-0017). The Aurora
+README and `new-aurora/variants/CATALOG.md` document the worked example.
+
 ## Register the instrument
 
 Everything an instrument touches (learned the hard way; the samples alone are

@@ -26,6 +26,9 @@ import {
   BASE_NOTE_PITCH_CLASSES,
   type InstrumentDefinition,
   type InstrumentNote,
+  type InstrumentSettingDefinition,
+  type InstrumentSettingsDefinition,
+  SETTING_KINDS,
   SUSTAIN_LOOP_MODES,
 } from './types';
 import type { GameJson, InstrumentMetaJson, NoteMetaJson, NotePresetsJson } from './schema';
@@ -71,6 +74,105 @@ function assertNonEmptyString(context: string, field: string, value: unknown): v
   if (typeof value !== 'string' || value.length === 0) {
     fail(context, `${field} must be a non-empty string`);
   }
+}
+
+// Setting and option ids are stored in songs (permanent, ADR-0017) and become i18n key
+// path segments (instrument_variants:<Instrument>.<option>), where '.' and ':' separate.
+const SETTING_ID = /^[a-z][a-z0-9_-]*$/;
+
+/**
+ * Validates an instrument's declared Instrument Settings (ADR-0018) against its already
+ * normalized notes, and returns the runtime definition (absent when none are declared)
+ * plus the notes with every Button's `file` taken from the default Variant option. A
+ * Variant owns the samples outright: the instrument's notes may not name files of their
+ * own, and a sample belongs to one Button across all options (a Take is one Button's).
+ */
+export function normalizeInstrumentSettings(
+  context: string,
+  name: string,
+  authored: InstrumentMetaJson['settings'],
+  authoredNotes: readonly NoteMetaJson[],
+  notes: InstrumentNote[]
+): { settings?: InstrumentSettingsDefinition; notes: InstrumentNote[] } {
+  if (authored === undefined) return { notes };
+  if (typeof authored !== 'object' || authored === null || Array.isArray(authored)) {
+    fail(context, 'settings must be an object keyed by setting id');
+  }
+  const entries = Object.entries(authored);
+  if (entries.length === 0) {
+    fail(context, 'settings must declare at least one setting, or be omitted');
+  }
+  if (name.includes('.') || name.includes(':')) {
+    fail(context, 'an instrument that declares settings needs a folder name without "." or ":"');
+  }
+  const settings: Record<string, InstrumentSettingDefinition> = {};
+  let variantFiles: readonly string[] | undefined;
+  for (const [id, declaration] of entries) {
+    if (!SETTING_ID.test(id)) fail(context, `setting id "${id}" must match ${SETTING_ID}`);
+    if (typeof declaration !== 'object' || declaration === null) {
+      fail(context, `setting "${id}" must be an object`);
+    }
+    if (!(SETTING_KINDS as readonly string[]).includes(declaration.kind)) {
+      fail(
+        context,
+        `setting "${id}": unknown kind "${declaration.kind}" (known: ${SETTING_KINDS.join(', ')})`
+      );
+    }
+    if (variantFiles !== undefined) {
+      fail(context, `setting "${id}": an instrument declares at most one Variant`);
+    }
+    const authoredOptions =
+      typeof declaration.options === 'object' && declaration.options !== null
+        ? Object.entries(declaration.options)
+        : [];
+    if (authoredOptions.length < 2) {
+      fail(context, `setting "${id}": a Variant needs at least two options`);
+    }
+    const buttonOfFile = new Map<string, number>();
+    const options = authoredOptions.map(([optionId, option]) => {
+      const where = `setting "${id}" option "${optionId}"`;
+      if (!SETTING_ID.test(optionId)) fail(context, `${where}: option id must match ${SETTING_ID}`);
+      assertNonEmptyString(context, `${where} label`, option?.label);
+      if (!Array.isArray(option.files) || option.files.length !== notes.length) {
+        fail(
+          context,
+          `${where}: files must name exactly one sample per button (${notes.length}), got ${Array.isArray(option.files) ? option.files.length : 'none'}`
+        );
+      }
+      option.files.forEach((file, button) => {
+        assertSafeSegment(context, `${where} file ${button}`, file);
+        const owner = buttonOfFile.get(file);
+        if (owner !== undefined && owner !== button) {
+          fail(
+            context,
+            `sample "${file}" is used by button ${owner} and button ${button}: a Take belongs to one Button`
+          );
+        }
+        buttonOfFile.set(file, button);
+      });
+      return { id: optionId, label: option.label, files: [...option.files] };
+    });
+    const fallback = options.find((option) => option.id === declaration.default);
+    if (fallback === undefined) {
+      fail(context, `setting "${id}": default "${declaration.default}" is not one of its options`);
+    }
+    const ownFile = authoredNotes.findIndex((note) => note.file !== undefined);
+    if (ownFile !== -1) {
+      fail(
+        context,
+        `note ${ownFile} names its own file, but setting "${id}" is a Variant: every button's sample comes from the chosen option`
+      );
+    }
+    variantFiles = fallback.files;
+    settings[id] = { kind: 'variant', default: fallback.id, options };
+  }
+  const defaultFiles = variantFiles;
+  return {
+    settings,
+    notes: defaultFiles
+      ? notes.map((note, button) => ({ ...note, file: defaultFiles[button] }))
+      : notes,
+  };
 }
 
 function assertLoop(context: string, label: string, loop: LoopRegion): void {
@@ -397,7 +499,15 @@ function buildGameMeta(id: string): GameMeta {
       // = held notes play their file once and note-off fades.
       if (meta.sustain.loop !== undefined) assertLoop(context, 'sustain.loop', meta.sustain.loop);
     }
-    const notes = normalizeNotes(context, meta.notes, presets, meta.register);
+    const normalizedNotes = normalizeNotes(context, meta.notes, presets, meta.register);
+    const authoredNotes = typeof meta.notes === 'string' ? presets[meta.notes] : meta.notes;
+    const { settings, notes } = normalizeInstrumentSettings(
+      context,
+      name,
+      meta.settings,
+      authoredNotes,
+      normalizedNotes
+    );
     for (const note of notes) {
       if (!gridIds.has(note.nominal)) {
         fail(
@@ -418,6 +528,9 @@ function buildGameMeta(id: string): GameMeta {
         ? { sustain: { ...meta.sustain, loopMode: meta.sustain.loopMode ?? 'loop-continuous' } }
         : {}),
       notes,
+      // Only when declared, like fill/clickColor: an instrument without settings keeps
+      // exactly the definition (and config-surface fixture entry) it always had.
+      ...(settings !== undefined ? { settings } : {}),
     };
   }
 

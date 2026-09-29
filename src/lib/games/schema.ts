@@ -112,6 +112,26 @@ export type SustainMetaJson = {
 };
 
 /**
+ * A Variant setting (ADR-0017): alternative recordings of the whole instrument, one
+ * sample file per button per option. Option keys are the ids songs store — permanent,
+ * like instrument names — and their order is menu order; `label` is the English display
+ * fallback i18n overrides (the displayName pattern). An instrument declaring a Variant
+ * takes every note's file from the chosen option, so its notes declare no `file`.
+ */
+export type VariantSettingMetaJson = {
+  kind: 'variant';
+  /** The option id a track plays when it names none. */
+  default: string;
+  options: Record<string, { label: string; files: string[] }>;
+};
+
+/**
+ * One declared Instrument Setting (ADR-0018), keyed by setting id in `settings`. `kind`
+ * names the first-party Setting Kind implementing it; the union grows with each kind.
+ */
+export type InstrumentSettingMetaJson = VariantSettingMetaJson;
+
+/**
  * instruments/<Name>/meta.json. The folder name IS the instrument name (the
  * runtime key, the audio URL segment, and what songs reference) — meta.json
  * never restates it.
@@ -145,6 +165,12 @@ export type InstrumentMetaJson = {
   register?: string;
   /** A preset name from the game's presets.json, or the full inline note array. */
   notes: string | NoteMetaJson[];
+  /**
+   * The Instrument Settings this instrument declares (ADR-0018), keyed by setting id.
+   * Tracks store their values in the song. Absent = none: the instrument serializes and
+   * sounds exactly as it did before settings existed.
+   */
+  settings?: Record<string, InstrumentSettingMetaJson>;
 };
 
 /**
