@@ -707,7 +707,8 @@
     "move_up": "위로 올리기",
     "merge_up": "위로 병합",
     "merge_down": "아래로 병합",
-    "variant": "Variant"
+    "variant": "변형",
+    "only_for": "{{instrument}} 전용"
   },
   "tutorials": {
     "composer": {
@@ -824,7 +825,7 @@
     "Saxophone": "색소폰",
     "Pipa": "비파",
     "WinterPiano": "겨울 피아노",
-    "Xylophone": "색소폰",
+    "Xylophone": "실로폰",
     "Flute": "플루트",
     "TransverseFlute": "가로 피리",
     "Panflute": "팬플루트",
@@ -862,9 +863,9 @@
   },
   "instrument_variants": {
     "Aurora": {
-      "ah": "Ah",
-      "eh": "Eh",
-      "oo": "Oo"
+      "ah": "아",
+      "eh": "에",
+      "oo": "우"
     }
   },
   "versions": {
@@ -881,6 +882,7 @@
       "change-9": "작곡 모드에서 실행 취소와 다시 실행 지원 (Ctrl+Z, Ctrl+Y 단축키)",
       "change-10": "Sky에 열한 가지 악기를 추가했습니다: 첼로, 바이올린, 색소폰, 하모니카, 가로 피리, 작은 종, 복 북, Cymbals, Krill Horn, Tuned Krill Horn, Triumph HandPan. 오로라와 라이트 기타도 이제 음을 지속할 수 있습니다.",
       "change-11": "Genshin에 Nightwind Horn 추가",
+      "change-12": "Genshin에 Vodyanitsa의 노랫소리 추가",
       "change-13": "기타 버그 수정 및 개선"
     },
     "3-7-0": {

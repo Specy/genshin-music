@@ -707,7 +707,8 @@
         "move_up": "向上移動",
         "merge_up": "向上合併",
         "merge_down": "向下合併",
-        "variant": "Variant"
+        "variant": "變體",
+        "only_for": "{{instrument}}專屬"
     },
     "tutorials": {
         "composer": {
@@ -862,9 +863,9 @@
     },
     "instrument_variants": {
         "Aurora": {
-            "ah": "Ah",
-            "eh": "Eh",
-            "oo": "Oo"
+            "ah": "啊",
+            "eh": "欸",
+            "oo": "嗚"
         }
     },
     "versions": {
@@ -881,6 +882,7 @@
             "change-9": "作曲器支援撤銷與重做，快捷鍵為 Ctrl+Z 和 Ctrl+Y",
             "change-10": "已為 光遇 新增十一種樂器：大提琴、小提琴、薩克斯、口琴、橫笛、小鈴鐺、福鼓、鑔、Krill Horn、Tuned Krill Horn 和 勝利手碟。歐若拉 和 電吉他 現在支援延音。",
             "change-11": "已為 原神 新增 晚風圓號",
+            "change-12": "已為 原神 新增 Vodyanitsa 的歌聲",
             "change-13": "其他問題修復和改進"
         },
         "3-7-0": {

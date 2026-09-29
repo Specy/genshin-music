@@ -707,7 +707,8 @@
         "move_up": "上に移動",
         "merge_up": "上に統合",
         "merge_down": "下に統合",
-        "variant": "Variant"
+        "variant": "バリエーション",
+        "only_for": "{{instrument}}専用"
     },
     "tutorials": {
         "composer": {
@@ -862,9 +863,9 @@
     },
     "instrument_variants": {
         "Aurora": {
-            "ah": "Ah",
-            "eh": "Eh",
-            "oo": "Oo"
+            "ah": "あ",
+            "eh": "え",
+            "oo": "う"
         }
     },
     "versions": {
@@ -881,6 +882,7 @@
             "change-9": "コンポーザーで元に戻す/やり直しができるようになりました（Ctrl+Z と Ctrl+Y のショートカット）",
             "change-10": "Skyに11の楽器を追加しました：チェロ、ヴァイオリン、サックス、ハーモニカ、横笛、小さなベル、福鼓、Cymbals、Krill Horn、Tuned Krill Horn、Triumph HandPan。オーロラとライトギターがサステイン対応になりました。",
             "change-11": "GenshinにNightwind Hornを追加しました",
+            "change-12": "GenshinにVodyanitsaの歌声を追加しました",
             "change-13": "その他のバグ修正と改善"
         },
         "3-7-0": {

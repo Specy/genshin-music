@@ -7,10 +7,10 @@
     SettingVolumeUpdate,
     SettingsInstrument,
   } from '$core/types/SettingsPropriety';
+  import type { Snippet } from 'svelte';
   import InstrumentSelect from '../inputs/InstrumentSelect.svelte';
-  import Select from '../inputs/Select.svelte';
-  import { tVariant } from '$i18n/binding.svelte';
-  import { resolveInstrumentSettings, variantSettingOf } from '$lib/games/instrumentSettings';
+  import InstrumentSpecificSettings from '../inputs/InstrumentSpecificSettings.svelte';
+  import { t } from '$i18n/binding.svelte';
 
   let {
     data,
@@ -21,6 +21,7 @@
     onSettingsPick,
     objectKey,
     instrument,
+    title,
   }: {
     data: SettingsInstrument;
     volume: number;
@@ -29,25 +30,11 @@
     onVolumeChange: (value: number) => void;
     onVolumeComplete: (data: SettingVolumeUpdate) => void;
     onInstrumentPick: (data: SettingUpdate) => void;
-    /** Where a Variant pick goes; without it no Variant picker is shown. */
+    /** Where the keyboard's own Instrument Settings go; without it none are shown. */
     onSettingsPick?: (data: SettingInstrumentSettingsUpdate) => void;
+    /** The setting's title, drawn beside the instrument select. */
+    title?: Snippet;
   } = $props();
-
-  // The keyboard's own Variant (ADR-0017), for an instrument whose config declares one. The stored
-  // settings may predate the field or name another instrument's ids: resolving them against this
-  // instrument's declaration is what turns either into the default.
-  const variant = $derived(variantSettingOf(instrument));
-  const variantValue = $derived(
-    variant ? String(resolveInstrumentSettings(instrument, data.settings)[variant.id]) : ''
-  );
-
-  function handleVariant(e: Event & { currentTarget: EventTarget & HTMLSelectElement }) {
-    if (!variant) return;
-    onSettingsPick?.({
-      key: objectKey,
-      settings: { ...(data.settings ?? {}), [variant.id]: e.currentTarget.value },
-    });
-  }
 
   // MUST be `oninput`, not `onchange`, below: `onchange` only fires once
   // the value is committed, so `onpointerup` (handleVolumePick) would fire
@@ -74,37 +61,58 @@
 </script>
 
 <div class="instrument-picker">
-  <InstrumentSelect
-    selected={instrument}
-    onChange={handleInstrument}
-    class="select"
-    style="text-align:left;padding-left:0.4rem;"
-  />
-  {#if variant && onSettingsPick}
-    <Select value={variantValue} onchange={handleVariant} style="margin-top:0.2rem">
-      {#each variant.definition.options as option (option.id)}
-        <option value={option.id}>{tVariant(instrument, option.id)}</option>
-      {/each}
-    </Select>
+  <div class="instrument-picker-line">
+    {@render title?.()}
+    <InstrumentSelect
+      selected={instrument}
+      onChange={handleInstrument}
+      class="select"
+      style="text-align:left;padding-left:0.4rem;width:8rem"
+    />
+  </div>
+  <hr class="instrument-picker-divider" />
+  <!-- the settings every instrument has first; the instrument's own always come after them -->
+  <label class="instrument-picker-line">
+    <span>{t('instrument_settings:volume')}</span>
+    <input
+      type="range"
+      min={1}
+      max={100}
+      value={volume}
+      oninput={handleVolumeChange}
+      onpointerup={handleVolumePick}
+    />
+  </label>
+  {#if onSettingsPick}
+    <!-- stored settings may predate the field or name another instrument's ids: the block
+         resolves them against this instrument's declaration, which turns either into its default -->
+    <InstrumentSpecificSettings
+      {instrument}
+      settings={data.settings}
+      onChange={(settings) => onSettingsPick({ key: objectKey, settings })}
+    />
   {/if}
-  <input
-    type="range"
-    min={1}
-    max={100}
-    value={volume}
-    oninput={handleVolumeChange}
-    onpointerup={handleVolumePick}
-  />
 </div>
 
 <style>
   .instrument-picker {
     display: flex;
     flex-direction: column;
-    width: 8rem;
+    gap: 0.35rem;
+    width: 100%;
   }
 
-  .instrument-picker input[type='range'] {
-    margin-top: 0.2rem;
+  .instrument-picker-line {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.4rem;
+  }
+
+  .instrument-picker-divider {
+    width: 100%;
+    margin: 0.1rem 0;
+    border: none;
+    border-top: 0.1rem solid var(--secondary);
   }
 </style>

@@ -278,7 +278,7 @@ const pixi = vi.hoisted(() => {
 vi.mock('pixi.js', () => pixi)
 
 //jsdom has no font loading; the renderer's own .catch() swallows this, which is what happens in a
-//browser that fails to load Bonobo too
+//browser that fails to load the app font too
 vi.mock('fontfaceobserver', () => ({
     default: class {
         load() {

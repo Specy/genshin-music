@@ -82,6 +82,10 @@
     // cleanup below would read whatever `instrument` has ALREADY been reassigned to by the
     // time it runs (a brand-new, not-yet-loaded Instrument whose .endNode is still null),
     // silently leaking the true previous instrument's connected audio nodes on every swap.
+    //
+    // `instrument` is this effect's ONLY dependency - everything else runs untracked. The cleanup
+    // disposes the engine, so a re-run for the same engine (a settings write, a logger update)
+    // would kill the one still playing.
     const currentInstrument = instrument;
     async function load() {
       // QUIRK: 'instruments.' + ... below is a literal dot, not the ':' namespace separator
@@ -90,16 +94,20 @@
       // shows a raw untranslated key fragment. Preserved from old, not "fixed" to a colon.
       logger.showPill(
         i18n.t('zen_keyboard:loading_instrument', {
-          instrument: i18n.t('instruments.' + settings.instrument.value),
+          instrument: i18n.t('instruments.' + currentInstrument.name),
         }),
         { spinner: true }
       );
       await currentInstrument.load(AudioProvider.getAudioContext());
       logger.hidePill();
+      //replaced while its samples loaded: disposed, with no node left to route
+      if (currentInstrument.isDeleted) return;
       AudioProvider.connect(currentInstrument.endNode, null);
+      //after load(), which builds the gain node - a new engine starts at the saved volume
+      currentInstrument.changeVolume(settings.instrument.volume ?? 100);
     }
 
-    load();
+    untrack(() => void load());
     return () => {
       //hard-release held voices before the node is disconnected (instrument swap mid-hold)
       currentInstrument.releaseAllNotes(true);
@@ -110,10 +118,11 @@
       for (const id of midiSentIds) MIDIProvider.broadcastNoteUp(id);
       midiSentIds.clear();
       AudioProvider.disconnect(currentInstrument.endNode);
-      //a REPLACED engine (another instrument, or another Variant of it) is finished for good:
-      //dispose it, or it stays registered as live and every context rebuild re-decodes and
-      //reconnects it. A re-run of this effect for the SAME engine must not kill it.
-      if (untrack(() => instrument) !== currentInstrument) currentInstrument.dispose();
+      //finished for good either way - this runs when the engine is replaced (another instrument or
+      //Variant) and when the page is left. Undisposed, it would stay registered as live, and every
+      //context rebuild would re-decode and reconnect it. (No need to tell the two cases apart, and
+      //no way to: Svelte hands a cleanup the values from BEFORE the change.)
+      currentInstrument.dispose();
     };
   });
 
@@ -213,6 +222,11 @@
 
   function onVolumeChange(data: SettingVolumeUpdate) {
     instrument.changeVolume(data.value);
+    //saved, so the next engine (another instrument, another Variant, the next visit) keeps it
+    if (data.key === 'instrument') {
+      settings.instrument = { ...settings.instrument, volume: data.value };
+      updateSettings(settings);
+    }
   }
 </script>
 

@@ -57,7 +57,9 @@ async function prepareGameAudio(id) {
 function sampleFiles(meta, notes) {
   const variant = Object.values(meta.settings ?? {}).find((setting) => setting?.kind === 'variant');
   if (variant) {
-    return new Set(Object.values(variant.options ?? {}).flatMap((option) => option.files ?? []));
+    // null-safe on purpose: malformed declarations are the registry's to reject, with a message
+    // that names the problem, and this runs before it does
+    return new Set(Object.values(variant.options ?? {}).flatMap((option) => option?.files ?? []));
   }
   return new Set(notes.map((note, i) => note.file ?? `${i}.mp3`));
 }

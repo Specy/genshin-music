@@ -17,8 +17,8 @@
 <script lang="ts">
   import type { Pitch } from '$lib/games/types';
   import { InstrumentData } from '$core/Songs/SongClasses';
-  import { t, tInstrument, tVariant } from '$i18n/binding.svelte';
-  import { resolveInstrumentSettings, variantSettingOf } from '$lib/games/instrumentSettings';
+  import { t, tInstrument } from '$i18n/binding.svelte';
+  import InstrumentSpecificSettings from '$cmp/inputs/InstrumentSpecificSettings.svelte';
   import { clickOutside } from '$lib/utils/clickOutside';
   import AppButton from '$cmp/inputs/AppButton.svelte';
   import PitchSelect from '$cmp/inputs/PitchSelect.svelte';
@@ -122,15 +122,6 @@
    * left able to see what moved.
    */
   const edited = (changes: Partial<InstrumentData>) => instrument.clone().set(changes);
-
-  // Shown only for an instrument that declares a Variant (ADR-0017) - read from config, never
-  // from which instrument this is.
-  const variant = $derived(instrument ? variantSettingOf(instrument.name) : undefined);
-  const variantValue = $derived(
-    instrument && variant
-      ? String(resolveInstrumentSettings(instrument.name, instrument.settings)[variant.id])
-      : ''
-  );
 </script>
 
 {#if !instrument}
@@ -167,24 +158,6 @@
         onChange={(name) => onChange(instrument.withInstrument(name))}
       />
     </div>
-    {#if variant}
-      <div class="row space-between items-center">
-        {t('instrument_settings:variant')}
-        <Select
-          style="padding:0.3rem;width:8rem"
-          onchange={(e) =>
-            onChange(
-              edited({ settings: { ...instrument.settings, [variant.id]: e.currentTarget.value } })
-            )}
-          value={variantValue}
-          {disabled}
-        >
-          {#each variant.definition.options as option (option.id)}
-            <option value={option.id}>{tVariant(instrument.name, option.id)}</option>
-          {/each}
-        </Select>
-      </div>
-    {/if}
     <div class="row space-between items-center">
       {t('common:pitch')}
       <PitchSelect
@@ -303,6 +276,13 @@
         {/if}
       </AppButton>
     </div>
+    <!-- What only this layer's instrument has (ADR-0018), always after the settings every layer has -->
+    <InstrumentSpecificSettings
+      instrument={instrument.name}
+      settings={instrument.settings}
+      {disabled}
+      onChange={(settings) => onChange(edited({ settings }))}
+    />
     <!-- TWO PAIRS SIDE BY SIDE, not four buttons in one row: merging FOLDS this layer into its
          neighbour and deletes it, moving only reorders, and reading them as one strip is what would
          let a mis-aimed tap destroy a layer. Destructive pair on the left, harmless pair on the
@@ -467,6 +447,10 @@
       /* The popup has the same rows to fit in a shorter viewport here, so its action buttons give
          up 0.1rem off each of their top and bottom edges. Horizontal padding is left alone. */
       --instrument-settings-button-trim: 0.1rem;
+      /* A layer whose instrument declares settings of its own (ADR-0018) adds rows, which can take
+         Delete/OK past the bottom of a short landscape phone: scroll inside rather than off-screen. */
+      max-height: calc(100dvh - 0.8rem);
+      overflow-y: auto;
     }
   }
 </style>

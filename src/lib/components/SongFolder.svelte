@@ -270,7 +270,7 @@
     color: var(--menu-background-text);
     border: none;
     outline: solid 2px var(--secondary);
-    font-family: Bonobo;
+    font-family: var(--font-main);
     border-radius: 0.2rem;
   }
 

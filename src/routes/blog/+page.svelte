@@ -234,7 +234,7 @@
   }
 
   :global(.blog-card-description) {
-    font-family: RobotoSerif, serif;
+    font-family: var(--font-reading);
     opacity: 0.9;
   }
 

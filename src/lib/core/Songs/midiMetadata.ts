@@ -72,6 +72,10 @@ export function decodeMidiMetadata(
             if (payload.app !== APP_NAME) return null
             if (payload.v !== METADATA_VERSION) return null
             if (!Array.isArray(payload.instruments) || payload.instruments.length === 0) return null
+            //every entry an object, or the whole blob is malformed: InstrumentData.deserialize
+            //tolerates anything, which would quietly turn a broken layer into the default
+            //instrument instead of letting the import suggest one
+            if (!payload.instruments.every(data => typeof data === 'object' && data !== null && !Array.isArray(data))) return null
             return {
                 instruments: payload.instruments.map(data => InstrumentData.deserialize(data)),
                 pitch: (payload.pitch ?? 'C') as Pitch,

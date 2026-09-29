@@ -262,7 +262,8 @@ export class InstrumentData {
 
     set(data: Partial<InstrumentData>) {
         Object.assign(this, data)
-        if (data.settings !== undefined) this.settings = {...data.settings}
+        //an explicit `settings: undefined` means none (= all defaults), never a missing map
+        if ('settings' in data) this.settings = {...(data.settings ?? {})}
         return this
     }
 

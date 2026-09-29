@@ -852,6 +852,8 @@ export const i18n_en = {
     merge_down: 'Merge down',
     // the row that picks one of an instrument's alternative recordings (e.g. Aurora's sung vowels)
     variant: 'Variant',
+    // caption over the settings only one instrument has, e.g. "Aurora only"
+    only_for: '{{instrument}} only',
   },
 
   tutorials: {

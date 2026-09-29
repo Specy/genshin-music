@@ -12,6 +12,7 @@ import {
   Rectangle,
   type FederatedPointerEvent,
   type RendererPreference,
+  type TextStyleFontWeight,
   type Texture,
 } from 'pixi.js';
 import { PIXI_RENDERER_PREFERENCE } from '$cmp/pixiRendererPreference';
@@ -518,7 +519,9 @@ export class VsrgComposerRenderer {
   private totalMovement = 0;
   private draggedHitObject: VsrgHitObject | null = null;
   private isClickingTimeline = false;
-  private isBonoboFontLoaded = false;
+  private isAppFontLoaded = false;
+  private appFontFamily = 'serif';
+  private appFontWeight = 'normal';
   /**
    * `globalConfigStore.get()` spreads a deep `$state` object into a fresh one on every call, and
    * the pre-pool draws called it three-plus-one-per-track times per frame for this one number.
@@ -536,7 +539,7 @@ export class VsrgComposerRenderer {
    * What drawKeys() last painted, or null for "nothing on screen can be trusted to be the keys".
    *
    * The keys are the one scene that does not move during playback - drawKeys reads the orientation,
-   * the key count, the canvas geometry, the playbar offset, the theme and whether Bonobo has
+   * the key count, the canvas geometry, the playbar offset, the theme and whether the app font has
    * loaded, and NONE of those change between two frames of a playing song - so rebuilding them per
    * frame was 4-6 canvas text rasterizations, 4-6 GPU texture uploads and two Graphics geometry
    * rebuilds per frame for glyphs and lines that never changed. This is the whole input list; a
@@ -549,7 +552,7 @@ export class VsrgComposerRenderer {
     height: number;
     timelineSize: number;
     playBarOffset: number;
-    bonoboLoaded: boolean;
+    appFontLoaded: boolean;
     theme: number;
   } | null = null;
 
@@ -618,10 +621,18 @@ export class VsrgComposerRenderer {
     if (this.state.isPlaying) this.throttledEventLoop.start();
     window.addEventListener('blur', this.handleBlur);
 
-    new FontFaceObserver('Bonobo')
+    const fontStyles = getComputedStyle(document.documentElement);
+    this.appFontFamily = fontStyles.getPropertyValue('--font-main').trim() || this.appFontFamily;
+    this.appFontWeight =
+      fontStyles.getPropertyValue('--font-weight-main').trim() || this.appFontWeight;
+    const fontFace = this.appFontFamily
+      .split(',')[0]
+      .trim()
+      .replace(/^['"]|['"]$/g, '');
+    new FontFaceObserver(fontFace, { weight: this.appFontWeight })
       .load()
       .then(() => {
-        this.isBonoboFontLoaded = true;
+        this.isAppFontLoaded = true;
         // The keys re-derive their own rebuild from this (see paintedKeys), but the end-of-song
         // buttons hold a TextStyle built when they were first created, so the pool goes too. It is
         // a one-shot at startup, and dropping it is cheaper to reason about than a second
@@ -984,8 +995,10 @@ export class VsrgComposerRenderer {
 
   private getTextStyle(): TextStyle {
     return new TextStyle({
-      fontFamily: this.isBonoboFontLoaded ? '"Bonobo"' : '"Source Sans Pro", Helvetica, sans-serif',
-      fontSize: this.isBonoboFontLoaded ? 25 : 30,
+      fontFamily: this.isAppFontLoaded ? this.appFontFamily : 'serif',
+      // Pixi accepts CSS font weights at runtime, although its type lists only 100-step values.
+      fontWeight: this.isAppFontLoaded ? (this.appFontWeight as TextStyleFontWeight) : 'normal',
+      fontSize: this.isAppFontLoaded ? 25 : 30,
       fill: this.canvasColors.lineColor[1],
     });
   }
@@ -1088,7 +1101,7 @@ export class VsrgComposerRenderer {
       painted.height === this.sizes.height &&
       painted.timelineSize === this.sizes.timelineSize &&
       painted.playBarOffset === this.playBarOffset &&
-      painted.bonoboLoaded === this.isBonoboFontLoaded &&
+      painted.appFontLoaded === this.isAppFontLoaded &&
       painted.theme === this.themeVersion
     );
   }
@@ -1121,7 +1134,7 @@ export class VsrgComposerRenderer {
       height: this.sizes.height,
       timelineSize: this.sizes.timelineSize,
       playBarOffset: this.playBarOffset,
-      bonoboLoaded: this.isBonoboFontLoaded,
+      appFontLoaded: this.isAppFontLoaded,
       theme: this.themeVersion,
     };
     // `context: true` so the two Graphics below release their GraphicsContext and its GPU geometry
@@ -1188,7 +1201,7 @@ export class VsrgComposerRenderer {
 
     const textStyle = this.getTextStyle();
     // getTextStyle() picks a size for a full key row; the vertical band is only
-    // VERTICAL_KEYS_BAND_PX tall, so cap the glyphs to it (the no-Bonobo fallback of 30px would
+    // VERTICAL_KEYS_BAND_PX tall, so cap the glyphs to it (the font-loading fallback of 30px would
     // otherwise fill 40px edge to edge). Harmless when the size already fits.
     if (!isHorizontal) {
       textStyle.fontSize = Math.min(

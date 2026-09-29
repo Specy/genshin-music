@@ -707,7 +707,8 @@
     "move_up": "Mover para cima",
     "merge_up": "Mesclar acima",
     "merge_down": "Mesclar abaixo",
-    "variant": "Variant"
+    "variant": "Variante",
+    "only_for": "Apenas {{instrument}}"
   },
   "tutorials": {
     "composer": {
@@ -862,9 +863,9 @@
   },
   "instrument_variants": {
     "Aurora": {
-      "ah": "Ah",
-      "eh": "Eh",
-      "oo": "Oo"
+      "ah": "A",
+      "eh": "E",
+      "oo": "U"
     }
   },
   "versions": {
@@ -881,6 +882,7 @@
       "change-9": "Desfazer e refazer no compositor, com os atalhos Ctrl+Z e Ctrl+Y",
       "change-10": "Foram adicionados onze instrumentos ao Sky: Violoncelo, Violino, Saxofone, Gaita, Flauta Transversal, Sino Pequeno, Tambor da Fortuna, Cymbals, Krill Horn, Tuned Krill Horn e Triumph HandPan. A Aurora e a Light Guitar agora sustentam as notas.",
       "change-11": "Adicionado o Nightwind Horn ao Genshin",
+      "change-12": "Adicionada a voz cantada de Vodyanitsa ao Genshin",
       "change-13": "Outras correções de bugs e melhorias"
     },
     "3-7-0": {

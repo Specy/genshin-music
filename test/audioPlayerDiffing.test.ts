@@ -11,6 +11,13 @@ import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest'
 import {AudioProvider} from '../src/lib/providers/AudioProvider'
 import {AudioPlayer} from '../src/lib/audio/AudioPlayer'
 import {InstrumentData} from '../src/lib/core/Songs/SongClasses'
+import {variantSettingOf} from '../src/lib/games/instrumentSettings'
+//straight from config, not './imports': that barrel loads VisualSong, which builds an Instrument at
+//module load - before this file's mocked-instance registry exists
+import {INSTRUMENTS} from '../src/lib/core/legacyConfig'
+
+/** By capability, never by game id: the instrument (if any) whose config declares a Variant. */
+const VARIANT = INSTRUMENTS.find((name: string) => variantSettingOf(name) !== undefined)
 
 type FakeInstrumentHandle = {
     name: string
@@ -116,6 +123,25 @@ describe('AudioPlayer.syncInstruments diffing', () => {
         const handle = wrapperBefore as unknown as FakeInstrumentHandle
         expect(handle.volume).toBe(90)
         expect(handle.reverbOverride).toBe(true)
+    })
+
+    //ADR-0017: the engine is the instrument PLUS its sample-choosing settings - a Variant change
+    //at the same name is a different engine, and the same Variant is the same one
+    it.runIf(VARIANT !== undefined)('re-voices a track whose Variant changed, and reuses one whose Variant did not', async () => {
+        const variant = variantSettingOf(VARIANT!)!
+        const other = variant.definition.options.find(option => option.id !== variant.definition.default)!.id
+        const player = new AudioPlayer('C')
+        await player.syncInstruments([new InstrumentData({name: VARIANT})])
+        const first = player.audioInstruments[0] as unknown as FakeInstrumentHandle
+
+        await player.syncInstruments([new InstrumentData({name: VARIANT, settings: {[variant.id]: other}})])
+        const second = player.audioInstruments[0] as unknown as FakeInstrumentHandle
+        expect(first.disposed).toBe(true)
+        expect(second).not.toBe(first)
+
+        await player.syncInstruments([new InstrumentData({name: VARIANT, settings: {[variant.id]: other}})])
+        expect(player.audioInstruments[0]).toBe(second as never)
+        expect(fakeInstrumentInstances).toHaveLength(2)
     })
 
     it('disposes and replaces the wrapper when the instrument name changes at the same position', async () => {

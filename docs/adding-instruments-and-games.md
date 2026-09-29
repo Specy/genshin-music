@@ -185,6 +185,11 @@ the worked example (`sky/instruments/Aurora/`):
 - Every option lists exactly one sample per button, in button order. Options may
   share a sample for the same button, never across buttons. With a Variant the
   notes name no `file` of their own: the chosen option owns every sample.
+- The registry also requires at least two options, distinct non-empty labels,
+  no two options playing exactly the same files, at most one Variant per
+  instrument, and a folder name without `.` or `:`. A Variant cannot be combined
+  with loop regions (`sustain.loop` or a note's `loop`): loop points are
+  measured on one recording, and each option plays different ones.
 - A track that names no Variant (every song saved before it existed) plays
   `default`; saving then records it. Swapping a track to another instrument
   resets its settings to that instrument's defaults.

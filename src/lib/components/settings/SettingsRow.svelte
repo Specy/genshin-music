@@ -52,7 +52,7 @@
   const rowBackground = $derived(theme.layer('menu_background', 0.15).toString());
 </script>
 
-<div class="settings-row" style="background-color:{rowBackground}">
+{#snippet label()}
   <div class={hasTooltip(data.tooltip)} style="flex:1">
     {t(`settings:props.${data.name}`)}
     {#if data.tooltip}
@@ -61,34 +61,14 @@
       </Tooltip>
     {/if}
   </div>
-  {#if data.type === 'select'}
-    <SettingsSelect {data} onChange={update} value={data.value} objectKey={objKey}>
-      <!-- Note name types are the only options with a translation, and tNoteNameType hands back
-           anything else unchanged, so every select can go through it. The option's VALUE is never
-           translated: it stays the stored setting value the app switches on, and only the text
-           the user reads changes. -->
-      {#each data.options as option (option)}
-        <option value={option}>{tNoteNameType(option)}</option>
-      {/each}
-    </SettingsSelect>
-  {/if}
-  {#if data.type === 'number' || data.type === 'text'}
-    <SettingsInput
-      {data}
-      value={currentValue as string | number}
-      onChange={(v) => (currentValue = v)}
-      onComplete={update}
-      objectKey={objKey}
-    />
-  {/if}
-  {#if data.type === 'checkbox'}
-    <Switch checked={currentValue as boolean} onchange={handleCheckbox} />
-  {/if}
-  {#if data.type === 'slider'}
-    <SettingsSlider objectKey={objKey} {data} value={currentValue as number} onChange={update} />
-  {/if}
-  {#if data.type === 'instrument' && changeVolume}
+{/snippet}
+
+{#if data.type === 'instrument' && changeVolume}
+  <!-- A block, not a row: the instrument on top, then what tunes it under a divider - the settings
+       every instrument has, and below those the ones only this instrument declares. -->
+  <div class="settings-row settings-row-block" style="background-color:{rowBackground}">
     <InstrumentInput
+      title={label}
       {volume}
       onInstrumentPick={update}
       onSettingsPick={changeInstrumentSettings}
@@ -98,8 +78,38 @@
       {data}
       objectKey={objKey}
     />
-  {/if}
-</div>
+  </div>
+{:else}
+  <div class="settings-row" style="background-color:{rowBackground}">
+    {@render label()}
+    {#if data.type === 'select'}
+      <SettingsSelect {data} onChange={update} value={data.value} objectKey={objKey}>
+        <!-- Note name types are the only options with a translation, and tNoteNameType hands back
+           anything else unchanged, so every select can go through it. The option's VALUE is never
+           translated: it stays the stored setting value the app switches on, and only the text
+           the user reads changes. -->
+        {#each data.options as option (option)}
+          <option value={option}>{tNoteNameType(option)}</option>
+        {/each}
+      </SettingsSelect>
+    {/if}
+    {#if data.type === 'number' || data.type === 'text'}
+      <SettingsInput
+        {data}
+        value={currentValue as string | number}
+        onChange={(v) => (currentValue = v)}
+        onComplete={update}
+        objectKey={objKey}
+      />
+    {/if}
+    {#if data.type === 'checkbox'}
+      <Switch checked={currentValue as boolean} onchange={handleCheckbox} />
+    {/if}
+    {#if data.type === 'slider'}
+      <SettingsSlider objectKey={objKey} {data} value={currentValue as number} onChange={update} />
+    {/if}
+  </div>
+{/if}
 
 <style>
   .settings-row {
@@ -115,6 +125,11 @@
   .settings-row div {
     display: flex;
     align-items: center;
+  }
+
+  .settings-row-block {
+    flex-direction: column;
+    align-items: stretch;
   }
 
   /* :global() because the input/select this reaches is rendered by a child

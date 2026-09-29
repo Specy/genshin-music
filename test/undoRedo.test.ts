@@ -8,6 +8,14 @@ import {
     TEMPO_CHANGERS,
 } from './imports'
 import {instanceCallables} from './reflect'
+import {variantSettingOf} from '$lib/games/instrumentSettings'
+
+/** By capability, never by game id: the instrument (if any) whose config declares a Variant. */
+const VARIANT = INSTRUMENTS.find((name: string) => variantSettingOf(name) !== undefined)
+const VARIANT_ID = VARIANT ? variantSettingOf(VARIANT)!.id : ''
+const VARIANT_OTHER = VARIANT
+    ? variantSettingOf(VARIANT)!.definition.options.find(option => option.id !== variantSettingOf(VARIANT)!.definition.default)!.id
+    : ''
 
 /**
  * THE NO-DATA-LOSS GATE for the delta undo recorded inside ComposedSong (ADR-0013, design §8.1-2).
@@ -377,6 +385,22 @@ const ROUND_TRIPS: Row[] = [
         label: 'the override cleared back to the song Basepoint',
         run: song => song.setInstrument(1, new InstrumentData({name: INSTRUMENTS[1], pitch: ''})),
     },
+    //Instrument Settings (ADR-0018): a Variant change is the same whole-entry call, and a swap resets
+    //them inside the same Step - both must come back whole on undo, including through redo
+    ...(VARIANT ? [
+        {
+            name: 'setInstrument',
+            label: 'a Variant change',
+            setup: (song: ComposedSong) => song.setInstrument(0, new InstrumentData({name: VARIANT})),
+            run: (song: ComposedSong) => song.setInstrument(0, song.instruments[0].clone().set({settings: {[VARIANT_ID]: VARIANT_OTHER}})),
+        },
+        {
+            name: 'setInstrument',
+            label: 'a swap resets the settings',
+            setup: (song: ComposedSong) => song.setInstrument(0, new InstrumentData({name: VARIANT, settings: {[VARIANT_ID]: VARIANT_OTHER}})),
+            run: (song: ComposedSong) => song.setInstrument(0, song.instruments[0].clone().set({name: INSTRUMENTS.find((name: string) => name !== VARIANT)!})),
+        },
+    ] satisfies Row[] : []),
     {name: 'swapInstruments', run: song => song.swapInstruments(0, 1)},
     {
         name: 'ensureInstruments',

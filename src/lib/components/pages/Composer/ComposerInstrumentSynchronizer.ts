@@ -52,7 +52,7 @@ export class ComposerInstrumentSynchronizer {
     });
 
     // Publish the provisional ownership into the live array synchronously, before any load can
-    // yield. A newer request can then adopt an in-flight engine by name from its new slot, while
+    // yield. A newer request can then adopt an in-flight engine by identity from its new slot, while
     // ownsSlot keeps the stale request from connecting or configuring it when the load resolves.
     // (Adopted by identity, not name: see the class comment.)
     layers.splice(0, layers.length, ...claims.map(({ instrument }) => instrument));

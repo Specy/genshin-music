@@ -2,8 +2,8 @@
 
 Recorded in game on 2026-09-26, in C major (C4–C6). Each of the 15 buttons was
 pressed 22–30 times and left to ring out: 381 presses in all. The raw captures
-and the full take catalog live in `new-aurora/` at the repo root
-(`new-aurora/variants/CATALOG.md`).
+and the full take catalog are not in the tree any more. They were deleted once
+the Variants shipped, and commit 49360100 (`new-aurora/`) still holds them.
 
 ## What the game does
 
@@ -26,7 +26,9 @@ and the full take catalog live in `new-aurora/` at the repo root
 
 The app does not reproduce the random choice (ADR-0017). It offers three fixed
 sets of Takes, picked by ear for how they sound together across the range and
-named after the vowel each set sings. Letters refer to `CATALOG.md`:
+named after the vowel each set sings. Each button's Takes are lettered in the
+order the capture first heard them: A is the first recording that button
+played, B the next new one, and so on.
 
 |                | C4  | D4  | E4  | F4  | G4  | A4  | B4  | C5  | D5  | E5  | F5  | G5  | A5  | B5  | C6  |
 | -------------- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -41,18 +43,19 @@ two), or because the shared Take blended better. Files are named
 
 ## Processing
 
-This was a one-off script run on the raw 48 kHz, 24-bit mono cuts in
-`new-aurora/variants/`:
+This was a one-off script run on raw 48 kHz, 24-bit mono cuts of each Take,
+one clean press per Take:
 
 1. **Onset:** at most 10 ms of pre-roll, with a 3 ms fade-in so each file
    starts at exactly zero. The decoded lead is 1.5–4.2 ms.
 2. **DC:** a 5 Hz high-pass. The captures' offset drifts with the note and fades
    in the tail, so subtracting a constant would push an offset into the silent
    tail instead.
-3. **Tuning:** Takes measuring 10 cents or more off equal temperament were
-   retuned with Rubber Band's R3 engine: B4 B (+9.9, on the line), A5 B (+12.3),
-   B5 A (+15.0) and C6 A (+12.2) now all sit within ±0.4 cents. Every other Take
-   ships at its captured pitch, within ±8.7 cents.
+3. **Tuning:** Takes about 10 cents or more off equal temperament were retuned
+   with Rubber Band's R3 engine: A5 B (+12.3), B5 A (+15.0), C6 A (+12.2), and
+   B4 B, which measures +9.9, right on the line depending on the analysis
+   window. All four now sit within ±0.4 cents. Every other Take ships at its
+   captured pitch, within ±8.7 cents.
 4. **Level:** every Take is at the same held level of −16.0 dBFS, _as decoded_.
    Held level is the median of the 200 ms-smoothed level while it stays within
    10 dB of the peak. The old Aurora decoded at a median of −15.3, so the instrument

@@ -2,9 +2,8 @@
   import Color from 'color';
   import type { VsrgTrack, VsrgTrackInstrumentIdentity } from '$core/Songs/VsrgSong.svelte';
   import type { Pitch } from '$lib/games/types';
-  import { t, tInstrument, tVariant } from '$i18n/binding.svelte';
-  import { resolveInstrumentSettings, variantSettingOf } from '$lib/games/instrumentSettings';
-  import Select from '$cmp/inputs/Select.svelte';
+  import { t, tInstrument } from '$i18n/binding.svelte';
+  import InstrumentSpecificSettings from '$cmp/inputs/InstrumentSpecificSettings.svelte';
   import Row from '$cmp/layout/Row.svelte';
   import Column from '$cmp/layout/Column.svelte';
   import AppButton from '$cmp/inputs/AppButton.svelte';
@@ -47,14 +46,6 @@
   // so reading it here subscribes this component's effects to the song's structure signal. Do not
   // hoist `track` into a $derived or a {@const} on either side - see VsrgTop.svelte's header.
   let isColorPickerOpen = $state(false);
-
-  /**
-   * The track's Variant setting and its current value (ADR-0017), read fresh on every call rather
-   * than held in a $derived - see the header above on why `track` is never hoisted here.
-   */
-  const currentVariant = () => variantSettingOf(track.instrument.name);
-  const currentVariantValue = (id: string) =>
-    String(resolveInstrumentSettings(track.instrument.name, track.instrument.settings)[id]);
 
   /** The instrument identity as it stands RIGHT NOW - call before mutating, never after. */
   const identity = (): VsrgTrackInstrumentIdentity => ({
@@ -110,28 +101,6 @@
         }}
       />
     </Row>
-    {#if currentVariant()}
-      {@const variant = currentVariant()!}
-      <Row justify="between" align="center" style="margin-top:0.4rem">
-        {t('instrument_settings:variant')}
-        <Select
-          style="padding:0.3rem;width:8rem"
-          value={currentVariantValue(variant.id)}
-          onchange={(e) => {
-            track.instrument.set({
-              settings: { ...track.instrument.settings, [variant.id]: e.currentTarget.value },
-            });
-            //the identity (name + Basepoint) is unchanged, so no Note Number moves - passing it
-            //is what counts the edit as a change to save, and the page re-syncs the engines
-            onChange(track, identity());
-          }}
-        >
-          {#each variant.definition.options as option (option.id)}
-            <option value={option.id}>{tVariant(track.instrument.name, option.id)}</option>
-          {/each}
-        </Select>
-      </Row>
-    {/if}
     <Row justify="between" align="center" style="margin-top:0.4rem">
       {t('common:pitch')}
       <PitchSelect
@@ -191,6 +160,19 @@
         </AppButton>
       </Row>
     </Column>
+    <!-- What only this track's instrument has (ADR-0018), always after the settings every track has.
+         Read through the prop on every render, like everything else here (see the header). -->
+    <InstrumentSpecificSettings
+      style="margin-top:0.4rem"
+      instrument={track.instrument.name}
+      settings={track.instrument.settings}
+      onChange={(settings) => {
+        track.instrument.set({ settings });
+        //the identity (name + Basepoint) is unchanged, so no Note Number moves - passing it is
+        //what counts the edit as a change to save, and the page re-syncs the engines
+        onChange(track, identity());
+      }}
+    />
     <Row justify="between" style="margin-top:0.4rem">
       <AppButton class="row-centered" style="padding:0.4rem;width:fit-content" onclick={onDelete}>
         {@render faTrashIcon()}

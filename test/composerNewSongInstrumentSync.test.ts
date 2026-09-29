@@ -70,6 +70,10 @@ import {Instrument} from '../src/lib/audio/Instrument.svelte'
 import {AudioProvider} from '../src/lib/providers/AudioProvider'
 import {ComposerInstrumentSynchronizer} from '../src/lib/components/pages/Composer/ComposerInstrumentSynchronizer'
 import {INSTRUMENTS} from './imports'
+import {variantSettingOf} from '../src/lib/games/instrumentSettings'
+
+/** By capability, never by game id: the instrument (if any) whose config declares a Variant. */
+const VARIANT = INSTRUMENTS.find((name: string) => variantSettingOf(name) !== undefined)
 
 // Composer owns two parallel representations of its layer roster: song.instruments renders the
 // controls, while layers contains the loaded audio engines. The project has no component harness
@@ -220,6 +224,35 @@ describe('Composer new-song instrument synchronization', () => {
         expect(AudioProvider.disconnect).toHaveBeenCalledTimes(1)
         expect(AudioProvider.connect).not.toHaveBeenCalled()
         expect(AudioProvider.setReverbOfNode).toHaveBeenCalledTimes(2)
+    })
+
+    //ADR-0017: an engine is the instrument PLUS its sample-choosing settings - a track whose Variant
+    //changed needs a new engine, and one whose Variant did not keeps its own
+    it.runIf(VARIANT !== undefined)('re-voices a layer whose Variant changed, and keeps one whose Variant did not', async () => {
+        const variant = variantSettingOf(VARIANT!)!
+        const other = variant.definition.options.find(option => option.id !== variant.definition.default)!.id
+        const original = new Instrument(VARIANT!)
+        const originalHandle = original as unknown as FakeInstrumentHandle
+        let layers = [original]
+        const synchronizer = new ComposerInstrumentSynchronizer({
+            getLayers: () => layers,
+            setLayers: nextLayers => (layers = nextLayers),
+            isMounted: () => true,
+            onLoadError: vi.fn(),
+            onSynced: vi.fn(),
+        })
+
+        const revoicing = synchronizer.sync([new InstrumentData({name: VARIANT, settings: {[variant.id]: other}})])
+        expect(originalHandle.disposed).toBe(true)
+        expect(fakes.pendingLoads).toHaveLength(1)
+        fakes.pendingLoads.splice(0).forEach(pending => pending.resolve(true))
+        await revoicing
+        const revoiced = layers[0] as unknown as FakeInstrumentHandle
+        expect(revoiced).not.toBe(originalHandle)
+
+        await synchronizer.sync([new InstrumentData({name: VARIANT, settings: {[variant.id]: other}})])
+        expect(layers[0] as unknown as FakeInstrumentHandle).toBe(revoiced)
+        expect(fakes.instances).toHaveLength(2)
     })
 
     it('lets the latest request adopt and reorder duplicate engines which are still loading', async () => {

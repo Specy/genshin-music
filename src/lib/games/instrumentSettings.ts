@@ -33,6 +33,14 @@ export function variantSettingOf(
   return undefined;
 }
 
+/**
+ * An OWN property only: a stored map is untrusted data and an inherited member is no value. Not
+ * Object.hasOwn, which older iOS Safari lacks and nothing in the build polyfills.
+ */
+function hasOwn(target: object, key: string): boolean {
+  return Object.prototype.hasOwnProperty.call(target, key);
+}
+
 function isValidValue(
   definition: InstrumentSettingDefinition,
   value: unknown
@@ -53,6 +61,7 @@ export function normalizeStoredSettings(
   if (declared === undefined || typeof stored !== 'object' || stored === null) return {};
   const kept: InstrumentSettingValues = {};
   for (const [id, definition] of Object.entries(declared)) {
+    if (!hasOwn(stored, id)) continue;
     const value = (stored as Record<string, unknown>)[id];
     if (isValidValue(definition, value)) kept[id] = value;
   }
@@ -73,7 +82,7 @@ export function resolveInstrumentSettings(
   const kept = normalizeStoredSettings(name, stored);
   const resolved: InstrumentSettingValues = {};
   for (const [id, definition] of Object.entries(declared)) {
-    resolved[id] = kept[id] ?? definition.default;
+    resolved[id] = hasOwn(kept, id) ? kept[id] : definition.default;
   }
   return resolved;
 }

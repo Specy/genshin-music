@@ -707,7 +707,8 @@
     "move_up": "Sposta verso l'alto",
     "merge_up": "Unisci sopra",
     "merge_down": "Unisci sotto",
-    "variant": "Variant"
+    "variant": "Variante",
+    "only_for": "Solo {{instrument}}"
   },
   "tutorials": {
     "composer": {
@@ -862,9 +863,9 @@
   },
   "instrument_variants": {
     "Aurora": {
-      "ah": "Ah",
-      "eh": "Eh",
-      "oo": "Oo"
+      "ah": "A",
+      "eh": "E",
+      "oo": "U"
     }
   },
   "versions": {
@@ -881,6 +882,7 @@
       "change-9": "Annulla e ripristina nel compositore, con le scorciatoie Ctrl+Z e Ctrl+Y",
       "change-10": "Aggiunti undici strumenti a Sky: violoncello, violino, sassofono, armonica, flauto traverso, campanella, tamburo della fortuna, Cymbals, Krill Horn, Tuned Krill Horn e Triumph HandPan. Aurora e la chitarra luminosa ora supportano le note sostenute.",
       "change-11": "Aggiunto il Corno della brezza notturna a Genshin",
+      "change-12": "Aggiunta la voce cantata di Vodyanitsa a Genshin",
       "change-13": "Altre correzioni di bug e migliorie"
     },
     "3-7-0": {

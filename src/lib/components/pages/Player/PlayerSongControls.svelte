@@ -403,11 +403,7 @@
      and the card goes from 55vw to 65vw at 921px, which CUTS that room from 0.225 to 0.175 of the
      window. Keying a compact tier to `max-width: 920px` therefore shrank the box exactly where it
      had the most space and left it full-size where it had the least.
-     Measured against BonoboBold's advances: the two-column table is ~208px wide from the viewport's
-     left edge at 0.8rem (label 59.8px + 3.5rem value column + paddings + the 4.4rem menu offset),
-     which only clears the card from ~1140px up. At 0.7rem it is still ~187px and would need
-     ~1070px, so below 1140px the label goes ABOVE its value instead: a ~62px column - the width of
-     the word "Accuracy" - that clears the card at every width down to ~590px. */
+     Below 1140px the label goes above its value so the table clears the centered card. */
   @media only screen and (max-width: 1139px) {
     .approaching-accuracy {
       padding: 0.3rem;

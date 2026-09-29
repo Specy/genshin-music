@@ -1,6 +1,6 @@
 # Instrument Settings and Aurora's Variants
 
-**Date:** 2026-09-29 · **Status:** planned, not started · **Requested by:** Specy (grill session; decisions in ADR-0017 and ADR-0018)
+**Date:** 2026-09-29 · **Status:** implemented on `feat/instrument-settings` (c0e387e2, 25c3e98e, d3a13f7f, ef675c34, adec0d74); the by-ear listening checks remain · **Requested by:** Specy (grill session; decisions in ADR-0017 and ADR-0018)
 
 ## Goal
 
@@ -33,7 +33,8 @@ Glossary: **Take**, **Variant**, **Instrument Setting**, **Setting Kind** in `CO
   - Setting Kinds are first-party code only.
 - Variant ids are permanent (`ah`, `eh`, `oo`). Labels are display text: an English fallback in `meta.json` that
   i18n overrides, following the `displayName` pattern.
-- Take picks, one letter per note from C4 to C6, using the catalog letters in `new-aurora/variants/CATALOG.md`:
+- Take picks, one letter per note from C4 to C6, using the catalog letters in `new-aurora/variants/CATALOG.md`
+  (the captures and catalog were deleted from the tree after implementation; commit 49360100 holds them):
 
   |                | C4  | D4  | E4  | F4  | G4  | A4  | B4  | C5  | D5  | E5  | F5  | G5  | A5  | B5  | C6  |
   | -------------- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -200,7 +201,8 @@ This is pure logic over the active game's instrument data (`$game`), and the mod
 ### 2.1 Prepare the 33 Takes
 
 This is a one-off script. Document it in the README, as every recorded instrument does. The source is
-`new-aurora/variants/NN-<Note>-<Take>.wav` (raw 48 kHz, 24-bit mono, cut from the capture). For each Take:
+`new-aurora/variants/NN-<Note>-<Take>.wav` (raw 48 kHz, 24-bit mono, cut from the capture; deleted from the tree
+after implementation, still in commit 49360100). For each Take:
 
 1. **Onset:** keep at most 10 ms of pre-roll, with a 3 ms fade-in.
 2. **DC removal.**
@@ -485,7 +487,7 @@ Cases to cover:
   - Zen doesn't persist its volume.
   - `Player.changeVolume` overrides song tracks.
 - **Per-URL sample sharing between Variants** (4.1).
-- **Remove `static/aurora-takes/`** once the survey is over. It ships in both builds today.
+- ~~**Remove `static/aurora-takes/`** once the survey is over.~~ Done: the survey page was removed after the picks were settled.
 - **Open question for the user:** does Aurora in the game stop on key-up, or always ring out? Until answered,
   `sustain` stays `{release: 0.4, minLength: 0.15}`. If it always rings out, the 0.4 s release on note-off does not
   match the game.

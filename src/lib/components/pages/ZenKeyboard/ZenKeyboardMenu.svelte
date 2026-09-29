@@ -4,7 +4,8 @@
   import { resolve } from '$app/paths';
   import { PITCHES } from '$core/sharedConfig';
   import { clickOutside } from '$lib/utils/clickOutside';
-  import { t, tInstrument } from '$i18n/binding.svelte';
+  import { language, t, tInstrument } from '$i18n/binding.svelte';
+  import { sortedInstruments } from '$cmp/inputs/instrumentOrder';
   import MenuSidebar from '$cmp/menu/MenuSidebar.svelte';
   import MenuButton from '$cmp/menu/MenuButton.svelte';
   import MenuItem from '$cmp/menu/MenuItem.svelte';
@@ -43,8 +44,15 @@
   let isVisible = $state(false);
   let wrapperEl: HTMLDivElement | undefined = $state();
 
+  // The same order as every other instrument menu (instrumentOrder.ts): alphabetical by the
+  // localized name, re-sorted when the language changes.
   const instrumentLabels = $derived(
-    game.instruments.list.map((i) => ({ value: i, label: tInstrument(i) }))
+    sortedInstruments(game.instruments.list, language(), tInstrument).map((i) => ({
+      // keyed by the instrument, never the label: two instruments may share one translation
+      key: i,
+      value: i,
+      label: tInstrument(i),
+    }))
   );
 
   $effect(() => {

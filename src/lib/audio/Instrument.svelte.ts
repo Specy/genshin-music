@@ -248,12 +248,12 @@ export class Instrument {
   }
 
   constructor(name: InstrumentName = INSTRUMENTS[0], settings?: InstrumentSettingValues) {
-    this.name = name;
-    if (!INSTRUMENTS.includes(this.name)) this.name = INSTRUMENTS[0];
+    const known = INSTRUMENTS.includes(name);
+    this.name = known ? name : INSTRUMENTS[0];
     this.instrumentData = INSTRUMENTS_DATA[this.name as keyof typeof INSTRUMENTS_DATA];
-    // Resolved against the name that survived the fallback above: settings meant for an unknown
-    // instrument must not leak onto the default one.
-    this.settings = resolveInstrumentSettings(this.name, settings);
+    // Settings meant for an unknown instrument never reach the default one it falls back to, even
+    // where a value would happen to be valid there: they belong to the instrument that declared them.
+    this.settings = resolveInstrumentSettings(this.name, known ? settings : undefined);
     this.identityKey = instrumentIdentityKey(this.name, this.settings);
     const files = variantFiles(this.name, this.settings);
     // Label Sets ride on the Shape, not the instrument (ADR-0003).
@@ -791,6 +791,13 @@ export function fetchAudioBuffer(
             console.error(e);
             rej();
           });
+      })
+      // A failed FETCH (offline, network error) - not a failed decode, which the callbacks above
+      // cover - must settle too: unsettled, it left `load()` pending forever, and with it the
+      // Player's instrument queue and any audio export waiting on it.
+      .catch((e) => {
+        console.error(e);
+        rej();
       });
   });
 }

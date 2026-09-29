@@ -244,7 +244,7 @@ export async function renderSongToAudioBuffer(
     // MEASURE PASS. An OfflineAudioContext's length is fixed at construction, but the tail
     // bound needs the decoded sample durations — so the samples are decoded first, on a
     // one-frame context that exists only to decode. Doing it twice is cheap by construction:
-    // Instrument pools its decoded buffers by name and an AudioBuffer belongs to no context,
+    // Instrument pools its decoded buffers by identity (name + Variant) and an AudioBuffer belongs to no context,
     // so the render pass below reuses these very buffers (and reuses the app's own, when a
     // live surface already loaded the instrument). Both contexts run at SAMPLE_RATE, which is
     // what makes that reuse sound right — decodeAudioData resamples to the context it

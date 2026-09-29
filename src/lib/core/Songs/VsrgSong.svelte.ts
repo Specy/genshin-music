@@ -377,7 +377,8 @@ export class VsrgSong extends Song<VsrgSong, SerializedVsrgSong, 3> {
 
     /**
      * NEW-format (v3/v2) cross-game conversion: each track swaps to the target game's most
-     * similar instrument (settings kept; target default when unmapped) and nothing else —
+     * similar instrument (track properties kept, Instrument Settings reset to the new
+     * instrument's defaults - ADR-0018; target default when unmapped) and nothing else —
      * Note Numbers pass through untouched, and the ones the matched instrument cannot voice
      * strand rather than octave-folding into range (ADR-0011, the same rule composed and
      * recorded conversion now follow). Unlike the legacy path, which keeps the historic

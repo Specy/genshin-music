@@ -398,6 +398,29 @@ describe('declared Instrument Settings (ADR-0017/0018)', () => {
     expect(normalize(variant({ ah: { label: 'Ah', files: ['a.mp3', 'x/b.mp3'] }, oo: { label: 'Oo', files: ['c.mp3', 'd.mp3'] } }))).toThrow(/must match/);
   });
 
+  it('rejects malformed shapes with a message, never a TypeError', () => {
+    expect(normalize([] as never)).toThrow(/object keyed by setting id/);
+    expect(normalize({ variant: null } as never)).toThrow(/must be an object/);
+    expect(normalize({ variant: { kind: 'variant', default: 'ah', options: [] } } as never)).toThrow(/at least two options/);
+    expect(normalize(variant({ ah: null, oo: { label: 'Oo', files: ['c.mp3', 'd.mp3'] } } as never))).toThrow(/must be an object/);
+  });
+
+  it('refuses ids an object already has, which a lookup would find where the value is missing', () => {
+    expect(normalize({ constructor: variant()!.variant })).toThrow(/built-in object member/);
+    expect(normalize(variant({ constructor: { label: 'Ah', files: ['a.mp3', 'b.mp3'] }, oo: { label: 'Oo', files: ['c.mp3', 'd.mp3'] } }))).toThrow(/built-in object member/);
+  });
+
+  it('refuses a second Variant, labels that cannot tell options apart, and options that change nothing', () => {
+    expect(normalize({ variant: variant()!.variant, vowel: variant()!.variant })).toThrow(/at most one Variant/);
+    expect(normalize(variant({ ah: { label: '  ', files: ['a.mp3', 'b.mp3'] }, oo: { label: 'Oo', files: ['c.mp3', 'd.mp3'] } }))).toThrow(/non-empty text/);
+    expect(normalize(variant({ ah: { label: 'Voice', files: ['a.mp3', 'b.mp3'] }, oo: { label: 'Voice', files: ['c.mp3', 'd.mp3'] } }))).toThrow(/already used/);
+    expect(normalize(variant({ ah: { label: 'Ah', files: ['a.mp3', 'b.mp3'] }, oo: { label: 'Oo', files: ['a.mp3', 'b.mp3'] } }))).toThrow(/changes nothing/);
+  });
+
+  it('refuses a Variant on an instrument with loop regions (loops are measured per recording)', () => {
+    expect(() => normalizeInstrumentSettings('test', 'Voice', variant(), authored, notes, true)).toThrow(/loop regions/);
+  });
+
   it('rejects a Take reused on another Button, and notes that name their own files', () => {
     expect(normalize(variant({ ah: { label: 'Ah', files: ['a.mp3', 'b.mp3'] }, oo: { label: 'Oo', files: ['b.mp3', 'd.mp3'] } }))).toThrow(/belongs to one Button/);
     const withFile: NoteMetaJson[] = [{ ...authored[0], file: 'own.mp3' }, authored[1]];

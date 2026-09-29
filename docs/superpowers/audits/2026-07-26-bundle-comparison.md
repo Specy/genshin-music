@@ -220,7 +220,7 @@ bytes, arrived late, zero interaction) stands regardless of the exact trigger.
 |    253 | `/_app/immutable/assets/Separator.CW8BWwH8.css`        |
 |    242 | `/_app/immutable/assets/LanguageSelector.DC8illDR.css` |
 
-Plus, separately: one `service-worker.js` request (32,985 B) and one `BonoboBold` font file
+Plus, separately: one `service-worker.js` request (32,985 B) and one bold font file
 (`.ttf`, not part of the JS/CSS totals above).
 
 ### Entry-graph summary

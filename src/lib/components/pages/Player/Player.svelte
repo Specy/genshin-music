@@ -273,17 +273,21 @@
 
   function loadInstrument(name: InstrumentName, instrumentSettings?: InstrumentSettingValues) {
     return enqueueInstrumentsTask(async () => {
+      //queued before the page left: the unmount already disposed every engine, nothing to replace
+      if (!mounted) return;
       const oldInstrument = instruments[0];
       AudioProvider.disconnect(oldInstrument.endNode);
       instruments[0].dispose();
       const instrument = new Instrument(name, instrumentSettings);
-      const volume = settings.instrument.volume ?? 100;
-      instrument.changeVolume(volume);
       isLoadingInstrument = true;
       const loaded = await instrument.load(AudioProvider.getAudioContext());
       if (!loaded) logger.error(t('logs:error_loading_instrument'));
+      //left while the samples loaded: the engine is nobody's, so it must not become live
+      if (!mounted) return instrument.dispose();
       AudioProvider.connect(instrument.endNode, null);
-      if (!mounted) return;
+      //AFTER load: load() builds the gain node, so a volume set before it went nowhere and the
+      //keyboard came back at the default level whatever the slider said
+      instrument.changeVolume(settings.instrument.volume ?? 100);
       if (playerStore.eventType === 'stop') playerStore.setKeyboardLayout(instrument.notes);
       instruments[0] = instrument;
       instruments = [...instruments];
@@ -523,7 +527,11 @@
       if (data.value !== previousInstrument) {
         settings.instrument = { ...settings.instrument, settings: {} };
       }
-      loadInstrument(data.value as InstrumentName, settings.instrument.settings);
+      //a loaded song brings its own instruments: while one is, the pick is only saved, and the
+      //stop-time restore plays it - the way the user's pitch, reverb and Variant come back
+      if (playerStore.eventType === 'stop') {
+        loadInstrument(data.value as InstrumentName, settings.instrument.settings);
+      }
     }
     if (setting.key === 'reverb') AudioProvider.setReverb(data.value as boolean);
     if (setting.key === 'bpm') metronome.bpm = data.value as number;

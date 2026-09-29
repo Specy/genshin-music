@@ -707,7 +707,8 @@
         "move_up": "Geser ke Atas",
         "merge_up": "Gabung ke atas",
         "merge_down": "Gabung ke bawah",
-        "variant": "Variant"
+        "variant": "Varian",
+        "only_for": "Khusus {{instrument}}"
     },
     "tutorials": {
         "composer": {
@@ -862,9 +863,9 @@
     },
     "instrument_variants": {
         "Aurora": {
-            "ah": "Ah",
-            "eh": "Eh",
-            "oo": "Oo"
+            "ah": "A",
+            "eh": "E",
+            "oo": "U"
         }
     },
     "versions": {
@@ -881,6 +882,7 @@
             "change-9": "Undo dan redo di komposer, dengan pintasan Ctrl+Z dan Ctrl+Y",
             "change-10": "Menambahkan sebelas instrumen ke Sky: Cello, Biola, Saksofon, Harmonika, Suling Melintang, Lonceng Kecil, Genderang Keberuntungan, Cymbals, Krill Horn, Tuned Krill Horn, dan Triumph HandPan. Aurora dan Light Guitar kini dapat menahan nada.",
             "change-11": "Menambahkan Nightwind Horn ke Genshin",
+            "change-12": "Menambahkan suara nyanyian Vodyanitsa ke Genshin",
             "change-13": "Perbaikan bug dan peningkatan lainnya"
         },
         "3-7-0": {

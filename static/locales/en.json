@@ -707,7 +707,8 @@
     "move_up": "Move up",
     "merge_up": "Merge up",
     "merge_down": "Merge down",
-    "variant": "Variant"
+    "variant": "Variant",
+    "only_for": "{{instrument}} only"
   },
   "tutorials": {
     "composer": {

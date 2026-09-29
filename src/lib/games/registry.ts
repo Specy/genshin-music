@@ -29,9 +29,16 @@ import {
   type InstrumentSettingDefinition,
   type InstrumentSettingsDefinition,
   SETTING_KINDS,
+  type VariantSettingDefinition,
   SUSTAIN_LOOP_MODES,
 } from './types';
-import type { GameJson, InstrumentMetaJson, NoteMetaJson, NotePresetsJson } from './schema';
+import type {
+  GameJson,
+  InstrumentMetaJson,
+  NoteMetaJson,
+  NotePresetsJson,
+  VariantSettingMetaJson,
+} from './schema';
 import { isGeneralMidiFamily, isGeneralMidiPatchName } from './generalMidi';
 
 export type GameMeta = {
@@ -76,23 +83,31 @@ function assertNonEmptyString(context: string, field: string, value: unknown): v
   }
 }
 
-// Setting and option ids are stored in songs (permanent, ADR-0017) and become i18n key
-// path segments (instrument_variants:<Instrument>.<option>), where '.' and ':' separate.
+// Setting and option ids are stored in songs (permanent, ADR-0017). Option ids, with the
+// instrument's name, are also i18n key path segments (instrument_variants:<Instrument>.<option>),
+// where '.' and ':' separate. A name Object.prototype already carries (`constructor`) is refused:
+// a plain-object lookup would find the inherited member where the value is missing.
 const SETTING_ID = /^[a-z][a-z0-9_-]*$/;
+function assertSettingId(context: string, kind: string, id: string): void {
+  if (!SETTING_ID.test(id) || id in Object.prototype) {
+    fail(context, `${kind} "${id}" must match ${SETTING_ID} and not be a built-in object member`);
+  }
+}
 
 /**
  * Validates an instrument's declared Instrument Settings (ADR-0018) against its already
- * normalized notes, and returns the runtime definition (absent when none are declared)
- * plus the notes with every Button's `file` taken from the default Variant option. A
- * Variant owns the samples outright: the instrument's notes may not name files of their
- * own, and a sample belongs to one Button across all options (a Take is one Button's).
+ * normalized notes, and returns the runtime definition (absent when none are declared) plus the
+ * notes with every Button's `file` taken from the default Variant option. Each Setting Kind has
+ * its own normalizer, and the switch below is exhaustive: a kind added to SETTING_KINDS without
+ * one does not compile.
  */
 export function normalizeInstrumentSettings(
   context: string,
   name: string,
   authored: InstrumentMetaJson['settings'],
   authoredNotes: readonly NoteMetaJson[],
-  notes: InstrumentNote[]
+  notes: InstrumentNote[],
+  hasLoops = false
 ): { settings?: InstrumentSettingsDefinition; notes: InstrumentNote[] } {
   if (authored === undefined) return { notes };
   if (typeof authored !== 'object' || authored === null || Array.isArray(authored)) {
@@ -108,8 +123,8 @@ export function normalizeInstrumentSettings(
   const settings: Record<string, InstrumentSettingDefinition> = {};
   let variantFiles: readonly string[] | undefined;
   for (const [id, declaration] of entries) {
-    if (!SETTING_ID.test(id)) fail(context, `setting id "${id}" must match ${SETTING_ID}`);
-    if (typeof declaration !== 'object' || declaration === null) {
+    assertSettingId(context, 'setting id', id);
+    if (typeof declaration !== 'object' || declaration === null || Array.isArray(declaration)) {
       fail(context, `setting "${id}" must be an object`);
     }
     if (!(SETTING_KINDS as readonly string[]).includes(declaration.kind)) {
@@ -118,53 +133,21 @@ export function normalizeInstrumentSettings(
         `setting "${id}": unknown kind "${declaration.kind}" (known: ${SETTING_KINDS.join(', ')})`
       );
     }
-    if (variantFiles !== undefined) {
-      fail(context, `setting "${id}": an instrument declares at most one Variant`);
-    }
-    const authoredOptions =
-      typeof declaration.options === 'object' && declaration.options !== null
-        ? Object.entries(declaration.options)
-        : [];
-    if (authoredOptions.length < 2) {
-      fail(context, `setting "${id}": a Variant needs at least two options`);
-    }
-    const buttonOfFile = new Map<string, number>();
-    const options = authoredOptions.map(([optionId, option]) => {
-      const where = `setting "${id}" option "${optionId}"`;
-      if (!SETTING_ID.test(optionId)) fail(context, `${where}: option id must match ${SETTING_ID}`);
-      assertNonEmptyString(context, `${where} label`, option?.label);
-      if (!Array.isArray(option.files) || option.files.length !== notes.length) {
-        fail(
-          context,
-          `${where}: files must name exactly one sample per button (${notes.length}), got ${Array.isArray(option.files) ? option.files.length : 'none'}`
-        );
-      }
-      option.files.forEach((file, button) => {
-        assertSafeSegment(context, `${where} file ${button}`, file);
-        const owner = buttonOfFile.get(file);
-        if (owner !== undefined && owner !== button) {
-          fail(
-            context,
-            `sample "${file}" is used by button ${owner} and button ${button}: a Take belongs to one Button`
-          );
+    switch (declaration.kind) {
+      case 'variant': {
+        if (variantFiles !== undefined) {
+          fail(context, `setting "${id}": an instrument declares at most one Variant`);
         }
-        buttonOfFile.set(file, button);
-      });
-      return { id: optionId, label: option.label, files: [...option.files] };
-    });
-    const fallback = options.find((option) => option.id === declaration.default);
-    if (fallback === undefined) {
-      fail(context, `setting "${id}": default "${declaration.default}" is not one of its options`);
+        const variant = normalizeVariant(context, id, declaration, authoredNotes, notes, hasLoops);
+        variantFiles = variant.options.find((option) => option.id === variant.default)!.files;
+        settings[id] = variant;
+        break;
+      }
+      default: {
+        const unhandled: never = declaration.kind;
+        fail(context, `setting "${id}": kind "${String(unhandled)}" has no normalizer`);
+      }
     }
-    const ownFile = authoredNotes.findIndex((note) => note.file !== undefined);
-    if (ownFile !== -1) {
-      fail(
-        context,
-        `note ${ownFile} names its own file, but setting "${id}" is a Variant: every button's sample comes from the chosen option`
-      );
-    }
-    variantFiles = fallback.files;
-    settings[id] = { kind: 'variant', default: fallback.id, options };
   }
   const defaultFiles = variantFiles;
   return {
@@ -173,6 +156,92 @@ export function normalizeInstrumentSettings(
       ? notes.map((note, button) => ({ ...note, file: defaultFiles[button] }))
       : notes,
   };
+}
+
+/**
+ * A Variant (ADR-0017) owns the instrument's samples outright: every option names one per Button,
+ * the notes name none of their own, and a sample belongs to one Button across all options (a Take
+ * is one Button's). Everything else about the instrument is shared by its options - which is why
+ * loop regions are refused: they are measured on one recording, and each option plays different
+ * ones.
+ */
+function normalizeVariant(
+  context: string,
+  id: string,
+  declaration: VariantSettingMetaJson,
+  authoredNotes: readonly NoteMetaJson[],
+  notes: readonly InstrumentNote[],
+  hasLoops: boolean
+): VariantSettingDefinition {
+  const authoredOptions =
+    typeof declaration.options === 'object' &&
+    declaration.options !== null &&
+    !Array.isArray(declaration.options)
+      ? Object.entries(declaration.options)
+      : [];
+  if (authoredOptions.length < 2) {
+    fail(context, `setting "${id}": a Variant needs at least two options`);
+  }
+  const buttonOfFile = new Map<string, number>();
+  const labels = new Set<string>();
+  const fileLists = new Map<string, string>();
+  const options = authoredOptions.map(([optionId, option]) => {
+    const where = `setting "${id}" option "${optionId}"`;
+    assertSettingId(context, `${where}: option id`, optionId);
+    if (typeof option !== 'object' || option === null) fail(context, `${where} must be an object`);
+    if (typeof option.label !== 'string' || option.label.trim() === '') {
+      fail(context, `${where}: label must be non-empty text`);
+    }
+    if (labels.has(option.label.trim())) {
+      fail(context, `${where}: label "${option.label}" is already used by another option`);
+    }
+    labels.add(option.label.trim());
+    if (!Array.isArray(option.files) || option.files.length !== notes.length) {
+      fail(
+        context,
+        `${where}: files must name exactly one sample per button (${notes.length}), got ${Array.isArray(option.files) ? option.files.length : 'none'}`
+      );
+    }
+    option.files.forEach((file, button) => {
+      assertSafeSegment(context, `${where} file ${button}`, file);
+      const owner = buttonOfFile.get(file);
+      if (owner !== undefined && owner !== button) {
+        fail(
+          context,
+          `sample "${file}" is used by button ${owner} and button ${button}: a Take belongs to one Button`
+        );
+      }
+      buttonOfFile.set(file, button);
+    });
+    const list = option.files.join('\n');
+    const twin = fileLists.get(list);
+    if (twin !== undefined) {
+      fail(
+        context,
+        `${where} plays exactly the samples of option "${twin}", so it changes nothing`
+      );
+    }
+    fileLists.set(list, optionId);
+    return { id: optionId, label: option.label, files: [...option.files] };
+  });
+  const fallback = options.find((option) => option.id === declaration.default);
+  if (fallback === undefined) {
+    fail(context, `setting "${id}": default "${declaration.default}" is not one of its options`);
+  }
+  const ownFile = authoredNotes.findIndex((note) => note.file !== undefined);
+  if (ownFile !== -1) {
+    fail(
+      context,
+      `note ${ownFile} names its own file, but setting "${id}" is a Variant: every button's sample comes from the chosen option`
+    );
+  }
+  if (hasLoops) {
+    fail(
+      context,
+      `setting "${id}": a Variant cannot be combined with loop regions - they are measured on one recording, and each option plays different ones`
+    );
+  }
+  return { kind: 'variant', default: fallback.id, options };
 }
 
 function assertLoop(context: string, label: string, loop: LoopRegion): void {
@@ -506,7 +575,8 @@ function buildGameMeta(id: string): GameMeta {
       name,
       meta.settings,
       authoredNotes,
-      normalizedNotes
+      normalizedNotes,
+      meta.sustain?.loop !== undefined || authoredNotes.some((note) => note.loop !== undefined)
     );
     for (const note of notes) {
       if (!gridIds.has(note.nominal)) {

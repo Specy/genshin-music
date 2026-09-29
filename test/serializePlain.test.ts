@@ -1,4 +1,5 @@
 import {describe, expect, it} from 'vitest'
+import {variantSettingOf} from '$lib/games/instrumentSettings'
 import {
     ApproachingNote,
     Chunk,
@@ -177,6 +178,21 @@ const PATHS: PersistencePath[] = [
         covers: ['InstrumentData.serialize'],
         run: () => {
             const instrument = new InstrumentData({name: INSTRUMENTS[0]})
+            return {model: instrument, payload: instrument.serialize()}
+        },
+    },
+    //the Instrument Settings branch (ADR-0018): the map a payload carries must be its own, never the
+    //model's - with an instrument that declares settings where one exists, the plain one otherwise
+    {
+        label: 'InstrumentData.serialize() with Instrument Settings',
+        covers: ['InstrumentData.serialize'],
+        run: () => {
+            const name = INSTRUMENTS.find((candidate: string) => variantSettingOf(candidate) !== undefined) ?? INSTRUMENTS[0]
+            const variant = variantSettingOf(name)
+            const instrument = new InstrumentData({
+                name,
+                settings: variant ? {[variant.id]: variant.definition.options[1].id} : {},
+            })
             return {model: instrument, payload: instrument.serialize()}
         },
     },

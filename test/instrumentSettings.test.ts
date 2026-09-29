@@ -6,7 +6,7 @@
 // Variant, and follows the config wherever one appears.
 import {flushSync, mount, unmount} from 'svelte'
 import {afterEach, beforeEach, describe, expect, it} from 'vitest'
-import {APP_NAME, ComposedSong, INSTRUMENTS, InstrumentData, RecordedSong} from './imports'
+import {APP_NAME, ComposedSong, INSTRUMENTS, InstrumentData, RecordedSong, VsrgSong} from './imports'
 import {resolveInstrumentSettings, variantSettingOf} from '$lib/games/instrumentSettings'
 import {Instrument} from '$lib/audio/Instrument.svelte'
 import {planSongRender} from '$lib/audio/OfflineSongRenderer'
@@ -93,6 +93,33 @@ describe.runIf(VARIANT !== undefined)('a track stores its Instrument Settings (A
         song.instruments = [new InstrumentData({name: 'SomeForeignInstrument', settings: {[ID]: OTHER}})]
         const converted = song.toOtherGame(APP_NAME)
         expect(converted.instruments[0].settings).toEqual({})
+    })
+
+    it('recorded and VSRG conversion reset them too', () => {
+        const recorded = new RecordedSong('foreign', [], [PLAIN])
+        recorded.data.appName = OTHER_GAME
+        recorded.instruments = [new InstrumentData({name: 'SomeForeignInstrument', settings: {[ID]: OTHER}})]
+        expect(recorded.toOtherGame(APP_NAME).instruments[0].settings).toEqual({})
+
+        const vsrg = new VsrgSong('foreign')
+        vsrg.data.appName = OTHER_GAME
+        vsrg.addTrack(PLAIN)
+        vsrg.tracks[0].instrument.set({name: 'SomeForeignInstrument', settings: {[ID]: OTHER}})
+        const converted = vsrg.toOtherGame(APP_NAME)
+        expect(converted.tracks[0].instrument.settings).toEqual({})
+        //the source song is a clone's origin, never touched
+        expect(vsrg.tracks[0].instrument.settings).toEqual({[ID]: OTHER})
+    })
+
+    it('a malformed MIDI metadata entry rejects the whole blob, as before settings existed', () => {
+        const text = encodeMidiMetadata({instruments: [new InstrumentData({name})], pitch: 'C', reverb: false})
+        const broken = text.replace(/"instruments":\[\{[^]*?\}\]/, '"instruments":[null]')
+        expect(broken).not.toBe(text)
+        expect(decodeMidiMetadata([{type: 'text', text: broken}])).toBeNull()
+    })
+
+    it('an explicit `settings: undefined` leaves an empty map, never a missing one', () => {
+        expect(new InstrumentData({name, settings: {[ID]: OTHER}}).set({settings: undefined}).settings).toEqual({})
     })
 
     it('the MIDI metadata round trip keeps the Variant', () => {

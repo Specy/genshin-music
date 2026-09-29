@@ -24,12 +24,12 @@
 
   :global(.blog-b) {
     font-weight: bold;
-    font-family: RobotoSerif, serif;
+    font-family: var(--font-reading);
   }
 
   :global(.blog-ol) {
     margin: 0;
-    font-family: RobotoSerif, serif;
+    font-family: var(--font-reading);
     padding: 0;
     list-style-type: none;
     margin-left: 2rem;
@@ -40,7 +40,7 @@
     counter-increment: step-counter;
     position: relative;
     margin: 1rem 0;
-    font-family: RobotoSerif, serif;
+    font-family: var(--font-reading);
     opacity: 0.9;
     user-select: text;
   }
