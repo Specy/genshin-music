@@ -1,5 +1,6 @@
 import {APP_NAME, INSTRUMENTS, type Pitch, TEMPO_CHANGERS, type TempoChanger} from "$core/legacyConfig"
 import type {InstrumentName} from "$core/types"
+import {declaredSettings, normalizeStoredSettings, resolveInstrumentSettings, type InstrumentSettingValues} from "$lib/games/instrumentSettings"
 // InstrumentNoteIcon used to live in Songs/ComposedSong.svelte.ts (old SongClasses.ts imported it
 // FROM there). Task 5 relocated the canonical definition here instead (needed for
 // InstrumentData/SerializedInstrumentData before ComposedSong was ported). Task 7's
@@ -169,6 +170,12 @@ export interface SerializedInstrumentData {
     muted: boolean
     solo: boolean
     reverbOverride: boolean | null
+    /**
+     * Instrument Settings (ADR-0018), written only for an instrument that declares any - and then
+     * every declared value, defaults included. Absent for every other instrument, which is why
+     * files that never used settings serialize byte-identically to before.
+     */
+    settings?: InstrumentSettingValues
 }
 
 /**
@@ -189,13 +196,21 @@ export class InstrumentData {
     alias = ''
     muted = false
     solo = false
+    /**
+     * Instrument Settings by setting id (ADR-0018). In memory a missing id means "the declared
+     * default" - every read goes through resolveInstrumentSettings. Always this instance's own
+     * object: the constructor (and so clone()) and set() copy it, because Object.assign would share
+     * it, and a popup edit or an undo delta would then write through into another entry's map.
+     */
+    settings: InstrumentSettingValues = {}
 
     constructor(data: Partial<InstrumentData> = {}) {
         Object.assign(this, data)
+        this.settings = {...(data.settings ?? {})}
     }
 
     serialize(): SerializedInstrumentData {
-        return {
+        const serialized: SerializedInstrumentData = {
             name: this.name,
             volume: this.volume,
             pitch: this.pitch,
@@ -206,33 +221,59 @@ export class InstrumentData {
             solo: this.solo,
             reverbOverride: this.reverbOverride
         }
+        //every declared value, defaults included (ADR-0018): a song records what it sounded like,
+        //so changing an instrument's declared default later re-voices no saved song. The key is
+        //left out entirely - not written as undefined - for an instrument that declares nothing
+        if (declaredSettings(this.name)) serialized.settings = resolveInstrumentSettings(this.name, this.settings)
+        return serialized
     }
 
     static deserialize(data: SerializedInstrumentData): InstrumentData {
+        //non-objects arrive here too: composed v1/v2 rosters are bare name strings mapped through
+        //this method (Song.deserializeTo) and re-applied by hand afterwards. A string's `.name` is
+        //undefined, so they land on the defaults exactly as they always did - the settings lookup
+        //below just must not throw on one. Single parameter on purpose: callers pass it to .map
+        const source: Partial<SerializedInstrumentData> = typeof data === 'object' && data !== null ? data : {}
+        const name = source.name ?? INSTRUMENTS[0]
         return new InstrumentData().set({
-            name: data.name ?? INSTRUMENTS[0],
-            volume: data.volume ?? 100,
+            name,
+            volume: source.volume ?? 100,
             //"" (FOLLOW the song's Basepoint), never "C": `pitch` is a per-track OVERRIDE, and only
             //the empty string means "no override" (noteIds.effectiveTrackPitch). A defaulted "C"
             //made a file that omits the field claim a hard Basepoint of C, which since ADR-0007
             //also mis-migrates its notes (+0 instead of +songPitch) and then freezes the track out
             //of song-level Basepoint changes. It was never a legacy meaning either: before the
             //2022 commit that filled these defaults in, a missing pitch left the class default "".
-            pitch: data.pitch ?? "",
-            visible: data.visible ?? true,
-            icon: data.icon ?? 'circle',
-            alias: data.alias ?? "",
-            muted: data.muted ?? false,
+            pitch: source.pitch ?? "",
+            visible: source.visible ?? true,
+            icon: source.icon ?? 'circle',
+            alias: source.alias ?? "",
+            muted: source.muted ?? false,
             //no version bump came with this field: files written before it load with no solos, and
             //an older app reading a file that has it ignores it and plays every unmuted track
-            solo: data.solo ?? false,
-            reverbOverride: data.reverbOverride ?? null
+            solo: source.solo ?? false,
+            reverbOverride: source.reverbOverride ?? null,
+            //checked against what `name` declares in the running game: unknown ids and invalid values
+            //drop out, which is how they fall back to the default. No version bump either: a file
+            //without the field (every song saved before settings existed) plays the defaults
+            settings: normalizeStoredSettings(name, source.settings)
         })
     }
 
     set(data: Partial<InstrumentData>) {
         Object.assign(this, data)
+        if (data.settings !== undefined) this.settings = {...data.settings}
         return this
+    }
+
+    /**
+     * This track swapped to another instrument: a copy carrying `name` and that instrument's
+     * default settings. A setting belongs to the instrument that declared it (ADR-0018), so every
+     * place that changes a track's instrument goes through here - even to the same name from
+     * another game, whose declarations were never this one's.
+     */
+    withInstrument(name: InstrumentName) {
+        return this.clone().set({name, settings: {}})
     }
 
     toNoteIcon() {

@@ -280,7 +280,8 @@ export class VsrgSong extends Song<VsrgSong, SerializedVsrgSong, 3> {
                 : null
             let dropped = 0
             song.tracks.forEach(track => {
-                if (crossGame) track.instrument.name = "DunDun"
+                //the settings were validated against the source name before this rename - drop them
+                if (crossGame) track.instrument.set({name: "DunDun", settings: {}})
                 const pitch = track.instrument.pitch || song.pitch
                 track.hitObjects.forEach(hitObject => {
                     const numbers: number[] = []
@@ -395,7 +396,9 @@ export class VsrgSong extends Song<VsrgSong, SerializedVsrgSong, 3> {
         song.data.appName = target
         song.tracks.forEach(t => {
             const similar = findSimilarInstrument(sourceGame, t.instrument.name, target)
-            t.instrument.name = INSTRUMENTS.find(name => name === similar) ?? INSTRUMENTS[0]
+            //a swap, never a bare rename: the new game's instrument starts on its own default
+            //settings (ADR-0018), even when both games use the same name
+            t.instrument.set({name: INSTRUMENTS.find(name => name === similar) ?? INSTRUMENTS[0], settings: {}})
             //hitObjects are deliberately untouched: no number is rewritten, so the fold's
             //within-hit-object collisions cannot appear and there is nothing left to dedupe
         })

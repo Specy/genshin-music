@@ -1001,7 +1001,10 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 5> 
             const oldPitch = previous.pitch || this.pitch
             const newPitch = instrument.pitch || this.pitch
             const instruments = [...this.instruments]
-            instruments[index] = instrument.clone()
+            //a setting belongs to the instrument that declared it (ADR-0018): a swap starts the new
+            //instrument on its own defaults, whatever map the caller's copy still carried - in the
+            //same Step, so undo returns the old instrument with its settings in one go
+            instruments[index] = oldName === instrument.name ? instrument.clone() : instrument.withInstrument(instrument.name)
             this.#writeInstruments(instruments)
             if (oldName === instrument.name && oldPitch === newPitch) return
             const notes = this.#notesOfTrack(index)
@@ -2153,9 +2156,9 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 5> 
         clone.data.appName = target
         clone.instruments = clone.instruments.map(ins => {
             const similar = findSimilarInstrument(sourceGame, ins.name, target)
-            const swapped = ins.clone()
-            swapped.name = INSTRUMENTS.find(name => name === similar) ?? INSTRUMENTS[0]
-            return swapped
+            //withInstrument, never a bare rename: the new game's instrument starts on its own
+            //default settings (ADR-0018), even when both games use the same name
+            return ins.withInstrument(INSTRUMENTS.find(name => name === similar) ?? INSTRUMENTS[0])
         })
         //columns are deliberately untouched: no number is rewritten, so no two notes can newly
         //collide and no span can newly overlap — normalizeSpans() has nothing left to re-enforce

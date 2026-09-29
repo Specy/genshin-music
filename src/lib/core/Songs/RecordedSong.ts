@@ -678,7 +678,7 @@ export class RecordedSong extends Song<RecordedSong, SerializedRecordedSong> {
             return null
         }
     }
-    /** NEW-format cross-game conversion (see ComposedSong.toOtherGame): tracks swap to the target game's most similar instruments (settings kept) and nothing else — Note Numbers pass through untouched, and the ones the matched instrument cannot voice strand rather than being folded into range (ADR-0011). */
+    /** NEW-format cross-game conversion (see ComposedSong.toOtherGame): tracks swap to the target game's most similar instruments (track properties kept, Instrument Settings reset to the new instrument's defaults — ADR-0018) and nothing else — Note Numbers pass through untouched, and the ones the matched instrument cannot voice strand rather than being folded into range (ADR-0011). */
     toOtherGame = (target: ConversionGame) => {
         const clone = this.clone()
         if (target !== APP_NAME) throw new Error(`toOtherGame can only convert into the running game (${APP_NAME}), got ${target}`)
@@ -690,9 +690,9 @@ export class RecordedSong extends Song<RecordedSong, SerializedRecordedSong> {
         clone.data.appName = target
         clone.instruments = clone.instruments.map(ins => {
             const similar = findSimilarInstrument(sourceGame, ins.name, target)
-            const swapped = ins.clone()
-            swapped.name = INSTRUMENTS.find(name => name === similar) ?? INSTRUMENTS[0]
-            return swapped
+            //withInstrument, never a bare rename: the new game's instrument starts on its own
+            //default settings (ADR-0018), even when both games use the same name
+            return ins.withInstrument(INSTRUMENTS.find(name => name === similar) ?? INSTRUMENTS[0])
         })
         //notes are deliberately untouched: no number is rewritten, so the same-track same-time
         //duplicates the fold used to create cannot appear and there is nothing left to merge
