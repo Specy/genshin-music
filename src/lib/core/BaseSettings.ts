@@ -654,7 +654,6 @@ export type ZenKeyboardSettingsDataType = {
 export type ZenKeyboardSettingsType = BaseSettings<ZenKeyboardSettingsDataType>
 
 export type SheetVisualizerSettingsDataType = {
-    noteNames: SettingsCheckbox
     noteNameType: SettingsSelect<NoteNameType>
     mergeEmptySpaces: SettingsCheckbox
     multiColorRows: SettingsCheckbox
@@ -664,26 +663,16 @@ export type SheetVisualizerSettingsType = BaseSettings<SheetVisualizerSettingsDa
 
 export const SheetVisualizerSettings = {
     other: {
-        settingVersion: APP_NAME + 1
+        settingVersion: APP_NAME + 2
     },
     data: {
-        noteNames: {
-            name: "sheet_visualizer_note_names",
-            tooltip: "sheet_visualizer_note_names_description",
-            type: "checkbox",
-            songSetting: false,
-            category: "sheet_visualizer_settings",
-            value: false
-        },
         noteNameType: {
             name: "sheet_visualizer_note_name_type",
             tooltip: "sheet_visualizer_note_name_type_description",
             type: "select",
             songSetting: false,
             category: "sheet_visualizer_settings",
-            //the same per-game default the page used to seed its own local state with. Flat, unlike
-            //the composer/player/zen entries beside it in the GameDefinition, which are
-            //desktop/mobile pairs - this one has no mobile branch to pick.
+            //No Text keeps the sheet unlabeled until the user chooses a name type.
             value: game.settings.defaultNoteNameType.sheetVisualizer,
             options: NOTE_NAME_TYPES
         },

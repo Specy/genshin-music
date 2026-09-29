@@ -823,24 +823,16 @@
   },
   "sheetVisualizer": {
     "other": {
-      "settingVersion": "Genshin1"
+      "settingVersion": "Genshin2"
     },
     "data": {
-      "noteNames": {
-        "name": "sheet_visualizer_note_names",
-        "tooltip": "sheet_visualizer_note_names_description",
-        "type": "checkbox",
-        "songSetting": false,
-        "category": "sheet_visualizer_settings",
-        "value": false
-      },
       "noteNameType": {
         "name": "sheet_visualizer_note_name_type",
         "tooltip": "sheet_visualizer_note_name_type_description",
         "type": "select",
         "songSetting": false,
         "category": "sheet_visualizer_settings",
-        "value": "Keyboard layout",
+        "value": "No Text",
         "options": [
           "Note name",
           "Keyboard layout",

@@ -18,12 +18,10 @@
   let {
     chunk,
     rows,
-    hasText,
     keyboardLayout,
   }: {
     chunk: TempoChunk;
     rows: number;
-    hasText: boolean;
     keyboardLayout: NoteNameType;
   } = $props();
 
@@ -96,7 +94,7 @@
               class={f.held ? 'frame-note-s frame-note-held' : 'frame-note-s'}
               style="grid-row:{f.gridRow};grid-column:{f.gridColumn};--selected-note-background:var(--sheet-row-color-{f.rowIndex})"
             >
-              {f && hasText
+              {keyboardLayout !== 'No Text'
                 ? noteLabelForDisplay(
                     baseInstrument.getNoteText(f.cell, keyboardLayout, 'C'),
                     keyboardLayout
@@ -154,7 +152,7 @@
     border-radius: 0.2rem;
     width: 80%;
     height: 80%;
-    font-size: 0.6rem;
+    font-size: calc(0.6rem * var(--jianpu-label-scale, 1));
     display: flex;
     justify-content: center;
     align-items: center;

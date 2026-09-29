@@ -237,10 +237,8 @@
             "composer_sync_tabs_description": "Fitur lanjutan, fitur ini menyinkronkan tab browser lain untuk bermain secara bersamaan",
             "composer_pro_view": "Komposer PRO",
             "composer_pro_view_description": "Shows every semitone as its own row, with all the notes at their real pitch, and lets you add or remove them by tapping the canvas itself",
-            "sheet_visualizer_note_names": "Tampilkan nama nada",
-            "sheet_visualizer_note_names_description": "Menuliskan nama setiap nada di dalamnya menggunakan tata letak yang dipilih di bawah",
             "sheet_visualizer_note_name_type": "Jenis nama nada",
-            "sheet_visualizer_note_name_type_description": "Penamaan yang ditulis di dalam nada; tidak berpengaruh kecuali nama nada ditampilkan",
+            "sheet_visualizer_note_name_type_description": "Pilih label yang ditampilkan di dalam nada; pilih Tanpa teks untuk menyembunyikannya.",
             "sheet_visualizer_merge_empty_spaces": "Gabungkan ruang kosong",
             "sheet_visualizer_merge_empty_spaces_description": "Menggabungkan kolom kosong yang berurutan sehingga lembar menjadi lebih pendek dan mudah dibaca",
             "sheet_visualizer_different_color_rows": "Baris dengan warna berbeda",
@@ -456,7 +454,6 @@
         }
     },
     "sheet_visualizer": {
-        "note_names": "Nama note",
         "merge_empty_spaces": "Gabungkan ruang kosong",
         "no_song_selected": "Tidak ada lagu yang dipilih",
         "print_as_pdf": "Cetak sebagai PDF",

@@ -126,7 +126,7 @@
     border-radius: 0.2rem;
     width: 80%;
     height: 80%;
-    font-size: 0.6rem;
+    font-size: calc(0.6rem * var(--jianpu-label-scale, 1));
     display: flex;
     justify-content: center;
     align-items: center;

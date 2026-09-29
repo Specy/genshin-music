@@ -477,7 +477,7 @@ export interface GameDefinition {
       composer: NoteNameTypeDefault; // Genshin {KeyboardLayout, DoReMi} | Sky {Note name, Note name}
       player: NoteNameTypeDefault; // idem
       zen: NoteNameTypeDefault; // Genshin {KeyboardLayout, DoReMi} | Sky {No Text, No Text}
-      sheetVisualizer: NoteNameType; // 'Keyboard layout' | 'ABC'
+      sheetVisualizer: NoteNameType; // Both games default to 'No Text'.
     };
   };
 

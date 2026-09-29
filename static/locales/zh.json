@@ -237,10 +237,8 @@
             "composer_sync_tabs_description": "高级功能，它同步其他浏览器选项卡以同时播放。",
             "composer_pro_view": "PRO 作曲器",
             "composer_pro_view_description": "显示每个半音，所有音符都在其真实音调上，您可以点击画布添加或删除音符",
-            "sheet_visualizer_note_names": "显示音符名称",
-            "sheet_visualizer_note_names_description": "使用下方选择的布局，在每个音符内显示其名称",
             "sheet_visualizer_note_name_type": "音符名称类型",
-            "sheet_visualizer_note_name_type_description": "要在音符内显示的命名方式；除非显示音符名称，否则不会生效",
+            "sheet_visualizer_note_name_type_description": "选择音符内显示的标签；选择“无文本”可隐藏。",
             "sheet_visualizer_merge_empty_spaces": "合并空白",
             "sheet_visualizer_merge_empty_spaces_description": "将连续的空白列合并，使乐谱更短且更容易阅读",
             "sheet_visualizer_different_color_rows": "各行使用不同颜色",
@@ -456,7 +454,6 @@
         }
     },
     "sheet_visualizer": {
-        "note_names": "音符名称",
         "merge_empty_spaces": "合并空格",
         "no_song_selected": "未选择歌曲",
         "print_as_pdf": "打印为 PDF",

@@ -280,12 +280,9 @@ export const i18n_en = {
       composer_pro_view: 'PRO composer',
       composer_pro_view_description:
         'Shows every semitone as its own row, with all the notes at their real pitch, and lets you add or remove them by tapping the canvas itself',
-      sheet_visualizer_note_names: 'Show note names',
-      sheet_visualizer_note_names_description:
-        'Writes the name of each note inside it, using the layout selected below',
       sheet_visualizer_note_name_type: 'Note name type',
       sheet_visualizer_note_name_type_description:
-        'Which naming to write inside the notes, has no effect unless note names are shown',
+        'Choose which labels appear inside notes; select No Text to hide them',
       sheet_visualizer_merge_empty_spaces: 'Merge empty spaces',
       sheet_visualizer_merge_empty_spaces_description:
         'Joins consecutive empty columns together, making the sheet shorter and easier to read',
@@ -545,7 +542,6 @@ export const i18n_en = {
     },
   },
   sheet_visualizer: {
-    note_names: 'Show note names',
     merge_empty_spaces: 'Merge empty spaces',
     no_song_selected: 'No song selected',
     print_as_pdf: 'Print as PDF',

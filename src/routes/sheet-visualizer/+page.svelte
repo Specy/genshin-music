@@ -27,11 +27,10 @@
   let ref = $state<HTMLDivElement>();
   // The page's settings, on the app's standard channel: defaults at module load, the persisted
   // ones in onMount (localStorage is not readable during prerender), and every edit written back
-  // through handleSettingChange. The five values below are read off this rather than held
+  // through handleSettingChange. The values below are read off this rather than held
   // separately, so there is one source for each.
   let settings = $state(settingsService.getDefaultSheetVisualizerSettings());
 
-  const hasText = $derived(settings.noteNames.value);
   const keyboardLayout = $derived(settings.noteNameType.value);
   const flattenSpaces = $derived(settings.mergeEmptySpaces.value);
   const multiColor = $derived(settings.multiColorRows.value);
@@ -100,11 +99,6 @@
   }
 
   $effect(() => {
-    // QUIRK: void hasText is a deliberate no-op read - it makes this $effect re-fire (and
-    // re-send Analytics.songEvent) whenever the note-name-text toggle changes, even though
-    // loadSong's own body never reads hasText. Matches old's explicit effect-dependency list.
-    // Removing this read would silently fire fewer Analytics events than old did.
-    void hasText;
     if (currentSong) loadSong(currentSong, keyboardLayout);
   });
 
@@ -163,7 +157,7 @@
     >
       {#if sheet}
         {#each sheet.chunks as chunk, i (i)}
-          <SheetFrame2 {chunk} rows={3} {hasText} {keyboardLayout} />
+          <SheetFrame2 {chunk} rows={3} {keyboardLayout} />
         {/each}
       {/if}
     </div>

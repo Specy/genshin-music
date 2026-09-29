@@ -236,10 +236,8 @@
       "composer_sync_tabs_description": "Funzione avanzata che sincronizza le altre schede del browser affinché vengano riprodotte contemporaneamente",
       "composer_pro_view": "Compositore PRO",
       "composer_pro_view_description": "Mostra ogni semitono su una riga distinta e tutte le note alla loro altezza reale; permette inoltre di aggiungerle o rimuoverle toccando direttamente l'area di lavoro",
-      "sheet_visualizer_note_names": "Mostra i nomi delle note",
-      "sheet_visualizer_note_names_description": "Scrive il nome dentro ogni nota usando la disposizione selezionata qui sotto",
       "sheet_visualizer_note_name_type": "Tipo di nome delle note",
-      "sheet_visualizer_note_name_type_description": "Il sistema di denominazione da scrivere nelle note; non ha effetto se i nomi non sono visibili",
+      "sheet_visualizer_note_name_type_description": "Scegli le etichette mostrate nelle note; seleziona Nessun testo per nasconderle.",
       "sheet_visualizer_merge_empty_spaces": "Unisci gli spazi vuoti",
       "sheet_visualizer_merge_empty_spaces_description": "Unisce le colonne vuote consecutive, rendendo lo spartito più corto e leggibile",
       "sheet_visualizer_different_color_rows": "Righe di colori diversi",
@@ -456,7 +454,6 @@
     }
   },
   "sheet_visualizer": {
-    "note_names": "Mostra i nomi delle note",
     "merge_empty_spaces": "Unisci gli spazi vuoti",
     "no_song_selected": "Nessun brano selezionato",
     "print_as_pdf": "Stampa come PDF",

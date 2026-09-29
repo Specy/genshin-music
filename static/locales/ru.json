@@ -236,10 +236,8 @@
             "composer_sync_tabs_description": "Advanced feature, it syncs other browser tabs to all play at the same time",
             "composer_pro_view": "Секвенсор PRO",
             "composer_pro_view_description": "Shows every semitone as its own row, with all the notes at their real pitch, and lets you add or remove them by tapping the canvas itself",
-            "sheet_visualizer_note_names": "Показывать названия нот",
-            "sheet_visualizer_note_names_description": "Отображает название внутри каждой ноты, используя выбранную ниже раскладку",
             "sheet_visualizer_note_name_type": "Тип названий нот",
-            "sheet_visualizer_note_name_type_description": "Система названий, используемая внутри нот; действует только при отображении названий нот",
+            "sheet_visualizer_note_name_type_description": "Выберите подписи внутри нот; чтобы скрыть их, выберите «Без текста».",
             "sheet_visualizer_merge_empty_spaces": "Объединять пустые промежутки",
             "sheet_visualizer_merge_empty_spaces_description": "Объединяет соседние пустые столбцы, делая нотный лист короче и удобнее для чтения",
             "sheet_visualizer_different_color_rows": "Разные цвета строк",
@@ -456,7 +454,6 @@
         }
     },
     "sheet_visualizer": {
-        "note_names": "Note names",
         "merge_empty_spaces": "Merge empty spaces",
         "no_song_selected": "No song selected",
         "print_as_pdf": "Print as PDF",

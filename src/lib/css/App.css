@@ -1143,7 +1143,7 @@ a {
 
 .note-composer .note-name {
   bottom: 14% !important;
-  font-size: 0.7rem;
+  font-size: calc(0.7rem * var(--jianpu-label-scale, 1));
 }
 
 .genshin-border {
@@ -1183,7 +1183,7 @@ a {
 }
 
 .note-name {
-  font-size: 0.8rem;
+  font-size: calc(0.8rem * var(--jianpu-label-scale, 1));
   position: absolute;
   bottom: 15%;
   color: var(--note-background-text);
@@ -1195,8 +1195,12 @@ a {
 
 .note-name-sky {
   position: absolute;
-  font-size: 1rem;
+  font-size: calc(1rem * var(--jianpu-label-scale, 1));
   color: var(--note-background-text);
+}
+
+.jianpu-mode {
+  --jianpu-label-scale: 1.2;
 }
 
 .jianpu-mode .note-name,
@@ -1204,6 +1208,7 @@ a {
 .jianpu-mode .frame-note-s {
   font-family: XVACLE, serif;
   font-weight: normal;
+  line-height: 1;
 }
 
 .button-hitbox,
@@ -1348,11 +1353,11 @@ a {
   }
 
   .note-name-sky {
-    font-size: 0.8rem;
+    font-size: calc(0.8rem * var(--jianpu-label-scale, 1));
   }
 
   .note-name {
-    font-size: 0.6rem;
+    font-size: calc(0.6rem * var(--jianpu-label-scale, 1));
     bottom: 10%;
   }
 

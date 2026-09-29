@@ -893,24 +893,16 @@
   },
   "sheetVisualizer": {
     "other": {
-      "settingVersion": "Sky1"
+      "settingVersion": "Sky2"
     },
     "data": {
-      "noteNames": {
-        "name": "sheet_visualizer_note_names",
-        "tooltip": "sheet_visualizer_note_names_description",
-        "type": "checkbox",
-        "songSetting": false,
-        "category": "sheet_visualizer_settings",
-        "value": false
-      },
       "noteNameType": {
         "name": "sheet_visualizer_note_name_type",
         "tooltip": "sheet_visualizer_note_name_type_description",
         "type": "select",
         "songSetting": false,
         "category": "sheet_visualizer_settings",
-        "value": "ABC",
+        "value": "No Text",
         "options": [
           "Note name",
           "Keyboard layout",

@@ -1,0 +1,36 @@
+import { beforeEach, describe, expect, it } from 'vitest';
+import { APP_NAME, SheetVisualizerSettings } from './imports';
+import { settingsService } from '../src/lib/core/Services/SettingsService';
+
+const key = `${APP_NAME}_SheetVisualizer_Settings`;
+
+describe('sheet visualizer note labels', () => {
+  beforeEach(() => localStorage.removeItem(key));
+
+  it('starts with no note labels', () => {
+    expect(settingsService.getDefaultSheetVisualizerSettings().noteNameType.value).toBe('No Text');
+    expect(settingsService.getSheetVisualizerSettings().noteNameType.value).toBe('No Text');
+  });
+
+  it('resets old sheet settings when the version changes', () => {
+    localStorage.setItem(
+      key,
+      JSON.stringify({
+        other: { ...SheetVisualizerSettings.other, settingVersion: `${APP_NAME}1` },
+        data: {
+          ...SheetVisualizerSettings.data,
+          noteNameType: { ...SheetVisualizerSettings.data.noteNameType, value: '1 2 3' },
+          noteNames: { value: true },
+        },
+      })
+    );
+
+    const settings = settingsService.getSheetVisualizerSettings();
+    expect(settings.noteNameType.value).toBe('No Text');
+    expect(settings).not.toHaveProperty('noteNames');
+    const stored = JSON.parse(localStorage.getItem(key)!);
+    expect(stored.other.settingVersion).toBe(SheetVisualizerSettings.other.settingVersion);
+    expect(stored.data.noteNameType.value).toBe('No Text');
+    expect(stored.data).not.toHaveProperty('noteNames');
+  });
+});

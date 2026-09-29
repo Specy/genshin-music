@@ -237,10 +237,8 @@
             "composer_sync_tabs_description": "高階功能，它同步其他瀏覽器分頁以同時播放。",
             "composer_pro_view": "PRO 作曲器",
             "composer_pro_view_description": "顯示每個半音，所有音符都在其真實音調上，您可以點選畫布新增或刪除音符",
-            "sheet_visualizer_note_names": "顯示音符名稱",
-            "sheet_visualizer_note_names_description": "使用下方選擇的佈局，在每個音符內顯示其名稱",
             "sheet_visualizer_note_name_type": "音符名稱型別",
-            "sheet_visualizer_note_name_type_description": "要在音符內顯示的命名方式；除非顯示音符名稱，否則不會生效",
+            "sheet_visualizer_note_name_type_description": "選擇音符內顯示的標籤；選擇「無文本」即可隱藏。",
             "sheet_visualizer_merge_empty_spaces": "合併空白",
             "sheet_visualizer_merge_empty_spaces_description": "將連續的空白列合併，使樂譜更短且更容易閱讀",
             "sheet_visualizer_different_color_rows": "各行使用不同顏色",
@@ -456,7 +454,6 @@
         }
     },
     "sheet_visualizer": {
-        "note_names": "音符名稱",
         "merge_empty_spaces": "合併空格",
         "no_song_selected": "未選擇歌曲",
         "print_as_pdf": "列印為 PDF",

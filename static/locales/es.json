@@ -236,10 +236,8 @@
       "composer_sync_tabs_description": "Función avanzada, sincroniza otras pestañas del navegador para que se reproduzcan todas al mismo tiempo",
       "composer_pro_view": "Compositor PRO",
       "composer_pro_view_description": "Muestra cada semitono en una fila propia, con todas las notas en su tono real, y permite añadirlas o eliminarlas tocando el lienzo.",
-      "sheet_visualizer_note_names": "Mostrar nombres de notas",
-      "sheet_visualizer_note_names_description": "Escribe el nombre de cada nota dentro de ella, usando el diseño seleccionado a continuación",
       "sheet_visualizer_note_name_type": "Tipo de nombre de nota",
-      "sheet_visualizer_note_name_type_description": "Qué nombre escribir dentro de las notas, no tiene efecto a menos que se muestren los nombres de las notas",
+      "sheet_visualizer_note_name_type_description": "Elige las etiquetas que aparecen dentro de las notas; selecciona Sin texto para ocultarlas.",
       "sheet_visualizer_merge_empty_spaces": "Fusionar espacios vacíos",
       "sheet_visualizer_merge_empty_spaces_description": "Une las columnas vacías consecutivas para que la partitura sea más corta y fácil de leer",
       "sheet_visualizer_different_color_rows": "Filas de diferentes colores",
@@ -456,7 +454,6 @@
     }
   },
   "sheet_visualizer": {
-    "note_names": "Mostrar nombres de notas",
     "merge_empty_spaces": "Fusionar espacios vacíos",
     "no_song_selected": "Ninguna canción seleccionada",
     "print_as_pdf": "Imprimir como PDF",

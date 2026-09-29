@@ -3489,11 +3489,15 @@ export class ComposerRenderer {
           resolved.text,
           this.jianpuFontReady ? this.state.noteNameType : 'Note name'
         );
-        label.style.fontSize = resolved.faint ? fontSize * PRO_FAINT_LABEL_SCALE : fontSize;
-        label.style.fontFamily =
-          this.state.noteNameType === '1 2 3' && this.jianpuFontReady && !resolved.faint
-            ? 'XVACLE, Arial, Helvetica, sans-serif'
-            : 'Arial, Helvetica, sans-serif';
+        const jianpu =
+          this.state.noteNameType === '1 2 3' && this.jianpuFontReady && !resolved.faint;
+        label.style.fontSize = resolved.faint
+          ? fontSize * PRO_FAINT_LABEL_SCALE
+          : fontSize * (jianpu ? 1.2 : 1);
+        label.style.fontFamily = jianpu
+          ? 'XVACLE, Arial, Helvetica, sans-serif'
+          : 'Arial, Helvetica, sans-serif';
+        label.style.lineHeight = jianpu ? fontSize * 1.2 : 0;
         label.style.fill = this.theme.pro.stripText;
         label.alpha = resolved.faint ? PRO_FAINT_LABEL_ALPHA : 1;
       }

@@ -236,10 +236,8 @@
       "composer_sync_tabs_description": "고급 기능으로, 다른 탭이 동시에 연주하도록 합니다",
       "composer_pro_view": "PRO 작곡 모드",
       "composer_pro_view_description": "Shows every semitone as its own row, with all the notes at their real pitch, and lets you add or remove them by tapping the canvas itself",
-      "sheet_visualizer_note_names": "노트 이름 표시",
-      "sheet_visualizer_note_names_description": "아래에서 선택한 배열을 사용하여 각 노트 안에 이름을 표시합니다",
       "sheet_visualizer_note_name_type": "노트 이름 형식",
-      "sheet_visualizer_note_name_type_description": "노트 안에 표시할 명명 방식입니다. 노트 이름을 표시하지 않으면 아무 효과가 없습니다",
+      "sheet_visualizer_note_name_type_description": "음표 안에 표시할 이름을 선택합니다. 숨기려면 텍스트 없음을 선택하세요.",
       "sheet_visualizer_merge_empty_spaces": "빈 공간 병합",
       "sheet_visualizer_merge_empty_spaces_description": "연속된 빈 열을 합쳐 악보를 더 짧고 읽기 쉽게 만듭니다",
       "sheet_visualizer_different_color_rows": "행마다 다른 색상",
@@ -456,7 +454,6 @@
     }
   },
   "sheet_visualizer": {
-    "note_names": "노트 이름",
     "merge_empty_spaces": "빈 공간 합치기",
     "no_song_selected": "노래가 선택되지 않았습니다",
     "print_as_pdf": "PDF 형식으로 인쇄하기",

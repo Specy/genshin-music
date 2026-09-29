@@ -237,10 +237,8 @@
             "composer_sync_tabs_description": "他のブラウザタブを同期して同時に再生する高度な機能です。",
             "composer_pro_view": "PROコンポーザー",
             "composer_pro_view_description": "Shows every semitone as its own row, with all the notes at their real pitch, and lets you add or remove them by tapping the canvas itself",
-            "sheet_visualizer_note_names": "ノート名を表示",
-            "sheet_visualizer_note_names_description": "下で選択した配列を使用して、各ノート内に名前を表示します",
             "sheet_visualizer_note_name_type": "ノート名の種類",
-            "sheet_visualizer_note_name_type_description": "ノート内に表示する命名方式。ノート名が表示されている場合にのみ有効です",
+            "sheet_visualizer_note_name_type_description": "音符内に表示するラベルを選びます。非表示にするには「テキストなし」を選択してください。",
             "sheet_visualizer_merge_empty_spaces": "空白を結合",
             "sheet_visualizer_merge_empty_spaces_description": "連続する空の列を結合し、シートを短く読みやすくします",
             "sheet_visualizer_different_color_rows": "行ごとに色分け",
@@ -456,7 +454,6 @@
         }
     },
     "sheet_visualizer": {
-        "note_names": "音符名",
         "merge_empty_spaces": "空白を結合",
         "no_song_selected": "曲が選択されていません",
         "print_as_pdf": "PDFとして印刷",
