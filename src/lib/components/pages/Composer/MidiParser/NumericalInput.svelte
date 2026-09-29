@@ -123,6 +123,9 @@
     background-color: var(--primary);
     color: var(--primary-text);
     text-align: center;
+    font-family: var(--font-controls);
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
   }
 
   .numerical-input input::placeholder {

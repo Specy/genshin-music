@@ -232,7 +232,7 @@
     border-radius: 0.3rem;
     background-color: var(--primary);
     color: var(--primary-text);
-    font-family: inherit;
+    font-family: var(--font-controls);
     font-size: 1rem;
     text-align: center;
     font-weight: bold;
