@@ -31,6 +31,10 @@
   import type { ComposedSong } from '$core/Songs/ComposedSong.svelte';
   import type { InstrumentName } from '$core/types';
   import { displayInstrumentNameFor } from '$core/Songs/displayInstrument';
+  import {
+    instrumentIdentityKey,
+    type InstrumentSettingValues,
+  } from '$lib/games/instrumentSettings';
   import type { Pitch } from '$core/legacyConfig';
   import type { PlayerSettingsDataType } from '$core/BaseSettings';
   import type { SettingUpdate, SettingVolumeUpdate } from '$core/types/SettingsPropriety';
@@ -174,6 +178,7 @@
             new InstrumentData({
               name: settings.instrument.value,
               volume: settings.instrument.volume ?? 100,
+              settings: settings.instrument.settings ?? {},
             }),
           ]);
         }
@@ -196,7 +201,7 @@
 
   async function init(loadedSettings: PlayerSettingsDataType) {
     await AudioProvider.waitReverb();
-    await loadInstrument(loadedSettings.instrument.value);
+    await loadInstrument(loadedSettings.instrument.value, loadedSettings.instrument.settings);
     AudioProvider.setReverb(loadedSettings.reverb.value);
   }
 
@@ -248,12 +253,12 @@
     return run;
   }
 
-  function loadInstrument(name: InstrumentName) {
+  function loadInstrument(name: InstrumentName, instrumentSettings?: InstrumentSettingValues) {
     return enqueueInstrumentsTask(async () => {
       const oldInstrument = instruments[0];
       AudioProvider.disconnect(oldInstrument.endNode);
       instruments[0].dispose();
-      const instrument = new Instrument(name);
+      const instrument = new Instrument(name, instrumentSettings);
       const volume = settings.instrument.volume ?? 100;
       instrument.changeVolume(volume);
       isLoadingInstrument = true;
@@ -353,13 +358,15 @@
       AudioProvider.disconnect(ins.endNode);
       ins.dispose();
     });
-    //the pill only when something actually loads — same-name syncs are silent
-    const needsLoad = toLoad.some((ins, i) => instruments[i]?.name !== ins.name);
+    //the pill only when something actually loads — same-identity syncs are silent. Identity, not
+    //name: a changed Variant (ADR-0017) is a different engine with different samples
+    const keyOf = (ins: InstrumentData) => instrumentIdentityKey(ins.name, ins.settings);
+    const needsLoad = toLoad.some((ins, i) => instruments[i]?.identityKey !== keyOf(ins));
     if (needsLoad) logger.showPill(t('logs:loading_instruments'), { spinner: true });
     const promises = toLoad.map(async (ins, i) => {
       if (instruments[i] === undefined) {
         //If it doesn't have a layer, create one
-        const instrument = new Instrument(ins.name);
+        const instrument = new Instrument(ins.name, ins.settings);
         instruments[i] = instrument;
         const loaded = await instrument.load(AudioProvider.getAudioContext());
         if (!loaded) logger.error(t('logs:error_loading_instrument'));
@@ -367,7 +374,7 @@
         AudioProvider.connect(instrument.endNode, ins.reverbOverride);
         instrument.changeVolume(ins.volume);
         return instrument;
-      } else if (instruments[i].name === ins.name) {
+      } else if (instruments[i].identityKey === keyOf(ins)) {
         //if it has a layer and it's the same, just set the volume and reverb
         instruments[i].changeVolume(ins.volume);
         AudioProvider.setReverbOfNode(instruments[i].endNode, ins.reverbOverride);
@@ -377,7 +384,7 @@
         const old = instruments[i];
         AudioProvider.disconnect(old.endNode);
         old.dispose();
-        const instrument = new Instrument(ins.name);
+        const instrument = new Instrument(ins.name, ins.settings);
         instruments[i] = instrument;
         const loaded = await instrument.load(AudioProvider.getAudioContext());
         if (!loaded) logger.error(t('logs:error_loading_instrument'));
@@ -489,10 +496,16 @@
   /** Applies a setting to the live state and its audio side effect, WITHOUT persisting it. */
   function applySetting(setting: SettingUpdate) {
     const { data } = setting;
+    const previousInstrument = settings.instrument.value;
     // @ts-expect-error SettingUpdateKey spans all 4 settings families; narrower here by design
     settings[setting.key] = { ...settings[setting.key], value: data.value };
     if (setting.key === 'instrument') {
-      loadInstrument(data.value as InstrumentName);
+      //a setting belongs to the instrument that declared it (ADR-0018): ANOTHER instrument starts
+      //on its own defaults, re-picking the same one keeps its Variant
+      if (data.value !== previousInstrument) {
+        settings.instrument = { ...settings.instrument, settings: {} };
+      }
+      loadInstrument(data.value as InstrumentName, settings.instrument.settings);
     }
     if (setting.key === 'reverb') AudioProvider.setReverb(data.value as boolean);
     if (setting.key === 'bpm') metronome.bpm = data.value as number;
@@ -609,6 +622,10 @@
       if (!mounted) return;
       if (songName !== null) {
         const song = new RecordedSong(songName, recording.notes, [instruments[0].name]);
+        //the recorded track sounds as the keyboard did: its Instrument Settings (the Variant) too
+        song.instruments = song.instruments.map((ins, i) =>
+          i === 0 ? ins.clone().set({ settings: { ...instruments[0].settings } }) : ins
+        );
         song.bpm = settings.bpm.value;
         song.pitch = settings.pitch.value;
         song.reverb = settings.reverb.value;

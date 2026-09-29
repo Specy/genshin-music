@@ -25,6 +25,12 @@ import type {
   SustainLoopMode,
 } from '$lib/games/types';
 import { shapeSlots } from '$lib/games/shapes/assignment';
+import {
+  instrumentIdentityKey,
+  type InstrumentSettingValues,
+  resolveInstrumentSettings,
+  variantFiles,
+} from '$lib/games/instrumentSettings';
 import { basepointOffset, numberToButton } from '$core/Songs/noteIds';
 import { Voice } from '$lib/audio/Voice';
 import { crossfadeLoopRegion, DEFAULT_LOOP_CROSSFADE_S } from '$lib/audio/loopCrossfade';
@@ -42,8 +48,11 @@ type Layouts = {
 };
 // QUIRK: deliberately a plain Map, not SvelteMap - this is a module-level cache, not UI-observed
 // state, so making it reactive would be pointless overhead.
+// Keyed by the engine's identityKey, never by name alone: two tracks on one instrument but
+// different Variants (ADR-0017) load different samples, and a name-keyed pool handed every
+// Variant whichever one decoded first - live and in audio export alike, since both share it.
 // eslint-disable-next-line svelte/prefer-svelte-reactivity
-const INSTRUMENT_BUFFER_POOL = new Map<InstrumentName, AudioBuffer[]>();
+const INSTRUMENT_BUFFER_POOL = new Map<string, AudioBuffer[]>();
 
 /**
  * Every engine currently loaded against the LIVE audio context, so AudioProvider can re-home
@@ -110,6 +119,18 @@ type ScheduledOneShot = {
  */
 export class Instrument {
   name: InstrumentName;
+  /**
+   * The Instrument Settings this engine plays (ADR-0018), resolved against the declaration at
+   * construction and fixed for its life - a changed Variant is a NEW engine, never a reload of
+   * this one (a second load() would orphan the gain node AudioProvider routes). Carried here so
+   * a context rebuild's rehome() -> load() reloads the same samples.
+   */
+  readonly settings: InstrumentSettingValues;
+  /**
+   * What makes two engines interchangeable: the name plus every sample-choosing setting. Every
+   * reuse check and the decoded-sample pool compare this, never the name alone.
+   */
+  readonly identityKey: string;
   volumeNode: GainNode | null = null;
   instrumentData: (typeof INSTRUMENTS_DATA)[InstrumentName];
   /** This instrument's notes in authored Button order — array position IS the Button. */
@@ -226,10 +247,15 @@ export class Instrument {
     CONTEXT_EPOCH++;
   }
 
-  constructor(name: InstrumentName = INSTRUMENTS[0]) {
+  constructor(name: InstrumentName = INSTRUMENTS[0], settings?: InstrumentSettingValues) {
     this.name = name;
     if (!INSTRUMENTS.includes(this.name)) this.name = INSTRUMENTS[0];
     this.instrumentData = INSTRUMENTS_DATA[this.name as keyof typeof INSTRUMENTS_DATA];
+    // Resolved against the name that survived the fallback above: settings meant for an unknown
+    // instrument must not leak onto the default one.
+    this.settings = resolveInstrumentSettings(this.name, settings);
+    this.identityKey = instrumentIdentityKey(this.name, this.settings);
+    const files = variantFiles(this.name, this.settings);
     // Label Sets ride on the Shape, not the instrument (ADR-0003).
     const labels = this.shape.labels;
     this.layouts = {
@@ -241,7 +267,9 @@ export class Instrument {
     };
     for (const [i, configNote] of this.instrumentData.notes.entries()) {
       // URL-locked path (§5.3 / ADR-0003): game id = the old APP_NAME.toLowerCase().
-      const url = `${base}/assets/audio/${game.id}/${this.name}/${configNote.file}`;
+      // A Variant owns every sample (ADR-0017); otherwise the note's own file.
+      const file = files?.[i] ?? configNote.file;
+      const url = `${base}/assets/audio/${game.id}/${this.name}/${file}`;
       const note = new ObservableNote(
         i,
         { keyboard: '' },
@@ -631,7 +659,7 @@ export class Instrument {
     // so it would be left behind on the closed context with nothing to re-home it.
     if (isLive) LIVE_INSTRUMENTS.add(this);
     let loadedCorrectly = true;
-    if (!INSTRUMENT_BUFFER_POOL.has(this.name)) {
+    if (!INSTRUMENT_BUFFER_POOL.has(this.identityKey)) {
       const emptyBuffer = this.audioContext.createBuffer(
         2,
         this.audioContext.sampleRate,
@@ -657,7 +685,7 @@ export class Instrument {
       // Render loop-boundary crossfades once per decode, BEFORE pooling: pool hits
       // must reuse the processed buffers, never re-blend already-blended audio.
       this.renderLoopCrossfades();
-      if (loadedCorrectly) INSTRUMENT_BUFFER_POOL.set(this.name, this.buffers);
+      if (loadedCorrectly) INSTRUMENT_BUFFER_POOL.set(this.identityKey, this.buffers);
     } else {
       if (
         this.isDeleted ||
@@ -665,7 +693,7 @@ export class Instrument {
         (isLive && epoch !== CONTEXT_EPOCH)
       )
         return false;
-      this.buffers = INSTRUMENT_BUFFER_POOL.get(this.name)!;
+      this.buffers = INSTRUMENT_BUFFER_POOL.get(this.identityKey)!;
     }
     this.isLoaded = true;
     return loadedCorrectly;

@@ -2,6 +2,7 @@ import type { Pitch } from '$core/legacyConfig';
 import { Instrument } from '$lib/audio/Instrument.svelte';
 import { AudioProvider } from '../providers/AudioProvider';
 import { InstrumentData } from '$core/Songs/SongClasses';
+import { instrumentIdentityKey } from '$lib/games/instrumentSettings';
 
 export class AudioPlayer {
   instruments: InstrumentData[] = [];
@@ -39,14 +40,16 @@ export class AudioPlayer {
     const promises = instruments.map(async (ins, i) => {
       if (audioInstruments[i] === undefined) {
         //If it doesn't have the instrument, create it
-        const instrument = new Instrument(ins.name);
+        const instrument = new Instrument(ins.name, ins.settings);
         audioInstruments[i] = instrument;
         await instrument.load(AudioProvider.getAudioContext());
         AudioProvider.connect(instrument.endNode, ins.reverbOverride);
         instrument.changeVolume(ins.volume);
         return instrument;
       }
-      if (audioInstruments[i].name === ins.name) {
+      // Same identity - the name plus the sample-choosing Instrument Settings (ADR-0017) - means
+      // the same samples: a changed Variant is a new engine, never an in-place reload.
+      if (audioInstruments[i].identityKey === instrumentIdentityKey(ins.name, ins.settings)) {
         //if it has the instrument and it's the same, just set the volume and reverb
         audioInstruments[i].changeVolume(ins.volume);
         AudioProvider.setReverbOfNode(audioInstruments[i].endNode, ins.reverbOverride);
@@ -56,7 +59,7 @@ export class AudioPlayer {
         const old = audioInstruments[i];
         AudioProvider.disconnect(old.endNode);
         old.dispose();
-        const instrument = new Instrument(ins.name);
+        const instrument = new Instrument(ins.name, ins.settings);
         audioInstruments[i] = instrument;
         await instrument.load(AudioProvider.getAudioContext());
         AudioProvider.connect(instrument.endNode, ins.reverbOverride);

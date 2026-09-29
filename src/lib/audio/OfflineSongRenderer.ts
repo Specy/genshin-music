@@ -20,6 +20,7 @@ import type { RecordedSong } from '$core/Songs/RecordedSong';
 import { isTrackAudible } from '$core/Songs/SongClasses';
 import type { InstrumentName } from '$core/types';
 import { fetchAudioBuffer, Instrument } from '$lib/audio/Instrument.svelte';
+import type { InstrumentSettingValues } from '$lib/games/instrumentSettings';
 
 /** CD rate, stereo: what a downloadable wav is expected to be, and what the plan renders at. */
 const SAMPLE_RATE = 44100;
@@ -51,6 +52,8 @@ export type RenderDestination = 'reverb' | 'end';
 export type PlannedTrack = {
   trackIndex: number;
   instrument: InstrumentName;
+  /** The track's Instrument Settings (ADR-0018): its Variant decides which samples render. */
+  settings: InstrumentSettingValues;
   volume: number;
   /** Effective Basepoint: the track's own override, else the song's. */
   pitch: Pitch;
@@ -116,6 +119,7 @@ export function planSongRender(song: RecordedSong): SongRenderPlan {
   const tracks: PlannedTrack[] = song.instruments.map((data, trackIndex) => ({
     trackIndex,
     instrument: data.name,
+    settings: { ...data.settings },
     volume: data.volume,
     pitch: data.pitch || song.pitch,
     audible: isTrackAudible(song.instruments, trackIndex),
@@ -404,7 +408,7 @@ async function loadPlannedInstruments(
   await Promise.all(
     plan.tracks.map(async (track) => {
       if (!track.audible) return;
-      const instrument = new Instrument(track.instrument);
+      const instrument = new Instrument(track.instrument, track.settings);
       owned.push(instrument);
       await instrument.load(context);
       instrument.changeVolume(track.volume);

@@ -48,7 +48,7 @@
   onMount(() => {
     const loaded = settingsService.getZenKeyboardSettings();
     metronome.bpm = loaded.metronomeBpm.value;
-    instrument = new Instrument(loaded.instrument.value);
+    instrument = new Instrument(loaded.instrument.value, loaded.instrument.settings);
     settings = loaded;
     AudioProvider.setReverb(loaded.reverb.value);
     return () => {
@@ -106,6 +106,10 @@
       for (const id of midiSentIds) MIDIProvider.broadcastNoteUp(id);
       midiSentIds.clear();
       AudioProvider.disconnect(currentInstrument.endNode);
+      //a REPLACED engine (another instrument, or another Variant of it) is finished for good:
+      //dispose it, or it stays registered as live and every context rebuild re-decodes and
+      //reconnects it. A re-run of this effect for the SAME engine must not kill it.
+      if (untrack(() => instrument) !== currentInstrument) currentInstrument.dispose();
     };
   });
 
@@ -144,10 +148,16 @@
 
   function handleSettingChange(setting: SettingUpdate) {
     const { data } = setting;
+    const previousInstrument = settings.instrument.value;
     // @ts-expect-error SettingUpdateKey spans all 4 settings families; narrower here by design
     settings[setting.key] = { ...settings[setting.key], value: data.value };
     if (setting.key === 'instrument') {
-      instrument = new Instrument(data.value as InstrumentName);
+      //a setting belongs to the instrument that declared it (ADR-0018): ANOTHER instrument starts
+      //on its own defaults, re-picking the same one keeps its Variant
+      if (data.value !== previousInstrument) {
+        settings.instrument = { ...settings.instrument, settings: {} };
+      }
+      instrument = new Instrument(data.value as InstrumentName, settings.instrument.settings);
     }
     if (setting.key === 'reverb') {
       AudioProvider.setReverb(data.value as boolean);

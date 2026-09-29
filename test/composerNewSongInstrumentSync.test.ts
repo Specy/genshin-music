@@ -22,8 +22,12 @@ const fakes = vi.hoisted(() => ({
     pendingLoads: [] as PendingLoad[],
 }))
 
-vi.mock('../src/lib/audio/Instrument.svelte', () => {
+vi.mock('../src/lib/audio/Instrument.svelte', async () => {
+    // The real identity rule (ADR-0017): name plus sample-choosing settings, so the fake is
+    // reused exactly when the real engine would be. Made-up names declare nothing: key = name.
+    const {instrumentIdentityKey} = await import('../src/lib/games/instrumentSettings')
     class FakeInstrument implements FakeInstrumentHandle {
+        identityKey: string
         endNode: object | null = {}
         volume = -1
         reverbOverride: boolean | null = null
@@ -31,7 +35,8 @@ vi.mock('../src/lib/audio/Instrument.svelte', () => {
         loaded = false
         connected = 0
 
-        constructor(public name: string) {
+        constructor(public name: string, settings?: Record<string, string | number | boolean>) {
+            this.identityKey = instrumentIdentityKey(name, settings)
             fakes.instances.push(this)
         }
 

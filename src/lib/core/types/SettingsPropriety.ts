@@ -12,6 +12,7 @@
 // reason (a type-only import + `typeof` type-query is fully erased, so it's not a runtime cycle,
 // only a type-level one TypeScript resolves fine), reproduced verbatim below.
 import type {InstrumentName} from '../types'
+import type {InstrumentSettingValues} from "$lib/games/instrumentSettings"
 import type {AppI18N} from '$i18n/i18n'
 import type {ComposerSettings, PlayerSettings, SheetVisualizerSettings, VsrgComposerSettings, ZenKeyboardSettings} from '$core/BaseSettings'
 
@@ -40,6 +41,13 @@ export type SettingsInstrument = BaseSettingsProp & {
     volume: number
     value: InstrumentName
     options: InstrumentName[]
+    /**
+     * The free-play keyboard's own Instrument Settings (ADR-0017/0018) - its Variant, say - for
+     * `value`. Optional and absent from the defaults on purpose: stored blobs from before it load
+     * as-is (no settingVersion bump, which would wipe the user's settings), so every reader
+     * resolves it against the instrument's declaration with a `?? {}` fallback.
+     */
+    settings?: InstrumentSettingValues
 }
 export type SettingsCheckbox = BaseSettingsProp & {
     type: 'checkbox'

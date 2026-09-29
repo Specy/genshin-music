@@ -90,8 +90,8 @@ class SettingsService {
         return ComposerSettings.data
     }
 
-    getZenKeyboardSettings() {
-        const {data, hadUpdate} = this.getLatestSettings(ZenKeyboardSettings, APP_NAME + "_ZenKeyboard_Settings")
+    getZenKeyboardSettings(): ZenKeyboardSettingsDataType {
+        const {data, hadUpdate} = this.getLatestSettings<ZenKeyboardSettingsDataType>(ZenKeyboardSettings, APP_NAME + "_ZenKeyboard_Settings")
         if (hadUpdate) {
             this.updateZenKeyboardSettings(data)
         }

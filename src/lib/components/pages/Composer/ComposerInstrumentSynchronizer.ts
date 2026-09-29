@@ -1,6 +1,7 @@
 import type { InstrumentData } from '$core/Songs/SongClasses';
 import { Instrument } from '$lib/audio/Instrument.svelte';
 import { AudioProvider } from '$lib/providers/AudioProvider';
+import { instrumentIdentityKey } from '$lib/games/instrumentSettings';
 
 type ComposerInstrumentSynchronizerDependencies = {
   getLayers: () => Instrument[];
@@ -18,7 +19,9 @@ type ComposerInstrumentSynchronizerDependencies = {
  * is instead decided by a monotonic request id. An older request may finish, but it may neither
  * connect/configure an engine nor publish its completed array once a newer request exists.
  *
- * A pending engine can be reused when the newer roster asks for the same name. Its load promise is
+ * A pending engine can be reused when the newer roster asks for the same identity - the name plus
+ * every sample-choosing Instrument Setting (the Variant, ADR-0017), since two Aurora tracks singing
+ * different vowels need different engines, and changing a track's Variant must re-voice it. Its load promise is
  * tracked so the newer owner, rather than the stale creator, performs the eventual connect and
  * applies the newer volume/reverb values.
  */
@@ -31,18 +34,19 @@ export class ComposerInstrumentSynchronizer {
   async sync(toLoad: readonly InstrumentData[]): Promise<void> {
     const requestId = ++this.requestId;
     const layers = this.dependencies.getLayers();
-    const availableByName = this.poolByName(layers);
+    const availableByKey = this.poolByKey(layers);
 
     // Claim the entire destination roster before disposing anything. A track removal or reorder
     // shifts every later slot, so disposing slot-by-slot would throw away engines which a later
     // destination can still reuse. Each pool is FIFO to keep duplicate-name reuse deterministic.
     const claims = toLoad.map((instrumentData) => {
-      const available = availableByName.get(instrumentData.name);
+      const key = instrumentIdentityKey(instrumentData.name, instrumentData.settings);
+      const available = availableByKey.get(key);
       const existing = available?.shift();
-      if (available?.length === 0) availableByName.delete(instrumentData.name);
+      if (available?.length === 0) availableByKey.delete(key);
       return {
         instrumentData,
-        instrument: existing ?? new Instrument(instrumentData.name),
+        instrument: existing ?? new Instrument(instrumentData.name, instrumentData.settings),
         isNew: existing === undefined,
       };
     });
@@ -50,9 +54,10 @@ export class ComposerInstrumentSynchronizer {
     // Publish the provisional ownership into the live array synchronously, before any load can
     // yield. A newer request can then adopt an in-flight engine by name from its new slot, while
     // ownsSlot keeps the stale request from connecting or configuring it when the load resolves.
+    // (Adopted by identity, not name: see the class comment.)
     layers.splice(0, layers.length, ...claims.map(({ instrument }) => instrument));
 
-    availableByName.forEach((available) => {
+    availableByKey.forEach((available) => {
       available.forEach((instrument) => this.dispose(instrument));
     });
 
@@ -67,14 +72,14 @@ export class ComposerInstrumentSynchronizer {
     this.dependencies.onSynced();
   }
 
-  private poolByName(layers: readonly Instrument[]): Map<Instrument['name'], Instrument[]> {
-    const availableByName = new Map<Instrument['name'], Instrument[]>();
+  private poolByKey(layers: readonly Instrument[]): Map<string, Instrument[]> {
+    const availableByKey = new Map<string, Instrument[]>();
     layers.forEach((instrument) => {
-      const available = availableByName.get(instrument.name);
+      const available = availableByKey.get(instrument.identityKey);
       if (available) available.push(instrument);
-      else availableByName.set(instrument.name, [instrument]);
+      else availableByKey.set(instrument.identityKey, [instrument]);
     });
-    return availableByName;
+    return availableByKey;
   }
 
   private async syncClaim(
@@ -89,7 +94,7 @@ export class ComposerInstrumentSynchronizer {
       const loaded = await pendingLoad;
       if (!this.ownsSlot(requestId, index, instrument)) return instrument;
       if (!loaded) this.dependencies.onLoadError();
-      // The request which created this engine may now be stale. The latest same-name owner is
+      // The request which created this engine may now be stale. The latest same-identity owner is
       // therefore responsible for making the freshly-loaded node live at its new destination.
       AudioProvider.connect(instrument.endNode, instrumentData.reverbOverride);
     } else {
