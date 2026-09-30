@@ -3491,12 +3491,12 @@ export class ComposerRenderer {
         );
         const jianpu =
           this.state.noteNameType === '1 2 3' && this.jianpuFontReady && !resolved.faint;
-        label.style.fontSize = resolved.faint
-          ? fontSize * PRO_FAINT_LABEL_SCALE
-          : fontSize * (jianpu ? 1.2 : 1);
+        label.style.fontSize = resolved.faint ? fontSize * PRO_FAINT_LABEL_SCALE : fontSize;
         label.style.fontFamily = jianpu
           ? 'XVACLE, Arial, Helvetica, sans-serif'
           : 'Arial, Helvetica, sans-serif';
+        //x-Vacle's @font-face size-adjust (120%, App.css) enlarges it on the canvas too, so no
+        //size multiplier here; the line box is one enlarged em, as in the DOM labels
         label.style.lineHeight = jianpu ? fontSize * 1.2 : 0;
         label.style.fill = this.theme.pro.stripText;
         label.alpha = resolved.faint ? PRO_FAINT_LABEL_ALPHA : 1;
