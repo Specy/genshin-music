@@ -4,7 +4,7 @@
 // value this file holds, so moving it moves those fixtures.
 import { BASE_NOTES, type BaseNote } from '$lib/games/types';
 
-export const APP_VERSION = '4.0.0' as const
+export const APP_VERSION = '5.0.0' as const
 
 export const HAS_BIGINT = typeof BigInt !== 'undefined'
 

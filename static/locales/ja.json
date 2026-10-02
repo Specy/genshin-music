@@ -866,7 +866,7 @@
         }
     },
     "versions": {
-        "4-0-0": {
+        "5-0-0": {
             "title": "新しいアプリ、サステインノート、スムーズスクロール、新しい楽器",
             "change-1": "ゼロから全面的に書き直し",
             "change-2": "サステインノート",
@@ -877,10 +877,13 @@
             "change-7": "MIDIエクスポートの精度が向上し、他のアプリに正しくインポートできるようになりました",
             "change-8": "コンポーザー設定に新しい「Proビュー」：複雑な曲向けに改良された高度なコンポーザー",
             "change-9": "コンポーザーで元に戻す/やり直しができるようになりました（Ctrl+Z と Ctrl+Y のショートカット）",
-            "change-10": "Skyに11の楽器を追加しました：チェロ、ヴァイオリン、サックス、ハーモニカ、横笛、小さなベル、福鼓、Cymbals、Krill Horn、Tuned Krill Horn、Triumph HandPan。オーロラとライトギターがサステイン対応になりました。",
-            "change-11": "GenshinにNightwind Hornを追加しました",
-            "change-12": "GenshinにVodyanitsaの歌声を追加しました",
-            "change-13": "その他のバグ修正と改善"
+            "change-10": "曲からVSRG譜面を自動生成",
+            "change-11": "曲をWAVまたはMP3のオーディオとしてエクスポート",
+            "change-12": "練習モードを刷新し、プレイヤーで曲を一時停止・再開できるようになりました",
+            "change-13": "Skyに11の楽器を追加しました：チェロ、ヴァイオリン、サックス、ハーモニカ、横笛、小さなベル、福鼓、Cymbals、Krill Horn、Tuned Krill Horn、Triumph HandPan。オーロラとライトギターがサステイン対応になりました。",
+            "change-14": "GenshinにNightwind Hornを追加しました",
+            "change-15": "GenshinにVodyanitsaの歌声を追加しました",
+            "change-16": "その他のバグ修正と改善"
         },
         "3-7-0": {
             "title": "新しい楽器と翻訳",

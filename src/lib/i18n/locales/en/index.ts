@@ -1020,7 +1020,7 @@ export const i18n_en = {
     },
   },
   versions: {
-    '4-0-0': {
+    '5-0-0': {
       title: 'New app, sustained notes, smooth scrolling, new instruments',
       'change-1': 'Rewritten from scratch',
       'change-2': 'Sustained notes',
@@ -1032,11 +1032,15 @@ export const i18n_en = {
       'change-8':
         'New "Pro view" in the composer settings: Improved and more advanced composer for complex songs',
       'change-9': 'Undo and redo in the composer, with the Ctrl+Z and Ctrl+Y shortcuts',
-      'change-10':
+      'change-10': 'Automatic VSRG beatmap generation from your songs',
+      'change-11': 'Export songs as WAV or MP3 audio',
+      'change-12':
+        'Overhauled practice mode, and songs in the player can now be paused and resumed',
+      'change-13':
         'Added eleven instruments to Sky: Cello, Violin, Saxophone, Harmonica, Transverse Flute, Small Bell, Fortune Drum, Cymbals, Krill Horn, Tuned Krill Horn and Triumph HandPan. The Aurora and the Light Guitar are now sustained.',
-      'change-11': 'Added the Nightwind Horn to Genshin',
-      'change-12': "Added Vodyanitsa's singing voice to Genshin",
-      'change-13': 'Other bug fixes and improvements',
+      'change-14': 'Added the Nightwind Horn to Genshin',
+      'change-15': "Added Vodyanitsa's singing voice to Genshin",
+      'change-16': 'Other bug fixes and improvements',
     },
     '3-7-0': {
       title: 'New instruments (Genshin)',

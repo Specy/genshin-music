@@ -7,9 +7,9 @@ type Update = {
 
 export const CHANGELOG: Update[] = [
     {
-        version: '4.0.0',
+        version: '5.0.0',
         title: "New app, sustained notes, smooth scrolling, new instruments",
-        date: new Date('2026-08-07'),
+        date: new Date('2026-10-02'),
         changes: [
             'Rewritten from scratch',
             'Sustained notes',
@@ -20,6 +20,9 @@ export const CHANGELOG: Update[] = [
             'MIDI export is now more accurate and works properly when imported in other apps',
             'New "Pro view" in the composer settings: Improved and more advanced composer for complex songs',
             'Undo and redo in the composer, with the Ctrl+Z and Ctrl+Y shortcuts',
+            'Automatic VSRG beatmap generation from your songs',
+            'Export songs as WAV or MP3 audio',
+            'Overhauled practice mode, and songs in the player can now be paused and resumed',
             'Added eleven instruments to Sky: Cello, Violin, Saxophone, Harmonica, Transverse Flute, Small Bell, Fortune Drum, Cymbals, Krill Horn, Tuned Krill Horn and Triumph HandPan. The Aurora and the Light Guitar are now sustained.',
             'Added the Nightwind Horn to Genshin',
             "Added Vodyanitsa's singing voice to Genshin",

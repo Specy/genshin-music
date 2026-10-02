@@ -866,7 +866,7 @@
     }
   },
   "versions": {
-    "4-0-0": {
+    "5-0-0": {
       "title": "Nueva aplicación, notas sostenidas, desplazamiento suave, nuevos instrumentos",
       "change-1": "Reescrita desde cero",
       "change-2": "Notas sostenidas",
@@ -877,10 +877,13 @@
       "change-7": "La exportación MIDI ahora es más precisa y funciona correctamente al importarla en otras aplicaciones",
       "change-8": "Nueva \"Vista Pro\" en los ajustes del compositor: un compositor mejorado y más avanzado para canciones complejas",
       "change-9": "Deshacer y rehacer en el compositor, con los atajos Ctrl+Z y Ctrl+Y",
-      "change-10": "Se han añadido once instrumentos a Sky: violonchelo, violín, saxofón, armónica, flauta travesera, campanilla, tambor de la fortuna, Cymbals, Krill Horn, Tuned Krill Horn y Triumph HandPan. Aurora y la Guitarra luminosa ahora tienen notas sostenidas.",
-      "change-11": "Se ha añadido la Trompa cefironocturna a Genshin",
-      "change-12": "Se ha añadido la voz cantada de Vodyanitsa a Genshin",
-      "change-13": "Otras correcciones de errores y mejoras"
+      "change-10": "Generación automática de mapas de notas VSRG a partir de tus canciones",
+      "change-11": "Exporta canciones como audio WAV o MP3",
+      "change-12": "Modo de práctica renovado; ahora las canciones del reproductor se pueden pausar y reanudar",
+      "change-13": "Se han añadido once instrumentos a Sky: violonchelo, violín, saxofón, armónica, flauta travesera, campanilla, tambor de la fortuna, Cymbals, Krill Horn, Tuned Krill Horn y Triumph HandPan. Aurora y la Guitarra luminosa ahora tienen notas sostenidas.",
+      "change-14": "Se ha añadido la Trompa cefironocturna a Genshin",
+      "change-15": "Se ha añadido la voz cantada de Vodyanitsa a Genshin",
+      "change-16": "Otras correcciones de errores y mejoras"
     },
     "3-7-0": {
       "title": "Nuevos instrumentos (Genshin)",

@@ -866,7 +866,7 @@
         }
     },
     "versions": {
-        "4-0-0": {
+        "5-0-0": {
             "title": "Yeni uygulama, uzatılan notalar, yumuşak kaydırma, yeni enstrümanlar",
             "change-1": "Baştan yazıldı",
             "change-2": "Uzatılan notalar",
@@ -877,10 +877,13 @@
             "change-7": "MIDI dışa aktarma artık daha doğru ve diğer uygulamalara aktarıldığında düzgün çalışıyor",
             "change-8": "Besteleyici ayarlarında yeni \"Pro görünümü\": karmaşık şarkılar için geliştirilmiş ve daha ileri düzey bir besteleyici",
             "change-9": "Besteleyicide geri alma ve yineleme, Ctrl+Z ve Ctrl+Y kısayollarıyla",
-            "change-10": "Sky'a on bir enstrüman eklendi: Çello, Keman, Saksofon, Mızıka, Yan Flüt, Küçük Çan, Şans Davulu, Cymbals, Krill Horn, Tuned Krill Horn ve Triumph HandPan. Aurora ve Light Guitar artık uzatılan notaları destekliyor.",
-            "change-11": "Genshin'e Nightwind Horn eklendi",
-            "change-12": "Genshin'e Vodyanitsa'nın şarkı sesi eklendi",
-            "change-13": "Diğer hata düzeltmeleri ve iyileştirmeler"
+            "change-10": "Şarkılarınızdan otomatik VSRG beatmap oluşturma",
+            "change-11": "Şarkıları WAV veya MP3 ses olarak dışa aktarma",
+            "change-12": "Pratik modu yenilendi ve oynatıcıdaki şarkılar artık duraklatılıp devam ettirilebiliyor",
+            "change-13": "Sky'a on bir enstrüman eklendi: Çello, Keman, Saksofon, Mızıka, Yan Flüt, Küçük Çan, Şans Davulu, Cymbals, Krill Horn, Tuned Krill Horn ve Triumph HandPan. Aurora ve Light Guitar artık uzatılan notaları destekliyor.",
+            "change-14": "Genshin'e Nightwind Horn eklendi",
+            "change-15": "Genshin'e Vodyanitsa'nın şarkı sesi eklendi",
+            "change-16": "Diğer hata düzeltmeleri ve iyileştirmeler"
         },
         "3-7-0": {
             "title": "Yeni enstrümanlar (Genshin)",

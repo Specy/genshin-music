@@ -866,7 +866,7 @@
     }
   },
   "versions": {
-    "4-0-0": {
+    "5-0-0": {
       "title": "새로워진 앱, 지속 노트, 부드러운 스크롤, 새로운 악기",
       "change-1": "처음부터 다시 작성",
       "change-2": "지속음",
@@ -877,10 +877,13 @@
       "change-7": "MIDI 내보내기가 더 정확해졌으며 다른 앱으로 가져올 때도 올바르게 작동합니다",
       "change-8": "작곡 모드 설정의 새로운 \"Pro 보기\": 복잡한 곡을 위한 개선된 고급 작곡 모드",
       "change-9": "작곡 모드에서 실행 취소와 다시 실행 지원 (Ctrl+Z, Ctrl+Y 단축키)",
-      "change-10": "Sky에 열한 가지 악기를 추가했습니다: 첼로, 바이올린, 색소폰, 하모니카, 가로 피리, 작은 종, 복 북, Cymbals, Krill Horn, Tuned Krill Horn, Triumph HandPan. 오로라와 라이트 기타도 이제 음을 지속할 수 있습니다.",
-      "change-11": "Genshin에 Nightwind Horn 추가",
-      "change-12": "Genshin에 Vodyanitsa의 노랫소리 추가",
-      "change-13": "기타 버그 수정 및 개선"
+      "change-10": "곡에서 VSRG 채보 자동 생성",
+      "change-11": "곡을 WAV 또는 MP3 오디오로 내보내기",
+      "change-12": "연습 모드가 개편되었으며, 이제 플레이어에서 곡을 일시정지하고 다시 재생할 수 있습니다",
+      "change-13": "Sky에 열한 가지 악기를 추가했습니다: 첼로, 바이올린, 색소폰, 하모니카, 가로 피리, 작은 종, 복 북, Cymbals, Krill Horn, Tuned Krill Horn, Triumph HandPan. 오로라와 라이트 기타도 이제 음을 지속할 수 있습니다.",
+      "change-14": "Genshin에 Nightwind Horn 추가",
+      "change-15": "Genshin에 Vodyanitsa의 노랫소리 추가",
+      "change-16": "기타 버그 수정 및 개선"
     },
     "3-7-0": {
       "title": "새로운 악기 추가 (원신)",

@@ -866,7 +866,7 @@
         }
     },
     "versions": {
-        "4-0-0": {
+        "5-0-0": {
             "title": "Aplikasi baru, note tertahan, scroll halus, instrumen baru",
             "change-1": "Ditulis ulang dari awal",
             "change-2": "Nada tertahan",
@@ -877,10 +877,13 @@
             "change-7": "Ekspor MIDI kini lebih akurat dan berfungsi dengan baik saat diimpor di aplikasi lain",
             "change-8": "Tampilan Pro baru di pengaturan komposer: komposer yang lebih baik dan lebih canggih untuk lagu kompleks",
             "change-9": "Undo dan redo di komposer, dengan pintasan Ctrl+Z dan Ctrl+Y",
-            "change-10": "Menambahkan sebelas instrumen ke Sky: Cello, Biola, Saksofon, Harmonika, Suling Melintang, Lonceng Kecil, Genderang Keberuntungan, Cymbals, Krill Horn, Tuned Krill Horn, dan Triumph HandPan. Aurora dan Light Guitar kini dapat menahan nada.",
-            "change-11": "Menambahkan Nightwind Horn ke Genshin",
-            "change-12": "Menambahkan suara nyanyian Vodyanitsa ke Genshin",
-            "change-13": "Perbaikan bug dan peningkatan lainnya"
+            "change-10": "Pembuatan beatmap VSRG otomatis dari lagu Anda",
+            "change-11": "Ekspor lagu sebagai audio WAV atau MP3",
+            "change-12": "Mode latihan dirombak, dan lagu di pemain kini dapat dijeda dan dilanjutkan",
+            "change-13": "Menambahkan sebelas instrumen ke Sky: Cello, Biola, Saksofon, Harmonika, Suling Melintang, Lonceng Kecil, Genderang Keberuntungan, Cymbals, Krill Horn, Tuned Krill Horn, dan Triumph HandPan. Aurora dan Light Guitar kini dapat menahan nada.",
+            "change-14": "Menambahkan Nightwind Horn ke Genshin",
+            "change-15": "Menambahkan suara nyanyian Vodyanitsa ke Genshin",
+            "change-16": "Perbaikan bug dan peningkatan lainnya"
         },
         "3-7-0": {
             "title": "Instrumen baru (Genshin)",

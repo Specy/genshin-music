@@ -866,7 +866,7 @@
     }
   },
   "versions": {
-    "4-0-0": {
+    "5-0-0": {
       "title": "Nuova app, note sostenute, scorrimento fluido e nuovi strumenti",
       "change-1": "Riscritta da zero",
       "change-2": "Note sostenute",
@@ -877,10 +877,13 @@
       "change-7": "L'esportazione MIDI ora è più precisa e funziona correttamente quando viene importata in altre app",
       "change-8": "Nuova \"Vista Pro\" nelle impostazioni del compositore: un compositore migliorato e più avanzato per i brani complessi",
       "change-9": "Annulla e ripristina nel compositore, con le scorciatoie Ctrl+Z e Ctrl+Y",
-      "change-10": "Aggiunti undici strumenti a Sky: violoncello, violino, sassofono, armonica, flauto traverso, campanella, tamburo della fortuna, Cymbals, Krill Horn, Tuned Krill Horn e Triumph HandPan. Aurora e la chitarra luminosa ora supportano le note sostenute.",
-      "change-11": "Aggiunto il Corno della brezza notturna a Genshin",
-      "change-12": "Aggiunta la voce cantata di Vodyanitsa a Genshin",
-      "change-13": "Altre correzioni di bug e migliorie"
+      "change-10": "Generazione automatica di beatmap VSRG dai tuoi brani",
+      "change-11": "Esporta i brani come audio WAV o MP3",
+      "change-12": "Modalità Esercitazione rinnovata, e ora i brani nel lettore si possono mettere in pausa e riprendere",
+      "change-13": "Aggiunti undici strumenti a Sky: violoncello, violino, sassofono, armonica, flauto traverso, campanella, tamburo della fortuna, Cymbals, Krill Horn, Tuned Krill Horn e Triumph HandPan. Aurora e la chitarra luminosa ora supportano le note sostenute.",
+      "change-14": "Aggiunto il Corno della brezza notturna a Genshin",
+      "change-15": "Aggiunta la voce cantata di Vodyanitsa a Genshin",
+      "change-16": "Altre correzioni di bug e migliorie"
     },
     "3-7-0": {
       "title": "Nuovi strumenti (Genshin)",
