@@ -1,0 +1,515 @@
+import { APP_NAME } from '$core/legacyConfig';
+import { KeyboardProvider } from '$lib/providers/KeyboardProvider';
+import { game } from '$game';
+import type { VsrgSongKeys } from '$core/Songs/VsrgSong.svelte';
+import cloneDeep from 'lodash.clonedeep';
+import { SvelteMap } from 'svelte/reactivity';
+
+export type Shortcut<T extends string> = {
+  name: T;
+  holdable: boolean;
+  description?: string;
+  /**
+   * A SECOND, FIXED COMBO FOR AN ACTION THAT ALREADY HAS ONE (see createAlias). It dispatches
+   * like any other entry - the surfaces only ever read `name` - but it is invisible to
+   * everything that treats a shortcut's name as its identity: the reverse map, the editor and
+   * the help tables, and `serialize`. That is what keeps "one name, one rebindable key" true.
+   */
+  alias?: boolean;
+};
+
+function createShortcut<T extends string>(
+  name: T,
+  isHoldable: boolean,
+  description?: string
+): Shortcut<T> {
+  return { name, holdable: isHoldable, description } as const;
+}
+
+/**
+ * An extra combo for an action whose rebindable row is declared elsewhere in the same page.
+ * Cannot be rebound and is never shown, so rebinding the action moves its own row and leaves
+ * the alias where it is - which is the point: an alias is a convention (Ctrl+Shift+Z is redo
+ * everywhere) rather than a user preference.
+ */
+function createAlias<T extends string>(
+  name: T,
+  isHoldable: boolean,
+  description?: string
+): Shortcut<T> {
+  return { name, holdable: isHoldable, description, alias: true } as const;
+}
+
+const defaultShortcuts = {
+  composer: {
+    Space: createShortcut('toggle_play', false, 'toggle_play_description'),
+    KeyA: createShortcut('previous_column', true, 'previous_column_description'),
+    KeyD: createShortcut('next_column', true, 'next_column_description'),
+    KeyQ: createShortcut('remove_column', true, 'remove_column_description'),
+    KeyE: createShortcut('add_column', true, 'add_column_description'),
+    ArrowUp: createShortcut('previous_layer', true, 'previous_layer_description'),
+    ArrowDown: createShortcut('next_layer', true, 'next_layer_description'),
+    ArrowRight: createShortcut('next_breakpoint', true, 'next_breakpoint_description'),
+    ArrowLeft: createShortcut('previous_breakpoint', true, 'previous_breakpoint_description'),
+    //THE PRO VIEW'S KEYBOARD SHEET (CONTEXT.md: Pro View), which the mouse raises by tapping the
+    //sliver and lowers by tapping the canvas - this is the hands-on-the-keys way to do both.
+    //`KeyK` is free in BOTH games and on both maps: no composer shortcut above uses it, and it is
+    //in neither game's note Label Set (genshin's 21 are QWERTYU/ASDFGHJ/ZXCVBNM, sky's 15 are
+    //QWERT/ASDFG/ZXCVB, and the drum/SFX sets are subsets of those), so it cannot shadow a note key
+    //while `keyboard`'s own listener is live. Not holdable: an auto-repeating toggle is a flicker.
+    KeyK: createShortcut('toggle_keyboard', false, 'toggle_keyboard_description'),
+    //UNDO/REDO (ADR-0013). Holdable: holding the combo walks the history step by step, which is
+    //what the OS auto-repeat is for and what every editor does with it.
+    //
+    //ONE REBINDABLE COMBO PER ACTION, and it is a constraint of this store rather than a
+    //preference: a shortcut is identified BY NAME everywhere outside this map - `reverseShortcuts`
+    //is name -> key, `load()` restores a stored rebind by looking its name up in it, and
+    //ShortcutsTable/ShortcutEditor key their rows by name - so a second *rebindable* entry named
+    //`redo` would collide in all three (a duplicate {#key} at best, a rebind landing on the wrong
+    //entry at worst). An ALIAS is the way around it (createAlias): it dispatches the same name and
+    //stays out of all three, so the name still resolves to exactly one rebindable key. Mac's Cmd
+    //combos would be MetaLeft aliases of the same kind; until then, rebind a row on /keybinds.
+    //
+    //BOTH MODIFIER ORDERS for Ctrl+Shift+Z, because a combo is matched against the keys currently
+    //down JOINED IN PRESS ORDER, not as a set - `ShiftLeft+KeyS` has always had that rule, and it
+    //is invisible for a one-modifier combo but not for two: whichever of Ctrl/Shift the user
+    //reaches for first, one of the two entries matches. Left-hand modifier codes only, like every
+    //other combo here (ControlRight has never been part of Ctrl+Z either).
+    'ControlLeft+KeyZ': createShortcut('undo', true, 'undo_description'),
+    'ControlLeft+KeyY': createShortcut('redo', true, 'redo_description'),
+    'ControlLeft+ShiftLeft+KeyZ': createAlias('redo', true, 'redo_description'),
+    'ShiftLeft+ControlLeft+KeyZ': createAlias('redo', true, 'redo_description'),
+  },
+  player: {
+    Space: createShortcut('toggle_record', false, 'toggle_record_description'),
+    'ShiftLeft+KeyS': createShortcut('stop', false, 'stop_description'),
+    'ShiftLeft+KeyR': createShortcut('restart', false, 'restart_description'),
+    'ShiftLeft+KeyM': createShortcut('toggle_menu', false, 'toggle_menu_description'),
+    Escape: createShortcut('close_menu', false, 'close_menu_description'),
+  },
+  vsrg_composer: {
+    'ShiftLeft+KeyW': createShortcut('move_up', true, 'move_up_description'),
+    'ShiftLeft+KeyS': createShortcut('move_down', true, 'move_down_description'),
+    'ShiftLeft+KeyA': createShortcut('move_left', true, 'move_left_description'),
+    'ShiftLeft+KeyD': createShortcut('move_right', true, 'move_right_description'),
+    Escape: createShortcut('deselect', false, 'deselect_description'),
+    Backspace: createShortcut('delete', false, 'delete_description'),
+    ArrowRight: createShortcut('next_breakpoint', true, 'next_breakpoint_description'),
+    ArrowLeft: createShortcut('previous_breakpoint', true, 'previous_breakpoint_description'),
+    ArrowUp: createShortcut('previous_track', true, 'previous_track_description'),
+    ArrowDown: createShortcut('next_track', true, 'next_track_description'),
+    Space: createShortcut('toggle_play', false, 'toggle_play_description'),
+    Digit1: createShortcut('set_tap_hand', false, 'set_tap_hand_description'),
+    Digit2: createShortcut('set_hold_hand', false, 'set_hold_hand_description'),
+    Digit3: createShortcut('set_delete_hand', false, 'set_delete_hand_description'),
+  },
+  vsrg_player: {
+    'ShiftLeft+KeyR': createShortcut('restart', false, 'restart_description'),
+    Escape: createShortcut('stop', false, 'stop_description'),
+  },
+  keyboard: Object.fromEntries(
+    // Default key row = the default instrument's Shape keyboard Label Set (ADR-0003;
+    // replaces the old game.layouts.defaultKeyboardKeys, which was that same data).
+    game.shapes[game.instruments.data[game.instruments.list[0]].shape].labels.keyboard.map(
+      (key) => [`Key${key}`, createShortcut(key, false)]
+    )
+  ),
+} as const satisfies Record<string, Record<string, Shortcut<string>>>;
+
+type ValuesOf<T> = T[keyof T];
+type KeysOf<T> = keyof T;
+type ShortcutsToMap<T> = {
+  [K in keyof T]: Map<string, ValuesOf<T[K]>>;
+};
+export type Shortcuts = ShortcutsToMap<typeof defaultShortcuts>;
+//extract all the name: string values from the shortcuts
+export type ShortcutPage = KeysOf<Shortcuts>;
+
+interface SerializedKeybinds {
+  version: number;
+  vsrg: {
+    k4: string[];
+    k6: string[];
+  };
+
+  shortcuts: {
+    composer: {
+      [key: string]: MapValues<Shortcuts['composer']>;
+    };
+    player: {
+      [key: string]: MapValues<Shortcuts['player']>;
+    };
+    keyboard: {
+      [key: string]: MapValues<Shortcuts['keyboard']>;
+    };
+    vsrg_composer: {
+      [key: string]: MapValues<Shortcuts['vsrg_composer']>;
+    };
+    vsrg_player: {
+      [key: string]: MapValues<Shortcuts['vsrg_player']>;
+    };
+  };
+}
+
+class KeyBinds {
+  version: number = 13; //change only if breaking changes are made, creating or removing a key is not a breaking change
+  private vsrg = $state({
+    k4: ['A', 'S', 'J', 'K'],
+    k6: ['A', 'S', 'D', 'H', 'J', 'K'],
+  });
+
+  private shortcuts: Shortcuts = $state(
+    Object.fromEntries(
+      Object.entries(defaultShortcuts).map(([key, value]) => [
+        key,
+        new SvelteMap(Object.entries(value)),
+      ])
+    ) as unknown as Shortcuts
+  );
+
+  // Must be SvelteMap, not a plain Map: getKeyOfShortcut() reads this to display "which
+  // physical key is this bound to". A plain Map isn't reactive, so mutating it in setShortcut()
+  // would never notify a template reading getKeyOfShortcut() - the real rebind (`shortcuts`
+  // above) would still persist correctly, but the displayed text would silently go stale.
+  private reverseShortcuts: Record<string, SvelteMap<string, string>>;
+
+  constructor() {
+    this.reverseShortcuts = this.getReverseShortcuts(this.shortcuts);
+  }
+
+  // Aliases are skipped: this map is name -> key and an alias shares its action's name, so
+  // including one would overwrite the rebindable key it must never displace (getKeyOfShortcut
+  // would display it, and load() would restore stored rebinds against it).
+  private getReverseShortcuts(of: Shortcuts) {
+    const entries = Object.entries(of).map(([key, value]) => {
+      return [
+        key,
+        new SvelteMap(
+          [...value.entries()].filter(([, v]) => !v.alias).map(([k, v]) => [v.name, k])
+        ),
+      ];
+    });
+    return Object.fromEntries(entries);
+  }
+
+  getVsrgKeybinds(keyCount: VsrgSongKeys) {
+    return this.vsrg[`k${keyCount}`];
+  }
+
+  setVsrgKeybind(keyCount: VsrgSongKeys, index: number, keybind: string) {
+    this.vsrg[`k${keyCount}`][index] = keybind;
+    this.save();
+  }
+
+  setVsrgKeybinds(keyCount: VsrgSongKeys, keybinds: string[]) {
+    this.vsrg[`k${keyCount}`].splice(0, keybinds.length, ...keybinds);
+    this.save();
+  }
+
+  getKeyboardKeybinds() {
+    return this.shortcuts.keyboard;
+  }
+
+  getShortcutMap<T extends ShortcutPage>(page: T) {
+    return this.shortcuts[page];
+  }
+
+  setKeyboardKeybind(layoutKey: string, keybind: string) {
+    const oldEntry = Array.from(this.shortcuts.keyboard.entries()).find(
+      (entry) => entry[1].name === layoutKey
+    );
+    if (!oldEntry) return;
+    const possibleExisting = this.setShortcut('keyboard', oldEntry[0], keybind);
+    return possibleExisting;
+  }
+
+  getKeyOfShortcut<T extends ShortcutPage>(page: T, value: string): string | undefined {
+    return this.reverseShortcuts[page].get(value);
+  }
+
+  getShortcut<T extends ShortcutPage>(
+    page: T,
+    key: string | string[]
+  ): MapValues<Shortcuts[T]> | undefined {
+    if (Array.isArray(key)) key = key.join('+');
+    return this.shortcuts[page].get(key) as MapValues<Shortcuts[T]> | undefined;
+  }
+
+  setShortcut<T extends ShortcutPage>(
+    page: T,
+    oldKey: string | string[],
+    newKey: string | string[]
+  ): MapValues<Shortcuts[T]> | undefined {
+    oldKey = KeyBinds.getShortcutName(oldKey);
+    newKey = KeyBinds.getShortcutName(newKey);
+    const oldShortcut = this.shortcuts[page].get(oldKey);
+    const newKeyExists = this.shortcuts[page].get(newKey);
+    if (oldShortcut === undefined || oldShortcut === null) return undefined;
+    if (newKeyExists !== undefined) return newKeyExists as MapValues<Shortcuts[T]> | undefined;
+    this.shortcuts[page].delete(oldKey);
+    this.shortcuts[page].set(newKey, oldShortcut);
+    // @ts-expect-error oldShortcut?.name is the value-union's `name` field, not provably a
+    // key of this specific page's reverse map from a generic T - runtime-correct (mirrors
+    // getReverseShortcuts' own construction), narrowing isn't expressible here
+    this.reverseShortcuts[page].set(oldShortcut?.name, newKey);
+    this.save();
+  }
+
+  static getShortcutName(key: string | string[]) {
+    if (typeof key === 'string') return key;
+    if (key.length === 1) return key[0];
+    return key.sort().join('+');
+  }
+
+  load() {
+    if (typeof window === 'undefined') return;
+    try {
+      const data = localStorage.getItem(`${APP_NAME}_keybinds`);
+      if (data) {
+        const parsed = JSON.parse(data) as SerializedKeybinds;
+        if (parsed.version !== this.version) return;
+        this.vsrg = parsed.vsrg;
+        //.map(([key, value]) => [key, new Map(Object.entries(value))])
+        for (const outer of Object.entries(parsed.shortcuts)) {
+          const [pageKey, pageValue] = outer as [
+            ShortcutPage,
+            SerializedKeybinds['shortcuts'][ShortcutPage],
+          ];
+          for (const inner of Object.entries(pageValue)) {
+            const [shortcutKey, shortcutValue] = inner;
+            const key = this.getKeyOfShortcut(pageKey, shortcutValue.name);
+            if (!key) {
+              console.warn('Skipping keybind', pageKey, shortcutKey, shortcutValue);
+              continue;
+            }
+            this.setShortcut(pageKey, key, shortcutKey);
+          }
+        }
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  save() {
+    localStorage.setItem(`${APP_NAME}_keybinds`, JSON.stringify(this.serialize()));
+  }
+
+  serialize(): SerializedKeybinds {
+    return {
+      version: this.version,
+      vsrg: cloneDeep(this.vsrg),
+      // Aliases are fixed and unrebindable, so there is nothing about them to persist - and
+      // leaving them out is what keeps `load()` simple: every entry it reads back names a
+      // rebindable shortcut, which is what getKeyOfShortcut() there can resolve.
+      shortcuts: Object.fromEntries(
+        Object.entries(this.shortcuts).map(([key, value]) => [
+          key,
+          Object.fromEntries([...value.entries()].filter(([, v]) => !v.alias)),
+        ])
+      ) as SerializedKeybinds['shortcuts'],
+    };
+  }
+}
+
+export const keyBinds = new KeyBinds();
+
+type ShortcutPressEvent<T> = {
+  code: string;
+  event: KeyboardEvent;
+  shortcut: T;
+  isRepeat: boolean;
+};
+export type ShortcutDisposer = () => void;
+
+export type ShortcutOptions = {
+  repeat?: boolean;
+};
+
+/**
+ * WHICH HELD KEYS A COMBO DOES NOT SEE (user revision 2026-08-22).
+ *
+ * `createKeyComboComposer` matches the WHOLE set of keys currently down, which is what makes
+ * `ShiftLeft+KeyS` a shortcut and `KeyS` alone a different one. The cost of that rule is that any
+ * key held for a reason of its own poisons every combo for as long as it is down — and the composer
+ * holds keys for a reason of its own all the time: its note keys ARE the letter row, and holding one
+ * is a gesture (a sustain being performed, or a Duration Hold editing a span — CONTEXT.md). While
+ * one was down, `a`/`d` could not step a column, which is exactly what a Duration Hold asks for.
+ *
+ * A key named here is TRANSPARENT: it stays in the set for its own listener (the note keeps
+ * sounding) and is simply not part of what a combo is matched against, so `KeyF` held plus `KeyD`
+ * pressed matches `KeyD`. Nothing else changes — a key that is not currently holding a note is in
+ * the combo exactly as before, so `ShiftLeft+KeyD` is still note entry and not `next_column`.
+ *
+ * A FUNCTION, called per keydown: the set changes with every press and release of a note, and a
+ * snapshot handed in at registration would be stale by the first gesture. Only surfaces that hold
+ * keys pass one; every other listener leaves it out and matches on the full set, unchanged.
+ */
+export type KeyComboOptions = {
+  transparentCodes?: () => ReadonlySet<string>;
+};
+
+export type ShortcutListener<T extends ShortcutPage> = (
+  keybind: ShortcutPressEvent<MapValues<Shortcuts[T]>>
+) => void;
+
+export function createShortcutListener<T extends KeysOf<Shortcuts>>(
+  page: T,
+  id: string,
+  callback: ShortcutListener<T>,
+  options?: KeyComboOptions
+): ShortcutDisposer {
+  return createKeyComboComposer(
+    id,
+    ({ code, event, keyCombo }) => {
+      const shortcut = keyBinds.getShortcut(page, keyCombo);
+      if (shortcut !== undefined) {
+        if (!(shortcut as Shortcut<string>).holdable && event.repeat) return;
+        callback({ code, event, shortcut, isRepeat: event.repeat });
+      }
+    },
+    options
+  );
+}
+
+export function createKeyboardListener(
+  id: string,
+  callback: ShortcutListener<'keyboard'>,
+  options?: ShortcutOptions & {
+    /** Fired on key-up of a bound note key — the release half of hold-to-sustain. */
+    onRelease?: ShortcutListener<'keyboard'>;
+  }
+): ShortcutDisposer {
+  KeyboardProvider.listen(
+    ({ code, event }) => {
+      //A NOTE KEY IS A BARE KEY. This listener matches on `code` alone — note entry has no
+      //modifiers to match — and KeyboardProvider fans every keydown out to EVERY listener, so
+      //without this an application chord whose letter happens to be a note key also enters that
+      //note: Ctrl+Z in the composer walked the history AND wrote note Z on top of it (both games'
+      //Label Sets contain Z, genshin's also Y), and that new Step cleared the redo branch the undo
+      //had just created. The combo listeners (createShortcutListener) are what answer such an
+      //event; alt/shift stay note entry, shift being the composer's own edit modifier.
+      //
+      //KEYDOWN ONLY — the release half below has no such guard, for the reason KeyboardProvider's
+      //typing-target guard is one-sided too: whoever is HOLDING a note needs its key-up, and a
+      //modifier pressed mid-hold must not swallow it.
+      if (event.ctrlKey || event.metaKey) return;
+      if (!options?.repeat && event.repeat) return;
+      const shortcut = keyBinds.getShortcut('keyboard', code);
+      if (shortcut !== undefined) {
+        //same rule as createShortcutListener: a NON-holdable shortcut ignores auto-repeat.
+        //Dead while nothing passes `repeat` (the guard above already returned), and it read
+        //inverted until hold-to-sustain made it matter: with repeats let through, the OS
+        //repeat stream would re-press a held note ~30x a second.
+        if (!(shortcut as Shortcut<string>).holdable && event.repeat) return;
+        callback({ code, event, shortcut, isRepeat: event.repeat });
+      }
+    },
+    { type: 'keydown', id: id + '_keyboard_down' }
+  );
+  const { onRelease } = options ?? {};
+  if (onRelease) {
+    KeyboardProvider.listen(
+      ({ code, event }) => {
+        const shortcut = keyBinds.getShortcut('keyboard', code);
+        if (shortcut !== undefined) {
+          onRelease({ code, event, shortcut, isRepeat: false });
+        }
+      },
+      { type: 'keyup', id: id + '_keyboard_up' }
+    );
+  }
+  return () => {
+    KeyboardProvider.unregisterById(id + '_keyboard_down');
+    KeyboardProvider.unregisterById(id + '_keyboard_up');
+  };
+}
+
+/**
+ * Fires when the page can no longer be trusted to deliver the release half of a gesture:
+ * window blur (alt-tab), pagehide (iOS/bfcache, where blur is not reliable), and the tab
+ * going hidden. Any surface holding notes must release them here — a key-up that never
+ * arrives leaves a looping sustaining instrument sounding indefinitely.
+ *
+ * Deliberately NOT hooked to focus moving into a text field: KeyboardProvider now delivers
+ * key-up even while an input has focus, so the real release still arrives and the note keeps
+ * sounding until the user actually lifts the key.
+ */
+export function createReleaseGuard(onRelease: () => void): ShortcutDisposer {
+  const handleVisibilityChange = () => {
+    if (document.hidden) onRelease();
+  };
+  window.addEventListener('blur', onRelease);
+  window.addEventListener('pagehide', onRelease);
+  document.addEventListener('visibilitychange', handleVisibilityChange);
+  return () => {
+    window.removeEventListener('blur', onRelease);
+    window.removeEventListener('pagehide', onRelease);
+    document.removeEventListener('visibilitychange', handleVisibilityChange);
+  };
+}
+
+type KeyComboListener = (data: { keyCombo: string[]; event: KeyboardEvent; code: string }) => void;
+
+export function createKeyComboComposer(
+  id: string,
+  callback: KeyComboListener,
+  options?: KeyComboOptions
+): ShortcutDisposer {
+  const currentKeybinds: string[] = [];
+  /**
+   * The set the combo is MATCHED against, which is the set of keys down minus whatever the caller
+   * declares transparent (see KeyComboOptions).
+   *
+   * Two things it deliberately does not do. It does not remove a transparent key from
+   * `currentKeybinds`, which stays the record of what is physically down and is what the key-up
+   * below splices from - a key that stops holding a note mid-press must come back into the combos
+   * without a second keydown. And with nothing transparent it hands back THE ARRAY ITSELF, exactly
+   * as this always did, so a caller that captures a combo (the keybinds page) sees no new copy.
+   *
+   * And it never drops THE KEY BEING PRESSED RIGHT NOW, whatever the caller says about it: only a
+   * key held from BEFORE this press steps aside. That is the rule in one line - `d` alone is
+   * next_column as it always was, and `d` pressed while `f` is held is next_column too - and stating
+   * it here rather than leaning on "the note listener has not registered it yet" keeps it true
+   * however the two listeners happen to be ordered.
+   */
+  function matchableCombo(pressed: string): string[] {
+    const transparent = options?.transparentCodes?.();
+    if (!transparent?.size) return currentKeybinds;
+    return currentKeybinds.filter((code) => code === pressed || !transparent.has(code));
+  }
+  KeyboardProvider.listen(
+    ({ code, event }) => {
+      if (!currentKeybinds.includes(code)) currentKeybinds.push(code);
+      callback({ keyCombo: matchableCombo(code), event, code });
+    },
+    { type: 'keydown', id: id + '_down' }
+  );
+  KeyboardProvider.listen(
+    ({ code }) => {
+      //guarded because indexOf can miss: a key-up now arrives even when its key-DOWN was
+      //swallowed (pressed while a text field had focus), and splice(-1, 1) would drop an
+      //unrelated key from the combo
+      const pressed = currentKeybinds.indexOf(code);
+      if (pressed >= 0) currentKeybinds.splice(pressed, 1);
+    },
+    { type: 'keyup', id: id + '_up' }
+  );
+
+  function reset() {
+    currentKeybinds.splice(0, currentKeybinds.length);
+  }
+
+  window.addEventListener('blur', reset);
+  return () => {
+    KeyboardProvider.unregisterById(id + '_down');
+    KeyboardProvider.unregisterById(id + '_up');
+    window.removeEventListener('blur', reset);
+  };
+}
+
+// Matches against the literal `string` key type instead of `infer _, infer V` (T's key is
+// already constrained to `string` above) so there's no unused, discarded type parameter for
+// @typescript-eslint/no-unused-vars to flag.
+type MapValues<T extends Map<string, Shortcut<string>>> =
+  T extends Map<string, infer V> ? V : never;

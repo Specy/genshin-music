@@ -1,0 +1,9 @@
+{
+  "displayName": "DunDun",
+  "family": "percussive",
+  "midiName": "synth drum",
+  "fill": "#F99C55",
+  "clickColor": "#f5a262",
+  "shape": "genshin-2x4",
+  "notes": "drums-8"
+}

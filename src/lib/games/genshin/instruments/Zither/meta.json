@@ -1,0 +1,9 @@
+{
+  "displayName": "Zither",
+  "family": "strings",
+  "midiName": "pizzicato strings",
+  "fill": "#cdb68e",
+  "clickColor": "#ddcba8",
+  "shape": "genshin-3x7",
+  "notes": "standard-21"
+}

@@ -1,0 +1,11 @@
+{
+  "displayName": "Violin",
+  "family": "strings",
+  "midiName": "violin",
+  "shape": "sky-3x5",
+  "sustain": {
+    "release": 0.32,
+    "minLength": 0.2
+  },
+  "notes": "standard-15"
+}

@@ -1,0 +1,1898 @@
+{
+  "composed-easy-4keys": {
+    "rating": 2.9,
+    "performed": [],
+    "doubled": [
+      0
+    ],
+    "attempts": 1,
+    "converged": true,
+    "song": {
+      "name": "new-format-composed-genshin",
+      "type": "vsrg",
+      "bpm": 220,
+      "pitch": "C",
+      "version": 3,
+      "keys": 4,
+      "data": {
+        "isComposed": false,
+        "isComposedVersion": false,
+        "appName": "Genshin"
+      },
+      "id": null,
+      "audioSongId": "composed-source",
+      "folderId": null,
+      "duration": 60000,
+      "tracks": [
+        {
+          "instrument": {
+            "name": "Lyre",
+            "volume": 90,
+            "pitch": "",
+            "visible": true,
+            "icon": "border",
+            "alias": "",
+            "muted": false,
+            "solo": false,
+            "reverbOverride": null
+          },
+          "hitObjects": [
+            [
+              2,
+              0,
+              0,
+              [
+                48
+              ]
+            ],
+            [
+              3,
+              273,
+              0,
+              [
+                50
+              ]
+            ],
+            [
+              2,
+              545,
+              0,
+              [
+                52
+              ]
+            ],
+            [
+              2,
+              1091,
+              0,
+              [
+                57
+              ]
+            ],
+            [
+              3,
+              1364,
+              0,
+              [
+                59
+              ]
+            ],
+            [
+              1,
+              1773,
+              0,
+              [
+                64
+              ]
+            ],
+            [
+              3,
+              2386,
+              0,
+              [
+                71
+              ]
+            ],
+            [
+              2,
+              2659,
+              0,
+              [
+                72
+              ]
+            ],
+            [
+              3,
+              2932,
+              0,
+              [
+                74
+              ]
+            ],
+            [
+              2,
+              3477,
+              0,
+              [
+                77
+              ]
+            ],
+            [
+              3,
+              3750,
+              0,
+              [
+                79
+              ]
+            ],
+            [
+              2,
+              4295,
+              0,
+              [
+                83
+              ]
+            ]
+          ],
+          "color": "#ffffff"
+        }
+      ],
+      "instruments": [],
+      "trackModifiers": [
+        {
+          "hidden": false,
+          "muted": false,
+          "alias": "Lyre"
+        },
+        {
+          "hidden": false,
+          "muted": false,
+          "alias": "Lyre"
+        },
+        {
+          "hidden": false,
+          "muted": false,
+          "alias": "Lyre"
+        }
+      ],
+      "breakpoints": [],
+      "difficulty": 5,
+      "snapPoint": 1
+    }
+  },
+  "composed-normal-4keys": {
+    "rating": 4.6,
+    "performed": [],
+    "doubled": [
+      0
+    ],
+    "attempts": 1,
+    "converged": true,
+    "song": {
+      "name": "new-format-composed-genshin",
+      "type": "vsrg",
+      "bpm": 220,
+      "pitch": "C",
+      "version": 3,
+      "keys": 4,
+      "data": {
+        "isComposed": false,
+        "isComposedVersion": false,
+        "appName": "Genshin"
+      },
+      "id": null,
+      "audioSongId": "composed-source",
+      "folderId": null,
+      "duration": 60000,
+      "tracks": [
+        {
+          "instrument": {
+            "name": "Lyre",
+            "volume": 90,
+            "pitch": "",
+            "visible": true,
+            "icon": "border",
+            "alias": "",
+            "muted": false,
+            "solo": false,
+            "reverbOverride": null
+          },
+          "hitObjects": [
+            [
+              2,
+              0,
+              0,
+              [
+                48
+              ]
+            ],
+            [
+              3,
+              273,
+              0,
+              [
+                50
+              ]
+            ],
+            [
+              2,
+              545,
+              0,
+              [
+                52
+              ]
+            ],
+            [
+              3,
+              682,
+              0,
+              [
+                53
+              ]
+            ],
+            [
+              2,
+              818,
+              0,
+              [
+                55
+              ]
+            ],
+            [
+              3,
+              1091,
+              0,
+              [
+                57
+              ]
+            ],
+            [
+              2,
+              1364,
+              0,
+              [
+                59
+              ]
+            ],
+            [
+              2,
+              1773,
+              0,
+              [
+                64
+              ]
+            ],
+            [
+              3,
+              2045,
+              0,
+              [
+                65
+              ]
+            ],
+            [
+              1,
+              2386,
+              0,
+              [
+                71
+              ]
+            ],
+            [
+              2,
+              2659,
+              0,
+              [
+                72
+              ]
+            ],
+            [
+              3,
+              2932,
+              0,
+              [
+                74
+              ]
+            ],
+            [
+              2,
+              3205,
+              0,
+              [
+                76
+              ]
+            ],
+            [
+              3,
+              3477,
+              0,
+              [
+                77
+              ]
+            ],
+            [
+              2,
+              3750,
+              0,
+              [
+                79
+              ]
+            ],
+            [
+              3,
+              4023,
+              0,
+              [
+                81
+              ]
+            ],
+            [
+              2,
+              4295,
+              0,
+              [
+                83
+              ]
+            ]
+          ],
+          "color": "#ffffff"
+        }
+      ],
+      "instruments": [],
+      "trackModifiers": [
+        {
+          "hidden": false,
+          "muted": false,
+          "alias": "Lyre"
+        },
+        {
+          "hidden": false,
+          "muted": false,
+          "alias": "Lyre"
+        },
+        {
+          "hidden": false,
+          "muted": false,
+          "alias": "Lyre"
+        }
+      ],
+      "breakpoints": [],
+      "difficulty": 5,
+      "snapPoint": 1
+    }
+  },
+  "composed-hard-4keys": {
+    "rating": 6.1,
+    "performed": [],
+    "doubled": [
+      0
+    ],
+    "attempts": 2,
+    "converged": true,
+    "song": {
+      "name": "new-format-composed-genshin",
+      "type": "vsrg",
+      "bpm": 220,
+      "pitch": "C",
+      "version": 3,
+      "keys": 4,
+      "data": {
+        "isComposed": false,
+        "isComposedVersion": false,
+        "appName": "Genshin"
+      },
+      "id": null,
+      "audioSongId": "composed-source",
+      "folderId": null,
+      "duration": 60000,
+      "tracks": [
+        {
+          "instrument": {
+            "name": "Lyre",
+            "volume": 90,
+            "pitch": "",
+            "visible": true,
+            "icon": "border",
+            "alias": "",
+            "muted": false,
+            "solo": false,
+            "reverbOverride": null
+          },
+          "hitObjects": [
+            [
+              2,
+              0,
+              0,
+              [
+                48
+              ]
+            ],
+            [
+              3,
+              273,
+              0,
+              [
+                50
+              ]
+            ],
+            [
+              2,
+              545,
+              0,
+              [
+                52
+              ]
+            ],
+            [
+              3,
+              682,
+              0,
+              [
+                53
+              ]
+            ],
+            [
+              2,
+              818,
+              0,
+              [
+                55
+              ]
+            ],
+            [
+              3,
+              1091,
+              0,
+              [
+                57
+              ]
+            ],
+            [
+              2,
+              1364,
+              0,
+              [
+                59
+              ]
+            ],
+            [
+              3,
+              1432,
+              0,
+              [
+                60
+              ]
+            ],
+            [
+              2,
+              1500,
+              0,
+              [
+                62
+              ]
+            ],
+            [
+              3,
+              1773,
+              0,
+              [
+                64
+              ]
+            ],
+            [
+              2,
+              2045,
+              0,
+              [
+                65
+              ]
+            ],
+            [
+              3,
+              2114,
+              0,
+              [
+                69
+              ]
+            ],
+            [
+              2,
+              2386,
+              0,
+              [
+                71
+              ]
+            ],
+            [
+              3,
+              2659,
+              0,
+              [
+                72
+              ]
+            ],
+            [
+              2,
+              2932,
+              0,
+              [
+                74
+              ]
+            ],
+            [
+              3,
+              3205,
+              0,
+              [
+                76
+              ]
+            ],
+            [
+              2,
+              3477,
+              0,
+              [
+                77
+              ]
+            ],
+            [
+              3,
+              3750,
+              0,
+              [
+                79
+              ]
+            ],
+            [
+              2,
+              4023,
+              0,
+              [
+                81
+              ]
+            ],
+            [
+              3,
+              4295,
+              0,
+              [
+                83
+              ]
+            ]
+          ],
+          "color": "#ffffff"
+        }
+      ],
+      "instruments": [],
+      "trackModifiers": [
+        {
+          "hidden": false,
+          "muted": false,
+          "alias": "Lyre"
+        },
+        {
+          "hidden": false,
+          "muted": false,
+          "alias": "Lyre"
+        },
+        {
+          "hidden": false,
+          "muted": false,
+          "alias": "Lyre"
+        }
+      ],
+      "breakpoints": [],
+      "difficulty": 5,
+      "snapPoint": 1
+    }
+  },
+  "composed-easy-6keys": {
+    "rating": 1.9,
+    "performed": [],
+    "doubled": [
+      0
+    ],
+    "attempts": 2,
+    "converged": true,
+    "song": {
+      "name": "new-format-composed-genshin",
+      "type": "vsrg",
+      "bpm": 220,
+      "pitch": "C",
+      "version": 3,
+      "keys": 6,
+      "data": {
+        "isComposed": false,
+        "isComposedVersion": false,
+        "appName": "Genshin"
+      },
+      "id": null,
+      "audioSongId": "composed-source",
+      "folderId": null,
+      "duration": 60000,
+      "tracks": [
+        {
+          "instrument": {
+            "name": "Lyre",
+            "volume": 90,
+            "pitch": "",
+            "visible": true,
+            "icon": "border",
+            "alias": "",
+            "muted": false,
+            "solo": false,
+            "reverbOverride": null
+          },
+          "hitObjects": [
+            [
+              3,
+              0,
+              0,
+              [
+                48
+              ]
+            ],
+            [
+              4,
+              273,
+              0,
+              [
+                50
+              ]
+            ],
+            [
+              4,
+              1091,
+              0,
+              [
+                57
+              ]
+            ],
+            [
+              5,
+              1364,
+              0,
+              [
+                59
+              ]
+            ],
+            [
+              1,
+              2386,
+              0,
+              [
+                71
+              ]
+            ],
+            [
+              2,
+              2659,
+              0,
+              [
+                72
+              ]
+            ],
+            [
+              4,
+              3477,
+              0,
+              [
+                77
+              ]
+            ],
+            [
+              4,
+              4295,
+              0,
+              [
+                83
+              ]
+            ]
+          ],
+          "color": "#ffffff"
+        }
+      ],
+      "instruments": [],
+      "trackModifiers": [
+        {
+          "hidden": false,
+          "muted": false,
+          "alias": "Lyre"
+        },
+        {
+          "hidden": false,
+          "muted": false,
+          "alias": "Lyre"
+        },
+        {
+          "hidden": false,
+          "muted": false,
+          "alias": "Lyre"
+        }
+      ],
+      "breakpoints": [],
+      "difficulty": 5,
+      "snapPoint": 1
+    }
+  },
+  "composed-normal-6keys": {
+    "rating": 4.6,
+    "performed": [],
+    "doubled": [
+      0
+    ],
+    "attempts": 1,
+    "converged": true,
+    "song": {
+      "name": "new-format-composed-genshin",
+      "type": "vsrg",
+      "bpm": 220,
+      "pitch": "C",
+      "version": 3,
+      "keys": 6,
+      "data": {
+        "isComposed": false,
+        "isComposedVersion": false,
+        "appName": "Genshin"
+      },
+      "id": null,
+      "audioSongId": "composed-source",
+      "folderId": null,
+      "duration": 60000,
+      "tracks": [
+        {
+          "instrument": {
+            "name": "Lyre",
+            "volume": 90,
+            "pitch": "",
+            "visible": true,
+            "icon": "border",
+            "alias": "",
+            "muted": false,
+            "solo": false,
+            "reverbOverride": null
+          },
+          "hitObjects": [
+            [
+              3,
+              0,
+              0,
+              [
+                48
+              ]
+            ],
+            [
+              4,
+              273,
+              0,
+              [
+                50
+              ]
+            ],
+            [
+              5,
+              545,
+              0,
+              [
+                52
+              ]
+            ],
+            [
+              4,
+              682,
+              0,
+              [
+                53
+              ]
+            ],
+            [
+              5,
+              818,
+              0,
+              [
+                55
+              ]
+            ],
+            [
+              4,
+              1091,
+              0,
+              [
+                57
+              ]
+            ],
+            [
+              5,
+              1364,
+              0,
+              [
+                59
+              ]
+            ],
+            [
+              3,
+              1773,
+              0,
+              [
+                64
+              ]
+            ],
+            [
+              4,
+              2045,
+              0,
+              [
+                65
+              ]
+            ],
+            [
+              4,
+              2386,
+              0,
+              [
+                71
+              ]
+            ],
+            [
+              5,
+              2659,
+              0,
+              [
+                72
+              ]
+            ],
+            [
+              4,
+              2932,
+              0,
+              [
+                74
+              ]
+            ],
+            [
+              5,
+              3205,
+              0,
+              [
+                76
+              ]
+            ],
+            [
+              4,
+              3477,
+              0,
+              [
+                77
+              ]
+            ],
+            [
+              5,
+              3750,
+              0,
+              [
+                79
+              ]
+            ],
+            [
+              4,
+              4023,
+              0,
+              [
+                81
+              ]
+            ],
+            [
+              5,
+              4295,
+              0,
+              [
+                83
+              ]
+            ]
+          ],
+          "color": "#ffffff"
+        }
+      ],
+      "instruments": [],
+      "trackModifiers": [
+        {
+          "hidden": false,
+          "muted": false,
+          "alias": "Lyre"
+        },
+        {
+          "hidden": false,
+          "muted": false,
+          "alias": "Lyre"
+        },
+        {
+          "hidden": false,
+          "muted": false,
+          "alias": "Lyre"
+        }
+      ],
+      "breakpoints": [],
+      "difficulty": 5,
+      "snapPoint": 1
+    }
+  },
+  "composed-hard-6keys": {
+    "rating": 6,
+    "performed": [],
+    "doubled": [
+      0
+    ],
+    "attempts": 2,
+    "converged": true,
+    "song": {
+      "name": "new-format-composed-genshin",
+      "type": "vsrg",
+      "bpm": 220,
+      "pitch": "C",
+      "version": 3,
+      "keys": 6,
+      "data": {
+        "isComposed": false,
+        "isComposedVersion": false,
+        "appName": "Genshin"
+      },
+      "id": null,
+      "audioSongId": "composed-source",
+      "folderId": null,
+      "duration": 60000,
+      "tracks": [
+        {
+          "instrument": {
+            "name": "Lyre",
+            "volume": 90,
+            "pitch": "",
+            "visible": true,
+            "icon": "border",
+            "alias": "",
+            "muted": false,
+            "solo": false,
+            "reverbOverride": null
+          },
+          "hitObjects": [
+            [
+              3,
+              0,
+              0,
+              [
+                48
+              ]
+            ],
+            [
+              4,
+              273,
+              0,
+              [
+                50
+              ]
+            ],
+            [
+              5,
+              545,
+              0,
+              [
+                52
+              ]
+            ],
+            [
+              4,
+              682,
+              0,
+              [
+                53
+              ]
+            ],
+            [
+              5,
+              818,
+              0,
+              [
+                55
+              ]
+            ],
+            [
+              4,
+              1091,
+              0,
+              [
+                57
+              ]
+            ],
+            [
+              5,
+              1364,
+              0,
+              [
+                59
+              ]
+            ],
+            [
+              4,
+              1432,
+              0,
+              [
+                60
+              ]
+            ],
+            [
+              5,
+              1500,
+              0,
+              [
+                62
+              ]
+            ],
+            [
+              4,
+              1773,
+              0,
+              [
+                64
+              ]
+            ],
+            [
+              5,
+              2045,
+              0,
+              [
+                65
+              ]
+            ],
+            [
+              4,
+              2114,
+              0,
+              [
+                69
+              ]
+            ],
+            [
+              5,
+              2386,
+              0,
+              [
+                71
+              ]
+            ],
+            [
+              4,
+              2659,
+              0,
+              [
+                72
+              ]
+            ],
+            [
+              5,
+              2932,
+              0,
+              [
+                74
+              ]
+            ],
+            [
+              4,
+              3205,
+              0,
+              [
+                76
+              ]
+            ],
+            [
+              5,
+              3477,
+              0,
+              [
+                77
+              ]
+            ],
+            [
+              4,
+              3750,
+              0,
+              [
+                79
+              ]
+            ],
+            [
+              5,
+              4023,
+              0,
+              [
+                81
+              ]
+            ],
+            [
+              4,
+              4295,
+              0,
+              [
+                83
+              ]
+            ]
+          ],
+          "color": "#ffffff"
+        }
+      ],
+      "instruments": [],
+      "trackModifiers": [
+        {
+          "hidden": false,
+          "muted": false,
+          "alias": "Lyre"
+        },
+        {
+          "hidden": false,
+          "muted": false,
+          "alias": "Lyre"
+        },
+        {
+          "hidden": false,
+          "muted": false,
+          "alias": "Lyre"
+        }
+      ],
+      "breakpoints": [],
+      "difficulty": 5,
+      "snapPoint": 1
+    }
+  },
+  "recorded-easy-4keys": {
+    "rating": 1.8,
+    "performed": [],
+    "doubled": [
+      0
+    ],
+    "attempts": 2,
+    "converged": true,
+    "song": {
+      "name": "new-format-recorded",
+      "type": "vsrg",
+      "bpm": 220,
+      "pitch": "C",
+      "version": 3,
+      "keys": 4,
+      "data": {
+        "isComposed": false,
+        "isComposedVersion": false,
+        "appName": "Genshin"
+      },
+      "id": null,
+      "audioSongId": "recorded-source",
+      "folderId": null,
+      "duration": 60000,
+      "tracks": [
+        {
+          "instrument": {
+            "name": "Lyre",
+            "volume": 90,
+            "pitch": "",
+            "visible": true,
+            "icon": "circle",
+            "alias": "",
+            "muted": false,
+            "solo": false,
+            "reverbOverride": null
+          },
+          "hitObjects": [
+            [
+              2,
+              100,
+              0,
+              [
+                48
+              ]
+            ],
+            [
+              3,
+              420,
+              0,
+              [
+                50
+              ]
+            ],
+            [
+              1,
+              1526,
+              0,
+              [
+                57
+              ]
+            ],
+            [
+              2,
+              1832,
+              0,
+              [
+                59
+              ]
+            ],
+            [
+              2,
+              2668,
+              0,
+              [
+                64
+              ]
+            ]
+          ],
+          "color": "#ffffff"
+        }
+      ],
+      "instruments": [],
+      "trackModifiers": [
+        {
+          "hidden": false,
+          "muted": false,
+          "alias": "Lyre"
+        }
+      ],
+      "breakpoints": [],
+      "difficulty": 5,
+      "snapPoint": 1
+    }
+  },
+  "recorded-normal-4keys": {
+    "rating": 4.2,
+    "performed": [
+      0
+    ],
+    "doubled": [],
+    "attempts": 1,
+    "converged": true,
+    "song": {
+      "name": "new-format-recorded",
+      "type": "vsrg",
+      "bpm": 220,
+      "pitch": "C",
+      "version": 3,
+      "keys": 4,
+      "data": {
+        "isComposed": false,
+        "isComposedVersion": false,
+        "appName": "Genshin"
+      },
+      "id": null,
+      "audioSongId": "recorded-source",
+      "folderId": null,
+      "duration": 60000,
+      "tracks": [
+        {
+          "instrument": {
+            "name": "Lyre",
+            "volume": 90,
+            "pitch": "",
+            "visible": true,
+            "icon": "circle",
+            "alias": "",
+            "muted": false,
+            "solo": false,
+            "reverbOverride": null
+          },
+          "hitObjects": [
+            [
+              2,
+              100,
+              0,
+              [
+                48
+              ]
+            ],
+            [
+              3,
+              420,
+              0,
+              [
+                50
+              ]
+            ],
+            [
+              2,
+              676,
+              0,
+              [
+                52
+              ]
+            ],
+            [
+              3,
+              968,
+              0,
+              [
+                53
+              ]
+            ],
+            [
+              2,
+              1212,
+              0,
+              [
+                55
+              ]
+            ],
+            [
+              3,
+              1526,
+              0,
+              [
+                57
+              ]
+            ],
+            [
+              2,
+              1832,
+              0,
+              [
+                59
+              ]
+            ],
+            [
+              3,
+              2124,
+              0,
+              [
+                60
+              ]
+            ],
+            [
+              2,
+              2425,
+              0,
+              [
+                62
+              ]
+            ],
+            [
+              3,
+              2668,
+              0,
+              [
+                64
+              ]
+            ]
+          ],
+          "color": "#ffffff"
+        }
+      ],
+      "instruments": [],
+      "trackModifiers": [
+        {
+          "hidden": false,
+          "muted": true,
+          "alias": "Lyre"
+        }
+      ],
+      "breakpoints": [],
+      "difficulty": 5,
+      "snapPoint": 1
+    }
+  },
+  "recorded-hard-4keys": {
+    "rating": 4.2,
+    "performed": [
+      0
+    ],
+    "doubled": [],
+    "attempts": 4,
+    "converged": false,
+    "song": {
+      "name": "new-format-recorded",
+      "type": "vsrg",
+      "bpm": 220,
+      "pitch": "C",
+      "version": 3,
+      "keys": 4,
+      "data": {
+        "isComposed": false,
+        "isComposedVersion": false,
+        "appName": "Genshin"
+      },
+      "id": null,
+      "audioSongId": "recorded-source",
+      "folderId": null,
+      "duration": 60000,
+      "tracks": [
+        {
+          "instrument": {
+            "name": "Lyre",
+            "volume": 90,
+            "pitch": "",
+            "visible": true,
+            "icon": "circle",
+            "alias": "",
+            "muted": false,
+            "solo": false,
+            "reverbOverride": null
+          },
+          "hitObjects": [
+            [
+              2,
+              100,
+              0,
+              [
+                48
+              ]
+            ],
+            [
+              3,
+              420,
+              0,
+              [
+                50
+              ]
+            ],
+            [
+              2,
+              676,
+              0,
+              [
+                52
+              ]
+            ],
+            [
+              3,
+              968,
+              0,
+              [
+                53
+              ]
+            ],
+            [
+              2,
+              1212,
+              0,
+              [
+                55
+              ]
+            ],
+            [
+              3,
+              1526,
+              0,
+              [
+                57
+              ]
+            ],
+            [
+              2,
+              1832,
+              0,
+              [
+                59
+              ]
+            ],
+            [
+              3,
+              2124,
+              0,
+              [
+                60
+              ]
+            ],
+            [
+              2,
+              2425,
+              0,
+              [
+                62
+              ]
+            ],
+            [
+              3,
+              2668,
+              0,
+              [
+                64
+              ]
+            ]
+          ],
+          "color": "#ffffff"
+        }
+      ],
+      "instruments": [],
+      "trackModifiers": [
+        {
+          "hidden": false,
+          "muted": true,
+          "alias": "Lyre"
+        }
+      ],
+      "breakpoints": [],
+      "difficulty": 5,
+      "snapPoint": 1
+    }
+  },
+  "recorded-easy-6keys": {
+    "rating": 2.9,
+    "performed": [],
+    "doubled": [
+      0
+    ],
+    "attempts": 1,
+    "converged": true,
+    "song": {
+      "name": "new-format-recorded",
+      "type": "vsrg",
+      "bpm": 220,
+      "pitch": "C",
+      "version": 3,
+      "keys": 6,
+      "data": {
+        "isComposed": false,
+        "isComposedVersion": false,
+        "appName": "Genshin"
+      },
+      "id": null,
+      "audioSongId": "recorded-source",
+      "folderId": null,
+      "duration": 60000,
+      "tracks": [
+        {
+          "instrument": {
+            "name": "Lyre",
+            "volume": 90,
+            "pitch": "",
+            "visible": true,
+            "icon": "circle",
+            "alias": "",
+            "muted": false,
+            "solo": false,
+            "reverbOverride": null
+          },
+          "hitObjects": [
+            [
+              3,
+              100,
+              0,
+              [
+                48
+              ]
+            ],
+            [
+              4,
+              420,
+              0,
+              [
+                50
+              ]
+            ],
+            [
+              5,
+              676,
+              0,
+              [
+                52
+              ]
+            ],
+            [
+              4,
+              1212,
+              0,
+              [
+                55
+              ]
+            ],
+            [
+              5,
+              1526,
+              0,
+              [
+                57
+              ]
+            ],
+            [
+              4,
+              1832,
+              0,
+              [
+                59
+              ]
+            ],
+            [
+              5,
+              2425,
+              0,
+              [
+                62
+              ]
+            ],
+            [
+              4,
+              2668,
+              0,
+              [
+                64
+              ]
+            ]
+          ],
+          "color": "#ffffff"
+        }
+      ],
+      "instruments": [],
+      "trackModifiers": [
+        {
+          "hidden": false,
+          "muted": false,
+          "alias": "Lyre"
+        }
+      ],
+      "breakpoints": [],
+      "difficulty": 5,
+      "snapPoint": 1
+    }
+  },
+  "recorded-normal-6keys": {
+    "rating": 4.1,
+    "performed": [
+      0
+    ],
+    "doubled": [],
+    "attempts": 1,
+    "converged": true,
+    "song": {
+      "name": "new-format-recorded",
+      "type": "vsrg",
+      "bpm": 220,
+      "pitch": "C",
+      "version": 3,
+      "keys": 6,
+      "data": {
+        "isComposed": false,
+        "isComposedVersion": false,
+        "appName": "Genshin"
+      },
+      "id": null,
+      "audioSongId": "recorded-source",
+      "folderId": null,
+      "duration": 60000,
+      "tracks": [
+        {
+          "instrument": {
+            "name": "Lyre",
+            "volume": 90,
+            "pitch": "",
+            "visible": true,
+            "icon": "circle",
+            "alias": "",
+            "muted": false,
+            "solo": false,
+            "reverbOverride": null
+          },
+          "hitObjects": [
+            [
+              3,
+              100,
+              0,
+              [
+                48
+              ]
+            ],
+            [
+              4,
+              420,
+              0,
+              [
+                50
+              ]
+            ],
+            [
+              5,
+              676,
+              0,
+              [
+                52
+              ]
+            ],
+            [
+              4,
+              968,
+              0,
+              [
+                53
+              ]
+            ],
+            [
+              5,
+              1212,
+              0,
+              [
+                55
+              ]
+            ],
+            [
+              4,
+              1526,
+              0,
+              [
+                57
+              ]
+            ],
+            [
+              5,
+              1832,
+              0,
+              [
+                59
+              ]
+            ],
+            [
+              4,
+              2124,
+              0,
+              [
+                60
+              ]
+            ],
+            [
+              5,
+              2425,
+              0,
+              [
+                62
+              ]
+            ],
+            [
+              4,
+              2668,
+              0,
+              [
+                64
+              ]
+            ]
+          ],
+          "color": "#ffffff"
+        }
+      ],
+      "instruments": [],
+      "trackModifiers": [
+        {
+          "hidden": false,
+          "muted": true,
+          "alias": "Lyre"
+        }
+      ],
+      "breakpoints": [],
+      "difficulty": 5,
+      "snapPoint": 1
+    }
+  },
+  "recorded-hard-6keys": {
+    "rating": 4.1,
+    "performed": [
+      0
+    ],
+    "doubled": [],
+    "attempts": 4,
+    "converged": false,
+    "song": {
+      "name": "new-format-recorded",
+      "type": "vsrg",
+      "bpm": 220,
+      "pitch": "C",
+      "version": 3,
+      "keys": 6,
+      "data": {
+        "isComposed": false,
+        "isComposedVersion": false,
+        "appName": "Genshin"
+      },
+      "id": null,
+      "audioSongId": "recorded-source",
+      "folderId": null,
+      "duration": 60000,
+      "tracks": [
+        {
+          "instrument": {
+            "name": "Lyre",
+            "volume": 90,
+            "pitch": "",
+            "visible": true,
+            "icon": "circle",
+            "alias": "",
+            "muted": false,
+            "solo": false,
+            "reverbOverride": null
+          },
+          "hitObjects": [
+            [
+              3,
+              100,
+              0,
+              [
+                48
+              ]
+            ],
+            [
+              4,
+              420,
+              0,
+              [
+                50
+              ]
+            ],
+            [
+              5,
+              676,
+              0,
+              [
+                52
+              ]
+            ],
+            [
+              4,
+              968,
+              0,
+              [
+                53
+              ]
+            ],
+            [
+              5,
+              1212,
+              0,
+              [
+                55
+              ]
+            ],
+            [
+              4,
+              1526,
+              0,
+              [
+                57
+              ]
+            ],
+            [
+              5,
+              1832,
+              0,
+              [
+                59
+              ]
+            ],
+            [
+              4,
+              2124,
+              0,
+              [
+                60
+              ]
+            ],
+            [
+              5,
+              2425,
+              0,
+              [
+                62
+              ]
+            ],
+            [
+              4,
+              2668,
+              0,
+              [
+                64
+              ]
+            ]
+          ],
+          "color": "#ffffff"
+        }
+      ],
+      "instruments": [],
+      "trackModifiers": [
+        {
+          "hidden": false,
+          "muted": true,
+          "alias": "Lyre"
+        }
+      ],
+      "breakpoints": [],
+      "difficulty": 5,
+      "snapPoint": 1
+    }
+  }
+}

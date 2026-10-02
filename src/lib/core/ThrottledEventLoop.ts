@@ -1,0 +1,77 @@
+// old src/lib/ThrottledEventLoop.ts (66 lines) - minimal-diff port; every method body byte-verbatim
+// (incl. the self-throttling `setTimeout(this.tick, 8)` loop, which is not a real
+// requestAnimationFrame and is preserved as-is). ONE import change: `Timer` (old
+// `$types/GeneralTypes`) now comes from `$core/utils/Utilities`, where it already lives (relocated
+// there by P3 Task 2 for createDebouncer/debounce; MediaRecorderPolyfill.ts set the same
+// import-swap precedent in P4a Task 2) - GeneralTypes.ts itself is not ported, so no new type
+// definition is added here. Consumed by both VSRG canvases (VsrgComposerCanvas/VsrgPlayerCanvas,
+// Phase-4c) for their render loops.
+import type {Timer} from "$core/utils/Utilities"
+
+type ThrottledEventLoopCallback = (elapsed: number, sinceLast: number) => void
+
+
+export class ThrottledEventLoop {
+    callback: ThrottledEventLoopCallback
+    startTime: number
+    elapsed: number
+    private nextTick = 0
+    private maxFps: number
+    private maxFpsInterval = 0
+    private deltaTime = 0
+    private raf: Timer = 0
+    private duration = 0
+    private previousTickTime = 0
+
+    constructor(callback: ThrottledEventLoopCallback, maxFps: number) {
+        this.callback = callback
+        this.startTime = 0
+        this.elapsed = 0
+        this.maxFps = maxFps
+        this.maxFpsInterval = 1000 / maxFps
+    }
+
+    get fps() {
+        return this.maxFps
+    }
+
+    changeMaxFps(maxFps: number) {
+        this.maxFps = maxFps
+        this.maxFpsInterval = 1000 / maxFps
+    }
+
+    setCallback(callback: ThrottledEventLoopCallback) {
+        this.callback = callback
+    }
+
+    start(duration?: number) {
+        this.stop()
+        this.startTime = Date.now()
+        this.nextTick = Date.now()
+        // The one deviation from the byte-verbatim port above: old set this to 0, which makes the
+        // FIRST tick of a run hand the callback `currentTime - 0` - the whole epoch in ms - as its
+        // `sinceLast`. Both VSRG renderers integrate that into a playback timestamp, so a run
+        // started while playing would jump the song ~1.7e12 ms on its first frame. It was invisible
+        // only because start() was called once at mount and never again; anchoring on startTime is
+        // what makes start/stop per playback run safe (VsrgComposerRenderer.update).
+        this.previousTickTime = this.startTime
+        this.duration = duration ?? Number.MAX_SAFE_INTEGER
+        this.tick()
+    }
+
+    stop() {
+        clearTimeout(this.raf)
+    }
+
+    tick = () => {
+        const currentTime = Date.now()
+        this.deltaTime = currentTime - this.nextTick
+        if (this.deltaTime >= this.maxFpsInterval) {
+            this.nextTick = currentTime - (this.deltaTime % this.maxFpsInterval)
+            this.callback(this.elapsed, currentTime - this.previousTickTime)
+            this.previousTickTime = currentTime
+        }
+        this.elapsed = currentTime - this.startTime
+        if (this.elapsed < this.duration) this.raf = setTimeout(this.tick, 8)
+    }
+}

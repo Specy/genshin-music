@@ -1,0 +1,8 @@
+{
+  "displayName": "Sine Synth",
+  "family": "synth lead",
+  "midiName": "lead 1 (square)",
+  "shape": "sky-2x4",
+  "register": "C5",
+  "notes": "synth-8"
+}

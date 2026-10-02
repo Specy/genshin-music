@@ -1,0 +1,8 @@
+{
+  "displayName": "Toy Ukulele",
+  "family": "guitar",
+  "midiName": "acoustic guitar (nylon)",
+  "shape": "sky-3x5",
+  "register": "C3",
+  "notes": "standard-15"
+}

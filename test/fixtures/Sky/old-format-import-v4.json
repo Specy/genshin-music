@@ -1,0 +1,150 @@
+{
+  "recorded": {
+    "name": "Old recorded",
+    "type": "recorded",
+    "folderId": null,
+    "version": 3,
+    "pitch": "C",
+    "bpm": 220,
+    "reverb": false,
+    "data": {
+      "isComposed": false,
+      "isComposedVersion": false,
+      "appName": "Sky"
+    },
+    "tracks": [
+      {
+        "instrument": {
+          "name": "Piano",
+          "volume": 100,
+          "pitch": "",
+          "visible": true,
+          "icon": "circle",
+          "alias": "",
+          "muted": false,
+          "reverbOverride": null
+        },
+        "notes": [
+          [
+            60,
+            0
+          ],
+          [
+            62,
+            100
+          ],
+          [
+            64,
+            300
+          ],
+          [
+            67,
+            400
+          ]
+        ]
+      },
+      {
+        "instrument": {
+          "name": "Piano",
+          "volume": 100,
+          "pitch": "",
+          "visible": true,
+          "icon": "circle",
+          "alias": "",
+          "muted": false,
+          "reverbOverride": null
+        },
+        "notes": [
+          [
+            69,
+            200
+          ],
+          [
+            67,
+            400
+          ]
+        ]
+      }
+    ],
+    "id": null
+  },
+  "composed": {
+    "name": "Old composed",
+    "type": "composed",
+    "bpm": 220,
+    "pitch": "C",
+    "version": 4,
+    "folderId": null,
+    "data": {
+      "isComposed": true,
+      "isComposedVersion": true,
+      "appName": "Sky"
+    },
+    "reverb": false,
+    "breakpoints": [
+      0
+    ],
+    "columnTempos": [
+      2,
+      2,
+      2,
+      2,
+      0
+    ],
+    "tracks": [
+      {
+        "instrument": {
+          "name": "Piano",
+          "volume": 100,
+          "pitch": "",
+          "visible": true,
+          "icon": "circle",
+          "alias": "",
+          "muted": false,
+          "reverbOverride": null
+        },
+        "notes": [
+          [
+            0,
+            60
+          ],
+          [
+            1,
+            62
+          ],
+          [
+            3,
+            64
+          ],
+          [
+            4,
+            67
+          ]
+        ]
+      },
+      {
+        "instrument": {
+          "name": "Piano",
+          "volume": 100,
+          "pitch": "",
+          "visible": true,
+          "icon": "circle",
+          "alias": "",
+          "muted": false,
+          "reverbOverride": null
+        },
+        "notes": [
+          [
+            2,
+            69
+          ],
+          [
+            4,
+            67
+          ]
+        ]
+      }
+    ],
+    "id": null
+  }
+}

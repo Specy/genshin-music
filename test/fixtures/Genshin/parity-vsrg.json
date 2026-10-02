@@ -1,0 +1,41 @@
+{
+  "song": "parity vsrg",
+  "songBasepoint": "A",
+  "tracks": [
+    {
+      "instrument": "Lyre",
+      "basepoint": ""
+    },
+    {
+      "instrument": "DunDun",
+      "basepoint": "Eb"
+    }
+  ],
+  "events": [
+    [
+      0,
+      500,
+      1.6818
+    ],
+    [
+      4,
+      500,
+      1.6818
+    ],
+    [
+      7,
+      1200,
+      1.6818
+    ],
+    [
+      0,
+      800,
+      1.1892
+    ],
+    [
+      -1,
+      800,
+      1.1892
+    ]
+  ]
+}

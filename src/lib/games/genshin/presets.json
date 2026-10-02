@@ -1,0 +1,273 @@
+{
+  "standard-21": [
+    {
+      "nominal": 72,
+      "baseNote": "C",
+      "icon": "do"
+    },
+    {
+      "nominal": 74,
+      "baseNote": "D",
+      "icon": "re"
+    },
+    {
+      "nominal": 76,
+      "baseNote": "E",
+      "icon": "mi"
+    },
+    {
+      "nominal": 77,
+      "baseNote": "F",
+      "icon": "fa"
+    },
+    {
+      "nominal": 79,
+      "baseNote": "G",
+      "icon": "so"
+    },
+    {
+      "nominal": 81,
+      "baseNote": "A",
+      "icon": "la"
+    },
+    {
+      "nominal": 83,
+      "baseNote": "B",
+      "icon": "ti"
+    },
+    {
+      "nominal": 60,
+      "baseNote": "C",
+      "icon": "do"
+    },
+    {
+      "nominal": 62,
+      "baseNote": "D",
+      "icon": "re"
+    },
+    {
+      "nominal": 64,
+      "baseNote": "E",
+      "icon": "mi"
+    },
+    {
+      "nominal": 65,
+      "baseNote": "F",
+      "icon": "fa"
+    },
+    {
+      "nominal": 67,
+      "baseNote": "G",
+      "icon": "so"
+    },
+    {
+      "nominal": 69,
+      "baseNote": "A",
+      "icon": "la"
+    },
+    {
+      "nominal": 71,
+      "baseNote": "B",
+      "icon": "ti"
+    },
+    {
+      "nominal": 48,
+      "baseNote": "C",
+      "icon": "do"
+    },
+    {
+      "nominal": 50,
+      "baseNote": "D",
+      "icon": "re"
+    },
+    {
+      "nominal": 52,
+      "baseNote": "E",
+      "icon": "mi"
+    },
+    {
+      "nominal": 53,
+      "baseNote": "F",
+      "icon": "fa"
+    },
+    {
+      "nominal": 55,
+      "baseNote": "G",
+      "icon": "so"
+    },
+    {
+      "nominal": 57,
+      "baseNote": "A",
+      "icon": "la"
+    },
+    {
+      "nominal": 59,
+      "baseNote": "B",
+      "icon": "ti"
+    }
+  ],
+  "ukulele-21": [
+    {
+      "nominal": 72,
+      "baseNote": "C",
+      "pitched": false,
+      "icon": "do"
+    },
+    {
+      "nominal": 74,
+      "baseNote": "Dm",
+      "pitched": false,
+      "icon": "re"
+    },
+    {
+      "nominal": 76,
+      "baseNote": "Em",
+      "pitched": false,
+      "icon": "mi"
+    },
+    {
+      "nominal": 77,
+      "baseNote": "F",
+      "pitched": false,
+      "icon": "fa"
+    },
+    {
+      "nominal": 79,
+      "baseNote": "G",
+      "pitched": false,
+      "icon": "so"
+    },
+    {
+      "nominal": 81,
+      "baseNote": "Am",
+      "pitched": false,
+      "icon": "la"
+    },
+    {
+      "nominal": 83,
+      "baseNote": "G7",
+      "pitched": false,
+      "icon": "ti"
+    },
+    {
+      "nominal": 60,
+      "baseNote": "C",
+      "icon": "do"
+    },
+    {
+      "nominal": 62,
+      "baseNote": "D",
+      "icon": "re"
+    },
+    {
+      "nominal": 64,
+      "baseNote": "E",
+      "icon": "mi"
+    },
+    {
+      "nominal": 65,
+      "baseNote": "F",
+      "icon": "fa"
+    },
+    {
+      "nominal": 67,
+      "baseNote": "G",
+      "icon": "so"
+    },
+    {
+      "nominal": 69,
+      "baseNote": "A",
+      "icon": "la"
+    },
+    {
+      "nominal": 71,
+      "baseNote": "B",
+      "icon": "ti"
+    },
+    {
+      "nominal": 48,
+      "baseNote": "C",
+      "icon": "do"
+    },
+    {
+      "nominal": 50,
+      "baseNote": "D",
+      "icon": "re"
+    },
+    {
+      "nominal": 52,
+      "baseNote": "E",
+      "icon": "mi"
+    },
+    {
+      "nominal": 53,
+      "baseNote": "F",
+      "icon": "fa"
+    },
+    {
+      "nominal": 55,
+      "baseNote": "G",
+      "icon": "so"
+    },
+    {
+      "nominal": 57,
+      "baseNote": "A",
+      "icon": "la"
+    },
+    {
+      "nominal": 59,
+      "baseNote": "B",
+      "icon": "ti"
+    }
+  ],
+  "drums-8": [
+    {
+      "nominal": 60,
+      "baseNote": "C",
+      "pitched": false,
+      "icon": "do"
+    },
+    {
+      "nominal": 62,
+      "baseNote": "D",
+      "pitched": false,
+      "icon": "re"
+    },
+    {
+      "nominal": 64,
+      "baseNote": "E",
+      "pitched": false,
+      "icon": "mi"
+    },
+    {
+      "nominal": 65,
+      "baseNote": "F",
+      "pitched": false,
+      "icon": "fa"
+    },
+    {
+      "nominal": 67,
+      "baseNote": "G",
+      "pitched": false,
+      "icon": "do"
+    },
+    {
+      "nominal": 69,
+      "baseNote": "A",
+      "pitched": false,
+      "icon": "re"
+    },
+    {
+      "nominal": 71,
+      "baseNote": "B",
+      "pitched": false,
+      "icon": "mi"
+    },
+    {
+      "nominal": 72,
+      "baseNote": "C",
+      "pitched": false,
+      "icon": "fa"
+    }
+  ]
+}

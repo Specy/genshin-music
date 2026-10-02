@@ -1,0 +1,281 @@
+{
+  "standard-15": [
+    {
+      "nominal": 60,
+      "baseNote": "C",
+      "icon": "dmcr"
+    },
+    {
+      "nominal": 62,
+      "baseNote": "D",
+      "icon": "dm"
+    },
+    {
+      "nominal": 64,
+      "baseNote": "E",
+      "icon": "cr"
+    },
+    {
+      "nominal": 65,
+      "baseNote": "F",
+      "icon": "dm"
+    },
+    {
+      "nominal": 67,
+      "baseNote": "G",
+      "icon": "cr"
+    },
+    {
+      "nominal": 69,
+      "baseNote": "A",
+      "icon": "cr"
+    },
+    {
+      "nominal": 71,
+      "baseNote": "B",
+      "icon": "dm"
+    },
+    {
+      "nominal": 72,
+      "baseNote": "C",
+      "icon": "dmcr"
+    },
+    {
+      "nominal": 74,
+      "baseNote": "D",
+      "icon": "dm"
+    },
+    {
+      "nominal": 76,
+      "baseNote": "E",
+      "icon": "cr"
+    },
+    {
+      "nominal": 77,
+      "baseNote": "F",
+      "icon": "cr"
+    },
+    {
+      "nominal": 79,
+      "baseNote": "G",
+      "icon": "dm"
+    },
+    {
+      "nominal": 81,
+      "baseNote": "A",
+      "icon": "cr"
+    },
+    {
+      "nominal": 83,
+      "baseNote": "B",
+      "icon": "dm"
+    },
+    {
+      "nominal": 84,
+      "baseNote": "C",
+      "icon": "dmcr"
+    }
+  ],
+  "drums-8": [
+    {
+      "nominal": 60,
+      "baseNote": "C",
+      "pitched": false,
+      "icon": "cr"
+    },
+    {
+      "nominal": 62,
+      "baseNote": "D",
+      "pitched": false,
+      "icon": "dm"
+    },
+    {
+      "nominal": 64,
+      "baseNote": "E",
+      "pitched": false,
+      "icon": "cr"
+    },
+    {
+      "nominal": 65,
+      "baseNote": "F",
+      "pitched": false,
+      "icon": "dm"
+    },
+    {
+      "nominal": 67,
+      "baseNote": "G",
+      "pitched": false,
+      "icon": "cr"
+    },
+    {
+      "nominal": 69,
+      "baseNote": "A",
+      "pitched": false,
+      "icon": "dm"
+    },
+    {
+      "nominal": 71,
+      "baseNote": "B",
+      "pitched": false,
+      "icon": "cr"
+    },
+    {
+      "nominal": 72,
+      "baseNote": "C",
+      "pitched": false,
+      "icon": "dm"
+    }
+  ],
+  "synth-8": [
+    {
+      "nominal": 60,
+      "baseNote": "C",
+      "icon": "dmcr"
+    },
+    {
+      "nominal": 62,
+      "baseNote": "D",
+      "icon": "dm"
+    },
+    {
+      "nominal": 64,
+      "baseNote": "E",
+      "icon": "cr"
+    },
+    {
+      "nominal": 65,
+      "baseNote": "F",
+      "icon": "dm"
+    },
+    {
+      "nominal": 67,
+      "baseNote": "G",
+      "icon": "cr"
+    },
+    {
+      "nominal": 69,
+      "baseNote": "A",
+      "icon": "dm"
+    },
+    {
+      "nominal": 71,
+      "baseNote": "B",
+      "icon": "cr"
+    },
+    {
+      "nominal": 72,
+      "baseNote": "C",
+      "icon": "dmcr"
+    }
+  ],
+  "bells-8": [
+    {
+      "nominal": 60,
+      "baseNote": "C",
+      "icon": "cr"
+    },
+    {
+      "nominal": 62,
+      "baseNote": "D",
+      "icon": "dm"
+    },
+    {
+      "nominal": 67,
+      "baseNote": "G",
+      "icon": "cr"
+    },
+    {
+      "nominal": 69,
+      "baseNote": "A",
+      "icon": "dm"
+    },
+    {
+      "nominal": 72,
+      "baseNote": "C",
+      "icon": "cr"
+    },
+    {
+      "nominal": 74,
+      "baseNote": "D",
+      "icon": "dm"
+    },
+    {
+      "nominal": 79,
+      "baseNote": "G",
+      "icon": "cr"
+    },
+    {
+      "nominal": 81,
+      "baseNote": "A",
+      "icon": "dm"
+    }
+  ],
+  "handpan-8": [
+    {
+      "nominal": 62,
+      "baseNote": "D",
+      "icon": "cr"
+    },
+    {
+      "nominal": 69,
+      "baseNote": "A",
+      "icon": "dm"
+    },
+    {
+      "nominal": 72,
+      "baseNote": "C",
+      "icon": "cr"
+    },
+    {
+      "nominal": 74,
+      "baseNote": "D",
+      "icon": "dm"
+    },
+    {
+      "nominal": 77,
+      "baseNote": "F",
+      "icon": "cr"
+    },
+    {
+      "nominal": 79,
+      "baseNote": "G",
+      "icon": "dm"
+    },
+    {
+      "nominal": 81,
+      "baseNote": "A",
+      "icon": "cr"
+    },
+    {
+      "nominal": 84,
+      "baseNote": "C",
+      "icon": "dm"
+    }
+  ],
+  "drums-4": [
+    {
+      "nominal": 60,
+      "baseNote": "C",
+      "pitched": false,
+      "icon": "cr"
+    },
+    {
+      "nominal": 62,
+      "baseNote": "D",
+      "pitched": false,
+      "icon": "dm"
+    },
+    {
+      "nominal": 64,
+      "baseNote": "E",
+      "pitched": false,
+      "icon": "cr"
+    },
+    {
+      "nominal": 65,
+      "baseNote": "F",
+      "pitched": false,
+      "icon": "dm"
+    }
+  ]
+}
