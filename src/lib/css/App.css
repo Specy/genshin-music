@@ -2407,8 +2407,10 @@ select {
     margin-left: 0;
   }
 
+  /* The close button stays for the sliding panel, shown only while it is open - like the
+     player's. ComposerMenu.svelte adds `close-menu-panel-open` then. */
   .composer-menu-sidebar .hamburger,
-  .composer-menu-sidebar .close-menu {
+  .composer-menu-sidebar .close-menu:not(.close-menu-panel-open) {
     display: none;
   }
 

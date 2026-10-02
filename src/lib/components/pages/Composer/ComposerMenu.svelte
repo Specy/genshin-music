@@ -78,10 +78,10 @@
   const excludedSongs: SongType[] = ['vsrg'];
 
   // THE SIDEBAR IS A COLUMN OF THE PAGE ON DESKTOP, not something the user opens. Above
-  // COMPOSER_MOBILE_MAX_WIDTH App.css pushes `.composer-grid` clear of the strip and hides both
-  // controls that used to toggle it (the hamburger and the close button), so the only thing left to
-  // open and close there is the sliding panel. Below it nothing changes: the strip still starts
-  // hidden behind the hamburger, which is what a phone has room for.
+  // COMPOSER_MOBILE_MAX_WIDTH App.css pushes `.composer-grid` clear of the strip and hides the
+  // hamburger, so the only thing left to open and close there is the sliding panel - the close
+  // button shows only while that panel is open and closes it, as in the player. Below it nothing
+  // changes: the strip still starts hidden behind the hamburger, which is what a phone has room for.
   //
   // `inPreview` opts /theme's composer preview out. That is a small box inside a scrolling page
   // rather than the composer route, and it keeps its own hamburger - the same exclusion
@@ -309,7 +309,8 @@
 {/snippet}
 
 <!-- `composer-menu-sidebar` is what App.css's desktop block hangs the pinned sidebar off: it pins
-     the strip open and hides the hamburger and the close button below. Dropped in preview, so
+     the strip open, hides the hamburger, and shows the close button below only while the panel is
+     open. Dropped in preview, so
      /theme's composer keeps the hamburger it has always had - the class going missing IS the
      exclusion here, where the shared `.menu`/`.hamburger` class names leave nothing else to
      select on. -->
@@ -332,11 +333,13 @@
     </div>
   {/snippet}
   <!-- The rail's start slot (`.menu-pinned-start` in App.css) - everything below it is one group at
-       the rail's other end. The desktop block hides this button, and then the group is all there
-       is. -->
+       the rail's other end. The desktop block hides this button unless the panel is open (then
+       toggleMenu lands on the panel - see setVisible), like the player's close button; while it is
+       hidden the group is all there is. A class rather than an {#if} on isSidebarPinned, so the
+       server-rendered desktop page does not flash the button before hydration. -->
   <MenuButton
     onclick={() => toggleMenu()}
-    class="close-menu menu-pinned-start"
+    class={['close-menu', 'menu-pinned-start', isOpen && 'close-menu-panel-open']}
     ariaLabel={t('menu:close_menu')}
   >
     {@render faTimesIcon()}

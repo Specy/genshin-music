@@ -1045,13 +1045,13 @@ describe('the desktop layout the canvas fills, and the chrome it fills around', 
         expect(isComposerDesktopWidth(COMPOSER_MOBILE_MAX_WIDTH + 1)).toBe(true)
     })
 
-    it('pins the sidebar open and takes away both controls that used to toggle it', () => {
+    it('pins the sidebar open, takes away the hamburger and keeps the close button for the panel', () => {
         //What makes the sidebar a COLUMN rather than an overlay, and therefore what makes the
         //176px of fixed chrome below start with `--menu-size`. ComposerMenu.svelte pins the same
         //thing in state; this is the half that holds before hydration.
         expect(DESKTOP).toContain('.composer-menu-sidebar .menu {\n    margin-left: 0;\n  }')
         expect(DESKTOP).toMatch(
-            /\.composer-menu-sidebar \.hamburger,\s*\.composer-menu-sidebar \.close-menu \{\s*display: none;/
+            /\.composer-menu-sidebar \.hamburger,\s*\.composer-menu-sidebar \.close-menu:not\(\.close-menu-panel-open\) \{\s*display: none;/
         )
     })
 
