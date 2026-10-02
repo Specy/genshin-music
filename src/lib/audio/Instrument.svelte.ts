@@ -819,6 +819,12 @@ export type NoteDataState = {
   holdTimerMs: number;
   /** Bumped per press so the ring's CSS animation restarts on a re-press of the same button. */
   holdTimerId: number;
+  /**
+   * Practice-mode: the note to click comes from a track after the first (layer 2+), drawn in the
+   * second highlight colour - sheets split by hand put each hand on its own layer. Only read while
+   * `status` is a to-click one; every write of 'toClick' sets it.
+   */
+  laterTrack: boolean;
 };
 
 /**
@@ -860,6 +866,7 @@ export class ObservableNote {
     holdMs: 0,
     holdTimerMs: 0,
     holdTimerId: 0,
+    laterTrack: false,
   });
 
   constructor(

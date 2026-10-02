@@ -74,7 +74,7 @@
     return 'var(--note-border-fill)';
   }
 
-  function parseClass(status: NoteStatus, disabled: boolean) {
+  function parseClass(status: NoteStatus, disabled: boolean, laterTrack: boolean) {
     //TODO there is a bug where if two notes to be clicked are the same, the first click will not be shown, as the transition is the same
     if (disabled) {
       switch (status) {
@@ -87,12 +87,13 @@
     switch (status) {
       case 'clicked':
         return 'click-event';
+      //track 0 is red, every later track blue: two-layer sheets put one hand on each layer
       case 'toClick':
-        return 'note-red';
+        return `note-to-click ${laterTrack ? 'note-blue' : 'note-red'}`;
       case 'toClickNext':
         return 'note-border-click';
       case 'toClickAndNext':
-        return 'note-red note-border-click';
+        return `note-to-click ${laterTrack ? 'note-blue' : 'note-red'} note-border-click`;
       case 'approach-wrong':
         return 'click-event approach-wrong';
       case 'approach-correct':
@@ -108,7 +109,7 @@
     `background-color ${note.data.delay}ms  ${note.data.delay === game.notes.animationDelayMs ? 'ease' : 'linear'} , transform 0.15s, border-color 100ms`
   );
   const noteClassName = $derived(
-    `${game.notes.cssClasses.note} ${parseClass(note.data.status, hideNote)}`
+    `${game.notes.cssClasses.note} ${parseClass(note.data.status, hideNote, note.data.laterTrack)}`
   );
   const noteBackgroundColor = $derived(
     clickColor && note.data.status === 'clicked' && theme.isDefault('accent')

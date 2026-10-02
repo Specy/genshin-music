@@ -845,9 +845,25 @@ describe('Player mode transition ownership', () => {
             !['toClick', 'toClickNext', 'toClickAndNext'].includes(note.status))).toBe(true)
     })
 
+    it('highlights notes to click red on the first track and blue on every later one', async () => {
+        await enterPractice()
+        // chunk 1 is one track-0 note alone
+        expect(target.querySelectorAll('.note-red')).toHaveLength(1)
+        expect(target.querySelectorAll('.note-blue')).toHaveLength(0)
+        const hitbox = target.querySelector('.note-red')?.closest<HTMLButtonElement>('.button-hitbox-bigger')
+        if (!hitbox) throw new Error('Practice mode exposed no clickable current note')
+        const press = new Event('pointerdown', {bubbles: true, cancelable: true})
+        Object.defineProperty(press, 'pointerId', {value: 1})
+        hitbox.dispatchEvent(press)
+        flushSync()
+        // chunk 2 holds one key from each track (the doubled key dedupes onto its track-0 entry)
+        expect(target.querySelectorAll('.note-red')).toHaveLength(1)
+        expect(target.querySelectorAll('.note-blue')).toHaveLength(1)
+    })
+
     it('does not apply an old practice click to a newer same-mode run during teardown', async () => {
         const song = await enterPractice()
-        const currentNote = target.querySelector<HTMLElement>('.note-red')
+        const currentNote = target.querySelector<HTMLElement>('.note-to-click')
         const hitbox = currentNote?.closest<HTMLButtonElement>('.button-hitbox-bigger')
         if (!hitbox) throw new Error('Practice mode exposed no clickable current note')
         const currentBefore = playerControlsStore.current

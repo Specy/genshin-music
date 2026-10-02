@@ -1263,6 +1263,22 @@ a {
   stroke: white !important;
 }
 
+/* practice-mode note to click on a track after the first (the other hand on a two-layer sheet) */
+.note-blue {
+  background-color: #5b8ff0;
+  border-color: #4f7dd6;
+  color: white;
+}
+
+.note-blue .svg-b {
+  stroke: #5b8ff0 !important;
+}
+
+.note-blue .svg-note {
+  fill: white !important;
+  stroke: white !important;
+}
+
 .note-border-click {
   border-color: var(--accent);
 }

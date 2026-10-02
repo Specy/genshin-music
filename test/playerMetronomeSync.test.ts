@@ -300,7 +300,7 @@ describe('Player delayed loop ownership', () => {
     it('does not let an old completion restart a newer mode after the loop pause', async () => {
         const song = buildRecordedSong()
         playerStore.practice(song, 0, song.notes.length)
-        await vi.waitFor(() => expect(target.querySelector('.note-red')).not.toBeNull())
+        await vi.waitFor(() => expect(target.querySelector('.note-to-click')).not.toBeNull())
 
         const loopButton = [...target.querySelectorAll<HTMLButtonElement>('button')].find(
             button => button.textContent?.includes('Loop'),
@@ -312,7 +312,7 @@ describe('Player delayed loop ownership', () => {
         // Consume every note in the first practice chunk. The last one calls onSongFinished(),
         // which parks for the one-second loop pause through the mocked delay above.
         while (!mocks.pendingDelays.some(({ms}) => ms === 1000)) {
-            const red = target.querySelector<HTMLElement>('.note-red')
+            const red = target.querySelector<HTMLElement>('.note-to-click')
             const hitbox = red?.closest<HTMLButtonElement>('.button-hitbox-bigger')
             if (!hitbox) throw new Error('Practice mode exposed no clickable current note')
             const press = new Event('pointerdown', {bubbles: true, cancelable: true})

@@ -667,6 +667,7 @@
       if (!keyboardNote) return;
       playerStore.setNoteState(keyboardNote, {
         status: 'toClick',
+        laterTrack: note.trackIndex > 0,
         delay: game.notes.animationDelayMs,
         holdMs:
           sustainingTracks[note.trackIndex] && note.duration >= SUSTAIN_VISUAL_THRESHOLD_MS
@@ -848,6 +849,7 @@
             if (!keyboardNote) return;
             playerStore.setNoteState(keyboardNote, {
               status: 'toClick',
+              laterTrack: note.trackIndex > 0,
               delay: nextChunk.delay,
               holdMs:
                 sustainingTracks[note.trackIndex] && note.duration >= SUSTAIN_VISUAL_THRESHOLD_MS
