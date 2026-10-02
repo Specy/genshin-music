@@ -38,6 +38,7 @@
   import { AVAILABLE_LANGUAGES, i18n, setI18nLanguage, type AppLanguage } from '$i18n/i18n';
   import { t } from '$i18n/binding.svelte';
   import rotateImg from '$lib/assets/images/rotate.svg';
+  import { applyAppScale, readStoredAppScale } from './appScale';
 
   // Effects-only orchestrator: no visual output except the rotate-screen
   // overlay markup below. Each block is commented with what it does.
@@ -245,6 +246,12 @@
     } catch (e) {
       console.error(e);
     }
+  });
+
+  // The home page's scale option, on every route and not only where HomeContent is mounted - see
+  // appScale.ts.
+  onMount(() => {
+    applyAppScale(readStoredAppScale());
   });
 
   onMount(() => {

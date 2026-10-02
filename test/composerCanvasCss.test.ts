@@ -46,6 +46,7 @@ import {
     composerNotesRegionY,
     composerTimelineStripY,
     isComposerDesktopWidth,
+    rootFontScale,
 } from '$cmp/pages/Composer/composerCanvasGeometry'
 
 //repo-relative, like test/midiConstructor.test.ts's own fixture read - vitest runs from the root
@@ -138,6 +139,8 @@ function mediaBlock(prelude: string): string {
 interface CssContext {
     viewportWidth: number
     viewportHeight: number
+    /** `html`'s computed font size, ROOT_FONT_SIZE unless a test sets the scale option's value */
+    rootFontSize?: number
     /** custom properties in scope, as their declared strings */
     vars: Record<string, string>
 }
@@ -212,7 +215,7 @@ function tokenize(source: string): CssToken[] {
  */
 function toPx(token: {value: number, unit: string}, context: CssContext): number {
     if (token.unit === '' || token.unit === 'px') return token.value
-    if (token.unit === 'rem') return token.value * ROOT_FONT_SIZE
+    if (token.unit === 'rem') return token.value * (context.rootFontSize ?? ROOT_FONT_SIZE)
     if (token.unit === 'vw') return context.viewportWidth * (token.value / 100)
     if (token.unit === 'vh') return context.viewportHeight * (token.value / 100)
     throw new Error(`unsupported unit \`${token.unit}\``)
@@ -316,6 +319,11 @@ describe('the composer canvas placeholder and the size the renderer computes', (
         )
         expect(mediaBlock(COMPOSER_DESKTOP_MEDIA_QUERY)).toContain(
             '--composer-canvas-width: var(--composer-canvas-width-desktop, 0px);'
+        )
+        //...and the desktop block drops the 78vw floor, which there could only hold the wrapper
+        //wider than the window-filling canvas (1280px at the scale option's 125%)
+        expect(mediaBlock(COMPOSER_DESKTOP_MEDIA_QUERY)).toContain(
+            'min-width: var(--composer-canvas-width, 0px);'
         )
     })
 
@@ -1267,4 +1275,64 @@ describe('the inline styles in ComposerCanvas.svelte that both couplings actuall
         //...and no inline hex left anywhere in the component to win over it
         expect(COMPOSER_CANVAS).not.toContain('timelineHex')
     })
+})
+
+describe("the home page's scale option: a root font size other than 16px", () => {
+    it('reads as 1 where the root font size cannot be read (jsdom answers "medium")', () => {
+        expect(rootFontScale()).toBe(1)
+    })
+
+    //THE BUG THIS PINS (2026-10-02): the canvas was sized with rem constants evaluated at 16px while
+    //the scale option had moved `html { font-size }`, so at 125% on a 2000px window the canvas was
+    //44px too wide and pushed the tool column off the right edge - and the placeholder's px inset
+    //held the wrapper at that wrong width even after the canvas was fixed.
+    const VIEWPORTS = [
+        {width: 2000, height: 1024},
+        {width: 1280, height: 720},
+    ]
+    const timelineHeight = 36.4
+    for (const rootFontSize of [12, 20]) {
+        for (const viewport of VIEWPORTS) {
+            for (const proView of [false, true]) {
+                const label = `${rootFontSize}px root, ${viewport.width}x${viewport.height}${proView ? ', pro' : ''}`
+                it(`sizes the canvas from the live root font size at ${label}`, () => {
+                    const remScale = rootFontSize / 16
+                    const css = composerCanvasCssSize({inPreview: false, proView, timelineHeight})!
+                    const context: CssContext = {
+                        viewportWidth: viewport.width,
+                        viewportHeight: viewport.height,
+                        rootFontSize,
+                        vars: {},
+                    }
+                    const js = composerCanvasSize({
+                        bodyWidth: viewport.width,
+                        bodyHeight: viewport.height,
+                        inPreview: false,
+                        proView,
+                        timelineHeight,
+                        remScale,
+                    })
+                    //the formula restated: the window less `.tool`'s `max(4vw, 3.5rem)` and the
+                    //11.1rem of fixed chrome, both at THIS root font size
+                    const expectedWidth =
+                        viewport.width -
+                        Math.max(viewport.width * 0.04, 3.5 * rootFontSize) -
+                        11.1 * rootFontSize
+                    expect(evaluateCss(css.desktopWidth, context)).toBeCloseTo(expectedWidth, 6)
+                    expect(js.width).toBe(nearestEven(expectedWidth))
+                    if (proView) {
+                        //the grid's 0.2rem padding twice and the 2.5rem sliver, at this root size
+                        const placeholder = evaluateCss(css.height, context)
+                        expect(placeholder).toBeCloseTo(viewport.height - 2.9 * rootFontSize, 6)
+                        expect(
+                            Math.abs(
+                                composerCanvasElementHeight(js.height, timelineHeight, true) -
+                                    placeholder
+                            )
+                        ).toBeLessThanOrEqual(1)
+                    }
+                })
+            }
+        }
+    }
 })

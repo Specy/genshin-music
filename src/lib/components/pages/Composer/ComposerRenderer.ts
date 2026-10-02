@@ -126,6 +126,7 @@ import {
   composerNotesRegionY,
   composerTimelineHeight,
   composerTimelineStripY,
+  rootFontScale,
 } from './composerCanvasGeometry';
 // THE COLUMN RULER'S CADENCE (CONTEXT.md: Column Ruler; spec 2026-08-27 §4), in the same pixi-free
 // shape proViewGeometry and composerInput are in: which columns of the top band carry a printed
@@ -2159,6 +2160,12 @@ export class ComposerRenderer {
   private height: number;
   private columnSize: { width: number; height: number };
   private timelineHeight = 30;
+  /**
+   * The live root font size over 16px (composerCanvasGeometry.rootFontScale), read where the canvas
+   * is sized. The DOM buttons the strip and the ruler's creep bands stand clear of are sized in rem,
+   * so the scale option's root font size has to reach their px insets here too.
+   */
+  private remScale = 1;
   private stageBackgroundColor: number;
   private theme: ComposerRendererTheme;
 
@@ -2616,7 +2623,9 @@ export class ComposerRenderer {
    */
   private computeCanvasSize(): { width: number; height: number; columnWidth: number } {
     const sizes = document.body.getBoundingClientRect();
+    this.remScale = rootFontScale();
     const { width, height } = composerCanvasSize({
+      remScale: this.remScale,
       bodyWidth: sizes.width,
       bodyHeight: sizes.height,
       inPreview: Boolean(this.state.inPreview),
@@ -2667,7 +2676,7 @@ export class ComposerRenderer {
    * The two POINTER HANDLERS are the exception and must convert explicitly - see stripX().
    */
   private positionTimelineStrip(): void {
-    this.timelineStrip.x = TIMELINE_INSET_LEFT;
+    this.timelineStrip.x = this.timelineInsetLeft();
     this.timelineStrip.y = composerTimelineStripY(this.state.proView, this.height);
     this.syncTimelineMinimapSpriteSize();
   }
@@ -4073,6 +4082,16 @@ export class ComposerRenderer {
     this.viewportClip.fill({ color: 0xffffff });
   }
 
+  /** TIMELINE_INSET_LEFT at the live root font size - the DOM buttons it clears are rem-sized. */
+  private timelineInsetLeft(): number {
+    return TIMELINE_INSET_LEFT * this.remScale;
+  }
+
+  /** TIMELINE_INSET_RIGHT at the live root font size - see timelineInsetLeft. */
+  private timelineInsetRight(): number {
+    return TIMELINE_INSET_RIGHT * this.remScale;
+  }
+
   /**
    * THE STRIP'S DRAWN WIDTH: the canvas less the two ends the DOM buttons stand on (see
    * TIMELINE_INSET_LEFT). Every timeline value that means "across the whole song" divides by this;
@@ -4084,7 +4103,7 @@ export class ComposerRenderer {
    * degenerate but finite one rather than propagating NaN into `selected`.
    */
   private stripWidth(): number {
-    return Math.max(1, this.width - TIMELINE_INSET_LEFT - TIMELINE_INSET_RIGHT);
+    return Math.max(1, this.width - this.timelineInsetLeft() - this.timelineInsetRight());
   }
 
   private syncTimelineMinimapSpriteSize(): void {
@@ -4105,7 +4124,7 @@ export class ComposerRenderer {
    * convert here rather than relying on positionTimelineStrip's offset.
    */
   private stripX(canvasX: number): number {
-    return canvasX - TIMELINE_INSET_LEFT;
+    return canvasX - this.timelineInsetLeft();
   }
 
   /**
@@ -6377,7 +6396,7 @@ export class ComposerRenderer {
       //the same inset ComposerCanvas.svelte holds the left chevron to, from the same function
       stripInset: this.state.proView ? proStripWidth(this.proRowHeightPx()) : 0,
       canvasWidth: this.width,
-      bandWidth: CANVAS_SIDE_BUTTON_WIDTH,
+      bandWidth: CANVAS_SIDE_BUTTON_WIDTH * this.remScale,
     });
     if (!edge || !(elapsedMs > 0)) return;
     const last = Math.max(0, this.state.columns.length - 1);
@@ -7451,7 +7470,7 @@ export class ComposerRenderer {
     // this method (and the hitarea, and the viewport clip) keeps meaning what it meant. Both views:
     // the buttons are opaque and the same colour as the band, so the Compressed View gains this in
     // the few px of margin around them and nowhere else.
-    background.rect(-TIMELINE_INSET_LEFT, 0, this.width, this.timelineHeight);
+    background.rect(-this.timelineInsetLeft(), 0, this.width, this.timelineHeight);
     background.fill({ color: this.theme.timeline.hexNumber });
     this.timelineBackground = background;
     if (this.timelineMinimapSprite) background.addChild(this.timelineMinimapSprite);

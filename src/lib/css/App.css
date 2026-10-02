@@ -2436,6 +2436,15 @@ select {
     --composer-canvas-width: var(--composer-canvas-width-desktop, 0px);
   }
 
+  /* ...and NO 78vw FLOOR here: the desktop canvas fills what the window leaves by construction, and
+     the floor (a phone-width concern - see `.canvas-wrapper`) could only ever hold the wrapper WIDER
+     than that and push the tool column off the right edge. It did at 1280px under the home page's
+     125% scale option (an 11.1rem-at-20px inset leaves 988px; 78vw is 998px). The preview is
+     excluded so `.canvas-wrapper-in-preview`'s `unset` keeps winning there. */
+  .canvas-wrapper:not(.canvas-wrapper-in-preview) {
+    min-width: var(--composer-canvas-width, 0px);
+  }
+
   /* ...and the keyboard centres itself in what is left of the window, not under the sidebar. It is
      `position: absolute` with no positioned ancestor, so both of these are against the viewport. */
   .composer-grid:not(.composer-grid-in-preview) .composer-keyboard-wrapper {

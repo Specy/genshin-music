@@ -28,6 +28,13 @@
   import { asyncConfirm } from '$stores/AsyncPromptStore.svelte';
   import { hasVisitedPage } from '$stores/PageVisitStore.svelte';
   import { isTWA } from '$core/utils/Utilities';
+  import {
+    APP_SCALE_MAX,
+    APP_SCALE_MIN,
+    applyAppScale,
+    readStoredAppScale,
+    storeAppScale,
+  } from './appScale';
   import { appPathname } from '$lib/utils/appPathname';
   import { APP_NAME } from '$core/legacyConfig';
   import { IS_BETA } from '$lib/env';
@@ -115,13 +122,13 @@
 
   function decreaseScale() {
     const newScale = appScale - 2;
-    if (newScale < 75) return;
+    if (newScale < APP_SCALE_MIN) return;
     appScale = newScale;
   }
 
   function increaseScale() {
     const newScale = appScale + 2;
-    if (newScale > 125) return;
+    if (newScale > APP_SCALE_MAX) return;
     appScale = newScale;
   }
 
@@ -129,24 +136,15 @@
     const storedHasVisited = localStorage.getItem(APP_NAME + '_Visited');
     hasVisited = storedHasVisited === 'true';
 
-    const storedFontScale = JSON.parse(localStorage.getItem(APP_NAME + '-font-size') || '100');
     isTwa = isTWA();
-    if (storedFontScale < 75 || storedFontScale > 125) {
-      appScale = 100;
-    } else {
-      appScale = storedFontScale;
-    }
+    appScale = readStoredAppScale();
 
     breakpoint = window.innerWidth > 1000;
   });
 
   $effect(() => {
-    localStorage.setItem(APP_NAME + '-font-size', `${appScale}`);
-    if (appScale === 100) {
-      document.documentElement.style.removeProperty('font-size');
-    } else {
-      document.documentElement.style.fontSize = `${appScale}%`;
-    }
+    storeAppScale(appScale);
+    applyAppScale(appScale);
   });
 </script>
 

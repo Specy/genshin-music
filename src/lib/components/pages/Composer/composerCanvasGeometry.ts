@@ -14,19 +14,29 @@ import { isMobile } from 'is-mobile';
 import { nearestEven } from '$core/utils/Utilities';
 
 /**
- * THE ROOT FONT SIZE EVERY px CONSTANT IN THIS FILE IS DERIVED AT.
+ * THE ROOT FONT SIZE EVERY px CONSTANT IN THIS FILE IS STATED AT. The constants stay written at 16px
+ * so they read as the App.css declarations they restate (test/composerCanvasCss.test.ts asserts
+ * App.css still declares the rem values they are derived from); the LIVE root font size is applied
+ * on top of them through rootFontScale() below.
  *
- * Verified: nothing in src/lib/css/*.css sets `font-size` on `html` or `:root`, and src/app.html
- * adds none - so 16px holds unless the USER changes their browser's default font size, in which
- * case the buttons (sized in rem by App.css) and the strip (sized in px by the constants below)
- * move apart by the ratio between the two. Accepted rather than fixed: the alternative is reading
- * the computed root font size at runtime, and jsdom returns the keyword "medium" for it, so
- * `parseFloat` is NaN and every test would exercise a fallback branch instead of the real one.
- *
- * test/composerCanvasCss.test.ts asserts App.css still declares the two rem values these are
- * derived from, which is the only thing standing between that stylesheet and this file.
+ * It is NOT fixed at 16 in practice: the home page's scale option writes a percentage onto
+ * `html { font-size }` (HomeContent.svelte), which moves every rem-sized button and column around
+ * the canvas. A canvas sized at 16px under a 20px root came out 44px too wide on desktop and pushed
+ * the tool column off the window's right edge (and left a gap at 12px).
  */
 const ROOT_FONT_SIZE = 16;
+
+/**
+ * THE LIVE ROOT FONT SIZE AS A MULTIPLIER on the px constants of this file: 1 at 16px, 1.25 at the
+ * scale option's 125%. Read at call time, never at import (see the module header), and 1 wherever
+ * it cannot be read - no `document` in a prerender, and jsdom answers the keyword "medium", which
+ * `parseFloat` turns into NaN.
+ */
+export function rootFontScale(): number {
+  if (typeof document === 'undefined') return 1;
+  const size = parseFloat(getComputedStyle(document.documentElement).fontSize);
+  return Number.isFinite(size) && size > 0 ? size / ROOT_FONT_SIZE : 1;
+}
 
 /** `.timeline-button`'s `width: 2.2rem` in src/lib/css/App.css. */
 export const TIMELINE_BUTTON_SIZE = 2.2 * ROOT_FONT_SIZE;
@@ -189,10 +199,10 @@ const DESKTOP_TOOL_COLUMN_MIN_REM = 3.5;
  * same choice rather than approximating it, and the two agree on both sides of the 1400px viewport
  * where the floor takes over.
  */
-function desktopToolColumnWidth(bodyWidth: number): number {
+function desktopToolColumnWidth(bodyWidth: number, remScale: number): number {
   return Math.max(
     bodyWidth * (DESKTOP_TOOL_COLUMN_VW / 100),
-    DESKTOP_TOOL_COLUMN_MIN_REM * ROOT_FONT_SIZE
+    DESKTOP_TOOL_COLUMN_MIN_REM * ROOT_FONT_SIZE * remScale
   );
 }
 
@@ -218,6 +228,9 @@ const DESKTOP_CANVAS_INSET_PX =
       0.2 * ROOT_FONT_SIZE) * //.buttons-composer-wrapper-right margin-left
       1000
   ) / 1000;
+/** The same inset in rem, for the CSS string - so the placeholder follows the live root font size. */
+const DESKTOP_CANVAS_INSET_REM =
+  Math.round((DESKTOP_CANVAS_INSET_PX / ROOT_FONT_SIZE) * 1000) / 1000;
 
 /**
  * THE LOWERED KEYBOARD SHEET'S SLIVER, in px: `:root`'s `--pro-sliver-height: 2.5rem` in
@@ -266,6 +279,8 @@ const PRO_CANVAS_INSET_PX =
       PRO_KEYBOARD_SLIVER_PX) * //the band the lowered keyboard sheet peeks into
       1000
   ) / 1000;
+/** The same inset in rem, for the CSS string - see DESKTOP_CANVAS_INSET_REM. */
+const PRO_CANVAS_INSET_REM = Math.round((PRO_CANVAS_INSET_PX / ROOT_FONT_SIZE) * 1000) / 1000;
 /**
  * The Pro View canvas' height as the CSS unit the placeholder is written in - `100vh` - so that the
  * pro branches of composerCanvasSize and composerCanvasCssSize stay two renderings of ONE formula,
@@ -409,11 +424,15 @@ export function composerColumnRulerY(timelineHeight: number): number {
  * COLUMN_RULER_HEIGHT's own docblock quotes. No caller had to be told; the row height is a function
  * of this number and follows it.
  */
-function proNotesRegionHeight(frameHeight: number, timelineHeight: number): number {
+function proNotesRegionHeight(
+  frameHeight: number,
+  timelineHeight: number,
+  remScale: number
+): number {
   return Math.max(
     PRO_MIN_NOTES_HEIGHT_PX,
     frameHeight * (PRO_CANVAS_HEIGHT_VH / 100) -
-      PRO_CANVAS_INSET_PX -
+      PRO_CANVAS_INSET_PX * remScale -
       //BOTH bands, as one term, so the split between the regions is stated in one place - and with
       //`proView` hard-coded true because this function is the pro branch: there is no compressed
       //caller for the flag to come from
@@ -457,8 +476,11 @@ export function composerCanvasSize(input: {
   frameHeight?: number;
   rowHeightScale?: number;
   timelineHeight?: number;
+  /** The live root font size over 16px - rootFontScale() unless a test pins it. */
+  remScale?: number;
 }): { width: number; height: number } {
   const scale = input.rowHeightScale ?? game.notes.composerRowHeightScale;
+  const remScale = input.remScale ?? rootFontScale();
   //the desktop layout is the composer page's, not the theme preview's - see composerCanvasCssSize
   const fillsWindow = !input.inPreview && isComposerDesktopWidth(input.bodyWidth);
   //THE PRO VIEW IS NOT EXCLUDED FROM THE PREVIEW ANY MORE (2026-09-18). It was, because a canvas
@@ -470,7 +492,9 @@ export function composerCanvasSize(input: {
   const proView = Boolean(input.proView);
   let width = nearestEven(
     fillsWindow
-      ? input.bodyWidth - desktopToolColumnWidth(input.bodyWidth) - DESKTOP_CANVAS_INSET_PX
+      ? input.bodyWidth -
+          desktopToolColumnWidth(input.bodyWidth, remScale) -
+          DESKTOP_CANVAS_INSET_PX * remScale
       : input.bodyWidth * (CANVAS_WIDTH_VW / 100) - CANVAS_WIDTH_INSET_PX
   );
   let height: number;
@@ -482,7 +506,8 @@ export function composerCanvasSize(input: {
     height = nearestEven(
       proNotesRegionHeight(
         input.frameHeight ?? input.bodyHeight,
-        input.timelineHeight ?? composerTimelineHeight()
+        input.timelineHeight ?? composerTimelineHeight(),
+        remScale
       )
     );
   } else {
@@ -584,16 +609,15 @@ export function composerCanvasCssSize(input: {
   const band = composerCanvasElementHeight(0, timelineHeight, input.proView);
   return {
     mobileWidth: `calc(${CANVAS_WIDTH_VW}vw - ${CANVAS_WIDTH_INSET_PX}px)`,
-    //`3.5rem` and not the 56px it comes to at ROOT_FONT_SIZE: this term IS `.tool`'s own
-    //declaration restated, so the placeholder follows the column a browser actually lays out. The
-    //fixed inset beside it cannot do the same - it is a sum of six declarations, printed rounded -
-    //which is exactly the drift ROOT_FONT_SIZE above already states and accepts.
-    desktopWidth: `calc(100vw - max(${DESKTOP_TOOL_COLUMN_VW}vw, ${DESKTOP_TOOL_COLUMN_MIN_REM}rem) - ${DESKTOP_CANVAS_INSET_PX}px)`,
+    //IN rem AND NOT px, both terms: they ARE `.tool`'s and the fixed chrome's own rem declarations
+    //restated, so the placeholder follows the column a browser actually lays out under the scale
+    //option's root font size - a px inset here floored the wrapper wider than the canvas at 125%.
+    desktopWidth: `calc(100vw - max(${DESKTOP_TOOL_COLUMN_VW}vw, ${DESKTOP_TOOL_COLUMN_MIN_REM}rem) - ${DESKTOP_CANVAS_INSET_REM}rem)`,
     //THE PRO HEIGHT IS proNotesRegionHeight + band, with `max` and `-` swapped so the whole thing
     //is one CSS expression: `max(F, 100vh - I - B) + B` is `max(F + B, 100vh - I)`. The floor is
     //reproduced here (unlike nearestEven) because `max()` is supported everywhere `calc()` is.
     height: input.proView
-      ? `max(${PRO_MIN_NOTES_HEIGHT_PX + band}px, calc(${PRO_CANVAS_HEIGHT_VH}vh - ${PRO_CANVAS_INSET_PX}px))`
+      ? `max(${PRO_MIN_NOTES_HEIGHT_PX + band}px, calc(${PRO_CANVAS_HEIGHT_VH}vh - ${PRO_CANVAS_INSET_REM}rem))`
       : `calc(${CANVAS_HEIGHT_VH}vh * ${scale} + ${band}px)`,
   };
 }
