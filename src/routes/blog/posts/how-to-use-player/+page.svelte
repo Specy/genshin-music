@@ -25,11 +25,9 @@
     />
     In the settings you can change the instrument, pitch, reverb, volume, keyboard size, etc... If you
     have a MIDI keyboard, you can connect it to your device, follow the <AppLink
-      href="/blog/connect-midi-device"
+      href="/blog/posts/connect-midi-device"
       >MIDI device
     </AppLink>
-    <!-- QUIRK: /blog/connect-midi-device above is a broken link (missing /posts/) - same
-             preserved bug as how-to-use-composer.tsx's equivalent link. -->
   </p>
 
   <Header type="h2" textSize="2rem" margin="1rem 0">How to use the player</Header>

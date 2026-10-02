@@ -1,3 +1,4 @@
+import { base } from '$app/paths';
 import { SpecyAuthor } from '../BaseBlogPost.svelte';
 import type { BlogMetadata } from '../types';
 
@@ -8,9 +9,6 @@ export const howUseVsrgComposerMetadata: BlogMetadata = {
   description: 'Learn how to use the VSRG composer to create beatmaps of a song',
   createdAt: new Date('2024/03/19'),
   tags: ['Guide'],
-  // QUIRK: missing the `${base}` prefix every other post's metadata image
-  // has - broken on a no-root base-path build. Reproduced exactly, not
-  // "fixed" to match the others.
-  image: '/assets/blog/help-vsrg-composer.webp',
+  image: `${base}/assets/blog/help-vsrg-composer.webp`,
   relativeUrl: 'how-to-use-vsrg-composer',
 };

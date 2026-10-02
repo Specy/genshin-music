@@ -62,16 +62,13 @@
     </li>
   </ol>
   <Header type="h2" textSize="2rem">Composer Tools</Header>
-  <!-- QUIRK: /blog/midi-conversion and /blog/ai-conversion below are broken links - the real
-         routes are /blog/posts/midi-transpose and /blog/posts/video-audio-transpose. Preserved
-         from old, not fixed. -->
   <p class="blog-p">
     The composer has useful tools that you can use to make it easier to edit/compose a song. <br />
     A very useful tool is the MIDI conversion, which transposes a MIDI song into a format that can be
-    used in the app. For more info on how to use it, go to the <AppLink href="/blog/midi-conversion"
-      >Midi conversion guide</AppLink
+    used in the app. For more info on how to use it, go to the <AppLink
+      href="/blog/posts/midi-transpose">Midi conversion guide</AppLink
     >. Also similar is a video/audio transposer, find more info in the <AppLink
-      href="/blog/ai-conversion">Audio conversion guide</AppLink
+      href="/blog/posts/video-audio-transpose">Audio conversion guide</AppLink
     >.
   </p>
   <p class="blog-p">
@@ -173,10 +170,8 @@
     <li>
       <b class="blog-b">Connect MIDI keyboard</b>: You can use a MIDI keyboard to make it easier to
       compose a song, by using the keyboard to select/deselect notes.
-      <!-- QUIRK: /blog/connect-midi-device is a broken link (missing /posts/) - same
-                 preserved bug as how-to-use-player.tsx's equivalent link. -->
       <br /> If you want to know how to connect your MIDI keyboard, follow the <AppLink
-        href="/blog/connect-midi-device">connect MIDI device</AppLink
+        href="/blog/posts/connect-midi-device">connect MIDI device</AppLink
       > guide.
     </li>
     <li>

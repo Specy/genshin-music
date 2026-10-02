@@ -76,9 +76,7 @@
     beatmap instrument, making the song seem more interctive. You can also "show" the notes of the
     layers inside of the editor, to more easily guide you where to place notes
   </p>
-  <!-- QUIRK: missing the ${base} prefix (unlike help-vsrg-composer-2.webp above) - matches the
-         same gap in this post's own metadata.ts image. Preserved, not fixed. -->
-  <BlogImage src="/assets/blog/help-vsrg-composer-3.webp" alt="VSRG song settings" />
+  <BlogImage src="{base}/assets/blog/help-vsrg-composer-3.webp" alt="VSRG song settings" />
   <ol class="blog-ol">
     <li>Deselects this song from the beatmap</li>
     <li>Hides the layer in the editor</li>
@@ -92,9 +90,10 @@
     object, add a "held" hit object, or remove one. You can select which of the 3 actions you want
     to do by pressing the selector on the bottom left.
   </p>
-  <!-- QUIRK: missing the ${base} prefix, same preserved gap as help-vsrg-composer-3.webp above
-         and this post's own metadata.ts image. -->
-  <BlogImage src="/assets/blog/help-vsrg-composer.webp" alt="tutorial for the vsrg composer page" />
+  <BlogImage
+    src="{base}/assets/blog/help-vsrg-composer.webp"
+    alt="tutorial for the vsrg composer page"
+  />
   <ol class="blog-ol">
     <li>
       This is the currently selected hit object, you can drag it around and change the notes that
