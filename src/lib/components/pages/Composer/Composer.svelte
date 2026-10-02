@@ -45,6 +45,7 @@
   import { RecordedSong } from '$core/Songs/RecordedSong';
   import { VsrgSong } from '$core/Songs/VsrgSong.svelte';
   import type { SerializedSong } from '$core/Songs/Song.svelte';
+  import { serializeForDownload } from '$core/Songs/legacySheetExport';
   import { NoteLayer } from '$core/Songs/Layer';
   import {
     isTrackAudible,
@@ -2601,12 +2602,13 @@
         const parsed = songService.parseSong(songToDownload);
         songToDownload.data.appName = APP_NAME;
         const songName = songToDownload.name;
-        // Downloads write the current format. The legacy old-format export was retired at
-        // ADR-0007 (it cannot state an absolute Note Number) and its producer is kept,
-        // commented, in ComposedSong/RecordedSong — old-format files still IMPORT fine.
-        const converted = [parsed.serialize()];
-        fileService.downloadSong(converted, `${songName}.${APP_NAME.toLowerCase()}sheet`);
+        // The current format, plus the legacy sheet fields where the game's config asks for
+        // them (ADR-0007 addendum, see legacySheetExport.ts).
+        const { file, droppedNotes } = serializeForDownload(parsed);
+        fileService.downloadSong([file], `${songName}.${APP_NAME.toLowerCase()}sheet`);
         logger.success(t('logs:song_downloaded'));
+        if (droppedNotes > 0)
+          logger.warn(t('logs:old_format_export_dropped_notes', { count: droppedNotes }), 8000);
         Analytics.userSongs('download', { page: 'composer' });
       } else if (as === 'midi') {
         const agrees = await asyncConfirm(t('menu:midi_download_warning'));

@@ -157,3 +157,6 @@ export const LANG_PREFERENCE_KEY_NAME = APP_NAME + '_Lang'
 // GameDefinition port (P2 Task 2/3 note: pre-existing upstream copy-paste artifact, byte-identical
 // both games), stored as game.i18n.updateMessage.
 export const UPDATE_MESSAGE = game.i18n.updateMessage
+// Whether song downloads carry the legacy sheet fields beside the current format (ADR-0007
+// addendum; see core/Songs/legacySheetExport.ts).
+export const LEGACY_SHEET_EXPORT = game.features.legacySheetExport

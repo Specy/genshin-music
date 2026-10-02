@@ -22,7 +22,7 @@
     "error_importing_file_generic": "Errore durante l'importazione del file",
     "error_importing_invalid_format": "Errore durante l'importazione del file: formato non valido",
     "song_backup_downloaded": "Backup del brano scaricato",
-    "old_format_export_dropped_notes": "Non è stato possibile includere {{count}} nota/e nel file nel vecchio formato (non hanno una posizione sullo strumento predefinito)",
+    "old_format_export_dropped_notes": "Non è stato possibile includere {{count}} nota/e per i vecchi strumenti per spartiti (non hanno una posizione sullo strumento predefinito). Il tuo file contiene comunque tutte le note.",
     "converted_song_stranded_notes": "Alcune note potrebbero non essere riprodotte perché non sono supportate da alcuni strumenti",
     "no_songs_to_backup": "Non ci sono brani di cui eseguire il backup",
     "no_empty_name": "Inserisci un nome non vuoto",

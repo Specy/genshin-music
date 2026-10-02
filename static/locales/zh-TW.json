@@ -20,7 +20,7 @@
         "error_importing_file_generic": "檔案匯入失敗",
         "error_importing_invalid_format": "檔案匯入失敗, 檔案格式錯誤",
         "song_backup_downloaded": "已下載歌曲備份",
-        "old_format_export_dropped_notes": "有 {{count}} 個音符無法寫入舊格式檔案（它們在預設樂器上沒有對應的位置）",
+        "old_format_export_dropped_notes": "有 {{count}} 個音符無法寫入供舊版樂譜工具使用的部分（它們在預設樂器上沒有對應的位置）。您的檔案仍然包含所有音符。",
         "converted_song_stranded_notes": "某些音符可能無法播放，因為某些樂器不支援它們",
         "no_songs_to_backup": "沒有要備份的歌曲",
         "no_empty_name": "請填寫一個非空白的名稱",

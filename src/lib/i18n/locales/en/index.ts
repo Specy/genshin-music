@@ -31,10 +31,10 @@ export const i18n_en = {
     error_importing_file_generic: 'Error importing file',
     error_importing_invalid_format: `Error importing file, invalid format`,
     song_backup_downloaded: 'Song backup downloaded',
-    // Unused since the old-format export was retired (ADR-0007 phase E). Kept, like the export
-    // itself, so the warning does not have to be re-translated in nine locales if it returns.
+    // Shown after a download whose legacy sheet fields (the copy third-party sheet tools read,
+    // ADR-0007 addendum) had to leave notes out. The downloaded file itself is complete.
     old_format_export_dropped_notes:
-      '{{count}} note(s) could not be included in the old-format file (they have no position on the default instrument)',
+      '{{count}} note(s) could not be included for older sheet tools (they have no position on the default instrument). Your file still has every note.',
     no_songs_to_backup: 'There are no songs to backup',
     no_empty_name: 'Please write a non empty name',
     cloned_song: `Cloned song: "{{song_name}}"`,

@@ -488,6 +488,10 @@ export interface GameDefinition {
     // animation. When false (Sky), notes have no frame and Zen uses a flip
     // animation. Refs: PlayerNote, BaseNote, ComposerNote, ZenNote.
     hasNoteFrame: boolean;
+    // Song downloads also carry the legacy sheet fields (`songNotes`, `pitchLevel`, ...) beside
+    // the current format, for the third-party tools that read only those (ADR-0007 addendum).
+    // Ref: core/Songs/legacySheetExport.ts.
+    legacySheetExport: boolean;
   };
 
   // ── i18n ──────────────────────────────────────────────────────────────────

@@ -140,9 +140,10 @@
     }
   },
   "features": {
-    "hasNoteFrame": true
+    "hasNoteFrame": true,
+    "legacySheetExport": false
   },
   "i18n": {
-    "updateMessage": "Added new instruments: Harmonic Key (genshin)\nAdded new Layout: number layout"
+    "updateMessage": "Rewritten from scratch, with sustained notes and a smooth scrolling composer\nAdded the Nightwind Horn, Vodyanitsa's voice, automatic VSRG beatmaps and WAV/MP3 export\nCheck the changelog for everything new"
   }
 }

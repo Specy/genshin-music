@@ -755,9 +755,10 @@ const CASES: PublishCase[] = [
 /** Same driver, empty expectations: these must not publish or touch anything at all. */
 const READERS: PublishCase[] = [
     {name: 'serialize', publishes: [], touches: 'none', run: song => void song.serialize()},
-    //`toOldFormat` and `countOldFormatDroppedNotes` had rows here until ADR-0007 phase E retired
-    //the old-format export (kept commented in ComposedSong), along with the three private steps
-    //they owned in INTERNAL below: groupColumnNotesById, legacyColumnsView, nominalOf.
+    //the legacy sheet fields a download adds beside the file (ADR-0007 addendum); their two
+    //private steps are in INTERNAL below
+    {name: 'legacySheetFields', publishes: [], touches: 'none', run: song => void song.legacySheetFields()},
+    {name: 'countLegacySheetDroppedNotes', publishes: [], touches: 'none', run: song => void song.countLegacySheetDroppedNotes()},
     {name: 'toRecordedSong', publishes: [], touches: 'none', run: song => void song.toRecordedSong()},
     {name: 'toComposedSong', publishes: [], touches: 'none', run: song => void song.toComposedSong()},
     {name: 'toMidi', publishes: [], touches: 'none', run: song => void song.toMidi()},
@@ -794,6 +795,8 @@ const READERS: PublishCase[] = [
 const INTERNAL: string[] = [
     'adjustSpansForInsertedColumns',
     'adjustSpansForRemovedColumns',
+    'groupColumnNotesById',
+    'nominalOf',
 ]
 
 function caseName(testCase: {name: string, label?: string}): string {

@@ -22,7 +22,7 @@
         "error_importing_file_generic": "Dosya içe aktarılırken hata oluştu",
         "error_importing_invalid_format": "Dosya içe aktarılırken hata oluştu, hatalı format",
         "song_backup_downloaded": "Yedeklenen şarkılar indirildi",
-        "old_format_export_dropped_notes": "{{count}} nota eski format dosyaya dahil edilemedi (varsayılan enstrümanda konumları yok)",
+        "old_format_export_dropped_notes": "{{count}} nota eski nota araçları için dahil edilemedi (varsayılan enstrümanda konumları yok). Dosyanızda tüm notalar duruyor.",
         "converted_song_stranded_notes": "Bazı notalar bazı enstrümanlar tarafından desteklenmediği için çalınmayabilir",
         "no_songs_to_backup": "Yedeklenecek şarkı yok",
         "no_empty_name": "Lütfen isim alanını boş bırakmayın",

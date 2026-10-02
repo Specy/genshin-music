@@ -120,6 +120,10 @@ async function reportUpdateStatus(event: ExtendableMessageEvent): Promise<void> 
 }
 
 // On a MAJOR_VERSION cache-key change, skip waiting and refresh all open tabs.
+// The refresh has to wait for activate: clients.claim() rejects with InvalidStateError on a worker
+// that is still installing - which, inside waitUntil, fails the install and strands every user on
+// the old worker - and WindowClient.navigate() only works on tabs this worker already controls.
+let refreshClientsOnActivate = false;
 self.addEventListener('install', (event) => {
   event.waitUntil(
     (async () => {
@@ -130,10 +134,8 @@ self.addEventListener('install', (event) => {
       const majorVersionKeys = appKeys.filter((e) => e.startsWith(`${MAJOR_VERSION}`));
       if (majorVersionKeys.length === 0) {
         console.log('Major version change, skipping waiting and refreshing all tabs');
+        refreshClientsOnActivate = true;
         await self.skipWaiting();
-        await self.clients.claim();
-        const clients = await self.clients.matchAll({ type: 'window' });
-        clients.forEach((client) => client.navigate(client.url));
       }
     })()
   );
@@ -162,6 +164,10 @@ self.addEventListener('activate', (evt) => {
         })
       );
       console.log('[ServiceWorker] Finished removing old caches');
+      if (!refreshClientsOnActivate) return;
+      await self.clients.claim();
+      const clients = await self.clients.matchAll({ type: 'window' });
+      await Promise.all(clients.map((client) => client.navigate(client.url).catch(console.error)));
     })
   );
   self.clients.claim();

@@ -14,6 +14,7 @@
   import { fileService } from '$core/Services/FileService';
   import { songService } from '$core/Services/SongService';
   import type { SerializedSong } from '$core/Songs/Song.svelte';
+  import { serializeForDownload } from '$core/Songs/legacySheetExport';
   import { APP_NAME } from '$core/legacyConfig';
   import { t } from '$i18n/binding.svelte';
 
@@ -46,11 +47,12 @@
     try {
       const songName = song.name;
       const parsed = songService.parseSong(song);
-      // Recovery downloads write the current format: the legacy old-format export was retired at
-      // ADR-0007 (see ComposedSong's commented block).
-      const converted = [parsed.serialize()];
-      fileService.downloadSong(converted, `${songName}.${APP_NAME.toLowerCase()}sheet`);
+      // Built like every other download (legacySheetExport.ts).
+      const { file, droppedNotes } = serializeForDownload(parsed);
+      fileService.downloadSong([file], `${songName}.${APP_NAME.toLowerCase()}sheet`);
       logger.success(t('logs:song_downloaded'));
+      if (droppedNotes > 0)
+        logger.warn(t('logs:old_format_export_dropped_notes', { count: droppedNotes }), 8000);
     } catch (e) {
       console.error(e);
       logger.error(t('logs:error_downloading_song'));

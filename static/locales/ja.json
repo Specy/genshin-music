@@ -20,7 +20,7 @@
         "error_importing_file_generic": "ファイルのインポート中にエラーが発生しました",
         "error_importing_invalid_format": "ファイルのインポート中にエラーが発生しました。無効な形式です",
         "song_backup_downloaded": "曲のバックアップがダウンロードされました",
-        "old_format_export_dropped_notes": "{{count}} 個のノートを旧形式のファイルに含めることができませんでした（デフォルトの楽器に対応する位置がありません）",
+        "old_format_export_dropped_notes": "{{count}} 個のノートを旧来の楽譜ツール向けに含めることができませんでした（デフォルトの楽器に対応する位置がありません）。ファイル自体にはすべてのノートが含まれています。",
         "converted_song_stranded_notes": "一部のノートは、一部の楽器に対応していないため再生されない場合があります",
         "no_songs_to_backup": "バックアップする曲がありません",
         "no_empty_name": "空白でない名前を入力してください",

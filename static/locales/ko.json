@@ -22,7 +22,7 @@
     "error_importing_file_generic": "파일을 불러오는데 에러가 발생했습니다",
     "error_importing_invalid_format": "파일을 불러오는데 에러가 있습니다: 지원되지 않는 형식의 파일",
     "song_backup_downloaded": "노래 백업 파일이 다운로드 되었습니다.",
-    "old_format_export_dropped_notes": "{{count}}개의 노트를 이전 형식의 파일에 포함할 수 없었습니다 (기본 악기에 해당하는 위치가 없습니다)",
+    "old_format_export_dropped_notes": "{{count}}개의 노트를 이전 악보 도구용으로 포함할 수 없었습니다 (기본 악기에 해당하는 위치가 없습니다). 파일에는 모든 노트가 그대로 들어 있습니다.",
     "converted_song_stranded_notes": "일부 악기에서 지원하지 않는 음표는 재생되지 않을 수 있습니다",
     "no_songs_to_backup": "백업 할 노래가 없습니다",
     "no_empty_name": "이름을 채워서 적어주세요",

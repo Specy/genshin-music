@@ -21,7 +21,7 @@
         "error_importing_file_generic": "Terjadi kesalahan saat mengimpor file",
         "error_importing_invalid_format": "Terjadi kesalahan mengimpor file, format tidak valid",
         "song_backup_downloaded": "Cadangan lagu terunduh",
-        "old_format_export_dropped_notes": "{{count}} note tidak dapat disertakan dalam file format lama (note tersebut tidak memiliki posisi pada instrumen default)",
+        "old_format_export_dropped_notes": "{{count}} note tidak dapat disertakan untuk alat lembar musik lama (note tersebut tidak memiliki posisi pada instrumen default). File Anda tetap berisi semua note.",
         "converted_song_stranded_notes": "Beberapa nada mungkin tidak dimainkan karena tidak didukung oleh beberapa instrumen",
         "no_songs_to_backup": "Tidak ada lagu untuk dicadangkan",
         "no_empty_name": "Harap tulis nama yang tidak kosong",

@@ -22,7 +22,7 @@
     "error_importing_file_generic": "Erro ao importar o arquivo",
     "error_importing_invalid_format": "Erro ao importar o arquivo, formato inválido",
     "song_backup_downloaded": "Backup da música baixado",
-    "old_format_export_dropped_notes": "{{count}} nota(s) não puderam ser incluídas no arquivo de formato antigo (elas não têm posição no instrumento padrão)",
+    "old_format_export_dropped_notes": "{{count}} nota(s) não puderam ser incluídas para as ferramentas de partituras antigas (elas não têm posição no instrumento padrão). Seu arquivo ainda tem todas as notas.",
     "converted_song_stranded_notes": "Algumas notas podem não tocar porque não são compatíveis com alguns instrumentos",
     "no_songs_to_backup": "Não há músicas para backup",
     "no_empty_name": "Por favor, escreva um nome não vazio",

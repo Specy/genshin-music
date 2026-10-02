@@ -10,9 +10,10 @@ import {expectGolden, readFixture} from './golden'
 // v4 outputs (absolute Note Numbers) live in `recorded-song-v4.json`. Neither old fixture
 // is ever regenerated.
 describe('RecordedSong formats', () => {
-    // No `oldFormatExport` member any more: that export was retired at ADR-0007 phase E (kept
-    // commented in RecordedSong), so the golden lost the key with its producer. Old-format
-    // IMPORT is unaffected — the legacy v1/v2 rows below and test/oldFormatImport.test.ts.
+    // No `oldFormatExport` member any more: the replacing old-format export was retired at
+    // ADR-0007 phase E, so the golden lost the key with its producer; the legacy sheet fields that
+    // came back beside downloads are pinned in test/legacySheetExport.test.ts. Old-format IMPORT
+    // is unaffected — the legacy v1/v2 rows below and test/oldFormatImport.test.ts.
     it('v4 serialize / roundtrip / v3 migration / legacy v1+v2 conversion are stable', () => {
         const legacy = readFixture('recorded-song')
         const song = buildRecordedSong()
@@ -56,5 +57,6 @@ describe('RecordedSong formats', () => {
 
     // The pre-v3 old-format export round-trip that used to close this file went with the
     // exporter itself (ADR-0007 phase E). `recorded-song.json`'s `oldFormatExport` member stays
-    // in the frozen fixture as the record of what that exporter emitted; nothing reads it.
+    // in the frozen fixture as the record of what that exporter emitted, and
+    // test/legacySheetExport.test.ts reads its legacy sheet fields as expected output.
 })

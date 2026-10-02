@@ -21,6 +21,7 @@
   import { ComposedSong } from '$core/Songs/ComposedSong.svelte';
   import { RecordedSong } from '$core/Songs/RecordedSong';
   import type { SerializedSong, SongStorable, SongType } from '$core/Songs/Song.svelte';
+  import { serializeForDownload } from '$core/Songs/legacySheetExport';
   import type {
     SettingInstrumentSettingsUpdate,
     SettingUpdate,
@@ -171,12 +172,13 @@
       return;
     }
     const songName = song.name;
-    // Downloads write the current format. The legacy old-format export was retired at ADR-0007
-    // (it cannot state an absolute Note Number) and its producer is kept, commented, in
-    // ComposedSong/RecordedSong — old-format files still IMPORT fine.
-    const converted = [song.serialize()];
-    fileService.downloadSong(converted, `${songName}.${APP_NAME.toLowerCase()}sheet`);
+    // The current format, plus the legacy sheet fields where the game's config asks for them
+    // (ADR-0007 addendum, see legacySheetExport.ts).
+    const { file, droppedNotes } = serializeForDownload(song);
+    fileService.downloadSong([file], `${songName}.${APP_NAME.toLowerCase()}sheet`);
     logger.success(t('logs:song_downloaded'));
+    if (droppedNotes > 0)
+      logger.warn(t('logs:old_format_export_dropped_notes', { count: droppedNotes }), 8000);
     Analytics.userSongs('download', { page: 'player' });
   }
 
@@ -216,9 +218,10 @@
   async function downloadAllSongs() {
     try {
       const songs = await songService.getSongs();
-      // Backups carry the current format, same as single-song downloads: the legacy old-format
-      // export was retired at ADR-0007 (see ComposedSong's commented block).
-      const toDownload = songs.map((song) => songService.parseSong(song).serialize());
+      // Backups are built like single-song downloads (legacySheetExport.ts), as they were pre-v4.
+      const downloads = songs.map((song) => serializeForDownload(songService.parseSong(song)));
+      const toDownload = downloads.map((download) => download.file);
+      const droppedNotes = downloads.reduce((total, download) => total + download.droppedNotes, 0);
       const date = new Date().toISOString().split('T')[0];
       const folders = await _folderService.getFolders();
       const files = [...folders, ...toDownload];
@@ -231,6 +234,8 @@
         `${APP_NAME}_Backup_${date}.${APP_NAME.toLowerCase()}backup`
       );
       logger.success(t('logs:song_backup_downloaded'));
+      if (droppedNotes > 0)
+        logger.warn(t('logs:old_format_export_dropped_notes', { count: droppedNotes }), 8000);
       settingsService.setLastBackupWarningTime(Date.now());
     } catch (e) {
       console.error(e);

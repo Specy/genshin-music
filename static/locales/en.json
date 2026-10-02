@@ -22,7 +22,7 @@
     "error_importing_file_generic": "Error importing file",
     "error_importing_invalid_format": "Error importing file, invalid format",
     "song_backup_downloaded": "Song backup downloaded",
-    "old_format_export_dropped_notes": "{{count}} note(s) could not be included in the old-format file (they have no position on the default instrument)",
+    "old_format_export_dropped_notes": "{{count}} note(s) could not be included for older sheet tools (they have no position on the default instrument). Your file still has every note.",
     "no_songs_to_backup": "There are no songs to backup",
     "no_empty_name": "Please write a non empty name",
     "cloned_song": "Cloned song: \"{{song_name}}\"",

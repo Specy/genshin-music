@@ -287,6 +287,7 @@ export type GameJson = {
 
   features: {
     hasNoteFrame: boolean;
+    legacySheetExport: boolean;
   };
 
   i18n: {

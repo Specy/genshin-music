@@ -505,6 +505,9 @@ const READ_ONLY: string[] = [
     'maxSpanAt',
     //a read that fills a private cache on the way through (ADR-0008) - no song state moves
     'columnsDurationMs',
+    //the legacy sheet fields a download adds beside the file (ADR-0007 addendum)
+    'legacySheetFields',
+    'countLegacySheetDroppedNotes',
 ]
 
 /**
@@ -525,6 +528,9 @@ const MACHINERY: string[] = ['attachHistory', 'undo', 'redo']
 const INTERNAL: string[] = [
     'adjustSpansForInsertedColumns',
     'adjustSpansForRemovedColumns',
+    //the legacy sheet fields' steps, reachable only through the two READ_ONLY readers above
+    'groupColumnNotesById',
+    'nominalOf',
 ]
 
 describe('every recorded mutator survives do → undo → redo → undo', () => {

@@ -10,6 +10,7 @@ import {
     INSTRUMENTS,
     INSTRUMENTS_DATA,
     type Pitch,
+    PITCHES,
     TEMPO_CHANGERS,
     type TempoChanger
 } from "$core/legacyConfig"
@@ -34,16 +35,10 @@ import {clamp} from "../utils/Utilities"
 import {isFixedBreakpoint} from "./breakpoints"
 import {isLegacyAppName, LEGACY_NOTE_TABLES, type LegacyAppName, legacyIndexToId} from "./legacyNoteTables"
 import {type ConversionGame, findSimilarInstrument} from "./instrumentSimilarity"
-import {effectiveTrackPitch, gridRowForNumber, nominalToNumber, numberToButton, scaleStepNumber} from "./noteIds"
+import {effectiveTrackPitch, gridRowForNumber, nominalToNumber, numberToButton, numberToNominal, scaleStepNumber} from "./noteIds"
 import {basepointDelta, rewriteForBasepoint, rewriteForSwap} from "./noteNumberTransforms"
 
-// Used only by the retired old-format EXPORT (see the commented block beside serialize()); kept
-// here rather than deleted so that block stays a complete, compilable reference.
-// interface OldFormatNoteType {
-//     key: string,
-//     time: number
-//     l?: number
-// }
+type OldFormatNoteType = OldFormat['songNotes'][number]
 
 /**
  * WHAT ONE UNIT OF moveNotesBy'S `amount` MEANS — the composer's statement of which canvas the user
@@ -1302,129 +1297,93 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 5> 
             id: this.id
         }
     }
-    // ─── RETIRED: the old-format EXPORT (ADR-0007 phase E) ───────────────────────────────
-    // Kept COMMENTED, not deleted: this block is the only remaining record of the legacy wire
-    // shape's PRODUCER side, and the reader side is still shipping.
+    // ─── LEGACY SHEET FIELDS (ADR-0007 addendum, 2026-10-02) ──────────────────────────────
+    // The old Sky sheet format names a note by its POSITION in a frozen default-instrument table
+    // (index + layer bitmask), an axis that cannot state a Note Number. ADR-0007 phase E retired
+    // the exporter that REPLACED a download with that format: it rewrote the song onto the frozen
+    // grid and dropped whatever the grid could not name.
     //
-    // Old-format IMPORT is untouched and fully supported — `isOldFormatSerializedType`,
-    // `RecordedSong.fromOldFormat` and the ≤v3 legacy deserializers all still open these files,
-    // and test/oldFormatImport.test.ts still pins every branch of that path.
-    //
-    // WHY the export went: the old format names a note by its POSITION in a frozen
-    // default-instrument table (index + layer bitmask), an axis that cannot state a Note Number.
-    // Writing one now means re-nominalizing every note back onto that frozen grid and DROPPING
-    // whatever it cannot name — every note stranded on the default table, plus the honesty of
-    // every tuned button. An exporter that silently rewrites what it exports is worse than no
-    // exporter, and nothing needs it: every download path in the app writes `serialize()`.
-    //
-    // Restoring it takes this block plus the three pieces commented out alongside it, all still
-    // exact: `OldFormatNoteType` (top of this file), `LAYERS_MAP` (bottom), and
-    // `noteIds.numberToNominal` — the inverse that kept these exports byte-identical across the
-    // ADR-0007 flip — plus the `PITCHES` import this file no longer needs.
-    //
-    // toOldFormat = (): OldFormatComposed => {
-    //     const serialized = this.serialize()
-    //     const song: OldFormatComposed = {
-    //         name: serialized.name,
-    //         type: 'composed',
-    //         bpm: serialized.bpm,
-    //         pitch: serialized.pitch,
-    //         //old format consumers never read `version`; keep the legacy value they were built against
-    //         version: 3,
-    //         folderId: serialized.folderId,
-    //         data: serialized.data,
-    //         reverb: serialized.reverb,
-    //         breakpoints: serialized.breakpoints,
-    //         instruments: this.instruments.map(instrument => instrument.serialize()),
-    //         columns: this.legacyColumnsView(),
-    //         id: serialized.id,
-    //         pitchLevel: PITCHES.indexOf(this.pitch),
-    //         isComposed: true,
-    //         bitsPerPage: 16,
-    //         isEncrypted: false,
-    //         songNotes: []
-    //     }
-    //     const convertedNotes: OldFormatNoteType[] = []
-    //     const msPerBeat = 60000 / song.bpm
-    //     let totalTime = 100
-    //     this.columns.forEach(column => {
-    //         const grouped = this.groupColumnNotesById(column)
-    //         grouped.forEach(({index, trackIndices}) => {
-    //             const stringifiedLayer = new Array(4).fill(0).map((_, i) => trackIndices.includes(i) ? '1' : '0').join('')
-    //             const layer = LAYERS_MAP[stringifiedLayer] ?? 1
-    //             if (layer === 0) return
-    //             const noteObj: OldFormatNoteType = {
-    //                 key: (layer > 2 ? 2 : layer) + 'Key' + index,
-    //                 time: totalTime,
-    //                 ...layer > 2 ? {l: 3} : {}
-    //             }
-    //             convertedNotes.push(noteObj)
-    //         })
-    //         //old format uses floor instead of rounding
-    //         totalTime += Math.floor(msPerBeat * TEMPO_CHANGERS[column.tempoChanger].changer)
-    //     })
-    //     song.songNotes = convertedNotes
-    //     return song
-    // }
-    //
-    // /** Old-format export view: columns re-expressed as legacy [tempo, [index, hexLayer][]] via the frozen tables. Notes whose id has no button in the frozen default table are dropped. */
-    // private legacyColumnsView(): SerializedColumnV3[] {
-    //     return this.columns.map(column => {
-    //         const notes = this.groupColumnNotesById(column).map(({index, trackIndices}) => {
-    //             const layer = new NoteLayer()
-    //             trackIndices.forEach(t => layer.set(t, true))
-    //             return [index, layer.serializeHex()] satisfies [number, string]
-    //         })
-    //         return [column.tempoChanger, notes] satisfies SerializedColumnV3
-    //     })
-    // }
-    //
-    // /**
-    //  * The NOMINAL Id a note names on its own track — the only axis the legacy/old wire formats
-    //  * and the frozen tables speak. Exactly inverts the number the note was entered/migrated as
-    //  * (noteIds.numberToNominal), so every nominal-space export below stayed byte-identical
-    //  * across the ADR-0007 flip, tuned instruments included.
-    //  */
-    // private nominalOf(note: ColumnNote): number {
-    //     const instrument = this.instruments[note.trackIndex]
-    //     return numberToNominal(instrument?.name ?? '', instrument?.pitch || this.pitch, note.id)
-    // }
-    //
-    // /** How many (column-grouped) notes toOldFormat() would drop — nominals without a frozen default-table button. Download UIs surface this before exporting to the legacy ecosystem. */
-    // countOldFormatDroppedNotes(): number {
-    //     const legacyTables = LEGACY_NOTE_TABLES[APP_NAME]
-    //     const defaultTable = legacyTables.tables[legacyTables.defaultInstrument]
-    //     let dropped = 0
-    //     this.columns.forEach(column => {
-    //         const seen = new Set<number>()
-    //         column.notes.forEach(note => {
-    //             const nominal = this.nominalOf(note)
-    //             if (defaultTable.indexOf(nominal) !== -1) return
-    //             if (seen.has(nominal)) return
-    //             seen.add(nominal)
-    //             dropped++
-    //         })
-    //     })
-    //     return dropped
-    // }
-    //
-    // /** Group a column's notes by legacy index (frozen default-table position of their nominal), merging tracks — the shape the pre-v4 formats stored. Stranded nominals are dropped. */
-    // private groupColumnNotesById(column: NoteColumn): { index: number, trackIndices: number[] }[] {
-    //     const legacyTables = LEGACY_NOTE_TABLES[APP_NAME]
-    //     const defaultTable = legacyTables.tables[legacyTables.defaultInstrument]
-    //     const grouped = new Map<number, { index: number, trackIndices: number[] }>()
-    //     column.notes.forEach(note => {
-    //         const index = defaultTable.indexOf(this.nominalOf(note))
-    //         if (index === -1) return
-    //         const existing = grouped.get(index)
-    //         if (existing) {
-    //             if (!existing.trackIndices.includes(note.trackIndex)) existing.trackIndices.push(note.trackIndex)
-    //         } else {
-    //             grouped.set(index, {index, trackIndices: [note.trackIndex]})
-    //         }
-    //     })
-    //     return [...grouped.values()]
-    // }
+    // What comes back is only the part third-party sheet tools read, ADDED BESIDE the v5 file
+    // (legacySheetExport.ts) - the same hybrid the pre-v4 app downloaded. The v5 data stays
+    // authoritative: both this app and the pre-v4 one look at `songNotes` only when a file has no
+    // `data`, so the lossy view is never read back. The pre-v4 `columns`/`version: 3` view is
+    // deliberately NOT restored: with `columns` present the pre-v4 composer would open a v5 file
+    // as an empty song and could save that over the user's own (see git 07ffd95f for the code).
+
+    /** The legacy sheet fields of this song: `songNotes` via the frozen default table. Notes with no button there are left out - countLegacySheetDroppedNotes says how many. */
+    legacySheetFields(): OldFormat {
+        const convertedNotes: OldFormatNoteType[] = []
+        const msPerBeat = 60000 / this.bpm
+        let totalTime = 100
+        this.columns.forEach(column => {
+            const grouped = this.groupColumnNotesById(column)
+            grouped.forEach(({index, trackIndices}) => {
+                const stringifiedLayer = new Array(4).fill(0).map((_, i) => trackIndices.includes(i) ? '1' : '0').join('')
+                const layer = LAYERS_MAP[stringifiedLayer] ?? 1
+                if (layer === 0) return
+                convertedNotes.push({
+                    key: (layer > 2 ? 2 : layer) + 'Key' + index,
+                    time: totalTime,
+                    ...layer > 2 ? {l: 3} : {}
+                })
+            })
+            //old format uses floor instead of rounding
+            totalTime += Math.floor(msPerBeat * TEMPO_CHANGERS[column.tempoChanger].changer)
+        })
+        return {
+            isComposed: true,
+            pitchLevel: PITCHES.indexOf(this.pitch),
+            bitsPerPage: 16,
+            isEncrypted: false,
+            songNotes: convertedNotes
+        }
+    }
+
+    /** How many (column-grouped) notes legacySheetFields() leaves out — nominals without a frozen default-table button. */
+    countLegacySheetDroppedNotes(): number {
+        const legacyTables = LEGACY_NOTE_TABLES[APP_NAME]
+        const defaultTable = legacyTables.tables[legacyTables.defaultInstrument]
+        let dropped = 0
+        this.columns.forEach(column => {
+            const seen = new Set<number>()
+            column.notes.forEach(note => {
+                const nominal = this.nominalOf(note)
+                if (defaultTable.indexOf(nominal) !== -1) return
+                if (seen.has(nominal)) return
+                seen.add(nominal)
+                dropped++
+            })
+        })
+        return dropped
+    }
+
+    /**
+     * The NOMINAL Id a note names on its own track — the only axis the legacy sheet format and
+     * the frozen tables speak. Exactly inverts the number the note was entered/migrated as
+     * (noteIds.numberToNominal), tuned instruments included.
+     */
+    private nominalOf(note: ColumnNote): number {
+        const instrument = this.instruments[note.trackIndex]
+        return numberToNominal(instrument?.name ?? '', instrument?.pitch || this.pitch, note.id)
+    }
+
+    /** Group a column's notes by legacy index (frozen default-table position of their nominal), merging tracks — the shape the pre-v4 formats stored. Stranded nominals are dropped. */
+    private groupColumnNotesById(column: NoteColumn): { index: number, trackIndices: number[] }[] {
+        const legacyTables = LEGACY_NOTE_TABLES[APP_NAME]
+        const defaultTable = legacyTables.tables[legacyTables.defaultInstrument]
+        const grouped = new Map<number, { index: number, trackIndices: number[] }>()
+        column.notes.forEach(note => {
+            const index = defaultTable.indexOf(this.nominalOf(note))
+            if (index === -1) return
+            const existing = grouped.get(index)
+            if (existing) {
+                if (!existing.trackIndices.includes(note.trackIndex)) existing.trackIndices.push(note.trackIndex)
+            } else {
+                grouped.set(index, {index, trackIndices: [note.trackIndex]})
+            }
+        })
+        return [...grouped.values()]
+    }
 
     get selectedColumn() {
         return this.columns[this.selected]
@@ -2246,23 +2205,22 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 5> 
     }
 }
 
-// Used only by the retired old-format EXPORT (see the commented block beside serialize()); kept
-// here rather than deleted so that block stays a complete, compilable reference.
-// const LAYERS_MAP: { [key in string]: number } = {
-//     '0000': 1, //out of range
-//     '0010': 2,
-//     '0110': 2,
-//     '0100': 2,
-//     '1010': 3,
-//     '1000': 1,
-//     '1110': 3,
-//     '1100': 3,
-//     '0001': 2,
-//     '0011': 2,
-//     '0111': 2,
-//     '0101': 2,
-//     '1011': 3,
-//     '1001': 1,
-//     '1111': 3,
-//     '1101': 3
-// }
+// Track bits (first four tracks) -> the legacy sheet's layer number; read by legacySheetFields().
+const LAYERS_MAP: { [key in string]: number } = {
+    '0000': 1, //out of range
+    '0010': 2,
+    '0110': 2,
+    '0100': 2,
+    '1010': 3,
+    '1000': 1,
+    '1110': 3,
+    '1100': 3,
+    '0001': 2,
+    '0011': 2,
+    '0111': 2,
+    '0101': 2,
+    '1011': 3,
+    '1001': 1,
+    '1111': 3,
+    '1101': 3
+}

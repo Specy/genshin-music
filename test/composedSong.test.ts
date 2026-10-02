@@ -21,10 +21,11 @@ import {isFixedBreakpoint, withFixedBreakpoints} from '$core/Songs/breakpoints'
 // below; v5 outputs (absolute Note Numbers) live in `composed-song-v5.json`. Neither old
 // fixture is ever regenerated.
 describe('ComposedSong formats', () => {
-    // No `oldFormatExport` member any more: that export was retired at ADR-0007 phase E (kept
-    // commented in ComposedSong), so the golden lost the key with its producer. Old-format
-    // IMPORT is unaffected and still covered — here by the legacy v1/v2/v3 rows, and in full by
-    // test/oldFormatImport.test.ts.
+    // No `oldFormatExport` member any more: the replacing old-format export was retired at
+    // ADR-0007 phase E, so the golden lost the key with its producer. What came back (the
+    // ADR-0007 addendum) is only the legacy sheet fields added beside a download, pinned in
+    // test/legacySheetExport.test.ts. Old-format IMPORT is covered here by the legacy v1/v2/v3
+    // rows, and in full by test/oldFormatImport.test.ts.
     it('v5 serialize / roundtrip / v4 migration / legacy v1+v2+v3 conversion are stable', () => {
         const legacy = readFixture('composed-song')
         const song = buildComposedSong()
@@ -93,9 +94,8 @@ describe('ComposedSong formats', () => {
         expect(numbersOf(migratedAtF)).toEqual(numbersOf(migratedAtE).map((n) => n + 1))
     })
 
-    // The frozen fixture's `oldFormatExport` member is no longer read by anything: the export
-    // that produced it was retired at ADR-0007 phase E. It stays in the file (frozen fixtures
-    // are never rewritten) as the record of what the pre-v4 exporter emitted.
+    // The frozen fixture's `oldFormatExport` member is the record of what the pre-v4 exporter
+    // emitted; test/legacySheetExport.test.ts reads its legacy sheet fields as expected output.
     it('a converted legacy v3 song reproduces the pre-v4 recorded conversion byte-for-byte', () => {
         const legacy = readFixture('composed-song')
         const converted = ComposedSong.deserialize(legacy.serialized)

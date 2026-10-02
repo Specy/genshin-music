@@ -24,6 +24,7 @@ import {
     VsrgTrackModifier,
 } from './imports'
 import {buildComposedSong, buildRecordedSong} from './builders'
+import {serializeForDownload} from '$core/Songs/legacySheetExport'
 import {assertNoReactiveProxies} from './noProxies'
 import {assertNoLiveAliasing, assertNoSharedState} from './noAliasing'
 import {instanceCallables, staticCallables} from './reflect'
@@ -93,9 +94,18 @@ const PATHS: PersistencePath[] = [
             return {model: song, payload: song.serialize()}
         },
     },
-    //The ComposedSong.toOldFormat() row lived here until ADR-0007 phase E retired that export
-    //(kept commented in the model). It carried NoteLayer.serializeHex with it, which is why that
-    //member now sits in NOT_PERSISTED below rather than under a `covers`.
+    //The ComposedSong.toOldFormat() row lived here until ADR-0007 phase E retired that export. It
+    //carried NoteLayer.serializeHex with it, which is why that member now sits in NOT_PERSISTED
+    //below rather than under a `covers`. What came back (ADR-0007 addendum) is the download: the
+    //file plus the legacy sheet fields, which build their own strings and never touch a layer.
+    {
+        label: 'serializeForDownload(ComposedSong) with the legacy sheet fields',
+        covers: [],
+        run: () => {
+            const song = liveComposedSong()
+            return {model: song, payload: serializeForDownload(song, true).file}
+        },
+    },
     {
         label: 'ComposedSong.clone().serialize()',
         //the clone is what the library's "duplicate song" and the undo history persist
@@ -121,7 +131,16 @@ const PATHS: PersistencePath[] = [
             return {model: song, payload: song.serialize()}
         },
     },
-    //RecordedSong.toOldFormat() was retired alongside the composed one (ADR-0007 phase E).
+    //RecordedSong.toOldFormat() was retired alongside the composed one (ADR-0007 phase E); its
+    //download with the legacy sheet fields (ADR-0007 addendum) is the row below.
+    {
+        label: 'serializeForDownload(RecordedSong) with the legacy sheet fields',
+        covers: [],
+        run: () => {
+            const song = buildRecordedSong()
+            return {model: song, payload: serializeForDownload(song, true).file}
+        },
+    },
     {
         label: 'RecordedSong.clone().serialize()',
         covers: [],
