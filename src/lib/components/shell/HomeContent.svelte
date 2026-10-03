@@ -47,6 +47,10 @@
   import Row from '../layout/Row.svelte';
   import LanguageSelector from '../i18n/LanguageSelector.svelte';
   import PromotionCard from '../PromotionCard.svelte';
+  import IconMobileScreenButton from '~icons/fa6-solid/mobile-screen-button';
+  import IconTriangleExclamation from '~icons/fa6-solid/triangle-exclamation';
+  import IconHardDrive from '~icons/fa6-solid/hard-drive';
+  import IconCheck from '~icons/fa6-solid/check';
 
   let {
     // Popup only: every link closes the overlay it floats over. The page variant leaves this
@@ -85,6 +89,13 @@
   // shift on every load.
   let hasVisited = $state(true);
   let isTwa = $state(false);
+  // Browsers with no install prompt to offer (every iOS browser - they are all WebKit - plus
+  // desktop Safari and Firefox) get the Install button anyway, pointing at the add-to-home-screen
+  // guide instead. Feature-detected, not UA-sniffed: Chromium exposes `onbeforeinstallprompt` on
+  // window even when the event never fires (already installed, criteria unmet), so this never
+  // shows the guide where the native prompt might still arrive. Hidden when already running
+  // installed - display-mode standalone, or iOS's own `navigator.standalone`.
+  let showInstallGuide = $state(false);
   let breakpoint = $state(false);
   let appScale = $state(100);
 
@@ -137,6 +148,11 @@
     hasVisited = storedHasVisited === 'true';
 
     isTwa = isTWA();
+    showInstallGuide =
+      !isTwa &&
+      !('onbeforeinstallprompt' in window) &&
+      !window.matchMedia('(display-mode: standalone)').matches &&
+      !(navigator as Navigator & { standalone?: boolean }).standalone;
     appScale = readStoredAppScale();
 
     breakpoint = window.innerWidth > 1000;
@@ -331,49 +347,54 @@
   {/if}
 
   {#if !hasVisited}
-    <div class="home-welcome">
-      <div>
+    <section class="home-welcome">
+      <ul class="home-welcome-list">
         {#if !isTwa}
-          <div class="home-spacing">
-            {t('home:add_to_home_screen')}. <AppLink
-              href="/blog/posts/add-to-home-screen"
-              onclick={onNavigate}
-              style="text-decoration:underline;color:var(--accent)"
-            >
-              {t('home:how_to_install')}
-            </AppLink>
-          </div>
+          <li class="home-welcome-item home-welcome-item-info">
+            <IconMobileScreenButton class="home-welcome-icon" />
+            <div>
+              {t('home:add_to_home_screen')}
+              <AppLink
+                href="/blog/posts/add-to-home-screen"
+                onclick={onNavigate}
+                class="home-welcome-link"
+              >
+                {t('home:how_to_install')}
+              </AppLink>
+            </div>
+          </li>
         {/if}
-        <div class="home-spacing">
-          <div class="red-text">{t('common:warning')}</div>
-          : {t('home:clear_cache_warning')}
-        </div>
-
+        <li class="home-welcome-item home-welcome-item-warning">
+          <IconTriangleExclamation class="home-welcome-icon" />
+          <div>
+            <strong class="home-welcome-warning-label">{t('common:warning')}</strong>
+            {t('home:clear_cache_warning')}
+          </div>
+        </li>
         <!-- hasPersistentStorage is still seeded by AppInit.svelte - it is a browser-capability
              probe, not part of the auto-open wiring that block lost. -->
         {#if homeStore.state.hasPersistentStorage}
-          <div>
-            <div class="red-text">{t('common:warning')}</div>
-            : {t('home:persistent_storage_button')}
-          </div>
+          <li class="home-welcome-item home-welcome-item-warning">
+            <IconHardDrive class="home-welcome-icon" />
+            <div>
+              <strong class="home-welcome-warning-label">{t('common:warning')}</strong>
+              {t('home:persistent_storage_button')}
+            </div>
+          </li>
         {/if}
-        <div>
-          <span style="margin-right:0.2rem">
+      </ul>
+      <div class="home-welcome-footer">
+        <div class="home-welcome-fineprint">
+          <p>
             {t('home:privacy_policy')}
-          </span>
-          <AppLink
-            href="/privacy"
-            style="color:var(--primary-text);text-decoration:underline"
-            onclick={onNavigate}
-          >
-            {t('common:privacy')}
-          </AppLink>
+            <AppLink href="/privacy" onclick={onNavigate} class="home-welcome-link">
+              {t('common:privacy')}
+            </AppLink>
+          </p>
+          <p>
+            {t('home:no_affiliation', { company_name: game.display.company.name })}
+          </p>
         </div>
-        <div>
-          {t('home:no_affiliation', { company_name: game.display.company.name })}
-        </div>
-      </div>
-      <div style="display:flex;justify-content:flex-end">
         <button
           class="home-accept-storage"
           onclick={() => {
@@ -381,10 +402,11 @@
             askForStorage();
           }}
         >
+          <IconCheck />
           {t('common:confirm')}
         </button>
       </div>
-    </div>
+    </section>
   {/if}
   {#if hasVisited}
     <PromotionCard style="margin-bottom:0.5rem" onclick={onNavigate} />
@@ -508,6 +530,15 @@
         {@render faDownloadIcon()}
         {t('home:install_app')}
       </AppButton>
+    {:else if showInstallGuide}
+      <AppLink
+        href="/blog/posts/add-to-home-screen"
+        onclick={onNavigate}
+        style="background-color:var(--accent);color:var(--accent-text)"
+      >
+        {@render faDownloadIcon()}
+        {t('home:install_app')}
+      </AppLink>
     {/if}
   </div>
 </div>
@@ -579,10 +610,6 @@
     margin: 0 auto;
   }
 
-  .home-spacing {
-    margin-bottom: 0.3rem;
-  }
-
   .home-bottom {
     width: 100%;
     padding: 0.4rem;
@@ -621,23 +648,121 @@
   }
 
   .home-welcome {
-    font-size: 0.9rem;
+    --home-welcome-warning: rgb(255, 51, 74);
+    font-size: 0.8rem;
+    line-height: 1.35;
     background-color: var(--primary-darken-10);
+    color: var(--primary-text);
     padding: 0.5rem;
     border-radius: 0.5rem;
-    margin: 0.8rem;
-    outline: 2px dashed var(--secondary);
-    outline-offset: 2px;
+    margin: 0.5rem 0;
+    border: 1px solid color-mix(in srgb, var(--primary-text) 12%, transparent);
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .home-welcome-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+  }
+
+  .home-welcome-item {
+    --home-welcome-tone: var(--accent);
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    padding: 0.35rem 0.5rem;
+    /* Square on the left: a rounded corner would bend the tone bar into a crescent. */
+    border-radius: 0 0.3rem 0.3rem 0;
+    border-left: 3px solid var(--home-welcome-tone);
+    background-color: color-mix(in srgb, var(--home-welcome-tone) 10%, transparent);
+  }
+
+  .home-welcome-item-warning {
+    --home-welcome-tone: var(--home-welcome-warning);
+  }
+
+  .home-welcome-item :global(.home-welcome-icon) {
+    flex-shrink: 0;
+    /* Fixed box so the narrow phone glyph lines its text up with the wider warning glyphs. */
+    width: 1rem;
+    font-size: 0.9rem;
+    /* Optically centred on the first text line (line-height 1.35 x 0.8rem). */
+    margin-top: 0.05rem;
+    color: var(--home-welcome-tone);
+  }
+
+  .home-welcome-warning-label {
+    color: var(--home-welcome-warning);
+    margin-right: 0.2rem;
+  }
+
+  .home-welcome-warning-label::after {
+    content: ':';
+  }
+
+  .home-welcome :global(.home-welcome-link) {
+    color: var(--accent);
+    text-decoration: underline;
+    text-underline-offset: 0.15em;
+  }
+
+  .home-welcome-footer {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 0.5rem;
+  }
+
+  .home-welcome-fineprint {
+    flex: 1 1 20rem;
+    font-size: 0.7rem;
+    opacity: 0.75;
+  }
+
+  .home-welcome-fineprint p {
+    margin: 0;
+  }
+
+  .home-welcome-fineprint p + p {
+    margin-top: 0.1rem;
+  }
+
+  .home-welcome-fineprint :global(.home-welcome-link) {
+    color: inherit;
   }
 
   .home-accept-storage {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin-left: auto;
     border: none;
-    padding: 0.4rem 1rem;
-    border-radius: 0.2rem;
-    background-color: limegreen;
-    color: white;
-    margin-top: 0.5rem;
+    padding: 0.3rem 0.9rem;
+    border-radius: 0.3rem;
+    background-color: var(--accent);
+    color: var(--accent-text);
+    font-size: 0.85rem;
     cursor: pointer;
+    transition:
+      filter 0.15s,
+      transform 0.12s;
+  }
+
+  @media (hover: hover) {
+    .home-accept-storage:hover {
+      filter: brightness(1.1);
+    }
+  }
+
+  .home-accept-storage:active {
+    transform: scale(0.97);
   }
 
   .home-content-main {

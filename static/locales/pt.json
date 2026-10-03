@@ -121,7 +121,7 @@
   },
   "home": {
     "app_description": "Um aplicativo onde você pode criar, praticar e tocar músicas para o {{APP_NAME}}",
-    "add_to_home_screen": "Para ter o aplicativo em tela cheia, adicione o site à sua tela inicial",
+    "add_to_home_screen": "Para ter o aplicativo em tela cheia, adicione o site à sua tela inicial.",
     "clear_cache_warning": "Limpar o cache/armazenamento do navegador pode excluir suas músicas, certifique-se de fazer backups",
     "persistent_storage_button": "Clique no botão abaixo para garantir que seu navegador não exclua suas músicas se faltar armazenamento",
     "privacy_policy": "Usamos cookies para análise, ao continuar a usar este aplicativo, você concorda com o uso de cookies. Saiba mais em:",

@@ -144,7 +144,7 @@ export const i18n_en = {
   home: {
     app_description: 'An app where you can create, practice and play songs for {{APP_NAME}}',
     add_to_home_screen:
-      'To have the webapp in fullscreen, please add the website to the home screen',
+      'To have the webapp in fullscreen, please add the website to the home screen.',
     clear_cache_warning:
       'Clearing your browser cache / storage might delete your songs, make sure you make backups',
     persistent_storage_button:

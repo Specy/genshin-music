@@ -121,7 +121,7 @@
   },
   "home": {
     "app_description": "Una aplicación donde puedes crear, practicar y tocar canciones para {{APP_NAME}}",
-    "add_to_home_screen": "Para usar la aplicación web a pantalla completa, añade el sitio a la pantalla de inicio",
+    "add_to_home_screen": "Para usar la aplicación web a pantalla completa, añade el sitio a la pantalla de inicio.",
     "clear_cache_warning": "Borrar la caché o el almacenamiento del navegador puede eliminar tus canciones; asegúrate de hacer copias de seguridad",
     "persistent_storage_button": "Pulsa el botón de abajo para evitar que el navegador elimine tus canciones si falta espacio de almacenamiento",
     "privacy_policy": "Usamos cookies con fines analíticos. Al seguir usando esta aplicación, aceptas su uso. Más información:",

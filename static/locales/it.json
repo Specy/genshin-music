@@ -121,7 +121,7 @@
   },
   "home": {
     "app_description": "Un'app in cui creare, esercitarsi e suonare brani per {{APP_NAME}}",
-    "add_to_home_screen": "Per usare l'app Web a schermo intero, aggiungi il sito alla schermata Home",
+    "add_to_home_screen": "Per usare l'app Web a schermo intero, aggiungi il sito alla schermata Home.",
     "clear_cache_warning": "La cancellazione della cache o dei dati del browser potrebbe eliminare i tuoi brani. Assicurati di eseguire dei backup",
     "persistent_storage_button": "Fai clic sul pulsante qui sotto per impedire al browser di eliminare i tuoi brani in caso di spazio insufficiente",
     "privacy_policy": "Utilizziamo cookie a fini statistici. Continuando a usare l'app accetti il loro utilizzo. Ulteriori informazioni:",
