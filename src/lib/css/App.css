@@ -1284,6 +1284,7 @@ a {
 }
 
 .note-name {
+  font-family: var(--font-controls);
   font-size: calc(0.8rem * var(--jianpu-label-scale, 1));
   position: absolute;
   bottom: 15%;
@@ -1296,6 +1297,7 @@ a {
 
 .note-name-sky {
   position: absolute;
+  font-family: var(--font-controls);
   font-size: calc(1rem * var(--jianpu-label-scale, 1));
   color: var(--note-background-text);
 }

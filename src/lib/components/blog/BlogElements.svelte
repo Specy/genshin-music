@@ -52,6 +52,7 @@
     color: var(--accent-text);
     transform: translateX(calc(-100% - 0.5rem));
     border-radius: 2rem;
+    font-family: var(--font-controls);
     font-weight: bold;
     min-width: 1.5rem;
     height: 100%;
