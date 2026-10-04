@@ -17,6 +17,7 @@
   import { ApproachingNote, type RecordedNote } from '$core/Songs/SongClasses';
   import type { NoteStatus } from '$core/types';
   import { effectiveTrackPitch, resolvePlayerNoteButtons } from '$core/Songs/noteIds';
+  import { retargetSong, type SongRetarget } from '$core/Songs/songRetarget';
   import { dedupeChunkNotes, dedupeSimultaneousNotes } from '$core/Songs/duplicateNotes';
   import { sectionQueue } from '$core/Songs/sectionChunks';
   import type { Instrument, ObservableNote } from '$lib/audio/Instrument.svelte';
@@ -46,6 +47,12 @@
       isLoading: boolean;
       instrument: Instrument;
       songDisplayInstrument: Instrument;
+      /**
+       * The user's own keyboard, while songs play on it ("don't sync the song's instrument and
+       * pitch"): each run is moved onto it by button before anything below reads a note. Null, and
+       * the song plays as saved.
+       */
+      songRetarget: SongRetarget | null;
       pitch: Pitch;
       keyboardSize: number;
       noteNameType: NoteNameType;
@@ -1026,7 +1033,16 @@
           functions.setHasSong(false);
         } else {
           if (!song) return;
-          const lostReference = song.isComposed ? song.toRecordedSong().clone() : song.clone();
+          const runSong = song.isComposed ? song.toRecordedSong().clone() : song.clone();
+          // ON THE USER'S OWN KEYBOARD, when songs play on it: every track moved onto the user's
+          // instrument and Basepoint by button (songRetarget.ts), before anything below reads a
+          // note - so the display instrument, both display coordinates, the planner and the three
+          // modes all see one ordinary song, and none of them needs to know. Player.svelte loaded
+          // the matching engines from the same `songRetarget`. The note list keeps its length and
+          // order, so the Section's indexes still address the same notes.
+          const lostReference = data.songRetarget
+            ? retargetSong(runSong, data.songRetarget)
+            : runSong;
           // THE BUTTON COUNT AND THE SHAPE COME FROM THE SAME INSTRUMENT - this line is the count,
           // the `shape` derived below is the grid - so a song on a 2x4 drum kit gets 8 buttons in
           // 4 columns rather than 8 buttons in a piano's 5.
@@ -1047,7 +1063,8 @@
             data.songDisplayInstrument.name,
             lostReference.pitch,
             //the Basepoint the keyboard on screen SOUNDS at: `data.pitch` is the player's own
-            //(which loading the song has already set to the song's), plus track 0's override, since
+            //(which loading the song has already set to the song's - or, on the user's own
+            //keyboard, the one the song was just moved onto), plus track 0's override, since
             //this keyboard follows track 0 (displayInstrument.ts) and Player.svelte sounds that
             //track through the same override
             effectiveTrackPitch(songInstruments[0], data.pitch)

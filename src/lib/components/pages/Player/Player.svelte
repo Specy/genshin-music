@@ -31,6 +31,7 @@
   import type { ComposedSong } from '$core/Songs/ComposedSong.svelte';
   import type { InstrumentName } from '$core/types';
   import { displayInstrumentNameFor } from '$core/Songs/displayInstrument';
+  import { retargetInstruments, type SongRetarget } from '$core/Songs/songRetarget';
   import {
     instrumentIdentityKey,
     type InstrumentSettingValues,
@@ -78,6 +79,22 @@
    * these - a song must never overwrite what the user chose.
    */
   let settingsBeforeSong: { pitch: Pitch; reverb: boolean } | null = null;
+  /**
+   * The user's own keyboard as songs play on it, while the "don't sync the song's instrument and
+   * pitch" setting is on - null, and every song sounds as it was saved, while it is off. A run moves
+   * the song onto it by button (songRetarget.ts): `retargetInstruments` for the engines loaded here,
+   * `retargetSong` for the notes PlayerKeyboard builds its run from.
+   */
+  const songRetarget: SongRetarget | null = $derived(
+    settings.dontSyncSongData.value
+      ? {
+          name: settings.instrument.value,
+          settings: settings.instrument.settings ?? {},
+          pitch: settings.pitch.value,
+          reverb: settings.reverb.value,
+        }
+      : null
+  );
 
   let { inPreview = false }: { inPreview?: boolean } = $props();
 
@@ -144,8 +161,9 @@
         // `instrumentsTasks` and awaits a sample fetch, but PlayerKeyboard publishes the keyboard
         // layout from this instrument on a 4ms debounce - so the shape has to be right now, not
         // whenever the audio finishes loading. A song's own track names need none of that.
+        //...from the instruments the song PLAYS with, which are the user's own while songs play on it
         if (isSongEvent) {
-          syncDisplayInstrument(song.instruments.map((instrument) => instrument.name));
+          syncDisplayInstrument(playbackInstruments(song).map((instrument) => instrument.name));
         } else if (eventType === 'stop') {
           syncDisplayInstrument([]);
         }
@@ -154,12 +172,20 @@
           // adopts this on its next wake without resetting the still-running free-play phase.
           metronome.bpm = settings.bpm.value;
         }
-        //A LOADED SONG ALWAYS BRINGS ITS OWN pitch, reverb and instruments: under absolute Note
-        //Numbers (ADR-0007) a song's notes only resolve at the Basepoint they were saved at, so
-        //adopting `song.pitch` is not a convenience the user could switch off - playing at any
-        //other Basepoint silences the song rather than transposing it. The user's own values are
-        //snapshotted below and put back at stop.
-        if (isSongEvent) {
+        //A LOADED SONG BRINGS ITS OWN pitch, reverb and instruments: under absolute Note Numbers
+        //(ADR-0007) a song's notes only resolve at the Basepoint they were saved at, so simply
+        //keeping the user's Basepoint would silence the song rather than transpose it. The user's
+        //own values are snapshotted below and put back at stop.
+        //
+        //The one way around it is the "don't sync" setting, which keeps the user's pitch, reverb and
+        //instrument and MOVES the song onto them instead, by button (songRetarget.ts): the engines
+        //here, the notes in PlayerKeyboard's run.
+        if (isSongEvent && settings.dontSyncSongData.value) {
+          //the setting can be switched on under a song that already swapped its values in: the
+          //user's go back first, since they are what this run is moved onto
+          restoreSettingsBeforeSong();
+          loadInstruments(playbackInstruments(song));
+        } else if (isSongEvent) {
           //remember the user's own values before the first song overrides them (a second song
           //replacing the first must not snapshot the previous song's values)
           settingsBeforeSong ??= { pitch: settings.pitch.value, reverb: settings.reverb.value };
@@ -170,13 +196,7 @@
           //song stopped: the branch above swapped the song's pitch/reverb/instruments in, so
           //put all three back to the user's own (queued, so a stop right after play cannot
           //race the song load still in flight)
-          if (settingsBeforeSong) {
-            const { pitch, reverb } = settingsBeforeSong;
-            applySetting({ data: { ...settings.pitch, value: pitch }, key: 'pitch' });
-            applySetting({ data: { ...settings.reverb, value: reverb }, key: 'reverb' });
-            //cleared last: while it is set, updateSettings substitutes it into what it saves
-            settingsBeforeSong = null;
-          }
+          restoreSettingsBeforeSong();
           //back to the user's own instrument, the same way the pitch and reverb above go back
           loadInstruments([
             new InstrumentData({
@@ -213,10 +233,30 @@
     hasSong = data;
   }
 
+  /** Puts back the user's own pitch and reverb a synced song swapped out, if one did. */
+  function restoreSettingsBeforeSong() {
+    if (!settingsBeforeSong) return;
+    const { pitch, reverb } = settingsBeforeSong;
+    applySetting({ data: { ...settings.pitch, value: pitch }, key: 'pitch' });
+    applySetting({ data: { ...settings.reverb, value: reverb }, key: 'reverb' });
+    //cleared last: while it is set, updateSettings substitutes it into what it saves
+    settingsBeforeSong = null;
+  }
+
+  /**
+   * The instruments a loaded song plays with: its own, or - while songs play on the user's
+   * keyboard - every track moved onto the user's instrument. The display keyboard and the loaded
+   * engines both ask this, so the keys on screen and the sound always follow the same instrument.
+   */
+  function playbackInstruments(song: RecordedSong | ComposedSong): InstrumentData[] {
+    return songRetarget ? retargetInstruments(song.instruments, songRetarget) : song.instruments;
+  }
+
   /**
    * The user's own keyboard Variant (ADR-0017). Saved either way, heard now only in free play:
    * while a song is loaded its tracks bring their own settings, and the stop-time restore picks
-   * this one up, the way the user's pitch and reverb come back.
+   * this one up, the way the user's pitch and reverb come back. The exception is a song playing on
+   * the user's own keyboard, whose tracks take this Variant too - so the run restarts on it.
    */
   function changeInstrumentSettings(update: SettingInstrumentSettingsUpdate) {
     if (update.key !== 'instrument') return;
@@ -224,6 +264,9 @@
     updateSettings();
     if (playerStore.eventType === 'stop') {
       loadInstrument(settings.instrument.value, settings.instrument.settings);
+    } else if (settings.dontSyncSongData.value && isPlayingSong()) {
+      //...unless songs play on the user's own keyboard: then the running one moves onto it now
+      restartSong();
     }
   }
 
@@ -528,7 +571,8 @@
         settings.instrument = { ...settings.instrument, settings: {} };
       }
       //a loaded song brings its own instruments: while one is, the pick is only saved, and the
-      //stop-time restore plays it - the way the user's pitch, reverb and Variant come back
+      //stop-time restore plays it - the way the user's pitch, reverb and Variant come back. (While
+      //songs play on the user's own keyboard, handleSettingChange restarts the run on the pick.)
       if (playerStore.eventType === 'stop') {
         loadInstrument(data.value as InstrumentName, settings.instrument.settings);
       }
@@ -557,7 +601,19 @@
     //song-sync effect re-adopts `song.pitch` on the way through: a loaded song cannot be
     //transposed by moving the player's Basepoint, only silenced. The user's choice is not lost -
     //it is kept in settingsBeforeSong above and takes effect when the song is stopped.
+    //(While songs play on the user's own keyboard there is no song pitch to re-adopt: the restart
+    //moves the song onto the new Basepoint, buttons kept - see songRetarget.ts.)
     if (setting.key === 'pitch' && isPlayingSong()) restartSong();
+    //The same restart re-aims a running song at the user's keyboard when it starts or stops being
+    //the one songs play on, or - while it is - when the instrument it plays with changes. The
+    //effect above re-reads the setting on the way through.
+    if (
+      isPlayingSong() &&
+      (setting.key === 'dontSyncSongData' ||
+        (setting.key === 'instrument' && settings.dontSyncSongData.value))
+    ) {
+      restartSong();
+    }
     if (
       (setting.key === 'numberOfVisualRows' || setting.key === 'numberOfVisualColumns') &&
       isPlayingSong()
@@ -743,6 +799,7 @@
         isLoading: isLoadingInstrument,
         instrument: instruments[0],
         songDisplayInstrument,
+        songRetarget,
         pitch: settings.pitch.value,
         keyboardSize: settings.keyboardSize.value,
         noteNameType: settings.noteNameType.value,

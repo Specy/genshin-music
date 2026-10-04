@@ -172,6 +172,10 @@ _Avoid_: frame (alone, ambiguous with animation frames), sheet tile
 The card holding the Sheet Frames above the player keyboard — the current page inline, the whole song when fullscreen. Section bounds render on it as brackets; frames outside the Section stay visible, dimmed.
 _Avoid_: visual sheet (the setting's name for the feature, not the surface)
 
+**Retargeted Run**:
+A player run of a song moved onto the user's own instrument, Instrument Settings, Basepoint and reverb, which the "don't sync the song's instrument and pitch" setting asks for. Every track moves by button, as an instrument swap plus a Basepoint change: notes keep their keys, and one the user's instrument has no key for strands. Tracks keep their volume, Mute and Solo, and the stored song never changes.
+_Avoid_: transposed song (the notes move by button, not by one interval), unsynced song
+
 ### Composer Playback
 
 **Transport**:

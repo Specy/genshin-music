@@ -321,6 +321,12 @@ export const i18n_en = {
         'During the practice mode, hide the notes so you can test your memory, the visual sheet will still be visible',
 
       player_reverb_description: 'Makes it sound like you are in a cave',
+      player_dont_sync_song_data: "Don't sync the song's instrument and pitch",
+      player_dont_sync_song_data_description:
+        'Songs play on your own instrument, pitch and reverb instead of the ones they were saved with, to hear how a song sounds on another instrument',
+      // shown under the setting while it is on
+      player_dont_sync_song_data_warning:
+        "Songs play on the same keys with your instrument and pitch, so they may not sound as intended. Notes on keys your instrument doesn't have stay silent.",
       player_note_name_type: 'Note name type',
       player_note_name_type_description: 'The type of text which will be written on the note',
       player_keyboard_size: 'Keyboard size',
