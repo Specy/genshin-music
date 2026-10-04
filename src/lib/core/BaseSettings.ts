@@ -193,7 +193,7 @@ export type PlayerSettingsDataType = {
 export type PlayerSettingsType = BaseSettings<PlayerSettingsDataType>
 export const PlayerSettings = {
     other: {
-        settingVersion: APP_NAME + 92 //change when instrument is added
+        settingVersion: APP_NAME + 92 //no bump needed for a new instrument or setting: stored blobs are reconciled per setting on load (ADR-0019)
     },
     data: {
         instrument: {
@@ -711,7 +711,7 @@ export const SheetVisualizerSettings = {
 
 export const ZenKeyboardSettings = {
     other: {
-        settingVersion: APP_NAME + 36 //change when instrument is added
+        settingVersion: APP_NAME + 36 //no bump needed for a new instrument or setting: stored blobs are reconciled per setting on load (ADR-0019)
     },
     data: {
         instrument: {

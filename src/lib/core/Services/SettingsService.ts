@@ -16,6 +16,7 @@ import {
     type ZenKeyboardSettingsDataType
 } from "$core/BaseSettings"
 import {MIDIShortcut} from "$core/utils/Utilities"
+import {reconcileSettings} from "./reconcileSettings"
 
 
 class SettingsService {
@@ -56,26 +57,27 @@ class SettingsService {
         return timeSinceLastEdit > elapsedTime && timeSinceLastBackup > elapsedTime
     }
 
-    private getLatestSettings<T>(baseSettings: BaseSettings<T>, keyName: string) {
-        const json = localStorage?.getItem(keyName)
-        const result = {
-            data: baseSettings.data,
-            hadUpdate: false,
-        }
+    /**
+     * The stored blob reconciled against the code's definitions, setting by setting (ADR-0019):
+     * what still fits is kept, the rest is the default. `hadUpdate` asks the caller to write the
+     * result back - whenever it differs from what was stored, or the version moved - so the next
+     * load reads it as-is. Nothing stored (or unreadable) is the defaults, with nothing to write.
+     */
+    private getLatestSettings<T extends object>(baseSettings: BaseSettings<T>, keyName: string) {
+        let stored: unknown = null
         try {
-            const storedSettings = JSON.parse(json || 'null') as BaseSettings<T>
-            if (storedSettings) {
-                if (storedSettings.other?.settingVersion !== baseSettings.other.settingVersion) {
-                    result.data = baseSettings.data
-                    result.hadUpdate = true
-                    return result
-                }
-                result.data = storedSettings.data
-            }
+            stored = JSON.parse(localStorage?.getItem(keyName) || 'null')
         } catch (e) {
             console.error(e)
         }
-        return result
+        if (typeof stored !== 'object' || stored === null) {
+            return {data: reconcileSettings(baseSettings.data, undefined), hadUpdate: false}
+        }
+        const {data: storedData, other} = stored as Partial<BaseSettings<unknown>>
+        const data = reconcileSettings(baseSettings.data, storedData)
+        const hadUpdate = other?.settingVersion !== baseSettings.other.settingVersion
+            || JSON.stringify(data) !== JSON.stringify(storedData)
+        return {data, hadUpdate}
     }
 
     getComposerSettings(): ComposerSettingsDataType {
