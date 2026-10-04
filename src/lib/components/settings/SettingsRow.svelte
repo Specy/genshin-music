@@ -7,12 +7,16 @@
   import SettingsInput from './SettingsInput.svelte';
   import SettingsSlider from './SettingsSlider.svelte';
   import InstrumentInput from './InstrumentInput.svelte';
+  import { slide } from 'svelte/transition';
+  import IconCircleInfo from '~icons/fa6-solid/circle-info';
+  import IconTriangleExclamation from '~icons/fa6-solid/triangle-exclamation';
   import { t, tNoteNameType } from '$i18n/binding.svelte';
   import type {
     SettingInstrumentSettingsUpdate,
     SettingUpdate,
     SettingUpdateKey,
     SettingVolumeUpdate,
+    SettingsNote,
     SettingsPropriety,
   } from '$core/types/SettingsPropriety';
 
@@ -50,6 +54,15 @@
   }
 
   const rowBackground = $derived(theme.layer('menu_background', 0.15).toString());
+
+  // The notes for the value as SAVED (`data.value`), not for an edit still in progress in
+  // `currentValue`: a note describes what the setting does, and an edit does nothing until it is
+  // committed. Widened to `unknown` because each setting type types its own notes' `when`.
+  const visibleNotes = $derived(
+    ((data.notes ?? []) as readonly SettingsNote<unknown>[]).filter(
+      (note) => note.when === undefined || note.when === data.value
+    )
+  );
 </script>
 
 {#snippet label()}
@@ -61,6 +74,28 @@
       </Tooltip>
     {/if}
   </div>
+{/snippet}
+
+<!-- Under the row, full width. Only a setting that declares notes gets the list, and each note
+     slides in and out on its own as the value it belongs to comes and goes. -->
+{#snippet notes()}
+  {#if data.notes}
+    <ul class="settings-row-notes">
+      {#each visibleNotes as note (`${note.kind}:${note.text}`)}
+        <li class="settings-row-note" transition:slide={{ duration: 150 }}>
+          {#if note.kind === 'warning'}
+            <IconTriangleExclamation
+              class="settings-row-note-icon settings-row-note-icon-warning"
+              aria-hidden="true"
+            />
+          {:else}
+            <IconCircleInfo class="settings-row-note-icon" aria-hidden="true" />
+          {/if}
+          <span class="settings-row-note-text">{t(`settings:props.${note.text}`)}</span>
+        </li>
+      {/each}
+    </ul>
+  {/if}
 {/snippet}
 
 {#if data.type === 'instrument' && changeVolume}
@@ -78,6 +113,7 @@
       {data}
       objectKey={objKey}
     />
+    {@render notes()}
   </div>
 {:else}
   <div class="settings-row" style="background-color:{rowBackground}">
@@ -108,18 +144,56 @@
     {#if data.type === 'slider'}
       <SettingsSlider objectKey={objKey} {data} value={currentValue as number} onChange={update} />
     {/if}
+    {@render notes()}
   </div>
 {/if}
 
 <style>
   .settings-row {
     display: flex;
+    /* lets the notes list take a line of its own under the label and the control */
+    flex-wrap: wrap;
     justify-content: space-between;
     padding: 0.4rem;
     border-radius: 0.2rem;
     color: var(--menu-background-text);
     align-items: center;
     margin-bottom: 0.3rem;
+  }
+
+  .settings-row-notes {
+    /* a whole line in the wrapping row, the whole width in the instrument's column block */
+    width: 100%;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .settings-row-note {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.4rem;
+    padding-top: 0.35rem;
+    font-size: 0.8rem;
+    line-height: 1.35;
+  }
+
+  /* Muted: a note informs, the setting above it is what the row is for. The warning icon keeps
+     its full colour so the two kinds still tell apart at a glance. */
+  .settings-row-note-text,
+  .settings-row-note :global(.settings-row-note-icon) {
+    opacity: 0.75;
+  }
+
+  .settings-row-note :global(.settings-row-note-icon) {
+    flex-shrink: 0;
+    /* optically centred on the first text line (line-height 1.35 x 0.8rem) */
+    margin-top: 0.1rem;
+  }
+
+  .settings-row-note :global(.settings-row-note-icon-warning) {
+    color: var(--red);
+    opacity: 1;
   }
 
   .settings-row div {

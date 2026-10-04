@@ -121,8 +121,10 @@
       the metronome
     </li>
     <li>
-      <b class="blog-b">Auto sync the song's instrument and pitch</b>: When selecting a song to
-      play, change the current instrument and pitch to match the song
+      <b class="blog-b">Don't sync the song's instrument and pitch</b>: Off by default, so a song
+      you select plays with its own instrument, pitch and reverb. Turn it on to play songs with
+      yours instead, for example to hear how a song sounds on another instrument: the song keeps its
+      keys, and notes on keys your instrument doesn't have stay silent
     </li>
     <li>
       <b class="blog-b">Metronome beats</b>: Set how many beats to use in the metronome, every nth

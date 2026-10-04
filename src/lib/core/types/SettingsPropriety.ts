@@ -29,14 +29,33 @@ export type SettingsCategory =
 
 export type NameOrDescriptionKey = keyof AppI18N['settings']['props']
 
-interface BaseSettingsProp {
+/**
+ * A line of text shown under a setting's row, in muted text so it informs without competing with
+ * the setting itself: `info` explains, `warning` cautions (the two differ by their icon).
+ *
+ * `when` ties the note to ONE value of the setting - a checkbox's `true`, one option of a select -
+ * and leaving it out shows the note whatever the value is. A setting lists as many notes as it
+ * needs, so different values can each carry their own, and two notes may share a `when`.
+ *
+ * Plain data on purpose, like the rest of a setting's definition: SettingsService reconciles the
+ * stored blob against the code's definitions on every load (ADR-0019), so a note added or reworded
+ * here reaches every user without a settingVersion bump.
+ */
+export type SettingsNote<T> = {
+    kind: 'info' | 'warning'
+    text: NameOrDescriptionKey
+    when?: T
+}
+
+interface BaseSettingsProp<T> {
     name: NameOrDescriptionKey
     songSetting: boolean
     category: SettingsCategory
     tooltip?: NameOrDescriptionKey
+    notes?: readonly SettingsNote<T>[]
 }
 
-export type SettingsInstrument = BaseSettingsProp & {
+export type SettingsInstrument = BaseSettingsProp<InstrumentName> & {
     type: 'instrument'
     volume: number
     value: InstrumentName
@@ -49,30 +68,30 @@ export type SettingsInstrument = BaseSettingsProp & {
      */
     settings?: InstrumentSettingValues
 }
-export type SettingsCheckbox = BaseSettingsProp & {
+export type SettingsCheckbox = BaseSettingsProp<boolean> & {
     type: 'checkbox'
     value: boolean
 }
 
-export type SettingsNumber = BaseSettingsProp & {
+export type SettingsNumber = BaseSettingsProp<number> & {
     type: 'number'
     value: number
     increment: number
     threshold: [number, number]
     placeholder?: string
 }
-export type SettingsSlider = BaseSettingsProp & {
+export type SettingsSlider = BaseSettingsProp<number> & {
     type: 'slider'
     value: number
     threshold: [number, number]
     step?: number
 }
-export type SettingsSelect<T = string | number> = BaseSettingsProp & {
+export type SettingsSelect<T = string | number> = BaseSettingsProp<T> & {
     type: 'select'
     value: T
     options: T[]
 }
-export type SettingsText = BaseSettingsProp & {
+export type SettingsText = BaseSettingsProp<string> & {
     type: 'text'
     value: string
     placeholder?: string

@@ -265,6 +265,21 @@
         "value": false,
         "category": "song_settings"
       },
+      "dontSyncSongData": {
+        "name": "player_dont_sync_song_data",
+        "tooltip": "player_dont_sync_song_data_description",
+        "type": "checkbox",
+        "songSetting": false,
+        "value": false,
+        "category": "song_settings",
+        "notes": [
+          {
+            "kind": "warning",
+            "text": "player_dont_sync_song_data_warning",
+            "when": true
+          }
+        ]
+      },
       "noteNameType": {
         "name": "player_note_name_type",
         "tooltip": "player_note_name_type_description",

@@ -176,6 +176,7 @@ export type PlayerSettingsDataType = {
     instrument: SettingsInstrument
     pitch: SettingsSelect<Pitch>
     reverb: SettingsCheckbox
+    dontSyncSongData: SettingsCheckbox
     noteNameType: SettingsSelect<NoteNameType>
     keyboardSize: SettingsSlider
     keyboardYPosition: SettingsSlider
@@ -193,7 +194,7 @@ export type PlayerSettingsDataType = {
 export type PlayerSettingsType = BaseSettings<PlayerSettingsDataType>
 export const PlayerSettings = {
     other: {
-        settingVersion: APP_NAME + 92 //change when instrument is added
+        settingVersion: APP_NAME + 92 //no bump needed for a new instrument or setting: stored blobs are reconciled per setting on load (ADR-0019)
     },
     data: {
         instrument: {
@@ -251,6 +252,21 @@ export const PlayerSettings = {
             songSetting: true,
             value: false,
             category: "song_settings",
+        },
+        //OFF by default: a loaded song sounds as it was saved. ON, the run plays the song on the
+        //user's own instrument, Basepoint and reverb instead (songRetarget.ts, ADR-0007 addendum
+        //2026-10-04) - on the same keys, so what was written is not what is heard, hence the note.
+        //`songSetting: false`: it is the listener's choice and never travels in a song.
+        dontSyncSongData: {
+            name: "player_dont_sync_song_data",
+            tooltip: "player_dont_sync_song_data_description",
+            type: "checkbox",
+            songSetting: false,
+            value: false,
+            category: "song_settings",
+            notes: [
+                {kind: "warning", text: "player_dont_sync_song_data_warning", when: true}
+            ]
         },
         noteNameType: {
             name: "player_note_name_type",
@@ -711,7 +727,7 @@ export const SheetVisualizerSettings = {
 
 export const ZenKeyboardSettings = {
     other: {
-        settingVersion: APP_NAME + 36 //change when instrument is added
+        settingVersion: APP_NAME + 36 //no bump needed for a new instrument or setting: stored blobs are reconciled per setting on load (ADR-0019)
     },
     data: {
         instrument: {
