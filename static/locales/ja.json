@@ -884,9 +884,8 @@
             "change-11": "曲をWAVまたはMP3のオーディオとしてエクスポート",
             "change-12": "練習モードを刷新し、プレイヤーで曲を一時停止・再開できるようになりました",
             "change-13": "Skyに11の楽器を追加しました：チェロ、ヴァイオリン、サックス、ハーモニカ、横笛、小さなベル、福鼓、Cymbals、Krill Horn、Tuned Krill Horn、Triumph HandPan。オーロラとライトギターがサステイン対応になりました。",
-            "change-14": "GenshinにNightwind Hornを追加しました",
-            "change-15": "GenshinにVodyanitsaの歌声を追加しました",
-            "change-16": "その他のバグ修正と改善"
+            "change-14": "GenshinにNightwind HornとVodyanitsaの歌声を追加しました",
+            "change-15": "その他のバグ修正と改善"
         },
         "3-7-0": {
             "title": "新しい楽器と翻訳",

@@ -24,8 +24,7 @@ export const CHANGELOG: Update[] = [
             'Export songs as WAV or MP3 audio',
             'Overhauled practice mode, and songs in the player can now be paused and resumed',
             'Added eleven instruments to Sky: Cello, Violin, Saxophone, Harmonica, Transverse Flute, Small Bell, Fortune Drum, Cymbals, Krill Horn, Tuned Krill Horn and Triumph HandPan. The Aurora and the Light Guitar are now sustained.',
-            'Added the Nightwind Horn to Genshin',
-            "Added Vodyanitsa's singing voice to Genshin",
+            'Added the Nightwind Horn and Vodyanitsa\'s singing voice to Genshin',
             'Other bug fixes and improvements',
         ]
     },

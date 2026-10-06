@@ -838,7 +838,7 @@
         "Harmonica": "口琴",
         "Aurora": "歐若拉",
         "NightwindHorn": "晚風圓號",
-        "Vodyanitsa": "Vodyanitsa",
+        "Vodyanitsa": "沃雅妮莎",
         "Kalimba": "拇指琴",
         "ToyUkulele": "玩具尤克里裡",
         "Drum": "鼓組",
@@ -884,9 +884,8 @@
             "change-11": "將歌曲匯出為 WAV 或 MP3 音訊",
             "change-12": "練習模式全面改版，演奏器中的歌曲現在可以暫停和繼續播放",
             "change-13": "已為 光遇 添加十一種樂器：大提琴、小提琴、薩克斯、口琴、橫笛、小鈴鐺、福鼓、鑔、Krill Horn、Tuned Krill Horn 和 勝利手碟。歐若拉 和 電吉他 現在支持延音。",
-            "change-14": "已為 原神 添加 晚風圓號",
-            "change-15": "已為 原神 添加 Vodyanitsa 的歌聲",
-            "change-16": "其他問題修復和改進"
+            "change-14": "已為 原神 添加 晚風圓號、沃雅妮莎的歌聲",
+            "change-15": "其他問題修復和改進"
         },
         "3-7-0": {
             "title": "新樂器(原神)",
