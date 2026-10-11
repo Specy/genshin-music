@@ -28,7 +28,8 @@ async function execute() {
       const { id, outDir } = GAMES[app];
       // Historical quirk, preserved: NO third argv → base '' (production
       // build:all); ANY third argv (scripts pass "false") → subpath base.
-      const basePath = process.argv[3] ? `/${outDir}` : '';
+      // PAGES_BASE_PATH: a fork's GitHub Pages site lives under /<repo-name>
+      const basePath = process.env.PAGES_BASE_PATH ?? (process.argv[3] ? `/${outDir}` : '');
       console.log(clc.bold.yellow(`Building ${app}...`));
       await prepareGameStatic(id, basePath);
       execSync('npm run build', {
