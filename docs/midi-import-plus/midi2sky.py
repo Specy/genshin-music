@@ -672,8 +672,8 @@ def gm_instrument(prog):
         (range(61, 64), 'Trumpet'), (range(64, 68), 'Saxophone'), (range(68, 72), 'Flute'),
         (range(72, 73), 'Flute'), (range(73, 74), 'Flute'), (range(74, 75), 'TransverseFlute'),
         (range(75, 76), 'Panflute'), (range(76, 80), 'Ocarina'), (range(80, 104), 'Piano'),
-        (range(104, 105), 'Pipa'), (range(105, 106), 'Pipa'), (range(106, 108), 'Kalimba'),
-        (range(108, 112), 'Kalimba'), (range(112, 128), 'Piano')]
+        (range(104, 108), 'Pipa'),
+        (range(108, 112), 'Kalimba'), (range(112, 120), 'DunDun'), (range(120, 128), 'Piano')]
     for r, name in table:
         if prog in r:
             return name
@@ -684,7 +684,7 @@ def best_layer(notes, instr, prefer=None):
     """escolhe escala (12 opções) e oitava que deixam MAIS notas exatamente nas 15 teclas"""
     best = None
     for p in PITCH_OUT:
-        for sh in (-36, -24, -12, 0, 12, 24, 36):
+        for sh in (-48, -36, -24, -12, 0, 12, 24, 36, 48):
             keys = set(layer_range(instr, p))
             hit = sum(1 for n in notes if n + sh in keys)
             cand = (hit, -abs(sh), p == prefer, p, sh)
@@ -693,7 +693,7 @@ def best_layer(notes, instr, prefer=None):
     return best[3], best[4], best[0]
 
 
-def auto_config_tracks(tracks, a, b, name, tpb=480, max_layers=12):
+def auto_config_tracks(tracks, a, b, name, tpb=480, max_layers=30):
     q16 = tpb // 4
     groups = []  # (instrumento, [tracks])
     pitched = []
@@ -724,20 +724,35 @@ def auto_config_tracks(tracks, a, b, name, tpb=480, max_layers=12):
     count = collections.Counter(g[0] for g in groups)
     seen = collections.Counter()
     for ins, ids in groups:
-        notes = [e[2] for t in tracks if t['idx'] in ids for e in t['notes'] if a <= e[0] < b]
-        p, sh, hit = best_layer(notes, ins, prefer=song_key)
-        keys = set(layer_range(ins, p))
-        left = [n for n in notes if n + sh not in keys]  # fora da escala OU fora do alcance
-        aux = []
-        if left:
-            best2 = max(PITCH_OUT, key=lambda q: sum(1 for n in left if n + sh in set(layer_range(ins, q))))
-            gain = sum(1 for n in left if n + sh in set(layer_range(ins, best2)))
-            if gain >= max(2, 0.01 * len(notes)):
-                aux = [best2]
+        allg = sorted(e[2] for t in tracks if t['idx'] in ids for e in t['notes'] if a <= e[0] < b)
         seen[ins] += 1
-        alias = ins + (f' {seen[ins]}' if count[ins] > 1 else '')
-        parts.append({'instrument': ins, 'tracks': ids, 'pitch': p, 'shift': sh, 'aux_pitches': aux,
-                      'alias': alias, 'volume': 100, 'aux': True, 'extend_range': True})
+        # nome da track no MIDI (ex.: "Melodie", "violons 1"), pra saber de onde veio cada layer
+        tname = ' + '.join(n for n in (tracks[i]['name'].strip() for i in ids) if n)[:40]
+        base_alias = tname or (ins + (f' {seen[ins]}' if count[ins] > 1 else ''))
+        # track mais larga que as 15 teclas (ex.: piano com as duas mãos): divide em 2 layers
+        # do mesmo instrumento, agudo e grave, em vez de jogar notas de oitava
+        ranges = [(None, base_alias)]
+        if allg and allg[int(len(allg) * 0.95) - 1] - allg[int(len(allg) * 0.05)] > 24:
+            split = allg[len(allg) // 2]
+            ranges = [((split, 127), base_alias + ' (agudo)'), ((0, split - 1), base_alias + ' (grave)')]
+        for rng, alias in ranges:
+            notes = [n for n in allg if rng is None or rng[0] <= n <= rng[1]]
+            if not notes:
+                continue
+            p, sh, hit = best_layer(notes, ins, prefer=song_key)
+            keys = set(layer_range(ins, p))
+            left = [n for n in notes if n + sh not in keys]  # fora da escala OU fora do alcance
+            aux = []
+            if left:
+                best2 = max(PITCH_OUT, key=lambda q: sum(1 for n in left if n + sh in set(layer_range(ins, q))))
+                gain = sum(1 for n in left if n + sh in set(layer_range(ins, best2)))
+                if gain >= max(2, 0.01 * len(notes)):
+                    aux = [best2]
+            part = {'instrument': ins, 'tracks': ids, 'pitch': p, 'shift': sh, 'aux_pitches': aux,
+                    'alias': alias, 'volume': 100, 'aux': True, 'extend_range': True}
+            if rng:
+                part['note_range'] = list(rng)
+            parts.append(part)
     return {'name': name, 'start_tick': a, 'end_tick': b, 'grid': 'auto', 'pitch': song_key,
             'parts': parts, 'drum_volume': {'Drum': 80, 'DunDun': 100}}
 
