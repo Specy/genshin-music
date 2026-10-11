@@ -813,6 +813,15 @@ export const i18n_en = {
                             the song fit into the app range. You can also change the offset of each layer.`,
       merged_notes: 'Merged repeats',
       suggest_offset: 'Suggest',
+      auto_fit_tracks: 'Fit each track',
+      auto_fit: 'Auto fit',
+      auto_fit_tracks_description:
+        'Picks, for every track, the layer pitch and octave that put the most notes on its instrument buttons (no accidentals, nothing out of range). Runs automatically when a MIDI is opened.',
+      auto_fit_done: 'Tracks fitted: {{accidentals}} accidentals, {{stranded}} notes the instruments cannot play',
+      section: 'Section',
+      section_description:
+        'Medleys change key and tempo between songs. Pick one section to import it as its own song, with its own tempo and pitch.',
+      whole_file: 'Whole file',
       suggested_offset:
         'Offset {{offset}}: {{accidentals}} accidentals, {{stranded}} notes the instrument cannot play',
       local_note_offset: 'Local track notes offset',

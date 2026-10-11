@@ -7,7 +7,9 @@
   import { logger } from '$stores/LoggerStore.svelte';
   import { ThemeProvider } from '$core/theme/ThemeProvider.svelte';
   import { ComposedSong } from '$core/Songs/ComposedSong.svelte';
-  import { importMidiTracks, suggestOffset } from '$core/Songs/midiImport';
+  import { importMidiTracks, suggestOffset, suggestTrackFit } from '$core/Songs/midiImport';
+  import { detectMidiSections, type MidiSection } from '$core/Songs/midiSections';
+  import { PITCHES } from '$core/sharedConfig';
   import { effectiveTrackPitch } from '$core/Songs/noteIds';
   import { decodeMidiMetadata, type MidiMetadata } from '$core/Songs/midiMetadata';
   import { delay, isAudioFormat, isVideoFormat } from '$core/utils/Utilities';
@@ -62,6 +64,11 @@
   //instrument config recovered from one of our own exports; null for any foreign file
   let importedMetadata: MidiMetadata | null = $state(null);
   let totalNotes = $state(0);
+  //medley support: the import range. -1 = the whole file
+  let sections: MidiSection[] = $state([]);
+  let sectionIndex = $state(-1);
+  let fileKeyPitch: Pitch = 'C';
+  let fileBpm = 220;
   let includeAccidentals = $state(true);
   let includeOutOfRange = $state(false);
   let warnedOfExperimental = false;
@@ -204,6 +211,87 @@
     mandleMidiFile(midi, name, generation);
   }
 
+  /** The notes of a track inside the selected section, re-timed so the section starts at 0. */
+  function trackNotes(track: CustomTrack): { midi: number; time: number; duration: number }[] {
+    const section = sections[sectionIndex];
+    if (!section) return track.track.notes;
+    return track.track.notes
+      .filter((note) => note.time >= section.start - 1e-3 && note.time < section.end - 1e-3)
+      .map((note) => ({
+        midi: note.midi,
+        time: note.time - section.start,
+        duration: Math.min(note.duration, section.end - note.time),
+      }));
+  }
+
+  function sectionPitch(section: MidiSection): Pitch | undefined {
+    const tonic = canonicalMidiPitch(section.key ?? undefined);
+    if (tonic === undefined) return undefined;
+    //a minor key signature names the minor tonic; the Basepoint is a major-scale root
+    return section.minor ? PITCHES[(PITCHES.indexOf(tonic) + 3) % 12] : tonic;
+  }
+
+  function formatTime(seconds: number) {
+    const s = Math.max(0, Math.round(seconds));
+    return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+  }
+
+  /**
+   * Give every track its own Basepoint and octave (suggestTrackFit): each layer has its own 15
+   * buttons, so the best scale/octave for the melody is rarely the best one for the bass.
+   */
+  function autoFitTracks(announce = true) {
+    let stranded = 0;
+    let accidentalCount = 0;
+    for (const track of tracks) {
+      const notes = trackNotes(track);
+      if (notes.length === 0) continue;
+      const fit = suggestTrackFit(notes, track.instrument.name, pitch, track.maxScaling, PITCHES);
+      track.instrument = track.instrument.clone().set({ pitch: fit.pitch === pitch ? '' : fit.pitch });
+      track.localOffset = fit.localOffset;
+      if (track.selected) {
+        stranded += fit.stranded;
+        accidentalCount += fit.accidentals;
+      }
+    }
+    if (tracks.length > 0) convertMidi();
+    if (announce) {
+      logger.success(
+        t('composer:midi_parser.auto_fit_done', {
+          accidentals: `${accidentalCount}`,
+          stranded: `${stranded}`,
+        })
+      );
+    }
+  }
+
+  /** Select the tracks that play inside the current range (most notes first, up to the layer limit). */
+  function selectTracksInSection() {
+    const counts = tracks.map((track) => trackNotes(track).length);
+    const order = tracks
+      .map((_, i) => i)
+      .filter((i) => counts[i] > 0)
+      .sort((a, b) => counts[b] - counts[a])
+      .slice(0, BASE_LAYER_LIMIT);
+    tracks.forEach((track, i) => (track.selected = order.includes(i)));
+  }
+
+  function changeSection(value: number) {
+    sectionIndex = value;
+    const section = sections[value];
+    if (section) {
+      bpm = Math.round(section.bpm * 4) || bpm;
+      pitch = sectionPitch(section) ?? pitch;
+    } else {
+      bpm = fileBpm;
+      pitch = fileKeyPitch;
+    }
+    if (tracks.length === 0) return;
+    selectTracksInSection();
+    if (importedMetadata) convertMidi();
+    else autoFitTracks(false);
+  }
+
   // QUIRK: mandleMidiFile (not handleMidiFile) is an intentional preserved typo.
   function mandleMidiFile(midi: Midi, name: string, generation: number) {
     if (!ownsFileRequest(generation)) return;
@@ -216,6 +304,8 @@
       importedMetadata = decodeMidiMetadata(midi.header.meta ?? []);
       tracks = buildMidiTrackRoster(midi.tracks, importedMetadata?.instruments ?? null);
       fileName = name;
+      sectionIndex = -1;
+      sections = importedMetadata ? [] : detectMidiSections(midi.header, midi.duration);
       //round, not floor: this is the inverse of toMidi's setTempo(bpm / 4), and the tempo
       //survives serialization as an integer microseconds-per-quarter, so the value coming
       //back can sit a hair under the original and lose a whole bpm to truncation
@@ -226,12 +316,17 @@
       //foreign file supplies one. Since ADR-0007 it also decides what the emitted notes ARE (the
       //snapped nominals are lifted by it), which is why convertMidi below is re-run on any change.
       pitch = canonicalMidiPitch(key) ?? importedMetadata?.pitch ?? 'C';
+      fileKeyPitch = pitch;
+      fileBpm = bpm;
       //a file whose every track was filtered out above has nothing to convert, and both the track
       //list and the summary table are gated on `tracks.length` - without this the screen would
       //show the filename and then say nothing at all, which reads as a broken importer
       if (tracks.length === 0) return logger.warn(t('composer:midi_parser.there_are_no_notes'));
       if (tracks.length > BASE_LAYER_LIMIT) warnTrackLimit();
-      convertMidi();
+      //a foreign file gets every track fitted to its own instrument right away (scale + octave);
+      //our own exports already carry the layer setup they were made with
+      if (importedMetadata) convertMidi();
+      else autoFitTracks(false);
     } catch (e) {
       console.error(e);
       logger.error(t('composer:midi_parser.error_is_file_midi'));
@@ -258,7 +353,7 @@
     const layers = selectedTracks.map((track) => track.instrument);
     const result = importMidiTracks(
       selectedTracks.map((track, layer) => ({
-        notes: track.track.notes,
+        notes: trackNotes(track),
         layer,
         localOffset: track.localOffset,
         maxScaling: track.maxScaling,
@@ -341,7 +436,7 @@
     }
     const suggestion = suggestOffset(
       selected.map((track) => ({
-        notes: track.track.notes,
+        notes: trackNotes(track),
         instrumentName: track.instrument.name,
         pitch: effectiveTrackPitch(track.instrument, pitch),
         localOffset: track.localOffset,
@@ -417,6 +512,44 @@
     <fieldset class={['midi-section', tracks.length === 0 && 'midi-section-disabled']}>
       <legend>{t('composer:midi_parser.import_settings')}</legend>
       <Column gap="0.3rem" style="width:100%">
+        {#if sections.length > 1}
+          <Row justify="between" align="center">
+            <div class="row flex-centered" style="gap:0.5rem">
+              <span>{t('composer:midi_parser.section')}:</span>
+              <HelpTooltip buttonStyle="width:1.2rem;height:1.2rem">
+                {t('composer:midi_parser.section_description')}
+              </HelpTooltip>
+            </div>
+            <select
+              class="midi-section-select"
+              style={midiInputsStyle}
+              value={sectionIndex}
+              onchange={(event) => changeSection(Number(event.currentTarget.value))}
+            >
+              <option value={-1}>{t('composer:midi_parser.whole_file')}</option>
+              {#each sections as section, i (i)}
+                <option value={i}>
+                  {`${i + 1}. ${formatTime(section.start)}–${formatTime(section.end)} · ${section.key ?? '?'}${section.minor ? 'm' : ''} · ${Math.round(section.bpm)} bpm`}
+                </option>
+              {/each}
+            </select>
+          </Row>
+        {/if}
+        <Row justify="between" align="center">
+          <div class="row flex-centered" style="gap:0.5rem">
+            <span>{t('composer:midi_parser.auto_fit_tracks')}:</span>
+            <HelpTooltip buttonStyle="width:1.2rem;height:1.2rem">
+              {t('composer:midi_parser.auto_fit_tracks_description')}
+            </HelpTooltip>
+          </div>
+          <button
+            class="midi-suggest-button"
+            disabled={tracks.length === 0}
+            onclick={() => autoFitTracks()}
+          >
+            {t('composer:midi_parser.auto_fit')}
+          </button>
+        </Row>
         <Row justify="between" align="center">
           <div style="margin-right:0.5rem">{t('composer:midi_parser.tempo_bpm')}:</div>
           <NumericalInput value={bpm} onChange={changeBpm} delay={600} step={5} />
@@ -531,6 +664,12 @@
     cursor: pointer;
     font-size: 0.8rem;
     white-space: nowrap;
+  }
+  .midi-section-select {
+    border: none;
+    border-radius: 0.3rem;
+    padding: 0.3rem 0.4rem;
+    max-width: 60%;
   }
   .midi-suggest-button:disabled {
     opacity: 0.5;

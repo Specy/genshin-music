@@ -180,6 +180,64 @@ export function suggestOffset(groups: readonly MidiOffsetSuggestionGroup[]): Off
     return {offset: best.offset, accidentals: best.accidental, stranded: best.stranded}
 }
 
+export type TrackFitSuggestion = {
+    /** The layer Basepoint that fits the track best. */
+    pitch: Pitch
+    /** Whole-octave local offset (a multiple of 12) placing the track on the instrument's buttons. */
+    localOffset: number
+    accidentals: number
+    stranded: number
+}
+
+/**
+ * Best Basepoint AND octave for ONE track on its own instrument — the per-layer counterpart of
+ * suggestOffset. Every layer has its own 15 buttons and its own Basepoint, so a melody, a bass
+ * line and a pad rarely want the same transposition: forcing one global offset strands the
+ * extremes of whichever track the compromise suits least.
+ *
+ * The track is never transposed by anything but whole octaves (its pitch content is kept): the
+ * Basepoint choice moves the SCALE under the notes instead of moving the notes. Cost is the
+ * number of notes that would be snapped (accidental) or unplayable (stranded/unaddressable);
+ * ties prefer the song's own Basepoint, then the smallest octave move.
+ */
+export function suggestTrackFit(
+    notes: readonly {midi: number}[],
+    instrumentName: string,
+    songPitch: Pitch,
+    maxScaling: number,
+    pitches: readonly Pitch[]
+): TrackFitSuggestion {
+    let best: (TrackFitSuggestion & {cost: number}) | null = null
+    for (const pitch of pitches) {
+        for (let octave = -4; octave <= 4; octave++) {
+            const localOffset = octave * 12
+            let accidentals = 0
+            let stranded = 0
+            let cost = 0
+            for (const note of notes) {
+                const transformed = transformMidiNumber(note.midi, {
+                    instrumentName,
+                    pitch,
+                    localOffset,
+                    maxScaling,
+                }, 0)
+                const unplayable = !transformed.voiceable || !transformed.addressable
+                if (transformed.isAccidental) accidentals++
+                if (unplayable) stranded++
+                if (transformed.isAccidental || unplayable) cost++
+            }
+            const better = best === null
+                || cost < best.cost
+                || (cost === best.cost && (pitch === songPitch) && best.pitch !== songPitch)
+                || (cost === best.cost && (pitch === songPitch) === (best.pitch === songPitch)
+                    && Math.abs(localOffset) < Math.abs(best.localOffset))
+            if (better) best = {pitch, localOffset, accidentals, stranded, cost}
+        }
+    }
+    if (!best) return {pitch: songPitch, localOffset: 0, accidentals: 0, stranded: 0}
+    return {pitch: best.pitch, localOffset: best.localOffset, accidentals: best.accidentals, stranded: best.stranded}
+}
+
 /** One MIDI track's notes, with the per-track import controls the UI exposes. */
 export type MidiImportTrack = {
     /** Times and durations in SECONDS, as @tonejs/midi reports them. */
