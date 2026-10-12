@@ -712,7 +712,15 @@ def auto_config_tracks(tracks, a, b, name, tpb=480, max_layers=30):
     uniq = [(ids, next(t for t, _ in pitched if t['idx'] == ids[0])) for ids in sig.values()]
     for ids, t in uniq:
         groups.append([gm_instrument(t['prog']), ids])
-    # muitas layers: junta as do mesmo instrumento
+    # arranjo orquestral grande: junta só tracks do MESMO programa do MIDI (ex.: Trumpet 1/2/3 do naipe),
+    # nunca instrumentos diferentes
+    if len(groups) > 16:
+        by_prog = collections.OrderedDict()
+        for ins, ids in groups:
+            prog = tracks[ids[0]]['prog']
+            by_prog.setdefault((ins, prog), []).extend(ids)
+        groups = [[k[0], v] for k, v in by_prog.items()]
+    # ainda demais: junta as do mesmo instrumento
     if len(groups) > max_layers:
         by = collections.OrderedDict()
         for ins, ids in groups:
@@ -746,7 +754,7 @@ def auto_config_tracks(tracks, a, b, name, tpb=480, max_layers=30):
             if left:
                 best2 = max(PITCH_OUT, key=lambda q: sum(1 for n in left if n + sh in set(layer_range(ins, q))))
                 gain = sum(1 for n in left if n + sh in set(layer_range(ins, best2)))
-                if gain >= max(2, 0.01 * len(notes)):
+                if gain >= max(3, 0.02 * len(notes)):
                     aux = [best2]
             part = {'instrument': ins, 'tracks': ids, 'pitch': p, 'shift': sh, 'aux_pitches': aux,
                     'alias': alias, 'volume': 100, 'aux': True, 'extend_range': True}
