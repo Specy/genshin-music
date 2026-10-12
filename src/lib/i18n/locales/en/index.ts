@@ -1057,8 +1057,7 @@ export const i18n_en = {
         'Overhauled practice mode, and songs in the player can now be paused and resumed',
       'change-13':
         'Added eleven instruments to Sky: Cello, Violin, Saxophone, Harmonica, Transverse Flute, Small Bell, Fortune Drum, Cymbals, Krill Horn, Tuned Krill Horn and Triumph HandPan. The Aurora and the Light Guitar are now sustained.',
-      'change-14':
-        "Added the Nightwind Horn and Vodyanitsa's singing voice to Genshin",
+      'change-14': "Added the Nightwind Horn and Vodyanitsa's singing voice to Genshin",
       'change-15': 'Other bug fixes and improvements',
     },
     '3-7-0': {
