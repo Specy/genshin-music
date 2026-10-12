@@ -272,6 +272,13 @@ export type MidiImportOptions = {
     /** Keep instrument-unvoiceable notes as strands. Omitted means the safe sounding default. */
     includeOutOfRange?: boolean
     /**
+     * Keep every note's length as a span, even on layers whose instrument cannot hold a note.
+     * Arrangers often swap instruments after importing; a span on a non-sustaining layer is
+     * simply played as a tap, and comes back to life once the layer is switched to one that
+     * sustains - instead of having to redraw every hold by hand. Omitted = only sustaining layers.
+     */
+    keepAllDurations?: boolean
+    /**
      * The Basepoint the imported song will carry (MidiParser's pitch selector, seeded from the
      * file's key signature or our own metadata), per layer through `effectiveTrackPitch`.
      *
@@ -415,7 +422,8 @@ export function importMidiTracks(
     const layerPitches = layers.map(layer => effectiveTrackPitch(layer, options.pitch))
     const pitchOf = (layer: number) => layerPitches[layer] ?? options.pitch
     const nameOf = (layer: number) => layers[layer]?.name ?? ''
-    const canHoldOn = layers.map(layer => layer.sustains ?? instrumentSupportsSustain(layer.name))
+    const canHoldOn = layers.map(layer =>
+        layer.sustains ?? (options.keepAllDurations === true || instrumentSupportsSustain(layer.name)))
 
     // ---- 1. apply the complete per-note policy before timing layout --------------------------
     const notes: MidiNote[] = []

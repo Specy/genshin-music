@@ -71,6 +71,7 @@
   let fileBpm = 220;
   let includeAccidentals = $state(true);
   let includeOutOfRange = $state(false);
+  let keepAllDurations = $state(true);
   let warnedOfExperimental = false;
   // Parsing audio/video can outlive this import session by several seconds. A closed importer must
   // never install that stale result over the song after the lock has gone (or over a newer import).
@@ -363,6 +364,7 @@
         offset,
         includeAccidentals,
         includeOutOfRange,
+        keepAllDurations,
         //the Basepoint the song below is given: the importer takes it off every incoming number
         //and puts it back on every emitted one (ADR-0007), so the two must be the same value
         pitch,
@@ -469,6 +471,11 @@
 
   function toggleAccidentals() {
     includeAccidentals = !includeAccidentals;
+    if (tracks.length > 0) convertMidi();
+  }
+
+  function toggleKeepDurations() {
+    keepAllDurations = !keepAllDurations;
     if (tracks.length > 0) convertMidi();
   }
 
@@ -604,6 +611,19 @@
               styleOuter={midiInputsStyle}
             />
           </Row>
+        </Row>
+        <Row justify="between" align="center">
+          <div class="row flex-centered" style="gap: 0.5rem">
+            <span>{t('composer:midi_parser.keep_all_durations')}:</span>
+            <HelpTooltip position="left" buttonStyle="width:1.2rem;height:1.2rem">
+              {t('composer:midi_parser.keep_all_durations_description')}
+            </HelpTooltip>
+          </div>
+          <Switch
+            checked={keepAllDurations}
+            onchange={toggleKeepDurations}
+            styleOuter={midiInputsStyle}
+          />
         </Row>
       </Column>
     </fieldset>

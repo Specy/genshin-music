@@ -822,6 +822,9 @@ export const i18n_en = {
       section_description:
         'Medleys change key and tempo between songs. Pick one section to import it as its own song, with its own tempo and pitch.',
       whole_file: 'Whole file',
+      keep_all_durations: 'Keep note lengths on every layer',
+      keep_all_durations_description:
+        "Store each note's length even on instruments that can't hold notes (they play it as a tap). If you change the layer to an instrument that sustains, the long notes are already there.",
       suggested_offset:
         'Offset {{offset}}: {{accidentals}} accidentals, {{stranded}} notes the instrument cannot play',
       local_note_offset: 'Local track notes offset',

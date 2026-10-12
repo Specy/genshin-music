@@ -306,7 +306,7 @@ def cmd_convert(args):
     for part in cfg.get('parts', []):
         instr = part['instrument']
         shift = part.get('shift', 0)
-        use_dur = part.get('durations', instr in SUSTAIN)
+        use_dur = part.get('durations', instr not in NKEYS)  # duração sempre (o usuário troca instrumentos depois); só percussão fica sem
         poly = part.get('max_poly')
         pick = part.get('pick', 'top')
         pkey = part.get('pitch') or key          # escala própria do layer (ou a da música)

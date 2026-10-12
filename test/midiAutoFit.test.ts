@@ -81,3 +81,18 @@ describe('detectMidiSections', () => {
         expect(sections[0].bpm).toBe(120)
     })
 })
+
+describe('keepAllDurations', () => {
+    it('keeps spans on a layer whose instrument cannot sustain', async () => {
+        const {importMidiTracks, instrumentSupportsSustain} = await import('../src/lib/core/Songs/midiImport')
+        const tap = INSTRUMENTS.find(name => !instrumentSupportsSustain(name))
+        if (!tap) return // a game where every instrument sustains has nothing to test here
+        const lowest = Math.min(...getSoundingTable(tap))
+        const tracks = [{notes: [{midi: lowest, time: 0, duration: 2}, {midi: lowest, time: 4, duration: 0.1}], layer: 0, localOffset: 0, maxScaling: 0}]
+        const base = {bpm: 240, offset: 0, includeAccidentals: true, pitch: 'C' as Pitch, layers: [{name: tap, pitch: '' as const}]}
+        const spans = (keep: boolean) => importMidiTracks(tracks, {...base, keepAllDurations: keep})
+            .columns.flatMap(c => c.notes.map(n => n.span))
+        expect(Math.max(...spans(false))).toBe(1)
+        expect(Math.max(...spans(true))).toBeGreaterThan(1)
+    })
+})
