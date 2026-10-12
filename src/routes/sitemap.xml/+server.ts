@@ -1,5 +1,6 @@
 import { CANONICAL_ORIGIN } from '$lib/seo';
 import { IS_BETA } from '$lib/env';
+import { allBlogPosts, isBlogPostForGame } from '$cmp/blog/allPosts';
 
 export const prerender = true;
 
@@ -18,6 +19,13 @@ const EXCLUDED = new Set([
   '/keybinds',
 ]);
 
+/** Blog posts scoped to the other game: their routes are not built for this one. */
+const OTHER_GAME_POSTS = new Set(
+  allBlogPosts
+    .filter((post) => !isBlogPostForGame(post))
+    .map((post) => `/blog/posts/${post.relativeUrl}`)
+);
+
 /** Discovered from the route files, so a new page is listed the moment it exists. */
 function routes() {
   const modules = import.meta.glob('/src/routes/**/+page.svelte');
@@ -25,6 +33,7 @@ function routes() {
     .map((file) => file.replace('/src/routes', '').replace('/+page.svelte', '') || '/')
     .filter((route) => !route.includes('['))
     .filter((route) => !EXCLUDED.has(route))
+    .filter((route) => !OTHER_GAME_POSTS.has(route))
     .sort();
 }
 

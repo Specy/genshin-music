@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { documentTitle } from '$lib/seo';
   import { onMount } from 'svelte';
   import DefaultPage from '$cmp/shell/DefaultPage.svelte';
   import PageMetadata from '$cmp/shell/PageMetadata.svelte';
@@ -90,7 +91,7 @@
 
 <DefaultPage>
   <PageMetadata
-    text="Import data"
+    text={documentTitle(`Import data for ${game.display.name} Music`)}
     description="A tool to import the data you have in other domains"
   />
   <div class="column">

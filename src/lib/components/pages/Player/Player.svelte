@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { documentTitle } from '$lib/seo';
   import { onMount, untrack } from 'svelte';
   import { game } from '$game';
   import { SPEED_CHANGERS } from '$core/legacyConfig';
@@ -769,7 +770,7 @@
 </script>
 
 <PageMetadata
-  text={t('home:player_name')}
+  text={documentTitle(t('home:player_title', { APP_NAME: game.display.name }))}
   description="Learn how to play songs, play them by hand and record them. Use the approaching circles mode or the guided tutorial to learn sections of a song at your own pace. Share your sheets or import existing ones."
 />
 <PlayerMenu

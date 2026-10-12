@@ -4,10 +4,7 @@ import type { BlogMetadata } from '../types';
 
 // See add-to-home-screen.ts for why this lives in its own module.
 //
-// QUIRK: description below hardcodes "Sky Music Nightly" - this post is
-// genuinely Sky-specific (the EASYPLAY 1s keyboard matches Sky's layout) and
-// ships unconditionally on both game builds with no game-title interpolation.
-// Not an oversight to "fix" with `${game.meta.title}`.
+// Sky only: the EASYPLAY 1s is laid out like Sky's instrument, so the post is not built for Genshin.
 export const easyplay1sMetadata: BlogMetadata = {
   title: '🎹 EASYPLAY 1s',
   tags: ['Product'],
@@ -16,4 +13,5 @@ export const easyplay1sMetadata: BlogMetadata = {
   description: 'The EASYPLAY 1s, the perfect keyboard for Sky Music Nightly',
   createdAt: new Date('2024/04/24'),
   author: SpecyAuthor,
+  game: 'sky',
 };

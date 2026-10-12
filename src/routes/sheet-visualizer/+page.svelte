@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { documentTitle } from '$lib/seo';
   import { onMount } from 'svelte';
   import { game } from '$game';
   import { ThemeProvider as theme } from '$core/theme/ThemeProvider.svelte';
@@ -103,7 +104,9 @@
   });
 
   const pageTitle = $derived(
-    `${t('home:sheet_visualizer_name')}${currentSong ? ` - ${currentSong.name}` : ''}`
+    currentSong
+      ? documentTitle(`${currentSong.name} - ${t('home:sheet_visualizer_name')}`)
+      : documentTitle(t('home:sheet_visualizer_title', { APP_NAME: game.display.name }))
   );
 </script>
 

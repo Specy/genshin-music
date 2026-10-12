@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { documentTitle } from '$lib/seo';
+  import { game } from '$game';
   import { onMount } from 'svelte';
   import DefaultPage from '$cmp/shell/DefaultPage.svelte';
   import PageMetadata from '$cmp/shell/PageMetadata.svelte';
@@ -13,7 +15,10 @@
 </script>
 
 <DefaultPage>
-  <PageMetadata text="Privacy" description="Privacy policy for the app" />
+  <PageMetadata
+    text={documentTitle(`Privacy policy for ${game.display.name} Music`)}
+    description="Privacy policy for the app"
+  />
   <PageHeading text="Privacy" />
   <span class="privacy-text">
     This website uses cookies to collect data about usage of the app through IP anonymized Google

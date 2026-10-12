@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { documentTitle } from '$lib/seo';
+  import { game } from '$game';
   import { onMount } from 'svelte';
   import DefaultPage from '$cmp/shell/DefaultPage.svelte';
   import PageMetadata from '$cmp/shell/PageMetadata.svelte';
@@ -92,7 +94,7 @@
      instead of leaking to every page that uses the same class. -->
 <DefaultPage class="keybinds-page">
   <PageMetadata
-    text={t('home:keybinds_or_midi_name')}
+    text={documentTitle(t('home:keybinds_title', { APP_NAME: game.display.name }))}
     description="Change the app keyboard keybinds and MIDI input keys"
   />
   <PageHeading text={t('home:keybinds_or_midi_name')} />

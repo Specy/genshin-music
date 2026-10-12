@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { documentTitle } from '$lib/seo';
   import { onMount } from 'svelte';
   import DefaultPage from '$cmp/shell/DefaultPage.svelte';
   import PageMetadata from '$cmp/shell/PageMetadata.svelte';
@@ -16,7 +17,7 @@
 
 <DefaultPage>
   <PageMetadata
-    text={t('home:donate_name')}
+    text={documentTitle(t('home:donate_title', { APP_NAME: game.display.name }))}
     description={`Help the development of ${game.id} with a donation.`}
   />
   <Header style="margin-bottom: 1rem;">

@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { documentTitle } from '$lib/seo';
+  import { game } from '$game';
   import AppBackground from '$cmp/theme/AppBackground.svelte';
   import { onMount } from 'svelte';
   import { goto } from '$app/navigation';
@@ -913,7 +915,9 @@
 
 <AppBackground page="Composer">
   <PageMetadata
-    text={`${t('home:vsrg_composer_name')} - ${vsrg.name ?? 'Unnamed'}`}
+    text={vsrg.name && vsrg.name !== 'Untitled'
+      ? documentTitle(`${vsrg.name} - ${t('home:vsrg_composer_name')}`)
+      : documentTitle(t('home:vsrg_composer_title', { APP_NAME: game.display.name }))}
     description="Create new VSRG songs using existing background songs and create your own beatmap for it."
   />
   <PageHeading text={`${t('home:vsrg_composer_name')} - ${vsrg.name ?? 'Unnamed'}`} />

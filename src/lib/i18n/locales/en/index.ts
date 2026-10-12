@@ -166,6 +166,19 @@ export const i18n_en = {
     vsrg_player_name: 'VSRG Player',
     zen_keyboard_name: 'Zen Keyboard',
     sheet_visualizer_name: 'Sheet Visualizer',
+    // Page <title> text (documentTitle adds " | <game title>"). Each names the game so a search for
+    // that game finds the tool. {{APP_NAME}} is the active game's display name.
+    player_title: 'Player - play and practice {{APP_NAME}} songs',
+    vsrg_player_title: 'VSRG Player - play {{APP_NAME}} songs as a rhythm game',
+    zen_keyboard_title: 'Zen Keyboard - play {{APP_NAME}} instruments freely',
+    composer_title: 'Composer - write and edit {{APP_NAME}} songs',
+    vsrg_composer_title: 'VSRG Composer - make rhythm game beatmaps for {{APP_NAME}} songs',
+    sheet_visualizer_title: 'Sheet Visualizer - read and print {{APP_NAME}} sheets',
+    donate_title: 'Donate - support the development of {{APP_NAME}} Music',
+    changelog_title: "Changelog V{{version}} - what's new in {{APP_NAME}} Music",
+    keybinds_title: 'Keybinds and MIDI - set up keyboard and MIDI input for {{APP_NAME}} Music',
+    themes_title: 'Themes - customize the look of {{APP_NAME}} Music',
+    backup_title: 'Backup - save and restore your {{APP_NAME}} songs',
     themes_name: 'Themes',
     blog_and_guides_name: 'Blog, Guides & Partners',
     keybinds_or_midi_name: 'Keybinds / MIDI',
@@ -1044,8 +1057,7 @@ export const i18n_en = {
         'Overhauled practice mode, and songs in the player can now be paused and resumed',
       'change-13':
         'Added eleven instruments to Sky: Cello, Violin, Saxophone, Harmonica, Transverse Flute, Small Bell, Fortune Drum, Cymbals, Krill Horn, Tuned Krill Horn and Triumph HandPan. The Aurora and the Light Guitar are now sustained.',
-      'change-14':
-        "Added the Nightwind Horn and Vodyanitsa's singing voice to Genshin",
+      'change-14': "Added the Nightwind Horn and Vodyanitsa's singing voice to Genshin",
       'change-15': 'Other bug fixes and improvements',
     },
     '3-7-0': {
