@@ -680,6 +680,28 @@ def gm_instrument(prog):
     return 'Piano'
 
 
+# nome da track -> instrumento (quando o MIDI não traz programa, ou o nome é mais claro que ele)
+NAME_HINTS = [('double bass', 'Contrabass'), ('contrabass', 'Contrabass'), ('contrabaixo', 'Contrabass'),
+              ('basse', 'Contrabass'), ('bass', 'Contrabass'), ('baixo', 'Contrabass'), ('cello', 'Cello'),
+              ('violon', 'Violin'), ('violin', 'Violin'), ('viola', 'Violin'), ('violino', 'Violin'),
+              ('string', 'Violin'), ('flute', 'Flute'), ('flauta', 'Flute'), ('fife', 'Flute'),
+              ('piccolo', 'Flute'), ('oboe', 'Flute'), ('clarinet', 'Saxophone'), ('sax', 'Saxophone'),
+              ('trombone', 'Horn'), ('tuba', 'Horn'), ('horn', 'Horn'), ('trompa', 'Horn'),
+              ('trumpet', 'Trumpet'), ('trompete', 'Trumpet'), ('lute', 'Pipa'), ('guitar', 'Pipa'),
+              ('guitare', 'Pipa'), ('violão', 'Pipa'), ('harp', 'Harp'), ('harpa', 'Harp'),
+              ('piano', 'Piano'), ('ocarina', 'Ocarina'), ('xylophone', 'Xylophone'), ('bell', 'Bells'),
+              ('choir', 'Aurora'), ('voice', 'Aurora'), ('soprano', 'Aurora'), ('alto', 'Aurora'),
+              ('tenor', 'Aurora')]
+
+
+def name_instrument(name):
+    n = (name or '').lower()
+    for key, ins in NAME_HINTS:
+        if key in n:
+            return ins
+    return None
+
+
 def best_layer(notes, instr, prefer=None):
     """escolhe escala (12 opções) e oitava que deixam MAIS notas exatamente nas 15 teclas"""
     best = None
@@ -711,7 +733,7 @@ def auto_config_tracks(tracks, a, b, name, tpb=480, max_layers=30):
         sig.setdefault(k, []).append(t['idx'])
     uniq = [(ids, next(t for t, _ in pitched if t['idx'] == ids[0])) for ids in sig.values()]
     for ids, t in uniq:
-        groups.append([gm_instrument(t['prog']), ids])
+        groups.append([name_instrument(t['name']) or gm_instrument(t['prog']), ids])
     # arranjo orquestral grande: junta só tracks do MESMO programa do MIDI (ex.: Trumpet 1/2/3 do naipe),
     # nunca instrumentos diferentes
     if len(groups) > 16:
