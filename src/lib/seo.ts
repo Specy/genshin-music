@@ -1,8 +1,39 @@
+import { base } from '$app/paths';
 import { game } from '$game';
 import { CANONICAL_ORIGIN_OVERRIDE } from '$lib/env';
+import { appPathname } from '$lib/utils/appPathname';
 
 /** The origin this build's pages declare as their own — see game.json's `canonicalOrigin`. */
 export const CANONICAL_ORIGIN = CANONICAL_ORIGIN_OVERRIDE || game.meta.canonicalOrigin;
+
+/**
+ * Social-preview image for pages that do not bring one of their own. Each game's static overlay
+ * ships its own manifestData/main.webp (1280x720), so the default is the active game's screenshot.
+ */
+export const DEFAULT_SOCIAL_IMAGE = `${base}/manifestData/main.webp`;
+
+/**
+ * An absolute URL on the canonical origin for a path this app serves. The path may carry the
+ * SvelteKit base (`${base}/assets/...`), which is stripped the same way RootMetadata strips it for
+ * the canonical link, so the subpath builds and the root build name the same image. A value that
+ * is already absolute passes through unchanged.
+ */
+export function absoluteUrl(path: string): string {
+  if (/^https?:\/\//.test(path)) return path;
+  return `${CANONICAL_ORIGIN}${appPathname(path)}`;
+}
+
+/** The full <title> for a page: its own headline, then the game's name. */
+export function documentTitle(headline: string): string {
+  return `${headline} | ${game.meta.title}`;
+}
+
+const EMOJI = /[\p{Extended_Pictographic}\p{Emoji_Presentation}️‍]/gu;
+
+/** Visible text with emoji removed, for places that must be plain (titles, JSON-LD headlines). */
+export function withoutEmoji(text: string): string {
+  return text.replace(EMOJI, '').replace(/\s+/g, ' ').trim();
+}
 
 /** `</script>` inside a JSON string would close the surrounding tag; escaping the three
  *  characters that can do that keeps it valid JSON but inert as markup. */
@@ -53,5 +84,19 @@ export function softwareApplicationLd() {
       sameAs: ['https://github.com/Specy'],
     },
     sameAs: ['https://github.com/Specy/genshin-music'],
+  };
+}
+
+/** A BreadcrumbList for a trail of app paths, the first being the home page. */
+export function breadcrumbLd(trail: { name: string; path: string }[]) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: trail.map((crumb, index) => ({
+      '@type': 'ListItem',
+      position: index + 1,
+      name: crumb.name,
+      item: absoluteUrl(crumb.path),
+    })),
   };
 }

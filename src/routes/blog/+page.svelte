@@ -1,30 +1,15 @@
 <script module lang="ts">
   import type { BlogMetadata } from '$cmp/blog/types';
-  import { addToHomeScreenMetadata } from '$cmp/blog/posts/add-to-home-screen';
-  import { easyplay1sMetadata } from '$cmp/blog/posts/easyplay-1s';
-  import { composerTutorialMetadata } from '$cmp/blog/posts/how-to-use-composer';
-  import { playerTutorialMetadata } from '$cmp/blog/posts/how-to-use-player';
-  import { midiTransposeMetadata } from '$cmp/blog/posts/midi-transpose';
-  import { midiDeviceMetadata } from '$cmp/blog/posts/connect-midi-device';
-  import { aiTransposeMetadata } from '$cmp/blog/posts/video-audio-transpose';
-  import { howUseVsrgComposerMetadata } from '$cmp/blog/posts/how-to-use-vsrg-composer';
-  import { createBeatmapMetadata } from '$cmp/blog/posts/how-to-create-a-beatmap';
+  import { blogPostsForGame } from '$cmp/blog/allPosts';
 
   // posts/tags are computed once at module scope, not per-render. Array.prototype.sort is
   // spec-guaranteed stable since ES2019, so the 6 posts sharing the 2024/03/19 createdAt
   // (composer, player, midi-transpose, connect-midi-device, video-audio-transpose,
-  // vsrg-composer) keep this array's literal order after the descending sort below.
-  const posts: BlogMetadata[] = [
-    addToHomeScreenMetadata,
-    easyplay1sMetadata,
-    composerTutorialMetadata,
-    playerTutorialMetadata,
-    midiTransposeMetadata,
-    midiDeviceMetadata,
-    aiTransposeMetadata,
-    howUseVsrgComposerMetadata,
-    createBeatmapMetadata,
-  ].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  // vsrg-composer) keep allBlogPosts' literal order after the descending sort below.
+  // Only this game's posts: a post scoped to the other game is neither listed nor linked here.
+  const posts: BlogMetadata[] = blogPostsForGame().sort(
+    (a, b) => b.createdAt.getTime() - a.createdAt.getTime()
+  );
 
   const tags = Array.from(new Set(posts.flatMap((p) => p.tags)));
 </script>
@@ -33,6 +18,7 @@
   import { onMount } from 'svelte';
   import DefaultPage from '$cmp/shell/DefaultPage.svelte';
   import PageMetadata from '$cmp/shell/PageMetadata.svelte';
+  import { breadcrumbLd, jsonLdScriptTag } from '$lib/seo';
   import Header from '$cmp/header/Header.svelte';
   import Card from '$cmp/layout/Card.svelte';
   import Column from '$cmp/layout/Column.svelte';
@@ -127,7 +113,16 @@
     text="{game.meta.title} Blog"
     description="Welcome to {game.meta
       .title} blog! Here there will be written guides, news and info about the app!"
-  />
+  >
+    <!-- Machine-generated from fixed paths (no translated strings); jsonLdScriptTag escapes < > &. -->
+    <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+    {@html jsonLdScriptTag(
+      breadcrumbLd([
+        { name: 'Home', path: '/' },
+        { name: 'Blog', path: '/blog' },
+      ])
+    )}
+  </PageMetadata>
   {@render blogNavbar(indexNavChildren, 'border-radius:0.5rem;padding:1rem 1.5rem')}
   <Column gap="2rem">
     <!-- Header writes its size as an inline `font-size`, which no stylesheet can override, so the

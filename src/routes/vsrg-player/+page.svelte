@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { documentTitle } from '$lib/seo';
+  import { game } from '$game';
   import { onMount } from 'svelte';
   import AppBackground from '$cmp/theme/AppBackground.svelte';
   import PageMetadata from '$cmp/shell/PageMetadata.svelte';
@@ -175,7 +177,10 @@
 </script>
 
 <AppBackground page="Main">
-  <PageMetadata text={t('home:vsrg_player_name')} description="Play or practice VSRG songs" />
+  <PageMetadata
+    text={documentTitle(t('home:vsrg_player_title', { APP_NAME: game.display.name }))}
+    description="Play or practice VSRG songs"
+  />
   <PageHeading text={t('home:vsrg_player_name')} />
   <VsrgPlayerMenu {settings} onSettingsUpdate={handleSettingChange} {onSongSelect} />
   <div class="vsrg-player-page appear-on-mount">

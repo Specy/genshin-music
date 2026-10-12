@@ -49,9 +49,15 @@ describe('interpolation hands values through unescaped, and Svelte is what escap
      * element - <svelte:element this="script"> renders nothing in Svelte, and a literal
      * <script> in a component is taken as its instance script, so {@html} is the only way.
      * Its payload comes from game.json via seo.ts's serializeJsonLd, which escapes < > and
-     * & so nothing interpolated can close the tag.
+     * & so nothing interpolated can close the tag. The blog's JSON-LD follows the same pattern.
      */
-    const HTML_ALLOWED = new Set(['src/lib/components/shell/HomePage.svelte'])
+    const HTML_ALLOWED = new Set([
+        'src/lib/components/shell/HomePage.svelte',
+        // Blog post and blog index JSON-LD: payloads built from post metadata and fixed paths,
+        // never from t(), and escaped by jsonLdScriptTag like the homepage's.
+        'src/lib/components/blog/BaseBlogPost.svelte',
+        'src/routes/blog/+page.svelte',
+    ])
 
     it('no component renders anything with {@html}', () => {
         const offenders: string[] = []

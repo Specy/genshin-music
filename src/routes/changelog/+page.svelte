@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { documentTitle } from '$lib/seo';
+  import { game } from '$game';
   import { onMount } from 'svelte';
   import { base } from '$app/paths';
   import DefaultPage from '$cmp/shell/DefaultPage.svelte';
@@ -72,7 +74,9 @@
 
 <DefaultPage excludeMenu={true} menu={changelogMenu}>
   <PageMetadata
-    text={`${t('home:changelog_name')} V${APP_VERSION}`}
+    text={documentTitle(
+      t('home:changelog_title', { APP_NAME: game.display.name, version: APP_VERSION })
+    )}
     description={`Changelog V${APP_VERSION}. ${CHANGELOG[0]?.changes.join('; ')}`}
   />
   <PageHeading text={`${t('home:changelog_name')} V${APP_VERSION}`} />

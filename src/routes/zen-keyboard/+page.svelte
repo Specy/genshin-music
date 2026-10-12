@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { documentTitle } from '$lib/seo';
+  import { game } from '$game';
   import AppBackground from '$cmp/theme/AppBackground.svelte';
   import { onMount, untrack } from 'svelte';
   import { SvelteSet } from 'svelte/reactivity';
@@ -232,7 +234,7 @@
 
 <AppBackground page="Main">
   <PageMetadata
-    text={t('home:zen_keyboard_name')}
+    text={documentTitle(t('home:zen_keyboard_title', { APP_NAME: game.display.name }))}
     description="The simplest keyboard in the app, focus only on playing manually with all the features of the player, instrument and pitch selection, animations and metronome"
   />
   <PageHeading text={t('home:zen_keyboard_name')} />

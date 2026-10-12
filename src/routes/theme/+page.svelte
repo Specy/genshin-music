@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { documentTitle } from '$lib/seo';
+  import { game } from '$game';
   import { onMount } from 'svelte';
   import cloneDeep from 'lodash.clonedeep';
   import DefaultPage from '$cmp/shell/DefaultPage.svelte';
@@ -125,7 +127,7 @@
 
 <DefaultPage>
   <PageMetadata
-    text={t('home:themes_name')}
+    text={documentTitle(t('home:themes_title', { APP_NAME: game.display.name }))}
     description="Change the theme of the app, set all colors and backgrounds, make elements translucent and share/import themes"
   />
   <PageHeading text={t('home:themes_name')} />
@@ -271,7 +273,7 @@
          toggle, strictly after the branch swap in template order, restoring "Themes". -->
   {#key selectedPagePreview}
     <PageMetadata
-      text={t('home:themes_name')}
+      text={documentTitle(t('home:themes_title', { APP_NAME: game.display.name }))}
       description="Change the app theme, set the different colors, backgrounds, opacity and customisations"
     />
   {/key}

@@ -1,6 +1,7 @@
 <script module lang="ts">
   import { base } from '$app/paths';
   import { APP_NAME } from '$core/legacyConfig';
+  import { breadcrumbLd, documentTitle, jsonLdScriptTag, withoutEmoji } from '$lib/seo';
   import type { Snippet } from 'svelte';
   import type { BlogAuthor } from './types';
   import Row from '../layout/Row.svelte';
@@ -37,6 +38,7 @@
   import BlogElements from './BlogElements.svelte';
   import { blogAuthorRenderer, blogTagsRenderer } from './BlogMetadataRenderers.svelte';
   import type { BlogMetadata } from './types';
+  import { blogPostingLd, blogPostPath } from './structuredData';
 
   interface BaseBlogPostProps {
     metadata: BlogMetadata;
@@ -85,10 +87,29 @@
   class="blog-post"
   style="padding-left:var(--blog-menu-inset);gap:1rem;line-height:1.5"
 >
-  <PageMetadata text={metadata.title} description={metadata.description} image={metadata.image}>
+  <!-- The <title> and social text are plain: the emoji in metadata.title is for the visible
+       heading only. -->
+  <PageMetadata
+    text={documentTitle(withoutEmoji(metadata.title))}
+    description={metadata.description}
+    image={metadata.image}
+    type="article"
+  >
     <meta name="author" content={metadata.author?.name ?? 'Specy'} />
     <meta name="date" content={metadata.createdAt.toISOString()} />
     <meta name="keywords" content={metadata.tags.join(', ')} />
+    <!-- Machine-generated schema.org payloads from this post's metadata (no translated strings).
+         jsonLdScriptTag escapes < > & so nothing interpolated can close the tag. -->
+    <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+    {@html jsonLdScriptTag(blogPostingLd(metadata))}
+    <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+    {@html jsonLdScriptTag(
+      breadcrumbLd([
+        { name: 'Home', path: '/' },
+        { name: 'Blog', path: '/blog' },
+        { name: withoutEmoji(metadata.title), path: blogPostPath(metadata) },
+      ])
+    )}
   </PageMetadata>
   {@render blogNavbar(navChildren)}
   <div class="blog-header">

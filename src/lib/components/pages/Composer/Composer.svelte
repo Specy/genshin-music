@@ -13,6 +13,7 @@
 </script>
 
 <script lang="ts">
+  import { documentTitle } from '$lib/seo';
   import { onMount } from 'svelte';
   import { goto } from '$app/navigation';
   import { resolve } from '$app/paths';
@@ -2819,7 +2820,9 @@
 {/snippet}
 
 <PageMetadata
-  text={`${t('home:composer_name')} - ${song.name}`}
+  text={song.name !== 'Untitled'
+    ? documentTitle(`${song.name} - ${t('home:composer_name')}`)
+    : documentTitle(t('home:composer_title', { APP_NAME: game.display.name }))}
   description="Create or edit songs with the composer, using up to 52 layers, tempo changers, multiple instruments and pitches. You can also convert a MIDI, video or audio into a sheet."
 />
 {#if isMidiVisible}

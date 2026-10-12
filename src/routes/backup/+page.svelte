@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { documentTitle } from '$lib/seo';
+  import { game } from '$game';
   import { onMount } from 'svelte';
   import DefaultPage from '$cmp/shell/DefaultPage.svelte';
   import PageMetadata from '$cmp/shell/PageMetadata.svelte';
@@ -262,7 +264,7 @@
 
 <DefaultPage>
   <PageMetadata
-    text={t('home:backup_name')}
+    text={documentTitle(t('home:backup_title', { APP_NAME: game.display.name }))}
     description="Manage the backups in the app, download or import songs, themes, or all of them"
   />
   <PageHeading text={t('home:backup_name')} />
