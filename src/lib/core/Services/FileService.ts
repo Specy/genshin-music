@@ -129,6 +129,24 @@ class UnknownFileResult {
         })
     }
 }
+// A one-level summary of an imported value, e.g. {name: "string(12)", songNotes: "array(340)"}.
+function describeTypeOf(value: unknown): string {
+    if (value === null) return 'null'
+    if (Array.isArray(value)) return `array(${value.length})`
+    if (typeof value === 'string') return `string(${value.length})`
+    return typeof value
+}
+
+function describeShape(value: unknown): unknown {
+    if (typeof value !== 'object' || value === null || Array.isArray(value)) return describeTypeOf(value)
+    const entries = Object.entries(value)
+    const shape: Record<string, string> = Object.fromEntries(
+        entries.slice(0, 40).map(([key, v]) => [key, describeTypeOf(v)])
+    )
+    if (entries.length > 40) shape['…'] = `${entries.length - 40} more keys`
+    return shape
+}
+
 export class FileService {
     async importAndLog(files: UnknownFile) {
         logger.showPill(i18n.t("logs:importing_files"), {spinner: true})
@@ -141,7 +159,12 @@ export class FileService {
         logger.hidePill()
         if (result.hasErrors()) {
             logger.error(i18n.t("logs:n_things_failed_to_import", {n: result.errors.length}))
-            console.error("failed to import: ", result.errors)
+            // The shape, not the file: it's what tells an unsupported format apart, and a whole
+            // song would fill the error log (which truncates each entry) with notes.
+            console.error("failed to import: ", result.errors.map(e => ({
+                error: e.error,
+                file: describeShape(e.file)
+            })))
         }
         const songs = result.getSuccessfulSongs()
         const songErrors = result.getSongErrors()
@@ -246,7 +269,9 @@ export class FileService {
             }
         }
         for (const unknown of split.unknown) {
-            result.appendError(unknown, 'Unknown file type')
+            result.appendError(unknown, FileService.isEncryptedSheet(unknown)
+                ? i18n.t('logs:encrypted_sheet_not_supported')
+                : i18n.t('logs:unknown_file_type'))
         }
         return result
     }
@@ -262,6 +287,13 @@ export class FileService {
             themes,
             unknown
         }
+    }
+
+    // Only an explicit flag counts: we don't know the encrypted format itself, just that the
+    // legacy sheet format (which we write with `isEncrypted: false`) has the field.
+    static isEncryptedSheet(file: unknown): boolean {
+        return typeof file === 'object' && file !== null
+            && 'isEncrypted' in file && file.isEncrypted === true
     }
 
     static getSerializedObjectType(file: unknown): FileKind | null {

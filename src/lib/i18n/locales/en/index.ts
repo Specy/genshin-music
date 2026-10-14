@@ -27,7 +27,7 @@ export const i18n_en = {
       'This song has never been saved, the audio will be exported from what is currently open',
     error_downloading_song: 'Error downloading song',
     error_downloading_songs: 'Error downloading songs',
-    error_importing_file: `Error importing file "{{file_name}}}"`,
+    error_importing_file: `Error importing file "{{file_name}}"`,
     error_importing_file_generic: 'Error importing file',
     error_importing_invalid_format: `Error importing file, invalid format`,
     song_backup_downloaded: 'Song backup downloaded',
@@ -56,7 +56,9 @@ export const i18n_en = {
     error_importing_song: `Error importing song "{{song_name}}"`,
     error_importing_folder: `Error importing folder "{{folder_name}}"`,
     error_importing_theme: `Error importing theme "{{theme_name}}"`,
-    error_importing_unknown_file: `"Error importing unknown file "{{file_name}}"`,
+    error_importing_unknown_file: `Error importing unknown file "{{file_name}}"`,
+    unknown_file_type: 'Unknown file type',
+    encrypted_sheet_not_supported: `This sheet is encrypted and can't be imported, export it again without encryption`,
     imported_theme: `Imported theme "{{theme_name}}"`,
     imported_folder: `Imported folder "{{folder_name}}"`,
     imported_song: `Imported {{song_type}} song "{{song_name}}"`,
@@ -668,6 +670,13 @@ export const i18n_en = {
     delete_all_songs: 'Delete all songs',
     error_logs: 'Error logs',
     download_logs: 'Download logs',
+    copy_logs: 'Copy logs',
+    clear_logs: 'Clear logs',
+    logs_copied: 'Logs copied to the clipboard',
+    logs_copy_failed: 'Could not copy the logs, try downloading them instead',
+    no_logs: 'No errors logged',
+    report_instructions:
+      'If something went wrong, download the logs and send them to us on Discord.',
   },
   donate: {
     donate_message: `Each App I make takes months of learning and development. Added to that

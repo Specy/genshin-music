@@ -60,8 +60,22 @@
   };
 
   function downloadLogs() {
-    const logs = logsStore.logs.map((l) => l.message);
-    fileService.downloadObject(logs, `${APP_NAME}_logs`);
+    fileService.downloadObject(logsStore.getReport(), `${APP_NAME}_logs`);
+  }
+
+  // Fallback for when downloading is the thing that's broken (it was, on iOS Safari).
+  async function copyLogs() {
+    try {
+      await navigator.clipboard.writeText(JSON.stringify(logsStore.getReport(), null, 2));
+      logger.success(t('error:logs_copied'));
+    } catch (e) {
+      console.error(e);
+      logger.error(t('error:logs_copy_failed'));
+    }
+  }
+
+  function formatTime(time: number) {
+    return new Date(time).toLocaleString();
   }
 </script>
 
@@ -90,11 +104,25 @@
   </div>
   <div class="row space-between error-logs-header" style="margin:1rem 0">
     <div style="font-size:2rem">{t('error:error_logs')}</div>
-    <AppButton onclick={downloadLogs}>{t('error:download_logs')}</AppButton>
+    <div class="row error-logs-actions">
+      <AppButton onclick={() => logsStore.clearLogs()}>{t('error:clear_logs')}</AppButton>
+      <AppButton onclick={copyLogs}>{t('error:copy_logs')}</AppButton>
+      <AppButton onclick={downloadLogs}>{t('error:download_logs')}</AppButton>
+    </div>
   </div>
+  <p class="error-logs-instructions">{t('error:report_instructions')}</p>
   <div class="error-logs">
     {#each logsStore.logs as log, i (i)}
-      <pre class="error-log-row row">{log.message}</pre>
+      <div class="error-log-row column">
+        <div class="error-log-meta">
+          {formatTime(log.time)} · {log.page} · {log.source}{log.count > 1
+            ? ` · ×${log.count}`
+            : ''}
+        </div>
+        <pre class="error-log-message">{log.message}</pre>
+      </div>
+    {:else}
+      <div class="error-log-row">{t('error:no_logs')}</div>
     {/each}
   </div>
 </DefaultPage>
@@ -137,10 +165,31 @@
     border-radius: 0.5rem;
   }
 
+  .error-logs-actions {
+    gap: 0.4rem;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+
+  .error-logs-instructions {
+    margin: 0 0 1rem;
+    white-space: pre-line;
+  }
+
   .error-log-row {
-    white-space: pre-wrap;
     border-top: solid 0.1rem var(--secondary);
     padding: 1rem 0.5rem;
+    margin: 0;
+    gap: 0.4rem;
+  }
+
+  .error-log-meta {
+    font-size: 0.8rem;
+    opacity: 0.7;
+  }
+
+  .error-log-message {
+    white-space: pre-wrap;
     margin: 0;
   }
 
@@ -178,7 +227,8 @@
       padding-top: 1.5rem;
     }
 
-    .error-log-row {
+    .error-log-message,
+    .error-log-meta {
       overflow-wrap: anywhere;
     }
 

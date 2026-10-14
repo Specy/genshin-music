@@ -5,7 +5,7 @@
   import isMobile from 'is-mobile';
   import { game } from '$game';
   import { homeStore } from '$stores/HomeStore.svelte';
-  import { logsStore } from '$stores/LogsStore.svelte';
+  import { formatError, formatLogArgs, logsStore } from '$stores/LogsStore.svelte';
   import { globalConfigStore } from '$stores/GlobalConfigStore.svelte';
   import { songsStore } from '$stores/SongsStore.svelte';
   import { folderStore } from '$stores/FoldersStore.svelte';
@@ -85,12 +85,8 @@
         originalErrorLog(...args);
         logsStore.addLog({
           error: args.find((arg): arg is Error => arg instanceof Error),
-          message: args
-            .map((arg) => {
-              if (arg instanceof Error) return arg.stack ?? arg.message;
-              return typeof arg === 'object' ? JSON.stringify(arg, null, 4) : String(arg);
-            })
-            .join(' '),
+          message: formatLogArgs(args),
+          source: 'console',
         });
       } catch (error) {
         originalErrorLog('Error logging error', error);
@@ -101,17 +97,33 @@
     };
   });
 
-  // Unlike the error-log override above, this one has no localhost guard.
+  // Unlike the error-log override above, these have no localhost guard.
+  // Most of the app is async, so an unhandled promise rejection is the common way an error
+  // escapes - those never reach the 'error' event.
   onMount(() => {
-    const windowInterceptor = (event: ErrorEvent) => {
+    const errorInterceptor = (event: ErrorEvent) => {
       const error = event.error instanceof Error ? event.error : undefined;
+      // Without an Error object (e.g. a cross-origin "Script error.") the location is all there is.
+      const location = event.filename ? ` (${event.filename}:${event.lineno}:${event.colno})` : '';
       logsStore.addLog({
         error,
-        message: error?.stack ?? error?.message ?? event.message,
+        message: error ? formatError(error) : `${event.message}${location}`,
+        source: 'uncaught',
       });
     };
-    window.addEventListener('error', windowInterceptor);
-    return () => window.removeEventListener('error', windowInterceptor);
+    const rejectionInterceptor = (event: PromiseRejectionEvent) => {
+      logsStore.addLog({
+        error: event.reason instanceof Error ? event.reason : undefined,
+        message: `Unhandled rejection: ${formatError(event.reason)}`,
+        source: 'rejection',
+      });
+    };
+    window.addEventListener('error', errorInterceptor);
+    window.addEventListener('unhandledrejection', rejectionInterceptor);
+    return () => {
+      window.removeEventListener('error', errorInterceptor);
+      window.removeEventListener('unhandledrejection', rejectionInterceptor);
+    };
   });
 
   type VirtualKeyboard = {
@@ -202,19 +214,26 @@
     if (!('launchQueue' in window)) return;
     async function consumer(launchParams: { files?: FileSystemFileHandle[] }) {
       if (launchParams.files && launchParams.files.length) {
-        const name = launchParams.files.join(', ');
+        const name = launchParams.files.map((file) => file.name).join(', ');
         const confirmed = await asyncConfirm(
           t('confirm:confirm_import_opened_file', { files_names: name }),
           false
         );
         if (!confirmed) return;
         for (const file of launchParams.files) {
-          const blob = (await file.getFile()) as File & { handle?: FileSystemFileHandle };
-          blob.handle = file;
-          const text = await blob.text();
-          const parsedFile = JSON.parse(text);
-          if (parsedFile) {
-            fileService.importAndLog(parsedFile);
+          // one unreadable file must not stop the rest, nor fail silently
+          try {
+            const blob = (await file.getFile()) as File & { handle?: FileSystemFileHandle };
+            blob.handle = file;
+            const text = await blob.text();
+            const parsedFile = JSON.parse(text);
+            if (parsedFile) {
+              // importAndLog toasts and logs its own failure before rethrowing
+              await fileService.importAndLog(parsedFile).catch(() => {});
+            }
+          } catch (e) {
+            console.error(e);
+            logger.error(t('logs:error_importing_file', { file_name: file.name }));
           }
         }
       }
@@ -305,8 +324,13 @@
 
     const gaWindow = window as GtagWindow;
     gaWindow.dataLayer = gaWindow.dataLayer || [];
-    gaWindow.gtag = async (...args: unknown[]) => {
-      gaWindow.dataLayer?.push(args);
+    // Must push the `arguments` object itself, exactly like Google's snippet:
+    // gtag.js only runs Arguments entries as gtag commands and treats plain
+    // arrays as GTM data-layer messages, so `(...args) => push(args)` makes
+    // 'js'/'config'/'event' all silent no-ops (the v5 launch lost ~95% of
+    // reported users this way).
+    gaWindow.gtag = async function () {
+      gaWindow.dataLayer?.push(arguments as unknown as unknown[]);
     };
     gaWindow.gtag?.('js', new Date());
     gaWindow.gtag?.('config', game.meta.analytics.configId, {

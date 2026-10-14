@@ -707,10 +707,6 @@
     cursor: text;
   }
 
-  .library-search-input::placeholder {
-    color: var(--menu-background-text);
-  }
-
   .library-search-btn {
     background-color: #d3bd8e;
     color: var(--menu-background-text);

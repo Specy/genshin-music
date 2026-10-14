@@ -18,7 +18,7 @@
     "exporting_unsaved_song": "Questo brano non è mai stato salvato, l'audio verrà esportato da ciò che è aperto ora",
     "error_downloading_song": "Errore durante il download del brano",
     "error_downloading_songs": "Errore durante il download dei brani",
-    "error_importing_file": "Errore durante l'importazione del file \"{{file_name}}}\"",
+    "error_importing_file": "Errore durante l'importazione del file \"{{file_name}}\"",
     "error_importing_file_generic": "Errore durante l'importazione del file",
     "error_importing_invalid_format": "Errore durante l'importazione del file: formato non valido",
     "song_backup_downloaded": "Backup del brano scaricato",
