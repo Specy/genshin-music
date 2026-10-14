@@ -18,7 +18,7 @@
         "exporting_unsaved_song": "Bu şarkı hiç kaydedilmedi; ses, şu anda açık olan içerikten dışa aktarılacak",
         "error_downloading_song": "Şarkı indirilirken hata oluştu",
         "error_downloading_songs": "Şarkılar indirilirken hata oluştu",
-        "error_importing_file": "\"{{file_name}}}\" dosyası içe aktarılırken hata oluştu",
+        "error_importing_file": "\"{{file_name}}\" dosyası içe aktarılırken hata oluştu",
         "error_importing_file_generic": "Dosya içe aktarılırken hata oluştu",
         "error_importing_invalid_format": "Dosya içe aktarılırken hata oluştu, hatalı format",
         "song_backup_downloaded": "Yedeklenen şarkılar indirildi",

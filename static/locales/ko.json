@@ -18,7 +18,7 @@
     "exporting_unsaved_song": "이 곡은 한 번도 저장되지 않았습니다. 현재 열려 있는 내용에서 오디오를 내보냅니다",
     "error_downloading_song": "노래를 다운로드하는 데 에러가 발생했습니다",
     "error_downloading_songs": "노래들을 다운로드 하는데 에러가 발생했습니다",
-    "error_importing_file": "파일: \"{{file_name}}}\"을 불러오는데 에러가 발생했습니다",
+    "error_importing_file": "파일: \"{{file_name}}\"을 불러오는데 에러가 발생했습니다",
     "error_importing_file_generic": "파일을 불러오는데 에러가 발생했습니다",
     "error_importing_invalid_format": "파일을 불러오는데 에러가 있습니다: 지원되지 않는 형식의 파일",
     "song_backup_downloaded": "노래 백업 파일이 다운로드 되었습니다.",

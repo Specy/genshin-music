@@ -16,7 +16,7 @@
         "exporting_unsaved_song": "此歌曲從未儲存，音訊將從當前打開的內容匯出",
         "error_downloading_song": "歌曲下載失敗",
         "error_downloading_songs": "歌曲下載失敗",
-        "error_importing_file": "匯入檔案“{{file_name}}}”時出錯",
+        "error_importing_file": "匯入檔案“{{file_name}}”時出錯",
         "error_importing_file_generic": "檔案匯入失敗",
         "error_importing_invalid_format": "檔案匯入失敗, 檔案格式錯誤",
         "song_backup_downloaded": "已下載歌曲備份",

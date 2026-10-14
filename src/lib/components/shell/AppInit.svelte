@@ -214,19 +214,26 @@
     if (!('launchQueue' in window)) return;
     async function consumer(launchParams: { files?: FileSystemFileHandle[] }) {
       if (launchParams.files && launchParams.files.length) {
-        const name = launchParams.files.join(', ');
+        const name = launchParams.files.map((file) => file.name).join(', ');
         const confirmed = await asyncConfirm(
           t('confirm:confirm_import_opened_file', { files_names: name }),
           false
         );
         if (!confirmed) return;
         for (const file of launchParams.files) {
-          const blob = (await file.getFile()) as File & { handle?: FileSystemFileHandle };
-          blob.handle = file;
-          const text = await blob.text();
-          const parsedFile = JSON.parse(text);
-          if (parsedFile) {
-            fileService.importAndLog(parsedFile);
+          // one unreadable file must not stop the rest, nor fail silently
+          try {
+            const blob = (await file.getFile()) as File & { handle?: FileSystemFileHandle };
+            blob.handle = file;
+            const text = await blob.text();
+            const parsedFile = JSON.parse(text);
+            if (parsedFile) {
+              // importAndLog toasts and logs its own failure before rethrowing
+              await fileService.importAndLog(parsedFile).catch(() => {});
+            }
+          } catch (e) {
+            console.error(e);
+            logger.error(t('logs:error_importing_file', { file_name: file.name }));
           }
         }
       }

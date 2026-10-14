@@ -18,7 +18,7 @@
         "exporting_unsaved_song": "Эта мелодия ещё ни разу не сохранялась; аудио будет экспортировано из открытой сейчас версии",
         "error_downloading_song": "Не получилось скачать мелодию",
         "error_downloading_songs": "Не вышло скачать мелодии",
-        "error_importing_file": "Не удалось импортировать файл \"{{file_name}}}\"",
+        "error_importing_file": "Не удалось импортировать файл \"{{file_name}}\"",
         "error_importing_file_generic": "Ошибка при импорте файла",
         "error_importing_invalid_format": "Ошибка при импорте файла, недопустимый формат",
         "song_backup_downloaded": "Резервная копия мелодии загружена",
