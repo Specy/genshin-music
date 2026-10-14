@@ -8,25 +8,25 @@ import * as workerTimers from 'worker-timers';
 
 
 class FileDownloader {
-    //TODO shouldn tthis be application/json?
+    // Everything goes through a Blob URL (never a data: URL - iOS Safari tends to open those in a
+    // viewer instead of downloading them), and the anchor + URL are kept alive for a while after
+    // the click: Safari starts the download asynchronously, so revoking the URL or removing the
+    // anchor in the same tick can make it silently fail. 40s matches FileSaver.js.
     static download(file: string | Blob, name: string, as: string = "application/json") {
+        const blob = typeof file === "string" ? new Blob([file], {type: as}) : file
+        const url = URL.createObjectURL(blob)
         const a = document.createElement("a")
         a.style.display = 'none'
         a.className = 'ignore_click_outside'
         a.download = name
+        a.href = url
+        a.rel = 'noopener'
         document.body.appendChild(a)
-
-        if (typeof file === "string") {
-            a.href = `data:${as};charset=utf-8,${encodeURIComponent(file)}`
-            a.click();
-        }
-        if (file instanceof Blob) {
-            const url = URL.createObjectURL(file)
-            a.href = url
-            a.click();
+        a.click()
+        setTimeout(() => {
+            a.remove()
             URL.revokeObjectURL(url)
-        }
-        a.remove();
+        }, 40_000)
     }
 }
 

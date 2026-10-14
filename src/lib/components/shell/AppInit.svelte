@@ -5,7 +5,7 @@
   import isMobile from 'is-mobile';
   import { game } from '$game';
   import { homeStore } from '$stores/HomeStore.svelte';
-  import { logsStore } from '$stores/LogsStore.svelte';
+  import { formatError, formatLogArgs, logsStore } from '$stores/LogsStore.svelte';
   import { globalConfigStore } from '$stores/GlobalConfigStore.svelte';
   import { songsStore } from '$stores/SongsStore.svelte';
   import { folderStore } from '$stores/FoldersStore.svelte';
@@ -85,12 +85,8 @@
         originalErrorLog(...args);
         logsStore.addLog({
           error: args.find((arg): arg is Error => arg instanceof Error),
-          message: args
-            .map((arg) => {
-              if (arg instanceof Error) return arg.stack ?? arg.message;
-              return typeof arg === 'object' ? JSON.stringify(arg, null, 4) : String(arg);
-            })
-            .join(' '),
+          message: formatLogArgs(args),
+          source: 'console',
         });
       } catch (error) {
         originalErrorLog('Error logging error', error);
@@ -101,17 +97,33 @@
     };
   });
 
-  // Unlike the error-log override above, this one has no localhost guard.
+  // Unlike the error-log override above, these have no localhost guard.
+  // Most of the app is async, so an unhandled promise rejection is the common way an error
+  // escapes - those never reach the 'error' event.
   onMount(() => {
-    const windowInterceptor = (event: ErrorEvent) => {
+    const errorInterceptor = (event: ErrorEvent) => {
       const error = event.error instanceof Error ? event.error : undefined;
+      // Without an Error object (e.g. a cross-origin "Script error.") the location is all there is.
+      const location = event.filename ? ` (${event.filename}:${event.lineno}:${event.colno})` : '';
       logsStore.addLog({
         error,
-        message: error?.stack ?? error?.message ?? event.message,
+        message: error ? formatError(error) : `${event.message}${location}`,
+        source: 'uncaught',
       });
     };
-    window.addEventListener('error', windowInterceptor);
-    return () => window.removeEventListener('error', windowInterceptor);
+    const rejectionInterceptor = (event: PromiseRejectionEvent) => {
+      logsStore.addLog({
+        error: event.reason instanceof Error ? event.reason : undefined,
+        message: `Unhandled rejection: ${formatError(event.reason)}`,
+        source: 'rejection',
+      });
+    };
+    window.addEventListener('error', errorInterceptor);
+    window.addEventListener('unhandledrejection', rejectionInterceptor);
+    return () => {
+      window.removeEventListener('error', errorInterceptor);
+      window.removeEventListener('unhandledrejection', rejectionInterceptor);
+    };
   });
 
   type VirtualKeyboard = {

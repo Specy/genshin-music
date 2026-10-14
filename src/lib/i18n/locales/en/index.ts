@@ -668,6 +668,13 @@ export const i18n_en = {
     delete_all_songs: 'Delete all songs',
     error_logs: 'Error logs',
     download_logs: 'Download logs',
+    copy_logs: 'Copy logs',
+    clear_logs: 'Clear logs',
+    logs_copied: 'Logs copied to the clipboard',
+    logs_copy_failed: 'Could not copy the logs, try downloading them instead',
+    no_logs: 'No errors logged',
+    report_instructions: `To report a bug: press "Clear logs", go back and repeat what caused the problem,
+            then come back here and download (or copy) the logs and send them to us on Discord.`,
   },
   donate: {
     donate_message: `Each App I make takes months of learning and development. Added to that
