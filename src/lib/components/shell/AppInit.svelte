@@ -305,8 +305,13 @@
 
     const gaWindow = window as GtagWindow;
     gaWindow.dataLayer = gaWindow.dataLayer || [];
-    gaWindow.gtag = async (...args: unknown[]) => {
-      gaWindow.dataLayer?.push(args);
+    // Must push the `arguments` object itself, exactly like Google's snippet:
+    // gtag.js only runs Arguments entries as gtag commands and treats plain
+    // arrays as GTM data-layer messages, so `(...args) => push(args)` makes
+    // 'js'/'config'/'event' all silent no-ops (the v5 launch lost ~95% of
+    // reported users this way).
+    gaWindow.gtag = async function () {
+      gaWindow.dataLayer?.push(arguments as unknown as unknown[]);
     };
     gaWindow.gtag?.('js', new Date());
     gaWindow.gtag?.('config', game.meta.analytics.configId, {
