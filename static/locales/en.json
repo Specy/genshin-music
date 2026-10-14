@@ -560,7 +560,7 @@
     "logs_copied": "Logs copied to the clipboard",
     "logs_copy_failed": "Could not copy the logs, try downloading them instead",
     "no_logs": "No errors logged",
-    "report_instructions": "To report a bug: press \"Clear logs\", go back and repeat what caused the problem,\n            then come back here and download (or copy) the logs and send them to us on Discord."
+    "report_instructions": "If something went wrong, download the logs and send them to us on Discord."
   },
   "donate": {
     "donate_message": "Each App I make takes months of learning and development. Added to that\n            are also the costs of hosting. With a higher budget I can afford to not\n            worry so much about how much I spend on the server, giving you the best\n            possible experience.\n\n            I care about giving users all features without\n            having to pay for it, neither having intrusive ads which can be annoying.\n            For this same reason, there is no source of income except donations.\n\n\n            I would be really thankful if you could consider donating in order to fund\n            development and costs."

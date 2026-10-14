@@ -361,6 +361,14 @@ p {
   color: var(--background-text);
 }
 
+/* Placeholders follow their field's own text colour, faded so they don't read as typed text.
+   Chrome/Safari's UA default is a fixed darkgray, Firefox's an opacity of 0.54; this evens them
+   out. Per-component ::placeholder rules may still set a colour - the opacity stays. */
+::placeholder {
+  color: inherit;
+  opacity: 0.6;
+}
+
 .app-button::placeholder {
   color: var(--primary-text);
 }
