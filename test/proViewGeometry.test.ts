@@ -24,9 +24,11 @@ import { INSTRUMENTS, INSTRUMENTS_DATA, InstrumentData, NOTES_PER_COLUMN, PITCHE
 import {
   AXIS_PADDING_ROWS,
   PRO_MIN_ROW_HEIGHT_PX,
+  PRO_SCROLLBAR_MIN_THUMB,
   PRO_ZOOM_MAX,
   PRO_ZOOM_MIN,
   ROW_HEIGHT_FRAMING_ROWS,
+  cameraYForScrollbarThumb,
   clampCameraY,
   clampProZoom,
   editableZone,
@@ -37,6 +39,7 @@ import {
   numberForRow,
   offscreenZoneDirection,
   proRowHeight,
+  proScrollbarThumb,
   proViewAxis,
   rowForNumber,
   spanOfNumbers,
@@ -606,6 +609,61 @@ describe('the offscreen-zone arrow direction', () => {
   it('answers null for an unmeasured region, where there is nothing to point from', () => {
     expect(at(0, { rowHeight: 0 })).toBe(null);
     expect(at(0, { notesRegionHeight: 0 })).toBe(null);
+  });
+});
+
+/**
+ * THE VERTICAL SCROLLBAR'S THUMB (ProViewScrollbar.svelte): the camera window drawn as a thumb on a
+ * track as tall as the notes region, and the inverse a drag runs through.
+ *
+ * HAND NUMBERS again: a 1000px axis seen through a 200px window, so the thumb is a fifth of the
+ * track (40px) and travels the other 160px while the camera travels 800.
+ */
+describe('the scrollbar thumb', () => {
+  const scroll = (cameraY: number) => ({ cameraY, contentHeight: 1000, viewportHeight: 200 });
+
+  it('is the window over the axis, positioned by the camera over its travel', () => {
+    expect(proScrollbarThumb(scroll(0))).toEqual({ top: 0, height: 40, travel: 160 });
+    expect(proScrollbarThumb(scroll(400))?.top).toBe(80);
+    expect(proScrollbarThumb(scroll(800))?.top).toBe(160);
+    //a camera reported past either end (an axis that shrank under a held pan) pins the thumb there
+    expect(proScrollbarThumb(scroll(-50))?.top).toBe(0);
+    expect(proScrollbarThumb(scroll(5000))?.top).toBe(160);
+  });
+
+  it('floors the thumb at a grabbable height and still reaches both ends', () => {
+    const long = { cameraY: 0, contentHeight: 100_000, viewportHeight: 200 };
+    expect(proScrollbarThumb(long)?.height).toBe(PRO_SCROLLBAR_MIN_THUMB);
+    const end = proScrollbarThumb({ ...long, cameraY: 100_000 - 200 });
+    expect(end!.top + end!.height).toBe(200);
+  });
+
+  it('is absent when the axis fits the window, where there is nothing to scroll', () => {
+    expect(proScrollbarThumb({ cameraY: 0, contentHeight: 200, viewportHeight: 200 })).toBe(null);
+    expect(proScrollbarThumb({ cameraY: 0, contentHeight: 150, viewportHeight: 200 })).toBe(null);
+    expect(proScrollbarThumb({ cameraY: 0, contentHeight: 1000, viewportHeight: 0 })).toBe(null);
+    expect(proScrollbarThumb(scroll(Number.NaN))).toBe(null);
+  });
+
+  it('inverts exactly, and clamps a drag past either end of the track', () => {
+    for (const cameraY of [0, 1, 250, 400, 799, 800]) {
+      const thumb = proScrollbarThumb(scroll(cameraY))!;
+      expect(cameraYForScrollbarThumb(scroll(cameraY), thumb.top)).toBeCloseTo(cameraY, 10);
+    }
+    expect(cameraYForScrollbarThumb(scroll(0), -30)).toBe(0);
+    expect(cameraYForScrollbarThumb(scroll(0), 10_000)).toBe(800);
+    //nothing to scroll answers the only camera there is
+    expect(
+      cameraYForScrollbarThumb({ cameraY: 0, contentHeight: 150, viewportHeight: 200 }, 50)
+    ).toBe(0);
+  });
+
+  it('scales to a track taller than the window, as the composer runs it over the ruler too', () => {
+    //a 250px track: the thumb is still a fifth of it, and the camera still spans its whole travel
+    expect(proScrollbarThumb(scroll(0), 250)).toEqual({ top: 0, height: 50, travel: 200 });
+    expect(proScrollbarThumb(scroll(800), 250)?.top).toBe(200);
+    expect(cameraYForScrollbarThumb(scroll(0), 100, 250)).toBe(400);
+    expect(proScrollbarThumb(scroll(0), 0)).toBe(null);
   });
 });
 

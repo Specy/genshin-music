@@ -462,6 +462,74 @@ export function offscreenZoneDirection(input: {
   return null;
 }
 
+/**
+ * THE CAMERA AS A SCROLLBAR READS IT, in px: how far down the axis the window is, how long the axis
+ * is (`rowCount × rowHeight`) and how much of it the notes region shows. ComposerRenderer reports
+ * one of these whenever any of the three moves; the scrollbar is a DOM element over the canvas, so
+ * this report is the only way it learns where the camera went.
+ *
+ * The camera's travel is NOT carried: it is `contentHeight − viewportHeight` (maxCameraY's own
+ * arithmetic), and a fourth field would be a second statement of it that could disagree.
+ */
+export type ProScroll = { cameraY: number; contentHeight: number; viewportHeight: number };
+
+/**
+ * THE SHORTEST THE SCROLLBAR'S THUMB GETS, in px. Proportional sizing alone shrinks it to a sliver
+ * on a long axis at a high zoom (sky's ~75 rows at 3x over a short phone region), and a thumb is a
+ * thing to grab as well as a gauge.
+ */
+export const PRO_SCROLLBAR_MIN_THUMB = 24;
+
+/**
+ * THE SCROLLBAR'S THUMB on a track `trackHeight` px tall: its top edge, its height, and the TRAVEL
+ * it moves through (the track minus the thumb), which is what both directions of the mapping
+ * divide by — see cameraYForScrollbarThumb.
+ *
+ * The track defaults to the notes region's own height; the composer's runs over the Column Ruler's
+ * band as well, since the rows show through that translucent band. Either way the thumb is to the
+ * track what the window is to the axis, floored at PRO_SCROLLBAR_MIN_THUMB, and its top is the
+ * camera's fraction of its own travel — so a floored thumb still reaches both ends exactly when the
+ * camera does.
+ *
+ * NULL WHEN THERE IS NOTHING TO SCROLL: the axis fits the region (a zoom-out far enough, or a
+ * degenerate measurement), where maxCameraY pins the camera at 0 and a scrollbar would be a full
+ * track claiming a range that does not exist.
+ */
+export function proScrollbarThumb(
+  scroll: ProScroll,
+  trackHeight: number = scroll.viewportHeight,
+  minThumb: number = PRO_SCROLLBAR_MIN_THUMB
+): { top: number; height: number; travel: number } | null {
+  const { cameraY, contentHeight, viewportHeight } = scroll;
+  const maxCamera = contentHeight - viewportHeight;
+  if (!(viewportHeight > 0) || !(trackHeight > 0) || !(maxCamera > 0)) return null;
+  if (!Number.isFinite(cameraY)) return null;
+  const height = Math.min(
+    trackHeight,
+    Math.max(minThumb, (trackHeight * viewportHeight) / contentHeight)
+  );
+  const travel = trackHeight - height;
+  const fraction = Math.min(1, Math.max(0, cameraY / maxCamera));
+  return { top: travel * fraction, height, travel };
+}
+
+/**
+ * proScrollbarThumb's inverse: the camera that puts the thumb's top edge at `thumbTop` (track
+ * coordinates, 0 at the track's top), clamped to the travel — so a drag past either end of the
+ * track holds the camera at that end of the axis. 0 where there is nothing to scroll.
+ */
+export function cameraYForScrollbarThumb(
+  scroll: ProScroll,
+  thumbTop: number,
+  trackHeight: number = scroll.viewportHeight,
+  minThumb: number = PRO_SCROLLBAR_MIN_THUMB
+): number {
+  const thumb = proScrollbarThumb(scroll, trackHeight, minThumb);
+  if (!thumb || !(thumb.travel > 0) || !Number.isFinite(thumbTop)) return 0;
+  const fraction = Math.min(1, Math.max(0, thumbTop / thumb.travel));
+  return fraction * (scroll.contentHeight - scroll.viewportHeight);
+}
+
 // Editable Zones memoized per (instrument, Basepoint), exactly like noteIds' gridRowCache and for
 // the same reason it is never invalidated: both halves of the key are IN the key, and everything
 // the answer derives from below them (the instrument's sounding table) is a build-time constant of

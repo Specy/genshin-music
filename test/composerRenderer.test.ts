@@ -761,6 +761,7 @@ import {
     proStripWidth,
     proViewAxis,
     rowForNumber,
+    type ProScroll,
     type ProViewAxis,
 } from '$cmp/pages/Composer/proViewGeometry'
 import {songNumberSpan} from '$cmp/pages/Composer/proViewNotes'
@@ -7624,6 +7625,8 @@ describe('the Pro View pointer', () => {
         const longPressDrags: number[] = []
         //...and how many times a taken hold has ENDED (CONTEXT.md: Duration Hold)
         let longPressEnds = 0
+        //every camera report the vertical scrollbar would have been handed, in order
+        const proScrolls: ProScroll[] = []
         const selectColumnCalls: number[] = []
         let height = 0
         let timelineHeight = 0
@@ -7680,6 +7683,7 @@ describe('the Pro View pointer', () => {
                 viewLocked = false
                 unlocks++
             },
+            onProScroll: scroll => proScrolls.push(scroll),
         })
         await renderer.init()
         //the cache debounce, exactly as mount() waits it out - without a cache nothing paints and
@@ -7786,6 +7790,17 @@ describe('the Pro View pointer', () => {
             longPressEnds: () => longPressEnds,
             dismissals: () => dismissals,
             unlocks: () => unlocks,
+            proScrolls,
+            /** The vertical scrollbar's own call: a thumb drag's move, or (`smooth`) a track press. */
+            scrollTo(cameraY: number, smooth = false) {
+                renderer.scrollProCameraTo(cameraY, smooth)
+            },
+            /** A plain wheel over the scrollbar, which ComposerCanvas.svelte forwards as it came. */
+            wheelScrollbar(deltaY: number) {
+                renderer.wheelProScrollbar(
+                    new WheelEvent('wheel', {deltaY, deltaMode: WheelEvent.DOM_DELTA_PIXEL})
+                )
+            },
             /**
              * Which offscreen-zone arrow is drawn, read from the arrow Graphics' own ops (stage
              * child 2, between the zone's framing and the playhead): a rounded shape whose TIP -
@@ -8191,6 +8206,89 @@ describe('the Pro View pointer', () => {
             harness.tap(x, harness.notesTop + harness.rowHeight / 2)
             //camera 0 = the axis' top row at the region's top edge
             expect(harness.taps).toEqual([{column: SELECTED, number: harness.axis.max}])
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    // THE VERTICAL SCROLLBAR (ProViewScrollbar.svelte): a DOM element over the canvas that reads the
+    // camera off onProScroll and moves it through scrollProCameraTo - the wheel's clamp and the
+    // wheel's padlock. proViewGeometry's suite pins the thumb arithmetic; these rows pin the wiring.
+
+    it('reports the camera to the scrollbar, and stays quiet while it holds still', async () => {
+        const harness = await mountPro()
+        try {
+            expect(harness.proScrolls.at(-1)).toEqual({
+                cameraY: harness.lockedCamera(),
+                contentHeight: harness.axis.rowCount * harness.rowHeight,
+                viewportHeight: harness.height,
+            })
+            const reports = harness.proScrolls.length
+            harness.push()
+            expect(harness.proScrolls.length).toBe(reports)
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    it('a scrollbar drag puts the camera where it asks, clamped, and unlocks the view once', async () => {
+        const harness = await mountPro()
+        try {
+            harness.scrollTo(0)
+            expect(harness.proScrolls.at(-1)!.cameraY).toBe(0)
+            expect(harness.unlocks()).toBe(1)
+            //read back through the tap oracle: camera 0 is the axis' top row at the region's top
+            harness.tap(harness.xOfColumn(SELECTED), harness.notesTop + harness.rowHeight / 2)
+            expect(harness.taps.at(-1)!.number).toBe(harness.axis.max)
+            //past the far end the clamp holds it at the axis' bottom, and the padlock is not asked twice
+            harness.scrollTo(1e9)
+            expect(harness.proScrolls.at(-1)!.cameraY).toBeCloseTo(
+                harness.axis.rowCount * harness.rowHeight - harness.height,
+                6
+            )
+            expect(harness.unlocks()).toBe(1)
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    it('a grab of the thumb that moves nothing leaves a locked view locked', async () => {
+        const harness = await mountPro()
+        try {
+            harness.scrollTo(harness.lockedCamera())
+            expect(harness.unlocks()).toBe(0)
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    it('a press on the track eases the jump when smooth scrolling is on', async () => {
+        const harness = await mountPro({smoothScroll: true})
+        try {
+            const from = harness.lockedCamera()
+            harness.scrollTo(0, true)
+            //nothing has moved yet: the frames carry it from here
+            expect(harness.proScrolls.at(-1)!.cameraY).toBe(from)
+            await vi.advanceTimersByTimeAsync(40)
+            const midway = harness.proScrolls.at(-1)!.cameraY
+            expect(midway).toBeGreaterThan(0)
+            expect(midway).toBeLessThan(from)
+            await vi.advanceTimersByTimeAsync(400)
+            expect(harness.proScrolls.at(-1)!.cameraY).toBe(0)
+            expect(harness.unlocks()).toBe(1)
+        } finally {
+            harness.destroy()
+        }
+    })
+
+    it('a wheel over the scrollbar pans the frame vertically, with no shift held', async () => {
+        const harness = await mountPro({viewLocked: false})
+        try {
+            const from = harness.proScrolls.at(-1)!.cameraY
+            harness.wheelScrollbar(harness.rowHeight * 2)
+            expect(harness.proScrolls.at(-1)!.cameraY).toBeCloseTo(from + harness.rowHeight * 2, 6)
+            //...and the song did not scroll: this wheel never reached handleWheel
+            expect(harness.selectColumnCalls).toEqual([])
         } finally {
             harness.destroy()
         }

@@ -12,9 +12,14 @@
   //a pure-rules module with no pixi in it (see its header), so unlike the renderer it is imported
   //statically - `import type` here besides, which is erased outright
   import type { ScreenRect } from './composerInput';
-  import { composerCanvasCssSize, composerNotesRegionY } from './composerCanvasGeometry';
-  import { proStripWidth } from './proViewGeometry';
+  import {
+    PRO_SCROLLBAR_WIDTH,
+    composerCanvasCssSize,
+    composerNotesRegionY,
+  } from './composerCanvasGeometry';
+  import { proStripWidth, type ProScroll } from './proViewGeometry';
   import TimelineButton from './TimelineButton.svelte';
+  import ProViewScrollbar from './ProViewScrollbar.svelte';
 
   // The class names below (canvas-wrapper, canvas-relative, canvas-buttons, timeline-controls,
   // timeline-button) are styled from App.css, not a local <style> block - renaming or restructuring
@@ -211,6 +216,11 @@
   // canvas. 0 in the Compressed View, where nothing reads it.
   let rowHeight = $state(0);
   let hasCache = $state(false);
+  // THE PRO VIEW'S VERTICAL CAMERA, from the renderer's onProScroll - its own channel rather than
+  // part of the geometry report above because it moves on every frame of a camera ease or a pan,
+  // and the geometry does not. Raw: it is replaced whole on every report and never mutated, so a
+  // deep proxy would be per-frame work buying nothing. Null until the first Pro View paint.
+  let proScroll: ProScroll | null = $state.raw(null);
 
   // THE ADD/REMOVE BUTTON'S TWO QUESTIONS. `isFixedBreakpoint` is the song's first/last column,
   // which always carries a breakpoint nobody can remove (see its module): the button reads as a
@@ -249,8 +259,14 @@
   // button is a DOM element floating over the canvas, so nothing else keeps the two apart. Same
   // discipline as `notesTop` above - the strip's own width function, given the row height the
   // RENDERER reported, rather than a second formula here. The right chevron needs none of this
-  // (the strip is at the left edge only).
+  // (the strip is at the left edge only) - it has a scrollbar to clear instead, just below.
   const stripInset = $derived(proView && rowHeight > 0 ? proStripWidth(rowHeight) : 0);
+  // ...and the RIGHT chevron's counterpart, which moves only its ICON: the Pro View's vertical
+  // scrollbar stands over the button's right edge, so the glyph is shifted clear of it while the
+  // gradient runs on under the scrollbar to the canvas' edge (a gap there read as a seam). The
+  // footprint stays `right: 0`, which is what the Ruler Scrub's right creep band is measured from.
+  // Whether or not the axis overflows right now - an icon that jumped with every zoom would be worse.
+  const scrollbarInset = $derived(proView ? PRO_SCROLLBAR_WIDTH : 0);
 
   onMount(() => {
     let cancelled = false;
@@ -321,6 +337,7 @@
             rowHeight = geometry.rowHeight;
             hasCache = geometry.hasCache;
           },
+          onProScroll: (scroll) => (proScroll = scroll),
         }
       );
       await instance.init();
@@ -588,8 +605,24 @@
         class={['canvas-buttons', !isPlaying && 'canvas-buttons-visible']}
         style="right:0;padding-left:0.5rem;justify-content:flex-end;background:linear-gradient(270deg, rgba({sideButtonsRgb},0.80) 30%, rgba({sideButtonsRgb},0.30) 80%, rgba({sideButtonsRgb},0) 100%)"
       >
-        {@render chevronRightIcon()}
+        <!-- a TRANSFORM and not padding: padding would widen the button past its 2.8rem footprint
+             (the 2rem glyph box no longer fits), and that footprint is the creep band's -->
+        <span style="display:flex" style:transform="translateX(-{scrollbarInset}px)">
+          {@render chevronRightIcon()}
+        </span>
       </button>
+    {/if}
+    {#if proView && proScroll}
+      <!-- the track spans the Column Ruler as well as the notes region: the rows run on behind the
+           translucent ruler, and the mobile chevrons it stands over cover the same two bands -->
+      <ProViewScrollbar
+        scroll={proScroll}
+        top={rulerTop}
+        trackHeight={rulerHeight + proScroll.viewportHeight}
+        {isPlaying}
+        onScrollTo={(cameraY, smooth) => renderer?.scrollProCameraTo(cameraY, smooth)}
+        onWheel={(e) => renderer?.wheelProScrollbar(e)}
+      />
     {/if}
   </div>
   <!--
