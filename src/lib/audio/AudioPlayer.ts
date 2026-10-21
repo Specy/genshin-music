@@ -45,6 +45,7 @@ export class AudioPlayer {
         await instrument.load(AudioProvider.getAudioContext());
         AudioProvider.connect(instrument.endNode, ins.reverbOverride);
         instrument.changeVolume(ins.volume);
+        instrument.changePan(ins.pan);
         return instrument;
       }
       // Same identity - the name plus the sample-choosing Instrument Settings (ADR-0017) - means
@@ -52,6 +53,7 @@ export class AudioPlayer {
       if (audioInstruments[i].identityKey === instrumentIdentityKey(ins.name, ins.settings)) {
         //if it has the instrument and it's the same, just set the volume and reverb
         audioInstruments[i].changeVolume(ins.volume);
+        audioInstruments[i].changePan(ins.pan);
         AudioProvider.setReverbOfNode(audioInstruments[i].endNode, ins.reverbOverride);
         return audioInstruments[i];
       } else {
@@ -64,6 +66,7 @@ export class AudioPlayer {
         await instrument.load(AudioProvider.getAudioContext());
         AudioProvider.connect(instrument.endNode, ins.reverbOverride);
         instrument.changeVolume(ins.volume);
+        instrument.changePan(ins.pan);
         return instrument;
       }
     });

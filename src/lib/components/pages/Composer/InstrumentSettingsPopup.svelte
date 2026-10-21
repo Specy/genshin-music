@@ -59,6 +59,7 @@
   import IconChevronDown from '~icons/fa6-solid/chevron-down';
   import IconVolumeHigh from '~icons/fa6-solid/volume-high';
   import IconVolumeXmark from '~icons/fa6-solid/volume-xmark';
+  import IconCrosshairs from '~icons/fa6-solid/crosshairs';
   import IconArrowUp from '~icons/fa6-solid/arrow-up';
   import IconArrowDown from '~icons/fa6-solid/arrow-down';
   import IconArrowsUpToLine from '~icons/fa6-solid/arrows-up-to-line';
@@ -93,7 +94,7 @@
     onDelete: () => void;
     onClose: () => void;
     /**
-     * Brackets around ONE CONTINUOUS GESTURE - a volume drag, a name being typed - for the
+     * Brackets around ONE CONTINUOUS GESTURE - a slider drag, a name being typed - for the
      * composer to collapse into a single Undo Step. See the group bookkeeping below.
      */
     onEditGroupStart?: () => void;
@@ -112,12 +113,12 @@
   });
 
   /**
-   * ONE GESTURE, ONE UNDO STEP (design §5). The volume slider and the alias field emit an
+   * ONE GESTURE, ONE UNDO STEP (design §5). The mix sliders and the alias field emit an
    * `onChange` PER TICK and each one is a whole `setInstrument` - one Step each. Ungrouped, a
    * single drag from 0 to 125 lands ~125 Steps: past the history's cap, so the session's real edits
    * are evicted from the bottom, the Savepoint is stranded, and undoing the drag costs 125 presses.
    *
-   * The two brackets are INDEPENDENT and idempotent rather than one shared flag, because they
+   * The brackets are INDEPENDENT and idempotent rather than one shared flag, because they
    * overlap: a pointerdown on the slider is dispatched before the alias field's blur, so a single
    * flag would be closed by that blur and leave the rest of the drag ungrouped. The composer's
    * groups are reentrant, which is exactly what that nesting needs.
@@ -127,6 +128,7 @@
    * its Step and silently swallows every edit made after it.
    */
   let volumeGrouped = false;
+  let panGrouped = false;
   let aliasGrouped = false;
 
   function startVolumeGroup() {
@@ -138,6 +140,18 @@
   function endVolumeGroup() {
     if (!volumeGrouped) return;
     volumeGrouped = false;
+    onEditGroupEnd?.();
+  }
+
+  function startPanGroup() {
+    if (panGrouped) return;
+    panGrouped = true;
+    onEditGroupStart?.();
+  }
+
+  function endPanGroup() {
+    if (!panGrouped) return;
+    panGrouped = false;
     onEditGroupEnd?.();
   }
 
@@ -155,6 +169,7 @@
 
   $effect(() => () => {
     endVolumeGroup();
+    endPanGroup();
     endAliasGroup();
   });
 
@@ -177,6 +192,14 @@
    * left able to see what moved.
    */
   const edited = (changes: Partial<InstrumentData>) => instrument.clone().set(changes);
+  const panPercent = $derived(Math.round((instrument?.pan ?? 0) * 100));
+  const panText = $derived(
+    panPercent === 0
+      ? t('instrument_settings:pan_center')
+      : t(panPercent < 0 ? 'instrument_settings:pan_left' : 'instrument_settings:pan_right', {
+          amount: Math.abs(panPercent),
+        })
+  );
 </script>
 
 {#snippet sectionHeader(id: SectionId, label: string)}
@@ -347,6 +370,39 @@
                   onkeyup={endVolumeGroup}
                   onblur={endVolumeGroup}
                   oninput={(e) => onChange(edited({ volume: Number(e.currentTarget.value) }))}
+                />
+              </div>
+              <div class="settings-row">
+                <label for="instrument-pan">{t('instrument_settings:pan')}</label>
+                <span>{panText}</span>
+              </div>
+              <div class="settings-pan">
+                <AppButton
+                  class="settings-pan-center flex-centered"
+                  ariaLabel={t('instrument_settings:pan_center')}
+                  tooltip={t('instrument_settings:pan_center')}
+                  disabled={disabled || instrument.pan === 0}
+                  onclick={() => onChange(edited({ pan: 0 }))}
+                >
+                  <IconCrosshairs />
+                </AppButton>
+                <input
+                  id="instrument-pan"
+                  type="range"
+                  min={-100}
+                  max={100}
+                  step={1}
+                  value={panPercent}
+                  aria-valuetext={panText}
+                  {disabled}
+                  onpointerdown={startPanGroup}
+                  onpointerup={endPanGroup}
+                  onpointercancel={endPanGroup}
+                  onlostpointercapture={endPanGroup}
+                  onkeydown={startPanGroup}
+                  onkeyup={endPanGroup}
+                  onblur={endPanGroup}
+                  oninput={(e) => onChange(edited({ pan: Number(e.currentTarget.value) / 100 }))}
                 />
               </div>
             </div>
@@ -620,13 +676,20 @@
     gap: 0.5rem;
   }
 
-  .settings-volume {
+  .settings-volume,
+  .settings-pan {
     display: flex;
     align-items: center;
     gap: 0.6rem;
   }
 
-  .floating-instrument-settings :global(.settings-mute) {
+  .settings-pan input {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .floating-instrument-settings :global(.settings-mute),
+  .floating-instrument-settings :global(.settings-pan-center) {
     min-width: unset;
     width: 1.8rem;
     height: 1.8rem;

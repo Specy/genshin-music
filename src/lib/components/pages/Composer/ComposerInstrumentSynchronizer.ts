@@ -102,6 +102,7 @@ export class ComposerInstrumentSynchronizer {
       AudioProvider.setReverbOfNode(instrument.endNode, instrumentData.reverbOverride);
     }
     instrument.changeVolume(instrumentData.volume);
+    instrument.changePan(instrumentData.pan);
     return instrument;
   }
 

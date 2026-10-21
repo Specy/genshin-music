@@ -5,6 +5,8 @@ import { Instrument } from '$lib/audio/Instrument.svelte';
 export type AppAudioNode = {
   node: AudioNode;
   to: AudioDestination | null;
+  /** Routes through the engine's optional panner while `node` keeps a stable identity. */
+  instrument?: Instrument;
 };
 type AudioDestination = 'reverb' | 'end';
 
@@ -661,7 +663,7 @@ export class AudioProviderClass {
       }
     });
     for (const { instrument } of routing) instrument.detachFromContext();
-    this.nodes.forEach((entry) => entry.node.disconnect());
+    this.nodes.forEach((entry) => (entry.instrument ?? entry.node).disconnect());
     this.nodes = [];
     this.reverbNode = null;
     this.reverbVolumeNode = null;
@@ -746,6 +748,7 @@ export class AudioProviderClass {
     this.nodes.push({
       node,
       to: reverbOverride === null ? null : reverbOverride ? 'reverb' : 'end',
+      instrument: Instrument.liveInstruments().find((instrument) => instrument.endNode === node),
     });
     this.setAudioDestinations();
     return this;
@@ -758,7 +761,7 @@ export class AudioProviderClass {
     this.disposeContextState = null;
     this.observedContext = null;
     this.disarmGesture?.();
-    this.nodes.forEach((node) => node.node.disconnect());
+    this.nodes.forEach((node) => (node.instrument ?? node.node).disconnect());
     this.nodes = [];
     this.recorder = null;
     this.reverbNode = null;
@@ -766,15 +769,16 @@ export class AudioProviderClass {
   };
 
   clear = () => {
-    this.nodes.forEach((node) => node.node.disconnect());
+    this.nodes.forEach((node) => (node.instrument ?? node.node).disconnect());
     this.nodes = [];
     return this;
   };
 
   disconnect = (node: AudioNode | null) => {
     if (!node) return this;
+    const entry = this.nodes.find((entry) => entry.node === node);
+    (entry?.instrument ?? node).disconnect();
     this.nodes = this.nodes.filter((n) => n.node !== node);
-    node.disconnect();
     return this;
   };
 
@@ -798,7 +802,7 @@ export class AudioProviderClass {
     for (const node of nodes) {
       const dest = node.to ?? this.defaultDestination;
       if (dest === 'end') {
-        node.node.connect(recorder.node);
+        (node.instrument ?? node.node).connect(recorder.node);
       }
     }
     this.isRecording = true;
@@ -836,17 +840,19 @@ export class AudioProviderClass {
   };
 
   setNodeDestination(node: AppAudioNode) {
-    node.node.disconnect();
+    const source = node.instrument ?? node.node;
+    source.disconnect();
     const dest = node.to ?? this.defaultDestination;
     if (dest === 'reverb') {
       if (!this.reverbNode) {
         console.warn("Couldn't connect to reverb");
-        if (this.audioContext) node.node.connect(this.audioContext.destination);
+        if (this.audioContext) source.connect(this.audioContext.destination);
       } else {
-        node.node.connect(this.reverbNode);
+        source.connect(this.reverbNode);
       }
     } else {
-      if (this.audioContext) node.node.connect(this.audioContext.destination);
+      if (this.audioContext) source.connect(this.audioContext.destination);
+      if (this.isRecording && this.recorder?.node) source.connect(this.recorder.node);
     }
   }
 }

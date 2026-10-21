@@ -41,6 +41,10 @@ function fakeContext(initial: FakeState = 'suspended', options: { clockFrozen?: 
       context.setState('closed');
     }),
     createGain: vi.fn(() => fakeNode(context)),
+    createStereoPanner: vi.fn(() => ({
+      ...fakeNode(context),
+      pan: { value: 0, setTargetAtTime: vi.fn() },
+    })),
     createConvolver: vi.fn(() => ({ ...fakeNode(context), buffer: null })),
     createMediaStreamDestination: vi.fn(() => {
       const tracks = [{ stop: vi.fn() }];
@@ -146,13 +150,13 @@ describe('Instrument live registry', () => {
     // re-apply volumes from - so a muted layer would come back audible.
     const instrument = await loadedInstrument(fakeContext('running'));
     instrument.changeVolume(20);
-    const before = instrument.endNode!.gain.value;
+    const before = instrument.volumeNode!.gain.value;
 
     const replacement = fakeContext('running');
     await instrument.rehome(replacement as unknown as BaseAudioContext);
 
     expect(instrument.endNode).not.toBe(null);
-    expect(instrument.endNode!.gain.value).toBe(before);
+    expect(instrument.volumeNode!.gain.value).toBe(before);
     expect(instrument.isDeleted).toBe(false);
     expect(Instrument.liveInstruments()).toContain(instrument);
     instrument.dispose();
@@ -165,13 +169,159 @@ describe('Instrument live registry', () => {
     // default - which is what a rehome()-only test does not notice.
     const instrument = await loadedInstrument(fakeContext('running'));
     instrument.changeVolume(20);
-    const before = instrument.endNode!.gain.value;
+    const before = instrument.volumeNode!.gain.value;
 
     instrument.detachFromContext();
     expect(instrument.endNode).toBe(null);
     await instrument.rehome(fakeContext('running') as unknown as BaseAudioContext);
 
-    expect(instrument.endNode!.gain.value).toBe(before);
+    expect(instrument.volumeNode!.gain.value).toBe(before);
+    instrument.dispose();
+  });
+
+  it('allocates no panner for centered instruments, including after context recovery', async () => {
+    const original = fakeContext('running');
+    const instrument = await loadedInstrument(original);
+    expect(original.createStereoPanner).not.toHaveBeenCalled();
+    expect(instrument.panNode).toBeNull();
+    expect(instrument.endNode).toBe(instrument.volumeNode);
+    instrument.changePan(0);
+    expect(original.createStereoPanner).not.toHaveBeenCalled();
+
+    const replacement = fakeContext('running');
+    await instrument.rehome(replacement as unknown as BaseAudioContext);
+    expect(replacement.createStereoPanner).not.toHaveBeenCalled();
+    expect(instrument.panNode).toBeNull();
+    instrument.dispose();
+  });
+
+  it('adds and removes the panner while keeping its output identity and all destinations', async () => {
+    const context = fakeContext('running');
+    const instrument = await loadedInstrument(context);
+    const endNode = instrument.endNode;
+    const recorder = fakeNode(context) as unknown as AudioNode;
+    instrument.connect(context.destination as unknown as AudioNode);
+    instrument.connect(recorder);
+    instrument.changePan(-0.75);
+    const panner = instrument.panNode!;
+    expect(context.createStereoPanner).toHaveBeenCalledOnce();
+    expect(instrument.endNode).toBe(endNode);
+    expect(panner.channelCount).toBe(2);
+    expect(panner.channelCountMode).toBe('explicit');
+    expect(instrument.volumeNode!.connect).toHaveBeenLastCalledWith(panner);
+    expect(panner.connect).toHaveBeenCalledWith(context.destination);
+    expect(panner.connect).toHaveBeenCalledWith(recorder);
+
+    instrument.changePan(0.5);
+    expect(context.createStereoPanner).toHaveBeenCalledOnce();
+    expect(panner.pan.setTargetAtTime).toHaveBeenCalledWith(0.5, expect.any(Number), 0.01);
+    instrument.disconnect(recorder);
+    vi.mocked(instrument.volumeNode!.connect).mockClear();
+    instrument.changePan(0);
+    expect(instrument.panNode).toBeNull();
+    expect(panner.disconnect).toHaveBeenCalled();
+    expect(instrument.volumeNode!.disconnect).toHaveBeenCalledWith(panner);
+    expect(instrument.volumeNode!.connect).toHaveBeenCalledWith(context.destination);
+    expect(instrument.volumeNode!.connect).not.toHaveBeenCalledWith(recorder);
+    expect(instrument.endNode).toBe(endNode);
+
+    instrument.changePan(0);
+    expect(context.createStereoPanner).toHaveBeenCalledOnce();
+    instrument.changePan(1);
+    expect(context.createStereoPanner).toHaveBeenCalledTimes(2);
+    expect(instrument.panNode).not.toBe(panner);
+    instrument.dispose();
+  });
+
+  it('preserves a non-centered pan across context recovery', async () => {
+    const original = fakeContext('running');
+    const instrument = await loadedInstrument(original);
+    instrument.changePan(-0.75);
+    const panner = instrument.panNode!;
+    expect(instrument.volumeNode!.connect).toHaveBeenCalledWith(panner);
+    expect(instrument.endNode).toBe(instrument.volumeNode);
+    expect(panner.pan.value).toBe(-0.75);
+
+    instrument.detachFromContext();
+    expect(panner.disconnect).toHaveBeenCalled();
+    expect(instrument.endNode).toBeNull();
+    await instrument.rehome(fakeContext('running') as unknown as BaseAudioContext);
+    expect(instrument.panNode).not.toBe(panner);
+    expect(instrument.panNode!.pan.value).toBe(-0.75);
+    instrument.dispose();
+    expect(instrument.panNode).toBeNull();
+  });
+
+  it('applies offline pan immediately so the beginning of an export is already panned', async () => {
+    const offline = { ...fakeContext('running'), startRendering: vi.fn() };
+    const instrument = await loadedInstrument(offline as unknown as FakeContext);
+    instrument.changePan(1);
+    expect(instrument.panNode!.pan.value).toBe(1);
+    expect(instrument.panNode!.pan.setTargetAtTime).not.toHaveBeenCalled();
+    instrument.changePan(-0.5);
+    expect(instrument.panNode!.pan.value).toBe(-0.5);
+    expect(instrument.panNode!.pan.setTargetAtTime).not.toHaveBeenCalled();
+    instrument.dispose();
+  });
+});
+
+describe('AudioProvider routing with an optional panner', () => {
+  it('preserves reverb routes without registering a different node at each center crossing', async () => {
+    const context = fakeContext('running');
+    const provider = new AudioProviderClass(FAST);
+    provider.audioContext = context as unknown as AudioContext;
+    provider.reverbNode = context.createConvolver() as unknown as ConvolverNode;
+    const instrument = await loadedInstrument(context);
+    const endNode = instrument.endNode;
+    provider.connect(endNode, true);
+    expect(provider.nodes[0].instrument).toBe(instrument);
+
+    instrument.changePan(-1);
+    expect(instrument.panNode!.connect).toHaveBeenCalledWith(provider.reverbNode);
+    provider.setReverbOfNode(endNode, false);
+    expect(instrument.panNode!.connect).toHaveBeenLastCalledWith(context.destination);
+    expect(instrument.volumeNode!.connect).not.toHaveBeenCalledWith(context.destination);
+
+    instrument.changePan(0);
+    expect(instrument.panNode).toBeNull();
+    expect(instrument.volumeNode!.connect).toHaveBeenLastCalledWith(context.destination);
+    provider.setReverbOfNode(endNode, true);
+    expect(instrument.volumeNode!.connect).toHaveBeenLastCalledWith(provider.reverbNode);
+    expect(provider.nodes).toHaveLength(1);
+    expect(provider.nodes[0].node).toBe(endNode);
+
+    instrument.changePan(1);
+    const panner = instrument.panNode!;
+    provider.disconnect(endNode);
+    expect(panner.disconnect).toHaveBeenCalled();
+    vi.mocked(instrument.volumeNode!.connect).mockClear();
+    instrument.changePan(0);
+    expect(instrument.volumeNode!.connect).not.toHaveBeenCalled();
+    expect(provider.nodes).toHaveLength(0);
+    instrument.dispose();
+  });
+
+  it('keeps dry audio recording connected while pan is changed and re-synced', async () => {
+    const context = fakeContext('running');
+    const provider = new AudioProviderClass(FAST);
+    provider.audioContext = context as unknown as AudioContext;
+    const recorderNode = fakeNode(context) as unknown as AudioNode;
+    provider.recorder = { node: recorderNode, start: vi.fn() } as unknown as AudioRecorder;
+    const instrument = await loadedInstrument(context);
+    provider.connect(instrument.endNode, false);
+    provider.startRecording();
+
+    instrument.changePan(1);
+    expect(instrument.panNode!.connect).toHaveBeenCalledWith(recorderNode);
+    vi.mocked(instrument.panNode!.connect).mockClear();
+    provider.setReverbOfNode(instrument.endNode, false);
+    expect(instrument.panNode!.connect).toHaveBeenCalledWith(context.destination);
+    expect(instrument.panNode!.connect).toHaveBeenCalledWith(recorderNode);
+
+    vi.mocked(instrument.volumeNode!.connect).mockClear();
+    instrument.changePan(0);
+    expect(instrument.volumeNode!.connect).toHaveBeenCalledWith(context.destination);
+    expect(instrument.volumeNode!.connect).toHaveBeenCalledWith(recorderNode);
     instrument.dispose();
   });
 });
@@ -183,7 +333,7 @@ describe('AudioProvider.rebuildContext', () => {
     provider.audioContext = original as unknown as AudioContext;
     const instrument = await loadedInstrument(original);
     instrument.changeVolume(20);
-    const quietened = instrument.endNode!.gain.value;
+    const quietened = instrument.volumeNode!.gain.value;
     const originalNode = instrument.endNode;
     // Routed dry while the default is wet: the rebuild must carry the per-node override, not
     // just reconnect everything to the current default.
@@ -201,7 +351,7 @@ describe('AudioProvider.rebuildContext', () => {
     const entry = provider.nodes.find((n) => n.node === instrument.endNode);
     expect(entry?.to).toBe('end');
     // End to end through the real two-pass sequence, not rehome() in isolation.
-    expect(instrument.endNode!.gain.value).toBe(quietened);
+    expect(instrument.volumeNode!.gain.value).toBe(quietened);
     instrument.dispose();
   });
 

@@ -55,6 +55,7 @@ export type PlannedTrack = {
   /** The track's Instrument Settings (ADR-0018): its Variant decides which samples render. */
   settings: InstrumentSettingValues;
   volume: number;
+  pan: number;
   /** Effective Basepoint: the track's own override, else the song's. */
   pitch: Pitch;
   /** Solo set + own Mute, derived over the whole roster; an inaudible track contributes no events. */
@@ -121,6 +122,7 @@ export function planSongRender(song: RecordedSong): SongRenderPlan {
     instrument: data.name,
     settings: { ...data.settings },
     volume: data.volume,
+    pan: data.pan,
     pitch: data.pitch || song.pitch,
     audible: isTrackAudible(song.instruments, trackIndex),
     // `??`, never `||`: reverbOverride is a tri-state where `false` is a real answer (this
@@ -412,6 +414,7 @@ async function loadPlannedInstruments(
       owned.push(instrument);
       await instrument.load(context);
       instrument.changeVolume(track.volume);
+      instrument.changePan(track.pan);
       loaded.set(track.trackIndex, instrument);
     })
   );

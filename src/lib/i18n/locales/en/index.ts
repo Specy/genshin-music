@@ -870,10 +870,14 @@ export const i18n_en = {
     note_icon: 'Note icon',
     solo: 'Solo',
     volume: 'Volume',
+    pan: 'Pan',
+    pan_center: 'Center',
+    pan_left: 'Left {{amount}}%',
+    pan_right: 'Right {{amount}}%',
     volume_high_warning: 'If you hear distortion, reduce the volume',
     // the layer settings panel's collapsible section titles
     section_sound: 'Sound',
-    section_mix: 'Mix', //the audio-mixing sense: the layer's volume
+    section_mix: 'Mix', //the audio-mixing sense: the layer's volume and stereo position
     section_display: 'Display', //how the layer's notes are drawn
     section_arrange: 'Arrange layer',
     // "Position: Up | Down" moves the layer in the list
