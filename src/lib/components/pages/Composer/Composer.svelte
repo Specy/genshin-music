@@ -2923,6 +2923,8 @@
       onMerge={mergeLayer}
       onEditGroupStart={beginInstrumentEditGroup}
       onEditGroupEnd={endInstrumentEditGroup}
+      songPitch={song.pitch}
+      songReverb={settings.reverb.value}
       {songLocked}
       onSettingsOpenChange={(open) => (layerSettingsDismissesClicks = open)}
     />

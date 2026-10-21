@@ -99,6 +99,7 @@ export const i18n_en = {
     yes: 'Yes',
     no: 'No',
     ok: 'Ok',
+    done: 'Done', //closes a panel whose edits already applied
     on: 'On',
     off: 'Off',
     help: 'Help',
@@ -870,10 +871,20 @@ export const i18n_en = {
     solo: 'Solo',
     volume: 'Volume',
     volume_high_warning: 'If you hear distortion, reduce the volume',
-    move_down: 'Move down',
-    move_up: 'Move up',
-    merge_up: 'Merge up',
-    merge_down: 'Merge down',
+    // the layer settings panel's collapsible section titles
+    section_sound: 'Sound',
+    section_mix: 'Mix', //the audio-mixing sense: the layer's volume
+    section_display: 'Display', //how the layer's notes are drawn
+    section_arrange: 'Arrange layer',
+    // "Position: Up | Down" moves the layer in the list
+    position: 'Position',
+    position_up: 'Up',
+    position_down: 'Down',
+    // "Merge into: Above | Below" folds this layer into the layer above or below it
+    merge_into: 'Merge into',
+    merge_above: 'Above',
+    merge_below: 'Below',
+    delete_layer: 'Delete layer',
     // the row that picks one of an instrument's alternative recordings (e.g. Aurora's sung vowels)
     variant: 'Variant',
     // caption over the settings only one instrument has, e.g. "Aurora only"

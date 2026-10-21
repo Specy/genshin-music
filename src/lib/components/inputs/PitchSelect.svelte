@@ -3,6 +3,7 @@
   import type { ClassValue } from 'svelte/elements';
   import { PITCHES } from '$core/sharedConfig';
   import type { Pitch } from '$lib/games/types';
+  import { ThemeProvider as theme } from '$core/theme/ThemeProvider.svelte';
 
   // PITCHES stopped being game-data with ADR-0003: it is shared music theory
   // (was byte-identical in both GameDefinitions), so it now lives in
@@ -27,11 +28,18 @@
     onChange(e.currentTarget.value as Pitch);
     e.currentTarget.blur();
   }
+
+  // Same inline-SVG-chevron-from-theme-text-color mechanism as inputs/Select.svelte and
+  // InstrumentSelect.svelte - without it this select fell back to App.css's fixed grey chevron,
+  // the one select in a row of them whose arrow did not follow the theme.
+  const backgroundImage = $derived(
+    `url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' height='24' viewBox='0 0 24 24' width='24' fill='${theme.getText('primary').hex().replace('#', '%23')}'><path d='M0 0h24v24H0z' fill='none'/><path d='M16.59 8.59L12 13.17 7.41 8.59 6 10l6 6 6-6z'/></svg>")`
+  );
 </script>
 
 <select
   class={['select', cls]}
-  style="width:100%;padding:0.3rem;{style}"
+  style="width:100%;padding:0.3rem;background-image:{backgroundImage};{style}"
   onchange={handleChange}
   value={selected}
   {disabled}

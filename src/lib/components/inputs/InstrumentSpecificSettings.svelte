@@ -21,6 +21,7 @@
     onChange,
     disabled = false,
     style = '',
+    selectStyle = '',
   }: {
     instrument: InstrumentName;
     /** As stored: may be partial, stale or absent - it resolves against the declaration here. */
@@ -29,6 +30,8 @@
     disabled?: boolean;
     /** On the block itself, so an instrument that declares nothing leaves no spacing behind. */
     style?: string;
+    /** After each row's own select style, for a surface whose other selects are another width. */
+    selectStyle?: string;
   } = $props();
 
   const variant = $derived(variantSettingOf(instrument));
@@ -44,7 +47,7 @@
     <label class="instrument-specific-row">
       <span>{t('instrument_settings:variant')}</span>
       <Select
-        style="padding:0.3rem;width:8rem;text-align:left"
+        style="padding:0.3rem;width:8rem;text-align:left;{selectStyle}"
         value={String(resolved[variant.id])}
         {disabled}
         onchange={(e) => onChange({ ...resolved, [variant.id]: e.currentTarget.value })}
