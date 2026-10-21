@@ -15,10 +15,13 @@
   let {
     data,
     index,
+    songPitch,
     onChange,
   }: {
     data: CustomTrack;
     index: number;
+    /** The import's base pitch, named on the option that follows it. */
+    songPitch: Pitch;
     onChange: (index: number, data: Partial<CustomTrack>) => void;
   } = $props();
 
@@ -125,7 +128,7 @@
           onChange(index, { instrument: data.instrument.clone().set({ pitch }) })}
       >
         <option value="">
-          {t('instrument_settings:use_song_pitch')}
+          {t('instrument_settings:use_song_pitch')} ({songPitch})
         </option>
       </PitchSelect>
     </Row>
