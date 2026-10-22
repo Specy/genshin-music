@@ -56,7 +56,7 @@
     disabled: boolean;
     onClick: () => void;
     active?: boolean;
-    style?: string;
+    stacked?: boolean;
     tooltip?: string;
     tooltipPosition?: 'top' | 'bottom';
     area?: string;
@@ -67,18 +67,22 @@
     disabled={opts.disabled}
     onclick={opts.onClick}
     class={[
-      'flex-centered',
       'tools-button',
+      opts.stacked ? 'flex-centered tools-button-stacked' : 'tools-button-row',
       opts.active && 'tools-button-highlighted',
       hasTooltip(opts.tooltip),
     ]}
-    style="grid-area:{opts.area ?? ''};{opts.style ?? ''}"
+    style="grid-area:{opts.area ?? ''}"
   >
     {@render content()}
     {#if opts.tooltip}
-      <Tooltip position={opts.tooltipPosition ?? 'top'}>
-        {opts.tooltip}
-      </Tooltip>
+      <!-- the tooltip leaves its left edge to its static position, which a grid button puts at
+           its start: this flex layer over the button centres it again whatever the button is -->
+      <span class="tools-tooltip-anchor">
+        <Tooltip position={opts.tooltipPosition ?? 'top'}>
+          {opts.tooltip}
+        </Tooltip>
+      </span>
     {/if}
   </button>
 {/snippet}
@@ -97,7 +101,7 @@
       d="M320 448v40c0 13.255-10.745 24-24 24H24c-13.255 0-24-10.745-24-24V120c0-13.255 10.745-24 24-24h72v296c0 30.879 25.121 56 56 56h168zm0-344V0H152c-13.255 0-24 10.745-24 24v368c0 13.255 10.745 24 24 24h272c13.255 0 24-10.745 24-24V128H344c-13.2 0-24-10.8-24-24zm120.971-31.029L375.029 7.029A24 24 0 0 0 358.059 0H352v96h96v-6.059a24 24 0 0 0-7.029-16.97z"
     /></svg
   >
-  {t('common:copy')}
+  <span class="tools-label">{t('common:copy')}</span>
 {/snippet}
 
 {#snippet pasteContent()}
@@ -114,9 +118,11 @@
       d="M497.941 273.941c18.745-18.745 18.745-49.137 0-67.882l-160-160c-18.745-18.745-49.136-18.746-67.883 0l-256 256c-18.745 18.745-18.745 49.137 0 67.882l96 96A48.004 48.004 0 0 0 144 480h356c6.627 0 12-5.373 12-12v-40c0-6.627-5.373-12-12-12H355.883l142.058-142.059zm-302.627-62.627l137.373 137.373L265.373 416H150.628l-80-80 124.686-124.686z"
     /></svg
   >
-  {selectionType === 'all'
-    ? t('composer:tools.paste_all_layers')
-    : t('composer:tools.paste_in_layer_n', { layer_number: data.layer + 1 })}
+  <span class="tools-label">
+    {selectionType === 'all'
+      ? t('composer:tools.paste_all_layers')
+      : t('composer:tools.paste_in_layer_n', { layer_number: data.layer + 1 })}
+  </span>
 {/snippet}
 
 {#snippet insertContent()}
@@ -138,9 +144,11 @@
     <path d="M14 12l-4 -4" />
     <path d="M20 4l0 16" />
   </svg>
-  {selectionType === 'all'
-    ? t('composer:tools.insert_all_layers')
-    : t('composer:tools.insert_in_layer_n', { layer_number: data.layer + 1 })}
+  <span class="tools-label">
+    {selectionType === 'all'
+      ? t('composer:tools.insert_all_layers')
+      : t('composer:tools.insert_in_layer_n', { layer_number: data.layer + 1 })}
+  </span>
 {/snippet}
 
 {#snippet eraseContent()}
@@ -157,7 +165,7 @@
       d="M128 184c0-30.879 25.122-56 56-56h136V56c0-13.255-10.745-24-24-24h-80.61C204.306 12.89 183.637 0 160 0s-44.306 12.89-55.39 32H24C10.745 32 0 42.745 0 56v336c0 13.255 10.745 24 24 24h104V184zm32-144c13.255 0 24 10.745 24 24s-10.745 24-24 24-24-10.745-24-24 10.745-24 24-24zm184 248h104v200c0 13.255-10.745 24-24 24H184c-13.255 0-24-10.745-24-24V184c0-13.255 10.745-24 24-24h136v104c0 13.2 10.8 24 24 24zm104-38.059V256h-96v-96h6.059a24 24 0 0 1 16.97 7.029l65.941 65.941a24.002 24.002 0 0 1 7.03 16.971z"
     /></svg
   >
-  {t('common:erase')}
+  <span class="tools-label">{t('common:erase')}</span>
 {/snippet}
 
 {#snippet deleteContent()}
@@ -175,7 +183,7 @@
       d="M432 32H312l-9.4-18.7A24 24 0 0 0 281.1 0H166.8a23.72 23.72 0 0 0-21.4 13.3L136 32H16A16 16 0 0 0 0 48v32a16 16 0 0 0 16 16h416a16 16 0 0 0 16-16V48a16 16 0 0 0-16-16zM53.2 467a48 48 0 0 0 47.9 45h245.8a48 48 0 0 0 47.9-45L416 128H32z"
     /></svg
   >
-  {t('common:delete')}
+  <span class="tools-label">{t('common:delete')}</span>
 {/snippet}
 
 {#snippet moveUpContent()}
@@ -192,7 +200,7 @@
       d="M177 159.7l136 136c9.4 9.4 9.4 24.6 0 33.9l-22.6 22.6c-9.4 9.4-24.6 9.4-33.9 0L160 255.9l-96.4 96.4c-9.4 9.4-24.6 9.4-33.9 0L7 329.7c-9.4-9.4-9.4-24.6 0-33.9l136-136c9.4-9.5 24.6-9.5 34-.1z"
     /></svg
   >
-  {t('composer:tools.move_notes_up')}
+  <span class="tools-label">{t('composer:tools.move_notes_up')}</span>
 {/snippet}
 
 {#snippet moveDownContent()}
@@ -209,7 +217,7 @@
       d="M143 352.3L7 216.3c-9.4-9.4-9.4-24.6 0-33.9l22.6-22.6c9.4-9.4 24.6-9.4 33.9 0l96.4 96.4 96.4-96.4c9.4-9.4 24.6-9.4 33.9 0l22.6 22.6c9.4 9.4 9.4 24.6 0 33.9l-136 136c-9.2 9.4-24.4 9.4-33.8 0z"
     /></svg
   >
-  {t('composer:tools.move_notes_down')}
+  <span class="tools-label">{t('composer:tools.move_notes_down')}</span>
 {/snippet}
 
 <!-- QUIRK: this repeats the "floating-tools" token when the tools are visible — old built the same duplicate and browsers dedupe it, so keep it rather than tidying the expression. -->
@@ -292,7 +300,7 @@
           onClick: () => functions.copyColumns(selectedTarget),
           active: data.hasCopiedColumns,
           tooltip: t('composer:tools.copy_notes'),
-          style: 'flex-direction:column;justify-content:center',
+          stacked: true,
           tooltipPosition: 'bottom',
           area: 'a',
         },
@@ -366,15 +374,53 @@
     font-size: 1.2rem;
   }
 
+  /* EACH HALF IS FOUR TRACKS - space, icon, label, space - and every button but copy SUBGRIDS its
+     half, so the icons of one column share a track and sit on one vertical line whatever the length
+     of their labels, while the two outer `1fr`s keep the icon + label pair centred in the button.
+     Copy stacks its icon over its label and has nothing in its column to line up with, so it stays a
+     plain centred flexbox across the same four tracks. */
   .tools-buttons-grid {
     display: grid;
+    grid-template-columns:
+      minmax(0, 1fr) auto auto minmax(0, 1fr)
+      minmax(0, 1fr) auto auto minmax(0, 1fr);
     grid-template-areas:
-      'a a b b'
-      'a a c c'
-      'd d e e'
-      'f f g g';
+      'a a a a b b b b'
+      'a a a a c c c c'
+      'd d d d e e e e'
+      'f f f f g g g g';
     flex: 1;
     gap: 0.6rem;
+  }
+
+  /* `justify-content: center` only shows where subgrid is unsupported: the tracks are then the
+     button's own, and this centres them as the flexbox it replaces did. */
+  .tools-button-row {
+    display: grid;
+    grid-template-columns: subgrid;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .tools-button-row > .tools-icon {
+    grid-column: 2;
+  }
+
+  .tools-button-row > .tools-label {
+    grid-column: 3;
+    text-align: start;
+  }
+
+  .tools-button-stacked {
+    flex-direction: column;
+  }
+
+  .tools-tooltip-anchor {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    justify-content: center;
+    pointer-events: none;
   }
 
   /* THE PANEL IS DecoratedCard'S OWN ROOT DIV, which is why this rule and the two state modifiers

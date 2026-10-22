@@ -55,7 +55,6 @@
   import HelpTooltip from '$cmp/utility/HelpTooltip.svelte';
   import DecoratedCard from '$cmp/layout/DecoratedCard.svelte';
   import IconPen from '~icons/fa6-solid/pen';
-  import IconXmark from '~icons/fa6-solid/xmark';
   import IconChevronDown from '~icons/fa6-solid/chevron-down';
   import IconVolumeHigh from '~icons/fa6-solid/volume-high';
   import IconVolumeXmark from '~icons/fa6-solid/volume-xmark';
@@ -248,13 +247,6 @@
           />
           <IconPen aria-hidden="true" />
         </label>
-        <AppButton
-          class="settings-close flex-centered"
-          ariaLabel={t('common:close')}
-          onclick={onClose}
-        >
-          <IconXmark />
-        </AppButton>
       </div>
 
       <div class="settings-body">
@@ -552,7 +544,7 @@
     display: flex;
     align-items: center;
     gap: 0.4rem;
-    padding: 0.4rem 0.4rem 0.4rem var(--settings-padding-x);
+    padding: 0.4rem var(--settings-padding-x);
   }
 
   .settings-name {
@@ -590,20 +582,6 @@
     flex-shrink: 0;
     font-size: 0.7rem;
     opacity: 0.5;
-  }
-
-  /* THE BUTTONS BELOW WEAR THEIR CLASS ON A CHILD COMPONENT'S ROOT (AppButton), which Svelte cannot
-     see from here and would prune - so they are reached through the panel, which also keeps them
-     beating `.app-button`'s own padding and background in App.css whatever the stylesheet order. */
-  .floating-instrument-settings :global(.settings-close) {
-    min-width: unset;
-    width: 1.8rem;
-    height: 1.8rem;
-    padding: 0;
-    flex-shrink: 0;
-    background-color: transparent;
-    color: inherit;
-    border-radius: 0.3rem;
   }
 
   .settings-body {
@@ -688,6 +666,9 @@
     min-width: 0;
   }
 
+  /* THE BUTTONS BELOW WEAR THEIR CLASS ON A CHILD COMPONENT'S ROOT (AppButton), which Svelte cannot
+     see from here and would prune - so they are reached through the panel, which also keeps them
+     beating `.app-button`'s own padding and background in App.css whatever the stylesheet order. */
   .floating-instrument-settings :global(.settings-mute),
   .floating-instrument-settings :global(.settings-pan-center) {
     min-width: unset;
