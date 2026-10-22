@@ -514,10 +514,10 @@
   }
 
   /* THE PANEL IS THREE BANDS: a header and a footer that always show, and a body between them that
-     scrolls. Its height is capped by the viewport below `top`, so whatever the open sections add,
-     Done and Delete stay on screen. NO `overflow: hidden` for the rounded corners to clip with: the
-     section bands only ever run inside the body, never into a corner, and clipping would cut off
-     the card's corner stars, which hang half outside it.
+     scrolls. Its height is fixed and capped by the viewport below `top`, so whatever the open
+     sections add, Done and Delete stay on screen and in place. NO `overflow: hidden` for the
+     rounded corners to clip with: the section bands only ever run inside the body, never into a
+     corner, and clipping would cut off the card's corner stars, which hang half outside it.
      The card is DecoratedCard's own root div, so it is reached through the panel (see below). */
   .floating-instrument-settings :global(.settings-card) {
     display: flex;
@@ -526,17 +526,16 @@
     color: var(--menu-background-text);
     border-radius: 0.4rem;
     border: solid 2px var(--secondary);
-    /* A FLOOR, so collapsing sections does not shrink the panel under the pointer and move the
-       footer to wherever the last open section now ends. min() keeps it from beating the cap on
-       a short window. */
-    min-height: min(25rem, calc(100dvh - 4rem));
-    max-height: calc(100dvh - 4rem);
+    /* A FIXED HEIGHT, not a floor: opening or collapsing a section never resizes the panel or
+       moves the footer, the body scrolls instead. Tall enough for every section open on a desktop
+       window; min() keeps it inside a short one. */
+    height: min(36rem, calc(100dvh - 4rem));
     /* on the card and not the root, so the blur is rounded with the border rather than square */
     animation: delayBackdrop 0.2s forwards;
   }
 
   .floating-instrument-settings :global(.settings-card-empty) {
-    min-height: unset;
+    height: auto;
     padding: 0.6rem var(--settings-padding-x);
   }
 
@@ -587,7 +586,9 @@
   .settings-body {
     flex: 1;
     min-height: 0;
-    overflow-y: auto;
+    /* `scroll`, not `auto`: the scrollbar's gutter is always reserved, so the rows do not jump
+       sideways when an opened section first makes the body overflow */
+    overflow-y: scroll;
     overscroll-behavior: contain;
   }
 
@@ -736,8 +737,11 @@
     }
 
     .floating-instrument-settings :global(.settings-card) {
-      min-height: unset;
-      max-height: calc(100dvh - 0.8rem);
+      height: calc(100dvh - 0.8rem);
+    }
+
+    .floating-instrument-settings :global(.settings-card-empty) {
+      height: auto;
     }
 
     .settings-header {
