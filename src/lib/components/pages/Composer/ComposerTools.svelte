@@ -391,6 +391,7 @@
       'f f f f g g g g';
     flex: 1;
     gap: 0.6rem;
+    padding: 0 0.4rem 0.4rem;
   }
 
   /* `justify-content: center` only shows where subgrid is unsupported: the tracks are then the
@@ -446,9 +447,13 @@
     transition: all 0.4s;
     transform: scale(0.7);
     color: var(--menu-background-text);
-    padding: 0.4rem;
   }
 
+  /* NO PADDING ON THE PANEL: the scroll area fills it border to border, so its scrollbar runs down
+     the panel's edge and the selection row's rule can cross the panel edge to edge. The inset lives
+     on the two rows instead (`.tools-selection-row` in App.css, the grid below). The panel itself
+     cannot clip - DecoratedCard's corner stars hang half outside it - so the scroll area rounds its
+     own corners to the panel's inner radius, keeping the scrollbar inside the border. */
   .floating-tools-content {
     display: flex;
     flex-direction: column;
@@ -456,6 +461,7 @@
     gap: 0.3rem;
     overflow-y: auto;
     overflow-x: hidden;
+    border-radius: calc(0.5rem - 2px);
   }
 
   :global(.tools-visible) {
@@ -482,6 +488,13 @@
      of that block. `.tools-button`'s padding override stays in App.css beside the base rule it
      belongs to (see the note on that rule there). */
   @media only screen and (max-width: 1000px) {
+    /* 1rem taller than on desktop: on a landscape phone 52vh is the limit that binds, and it left
+       the last row of tools cut in half. */
+    :global(.floating-tools) {
+      min-height: calc(min(52vh, 18rem) + 1rem);
+      max-height: calc(min(52vh, 18rem) + 1rem);
+    }
+
     :global(.tools-visible) {
       bottom: 0.2rem;
     }

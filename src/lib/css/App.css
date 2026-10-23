@@ -1803,14 +1803,15 @@ select {
 }
 
 /* The selection scope sits ACROSS THE TOP of the panel rather than down its side, so its rule is the
-   panel's own horizontal divider - see the markup note in ComposerTools.svelte. It WRAPS because the
+   panel's own horizontal divider - see the markup note in ComposerTools.svelte. The panel has no
+   padding of its own, so the inset is here and the rule runs edge to edge. It WRAPS because the
    panel is only `min-width: 36vw` wide: on a narrow screen three buttons that refuse to wrap would
    force the panel wider than the viewport instead. */
 .tools-selection-row {
   display: flex;
   flex-wrap: wrap;
   gap: 0.4rem;
-  padding-bottom: 0.3rem;
+  padding: 0.4rem 0.4rem 0.3rem;
   border-bottom: solid 2px var(--secondary);
 }
 
