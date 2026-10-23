@@ -35,6 +35,7 @@ import { basepointOffset, numberToButton } from '$core/Songs/noteIds';
 import { Voice } from '$lib/audio/Voice';
 import { normalizePan } from '$lib/audio/panning';
 import { crossfadeLoopRegion, DEFAULT_LOOP_CROSSFADE_S } from '$lib/audio/loopCrossfade';
+import { trimSilentTail } from '$lib/audio/trimSilentTail';
 import { KeyboardProvider } from '$lib/providers/KeyboardProvider';
 import type { KeyboardCode } from '$lib/providers/KeyboardProvider/KeyboardTypes';
 import { keyBinds } from '$stores/KeybindsStore.svelte';
@@ -697,6 +698,27 @@ export class Instrument {
       }
     }
   };
+  /**
+   * Cut each one-shot sample's inaudible tail (see trimSilentTail.ts). A sustaining instrument is
+   * left whole: its tail is the release a Voice plays out of the loop, not dead time at the end.
+   */
+  private trimSilentTails = (audioContext: BaseAudioContext) => {
+    if (this.sustainConfig) return;
+    this.buffers = this.buffers.map((buffer) => {
+      const channels = Array.from({ length: buffer.numberOfChannels }, (_, channel) =>
+        buffer.getChannelData(channel)
+      );
+      const length = trimSilentTail(channels, buffer.sampleRate);
+      if (length === null) return buffer;
+      const trimmed = audioContext.createBuffer(buffer.numberOfChannels, length, buffer.sampleRate);
+      // getChannelData().set rather than copyToChannel, which the older WebKit this engine still
+      // serves does not have.
+      channels.forEach((data, channel) =>
+        trimmed.getChannelData(channel).set(data.subarray(0, length))
+      );
+      return trimmed;
+    });
+  };
   load = async (audioContext: BaseAudioContext) => {
     const generation = ++this.loadGeneration;
     const epoch = CONTEXT_EPOCH;
@@ -733,9 +755,10 @@ export class Instrument {
       )
         return false;
       this.buffers = decoded;
-      // Render loop-boundary crossfades once per decode, BEFORE pooling: pool hits
-      // must reuse the processed buffers, never re-blend already-blended audio.
+      // Render loop-boundary crossfades and tail trims once per decode, BEFORE pooling: pool
+      // hits must reuse the processed buffers, never re-blend already-blended audio.
       this.renderLoopCrossfades();
+      this.trimSilentTails(audioContext);
       if (loadedCorrectly) INSTRUMENT_BUFFER_POOL.set(this.identityKey, this.buffers);
     } else {
       if (
