@@ -9,6 +9,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { AudioProviderClass } from '../src/lib/providers/AudioProvider';
 import AudioRecorder from '../src/lib/audio/AudioRecorder';
 import { Instrument } from '../src/lib/audio/Instrument.svelte';
+import { masterBusOf } from '../src/lib/audio/MasterBus';
 import { INSTRUMENTS } from './imports';
 
 const FAST = { callTimeoutMs: 50, interruptionWaitMs: 20, statePollMs: 2, clockProbeMs: 2 };
@@ -46,6 +47,15 @@ function fakeContext(initial: FakeState = 'suspended', options: { clockFrozen?: 
       pan: { value: 0, setTargetAtTime: vi.fn() },
     })),
     createConvolver: vi.fn(() => ({ ...fakeNode(context), buffer: null })),
+    createDynamicsCompressor: vi.fn(() => ({
+      ...fakeNode(context),
+      threshold: { value: -24 },
+      knee: { value: 30 },
+      ratio: { value: 12 },
+      attack: { value: 0.003 },
+      release: { value: 0.25 },
+    })),
+    createWaveShaper: vi.fn(() => ({ ...fakeNode(context), curve: null })),
     createMediaStreamDestination: vi.fn(() => {
       const tracks = [{ stop: vi.fn() }];
       return { ...fakeNode(context), stream: { getTracks: () => tracks } };
@@ -276,15 +286,16 @@ describe('AudioProvider routing with an optional panner', () => {
     provider.connect(endNode, true);
     expect(provider.nodes[0].instrument).toBe(instrument);
 
+    const master = masterBusOf(context as unknown as BaseAudioContext).input;
     instrument.changePan(-1);
     expect(instrument.panNode!.connect).toHaveBeenCalledWith(provider.reverbNode);
     provider.setReverbOfNode(endNode, false);
-    expect(instrument.panNode!.connect).toHaveBeenLastCalledWith(context.destination);
-    expect(instrument.volumeNode!.connect).not.toHaveBeenCalledWith(context.destination);
+    expect(instrument.panNode!.connect).toHaveBeenLastCalledWith(master);
+    expect(instrument.volumeNode!.connect).not.toHaveBeenCalledWith(master);
 
     instrument.changePan(0);
     expect(instrument.panNode).toBeNull();
-    expect(instrument.volumeNode!.connect).toHaveBeenLastCalledWith(context.destination);
+    expect(instrument.volumeNode!.connect).toHaveBeenLastCalledWith(master);
     provider.setReverbOfNode(endNode, true);
     expect(instrument.volumeNode!.connect).toHaveBeenLastCalledWith(provider.reverbNode);
     expect(provider.nodes).toHaveLength(1);
@@ -301,27 +312,32 @@ describe('AudioProvider routing with an optional panner', () => {
     instrument.dispose();
   });
 
-  it('keeps dry audio recording connected while pan is changed and re-synced', async () => {
+  it('records the master bus output, so pan and routing changes never touch the tap', async () => {
     const context = fakeContext('running');
     const provider = new AudioProviderClass(FAST);
     provider.audioContext = context as unknown as AudioContext;
     const recorderNode = fakeNode(context) as unknown as AudioNode;
-    provider.recorder = { node: recorderNode, start: vi.fn() } as unknown as AudioRecorder;
+    provider.recorder = {
+      node: recorderNode,
+      start: vi.fn(),
+      stop: vi.fn(async () => ({ data: new Blob(), toUrl: () => '' })),
+    } as unknown as AudioRecorder;
+    const bus = masterBusOf(context as unknown as BaseAudioContext);
     const instrument = await loadedInstrument(context);
     provider.connect(instrument.endNode, false);
     provider.startRecording();
+    expect(bus.output.connect).toHaveBeenCalledWith(recorderNode);
 
     instrument.changePan(1);
-    expect(instrument.panNode!.connect).toHaveBeenCalledWith(recorderNode);
-    vi.mocked(instrument.panNode!.connect).mockClear();
     provider.setReverbOfNode(instrument.endNode, false);
-    expect(instrument.panNode!.connect).toHaveBeenCalledWith(context.destination);
-    expect(instrument.panNode!.connect).toHaveBeenCalledWith(recorderNode);
-
-    vi.mocked(instrument.volumeNode!.connect).mockClear();
+    expect(instrument.panNode!.connect).toHaveBeenLastCalledWith(bus.input);
     instrument.changePan(0);
-    expect(instrument.volumeNode!.connect).toHaveBeenCalledWith(context.destination);
-    expect(instrument.volumeNode!.connect).toHaveBeenCalledWith(recorderNode);
+    expect(instrument.volumeNode!.connect).toHaveBeenLastCalledWith(bus.input);
+    expect(instrument.volumeNode!.connect).not.toHaveBeenCalledWith(recorderNode);
+
+    await provider.stopRecording();
+    expect(bus.output.disconnect).toHaveBeenCalledWith(recorderNode);
+    expect(provider.isRecording).toBe(false);
     instrument.dispose();
   });
 });

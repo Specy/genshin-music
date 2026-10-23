@@ -1,6 +1,7 @@
 import { base } from '$app/paths';
 import AudioRecorder from '$lib/audio/AudioRecorder';
 import { Instrument } from '$lib/audio/Instrument.svelte';
+import { masterBusOf } from '$lib/audio/MasterBus';
 
 export type AppAudioNode = {
   node: AudioNode;
@@ -211,7 +212,7 @@ export class AudioProviderClass {
         gainNode.gain.value = 2.5;
         convolver.buffer = impulseResponse;
         convolver.connect(gainNode);
-        gainNode.connect(context.destination);
+        gainNode.connect(masterBusOf(context).input);
         this.reverbNode = convolver;
         this.reverbVolumeNode = gainNode;
       })
@@ -796,34 +797,28 @@ export class AudioProviderClass {
   };
 
   startRecording = () => {
-    const { recorder, nodes, reverbVolumeNode } = this;
-    if (!recorder || !recorder.node) return;
-    if (reverbVolumeNode) reverbVolumeNode.connect(recorder.node);
-    for (const node of nodes) {
-      const dest = node.to ?? this.defaultDestination;
-      if (dest === 'end') {
-        (node.instrument ?? node.node).connect(recorder.node);
-      }
-    }
+    const { recorder, audioContext } = this;
+    if (!recorder || !recorder.node || !audioContext) return;
+    // One tap on the master bus output: what the speakers get, limiter included. The metronome
+    // joins the destination past the bus, which is what keeps it out of recordings.
+    masterBusOf(audioContext).output.connect(recorder.node);
     this.isRecording = true;
     recorder.start();
     return this;
   };
 
   stopRecording = async () => {
-    const { recorder, reverbVolumeNode, audioContext } = this;
+    const { recorder, audioContext } = this;
     if (!recorder) return;
     const recording = await recorder.stop();
-    // A rebuild can replace all three while MediaRecorder is asynchronously delivering its final
-    // dataavailable event. The captured blob is still valid, but reconnecting an old reverb node
-    // to the new context would throw a cross-context InvalidAccessError.
+    // A rebuild can replace both while MediaRecorder is asynchronously delivering its final
+    // dataavailable event. The captured blob is still valid, and the tap went with the old
+    // context's bus.
     if (this.recorder !== recorder || this.audioContext !== audioContext) return recording;
-    if (reverbVolumeNode && audioContext) {
-      reverbVolumeNode.disconnect();
-      reverbVolumeNode.connect(audioContext.destination);
+    if (this.isRecording && recorder.node && audioContext) {
+      masterBusOf(audioContext).output.disconnect(recorder.node);
     }
     this.isRecording = false;
-    this.setAudioDestinations();
     return recording;
   };
   now = () => {
@@ -846,13 +841,12 @@ export class AudioProviderClass {
     if (dest === 'reverb') {
       if (!this.reverbNode) {
         console.warn("Couldn't connect to reverb");
-        if (this.audioContext) source.connect(this.audioContext.destination);
+        if (this.audioContext) source.connect(masterBusOf(this.audioContext).input);
       } else {
         source.connect(this.reverbNode);
       }
     } else {
-      if (this.audioContext) source.connect(this.audioContext.destination);
-      if (this.isRecording && this.recorder?.node) source.connect(this.recorder.node);
+      if (this.audioContext) source.connect(masterBusOf(this.audioContext).input);
     }
   }
 }

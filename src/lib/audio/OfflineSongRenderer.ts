@@ -20,12 +20,13 @@ import type { RecordedSong } from '$core/Songs/RecordedSong';
 import { isTrackAudible } from '$core/Songs/SongClasses';
 import type { InstrumentName } from '$core/types';
 import { fetchAudioBuffer, Instrument } from '$lib/audio/Instrument.svelte';
+import { masterBusOf } from '$lib/audio/MasterBus';
 import type { InstrumentSettingValues } from '$lib/games/instrumentSettings';
 
 /** CD rate, stereo: what a downloadable wav is expected to be, and what the plan renders at. */
 const SAMPLE_RATE = 44100;
 const CHANNEL_COUNT = 2;
-/** Reverb make-up gain — the same value the live provider puts between convolver and destination. */
+/** Reverb make-up gain — the same value the live provider puts between convolver and master bus. */
 const REVERB_GAIN = 2.5;
 /** Slack over the computed tail, for the seams (crossfades, final safety fades) inside a Voice. */
 const TAIL_MARGIN_S = 0.25;
@@ -283,7 +284,9 @@ export async function renderSongToAudioBuffer(
     if (cancelled) throw new SongRenderCancelledError();
 
     // The live graph, rebuilt: one volume node per track, and one shared
-    // ConvolverNode(IR) -> GainNode -> destination chain that reverb-routed tracks feed.
+    // ConvolverNode(IR) -> GainNode chain that reverb-routed tracks feed, all ending in the same
+    // master bus the live provider plays through - an export must limit exactly as playback does.
+    const master = masterBusOf(context).input;
     let reverbInput: AudioNode | null = null;
     if (impulseResponse) {
       const convolver = context.createConvolver();
@@ -291,7 +294,7 @@ export async function renderSongToAudioBuffer(
       const reverbVolume = context.createGain();
       reverbVolume.gain.value = REVERB_GAIN;
       convolver.connect(reverbVolume);
-      reverbVolume.connect(context.destination);
+      reverbVolume.connect(master);
       reverbInput = convolver;
     }
     plan.tracks.forEach((track) => {
@@ -299,9 +302,7 @@ export async function renderSongToAudioBuffer(
       // sounds, dry, which is the fallback the live provider takes for the same reason.
       instruments
         .get(track.trackIndex)
-        ?.connect(
-          track.destination === 'reverb' && reverbInput ? reverbInput : context.destination
-        );
+        ?.connect(track.destination === 'reverb' && reverbInput ? reverbInput : master);
     });
 
     // The window pointer walks the event list once, so an out-of-order event would be stranded

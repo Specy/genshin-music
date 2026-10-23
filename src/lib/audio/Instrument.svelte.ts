@@ -84,6 +84,13 @@ function isOfflineContext(audioContext: BaseAudioContext): boolean {
  */
 let CONTEXT_EPOCH = 0;
 
+/**
+ * The engine's gain at 100% volume. A little under unity: chords sum, so each engine keeps some
+ * headroom of its own, and the master bus (MasterBus.ts) limits whatever still piles up past it.
+ * Composer layers go to 125%, which lands just above unity.
+ */
+const FULL_VOLUME_GAIN = 0.9;
+
 type ScheduledOneShot = {
   source: AudioBufferSourceNode;
   /** The absolute AudioContext time this one-shot was committed to sound at. */
@@ -383,7 +390,7 @@ export class Instrument {
     return '';
   };
   changeVolume = (amount: number) => {
-    let newVolume = Number((amount / 135).toFixed(2));
+    let newVolume = (amount / 100) * FULL_VOLUME_GAIN;
     if (amount < 5) newVolume = 0;
     if (this.volumeNode) this.volumeNode.gain.value = newVolume;
   };
@@ -696,7 +703,7 @@ export class Instrument {
     const isLive = !isOfflineContext(audioContext);
     this.audioContext = audioContext;
     this.volumeNode = audioContext.createGain();
-    this.volumeNode.gain.value = 0.8;
+    this.volumeNode.gain.value = FULL_VOLUME_GAIN;
     this.changePan(this.pan);
     // Registered BEFORE the await, not after it. A rebuild snapshots this registry, and an engine
     // that only appears once its samples have decoded is invisible to one that starts mid-load -
@@ -762,7 +769,7 @@ export class Instrument {
     // Remembered HERE rather than read back in `rehome`, because the rebuild detaches every
     // engine up front - while the outgoing context can still be torn down safely - and re-homes
     // them only after the replacement exists. Read at re-home time the node is long gone, and
-    // every layer silently came back at load()'s 0.8 default.
+    // every layer silently came back at load()'s full-volume default.
     this.detachedGain = this.volumeNode?.gain.value ?? this.detachedGain;
     this.volumeNode?.disconnect();
     this.volumeNode = null;
@@ -775,10 +782,10 @@ export class Instrument {
   /**
    * Load onto a replacement context, preserving the gain the engine was carrying.
    *
-   * `load` always sets a fresh node to the 0.8 default and every ordinary caller follows it with
-   * `changeVolume(...)` from the roster it is syncing. A rebuild has no roster to read - it is
-   * repairing whatever is already on screen - so the level is carried across here instead, or a
-   * muted layer would come back audible.
+   * `load` always sets a fresh node to the full-volume default and every ordinary caller follows
+   * it with `changeVolume(...)` from the roster it is syncing. A rebuild has no roster to read - it
+   * is repairing whatever is already on screen - so the level is carried across here instead, or
+   * a muted layer would come back audible.
    */
   rehome = async (audioContext: BaseAudioContext) => {
     if (this.isDeleted) return false;
