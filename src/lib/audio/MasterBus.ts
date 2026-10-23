@@ -35,6 +35,16 @@ const SOFT_CLIP_RANGE = 4;
 /** Odd, so an input of exactly 0 lands on a curve point instead of between two. */
 const SOFT_CLIP_POINTS = 2 ** 12 + 1;
 
+/**
+ * Audio time a freshly built bus needs before it passes sound untouched. The compressor starts
+ * from a reset state that reads as full gain reduction and releases out of it like any other
+ * duck, so a note on the very first frame came out up to 19 dB down for ~150 ms (measured in
+ * Chromium, 2026-10-23); 200 ms of silence first was enough. Live playback never meets it - the
+ * bus is built long before the first note - but an offline render starts its song on frame 0,
+ * so OfflineSongRenderer leads in by this much and cuts it off again.
+ */
+export const MASTER_BUS_WARMUP_S = 0.25;
+
 /** The compressor's level at 0 dBFS in, which is what the spec derives its makeup gain from. */
 const FULL_RANGE_GAIN_DB = THRESHOLD_DB - THRESHOLD_DB / RATIO;
 const MAKEUP_CANCEL = 10 ** ((0.6 * FULL_RANGE_GAIN_DB) / 20);

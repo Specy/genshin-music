@@ -20,7 +20,7 @@ import type { RecordedSong } from '$core/Songs/RecordedSong';
 import { isTrackAudible } from '$core/Songs/SongClasses';
 import type { InstrumentName } from '$core/types';
 import { fetchAudioBuffer, Instrument } from '$lib/audio/Instrument.svelte';
-import { masterBusOf } from '$lib/audio/MasterBus';
+import { MASTER_BUS_WARMUP_S, masterBusOf } from '$lib/audio/MasterBus';
 import type { InstrumentSettingValues } from '$lib/games/instrumentSettings';
 
 /** CD rate, stereo: what a downloadable wav is expected to be, and what the plan renders at. */
@@ -275,9 +275,13 @@ export async function renderSongToAudioBuffer(
     };
 
     const lengthS = renderLengthS(plan, bounds);
+    // The song starts `leadIn` into the render, not on its first frame: a fresh master bus needs
+    // that long to settle before it passes sound untouched (see MASTER_BUS_WARMUP_S), and
+    // trimToSong cuts the lead-in off again. Every context time below is song time + leadIn.
+    const leadIn = MASTER_BUS_WARMUP_S;
     const context = new OfflineAudioContext(
       plan.channelCount,
-      Math.max(1, Math.ceil(lengthS * plan.sampleRate)),
+      Math.max(1, Math.ceil((leadIn + lengthS) * plan.sampleRate)),
       plan.sampleRate
     );
     const instruments = await loadPlannedInstruments(context, plan, owned);
@@ -322,11 +326,11 @@ export async function renderSongToAudioBuffer(
         if (!instrument || !track) continue;
         if (event.kind === 'press') {
           instrument.pressNote(event.id, track.pitch, {
-            at: event.atS,
+            at: leadIn + event.atS,
             durationMs: event.durationMs,
           });
         } else {
-          instrument.play(event.id, track.pitch, event.atS);
+          instrument.play(event.id, track.pitch, leadIn + event.atS);
         }
       }
     };
@@ -350,12 +354,14 @@ export async function renderSongToAudioBuffer(
     // makes it structural rather than hoped-for: the batch at checkpoint `t` begins where the
     // previous one stopped, at `t - PROGRESS_CHECKPOINT_S + LEAD_S`, which clears `t` by
     // LEAD_S - PROGRESS_CHECKPOINT_S seconds — far more than the up-to-one-quantum rounding
-    // suspend applies to its own time. Do not narrow that margin.
+    // suspend applies to its own time. Do not narrow that margin. All of that is in song time:
+    // the checkpoint for song time `t` parks the clock at `leadIn + t`, the same shift every
+    // committed event gets, so the margin is unchanged.
     const canSuspend = typeof context.suspend === 'function';
     if (canSuspend) {
       for (let at = PROGRESS_CHECKPOINT_S; at < lengthS; at += PROGRESS_CHECKPOINT_S) {
         const fraction = at / lengthS;
-        void context.suspend(at).then(
+        void context.suspend(leadIn + at).then(
           () => {
             if (cancelled) return;
             commitBefore(at + LEAD_S);
@@ -370,13 +376,13 @@ export async function renderSongToAudioBuffer(
         );
       }
     }
-    // The t=0 batch is the one place a note can land ON the clock rather than ahead of it, and
-    // that is unchanged and deliberate: notes at exactly 0 take the choke/steal path and find
-    // empty registries, since a render holds no live press to choke or steal. Everything after
-    // it is committed ahead of the clock, so the render keeps the COMPOSER's committed-playback
-    // semantics — no note silently dropped under a voice budget, and a dense song rendering
-    // FULLER than the live player sounds. That is the right answer for an export: the file is
-    // the song, not a performance of it.
+    // This first batch is committed before the clock starts, and the lead-in puts even a note
+    // at song time 0 ahead of it - so EVERY note is committed ahead of the clock and the render
+    // keeps the COMPOSER's committed-playback semantics — no note silently dropped under a voice
+    // budget, and a dense song rendering FULLER than the live player sounds. That is the right
+    // answer for an export: the file is the song, not a performance of it. (Before the lead-in,
+    // notes at exactly 0 landed ON the clock and took the choke/steal path instead, finding
+    // empty registries, since a render holds no live press to choke or steal - the same result.)
     //
     // Without suspend there is no later moment to commit from, so the whole song goes in
     // up-front exactly as it used to: still correct, just slow on a long dense song.
@@ -388,7 +394,7 @@ export async function renderSongToAudioBuffer(
 
     const rendered = await Promise.race([context.startRendering(), cancellation]);
     onProgress?.(1);
-    return trimTrailingSilence(rendered);
+    return trimToSong(rendered, Math.round(leadIn * plan.sampleRate));
   } finally {
     signal?.removeEventListener('abort', onAbort);
     // Safe while the pool holds the same arrays: dispose reassigns `buffers`, never mutates it.
@@ -423,17 +429,16 @@ async function loadPlannedInstruments(
 }
 
 /**
- * Cut the dead air the generous length bound leaves at the end, keeping TRIM_TAIL_S of it so a
- * decay can never be clipped. This is the other half of not re-deriving envelopes: the bound
- * overshoots on purpose and the measurement of what actually sounded happens here, on the
- * rendered samples. A wholly silent render (every track muted) is returned honestly, as the
- * shortest valid buffer, rather than padded into sounding like something went out.
+ * Cut the render down to the song: drop the `start` frames of lead-in, and the dead air the
+ * generous length bound leaves at the end, keeping TRIM_TAIL_S of it so a decay can never be
+ * clipped. This is the other half of not re-deriving envelopes: the bound overshoots on purpose
+ * and the measurement of what actually sounded happens here, on the rendered samples. A wholly
+ * silent render (every track muted) is returned honestly, as the shortest valid buffer, rather
+ * than padded into sounding like something went out.
  */
-function trimTrailingSilence(rendered: AudioBuffer): AudioBuffer {
-  const minLength = Math.min(
-    rendered.length,
-    Math.max(1, Math.ceil(MIN_RENDER_S * rendered.sampleRate))
-  );
+function trimToSong(rendered: AudioBuffer, start: number): AudioBuffer {
+  const available = Math.max(1, rendered.length - start);
+  const minLength = Math.min(available, Math.max(1, Math.ceil(MIN_RENDER_S * rendered.sampleRate)));
   let last = -1;
   for (let channel = 0; channel < rendered.numberOfChannels; channel++) {
     const samples = rendered.getChannelData(channel);
@@ -446,16 +451,20 @@ function trimTrailingSilence(rendered: AudioBuffer): AudioBuffer {
       }
     }
   }
-  const sounded = last === -1 ? 0 : last + 1 + Math.round(TRIM_TAIL_S * rendered.sampleRate);
-  const length = Math.min(rendered.length, Math.max(minLength, sounded));
-  if (length >= rendered.length) return rendered;
+  const sounded =
+    last < start ? 0 : last + 1 - start + Math.round(TRIM_TAIL_S * rendered.sampleRate);
+  const length = Math.min(available, Math.max(minLength, sounded));
+  if (start === 0 && length >= rendered.length) return rendered;
   const trimmed = new AudioBuffer({
     length,
     numberOfChannels: rendered.numberOfChannels,
     sampleRate: rendered.sampleRate,
   });
   for (let channel = 0; channel < rendered.numberOfChannels; channel++) {
-    trimmed.copyToChannel(rendered.getChannelData(channel).subarray(0, length), channel);
+    trimmed.copyToChannel(
+      rendered.getChannelData(channel).subarray(start, start + length),
+      channel
+    );
   }
   return trimmed;
 }
