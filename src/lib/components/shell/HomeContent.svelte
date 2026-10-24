@@ -17,7 +17,8 @@
   //      goto/resolve imports where nothing else in the file uses them).
   //   3. routes/+page.svelte - restore the byte-for-byte copy of routes/player/+page.svelte
   //      (setPageVisited('player') included), and point the player card below back at '/'.
-  //   4. HomePage.svelte becomes unused and can be deleted; Home.svelte is already complete.
+  //   4. HomePage.svelte becomes unused and can be deleted, and HomeAbout.svelte (the about text
+  //      under the page's first screen) with it; Home.svelte is already complete.
   import { onMount } from 'svelte';
   import type { Snippet } from 'svelte';
   import { page } from '$app/state';

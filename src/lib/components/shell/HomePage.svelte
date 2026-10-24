@@ -9,6 +9,7 @@
   import { jsonLdScriptTag, softwareApplicationLd } from '$lib/seo';
   import SimpleMenu from './SimpleMenu.svelte';
   import HomeContent from './HomeContent.svelte';
+  import HomeAbout from './HomeAbout.svelte';
 
   // THE BACK BUTTON ONLY EXISTS WHEN THERE IS SOMETHING TO GO BACK TO. As a page, '/' is also
   // where a direct link, a bookmark and an installed PWA all land (manifest start_url is '.'), and
@@ -77,7 +78,15 @@
   class:animate-entry={animateEntry}
   style="background-color:{backgroundColor}"
 >
-  <HomeContent alwaysShowTitle />
+  <!-- THE FIRST SCREEN is exactly what the page showed before the about text existed: at least the
+       visible height, its bottom bar at the bottom. The about text starts after it, below the fold
+       wherever the screen is - so when HomeAbout hides itself after hydration, nothing on screen
+       moves - and it is part of this same scroller. It lives here and not in HomeContent because
+       the dormant popup (Home.svelte) shares HomeContent and has no use for it. -->
+  <div class="home-first-screen column">
+    <HomeContent alwaysShowTitle />
+  </div>
+  <HomeAbout />
 </div>
 
 <style>
@@ -100,6 +109,14 @@
     overflow-y: auto;
     overflow-x: hidden;
     color: var(--background-text);
+  }
+
+  /* `100dvh` and not 100%: the same reason `.home-page` caps itself with dvh above, this height has
+     no definite ancestor to be a percentage of. Never shrunk below its content either, or a short
+     window would push the cards over the about text instead of scrolling. */
+  .home-first-screen {
+    flex-shrink: 0;
+    min-height: 100dvh;
   }
 
   /* THE IN-APP ARRIVAL, gated in the script - see `animateEntry` for why a cold load is excluded.
@@ -179,6 +196,11 @@
     .home-page {
       padding-left: 0;
       padding-bottom: var(--menu-size);
+    }
+
+    /* The rail covers the bottom of the window here, so the first screen ends at its top edge. */
+    .home-first-screen {
+      min-height: calc(100dvh - var(--menu-size));
     }
 
     .home-page :global(.home-content) {
