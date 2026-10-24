@@ -71,54 +71,64 @@
 {/if}
 
 <style>
-  /* Quiet on purpose: it sits under the home screen rather than being part of it, so it reads as
-     fine print - muted text in the same column as the cards, set off by the separator line the
-     home screen already uses (`.home-separator`). */
+  /* Typeset like a blog post, so the text reads as the same kind of content wherever it appears.
+     The values mirror the blog's own rules: the article column (BaseBlogPost's
+     `.blog-article-cropped`, including its phone-tier padding), section headers (the posts'
+     `<Header type="h2" textSize="2rem" margin="1rem 0">`), `.blog-p`, `.blog-b`, the `.blog-ol`
+     item spacing and `.blog-article a`. Change them together. Set off from the home screen by the
+     separator line it already uses (`.home-separator`). */
   .home-about {
     flex-shrink: 0;
     width: 100%;
-    max-width: 48rem;
+    max-width: 60rem;
     margin: 0 auto;
-    padding: 1rem 0.8rem 1.5rem;
+    padding: 2rem;
     border-top: 1px solid var(--secondary);
     color: var(--background-text);
-    font-size: 0.85rem;
-    line-height: 1.5;
-    opacity: 0.85;
+  }
+
+  @media (orientation: portrait) and (max-width: 920px) {
+    .home-about {
+      padding: 1.25rem;
+    }
   }
 
   .home-about :global(h2) {
-    margin: 0 0 0.5rem;
-    font-size: 1.15rem;
-    line-height: 1.3;
+    margin: 1rem 0;
+    font-size: 2rem;
   }
 
+  /* The posts have no h3; Header's default h2 size keeps the step down from the 2rem above. */
   .home-about :global(h3) {
-    margin: 1rem 0 0.3rem;
-    font-size: 0.95rem;
+    margin: 1rem 0;
+    font-size: 1.5rem;
   }
 
+  /* Font and opacity come from App.css's global `p` rule, as they do for `.blog-p`. */
   .home-about :global(p) {
-    margin: 0 0 0.5rem;
+    margin: 1rem 0;
+    user-select: text;
   }
 
   .home-about :global(ul),
   .home-about :global(ol) {
-    margin: 0 0 0.5rem;
-    padding-left: 1.2rem;
+    margin: 0;
+    padding-left: 2rem;
   }
 
-  .home-about :global(li + li) {
-    margin-top: 0.25rem;
+  .home-about :global(li) {
+    margin: 1rem 0;
+    font-family: var(--font-reading);
+    opacity: 0.9;
+    user-select: text;
+  }
+
+  .home-about :global(strong) {
+    font-family: var(--font-reading);
   }
 
   .home-about :global(a) {
-    color: inherit;
+    color: var(--accent);
     text-decoration: underline;
-    text-underline-offset: 0.15em;
-  }
-
-  .home-about :global(code) {
-    font-size: 0.9em;
   }
 </style>
