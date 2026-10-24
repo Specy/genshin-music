@@ -56,6 +56,34 @@ export function jsonLdScriptTag(value: unknown) {
   return `<script type="application/ld+json">${serializeJsonLd(value)}</` + `script>`;
 }
 
+/** A schema.org Person, as the JSON-LD on these pages names one. */
+export type PersonLd = {
+  '@type': 'Person';
+  '@id': string;
+  name: string;
+  alternateName?: string;
+  url?: string;
+  sameAs?: readonly string[];
+};
+
+/**
+ * The app's author: the same Person block the other specy.app sites declare, word for word. The
+ * shared `@id` is what makes them one entity to a crawler: the app, its blog posts and the other
+ * sites all name the same person instead of each describing a "Specy" of its own. Change it
+ * everywhere or nowhere.
+ */
+export const SPECY_PERSON: PersonLd = {
+  '@type': 'Person',
+  '@id': 'https://specy.app/#person',
+  name: 'Enrico Menichelli',
+  alternateName: 'Specy',
+  url: 'https://specy.app',
+  sameAs: ['https://github.com/Specy'],
+};
+
+/** Both games are built from this one repository. */
+const SOURCE_REPOSITORY = 'https://github.com/Specy/genshin-music';
+
 /**
  * Pages that exist but are not content: surfaces that only make sense with the reader's own data
  * behind them, and the error/maintenance pages. One list for both halves of keeping them out of
@@ -94,13 +122,10 @@ export function softwareApplicationLd() {
       'Record and export your own sheets',
       'Connect a MIDI device',
     ],
-    author: {
-      '@type': 'Person',
-      name: 'Specy',
-      url: 'https://specy.app',
-      sameAs: ['https://github.com/Specy'],
-    },
-    sameAs: ['https://github.com/Specy/genshin-music'],
+    author: SPECY_PERSON,
+    // isBasedOn and not sameAs: sameAs would declare the repository to BE this app, and the sky
+    // and genshin builds both point at the same one, which would merge the two apps into one.
+    isBasedOn: { '@type': 'SoftwareSourceCode', codeRepository: SOURCE_REPOSITORY },
   };
 }
 

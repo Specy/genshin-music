@@ -1,4 +1,5 @@
 import type { GameId } from '$lib/games/types';
+import type { PersonLd } from '$lib/seo';
 
 export type BlogMetadata = {
   title: string;
@@ -18,4 +19,9 @@ export type BlogMetadata = {
 export type BlogAuthor = {
   name: string;
   picture?: string;
+  /**
+   * The schema.org Person this author already is elsewhere. Set, the post's JSON-LD names that
+   * Person (its `@id` included) instead of describing an author from `name` alone.
+   */
+  person?: PersonLd;
 };
