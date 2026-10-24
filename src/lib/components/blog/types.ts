@@ -8,6 +8,11 @@ export type BlogMetadata = {
   description: string;
   image?: string;
   createdAt: Date;
+  /**
+   * When the post was last edited in a way a reader would notice. Leave it unset until then: the
+   * sitemap's <lastmod> for the post falls back to createdAt.
+   */
+  updatedAt?: Date;
   author?: BlogAuthor;
   /**
    * The one game this post is about. Unset means the post is for every game. A post with a game
