@@ -82,17 +82,21 @@ describe('the song menu rename is not an Undo Step', () => {
 });
 
 describe('the layer settings popup collapses a gesture into one Step', () => {
-  it('brackets both continuous inputs from every end they can have', () => {
+  it('brackets the continuous inputs from every end they can have', () => {
     //ungrouped, one volume drag lands ~125 Steps: past UNDO_HISTORY_CAP, so the session's real
     //edits are evicted and the Savepoint stranded
     expect(popup).toContain('onpointerdown={startVolumeGroup}');
     expect(popup).toContain('onpointerup={endVolumeGroup}');
     expect(popup).toContain('onpointercancel={endVolumeGroup}');
     expect(popup).toContain('onlostpointercapture={endVolumeGroup}');
+    expect(popup).toContain('onpointerdown={startPanGroup}');
+    expect(popup).toContain('onpointerup={endPanGroup}');
+    expect(popup).toContain('onpointercancel={endPanGroup}');
+    expect(popup).toContain('onlostpointercapture={endPanGroup}');
     expect(popup).toContain('onfocus={startAliasGroup}');
     expect(popup).toContain('onblur={endAliasGroup}');
     //...including the popup being taken away mid-gesture (delete/merge close it)
-    expect(popup).toMatch(/\$effect\(\(\) => \(\) => \{\s*endVolumeGroup\(\);\s*endAliasGroup\(\);/);
+    expect(popup).toMatch(/\$effect\(\(\) => \(\) => \{\s*endVolumeGroup\(\);\s*endPanGroup\(\);\s*endAliasGroup\(\);/);
   });
 
   it('reaches the history through the panel, which only forwards', () => {

@@ -1186,6 +1186,9 @@ describe("the side chevrons' declared width and the bands a Ruler Scrub creeps i
         const right = openTagContaining('selectColumn(selected + 1)')
         expect(left).toContain('style="left:{stripInset}px;')
         expect(right).toContain('style="right:0;')
+        //THE PRO VIEW'S SCROLLBAR moves the right chevron's ICON and nothing else - by a transform,
+        //which leaves the footprint (and so the band) exactly where it was
+        expect(COMPOSER_CANVAS).toContain('style:transform="translateX(-{scrollbarInset}px)"')
         //BOTH ARE `.canvas-buttons`, which is what makes the one min-width above the width of both
         //bands rather than of the left one alone
         expect(left).toContain("'canvas-buttons'")

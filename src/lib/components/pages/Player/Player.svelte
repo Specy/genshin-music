@@ -439,10 +439,12 @@
         if (!mounted) return instrument.dispose();
         AudioProvider.connect(instrument.endNode, ins.reverbOverride);
         instrument.changeVolume(ins.volume);
+        instrument.changePan(ins.pan);
         return instrument;
       } else if (instruments[i].identityKey === keyOf(ins)) {
         //if it has a layer and it's the same, just set the volume and reverb
         instruments[i].changeVolume(ins.volume);
+        instruments[i].changePan(ins.pan);
         AudioProvider.setReverbOfNode(instruments[i].endNode, ins.reverbOverride);
         return instruments[i];
       } else {
@@ -457,6 +459,7 @@
         if (!mounted) return instrument.dispose();
         AudioProvider.connect(instrument.endNode, ins.reverbOverride);
         instrument.changeVolume(ins.volume);
+        instrument.changePan(ins.pan);
         return instrument;
       }
     });

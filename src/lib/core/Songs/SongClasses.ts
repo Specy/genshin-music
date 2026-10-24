@@ -1,6 +1,7 @@
 import {APP_NAME, INSTRUMENTS, type Pitch, TEMPO_CHANGERS, type TempoChanger} from "$core/legacyConfig"
 import type {InstrumentName} from "$core/types"
 import {declaredSettings, normalizeStoredSettings, resolveInstrumentSettings, type InstrumentSettingValues} from "$lib/games/instrumentSettings"
+import {normalizePan} from "$lib/audio/panning"
 // InstrumentNoteIcon used to live in Songs/ComposedSong.svelte.ts (old SongClasses.ts imported it
 // FROM there). Task 5 relocated the canonical definition here instead (needed for
 // InstrumentData/SerializedInstrumentData before ComposedSong was ported). Task 7's
@@ -163,6 +164,8 @@ const instrumentNoteMap = new Map<InstrumentNoteIcon, number>([['border', 1], ['
 export interface SerializedInstrumentData {
     name: InstrumentName
     volume: number
+    /** Stereo position in [-1, 1]. Omitted for centered tracks, including older songs. */
+    pan?: number
     pitch: Pitch | ""
     visible: boolean
     icon: InstrumentNoteIcon
@@ -189,6 +192,7 @@ export interface SerializedInstrumentData {
 export class InstrumentData {
     name: InstrumentName = INSTRUMENTS[0]
     volume: number = APP_NAME === 'Genshin' ? 90 : 100
+    pan: number = 0
     pitch: Pitch | "" = ""
     visible: boolean = true
     icon: InstrumentNoteIcon = 'circle'
@@ -206,6 +210,7 @@ export class InstrumentData {
 
     constructor(data: Partial<InstrumentData> = {}) {
         Object.assign(this, data)
+        this.pan = normalizePan(data.pan)
         this.settings = {...(data.settings ?? {})}
     }
 
@@ -221,6 +226,8 @@ export class InstrumentData {
             solo: this.solo,
             reverbOverride: this.reverbOverride
         }
+        const pan = normalizePan(this.pan)
+        if (pan !== 0) serialized.pan = pan
         //every declared value, defaults included (ADR-0018): a song records what it sounded like,
         //so changing an instrument's declared default later re-voices no saved song. The key is
         //left out entirely - not written as undefined - for an instrument that declares nothing
@@ -238,6 +245,7 @@ export class InstrumentData {
         return new InstrumentData().set({
             name,
             volume: source.volume ?? 100,
+            pan: normalizePan(source.pan),
             //"" (FOLLOW the song's Basepoint), never "C": `pitch` is a per-track OVERRIDE, and only
             //the empty string means "no override" (noteIds.effectiveTrackPitch). A defaulted "C"
             //made a file that omits the field claim a hard Basepoint of C, which since ADR-0007
@@ -262,6 +270,7 @@ export class InstrumentData {
 
     set(data: Partial<InstrumentData>) {
         Object.assign(this, data)
+        if ('pan' in data) this.pan = normalizePan(data.pan)
         //an explicit `settings: undefined` means none (= all defaults), never a missing map
         if ('settings' in data) this.settings = {...(data.settings ?? {})}
         return this

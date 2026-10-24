@@ -233,6 +233,7 @@
   {#if isTrackSettingsOpen}
     <VsrgTrackSettings
       track={vsrg.tracks[selectedTrack]}
+      songPitch={vsrg.pitch}
       onSave={() => (isTrackSettingsOpen = false)}
       onDelete={() => onTrackDelete(selectedTrack)}
       onChange={(track, previousInstrument) =>

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import type { Pitch } from '$lib/games/types';
   import { ThemeProvider } from '$core/theme/ThemeProvider.svelte';
   import { InstrumentData } from '$core/Songs/SongClasses';
   import { t, tInstrument } from '$i18n/binding.svelte';
@@ -18,9 +19,15 @@
     onEditGroupStart,
     onEditGroupEnd,
     onSettingsOpenChange,
+    songPitch,
+    songReverb,
     songLocked = false,
   }: {
     instruments: InstrumentData[];
+    /** The song's Basepoint, which the settings popup names on its "use song pitch" option. */
+    songPitch: Pitch;
+    /** The song's reverb, which the settings popup names on its "use song reverb" option. */
+    songReverb: boolean;
     selected: number;
     usedLayers: ReadonlySet<number>;
     onLayerSelect: (index: number) => void;
@@ -83,6 +90,8 @@
     instrument={instruments[selected]}
     currentLayer={selected}
     {instruments}
+    {songPitch}
+    {songReverb}
     onChange={(ins) => onInstrumentChange(ins, selected)}
     onDelete={() => {
       onInstrumentDelete(selected);

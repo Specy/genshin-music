@@ -94,6 +94,19 @@ const RECLAIMED_TIMELINE_PADDING = TIMELINE_BUTTON_MARGIN * 2;
 export const CANVAS_SIDE_BUTTON_WIDTH = 2.8 * ROOT_FONT_SIZE;
 
 /**
+ * THE PRO VIEW'S VERTICAL SCROLLBAR'S WIDTH, in px - its hit area, which the thumb drawn inside it
+ * is narrower than. The scrollbar stands at the canvas' right edge OVER the right chevron, whose
+ * gradient runs on underneath it to the edge, so this is also how far that chevron's ICON is shifted
+ * in (`translateX(-{scrollbarInset}px)` in ComposerCanvas.svelte). The button's footprint - and
+ * with it the Ruler Scrub's right creep band, CANVAS_SIDE_BUTTON_WIDTH above - does not move.
+ *
+ * In px rather than rem like the chevrons: a scrollbar is chrome the root font scale has no reason
+ * to grow, and a px constant can be applied inline on both sides with no conversion to disagree
+ * about. Applied inline from here (ProViewScrollbar.svelte), so App.css carries no second copy.
+ */
+export const PRO_SCROLLBAR_WIDTH = 14;
+
+/**
  * THE COLUMN RULER'S HEIGHT, in px - THE SAME NUMBER ON DESKTOP AND ON PHONES (CONTEXT.md: Column
  * Ruler, Ruler Scrub; spec 2026-08-27 §2).
  *

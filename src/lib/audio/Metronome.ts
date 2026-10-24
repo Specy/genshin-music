@@ -152,9 +152,10 @@ export class Metronome {
     this.audioContext = audioContext;
     this.volumeNode = audioContext.createGain();
     this.loadBuffers();
-    // Straight to destination, not through AudioProvider's node registry - so the metronome gets
-    // no reverb, and AudioProvider.startRecording() (which wires only registered nodes and the
-    // reverb bus into the recorder) does not capture it. Preserved deliberately.
+    // Straight to destination, past AudioProvider's node registry AND the master bus - so the
+    // metronome gets no reverb, and AudioProvider.startRecording() (which records the master bus
+    // output) does not capture it. Preserved deliberately. The cost is that it is the one path the
+    // limiter does not cover, and a click is short enough for that to be the lesser one.
     this.volumeNode.connect(this.audioContext.destination);
     this.changeVolume(this.volume);
   }

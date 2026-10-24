@@ -33,7 +33,9 @@ import {
 } from '$lib/games/instrumentSettings';
 import { basepointOffset, numberToButton } from '$core/Songs/noteIds';
 import { Voice } from '$lib/audio/Voice';
+import { normalizePan } from '$lib/audio/panning';
 import { crossfadeLoopRegion, DEFAULT_LOOP_CROSSFADE_S } from '$lib/audio/loopCrossfade';
+import { trimSilentTail } from '$lib/audio/trimSilentTail';
 import { KeyboardProvider } from '$lib/providers/KeyboardProvider';
 import type { KeyboardCode } from '$lib/providers/KeyboardProvider/KeyboardTypes';
 import { keyBinds } from '$stores/KeybindsStore.svelte';
@@ -82,6 +84,13 @@ function isOfflineContext(audioContext: BaseAudioContext): boolean {
  * Bumped by AudioProvider before it starts tearing the old context down.
  */
 let CONTEXT_EPOCH = 0;
+
+/**
+ * The engine's gain at 100% volume. A little under unity: chords sum, so each engine keeps some
+ * headroom of its own, and the master bus (MasterBus.ts) limits whatever still piles up past it.
+ * Composer layers go to 125%, which lands just above unity.
+ */
+const FULL_VOLUME_GAIN = 0.9;
 
 type ScheduledOneShot = {
   source: AudioBufferSourceNode;
@@ -132,6 +141,11 @@ export class Instrument {
    */
   readonly identityKey: string;
   volumeNode: GainNode | null = null;
+  panNode: StereoPannerNode | null = null;
+  /** Retained while unloaded so context recovery preserves the track's position. */
+  private pan = 0;
+  // eslint-disable-next-line svelte/prefer-svelte-reactivity -- audio graph, never UI-observed
+  private destinations = new Set<AudioNode>();
   instrumentData: (typeof INSTRUMENTS_DATA)[InstrumentName];
   /** This instrument's notes in authored Button order — array position IS the Button. */
   notes: ObservableNote[] = [];
@@ -210,7 +224,13 @@ export class Instrument {
   private static readonly ONE_SHOT_RETENTION_S = 1;
 
   get endNode() {
+    // Stable routing identity: adding/removing the optional panner must not orphan the
+    // provider's reverb and recording registrations.
     return this.volumeNode;
+  }
+
+  private get outputNode() {
+    return this.panNode ?? this.volumeNode;
   }
 
   get sustainConfig():
@@ -371,9 +391,40 @@ export class Instrument {
     return '';
   };
   changeVolume = (amount: number) => {
-    let newVolume = Number((amount / 135).toFixed(2));
+    let newVolume = (amount / 100) * FULL_VOLUME_GAIN;
     if (amount < 5) newVolume = 0;
     if (this.volumeNode) this.volumeNode.gain.value = newVolume;
+  };
+
+  changePan = (amount: number) => {
+    this.pan = normalizePan(amount);
+    if (!this.volumeNode || !this.audioContext) return;
+    if (this.pan === 0) {
+      if (!this.panNode) return;
+      this.volumeNode.disconnect(this.panNode);
+      this.panNode.disconnect();
+      this.panNode = null;
+      this.destinations.forEach((node) => this.volumeNode!.connect(node));
+      return;
+    }
+    if (!this.panNode) {
+      const panner = this.audioContext.createStereoPanner();
+      // Mono previously upmixed to both speakers at full level. Treat it as that same
+      // stereo signal here, so approaching center does not introduce a 3 dB level drop.
+      panner.channelCount = 2;
+      panner.channelCountMode = 'explicit';
+      panner.pan.value = this.pan;
+      this.volumeNode.disconnect();
+      this.volumeNode.connect(panner);
+      this.panNode = panner;
+      this.destinations.forEach((node) => panner.connect(node));
+      return;
+    }
+    if (isOfflineContext(this.audioContext)) {
+      this.panNode.pan.value = this.pan;
+    } else {
+      this.panNode.pan.setTargetAtTime(this.pan, this.audioContext.currentTime, 0.01);
+    }
   };
 
   /**
@@ -647,13 +698,35 @@ export class Instrument {
       }
     }
   };
+  /**
+   * Cut each one-shot sample's inaudible tail (see trimSilentTail.ts). A sustaining instrument is
+   * left whole: its tail is the release a Voice plays out of the loop, not dead time at the end.
+   */
+  private trimSilentTails = (audioContext: BaseAudioContext) => {
+    if (this.sustainConfig) return;
+    this.buffers = this.buffers.map((buffer) => {
+      const channels = Array.from({ length: buffer.numberOfChannels }, (_, channel) =>
+        buffer.getChannelData(channel)
+      );
+      const length = trimSilentTail(channels, buffer.sampleRate);
+      if (length === null) return buffer;
+      const trimmed = audioContext.createBuffer(buffer.numberOfChannels, length, buffer.sampleRate);
+      // getChannelData().set rather than copyToChannel, which the older WebKit this engine still
+      // serves does not have.
+      channels.forEach((data, channel) =>
+        trimmed.getChannelData(channel).set(data.subarray(0, length))
+      );
+      return trimmed;
+    });
+  };
   load = async (audioContext: BaseAudioContext) => {
     const generation = ++this.loadGeneration;
     const epoch = CONTEXT_EPOCH;
     const isLive = !isOfflineContext(audioContext);
     this.audioContext = audioContext;
     this.volumeNode = audioContext.createGain();
-    this.volumeNode.gain.value = 0.8;
+    this.volumeNode.gain.value = FULL_VOLUME_GAIN;
+    this.changePan(this.pan);
     // Registered BEFORE the await, not after it. A rebuild snapshots this registry, and an engine
     // that only appears once its samples have decoded is invisible to one that starts mid-load -
     // so it would be left behind on the closed context with nothing to re-home it.
@@ -682,9 +755,10 @@ export class Instrument {
       )
         return false;
       this.buffers = decoded;
-      // Render loop-boundary crossfades once per decode, BEFORE pooling: pool hits
-      // must reuse the processed buffers, never re-blend already-blended audio.
+      // Render loop-boundary crossfades and tail trims once per decode, BEFORE pooling: pool
+      // hits must reuse the processed buffers, never re-blend already-blended audio.
       this.renderLoopCrossfades();
+      this.trimSilentTails(audioContext);
       if (loadedCorrectly) INSTRUMENT_BUFFER_POOL.set(this.identityKey, this.buffers);
     } else {
       if (
@@ -718,9 +792,11 @@ export class Instrument {
     // Remembered HERE rather than read back in `rehome`, because the rebuild detaches every
     // engine up front - while the outgoing context can still be torn down safely - and re-homes
     // them only after the replacement exists. Read at re-home time the node is long gone, and
-    // every layer silently came back at load()'s 0.8 default.
+    // every layer silently came back at load()'s full-volume default.
     this.detachedGain = this.volumeNode?.gain.value ?? this.detachedGain;
+    this.volumeNode?.disconnect();
     this.volumeNode = null;
+    this.panNode = null;
     this.audioContext = null;
     this.buffers = [];
     this.isLoaded = false;
@@ -729,10 +805,10 @@ export class Instrument {
   /**
    * Load onto a replacement context, preserving the gain the engine was carrying.
    *
-   * `load` always sets a fresh node to the 0.8 default and every ordinary caller follows it with
-   * `changeVolume(...)` from the roster it is syncing. A rebuild has no roster to read - it is
-   * repairing whatever is already on screen - so the level is carried across here instead, or a
-   * muted layer would come back audible.
+   * `load` always sets a fresh node to the full-volume default and every ordinary caller follows
+   * it with `changeVolume(...)` from the roster it is syncing. A rebuild has no roster to read - it
+   * is repairing whatever is already on screen - so the level is carried across here instead, or
+   * a muted layer would come back audible.
    */
   rehome = async (audioContext: BaseAudioContext) => {
     if (this.isDeleted) return false;
@@ -750,11 +826,18 @@ export class Instrument {
     return loaded;
   };
   disconnect = (node?: AudioNode) => {
-    if (node) return this.volumeNode?.disconnect(node);
-    this.volumeNode?.disconnect();
+    if (node) {
+      this.outputNode?.disconnect(node);
+      this.destinations.delete(node);
+    } else {
+      this.outputNode?.disconnect();
+      this.destinations.clear();
+    }
   };
   connect = (node: AudioNode) => {
-    this.volumeNode?.connect(node);
+    if (!this.outputNode) return;
+    this.outputNode.connect(node);
+    this.destinations.add(node);
   };
   dispose = () => {
     this.loadGeneration++;
@@ -766,9 +849,11 @@ export class Instrument {
     this.cancelScheduledAfter(0);
     this.releaseAllNotes(true);
     this.disconnect();
+    this.volumeNode?.disconnect();
     this.isDeleted = true;
     this.buffers = [];
     this.volumeNode = null;
+    this.panNode = null;
     LIVE_INSTRUMENTS.delete(this);
   };
 }

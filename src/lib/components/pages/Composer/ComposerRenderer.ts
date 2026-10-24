@@ -89,6 +89,7 @@ import {
   yForNumber,
   zoomedCameraY,
   type EditableZone,
+  type ProScroll,
   type ProViewAxis,
 } from './proViewGeometry';
 // ...and the Pro View's INPUT rules, in the same pixi-free shape (spec §7): what a release on the
@@ -1052,6 +1053,17 @@ export interface ComposerRendererCallbacks {
    * transition, so a zoom made while already unlocked says nothing.
    */
   onViewUnlock: () => void;
+  /**
+   * THE PRO VIEW'S VERTICAL CAMERA, for the scrollbar ComposerCanvas.svelte stands over the notes
+   * region's right edge: where the window is down the axis, how long the axis is, and how tall the
+   * window - see proViewGeometry.ProScroll.
+   *
+   * Reported from the seams that paint the camera (applyCameraY, and drawNotesStage's Pro View
+   * layers), and only when one of the three numbers moved: a playback tick that moves nothing
+   * vertical reports nothing. Never called in the Compressed View, which has no vertical camera.
+   * Optional because only that scrollbar listens.
+   */
+  onProScroll?: (scroll: ProScroll) => void;
   onGeometryChange: (geometry: {
     width: number;
     /** the NOTES region's height - the canvas is this plus timelineHeight */
@@ -1828,6 +1840,8 @@ export class ComposerRenderer {
   } | null = null;
   /** Everything the strip's labels are a function of, as one comparable string - see syncProStrip. */
   private proStripKey = '';
+  /** The camera as onProScroll last reported it, or null before the first report - see notifyProScroll. */
+  private reportedProScroll: ProScroll | null = null;
   private jianpuFontRequested = false;
   private jianpuFontReady = false;
 
@@ -2858,6 +2872,15 @@ export class ComposerRenderer {
     //answer arrives one update later, and a pinch delivers many moves before then. If that answer
     //comes back LOCKED anyway, the next syncProView reads it as a fresh re-lock command and resets
     //the zoom, which is exactly what a refused unlock should do.
+    this.takeProFrame();
+  }
+
+  /**
+   * THE PADLOCK FOLLOWS THE HAND: a gesture that moved the frame while the View Lock was closed asks
+   * Composer.svelte to open it, ONCE per gesture - applyProZoom's comment at its call says why
+   * `proViewLocked` is what makes it once, and what a refused unlock then does.
+   */
+  private takeProFrame(): void {
     if (this.state.viewLocked && this.proViewLocked) {
       this.proViewLocked = false;
       this.callbacks.onViewUnlock();
@@ -2888,10 +2911,56 @@ export class ComposerRenderer {
       cameraY: this.cameraY + deltaPx,
     });
     if (target !== this.cameraY) this.applyCameraY(target);
-    if (this.state.viewLocked && this.proViewLocked) {
-      this.proViewLocked = false;
-      this.callbacks.onViewUnlock();
+    this.takeProFrame();
+  }
+
+  /**
+   * THE PRO VIEW'S SCROLLBAR (ProViewScrollbar.svelte, over the notes region's right edge): the
+   * camera put at an absolute offset down the axis - on every move of a thumb drag, and once for a
+   * press on the track.
+   *
+   * The wheel's rule above restated for an absolute target: clamped to the axis' travel, a running
+   * ease replaced because the hand took the frame, and the padlock following the gesture. ONE
+   * DIFFERENCE: here the padlock follows only a camera that MOVES. A press on the thumb that drags
+   * nowhere is a scrollbar being grabbed, not a frame being taken, and a locked view survives it.
+   *
+   * `smooth` is the track press - a jump of up to the whole axis - eased exactly as the zone arrow's
+   * jump is (centerProZoneCamera: same duration, same `smoothScroll` gate). A drag's moves are never
+   * eased; the first one simply replaces a press's ease that is still running.
+   */
+  scrollProCameraTo(cameraY: number, smooth: boolean = false): void {
+    if (!this.state.proView || this.state.isRecordingAudio) return;
+    if (!Number.isFinite(cameraY)) return;
+    const target = clampCameraY({
+      axis: this.proAxis(),
+      rowHeight: this.proRowHeightPx(),
+      notesRegionHeight: this.height,
+      cameraY,
+    });
+    if (target === this.cameraY) return;
+    if (smooth && this.state.smoothScroll) {
+      this.cameraEase = {
+        from: this.cameraY,
+        to: target,
+        startMs: this.now(),
+        durationMs: PRO_CAMERA_EASE_MS,
+      };
+      this.startMotionFrames();
+    } else {
+      this.cameraEase = null;
+      this.applyCameraY(target);
     }
+    this.takeProFrame();
+  }
+
+  /**
+   * A WHEEL OVER THE PRO VIEW'S SCROLLBAR. The scrollbar is a DOM element standing over the canvas,
+   * so its wheel never reaches handleWheel - and over a vertical scrollbar every wheel means the
+   * vertical axis, so it is shift+wheel's pan with or without the shift (shiftedWheelDeltaPx reads
+   * whichever axis the browser put the travel on).
+   */
+  wheelProScrollbar(e: WheelEvent): void {
+    this.panProCameraBy(this.shiftedWheelDeltaPx(e));
   }
 
   /** What a column view needs to place its notes, or null in the Compressed View. */
@@ -3146,6 +3215,7 @@ export class ComposerRenderer {
     this.drawProZone();
     this.drawProArrows();
     this.syncProStrip();
+    this.notifyProScroll();
     this.notesApp.render();
   }
 
@@ -6783,6 +6853,30 @@ export class ComposerRenderer {
     this.applyNotesCanvasOpacity();
   };
 
+  /**
+   * TELL THE SCROLLBAR WHERE THE CAMERA IS (onProScroll). Called beside drawProArrows from both
+   * seams that paint the camera, and a no-op unless one of the three numbers moved since the last
+   * report - which is what keeps the steady playback tick from crossing into Svelte at all.
+   */
+  private notifyProScroll(): void {
+    const scroll: ProScroll = {
+      cameraY: this.cameraY,
+      contentHeight: this.proAxis().rowCount * this.proRowHeightPx(),
+      viewportHeight: this.height,
+    };
+    const last = this.reportedProScroll;
+    if (
+      last &&
+      last.cameraY === scroll.cameraY &&
+      last.contentHeight === scroll.contentHeight &&
+      last.viewportHeight === scroll.viewportHeight
+    ) {
+      return;
+    }
+    this.reportedProScroll = scroll;
+    this.callbacks.onProScroll?.(scroll);
+  }
+
   private notifyGeometry() {
     this.callbacks.onGeometryChange({
       width: this.width,
@@ -7395,6 +7489,7 @@ export class ComposerRenderer {
       this.drawProZone();
       this.drawProArrows();
       this.syncProStrip();
+      this.notifyProScroll();
       //...and the Column Ruler, which is the one of the four that is a function of the HORIZONTAL
       //axis rather than the camera: it is here because this is where the container offset above has
       //just been written and the drawn window is known, which is exactly what the band's own key is

@@ -17,11 +17,14 @@
   // {#if track} guard below despite what the type says.
   let {
     track,
+    songPitch,
     onSave,
     onDelete,
     onChange,
   }: {
     track: VsrgTrack;
+    /** The song's own Basepoint, named on the option that follows it. */
+    songPitch: Pitch;
     onSave: () => void;
     onDelete: () => void;
     onChange: (track: VsrgTrack, previousInstrument?: VsrgTrackInstrumentIdentity) => void;
@@ -113,7 +116,7 @@
         }}
       >
         <option value="">
-          {t('instrument_settings:use_song_pitch')}
+          {t('instrument_settings:use_song_pitch')} ({songPitch})
         </option>
       </PitchSelect>
     </Row>

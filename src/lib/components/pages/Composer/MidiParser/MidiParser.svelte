@@ -479,7 +479,7 @@
         <legend>{t('composer:midi_parser.track_settings')}</legend>
         <Column style="width:100%">
           {#each tracks as track, i (i)}
-            <TrackInfo data={track} index={i} onChange={editTrack} />
+            <TrackInfo data={track} index={i} songPitch={pitch} onChange={editTrack} />
           {/each}
         </Column>
       </fieldset>

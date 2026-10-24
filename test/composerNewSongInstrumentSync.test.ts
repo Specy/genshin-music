@@ -6,6 +6,7 @@ type FakeInstrumentHandle = {
     name: string
     endNode: object | null
     volume: number
+    pan: number
     reverbOverride: boolean | null
     disposed: boolean
     loaded: boolean
@@ -30,6 +31,7 @@ vi.mock('../src/lib/audio/Instrument.svelte', async () => {
         identityKey: string
         endNode: object | null = {}
         volume = -1
+        pan = 0
         reverbOverride: boolean | null = null
         disposed = false
         loaded = false
@@ -54,6 +56,10 @@ vi.mock('../src/lib/audio/Instrument.svelte', async () => {
 
         changeVolume(volume: number) {
             this.volume = volume
+        }
+
+        changePan(pan: number) {
+            this.pan = pan
         }
 
         dispose() {
@@ -279,9 +285,9 @@ describe('Composer new-song instrument synchronization', () => {
             layers as unknown as FakeInstrumentHandle[]
 
         const latestSync = synchronizer.sync([
-            new InstrumentData({name: duplicateName, volume: 41, reverbOverride: false}),
-            new InstrumentData({name: otherName, volume: 52, reverbOverride: null}),
-            new InstrumentData({name: duplicateName, volume: 63, reverbOverride: true}),
+            new InstrumentData({name: duplicateName, volume: 41, pan: -1, reverbOverride: false}),
+            new InstrumentData({name: otherName, volume: 52, pan: 0.5, reverbOverride: null}),
+            new InstrumentData({name: duplicateName, volume: 63, pan: 1, reverbOverride: true}),
         ])
 
         // The live provisional roster changes before either request yields back from a load. That
@@ -303,9 +309,9 @@ describe('Composer new-song instrument synchronization', () => {
             other,
             secondDuplicate,
         ])
-        expect(firstDuplicate).toMatchObject({volume: 41, reverbOverride: false, connected: 1})
-        expect(other).toMatchObject({volume: 52, reverbOverride: null, connected: 1})
-        expect(secondDuplicate).toMatchObject({volume: 63, reverbOverride: true, connected: 1})
+        expect(firstDuplicate).toMatchObject({volume: 41, pan: -1, reverbOverride: false, connected: 1})
+        expect(other).toMatchObject({volume: 52, pan: 0.5, reverbOverride: null, connected: 1})
+        expect(secondDuplicate).toMatchObject({volume: 63, pan: 1, reverbOverride: true, connected: 1})
         expect(fakes.instances.every(instrument => !instrument.disposed)).toBe(true)
         expect(publish).toHaveBeenCalledTimes(1)
         expect(onSynced).toHaveBeenCalledTimes(1)

@@ -23,6 +23,7 @@ type FakeInstrumentHandle = {
     name: string
     endNode: object
     volume: number
+    pan: number
     reverbOverride: boolean | null
     disposed: boolean
     loaded: boolean
@@ -38,6 +39,7 @@ vi.mock('../src/lib/audio/Instrument.svelte', async () => {
         identityKey: string
         endNode = {}
         volume = -1
+        pan = 0
         reverbOverride: boolean | null = null
         disposed = false
         loaded = false
@@ -55,6 +57,10 @@ vi.mock('../src/lib/audio/Instrument.svelte', async () => {
 
         changeVolume(v: number) {
             this.volume = v
+        }
+
+        changePan(pan: number) {
+            this.pan = pan
         }
 
         dispose() {
@@ -93,20 +99,22 @@ describe('AudioPlayer.syncInstruments diffing', () => {
         vi.restoreAllMocks()
     })
 
-    it('constructs a new wrapper per entry on first sync, applying volume/reverb', async () => {
+    it('constructs a new wrapper per entry on first sync, applying volume/pan/reverb', async () => {
         const player = new AudioPlayer('C')
         await player.syncInstruments([
-            new InstrumentData({name: 'A', volume: 50, reverbOverride: true}),
-            new InstrumentData({name: 'B', volume: 80, reverbOverride: false}),
+            new InstrumentData({name: 'A', volume: 50, pan: -1, reverbOverride: true}),
+            new InstrumentData({name: 'B', volume: 80, pan: 0.75, reverbOverride: false}),
         ])
         expect(player.audioInstruments).toHaveLength(2)
         expect(fakeInstrumentInstances).toHaveLength(2)
         const [a, b] = player.audioInstruments as unknown as FakeInstrumentHandle[]
         expect(a.name).toBe('A')
         expect(a.volume).toBe(50)
+        expect(a.pan).toBe(-1)
         expect(a.reverbOverride).toBe(true)
         expect(b.name).toBe('B')
         expect(b.volume).toBe(80)
+        expect(b.pan).toBe(0.75)
         expect(b.reverbOverride).toBe(false)
     })
 
@@ -116,12 +124,13 @@ describe('AudioPlayer.syncInstruments diffing', () => {
         const wrapperBefore = player.audioInstruments[0]
         expect(fakeInstrumentInstances).toHaveLength(1)
 
-        await player.syncInstruments([new InstrumentData({name: 'A', volume: 90, reverbOverride: true})])
+        await player.syncInstruments([new InstrumentData({name: 'A', volume: 90, pan: 0.6, reverbOverride: true})])
 
         expect(player.audioInstruments[0]).toBe(wrapperBefore)
         expect(fakeInstrumentInstances).toHaveLength(1) // still just the one wrapper ever constructed
         const handle = wrapperBefore as unknown as FakeInstrumentHandle
         expect(handle.volume).toBe(90)
+        expect(handle.pan).toBe(0.6)
         expect(handle.reverbOverride).toBe(true)
     })
 
