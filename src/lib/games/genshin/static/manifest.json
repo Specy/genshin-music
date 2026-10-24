@@ -1,7 +1,7 @@
 {
   "name": "Genshin Music Nightly",
   "short_name": "Genshin Music Nightly",
-  "description": "A program to record, practice and share music. \nBy downloading the app, you get fullscreen and better overall experience",
+  "description": "Play, practice and compose songs for the Genshin Impact Windsong Lyre, Floral Zither, Vintage Lyre and more. Installing the app opens it fullscreen, like a native app.",
   "icons": [
     {
       "src": "favicon.ico",

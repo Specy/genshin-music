@@ -408,6 +408,7 @@ export interface GameDefinition {
   // ── head / manifest / SEO / analytics ─────────────────────────────────────
   meta: {
     title: string; // '{name} Music Nightly'
+    homeTitle: string; // home page <title>: brand + game + what the app does
     description: string; // per-game <meta> + manifest description
     canonicalOrigin: string; // rel=canonical origin; PUBLIC_CANONICAL_ORIGIN overrides
     themeColor: string; // viewport theme-color (#63aea7 today, both games)

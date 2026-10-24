@@ -1,7 +1,7 @@
 {
   "name": "Sky Music Nightly",
   "short_name": "Sky Music Nightly",
-  "description": "A program to record, practice and share music. \nBy downloading the app, you get fullscreen and better overall experience",
+  "description": "Play, practice and compose songs for the Sky: Children of the Light piano, harp, flute and over 40 other instruments. Installing the app opens it fullscreen, like a native app.",
   "icons": [
     {
       "src": "favicon.ico",

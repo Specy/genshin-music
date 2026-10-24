@@ -4,9 +4,7 @@
   import { afterNavigate } from '$app/navigation';
   import { browserHistoryStore } from '$stores/BrowserHistoryStore';
   import { ThemeProvider } from '$core/theme/ThemeProvider.svelte';
-  import { APP_NAME } from '$core/legacyConfig';
   import { game } from '$game';
-  import { t } from '$i18n/binding.svelte';
   import PageMetadata from './PageMetadata.svelte';
   import { jsonLdScriptTag, softwareApplicationLd } from '$lib/seo';
   import SimpleMenu from './SimpleMenu.svelte';
@@ -53,7 +51,7 @@
   const backgroundColor = $derived(ThemeProvider.get('background').fade(0.1).toString());
 </script>
 
-<PageMetadata text={game.meta.title} description={t('home:app_description', { APP_NAME })}>
+<PageMetadata text={game.meta.homeTitle} description={game.meta.description}>
   <!-- The page's schema.org description. {@html} is the only way to emit a <script> from a
        component: <svelte:element this="script"> renders nothing in Svelte, and a literal
        script tag here is taken as the component's own instance script. Safe because the

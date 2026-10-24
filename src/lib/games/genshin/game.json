@@ -15,7 +15,8 @@
   },
   "meta": {
     "title": "Genshin Music Nightly",
-    "description": "Genshin music, a website to play, practice and compose songs",
+    "homeTitle": "Genshin Music Nightly - Play and compose Genshin Impact lyre songs",
+    "description": "Free web app to play, practice and compose songs for the Genshin Impact Windsong Lyre, Floral Zither, Vintage Lyre and more. Import MIDI files and export sheets.",
     "canonicalOrigin": "https://genshin-music.specy.app",
     "themeColor": "#63aea7",
     "analytics": {
