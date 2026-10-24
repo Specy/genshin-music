@@ -6,7 +6,7 @@
 // only a little headroom (Instrument's FULL_VOLUME_GAIN) instead of being turned down for the
 // worst case.
 //
-//   input -> DynamicsCompressor -> makeup cancel -> soft clip -> output -> destination
+//   input -> DynamicsCompressor -> makeup cancel -> soft clip -> output -> fader -> destination
 //
 // - The compressor does the limiting. Measured in Chromium (2026-10-23) on a dense Lyre stream
 //   driven 12 dB past a level that already clips: not one sample over full scale. The attack is
@@ -16,6 +16,8 @@
 //   below the threshold passes through unchanged.
 // - A stock compressor is not a brickwall: driven a further 6 dB, its transients still overshoot
 //   by about a dB. The soft clip takes what is left, and is an identity below SOFT_CLIP_KNEE.
+// - The fader sits at unity except around a renderer restart (see fadeMasterBus). It is past
+//   `output`, so a recording tapping the bus never captures that dip.
 //
 // Stock nodes rather than an AudioWorklet, deliberately: the bus carries every sound the app
 // makes, so it has to exist synchronously with its context and survive the iOS recovery ladder,
@@ -49,6 +51,12 @@ export const MASTER_BUS_WARMUP_S = 0.25;
 const FULL_RANGE_GAIN_DB = THRESHOLD_DB - THRESHOLD_DB / RATIO;
 const MAKEUP_CANCEL = 10 ** ((0.6 * FULL_RANGE_GAIN_DB) / 20);
 
+/**
+ * How long fadeMasterBus takes, in s. Long enough that cutting a waveform this way is no longer a
+ * click, short enough that the dip it leaves reads as one.
+ */
+export const MASTER_BUS_FADE_S = 0.02;
+
 export type MasterBus = {
   /** What audible paths connect to. */
   input: AudioNode;
@@ -56,7 +64,7 @@ export type MasterBus = {
   output: AudioNode;
 };
 
-const buses = new WeakMap<BaseAudioContext, MasterBus>();
+const buses = new WeakMap<BaseAudioContext, MasterBus & { fader: GainNode }>();
 let softClipCurve: Float32Array<ArrayBuffer> | null = null;
 
 /**
@@ -79,13 +87,35 @@ export function masterBusOf(context: BaseAudioContext): MasterBus {
   scale.gain.value = MAKEUP_CANCEL / SOFT_CLIP_RANGE;
   const softClip = context.createWaveShaper();
   softClip.curve = softClipCurve ??= buildSoftClipCurve();
+  const fader = context.createGain();
 
   compressor.connect(scale);
   scale.connect(softClip);
-  softClip.connect(context.destination);
-  const bus = { input: compressor, output: softClip };
+  softClip.connect(fader);
+  fader.connect(context.destination);
+  const bus = { input: compressor, output: softClip, fader };
   buses.set(context, bus);
   return bus;
+}
+
+/**
+ * Fade what the speakers get from `context` out to silence, or back in from it, over
+ * MASTER_BUS_FADE_S of audio time. Returns false when the context has no bus yet, which means it
+ * has nothing audible to fade.
+ *
+ * For AudioProvider's renderer restart: suspend() stops the output mid-waveform and resume()
+ * starts it again the same way, and each of those is a click. Fading in always starts from
+ * silence rather than from the gain's current value, so it also covers a context that was not
+ * rendering when the fade out was scheduled and so never played it.
+ */
+export function fadeMasterBus(context: BaseAudioContext, direction: 'out' | 'in'): boolean {
+  const gain = buses.get(context)?.fader.gain;
+  if (!gain) return false;
+  const now = context.currentTime;
+  gain.cancelScheduledValues(now);
+  gain.setValueAtTime(direction === 'out' ? gain.value : 0, now);
+  gain.linearRampToValueAtTime(direction === 'out' ? 0 : 1, now + MASTER_BUS_FADE_S);
+  return true;
 }
 
 /**
