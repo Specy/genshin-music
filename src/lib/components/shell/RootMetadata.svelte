@@ -2,7 +2,7 @@
   import { base } from '$app/paths';
   import { page } from '$app/state';
   import { IS_BETA } from '$lib/env';
-  import { CANONICAL_ORIGIN } from '$lib/seo';
+  import { CANONICAL_ORIGIN, NOINDEX_PATHS } from '$lib/seo';
   import { appPathname } from '$lib/utils/appPathname';
 
   // One canonical per page, which is why it lives here and not in PageMetadata: several
@@ -14,6 +14,17 @@
   // copies consolidate onto it instead of competing. appPathname drops the base, which is
   // exactly the part that differs between those builds.
   let canonicalUrl = $derived(`${CANONICAL_ORIGIN}${appPathname(page.url.pathname)}`);
+
+  // The beta keeps every page out of the index, links included. On the real site only the
+  // utility pages are, and their links still count: NOINDEX_PATHS is the same list the sitemap
+  // leaves out, so the two can never disagree about which pages are content.
+  let robots = $derived(
+    IS_BETA
+      ? 'noindex, nofollow'
+      : NOINDEX_PATHS.has(appPathname(page.url.pathname))
+        ? 'noindex'
+        : null
+  );
 
   // Carries every root-level head element old's metadata cascade produced
   // EXCEPT <title>/<meta name="description"> and the favicon - see the two
@@ -45,8 +56,8 @@
   <meta property="og:url" content={canonicalUrl} />
   <link rel="manifest" href="{base}/manifest.json" />
   <link rel="apple-touch-icon" href="{base}/logo192.png" />
-  {#if IS_BETA}
-    <meta name="robots" content="noindex, nofollow" />
+  {#if robots}
+    <meta name="robots" content={robots} />
   {/if}
   <!-- This is the SECOND theme-color meta in document order (see header) -
          the dynamic FIRST one comes from ThemeVars.svelte. -->

@@ -57,6 +57,23 @@ export function jsonLdScriptTag(value: unknown) {
 }
 
 /**
+ * Pages that exist but are not content: surfaces that only make sense with the reader's own data
+ * behind them, and the error/maintenance pages. One list for both halves of keeping them out of
+ * search results: the sitemap leaves them out, and RootMetadata marks them noindex. Paths are
+ * appPathname()-style, without the base.
+ */
+export const NOINDEX_PATHS: ReadonlySet<string> = new Set([
+  // a build-time meta-refresh stub for old deep links (routes/partners/+page.ts), not a page
+  '/partners',
+  '/error',
+  '/delete-cache',
+  '/backup',
+  '/transfer',
+  '/theme',
+  '/keybinds',
+]);
+
+/**
  * Describes the app itself, sourced from the active game's own metadata so the sky and
  * genshin builds each declare their own identity rather than a shared one.
  */

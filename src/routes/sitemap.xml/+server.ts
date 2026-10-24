@@ -1,23 +1,8 @@
-import { CANONICAL_ORIGIN } from '$lib/seo';
+import { CANONICAL_ORIGIN, NOINDEX_PATHS } from '$lib/seo';
 import { IS_BETA } from '$lib/env';
 import { allBlogPosts, isBlogPostForGame } from '$cmp/blog/allPosts';
 
 export const prerender = true;
-
-/**
- * Routes that exist but are not content: surfaces that only make sense with the reader's
- * own data behind them, and the error/maintenance pages.
- */
-const EXCLUDED = new Set([
-  // a build-time meta-refresh stub for old deep links (routes/partners/+page.ts), not a page
-  '/partners',
-  '/error',
-  '/delete-cache',
-  '/backup',
-  '/transfer',
-  '/theme',
-  '/keybinds',
-]);
 
 /** Blog posts scoped to the other game: their routes are not built for this one. */
 const OTHER_GAME_POSTS = new Set(
@@ -32,7 +17,7 @@ function routes() {
   return Object.keys(modules)
     .map((file) => file.replace('/src/routes', '').replace('/+page.svelte', '') || '/')
     .filter((route) => !route.includes('['))
-    .filter((route) => !EXCLUDED.has(route))
+    .filter((route) => !NOINDEX_PATHS.has(route))
     .filter((route) => !OTHER_GAME_POSTS.has(route))
     .sort();
 }
