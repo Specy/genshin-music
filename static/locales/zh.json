@@ -172,7 +172,13 @@
         "expand_screen": "请扩大您的窗口尺寸",
         "drop_files_here": "拖放文件到此处",
         "new_changes_to_page": "页面更新!",
-        "how_to_install": "如何使用浏览器添加应用到主屏幕"
+        "how_to_install": "如何使用浏览器添加应用到主屏幕",
+        "title_genshin": "Genshin Music Nightly - 演奏和创作原神诗琴乐曲",
+        "title_sky": "Sky Music Nightly - 演奏和创作《Sky 光·遇》乐曲",
+        "description_genshin": "在浏览器中演奏原神乐器。学习乐曲、录制演奏或创作自己的音乐。支持导入 MIDI 文件，导出音频或曲谱。",
+        "description_sky": "在浏览器中演奏《Sky 光·遇》的乐器。学习乐曲、录制演奏或创作自己的音乐。支持导入 MIDI 文件，导出音频或曲谱。",
+        "about_genshin": "## 关于 {{APP_NAME}} Music Nightly\n\n{{APP_NAME}} Music Nightly 让你在浏览器中演奏原神乐器，包括风物之诗琴、镜花之琴和老旧的诗琴。应用免费，可在电脑、手机和平板上使用。录制或创作的乐曲会保存在浏览器中。\n\n### 演奏和学习乐曲\n\n[演奏器](/player)可以播放已有乐曲，也能录制你自己的演奏。想学习一首乐曲时，可以试试[练习模式](/blog/posts/how-to-use-player)。它会高亮接下来的音符，等你按下后再继续。接近圆圈模式会用圆圈提示按键时机，帮助你练习节奏。\n\n用[纯键盘模式](/zen-keyboard)自由演奏，里面也有节拍器。它还可以把你弹奏的音符发送到 MIDI 设备。你可以[连接 MIDI 键盘](/blog/posts/connect-midi-device)来演奏这里的乐器，也可以按需[自定义按键](/keybinds)。\n\n### 作曲和导出\n\n在[作曲器](/composer)中，[把音符放到网格上](/blog/posts/how-to-use-composer)就能编写乐曲。用多个图层安排不同乐器，并分别设置音高、音量和混响。完成后，可以导出为曲谱、MIDI、WAV 或 MP3。\n\n你也可以[导入 MIDI 文件](/composer)，再[调整音符](/blog/posts/midi-transpose)，让乐曲适合游戏中的乐器。[曲谱可视化工具](/sheet-visualizer)可以把乐曲显示为曲谱或文字。你可以打印曲谱，也可以保存为 PDF。\n\n### 其他工具\n\n在[下落式音乐游戏作曲器](/vsrg-composer)中，可以[把乐曲制作成节奏谱面](/blog/posts/how-to-create-a-beatmap)。制作好的谱面可以在[下落式音乐游戏演奏器](/vsrg-player)中游玩。\n\n你可以在[主题](/theme)中更改颜色和背景。用[备份](/backup)把乐曲和主题一起保存在一个文件中。\n\n### 乐器\n\n可用乐器：{{INSTRUMENTS}}。\n\n大多数乐器有 21 个琴键，分为三行，每行七个，与原神中的布局相同。有些乐器支持延音，按住琴键就能让音符持续更久。\n\n在电脑上，可以通过[按键绑定](/keybinds)页面修改演奏按键和整个应用的快捷键。在触摸屏上，直接轻触琴键即可演奏。琴键标签可以显示音名、Do Re Mi、ABC、数字或键盘字母。\n\n你可以在 C 到 B 之间调整乐器音高，让所有音符一起升高或降低。作曲器的每个图层都可以设置各自的音高。",
+        "about_sky": "## 关于 {{APP_NAME}} Music Nightly\n\n{{APP_NAME}} Music Nightly 让你在浏览器中演奏《Sky 光·遇》的乐器。应用免费，可在电脑、手机和平板上使用。录制或创作的乐曲会保存在浏览器中。\n\n### 演奏和学习乐曲\n\n[演奏器](/player)可以播放已有乐曲，也能录制你自己的演奏。想学习一首乐曲时，可以试试[练习模式](/blog/posts/how-to-use-player)。它会高亮接下来的音符，等你按下后再继续。接近圆圈模式会用圆圈提示按键时机，帮助你练习节奏。\n\n用[纯键盘模式](/zen-keyboard)自由演奏，里面也有节拍器。它还可以把你弹奏的音符发送到 MIDI 设备。你可以[连接 MIDI 键盘](/blog/posts/connect-midi-device)来演奏这里的乐器，也可以按需[自定义按键](/keybinds)。\n\n### 作曲和导出\n\n在[作曲器](/composer)中，[把音符放到网格上](/blog/posts/how-to-use-composer)就能编写乐曲。用多个图层安排不同乐器，并分别设置音高、音量和混响。完成后，可以导出为曲谱、MIDI、WAV 或 MP3。\n\n你也可以[导入 MIDI 文件](/composer)，再[调整音符](/blog/posts/midi-transpose)，让乐曲适合游戏中的乐器。[曲谱可视化工具](/sheet-visualizer)可以把乐曲显示为曲谱或文字。你可以打印曲谱，也可以保存为 PDF。\n\n### 其他工具\n\n在[下落式音乐游戏作曲器](/vsrg-composer)中，可以[把乐曲制作成节奏谱面](/blog/posts/how-to-create-a-beatmap)。制作好的谱面可以在[下落式音乐游戏演奏器](/vsrg-player)中游玩。\n\n你可以在[主题](/theme)中更改颜色和背景。用[备份](/backup)把乐曲和主题一起保存在一个文件中。\n\n### 乐器\n\n可用乐器：{{INSTRUMENTS}}。\n\n大多数乐器有 15 个琴键，分为三行，每行五个，与 Sky 中的布局相同。鼓、铃铛和其他部分乐器的琴键较少。有些乐器支持延音，按住琴键就能让音符持续更久。欧若拉有三种元音音色可选。\n\n在电脑上，可以通过[按键绑定](/keybinds)页面修改演奏按键和整个应用的快捷键。在触摸屏上，直接轻触琴键即可演奏。琴键标签可以显示音名、Do Re Mi、ABC、数字、键盘字母或 PlayStation 和 Switch 按钮。\n\n你可以在 C 到 B 之间调整乐器音高，让所有音符一起升高或降低。作曲器的每个图层都可以设置各自的音高。"
     },
     "menu": {
         "close_menu": "关闭菜单",

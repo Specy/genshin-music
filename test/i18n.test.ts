@@ -41,15 +41,16 @@ describe('interpolation hands values through unescaped, and Svelte is what escap
      * a per-surface test would not.
      */
     /**
-     * ALLOWLISTED, and the bar for adding to this list is high: the value must be machine
-     * generated and escaped at the point of interpolation, never a translated or
-     * user-supplied string.
+     * ALLOWLISTED, and the bar for adding to this list is high: the value must be
+     * serialized and escaped at the point of interpolation, never raw translated or
+     * user-supplied markup.
      *
      * HomePage.svelte emits the page's schema.org JSON-LD, which has to be a real <script>
      * element - <svelte:element this="script"> renders nothing in Svelte, and a literal
      * <script> in a component is taken as its instance script, so {@html} is the only way.
-     * Its payload comes from game.json via seo.ts's serializeJsonLd, which escapes < > and
-     * & so nothing interpolated can close the tag. The blog's JSON-LD follows the same pattern.
+     * Its app metadata and translated description pass through seo.ts's serializeJsonLd,
+     * which escapes < > and & so the description cannot close the tag. The blog's JSON-LD
+     * follows the same pattern.
      */
     const HTML_ALLOWED = new Set([
         'src/lib/components/shell/HomePage.svelte',
@@ -77,7 +78,7 @@ describe('interpolation hands values through unescaped, and Svelte is what escap
         expect(offenders).toEqual([])
     })
 
-    it('no allowlisted {@html} interpolates a translated string', () => {
+    it('no allowlisted {@html} interpolates t() directly', () => {
         for (const path of HTML_ALLOWED) {
             const source = readFileSync(path, 'utf8')
             for (const [, expression] of source.matchAll(/\{@html ([\s\S]*?)\}\n/g)) {

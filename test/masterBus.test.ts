@@ -2,11 +2,12 @@
 // so what is held here is the wiring and the numbers; how the real compressor behaves on real
 // samples was measured in Chromium and is recorded in that file's header.
 import { describe, expect, it, vi } from 'vitest';
-import { masterBusOf } from '../src/lib/audio/MasterBus';
+import { fadeMasterBus, MASTER_BUS_FADE_S, masterBusOf } from '../src/lib/audio/MasterBus';
 
 function fakeContext() {
   const node = () => ({ connect: vi.fn(), disconnect: vi.fn() });
   const context = {
+    currentTime: 0,
     destination: node(),
     createDynamicsCompressor: vi.fn(() => ({
       ...node(),
@@ -16,7 +17,15 @@ function fakeContext() {
       attack: { value: 0.003 },
       release: { value: 0.25 },
     })),
-    createGain: vi.fn(() => ({ ...node(), gain: { value: 1 } })),
+    createGain: vi.fn(() => ({
+      ...node(),
+      gain: {
+        value: 1,
+        cancelScheduledValues: vi.fn(),
+        setValueAtTime: vi.fn(),
+        linearRampToValueAtTime: vi.fn(),
+      },
+    })),
     createWaveShaper: vi.fn(() => ({ ...node(), curve: null as Float32Array | null })),
   };
   return context;
@@ -27,7 +36,8 @@ function busOf(context: ReturnType<typeof fakeContext>) {
   const compressor = context.createDynamicsCompressor.mock.results[0].value;
   const scale = context.createGain.mock.results[0].value;
   const softClip = context.createWaveShaper.mock.results[0].value;
-  return { bus, compressor, scale, softClip };
+  const fader = context.createGain.mock.results[1].value;
+  return { bus, compressor, scale, softClip, fader };
 }
 
 /** What the soft clip outputs for `x`, read the way a WaveShaperNode reads its curve. */
@@ -40,16 +50,18 @@ function shape(curve: Float32Array, scaleGain: number, x: number) {
 }
 
 describe('masterBusOf', () => {
-  it('builds one bus per context and wires compressor -> scale -> soft clip -> destination', () => {
+  it('builds one bus per context and wires compressor -> scale -> soft clip -> fader -> destination', () => {
     const context = fakeContext();
-    const { bus, compressor, scale, softClip } = busOf(context);
+    const { bus, compressor, scale, softClip, fader } = busOf(context);
     expect(masterBusOf(context as unknown as BaseAudioContext)).toBe(bus);
     expect(context.createDynamicsCompressor).toHaveBeenCalledOnce();
     expect(bus.input).toBe(compressor);
     expect(bus.output).toBe(softClip);
     expect(compressor.connect).toHaveBeenCalledWith(scale);
     expect(scale.connect).toHaveBeenCalledWith(softClip);
-    expect(softClip.connect).toHaveBeenCalledWith(context.destination);
+    expect(softClip.connect).toHaveBeenCalledWith(fader);
+    expect(fader.connect).toHaveBeenCalledWith(context.destination);
+    expect(fader.gain.value).toBe(1);
 
     const other = fakeContext();
     expect(masterBusOf(other as unknown as BaseAudioContext)).not.toBe(bus);
@@ -102,5 +114,34 @@ describe('masterBusOf', () => {
       expect(curve[i]).toBeGreaterThanOrEqual(curve[i - 1]);
       expect(Math.abs(curve[i])).toBeLessThanOrEqual(1);
     }
+  });
+});
+
+describe('fadeMasterBus', () => {
+  it('fades the speakers out from where the gain is, and back in from silence', () => {
+    const context = fakeContext();
+    const { fader } = busOf(context);
+    const gain = fader.gain;
+    context.currentTime = 2;
+    gain.value = 0.7;
+
+    expect(fadeMasterBus(context as unknown as BaseAudioContext, 'out')).toBe(true);
+    expect(gain.cancelScheduledValues).toHaveBeenLastCalledWith(2);
+    expect(gain.setValueAtTime).toHaveBeenLastCalledWith(0.7, 2);
+    expect(gain.linearRampToValueAtTime).toHaveBeenLastCalledWith(0, 2 + MASTER_BUS_FADE_S);
+
+    // A context that was not rendering never played the fade out, so the gain may still read
+    // full: fading in must not start from there.
+    context.currentTime = 3;
+    fadeMasterBus(context as unknown as BaseAudioContext, 'in');
+    expect(gain.cancelScheduledValues).toHaveBeenLastCalledWith(3);
+    expect(gain.setValueAtTime).toHaveBeenLastCalledWith(0, 3);
+    expect(gain.linearRampToValueAtTime).toHaveBeenLastCalledWith(1, 3 + MASTER_BUS_FADE_S);
+  });
+
+  it('leaves a context without a bus alone, and never builds one', () => {
+    const context = fakeContext();
+    expect(fadeMasterBus(context as unknown as BaseAudioContext, 'out')).toBe(false);
+    expect(context.createGain).not.toHaveBeenCalled();
   });
 });

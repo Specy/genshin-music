@@ -1,7 +1,13 @@
 <script module lang="ts">
   import { base } from '$app/paths';
   import { APP_NAME } from '$core/legacyConfig';
-  import { breadcrumbLd, documentTitle, jsonLdScriptTag, withoutEmoji } from '$lib/seo';
+  import {
+    breadcrumbLd,
+    documentTitle,
+    jsonLdScriptTag,
+    SPECY_PERSON,
+    withoutEmoji,
+  } from '$lib/seo';
   import type { Snippet } from 'svelte';
   import type { BlogAuthor } from './types';
   import Row from '../layout/Row.svelte';
@@ -12,6 +18,7 @@
   export const SpecyAuthor: BlogAuthor = {
     name: 'Specy',
     picture: `${base}/assets/images/specy.png`,
+    person: SPECY_PERSON,
   };
 
   const visitedBlogPostsKey = `${APP_NAME}_visited_blog_posts`;

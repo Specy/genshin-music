@@ -1,7 +1,7 @@
 {
   "name": "Genshin Music Nightly",
   "short_name": "Genshin Music Nightly",
-  "description": "A program to record, practice and share music. \nBy downloading the app, you get fullscreen and better overall experience",
+  "description": "Play Genshin Impact instruments in your browser. Learn songs, record your playing or compose your own music. Import MIDI files and export audio or sheets.",
   "icons": [
     {
       "src": "favicon.ico",

@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
+import { masterBusOf } from '../src/lib/audio/MasterBus';
 import { AudioProviderClass, AudioContextTimeoutError } from '../src/lib/providers/AudioProvider';
 
 /**
@@ -47,6 +48,42 @@ function fakeContext(
     },
   };
   return context;
+}
+
+/**
+ * Gives a fake context the node factories the master bus needs and builds its bus, logging the
+ * fader's ramps to `log` by direction. Only the fader ever ramps, so every entry is one of its.
+ */
+function withMasterBus(context: ReturnType<typeof fakeContext>, log: string[]) {
+  const node = () => ({ connect: vi.fn(), disconnect: vi.fn() });
+  const param = () => ({
+    value: 1,
+    cancelScheduledValues: vi.fn(),
+    setValueAtTime: vi.fn(),
+    linearRampToValueAtTime: vi.fn((to: number) => log.push(to === 0 ? 'fade out' : 'fade in')),
+  });
+  Object.assign(context, {
+    destination: node(),
+    createDynamicsCompressor: () => ({
+      ...node(),
+      threshold: param(),
+      knee: param(),
+      ratio: param(),
+      attack: param(),
+      release: param(),
+    }),
+    createGain: () => ({ ...node(), gain: param() }),
+    createWaveShaper: () => ({ ...node(), curve: null }),
+  });
+  masterBusOf(context as unknown as BaseAudioContext);
+}
+
+/** Puts the page through a real hidden -> visible transition. */
+function backgroundAndReturn() {
+  Object.defineProperty(document, 'visibilityState', { value: 'hidden', configurable: true });
+  document.dispatchEvent(new Event('visibilitychange'));
+  Object.defineProperty(document, 'visibilityState', { value: 'visible', configurable: true });
+  document.dispatchEvent(new Event('visibilitychange'));
 }
 
 function providerWith(context: ReturnType<typeof fakeContext>) {
@@ -335,6 +372,71 @@ describe('the failure no probe can see', () => {
     Object.defineProperty(document, 'visibilityState', { value: 'visible', configurable: true });
     await expect(provider.ensureRunning()).resolves.toBe(context);
     expect(workingSuspend).toHaveBeenCalledOnce();
+    provider.destroy();
+    warn.mockRestore();
+  });
+
+  it('leaves every other engine alone', async () => {
+    // The cycle is a dip in whatever is playing, so an engine that cannot have this bug would
+    // pay it on every tab switch for nothing. jsdom reports WebKit's vendor string, like Safari.
+    Object.defineProperty(navigator, 'vendor', { value: 'Google Inc.', configurable: true });
+    try {
+      const context = fakeContext('running');
+      const provider = providerWith(context);
+      await provider.ensureRunning();
+      provider.installLifecycleRecovery();
+
+      backgroundAndReturn();
+      await provider.recoverAudioContext();
+
+      expect(context.suspend).not.toHaveBeenCalled();
+      provider.destroy();
+    } finally {
+      delete (navigator as { vendor?: string }).vendor;
+    }
+  });
+
+  it('fades the speakers out before stopping the renderer and back in after', async () => {
+    // Unfaded, suspend() cuts the output mid-waveform and resume() starts it the same way: a
+    // click on every return to the tab while music plays.
+    const log: string[] = [];
+    const context = fakeContext('running');
+    withMasterBus(context, log);
+    const { suspend, resume } = context;
+    context.suspend = vi.fn(async () => {
+      log.push('suspend');
+      await suspend();
+    });
+    context.resume = vi.fn(async () => {
+      log.push('resume');
+      await resume();
+    });
+    const provider = providerWith(context);
+    await provider.ensureRunning();
+    provider.installLifecycleRecovery();
+
+    backgroundAndReturn();
+    await provider.recoverAudioContext();
+
+    expect(log).toEqual(['fade out', 'suspend', 'resume', 'fade in']);
+    provider.destroy();
+  });
+
+  it('fades back in when the cycle fails, rather than leaving the app muted', async () => {
+    const log: string[] = [];
+    const context = fakeContext('running');
+    withMasterBus(context, log);
+    context.suspend = vi.fn().mockRejectedValue(new Error('activation required'));
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const provider = providerWith(context);
+    await provider.ensureRunning();
+    provider.installLifecycleRecovery();
+
+    backgroundAndReturn();
+    await provider.recoverAudioContext();
+
+    expect(context.suspend).toHaveBeenCalled();
+    expect(log.at(-1)).toBe('fade in');
     provider.destroy();
     warn.mockRestore();
   });

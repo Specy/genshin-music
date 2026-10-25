@@ -193,6 +193,8 @@ export type GameJson = {
 
   meta: {
     title: string;
+    /** The home page <title>: the brand plus the game and what the app does, for search results. */
+    homeTitle: string;
     description: string;
     /**
      * The origin this game's pages want to be ranked as. Every build of a game — the

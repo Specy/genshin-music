@@ -4,13 +4,13 @@
   import { afterNavigate } from '$app/navigation';
   import { browserHistoryStore } from '$stores/BrowserHistoryStore';
   import { ThemeProvider } from '$core/theme/ThemeProvider.svelte';
-  import { APP_NAME } from '$core/legacyConfig';
   import { game } from '$game';
   import { t } from '$i18n/binding.svelte';
   import PageMetadata from './PageMetadata.svelte';
   import { jsonLdScriptTag, softwareApplicationLd } from '$lib/seo';
   import SimpleMenu from './SimpleMenu.svelte';
   import HomeContent from './HomeContent.svelte';
+  import HomeAbout from './HomeAbout.svelte';
 
   // THE BACK BUTTON ONLY EXISTS WHEN THERE IS SOMETHING TO GO BACK TO. As a page, '/' is also
   // where a direct link, a bookmark and an installed PWA all land (manifest start_url is '.'), and
@@ -51,17 +51,23 @@
   // Same fade the popup used over the page it covered: here it lets AppBackground's image read
   // through the page's own ground instead of a flat fill.
   const backgroundColor = $derived(ThemeProvider.get('background').fade(0.1).toString());
+  const metadataKeys = {
+    genshin: { title: 'home:title_genshin', description: 'home:description_genshin' },
+    sky: { title: 'home:title_sky', description: 'home:description_sky' },
+  } as const;
+  const title = $derived(t(metadataKeys[game.id].title));
+  const description = $derived(t(metadataKeys[game.id].description));
 </script>
 
-<PageMetadata text={game.meta.title} description={t('home:app_description', { APP_NAME })}>
+<PageMetadata text={title} {description}>
   <!-- The page's schema.org description. {@html} is the only way to emit a <script> from a
        component: <svelte:element this="script"> renders nothing in Svelte, and a literal
        script tag here is taken as the component's own instance script. Safe because the
-       payload is machine generated from game.json and serializeJsonLd escapes < > and &, so
-       nothing interpolated can close the tag - jsonLdScriptTag ($lib/seo) assembles it.
+       payload combines app metadata with the translated description. serializeJsonLd escapes
+       < > and &, so nothing interpolated can close the tag - jsonLdScriptTag ($lib/seo) assembles it.
        test/i18n.test.ts allowlists this one call site and asserts it interpolates no t(). -->
   <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-  {@html jsonLdScriptTag(softwareApplicationLd())}
+  {@html jsonLdScriptTag({ ...softwareApplicationLd(), description })}
 </PageMetadata>
 
 <!-- THE SAME RAIL EVERY OTHER PAGE HAS, so the shell never disappears under the user: the home
@@ -79,7 +85,15 @@
   class:animate-entry={animateEntry}
   style="background-color:{backgroundColor}"
 >
-  <HomeContent alwaysShowTitle />
+  <!-- THE FIRST SCREEN is exactly what the page showed before the about text existed: at least the
+       visible height, its bottom bar at the bottom. The about text starts after it, below the fold
+       wherever the screen is - so when HomeAbout hides itself after hydration, nothing on screen
+       moves - and it is part of this same scroller. It lives here and not in HomeContent because
+       the dormant popup (Home.svelte) shares HomeContent and has no use for it. -->
+  <div class="home-first-screen column">
+    <HomeContent alwaysShowTitle />
+  </div>
+  <HomeAbout />
 </div>
 
 <style>
@@ -99,9 +113,17 @@
     height: 100%;
     max-height: 100dvh;
     padding-left: var(--menu-size);
-    overflow-y: auto;
+    overflow-y: scroll;
     overflow-x: hidden;
     color: var(--background-text);
+  }
+
+  /* `100dvh` and not 100%: the same reason `.home-page` caps itself with dvh above, this height has
+     no definite ancestor to be a percentage of. Never shrunk below its content either, or a short
+     window would push the cards over the about text instead of scrolling. */
+  .home-first-screen {
+    flex-shrink: 0;
+    min-height: 100dvh;
   }
 
   /* THE IN-APP ARRIVAL, gated in the script - see `animateEntry` for why a cold load is excluded.
@@ -181,6 +203,11 @@
     .home-page {
       padding-left: 0;
       padding-bottom: var(--menu-size);
+    }
+
+    /* The rail covers the bottom of the window here, so the first screen ends at its top edge. */
+    .home-first-screen {
+      min-height: calc(100dvh - var(--menu-size));
     }
 
     .home-page :global(.home-content) {

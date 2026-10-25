@@ -34,8 +34,7 @@ export function blogPostingLd(metadata: BlogMetadata) {
     datePublished: blogPostDate(metadata.createdAt),
     author: author
       ? {
-          '@type': 'Person',
-          name: author.name,
+          ...(author.person ?? { '@type': 'Person', name: author.name }),
           ...(author.picture && { image: absoluteUrl(author.picture) }),
         }
       : { '@type': 'Organization', name: game.meta.title },

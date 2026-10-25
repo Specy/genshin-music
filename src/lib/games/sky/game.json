@@ -15,7 +15,8 @@
   },
   "meta": {
     "title": "Sky Music Nightly",
-    "description": "Sky music nightly, a website to play, practice and compose songs",
+    "homeTitle": "Sky Music Nightly - Play and compose Sky: Children of the Light songs",
+    "description": "Play instruments from Sky: Children of the Light in your browser. Learn songs, record your playing or compose your own music. Import MIDI files and export audio or sheets.",
     "canonicalOrigin": "https://sky-music.specy.app",
     "themeColor": "#63aea7",
     "analytics": {

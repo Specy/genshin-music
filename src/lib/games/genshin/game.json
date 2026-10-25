@@ -15,7 +15,8 @@
   },
   "meta": {
     "title": "Genshin Music Nightly",
-    "description": "Genshin music, a website to play, practice and compose songs",
+    "homeTitle": "Genshin Music Nightly - Play and compose Genshin Impact lyre songs",
+    "description": "Play Genshin Impact instruments in your browser. Learn songs, record your playing or compose your own music. Import MIDI files and export audio or sheets.",
     "canonicalOrigin": "https://genshin-music.specy.app",
     "themeColor": "#63aea7",
     "analytics": {
