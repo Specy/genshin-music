@@ -1,8 +1,12 @@
 import {flushSync, mount, unmount} from 'svelte'
 import {afterEach, describe, expect, it} from 'vitest'
+import {readFileSync} from 'node:fs'
+import {createInstance} from 'i18next'
 import Markdown from '../src/lib/components/utility/Markdown.svelte'
 import {escapeMarkdown, parseMarkdown} from '../src/lib/components/utility/markdown'
-import {i18n} from '../src/lib/i18n/i18n'
+import {AVAILABLE_LANGUAGES, i18n} from '../src/lib/i18n/i18n'
+
+const english = JSON.parse(readFileSync('static/locales/en.json', 'utf8'))
 
 // Translated markdown is rendered without ever being treated as markup (see markdown.ts): marked
 // only tokenizes it, and what survives is a fixed set of nodes rendered as escaped text. These
@@ -81,5 +85,28 @@ describe('translated markdown', () => {
             expect(text).not.toContain('{{')
             expect(parseMarkdown(text)[0]).toMatchObject({kind: 'heading', level: 2})
         }
+    })
+
+    it.each(AVAILABLE_LANGUAGES.flatMap(language =>
+        (['genshin', 'sky'] as const).map(game => ({language, game}))
+    ))('renders the $game About text in $language with its links and instrument names intact', async ({language, game}) => {
+        const locale = JSON.parse(readFileSync(`static/locales/${language}.json`, 'utf8'))
+        const translator = createInstance()
+        await translator.init({lng: language, fallbackLng: false, resources: {[language]: locale}, interpolation: {escapeValue: false}})
+        const key = `home:about_${game}` as const
+        const instrumentNames = 'Lyre & <Harp>, A_B'
+        const text = translator.t(key, {APP_NAME: 'Test App', INSTRUMENTS: escapeMarkdown(instrumentNames)})
+        const root = render(text)
+
+        expect(root.querySelector('h2')?.textContent).toContain('Test App')
+        expect(root.querySelectorAll('h3')).toHaveLength(4)
+        expect(root.textContent).toContain(instrumentNames)
+        expect(root.textContent).not.toContain('{{')
+        expect(root.querySelector('harp')).toBeNull()
+        const expectedLinks = [...english.home[`about_${game}`].matchAll(/\]\(([^)]+)\)/g)]
+            .map(match => match[1]).sort()
+        expect([...root.querySelectorAll('a')].map(link => link.getAttribute('href')).sort()).toEqual(expectedLinks)
+        expect(translator.t(`home:title_${game}`)).toBe(locale.home[`title_${game}`])
+        expect(translator.t(`home:description_${game}`)).toBe(locale.home[`description_${game}`])
     })
 })

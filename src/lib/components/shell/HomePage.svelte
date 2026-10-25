@@ -5,6 +5,7 @@
   import { browserHistoryStore } from '$stores/BrowserHistoryStore';
   import { ThemeProvider } from '$core/theme/ThemeProvider.svelte';
   import { game } from '$game';
+  import { t } from '$i18n/binding.svelte';
   import PageMetadata from './PageMetadata.svelte';
   import { jsonLdScriptTag, softwareApplicationLd } from '$lib/seo';
   import SimpleMenu from './SimpleMenu.svelte';
@@ -50,17 +51,23 @@
   // Same fade the popup used over the page it covered: here it lets AppBackground's image read
   // through the page's own ground instead of a flat fill.
   const backgroundColor = $derived(ThemeProvider.get('background').fade(0.1).toString());
+  const metadataKeys = {
+    genshin: { title: 'home:title_genshin', description: 'home:description_genshin' },
+    sky: { title: 'home:title_sky', description: 'home:description_sky' },
+  } as const;
+  const title = $derived(t(metadataKeys[game.id].title));
+  const description = $derived(t(metadataKeys[game.id].description));
 </script>
 
-<PageMetadata text={game.meta.homeTitle} description={game.meta.description}>
+<PageMetadata text={title} {description}>
   <!-- The page's schema.org description. {@html} is the only way to emit a <script> from a
        component: <svelte:element this="script"> renders nothing in Svelte, and a literal
        script tag here is taken as the component's own instance script. Safe because the
-       payload is machine generated from game.json and serializeJsonLd escapes < > and &, so
-       nothing interpolated can close the tag - jsonLdScriptTag ($lib/seo) assembles it.
+       payload combines app metadata with the translated description. serializeJsonLd escapes
+       < > and &, so nothing interpolated can close the tag - jsonLdScriptTag ($lib/seo) assembles it.
        test/i18n.test.ts allowlists this one call site and asserts it interpolates no t(). -->
   <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-  {@html jsonLdScriptTag(softwareApplicationLd())}
+  {@html jsonLdScriptTag({ ...softwareApplicationLd(), description })}
 </PageMetadata>
 
 <!-- THE SAME RAIL EVERY OTHER PAGE HAS, so the shell never disappears under the user: the home
@@ -106,7 +113,7 @@
     height: 100%;
     max-height: 100dvh;
     padding-left: var(--menu-size);
-    overflow-y: auto;
+    overflow-y: scroll;
     overflow-x: hidden;
     color: var(--background-text);
   }

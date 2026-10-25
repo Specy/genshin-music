@@ -1,7 +1,7 @@
 {
   "name": "Sky Music Nightly",
   "short_name": "Sky Music Nightly",
-  "description": "Play, practice and compose songs for the Sky: Children of the Light piano, harp, flute and over 40 other instruments. Installing the app opens it fullscreen, like a native app.",
+  "description": "Play instruments from Sky: Children of the Light in your browser. Learn songs, record your playing or compose your own music. Import MIDI files and export audio or sheets.",
   "icons": [
     {
       "src": "favicon.ico",

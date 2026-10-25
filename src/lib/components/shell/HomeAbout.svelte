@@ -85,6 +85,7 @@
     padding: 2rem;
     border-top: 1px solid var(--secondary);
     color: var(--background-text);
+    line-height: 1.6;
   }
 
   @media (orientation: portrait) and (max-width: 920px) {
