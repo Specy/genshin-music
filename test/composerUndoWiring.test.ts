@@ -84,8 +84,8 @@ describe('the song menu rename is not an Undo Step', () => {
 
 describe('the layer settings popup collapses a gesture into one Step', () => {
   it('brackets the continuous inputs from every end they can have', () => {
-    //ungrouped, one volume drag lands ~125 Steps: past UNDO_HISTORY_CAP, so the session's real
-    //edits are evicted and the Savepoint stranded
+    //ungrouped, one volume drag lands ~125 Steps: half of UNDO_HISTORY_CAP, so two drags evict the
+    //session's real edits and strand the Savepoint
     expect(popup).toContain('onpointerdown={startVolumeGroup}');
     expect(popup).toContain('onpointerup={endVolumeGroup}');
     expect(popup).toContain('onpointercancel={endVolumeGroup}');

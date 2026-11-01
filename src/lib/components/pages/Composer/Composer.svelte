@@ -954,8 +954,8 @@
    * THE LAYER SETTINGS POPUP'S CONTINUOUS INPUTS (design §5), the second gesture on this surface
    * that spans time rather than one call: its volume slider and alias field emit one
    * `onInstrumentChange` per tick and every one of them is a whole `setInstrument` Step. One drag
-   * would land ~125 of them - past the cap, evicting the session's real edits and stranding the
-   * Savepoint - so the popup brackets the gesture and it collapses into one Step, the same way the
+   * would land ~125 of them - half the cap, so two drags evict the session's real edits and strand
+   * the Savepoint - so the popup brackets the gesture and it collapses into one Step, the same way the
    * Duration Hold's does.
    *
    * The depth check is the composer answering what the container cannot see, exactly as

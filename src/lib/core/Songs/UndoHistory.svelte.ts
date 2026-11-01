@@ -36,8 +36,14 @@ export interface UndoStep<D> {
     label?: string
 }
 
-/** Steps kept before oldest-eviction. In-memory only; the ceiling is bounded RAM, not history depth. */
-export const UNDO_HISTORY_CAP = 100
+/**
+ * Steps kept before oldest-eviction. In-memory only; the ceiling is bounded RAM, not history depth:
+ * a Step costs what it changed (~0.7 KB to add a note, ~100 bytes per note a whole-song rewrite
+ * moves), and undo/redo time follows the Step's size, never the depth. Measured 2026-11-01: 256
+ * keeps a long session's ordinary edits; the worst case, 256 whole-song Basepoint changes on a
+ * 20,000-note song, holds about half a gigabyte. Raised from 100 at the user's request.
+ */
+export const UNDO_HISTORY_CAP = 256
 
 /** The position before the oldest recorded step - where a freshly installed (just-loaded, just-saved) song sits. */
 const BOTTOM = Symbol('undo-history-bottom')

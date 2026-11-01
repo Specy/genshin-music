@@ -114,8 +114,9 @@
   /**
    * ONE GESTURE, ONE UNDO STEP (design §5). The mix sliders and the alias field emit an
    * `onChange` PER TICK and each one is a whole `setInstrument` - one Step each. Ungrouped, a
-   * single drag from 0 to 125 lands ~125 Steps: past the history's cap, so the session's real edits
-   * are evicted from the bottom, the Savepoint is stranded, and undoing the drag costs 125 presses.
+   * single drag from 0 to 125 lands ~125 Steps: half the history's cap, so two drags evict the
+   * session's real edits from the bottom, the Savepoint is stranded, and undoing one drag costs 125
+   * presses.
    *
    * The brackets are INDEPENDENT and idempotent rather than one shared flag, because they
    * overlap: a pointerdown on the slider is dispatched before the alias field's blur, so a single
