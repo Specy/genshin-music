@@ -10,7 +10,7 @@ import {
 } from './imports'
 import {buildComposedSong} from './builders'
 import {expectGolden, readFixture} from './golden'
-import {basepointOffset, gridRowForNumber, noteIdToButton, numberToNominal, registerShift, scaleStepNumber} from '$core/Songs/noteIds'
+import {basepointOffset, gridRowForNumber, noteIdToButton, scaleStepNumber} from '$core/Songs/noteIds'
 import {rewriteForSwap} from '$core/Songs/noteNumberTransforms'
 import {isFixedBreakpoint, withFixedBreakpoints} from '$core/Songs/breakpoints'
 
@@ -345,25 +345,15 @@ describe('an instrument swap rewrites the track button-preservingly', () => {
         })))
     const rowMoves = ({reflavored, host}: (typeof offGridPairs)[number]) =>
         gridRowForNumber(host, 'C', reflavored.sounding).row !== CANONICAL_NOTE_IDS.indexOf(reflavored.nominal)
-    /**
-     * A per-button FLAVORED instrument (genshin's Vintage-Lyre): no register, so the number it
-     * sounds is the number it reads and the strand finds that key. A REGISTERED one reads a foreign
-     * number through its register instead — see the test after next.
-     */
-    const flavored = ({tuned}: (typeof offGridPairs)[number]) => registerShift(tuned) === 0
-    /** A register difference that carries the strand somewhere still on the MIDI axis. */
-    const carriedOnAxis = ({tuned, reflavored, host}: (typeof offGridPairs)[number]) => {
-        if (registerShift(tuned) === registerShift(host)) return false
-        const carried = numberToNominal(host, 'C', reflavored.sounding) + registerShift(tuned)
-        return carried >= 0 && carried <= 127
-    }
 
-    it.runIf(offGridPairs.some((pair) => rowMoves(pair) && flavored(pair)))('an OFF-SCALE strand un-strands onto the tuned button that sounds it, moving to its row', () => {
+    it.runIf(offGridPairs.some(rowMoves))('an OFF-SCALE strand un-strands onto the tuned button that sounds it, moving to its row', () => {
         //the Lyre -> Vintage-Lyre case the composer smoke pass walks through: a tuned instrument's
         //Sounding Pitch, stored on an untuned track, is not a grid id at all — it draws on the
         //nearest row with a ♯/♭ hint. Swapping the track to the instrument that OWNS that pitch
         //gives it a button, and the note moves to the row that button's nominal id prints.
-        const {tuned, reflavored, host} = offGridPairs.find((pair) => rowMoves(pair) && flavored(pair))!
+        //(Sky states it at octave distance: Contrabass's D1 = 26 is nearest the C row, its button
+        //prints the D row.)
+        const {tuned, reflavored, host} = offGridPairs.find(rowMoves)!
         const before = gridRowForNumber(host, 'C', reflavored.sounding)
         expect(before.stranded).toBe(true)
         expect(before.accidental).not.toBe(0)
@@ -384,25 +374,25 @@ describe('an instrument swap rewrites the track button-preservingly', () => {
         expect(after.row).not.toBe(before.row)
     })
 
-    it.runIf(offGridPairs.some(carriedOnAxis))('an OUT-OF-GRID strand moves with a registered instrument and keeps its row, still stranded', () => {
-        //the octave-register counterpart (sky: a registered instrument's low Sounding Pitch stored on
-        //an unregistered track, swapped onto that instrument). A registered instrument reads a
-        //foreign number through its register (noteIds.registerShift),
-        //so the swap carries the strand by the two registers' difference, like every voiced note
-        //beside it: same row, same hint, still silent. Until 2026-11-01 it kept its number, which
-        //the register then read as some OTHER key's nominal - the octave jump a user reported.
-        const {tuned, reflavored, host} = offGridPairs.find(carriedOnAxis)!
+    it.runIf(offGridPairs.some((pair) => !rowMoves(pair)))('an OUT-OF-GRID strand un-strands onto the register-shifted button without leaving its row', () => {
+        //the octave-register counterpart (sky: number 24 = C1 on a Piano track): the pitch class
+        //already names the row the note is nearest to, so giving it a button flips stranded and
+        //clears the accidental hint while the row stays exactly where the user sees it.
+        const {tuned, reflavored, host} = offGridPairs.find((pair) => !rowMoves(pair))!
         const before = gridRowForNumber(host, 'C', reflavored.sounding)
         expect(before.stranded).toBe(true)
         expect(before.accidental).not.toBe(0)
 
-        const song = new ComposedSong('out-of-grid strand', [host])
+        const song = new ComposedSong('out-of-grid un-strand', [host])
         song.addNoteAt(0, 0, reflavored.sounding)
         song.setInstrument(0, new InstrumentData({name: tuned}))
 
-        const carried = numberToNominal(host, 'C', reflavored.sounding) + registerShift(tuned)
-        expect(song.columns[0].notesOfTrack(0)[0].id).toBe(carried)
-        expect(gridRowForNumber(tuned, 'C', carried)).toEqual(before)
+        expect(song.columns[0].notesOfTrack(0)[0].id).toBe(reflavored.sounding)
+        expect(gridRowForNumber(tuned, 'C', reflavored.sounding)).toEqual({
+            row: before.row,
+            stranded: false,
+            accidental: 0,
+        })
     })
 
     /**

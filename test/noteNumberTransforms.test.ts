@@ -6,8 +6,8 @@ import {describe, expect, it} from 'vitest'
 import {CANONICAL_NOTE_IDS, INSTRUMENTS, INSTRUMENTS_DATA, PITCHES, RecordedNote} from './imports'
 import type {ColumnNote} from './imports'
 import {
-    basepointOffset, getNoteIdTable, getSoundingTable, gridRowForNumber, nominalToNumber, numberToButton,
-    numberToNominal, registerShift, songGridSlotForId,
+    addressableSpan, basepointOffset, getNoteIdTable, getSoundingTable, gridRowForNumber, nominalToNumber,
+    numberToButton, numberToNominal, registerShift, songGridSlotForId, strandedRow,
 } from '../src/lib/core/Songs/noteIds'
 import {
     basepointDelta, migrateTrackNotes, rewriteForBasepoint, rewriteForSwap,
@@ -211,7 +211,7 @@ describe('rewriteForSwap', () => {
     it('restores every number when a swap between two rigid instruments is swapped back, at every Basepoint', () => {
         for (const a of RIGID) {
             //every row a track on `a` can hold: its buttons, and the grid rows it has no key for
-            //(stranded, carried by its own register)
+            //(ROW strands, carried by its own register - noteIds.strandedRow)
             const rows = [...new Set([...getNoteIdTable(a), ...CANONICAL_NOTE_IDS])]
             for (const b of RIGID) {
                 for (const pitch of ALL_PITCHES) {
@@ -254,9 +254,9 @@ describe('rewriteForSwap', () => {
             .filter(row => !getNoteIdTable(host).includes(row) && getNoteIdTable(to).includes(row))
             .map(row => ({host, to, row}))))
 
-    it.runIf(UNSTRAND.length > 0)('carries a STRANDED note by the registers\' difference, and un-strands it where its row has a key', () => {
-        //a strand is a row the instrument has no key on: it moves with its track like every voiced
-        //note beside it, and finds a button exactly when the new instrument has one on that row
+    it.runIf(UNSTRAND.length > 0)('carries a ROW strand by the registers\' difference, and un-strands it where its row has a key', () => {
+        //a row strand is a row the instrument has no key on: it moves with its track like every
+        //voiced note beside it, and finds a button exactly when the new instrument has one there
         for (const {host, to, row} of UNSTRAND) {
             const stranded = nominalToNumber(host, 'C', row)
             expect(numberToButton(host, 'C', stranded)).toBe(-1)
@@ -266,15 +266,48 @@ describe('rewriteForSwap', () => {
         }
     })
 
-    it.runIf(REGISTERED.some((name: string) => registerShift(name) < 0))('refuses to carry a strand off the MIDI axis, keeping its number instead', () => {
-        //a Pro View note octaves below its instrument, swapped onto one registered octaves lower:
-        //the carried number would be negative, which no format can hold
-        const low = REGISTERED.find((name: string) => registerShift(name) < 0)!
-        const number = 0
-        expect(numberToButton(UNTUNED, 'C', number)).toBe(-1)
-        const [swapped] = rewriteForSwap([number], UNTUNED, low, 'C')
-        expect(swapped).toBeGreaterThanOrEqual(0)
-        expect(swapped).toBeLessThanOrEqual(127)
+    // PITCH STRANDS: every stranded number that does not stand for a grid row its instrument lacks
+    // (a paste between instruments, a Pro View placement, a cross-game import). They keep their
+    // pitch through a swap, exactly as every strand did before registers (ADR-0007, ADR-0011).
+    it('passes every PITCH strand through a swap unchanged, at every Basepoint', () => {
+        const span = addressableSpan()
+        for (const pitch of ['C', 'Gb', 'B'] as Pitch[]) {
+            for (const a of INSTRUMENTS) {
+                const strands: number[] = []
+                for (let number = span.min; number <= span.max; number++) {
+                    if (numberToButton(a, pitch, number) === -1 && strandedRow(a, pitch, number) === null) strands.push(number)
+                }
+                for (const b of INSTRUMENTS) expect(rewriteForSwap(strands, a, b, pitch), `${a} -> ${b} at ${pitch}`).toEqual(strands)
+            }
+        }
+    })
+
+    it('lets a part pasted onto the wrong layer play once that layer becomes its instrument', () => {
+        //THE FIX-UP a register must not break (review of the 2026-11-01 fix): paste keeps pitch, so a
+        //low part pasted onto a Piano layer is all strands there - and swapping the layer to the
+        //instrument it was written for voices every one of them, at the pitch it was pasted at
+        for (const instrument of INSTRUMENTS) {
+            const part = getSoundingTable(instrument).filter(sounding =>
+                numberToButton(INSTRUMENTS[0], 'C', sounding) === -1
+                && strandedRow(INSTRUMENTS[0], 'C', sounding) === null)
+            const swapped = rewriteForSwap(part, INSTRUMENTS[0], instrument, 'C')
+            expect(swapped, instrument).toEqual(part)
+            for (const number of swapped) expect(numberToButton(instrument, 'C', number)).not.toBe(-1)
+        }
+    })
+
+    it('carries every grid row by every register onto the MIDI axis', () => {
+        //what lets nominalToNumber carry a row strand without an axis fallback: a future register
+        //that broke this would fail here, not write a number no format can hold
+        for (const name of INSTRUMENTS) {
+            for (const pitch of ALL_PITCHES) {
+                for (const row of CANONICAL_NOTE_IDS) {
+                    const number = nominalToNumber(name, pitch, row)
+                    expect(number).toBeGreaterThanOrEqual(0)
+                    expect(number).toBeLessThanOrEqual(127)
+                }
+            }
+        }
     })
 
     it('returns a new array and never mutates its input', () => {
@@ -379,15 +412,13 @@ describe('migrateTrackNotes', () => {
         }
     })
 
-    it('never migrates off the MIDI axis: a register that would carry an id past 0..127 carries it as itself', () => {
-        const name = REGISTERED.find((candidate: string) => registerShift(candidate) < 0) ?? INSTRUMENTS[0]
-        const shift = registerShift(name)
-        //low enough that the register would take it below 0, and on no button
-        const id = Math.max(0, -shift - 1)
-        expect(getNoteIdTable(name).includes(id)).toBe(false)
-        const [migrated] = migrateTrackNotes([id], name, 'C')
-        expect(migrated).toBe(shift < 0 ? id : id + shift)
-        expect(migrated).toBeGreaterThanOrEqual(0)
+    it('migrates an id that is no grid row as itself: it has no row to strand on', () => {
+        //only a malformed v4 file holds one; carried by a register it could leave the MIDI axis
+        const offGrid = Math.min(...CANONICAL_NOTE_IDS) - 13
+        expect(songGridSlotForId(offGrid)).toBe(-1)
+        for (const name of INSTRUMENTS) {
+            expect(migrateTrackNotes([offGrid], name, 'D')).toEqual([offGrid + basepointOffset('D')])
+        }
     })
 
     it('returns a new array and never mutates its input', () => {

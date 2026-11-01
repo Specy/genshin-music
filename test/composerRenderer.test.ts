@@ -710,7 +710,6 @@ import {
     gridRowForNumber,
     nominalToNumber,
     numberToButton,
-    registerShift,
 } from '$core/Songs/noteIds'
 //the note icon's cache key, which is where the OFF-SCALE hint lives: one texture per (layer
 //status, accidental), so the sprite that carries the ♯/♭ is the note's own sprite
@@ -906,10 +905,7 @@ function strandingPair(): {instrument: (typeof INSTRUMENTS)[number], number: num
             //candidate instrument can voice it, which is what "stranded on its own track" means
             const number = numberOf(button, 0)
             const placement = gridRowForNumber(instrument, 'C', number)
-            //accidental 0: stranded ON ITS OWN ROW, which is the scenario the callers draw. On a
-            //registered instrument a number some other track voices can read as a nominal octaves
-            //off the grid there (noteIds.registerShift), and that is the off-scale case instead
-            if (placement.row !== -1 && placement.stranded && placement.accidental === 0) {
+            if (placement.row !== -1 && placement.stranded) {
                 return {instrument, number, row: placement.row}
             }
         }
@@ -3442,18 +3438,16 @@ describe('an off-scale note draws the accidental hint into its own icon', () => 
         }
     })
 
-    //PER-BUTTON flavored instruments only (genshin's Vintage-Lyre): a REGISTERED one reads a
-    //foreign number through its register, so the swap carries the strand by the registers'
-    //difference and it un-strands only where its row has a key (noteNumberTransforms.test.ts)
-    const isFlavored = (name: string) => registerShift(name) === 0
-        && INSTRUMENTS_DATA[name].notes.some(note => note.pitched && note.sounding !== note.nominal)
-    it.runIf(INSTRUMENTS.some(isFlavored))('an instrument swap that UN-STRANDS the note takes the hint off it', async () => {
+    it.runIf(INSTRUMENTS.some(name =>
+        INSTRUMENTS_DATA[name].notes.some(note => note.pitched && note.sounding !== note.nominal)
+    ))('an instrument swap that UN-STRANDS the note takes the hint off it', async () => {
         //THE UN-STRAND FLOW, END TO END ON THE CANVAS, and the composer smoke pass in miniature:
         //a tuned instrument's Sounding Pitch stored on an untuned track is off-scale there - drawn
         //on its nearest row, dimmed, marked. Swapping the track to the instrument that owns that
         //pitch passes the number through untouched and gives it a button, so the same note becomes
         //an ordinary voiced one on the row that button's nominal id prints.
-        const tuned = INSTRUMENTS.find(isFlavored)!
+        const tuned = INSTRUMENTS.find(name =>
+            INSTRUMENTS_DATA[name].notes.some(note => note.pitched && note.sounding !== note.nominal))!
         const reflavored = INSTRUMENTS_DATA[tuned].notes.find(note =>
             note.pitched && note.sounding !== note.nominal && !CANONICAL_NOTE_IDS.includes(note.sounding))
         if (!reflavored) return

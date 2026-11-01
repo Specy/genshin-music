@@ -471,8 +471,8 @@ export class VsrgSong extends Song<VsrgSong, SerializedVsrgSong, 3> {
      * OLD effective Basepoint:
      *  - a changed NAME rewrites button-preservingly through nominal correspondence, so
      *    Lyre -> Vintage-Lyre re-flavors (the D button becomes the Db button) and a nominal the
-     *    new instrument has no button for keeps its row, carried by the register, now visibly
-     *    stranded;
+     *    new instrument has no button for becomes a row strand there, on its own row (a pitch
+     *    strand passes through unchanged - noteIds.strandedRow);
      *  - a changed BASEPOINT OVERRIDE then moves the whole track by the interval.
      * The order is load-bearing: a swap is not a transposition, and doing the interval first would
      * ask the OLD instrument to voice numbers that are already at the NEW Basepoint.
