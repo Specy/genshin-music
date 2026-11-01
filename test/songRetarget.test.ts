@@ -9,7 +9,7 @@ import {describe, expect, it} from 'vitest'
 import {INSTRUMENTS, InstrumentData, RecordedNote, RecordedSong, isTrackAudible} from './imports'
 import {retargetInstruments, retargetSong} from '../src/lib/core/Songs/songRetarget'
 import {
-    buttonToNumber, getNoteIdTable, numberToButton, resolvePlayerNoteButtons,
+    basepointOffset, buttonToNumber, getNoteIdTable, numberToButton, registerShift, resolvePlayerNoteButtons,
 } from '../src/lib/core/Songs/noteIds'
 import {planSongRender} from '$lib/audio/OfflineSongRenderer'
 import {instrumentIdentityKey, variantSettingOf} from '$lib/games/instrumentSettings'
@@ -99,7 +99,7 @@ describe('retargetSong', () => {
         expect(retargeted.instruments[0].name).toBe(TWIN)
     })
 
-    it('onto a narrower instrument: same key where it has one, passed through (and moved) where not', () => {
+    it('onto a narrower instrument: same key where it has one, stranded on its own row where not', () => {
         const song = everyButtonSong('C')
         const retargeted = retargetSong(song, target({name: NARROW, pitch: 'D'}))
         const sourceNominals = getNoteIdTable(DEFAULT)
@@ -113,9 +113,11 @@ describe('retargetSong', () => {
                 expect(targetNominals[numberToButton(NARROW, 'D', note.id)]).toBe(nominal)
                 mapped++
             } else {
-                //no key to go to: the number carries on as it was, moved by the Basepoint change
-                //like every other note (a composer swap leaves it exactly this way)
-                expect(note.id).toBe(song.notes[index].id + 2)
+                //no key to go to: the note keeps its row, carried by the target's register, and
+                //strands there - moved by the Basepoint change like every other note (a composer
+                //swap leaves it exactly this way). Never voiced by some other key of the target
+                expect(note.id).toBe(nominal + registerShift(NARROW) + basepointOffset('D'))
+                expect(numberToButton(NARROW, 'D', note.id)).toBe(-1)
                 passed++
             }
         })

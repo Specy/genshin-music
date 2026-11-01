@@ -15,7 +15,7 @@ import {flushSync, mount, unmount} from 'svelte'
 import {afterEach, beforeEach, describe, expect, it} from 'vitest'
 import InstrumentSettingsPopup from '../src/lib/components/pages/Composer/InstrumentSettingsPopup.svelte'
 import {ComposedSong, INSTRUMENTS, INSTRUMENTS_DATA, InstrumentData} from './imports'
-import {gridRowForNumber, noteIdToButton, numberToButton} from '$core/Songs/noteIds'
+import {gridRowForNumber, nominalToNumber, noteIdToButton, numberToButton} from '$core/Songs/noteIds'
 
 type Mounted = ReturnType<typeof mount>
 
@@ -23,9 +23,6 @@ const notesOf = (name: string) => INSTRUMENTS_DATA[name as keyof typeof INSTRUME
 /** Roles by capability, never by game id — the same derivations the transform tests use. */
 const TUNED = INSTRUMENTS.filter((name: string) =>
     notesOf(name).some(note => note.pitched && note.sounding !== note.nominal))
-/** An instrument that STRANDS at least one number the default one enters — the swap's other side. */
-const NARROW = INSTRUMENTS.find((name: string) =>
-    notesOf(INSTRUMENTS[0]).some(note => numberToButton(name, 'C', note.sounding) === -1))!
 
 describe('the composer layer panel rewrites the track it edits', () => {
     let target: HTMLDivElement
@@ -92,20 +89,25 @@ describe('the composer layer panel rewrites the track it edits', () => {
             .toBe(noteIdToButton(tuned, reflavored.nominal))
     })
 
-    it('a swap passes a stranded number through, and the panel is where it UN-STRANDS', () => {
-        //the phase-D un-strand flow through the real control: a number the current instrument cannot
-        //voice keeps its value across the swap and finds a button on the new one
-        const stranded = notesOf(INSTRUMENTS[0]).map(note => note.sounding)
-            .find(number => numberToButton(NARROW, 'C', number) === -1)!
-        const song = new ComposedSong('panel un-strand', [NARROW])
+    it('a swap carries a stranded note on its row, and the panel is where it UN-STRANDS', () => {
+        //the phase-D un-strand flow through the real control: a note on a row the current instrument
+        //has no key for is stranded there, and swapping to one that HAS a key on that row voices it.
+        //Found by capability: an instrument missing a grid row the default instrument plays
+        const host = INSTRUMENTS.find((name: string) =>
+            notesOf(INSTRUMENTS[0]).some(note => noteIdToButton(name, note.nominal) === -1))!
+        const row = notesOf(INSTRUMENTS[0]).find(note => noteIdToButton(host, note.nominal) === -1)!.nominal
+        const stranded = nominalToNumber(host, 'C', row)
+        const song = new ComposedSong('panel un-strand', [host])
         song.addNoteAt(0, 0, stranded)
-        expect(gridRowForNumber(NARROW, 'C', stranded).stranded).toBe(true)
+        expect(gridRowForNumber(host, 'C', stranded).stranded).toBe(true)
 
         openPanel(song)
         choose(INSTRUMENTS[0], INSTRUMENTS[0])
 
-        expect(song.columns[0].notes[0].id).toBe(stranded)
-        expect(gridRowForNumber(INSTRUMENTS[0], 'C', stranded).stranded).toBe(false)
+        const voiced = song.columns[0].notes[0].id
+        expect(voiced).toBe(nominalToNumber(INSTRUMENTS[0], 'C', row))
+        expect(gridRowForNumber(INSTRUMENTS[0], 'C', voiced))
+            .toEqual({row: gridRowForNumber(host, 'C', stranded).row, stranded: false, accidental: 0})
     })
 
     it('a per-layer Basepoint override moves the track by the interval', () => {

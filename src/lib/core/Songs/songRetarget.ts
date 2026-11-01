@@ -14,9 +14,9 @@
 //   2. the Basepoint change (rewriteForBasepoint): the same buttons, at the user's Basepoint.
 //
 // That is what playing a sheet on another instrument in-game is, and what the old setting did back
-// when songs stored buttons. A note the user's instrument has no key for passes through the swap
-// and strands, silent - exactly what a composer swap leaves it as, and never approximated onto some
-// other key.
+// when songs stored buttons. A note the user's instrument has no key for keeps its row through the
+// swap and strands, silent - exactly what a composer swap leaves it as, and never approximated onto
+// some other key.
 //
 // FOR ONE RUN ONLY: the player retargets the per-run clone it builds anyway, never the stored song.
 // Nothing is dropped and nothing reordered - the note list keeps its length and order - so the

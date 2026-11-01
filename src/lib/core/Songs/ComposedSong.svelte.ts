@@ -1037,10 +1037,12 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 5> 
      * VsrgSong's #rewriteForInstrumentChange states for hit-object note SETS. Returns whether
      * anything merged, because a merged span may now overlap a later note.
      *
-     * setInstrument needs it because NEITHER whole-track rewrite is injective: a number the old
-     * instrument cannot voice passes through a swap unchanged (rewriteForSwap's documented
-     * pass-through) and can land exactly on a swapped neighbour - on genshin,
-     * rewriteForSwap([73, 74], 'Vintage-Lyre', 'Lyre', 'C') is [74, 74]. Two notes at the same
+     * setInstrument needs it because NEITHER whole-track rewrite is injective on a per-button
+     * TUNED instrument: a number the old instrument cannot voice keeps its virtual nominal through
+     * a swap (rewriteForSwap) and can land exactly on a swapped neighbour - on genshin,
+     * rewriteForSwap([73, 74], 'Vintage-Lyre', 'Lyre', 'C') is [74, 74]. (Between untuned and
+     * registered instruments the swap is a bijection and merges nothing; until 2026-11-01 it was
+     * not, and this pass deleted a registered instrument's octave pairs.) Two notes at the same
      * (track, number) in one column double-trigger at playback, and only the FIRST of them is
      * reachable through findNote/removeNote, so the second is a note the user can hear but not
      * select, delete or re-span - until a save/reload merges it away silently.

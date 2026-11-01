@@ -13,7 +13,8 @@ import {
 } from './imports'
 import {expectGolden, readFixture} from './golden'
 import {
-    basepointOffset, getNoteIdTable, getSoundingTable, gridRowForNumber, numberToButton,
+    basepointOffset, getNoteIdTable, getSoundingTable, gridRowForNumber, numberToButton, numberToNominal,
+    registerShift,
 } from '$core/Songs/noteIds'
 import type {Pitch} from '$core/legacyConfig'
 
@@ -252,12 +253,20 @@ describe('a vsrg instrument swap rewrites the track', () => {
         })))
     const rowMoves = ({reflavored, host}: (typeof offGridPairs)[number]) =>
         gridRowForNumber(host, 'C', reflavored.sounding).row !== CANONICAL_NOTE_IDS.indexOf(reflavored.nominal)
+    /** Per-button flavor (Vintage-Lyre): the pitch IS its number there, so the strand finds the key. */
+    const flavored = ({tuned}: (typeof offGridPairs)[number]) => registerShift(tuned) === 0
+    /** A register difference that carries the strand somewhere still on the MIDI axis. */
+    const carriedOnAxis = ({tuned, reflavored, host}: (typeof offGridPairs)[number]) => {
+        if (registerShift(tuned) === registerShift(host)) return false
+        const carried = numberToNominal(host, 'C', reflavored.sounding) + registerShift(tuned)
+        return carried >= 0 && carried <= 127
+    }
 
-    it.runIf(offGridPairs.some(rowMoves))('un-strands an OFF-SCALE number onto the tuned button that sounds it', () => {
+    it.runIf(offGridPairs.some((pair) => rowMoves(pair) && flavored(pair)))('un-strands an OFF-SCALE number onto the tuned button that sounds it', () => {
         //the vsrg twin of ComposedSong's row: a tuned instrument's Sounding Pitch is not a grid id
         //at all, so on an untuned track it draws on the NEAREST row with a ♯/♭ hint. Swapping to the
         //instrument that owns that pitch gives it a button and moves it to that button's own row.
-        const {tuned, reflavored, host} = offGridPairs.find(rowMoves)!
+        const {tuned, reflavored, host} = offGridPairs.find((pair) => rowMoves(pair) && flavored(pair))!
         const before = gridRowForNumber(host, 'C', reflavored.sounding)
         expect(before).toMatchObject({stranded: true})
         expect(before.accidental).not.toBe(0)
@@ -273,21 +282,21 @@ describe('a vsrg instrument swap rewrites the track', () => {
         expect(after.row).not.toBe(before.row)
     })
 
-    it.runIf(offGridPairs.some((pair) => !rowMoves(pair)))('un-strands an OUT-OF-GRID number onto the register-shifted button, keeping its row', () => {
-        //the octave-register counterpart (sky: 24 = C1 on a Piano track): the pitch class already
-        //names the nearest row, so the un-strand flips stranded and clears the hint in place.
-        const {tuned, reflavored, host} = offGridPairs.find((pair) => !rowMoves(pair))!
+    it.runIf(offGridPairs.some(carriedOnAxis))('carries an OUT-OF-GRID strand by the registers\' difference, keeping its row and its hint', () => {
+        //the octave-register counterpart (sky: a registered instrument's low Sounding Pitch on an
+        //unregistered track, swapped onto that instrument): a registered instrument reads a
+        //foreign number through its register, so the strand moves
+        //with the track like every voiced note and stays a strand on the row it was drawn on - it
+        //is never voiced by the key that merely shares its number (noteIds.registerShift)
+        const {tuned, reflavored, host} = offGridPairs.find(carriedOnAxis)!
         const before = gridRowForNumber(host, 'C', reflavored.sounding)
         expect(before).toMatchObject({stranded: true})
         expect(before.accidental).not.toBe(0)
 
         const song = songOn(host, [reflavored.sounding])
-        expect(swapTo(song, tuned)).toEqual([reflavored.sounding])
-        expect(gridRowForNumber(tuned, 'C', reflavored.sounding)).toEqual({
-            row: before.row,
-            stranded: false,
-            accidental: 0,
-        })
+        const carried = numberToNominal(host, 'C', reflavored.sounding) + registerShift(tuned)
+        expect(swapTo(song, tuned)).toEqual([carried])
+        expect(gridRowForNumber(tuned, 'C', carried)).toEqual(before)
     })
 
     it('applies the swap at the OLD Basepoint when the same save also moves the override', () => {

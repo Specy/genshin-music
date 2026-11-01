@@ -236,7 +236,10 @@ function adjacentGridDegree(degree: number, direction: 1 | -1): number {
  *
  * IT WORKS IN VIRTUAL NOMINAL SPACE (`number − basepointOffset`) because the grid's degrees are
  * nominal ids: at Basepoint Db the C button's number is 73, and stepping it as though 73 were the
- * scale degree would move it by the wrong interval. The offset comes back off the answer.
+ * scale degree would move it by the wrong interval. The offset comes back off the answer. The
+ * instrument's registerShift is deliberately NOT removed as well, though numberToNominal removes
+ * it: it is whole octaves and this scale repeats every octave, so stepping with or without it
+ * lands on the same number — and leaving it out keeps this function instrument-free.
  *
  * `steps` is signed (positive = up) and may be any integer; a grid with no pitch classes at all
  * (impossible for a registry-validated game) answers the input unchanged rather than looping.
@@ -611,6 +614,44 @@ export function basepointOffset(pitch: Pitch): number {
     return PITCH_TO_INDEX.get(pitch) ?? 0
 }
 
+// Build-time like the tables it is read off, so each instrument's answer is paid once.
+// eslint-disable-next-line svelte/prefer-svelte-reactivity -- build-time constants cache
+const registerShiftCache = new Map<string, number>()
+
+/**
+ * The whole octaves an instrument's `register` translates it by (registry.normalizeNotes): -36 for
+ * Sky's Contrabass, -12 for its handpans, 0 for every instrument without a register — Vintage-Lyre
+ * included, whose semitone flavors are per-button `baseNote`s and not a register.
+ *
+ * WHY IT EXISTS: it is the offset between an instrument's NOMINAL axis and its Note Numbers for a
+ * nominal it has NO button for. A button carries its own answer (its Sounding Pitch); a missing one
+ * has nothing to ask but the register, which moves the whole instrument rigidly. Reading a missing
+ * nominal as itself instead (number = nominal + offset, the rule before this) lands it, on a
+ * registered instrument, on the Sounding Pitch of the button an octave away — HandPan's F5 button
+ * sounds F4 — so a note meant to strand was silently voiced by another key, and the next swap
+ * carried that key's nominal onward: Piano → HandPan → Piano moved every C4, F4 and G4 up an octave
+ * (user report 2026-11-01).
+ *
+ * Recovered from ONE button rather than stored: a button's `sounding − nominal` is the register's
+ * displacement plus its baseNote flavor, and the registry bounds that flavor to ±5 semitones
+ * (nearestChromaticMatch rejects the tritone) and an Assigned Button's to 0, so rounding to the
+ * octave recovers the displacement exactly from whichever button is asked. noteIds.test.ts pins
+ * that every button of every instrument agrees.
+ */
+export function registerShift(instrumentName: RuntimeInstrumentName): number {
+    const name = isInstrumentName(instrumentName) ? instrumentName : DEFAULT_INSTRUMENT
+    const cached = registerShiftCache.get(name)
+    if (cached !== undefined) return cached
+    const nominal = getNoteIdTable(name)[0]
+    const sounding = getSoundingTable(name)[0]
+    //`+ 0` turns Math.round's -0 into 0, which `toBe(0)` and Object.is would otherwise tell apart
+    const shift = nominal === undefined || sounding === undefined
+        ? 0
+        : Math.round((sounding - nominal) / 12) * 12 + 0
+    registerShiftCache.set(name, shift)
+    return shift
+}
+
 /** The Note Number a button enters at this Basepoint, or null past the instrument's range. */
 export function buttonToNumber(instrumentName: RuntimeInstrumentName, pitch: Pitch, button: number): number | null {
     const sounding = getSoundingTable(instrumentName)[button]
@@ -642,31 +683,49 @@ export type GridRowPlacement = {row: number, stranded: boolean, accidental: -1 |
 /**
  * A Nominal Id lifted onto the absolute axis for one instrument at one Basepoint (spec §4's
  * migration formula, which is the same arithmetic wherever a NOMINAL is the thing being named:
- * legacy decode, an instrument-space grid tool, the MIDI importer's snapped white keys).
+ * legacy decode, an instrument swap, the composer's row-step tool).
  *
  * A nominal the instrument HAS becomes that button's Sounding Pitch carried by the Basepoint —
  * so the note sounds what the button sounds. A nominal it does not have has no button to ask
- * and is carried across as itself, which strands it exactly where it would have been.
+ * and is carried by the instrument's REGISTER instead (registerShift), which strands it exactly
+ * where it would have been: on its own grid row (gridRowForNumber reads it back the same way)
+ * and on no button, since a rigid translation of a nominal the instrument lacks cannot meet the
+ * translation of one it has. Carried as ITSELF on a registered instrument it could, and did —
+ * see registerShift. On an instrument without a register the two rules are the same number.
+ *
+ * THE ONE EXCEPTION is the MIDI axis: a nominal octaves outside the grid (a hand-edited v4 id, a
+ * strand a swap reads back off a Pro View placement) carried by a register of up to three octaves
+ * can leave 0..127, and is then carried as itself, the pre-register rule — a number no format can
+ * hold is worse than one that may un-strand. numberToNominal does not invert that fallback; it is
+ * never a grid id, so nothing that reads the nominal back (grid rows, the legacy sheet) loses a row.
+ *
+ * NOT for the MIDI importer, whose snapped number is a pitch on the SOUNDING axis that only
+ * looks like a nominal (midiImport.ts keeps its own lift).
  */
 export function nominalToNumber(instrumentName: RuntimeInstrumentName, pitch: Pitch, nominal: number): number {
-    const button = noteIdToButton(instrumentName, nominal)
-    const sounding = button === -1 ? nominal : (getSoundingTable(instrumentName)[button] ?? nominal)
-    return sounding + basepointOffset(pitch)
+    const offset = basepointOffset(pitch)
+    const sounding = getSoundingTable(instrumentName)[noteIdToButton(instrumentName, nominal)]
+    if (sounding !== undefined) return sounding + offset
+    const carried = nominal + registerShift(instrumentName) + offset
+    return carried >= 0 && carried <= 127 ? carried : nominal + offset
 }
 
 /**
  * nominalToNumber's inverse, and the ONLY way back to the nominal axis: the voicing button's
- * Nominal Id, else (stranded) the virtual nominal `number − offset`.
+ * Nominal Id, else (stranded) the virtual nominal `number − offset − registerShift`.
  *
  * EXACTLY invertible against nominalToNumber for both cases, which is what keeps the legacy sheet
  * fields (legacySheetExport.ts) byte-identical to what the pre-ADR-0007 exporter wrote, even on a
- * tuned instrument. Retired with the old-format export at ADR-0007 phase E and restored with the
- * legacy sheet fields (ADR-0007 addendum, 2026-10-02) - they are its only callers.
+ * tuned instrument, and what makes an instrument swap reversible (rewriteForSwap is this function
+ * on the old instrument followed by nominalToNumber on the new one). Retired with the old-format
+ * export at ADR-0007 phase E and restored with the legacy sheet fields (ADR-0007 addendum,
+ * 2026-10-02).
  */
 export function numberToNominal(instrumentName: RuntimeInstrumentName, pitch: Pitch, number: number): number {
     const button = numberToButton(instrumentName, pitch, number)
-    if (button === -1) return number - basepointOffset(pitch)
-    return getNoteIdTable(instrumentName)[button] ?? number - basepointOffset(pitch)
+    const virtual = number - basepointOffset(pitch) - registerShift(instrumentName)
+    if (button === -1) return virtual
+    return getNoteIdTable(instrumentName)[button] ?? virtual
 }
 
 /**
@@ -734,8 +793,11 @@ export function foldNumberIntoRange(
  *     tuned button draws on the row its instrument prints on it (Vintage-Lyre's Db button
  *     sits on the D row, where its player expects to find it) even though it sounds a
  *     semitone lower.
- *  2. STRANDED, virtual nominal (`number − offset`) IS a canonical id → that row, marked
- *     stranded. This is ADR-0004's stranded-note fallback, preserved exactly.
+ *  2. STRANDED, virtual nominal (`number − offset − registerShift`, numberToNominal's
+ *     stranded answer) IS a canonical id → that row, marked stranded. This is ADR-0004's
+ *     stranded-note fallback; the register term is what keeps it on the row a voiced note
+ *     of the same nominal would take on a registered instrument (Contrabass, the handpans),
+ *     and it is 0 everywhere else.
  *  3. STRANDED and OFF-SCALE → the nearest canonical id by absolute distance (tie: the
  *     LOWER id, so the choice never depends on the authored row order), marked stranded,
  *     with the accidental hint signed by (virtual − chosen). Deliberately nearest-row and
@@ -750,7 +812,7 @@ export function gridRowForNumber(instrumentName: RuntimeInstrumentName, pitch: P
     if (button !== -1) {
         return {row: songGridSlotForId(getNoteIdTable(instrumentName)[button]), stranded: false, accidental: 0}
     }
-    const virtual = number - basepointOffset(pitch)
+    const virtual = numberToNominal(instrumentName, pitch, number)
     const exactRow = songGridSlotForId(virtual)
     if (exactRow !== -1) return {row: exactRow, stranded: true, accidental: 0}
     let nearest = -1
