@@ -16,11 +16,10 @@
 import type {Pitch} from '$core/legacyConfig'
 import {
     basepointOffset,
-    getNoteIdTable,
-    getSoundingTable,
     nominalToNumber,
-    noteIdToButton,
     numberToButton,
+    numberToNominal,
+    strandedRow,
     type RuntimeInstrumentName,
 } from './noteIds'
 
@@ -71,15 +70,31 @@ export function rewriteNumbersForBasepoint(numbers: readonly number[], delta: nu
  * array. BUTTON-PRESERVING through nominal correspondence, which is the behavior users
  * rely on and the reason cross-instrument swaps are not sound-preserving (ADR-0007):
  *
- *   number → old button → old NOMINAL id → the new instrument's button for that same
- *   nominal → that button's Note Number at this Basepoint.
+ *   number → its NOMINAL on the old instrument → that nominal's Note Number on the new one
+ *   (numberToNominal, then nominalToNumber, both at this Basepoint).
  *
  * Lyre → Vintage-Lyre therefore RE-FLAVORS: the D button becomes the Db button, keeping the
- * shape of what was played and changing what it sounds. Two cases pass through UNCHANGED:
- * a number stranded on the OLD instrument (nothing to correspond from — it keeps its place
- * and may un-strand on the new one), and a nominal the NEW instrument has no button for
- * (the note stays exactly where it was and is now stranded, visibly, instead of being
- * approximated onto some other key).
+ * shape of what was played and changing what it sounds. The two kinds of stranded note
+ * (noteIds.strandedRow) take the two halves of that rule:
+ *  - a note whose nominal the new instrument has no key for becomes a ROW strand there, carried
+ *    by the new register onto the row it was on - never left on a number some other key of a
+ *    registered instrument sounds. A row strand on the old instrument goes the same way, and finds
+ *    a key where the new instrument has one on its row: that is how a swap back restores it.
+ *  - a PITCH strand passes through UNCHANGED, as every strand did before registers: it keeps its
+ *    pitch, and un-strands where the new instrument sounds that pitch - a Guitar part pasted onto a
+ *    Piano layer plays once the layer is a Guitar.
+ * Between two instruments without a register both are the number itself, unchanged.
+ *
+ * WHY THE REGISTER (2026-11-01): before it, a key-less note was left at its number, which on a
+ * registered instrument can be the Sounding Pitch of ANOTHER key — HandPan's F5 button sounds F4 —
+ * so a note meant to strand was voiced by the key an octave away, and the swap back took that key's
+ * F5. Piano → HandPan → Piano moved every C4, F4 and G4 up an octave, merged into any F5 already in
+ * the column; a user lost a song's low notes to it. Now swapping back restores every voiced note and
+ * every row strand between any two instruments with no per-button flavor (every untuned and every
+ * registered one). What stays lossy is what always was: a pitch strand that un-strands on the new
+ * instrument becomes that key, and the key is what a swap back carries; and a per-button TUNED
+ * instrument (Vintage-Lyre), whose flavored keys can sound a neighbour's nominal - setInstrument's
+ * merge pass is for those.
  *
  * `pitch` is the track's EFFECTIVE Basepoint (its own override, else the song's) and is the
  * same on both sides: a swap is not a transposition.
@@ -90,17 +105,10 @@ export function rewriteForSwap(
     newInstrumentName: RuntimeInstrumentName,
     pitch: Pitch
 ): number[] {
-    const offset = basepointOffset(pitch)
-    const oldNominals = getNoteIdTable(oldInstrumentName)
-    const newSounding = getSoundingTable(newInstrumentName)
     return numbers.map((number) => {
-        const button = numberToButton(oldInstrumentName, pitch, number)
-        if (button === -1) return number
-        const nominal = oldNominals[button]
-        const newButton = nominal === undefined ? -1 : noteIdToButton(newInstrumentName, nominal)
-        if (newButton === -1) return number
-        const sounding = newSounding[newButton]
-        return sounding === undefined ? number : sounding + offset
+        const voiced = numberToButton(oldInstrumentName, pitch, number) !== -1
+        if (!voiced && strandedRow(oldInstrumentName, pitch, number) === null) return number
+        return nominalToNumber(newInstrumentName, pitch, numberToNominal(oldInstrumentName, pitch, number))
     })
 }
 
@@ -108,16 +116,20 @@ export function rewriteForSwap(
  * Lift one track's OLD-FORMAT note ids (composed ≤v4, recorded ≤v3, vsrg ≤v2 — all of them
  * Nominal Ids stored pre-Basepoint) onto the absolute axis (spec §4), returning a new array:
  *
- *   `number = (nominalIndex(id) === -1 ? id : sounding(button)) + offset(effectivePitch)`
+ *   `number = (nominalIndex(id) === -1 ? id + registerShift : sounding(button)) + offset(effectivePitch)`
  *
  * A note the track's instrument plays becomes what it ALREADY SOUNDED in that file: the
  * button is unchanged and so is the playback rate, which is why migrated songs are audibly
  * identical (the parity suite pins exactly this). A note stranded in the old file has no
- * button to ask, so it migrates BEST-EFFORT as `id + offset` — that keeps its position
- * relative to its neighbours, which is all a stranded note ever had. On a tuned instrument
- * such a best-effort number can coincide with a real Sounding Pitch and thus UN-STRAND, and
- * that is accepted: it is a note that never sounded starting to sound the pitch its stored
- * number now names.
+ * button to ask, so it migrates BEST-EFFORT as a ROW strand, `id + registerShift + offset`
+ * (noteIds.strandedRow) — that keeps its grid row and its position relative to its neighbours,
+ * which is all a stranded note ever had, and keeps it stranded, as it was. (Before 2026-11-01 it
+ * migrated as `id + offset`, which on a registered instrument can be the Sounding Pitch of the
+ * button an octave away: a note that never sounded un-stranded onto another key.) An id that is
+ * no grid row at all, which only a malformed file holds, has no row and migrates as itself. On a
+ * per-button TUNED instrument the best-effort number can still coincide with a flavored button's
+ * Sounding Pitch and thus UN-STRAND, and that is accepted: it is a note that never sounded
+ * starting to sound the pitch its stored number now names.
  *
  * `effectivePitch` is the track's own Basepoint override, else the song's — per track,
  * because that is what the file's playback used.

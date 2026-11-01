@@ -10,7 +10,7 @@
 // bug found in this pipeline was invisible at the integer-ms tempos (120, 240) and only bit
 // where the column length is fractional.
 import {describe, expect, it} from 'vitest'
-import {CANONICAL_NOTE_IDS, INSTRUMENTS, PITCHES} from './imports'
+import {CANONICAL_NOTE_IDS, INSTRUMENTS, INSTRUMENTS_DATA, PITCHES} from './imports'
 import {ComposedSong} from '../src/lib/core/Songs/ComposedSong.svelte'
 import {NoteColumn} from '../src/lib/core/Songs/SongClasses'
 import {Midi} from '../src/lib/core/Songs/midiConstructor'
@@ -20,6 +20,7 @@ import {
     getSoundingTable,
     isAccidentalMidi,
     numberToButton,
+    registerShift,
 } from '../src/lib/core/Songs/noteIds'
 import type {Pitch} from '../src/lib/core/legacyConfig'
 import {
@@ -358,6 +359,39 @@ describe('the Basepoint, on both sides of the pipeline', () => {
             const carried = [60, 62].map(number => number + basepointOffset(pitch))
             const song = buildSong(220, [[{id: carried[0]}], null, [{id: carried[1]}]], [], pitch)
             expect(numbersOf(roundTrip(song).columns), pitch).toEqual(carried)
+        }
+    })
+
+    /**
+     * Pitched instruments moved by a register and by nothing else: every key sounds its nominal
+     * moved by whole octaves. (A per-button flavored one - Vintage-Lyre - stays best-effort, see
+     * MidiImportOptions.pitch, and has no register.)
+     */
+    const REGISTERED = INSTRUMENTS.filter((name: string) => registerShift(name) !== 0
+        && INSTRUMENTS_DATA[name as keyof typeof INSTRUMENTS_DATA].notes.every(note => note.pitched)
+        && getSoundingTable(name).every((sounding, button) =>
+            sounding === getNoteIdTable(name)[button] + registerShift(name)))
+
+    it.runIf(REGISTERED.length > 0)('re-imports our own export unchanged on a REGISTERED instrument, at every Basepoint', () => {
+        //a register puts an instrument's pitches and the names of its keys octaves apart (Sky's
+        //Guitar sounds C3-C5 on keys named C4-C6). The importer used to look a pitch up AS a key
+        //name, so every pitch that is also one of its key names came back on THAT key, a register
+        //away - half of any in-range file an octave low, merged into the notes really there
+        for (const name of REGISTERED) {
+            for (const pitch of PITCHES as readonly Pitch[]) {
+                const carried = getSoundingTable(name).map(sounding => sounding + basepointOffset(pitch))
+                const song = new ComposedSong('registered roundtrip', [name])
+                song.bpm = 220
+                song.pitch = pitch
+                song.initColumnsForConstruction(carried.map(id => {
+                    const column = new NoteColumn()
+                    column.notes = [{trackIndex: 0, id, span: 1}]
+                    return column
+                }))
+                const result = roundTrip(song)
+                expect(numbersOf(result.columns), `${name} at ${pitch}`).toEqual([...carried].sort((a, b) => a - b))
+                expect(result.merged).toBe(0)
+            }
         }
     })
 

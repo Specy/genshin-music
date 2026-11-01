@@ -36,8 +36,14 @@ export interface UndoStep<D> {
     label?: string
 }
 
-/** Steps kept before oldest-eviction. In-memory only; the ceiling is bounded RAM, not history depth. */
-export const UNDO_HISTORY_CAP = 100
+/**
+ * Steps kept before oldest-eviction. In-memory only; the ceiling is bounded RAM, not history depth:
+ * a Step costs what it changed (~0.7 KB to add a note, ~100 bytes per note a whole-song rewrite
+ * moves), and undo/redo time follows the Step's size, never the depth. Measured 2026-11-01: 256
+ * keeps a long session's ordinary edits; the worst case, 256 whole-song Basepoint changes on a
+ * 20,000-note song, holds about half a gigabyte. Raised from 100 at the user's request.
+ */
+export const UNDO_HISTORY_CAP = 256
 
 /** The position before the oldest recorded step - where a freshly installed (just-loaded, just-saved) song sits. */
 const BOTTOM = Symbol('undo-history-bottom')
@@ -158,6 +164,21 @@ export class UndoHistory<D> {
         return step
     }
 
+    /**
+     * Drops `step` from the top of the redo stack, as though it had never been made: for an edit the
+     * caller WITHDRAWS through undoStep rather than one the user undid. The layer panel's instrument
+     * picks undo the run's previous pick before making the next one (instrumentPickSession.ts), and
+     * a redo that re-made it would bring back an audition the user had already backed out of. A
+     * no-op unless `step` tops the redo stack. A savepoint on it is stranded, the honest answer: the
+     * file holds the withdrawn edit and the song no longer does, with no Step left to walk back to it.
+     */
+    forgetRedoStep(step: UndoStep<D>): void {
+        if (this.#redo.at(-1) !== step) return
+        this.#redo.pop()
+        if (this.#savepoint === step) this.#savepoint = STRANDED
+        this.#bump()
+    }
+
     /** Called on a real save. The song is clean exactly while it sits here. */
     markSavepoint(): void {
         //Deliberately does NOT settle: an autosave landing mid Duration Hold must not split the
@@ -203,6 +224,19 @@ export class UndoHistory<D> {
      */
     get groupDepth(): number {
         return this.#groupDepth
+    }
+
+    /**
+     * The Step the history STANDS ON: the top of the undo stack, or null when nothing has landed or
+     * an edit is still in flight (a mutator mid-call, an open group, an open Step with deltas) -
+     * then the top is no longer the latest edit. Compared by IDENTITY, like the savepoint: a caller
+     * that kept the Step its own edit landed can ask "has anything happened since?" without an
+     * index that eviction or a cleared redo branch would invalidate. The layer panel's instrument
+     * picks are what ask it (instrumentPickSession.ts). Not reactive, for groupDepth's reason.
+     */
+    get lastStep(): UndoStep<D> | null {
+        if (this.#stepDepth > 0 || this.#groupDepth > 0 || this.#hasOpenDeltas) return null
+        return this.#undo.at(-1) ?? null
     }
 
     get #hasOpenDeltas(): boolean {

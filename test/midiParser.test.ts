@@ -6,6 +6,7 @@ import {
     getSoundingTable,
     nominalToNumber,
     numberToButton,
+    registerShift,
     snapMidiToGridPeriodically,
 } from '$core/Songs/noteIds'
 import {importMidiTracks, type MidiImportLayer} from '$core/Songs/midiImport'
@@ -68,9 +69,15 @@ describe('MIDI key-signature Basepoints', () => {
 // entirely. Instruments are chosen by CAPABILITY, never by game id.
 
 const notesOf = (name: string) => INSTRUMENTS_DATA[name as keyof typeof INSTRUMENTS_DATA].notes
-/** Instruments with at least one Pitched Button tuned away from its Nominal Id (genshin: Vintage-Lyre). */
-const TUNED = INSTRUMENTS.filter((name: string) =>
-    notesOf(name).some(note => note.pitched && note.sounding !== note.nominal))
+/**
+ * Instruments with a Pitched Button tuned away from its Nominal Id by per-button FLAVOR (genshin's
+ * Vintage-Lyre), not by a register: its keys sound between the grid's rows, so a file note written
+ * on a row has to reach that row's key. A REGISTERED instrument is not this case - its keys sound
+ * whole octaves from their names, and a file's number is the pitch it sounds, so it lands on the key
+ * that SOUNDS it (midiRoundTrip.test.ts pins that).
+ */
+const TUNED = INSTRUMENTS.filter((name: string) => registerShift(name) === 0
+    && notesOf(name).some(note => note.pitched && note.sounding !== note.nominal))
 /** An instrument whose two axes coincide, i.e. one the old bare arithmetic could not misplace. */
 const UNTUNED = INSTRUMENTS.find((name: string) =>
     getSoundingTable(name).every((sounding, button) => sounding === getNoteIdTable(name)[button]))!

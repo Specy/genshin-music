@@ -15,7 +15,8 @@ import {flushSync, mount, unmount} from 'svelte'
 import {afterEach, beforeEach, describe, expect, it} from 'vitest'
 import InstrumentSettingsPopup from '../src/lib/components/pages/Composer/InstrumentSettingsPopup.svelte'
 import {ComposedSong, INSTRUMENTS, INSTRUMENTS_DATA, InstrumentData} from './imports'
-import {gridRowForNumber, noteIdToButton, numberToButton} from '$core/Songs/noteIds'
+import {getSoundingTable, gridRowForNumber, nominalToNumber, noteIdToButton, numberToButton} from '$core/Songs/noteIds'
+import {InstrumentPickSession} from '$cmp/pages/Composer/instrumentPickSession'
 
 type Mounted = ReturnType<typeof mount>
 
@@ -23,6 +24,7 @@ const notesOf = (name: string) => INSTRUMENTS_DATA[name as keyof typeof INSTRUME
 /** Roles by capability, never by game id — the same derivations the transform tests use. */
 const TUNED = INSTRUMENTS.filter((name: string) =>
     notesOf(name).some(note => note.pitched && note.sounding !== note.nominal))
+
 /** An instrument that STRANDS at least one number the default one enters — the swap's other side. */
 const NARROW = INSTRUMENTS.find((name: string) =>
     notesOf(INSTRUMENTS[0]).some(note => numberToButton(name, 'C', note.sounding) === -1))!
@@ -31,8 +33,11 @@ describe('the composer layer panel rewrites the track it edits', () => {
     let target: HTMLDivElement
     let component: Mounted | null = null
 
-    /** Mount the popup over a song's layer 0, wired exactly as InstrumentControls wires it. */
-    function openPanel(song: ComposedSong) {
+    /**
+     * Mount the popup over a song's layer 0, wired exactly as InstrumentControls wires it - and, given
+     * a pick session, through it, exactly as Composer.svelte's editInstrument routes every panel edit.
+     */
+    function openPanel(song: ComposedSong, picks?: InstrumentPickSession) {
         component = mount(InstrumentSettingsPopup, {
             target,
             props: {
@@ -40,7 +45,9 @@ describe('the composer layer panel rewrites the track it edits', () => {
                 instrument: song.instruments[0],
                 currentLayer: 0,
                 instruments: song.instruments,
-                onChange: (instrument: InstrumentData) => song.setInstrument(0, instrument),
+                onChange: (instrument: InstrumentData) => picks
+                    ? picks.apply(song, 0, instrument)
+                    : song.setInstrument(0, instrument),
                 onChangePosition: () => {},
                 onDelete: () => {},
                 onClose: () => {},
@@ -106,6 +113,49 @@ describe('the composer layer panel rewrites the track it edits', () => {
 
         expect(song.columns[0].notes[0].id).toBe(stranded)
         expect(gridRowForNumber(INSTRUMENTS[0], 'C', stranded).stranded).toBe(false)
+    })
+
+    it('a ROW strand un-strands when the panel swaps to an instrument with a key on that row', () => {
+        //the row half of the un-strand flow (noteIds.strandedRow): a note on a row the current
+        //instrument has no key for - what a swap or a legacy file leaves - is stranded on that row,
+        //and swapping to an instrument that HAS a key there voices it on the same row.
+        //Found by capability: an instrument missing a grid row the default instrument plays
+        const host = INSTRUMENTS.find((name: string) =>
+            notesOf(INSTRUMENTS[0]).some(note => noteIdToButton(name, note.nominal) === -1))!
+        const row = notesOf(INSTRUMENTS[0]).find(note => noteIdToButton(host, note.nominal) === -1)!.nominal
+        const stranded = nominalToNumber(host, 'C', row)
+        const song = new ComposedSong('panel un-strand', [host])
+        song.addNoteAt(0, 0, stranded)
+        expect(gridRowForNumber(host, 'C', stranded).stranded).toBe(true)
+
+        openPanel(song)
+        choose(INSTRUMENTS[0], INSTRUMENTS[0])
+
+        const voiced = song.columns[0].notes[0].id
+        expect(voiced).toBe(nominalToNumber(INSTRUMENTS[0], 'C', row))
+        expect(gridRowForNumber(INSTRUMENTS[0], 'C', voiced))
+            .toEqual({row: gridRowForNumber(host, 'C', stranded).row, stranded: false, accidental: 0})
+    })
+
+    it('an audition through the instrument <select> and back leaves the song as it was', () => {
+        //THE REPORTED FLOW, through the real control (user report 2026-11-01): every instrument of
+        //the roster picked in turn - a long audition, one pick per focus of the <select> - and then
+        //the original again. Each pick swaps from the original, so the track ends exactly where it
+        //began. The NOTES alone cannot tell (swaps between rigid instruments reverse exactly since
+        //the register fix); the history is what proves the run was one audition
+        const song = new ComposedSong('panel audition', [INSTRUMENTS[0]])
+        song.pitch = 'Gb'
+        getSoundingTable(INSTRUMENTS[0]).forEach((sounding, column) => song.addNoteAt(column, 0, sounding + 6))
+        const before = song.columns.flatMap(column => column.notes.map(note => note.id))
+        const history = song.attachHistory()
+
+        openPanel(song, new InstrumentPickSession())
+        for (const name of [...INSTRUMENTS.slice(1), INSTRUMENTS[0]]) choose(INSTRUMENTS[0], name)
+
+        expect(song.instruments[0].name).toBe(INSTRUMENTS[0])
+        expect(song.columns.flatMap(column => column.notes.map(note => note.id))).toEqual(before)
+        expect(history.canUndo).toBe(false)
+        expect(history.canRedo).toBe(false)
     })
 
     it('a per-layer Basepoint override moves the track by the interval', () => {

@@ -370,6 +370,48 @@ describe('savepoint walks', () => {
     })
 })
 
+describe('withdrawing a Step (forgetRedoStep)', () => {
+    it('drops the Step it was handed from the top of the redo stack, and only that one', () => {
+        const history = makeHistory()
+        recordStep(history, 0, 1, 'kept')
+        recordStep(history, 1, 1, 'withdrawn')
+        const kept = history.undoStep()!
+        //not on top: a no-op
+        recordStep(history, 1, 1, 'again')
+        const withdrawn = history.undoStep()!
+        history.forgetRedoStep(kept)
+        expect(history.canRedo).toBe(true)
+        history.forgetRedoStep(withdrawn)
+        expect(history.canRedo).toBe(false)
+        expect(history.redoStep()).toBeNull()
+        //the undo side is untouched
+        expect(history.lastStep?.deltas).toEqual([{op: 'kept:0:0'}])
+    })
+
+    it('is a no-op for a Step that is not on the redo stack at all', () => {
+        const history = makeHistory()
+        recordStep(history, 0, 1, 'a')
+        const step = history.lastStep!
+        history.forgetRedoStep(step)
+        expect(history.lastStep).toBe(step)
+        expect(history.canRedo).toBe(false)
+    })
+
+    it('strands a savepoint that sat on the withdrawn Step', () => {
+        //the file holds the withdrawn edit and the song no longer does: dirty until the next save,
+        //with no walk able to reach the saved position again
+        const history = makeHistory()
+        recordStep(history, 0, 1, 'a')
+        recordStep(history, 1, 1, 'saved')
+        history.markSavepoint()
+        const withdrawn = history.undoStep()!
+        history.forgetRedoStep(withdrawn)
+        expect(history.isDirty).toBe(true)
+        undoAll(history)
+        expect(history.isDirty).toBe(true)
+    })
+})
+
 describe('the version signal reaches deriveds', () => {
     //through a `$derived`, not a bare effect: the composer reads these getters from templates and
     //deriveds, which only propagate when the VALUE changes - see test/signals.svelte.ts

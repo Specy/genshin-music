@@ -6,7 +6,8 @@ import {describe, expect, it} from 'vitest'
 import {CANONICAL_NOTE_IDS, INSTRUMENTS, INSTRUMENTS_DATA, PITCHES, RecordedNote} from './imports'
 import type {ColumnNote} from './imports'
 import {
-    basepointOffset, getNoteIdTable, getSoundingTable, numberToButton,
+    addressableSpan, basepointOffset, getNoteIdTable, getSoundingTable, gridRowForNumber, nominalToNumber,
+    numberToButton, numberToNominal, registerShift, songGridSlotForId, strandedRow,
 } from '../src/lib/core/Songs/noteIds'
 import {
     basepointDelta, migrateTrackNotes, rewriteForBasepoint, rewriteForSwap,
@@ -27,6 +28,16 @@ const NARROW = INSTRUMENTS.find((name: string) =>
     //...and untuned, so the grid nominals these rows pass around ARE Note Numbers
     && getSoundingTable(name).every((s, b) => s === getNoteIdTable(name)[b]))!
 const ALL_PITCHES = PITCHES as readonly Pitch[]
+/** Tuned by per-button flavor and NOT by a register - genshin's Vintage-Lyre. */
+const FLAVORED = TUNED.filter((name: string) => registerShift(name) === 0)
+/** Translated by a register - sky's Contrabass, Cello, handpans… */
+const REGISTERED = INSTRUMENTS.filter((name: string) => registerShift(name) !== 0)
+/**
+ * Every button's Sounding Pitch is its nominal moved by the register and nothing else: no
+ * per-button flavor. Between two of these an instrument swap is a bijection (rewriteForSwap).
+ */
+const RIGID = INSTRUMENTS.filter((name: string) =>
+    getSoundingTable(name).every((sounding, button) => sounding === getNoteIdTable(name)[button] + registerShift(name)))
 
 describe('basepointDelta', () => {
     // [old, new, delta] — the interval is a raw PITCHES-index difference, never folded
@@ -124,8 +135,15 @@ describe('rewriteForSwap', () => {
                 const nominal = getNoteIdTable(WIDE)[button]
                 const targetButton = getNoteIdTable(target).indexOf(nominal)
                 if (targetButton === -1) {
-                    //no button of the same nominal: unchanged, and now stranded there
-                    expect(number).toBe(numbers[button])
+                    //no button of the same nominal: carried by the target's REGISTER onto the row
+                    //it was on, and stranded there - never left on a number some other key of a
+                    //registered target sounds (registerShift says why). Without a register on
+                    //either side that is the number itself, unchanged
+                    expect(number).toBe(nominal + registerShift(target) + offset)
+                    expect(numberToButton(target, pitch, number)).toBe(-1)
+                    expect(gridRowForNumber(target, pitch, number)).toEqual({
+                        row: songGridSlotForId(nominal), stranded: true, accidental: 0,
+                    })
                     return
                 }
                 expect(number).toBe(getSoundingTable(target)[targetButton] + offset)
@@ -186,11 +204,139 @@ describe('rewriteForSwap', () => {
         expect(swapped - offset).toBe(getSoundingTable(UNTUNED)[getNoteIdTable(UNTUNED).indexOf(getNoteIdTable(WIDE)[0])])
     })
 
+    // THE REVERSIBILITY RULE (user report 2026-11-01): a Piano song at Gb swapped to a handpan and
+    // back lost every C4/F4/G4 an octave up, because the handpan's register made the number a note
+    // was "left unchanged" at the Sounding Pitch of the key an octave away. Stated for every pair
+    // the build ships rather than for the two instruments of the report.
+    it('restores every number when a swap between two rigid instruments is swapped back, at every Basepoint', () => {
+        for (const a of RIGID) {
+            //every row a track on `a` can hold: its buttons, and the grid rows it has no key for
+            //(ROW strands, carried by its own register - noteIds.strandedRow)
+            const rows = [...new Set([...getNoteIdTable(a), ...CANONICAL_NOTE_IDS])]
+            for (const b of RIGID) {
+                for (const pitch of ALL_PITCHES) {
+                    const numbers = rows.map(nominal => nominalToNumber(a, pitch, nominal))
+                    const there = rewriteForSwap(numbers, a, b, pitch)
+                    expect(rewriteForSwap(there, b, a, pitch)).toEqual(numbers)
+                    //and nothing collapsed on the way: a bijection merges no notes
+                    expect(new Set(there).size).toBe(new Set(numbers).size)
+                }
+            }
+        }
+    })
+
+    /**
+     * THE OCTAVE-SIBLING TRAP itself, wherever this build has one: a voiced number whose nominal the
+     * new instrument lacks, but which is the Sounding Pitch of some OTHER key of it. Before the fix
+     * the swap left it there, voiced by that key; the swap back then took that key's nominal.
+     */
+    const TRAPS = INSTRUMENTS.flatMap((from: string) => INSTRUMENTS.flatMap((to: string) =>
+        getNoteIdTable(from)
+            .filter(nominal => !getNoteIdTable(to).includes(nominal))
+            .map(nominal => ({from, to, nominal, number: nominalToNumber(from, 'Gb', nominal)}))
+            .filter(({number}) => numberToButton(to, 'Gb', number) !== -1)))
+
+    it.runIf(TRAPS.some(trap => RIGID.includes(trap.to)))('strands a note the new instrument has no key for, instead of voicing it on another key', () => {
+        for (const {from, to, nominal, number} of TRAPS.filter(trap => RIGID.includes(trap.to))) {
+            const [swapped] = rewriteForSwap([number], from, to, 'Gb')
+            expect(numberToButton(to, 'Gb', swapped)).toBe(-1)
+            expect(numberToNominal(to, 'Gb', swapped)).toBe(nominal)
+            //...and on the row it was drawn on before the swap
+            expect(gridRowForNumber(to, 'Gb', swapped).row).toBe(gridRowForNumber(from, 'Gb', number).row)
+            if (RIGID.includes(from)) expect(rewriteForSwap([swapped], to, from, 'Gb')).toEqual([number])
+        }
+    })
+
+    /** A grid row one rigid instrument has no key on and another, registered differently, has. */
+    const UNSTRAND = RIGID.flatMap((host: string) => RIGID
+        .filter((to: string) => registerShift(to) !== registerShift(host))
+        .flatMap((to: string) => CANONICAL_NOTE_IDS
+            .filter(row => !getNoteIdTable(host).includes(row) && getNoteIdTable(to).includes(row))
+            .map(row => ({host, to, row}))))
+
+    it.runIf(UNSTRAND.length > 0)('carries a ROW strand by the registers\' difference, and un-strands it where its row has a key', () => {
+        //a row strand is a row the instrument has no key on: it moves with its track like every
+        //voiced note beside it, and finds a button exactly when the new instrument has one there
+        for (const {host, to, row} of UNSTRAND) {
+            const stranded = nominalToNumber(host, 'C', row)
+            expect(numberToButton(host, 'C', stranded)).toBe(-1)
+            const [swapped] = rewriteForSwap([stranded], host, to, 'C')
+            expect(swapped).toBe(getSoundingTable(to)[getNoteIdTable(to).indexOf(row)])
+            expect(swapped - stranded).toBe(registerShift(to) - registerShift(host))
+        }
+    })
+
+    // PITCH STRANDS: every stranded number that does not stand for a grid row its instrument lacks
+    // (a paste between instruments, a Pro View placement, a cross-game import). They keep their
+    // pitch through a swap, exactly as every strand did before registers (ADR-0007, ADR-0011).
+    it('passes every PITCH strand through a swap unchanged, at every Basepoint', () => {
+        const span = addressableSpan()
+        for (const pitch of ['C', 'Gb', 'B'] as Pitch[]) {
+            for (const a of INSTRUMENTS) {
+                const strands: number[] = []
+                for (let number = span.min; number <= span.max; number++) {
+                    if (numberToButton(a, pitch, number) === -1 && strandedRow(a, pitch, number) === null) strands.push(number)
+                }
+                for (const b of INSTRUMENTS) expect(rewriteForSwap(strands, a, b, pitch), `${a} -> ${b} at ${pitch}`).toEqual(strands)
+            }
+        }
+    })
+
+    it('lets a part pasted onto the wrong layer play once that layer becomes its instrument', () => {
+        //THE FIX-UP a register must not break (review of the 2026-11-01 fix): paste keeps pitch, so a
+        //low part pasted onto a Piano layer is all strands there - and swapping the layer to the
+        //instrument it was written for voices every one of them, at the pitch it was pasted at
+        for (const instrument of INSTRUMENTS) {
+            const part = getSoundingTable(instrument).filter(sounding =>
+                numberToButton(INSTRUMENTS[0], 'C', sounding) === -1
+                && strandedRow(INSTRUMENTS[0], 'C', sounding) === null)
+            const swapped = rewriteForSwap(part, INSTRUMENTS[0], instrument, 'C')
+            expect(swapped, instrument).toEqual(part)
+            for (const number of swapped) expect(numberToButton(instrument, 'C', number)).not.toBe(-1)
+        }
+    })
+
+    it('carries every grid row by every register onto the MIDI axis', () => {
+        //what lets nominalToNumber carry a row strand without an axis fallback: a future register
+        //that broke this would fail here, not write a number no format can hold
+        for (const name of INSTRUMENTS) {
+            for (const pitch of ALL_PITCHES) {
+                for (const row of CANONICAL_NOTE_IDS) {
+                    const number = nominalToNumber(name, pitch, row)
+                    expect(number).toBeGreaterThanOrEqual(0)
+                    expect(number).toBeLessThanOrEqual(127)
+                }
+            }
+        }
+    })
+
     it('returns a new array and never mutates its input', () => {
         const numbers = [getSoundingTable(WIDE)[0]]
         const swapped = rewriteForSwap(numbers, WIDE, UNTUNED, 'C')
         expect(swapped).not.toBe(numbers)
         expect(numbers).toEqual([getSoundingTable(WIDE)[0]])
+    })
+})
+
+describe('registerShift', () => {
+    it('is the same whole octaves for every button of every instrument', () => {
+        //the registry's guarantee the function relies on: a register translates the WHOLE
+        //instrument rigidly, and a baseNote flavor is at most five semitones, so every button
+        //rounds to one answer
+        for (const name of INSTRUMENTS) {
+            const shift = registerShift(name)
+            expect(Number.isInteger(shift / 12)).toBe(true)
+            getSoundingTable(name).forEach((sounding, button) => {
+                const flavor = sounding - getNoteIdTable(name)[button] - shift
+                expect(Math.abs(flavor)).toBeLessThanOrEqual(5)
+                if (!notesOf(name)[button].pitched) expect(flavor).toBe(0)
+            })
+        }
+    })
+
+    it('is 0 for an instrument without a register, flavored ones included', () => {
+        expect(registerShift(UNTUNED)).toBe(0)
+        for (const name of FLAVORED) expect(registerShift(name)).toBe(0)
     })
 })
 
@@ -235,19 +381,44 @@ describe('migrateTrackNotes', () => {
         expect(migrated[1] - stranded).toBe(basepointOffset('F'))
     })
 
-    it.runIf(TUNED.length > 0)('may UN-STRAND a best-effort migration on a tuned instrument, by design', () => {
-        //the accepted consequence of `id + offset` (ADR-0007): a nominal the tuned
+    it.runIf(FLAVORED.length > 0)('may UN-STRAND a best-effort migration on a per-button tuned instrument, by design', () => {
+        //the accepted consequence of `id + offset` (ADR-0007): a nominal the flavored
         //instrument never had can equal another button's Sounding Pitch, so a note that was
         //silent starts sounding the pitch its stored number now names. Pinned here so the
         //phase-C parity suite is never asked to prove the opposite — parity songs must not
         //put a Stranded Note on a tuned track.
-        const tuned = TUNED[0]
+        const tuned = FLAVORED[0]
         const soundingOnly = getSoundingTable(tuned).find(sounding =>
             !getNoteIdTable(tuned).includes(sounding))
         if (soundingOnly === undefined) return
         expect(numberToButton(tuned, 'C', soundingOnly)).toBeGreaterThanOrEqual(0)
         const [migrated] = migrateTrackNotes([soundingOnly], tuned, 'C')
         expect(migrated).toBe(soundingOnly)
+    })
+
+    it.runIf(REGISTERED.length > 0)('keeps a stranded id STRANDED on its own row on a registered instrument', () => {
+        //the register is a rigid translation, so carrying a missing nominal by it can never meet a
+        //button's Sounding Pitch - the note that never sounded in the old file stays silent, on the
+        //row it was drawn on, instead of un-stranding onto the key an octave away
+        for (const name of REGISTERED) {
+            for (const id of CANONICAL_NOTE_IDS.filter(id => !getNoteIdTable(name).includes(id))) {
+                for (const pitch of ALL_PITCHES) {
+                    const [migrated] = migrateTrackNotes([id], name, pitch)
+                    expect(migrated).toBe(id + registerShift(name) + basepointOffset(pitch))
+                    expect(gridRowForNumber(name, pitch, migrated))
+                        .toEqual({row: songGridSlotForId(id), stranded: true, accidental: 0})
+                }
+            }
+        }
+    })
+
+    it('migrates an id that is no grid row as itself: it has no row to strand on', () => {
+        //only a malformed v4 file holds one; carried by a register it could leave the MIDI axis
+        const offGrid = Math.min(...CANONICAL_NOTE_IDS) - 13
+        expect(songGridSlotForId(offGrid)).toBe(-1)
+        for (const name of INSTRUMENTS) {
+            expect(migrateTrackNotes([offGrid], name, 'D')).toEqual([offGrid + basepointOffset('D')])
+        }
     })
 
     it('returns a new array and never mutates its input', () => {
