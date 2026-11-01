@@ -311,7 +311,7 @@
   /**
    * THE LAYER PANEL'S INSTRUMENT PICKS, one audition per panel visit (instrumentPickSession.ts):
    * each pick swaps from the instrument the run started on, replacing the previous pick's Step,
-   * so passing through instruments - an arrow key held on the <select> - cannot accumulate swaps.
+   * so auditioning several instruments one after another cannot accumulate swaps.
    * The visit is the run's outer bound, which is why it resets on every open/close report.
    */
   const instrumentPicks = new InstrumentPickSession();

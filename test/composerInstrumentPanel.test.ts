@@ -139,8 +139,10 @@ describe('the composer layer panel rewrites the track it edits', () => {
 
     it('an audition through the instrument <select> and back leaves the song as it was', () => {
         //THE REPORTED FLOW, through the real control (user report 2026-11-01): every instrument of
-        //the roster picked in turn - what an arrow key held on the <select> does - and then the
-        //original again. Each pick swaps from the original, so the track ends exactly where it began
+        //the roster picked in turn - a long audition, one pick per focus of the <select> - and then
+        //the original again. Each pick swaps from the original, so the track ends exactly where it
+        //began. The NOTES alone cannot tell (swaps between rigid instruments reverse exactly since
+        //the register fix); the history is what proves the run was one audition
         const song = new ComposedSong('panel audition', [INSTRUMENTS[0]])
         song.pitch = 'Gb'
         getSoundingTable(INSTRUMENTS[0]).forEach((sounding, column) => song.addNoteAt(column, 0, sounding + 6))
@@ -153,6 +155,7 @@ describe('the composer layer panel rewrites the track it edits', () => {
         expect(song.instruments[0].name).toBe(INSTRUMENTS[0])
         expect(song.columns.flatMap(column => column.notes.map(note => note.id))).toEqual(before)
         expect(history.canUndo).toBe(false)
+        expect(history.canRedo).toBe(false)
     })
 
     it('a per-layer Basepoint override moves the track by the interval', () => {

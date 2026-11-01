@@ -2,10 +2,10 @@
 //
 // A pick from the panel's instrument <select> is a whole ComposedSong.setInstrument, and since
 // ADR-0007 a swap rewrites the track's Note Numbers. Picks come in runs: a user auditions Piano ->
-// Handpan -> Harp -> back to Piano, and a keyboard user arrowing through a native <select> fires a
-// `change` for EVERY instrument they pass. Composed one after another, every hop is a separate
-// rewrite, and a hop that cannot be undone exactly by the next one leaves the track somewhere the
-// user never asked for - which is how a reporter lost a song's low notes an octave up on
+// Handpan -> Harp -> back to Piano. (One pick per focus of the <select>, so not a keyboard sweep:
+// InstrumentSelect blurs itself after every change.) Composed one after another, every hop is a
+// separate rewrite, and a hop that cannot be undone exactly by the next one leaves the track
+// somewhere the user never asked for - which is how a reporter lost a song's low notes an octave up on
 // 2026-11-01 (noteNumberTransforms.rewriteForSwap now inverts itself between rigid instruments;
 // this is the second half of that fix, for the instruments it cannot, and for the history).
 //
@@ -13,7 +13,9 @@
 // session is still the Step the history stands on (nothing landed since), it is UNDONE first and
 // the new pick is made from the restored track. One Undo Step per run, however many instruments
 // were passed through, and picking the original back leaves no Step at all - the song is exactly
-// what it was, Savepoint included.
+// what it was, Savepoint included. The undone pick is WITHDRAWN, not left on the redo stack: a
+// redo that re-made an audition the user backed out of would be a trap. (Whatever redo branch the
+// user had before the run died at its first pick, as it does at any edit.)
 //
 // THE RUN ENDS on anything that is not another pick of the same layer: the panel closing or opening
 // (Composer.svelte resets the session from onSettingsOpenChange), another layer's pick, or any edit
@@ -54,16 +56,18 @@ export class InstrumentPickSession {
       return;
     }
     const history = song.history;
+    const withdrawn = this.#step;
     const continuesRun =
       history !== null &&
       this.#layer === index &&
-      this.#step !== null &&
-      history.lastStep === this.#step;
+      withdrawn !== null &&
+      history.lastStep === withdrawn;
     if (continuesRun) {
       //back to the track the run started on, notes and roster entry both, by the Step's own
       //inverse - not by swapping back, which is the lossy composition this exists to avoid.
       //No cursor jump and no walk side effects: the composer's edit funnel follows this call
       song.undo();
+      history.forgetRedoStep(withdrawn);
       const origin = song.instruments[index];
       if (origin === undefined || origin.name === instrument.name) {
         //picked the original back: the undo WAS the edit

@@ -158,6 +158,21 @@ export class UndoHistory<D> {
         return step
     }
 
+    /**
+     * Drops `step` from the top of the redo stack, as though it had never been made: for an edit the
+     * caller WITHDRAWS through undoStep rather than one the user undid. The layer panel's instrument
+     * picks undo the run's previous pick before making the next one (instrumentPickSession.ts), and
+     * a redo that re-made it would bring back an audition the user had already backed out of. A
+     * no-op unless `step` tops the redo stack. A savepoint on it is stranded, the honest answer: the
+     * file holds the withdrawn edit and the song no longer does, with no Step left to walk back to it.
+     */
+    forgetRedoStep(step: UndoStep<D>): void {
+        if (this.#redo.at(-1) !== step) return
+        this.#redo.pop()
+        if (this.#savepoint === step) this.#savepoint = STRANDED
+        this.#bump()
+    }
+
     /** Called on a real save. The song is clean exactly while it sits here. */
     markSavepoint(): void {
         //Deliberately does NOT settle: an autosave landing mid Duration Hold must not split the

@@ -48,6 +48,37 @@ describe('a run of instrument picks is one audition', () => {
         expect(history.canUndo).toBe(false)
         //...and clean: the audition never reached the file, so nothing asks to be saved
         expect(history.isDirty).toBe(false)
+        //...and the instruments backed out of are WITHDRAWN, not waiting on the redo stack: a redo
+        //here would re-make an audition the user already left
+        expect(history.canRedo).toBe(false)
+    })
+
+    it('withdraws a replaced pick even over a redo branch the user had before the run', () => {
+        const {song, history} = auditionSong()
+        song.addNoteAt(0, 0, getSoundingTable(ORIGIN)[1] + 6)
+        song.undo()
+        expect(history.canRedo).toBe(true)
+        const picks = new InstrumentPickSession()
+
+        picks.apply(song, 0, pickOf(song, FIRST))
+        picks.apply(song, 0, pickOf(song, ORIGIN))
+
+        //the earlier branch died at the first pick, as at any edit; what must not be left is a redo
+        //that swaps the layer back onto the auditioned instrument
+        expect(history.canRedo).toBe(false)
+        expect(song.redo()).toBeNull()
+        expect(song.instruments[0].name).toBe(ORIGIN)
+    })
+
+    it('keeps the song dirty when a save landed in the middle of the run', () => {
+        //the autosave can write the file between two picks: it then holds the auditioned
+        //instrument, and the song picked back to the original no longer matches it
+        const {song, history} = auditionSong()
+        const picks = new InstrumentPickSession()
+        picks.apply(song, 0, pickOf(song, FIRST))
+        history.markSavepoint()
+        picks.apply(song, 0, pickOf(song, ORIGIN))
+        expect(history.isDirty).toBe(true)
     })
 
     it('swaps every pick from the ORIGIN, so the run is one Step equal to one direct swap', () => {
@@ -87,6 +118,28 @@ describe('a run of instrument picks is one audition', () => {
         expect(numbersOf(song)).toEqual(before)
     })
 
+    it('ends the run at a note edit between two picks, and never undoes that edit', () => {
+        //THE IDENTITY CHECK, on an edit that does not come through the panel: the keyboard stays
+        //live while the panel is open, so a note can land between two picks. The second pick must
+        //see that the history moved and swap from where the track is, rather than undo the note
+        const {song, history} = auditionSong()
+        const picks = new InstrumentPickSession()
+        picks.apply(song, 0, pickOf(song, FIRST))
+        const column = song.columns.length - 1
+        const added = song.addNoteAt(column, 0, getSoundingTable(FIRST)[0] + 6)
+        picks.apply(song, 0, pickOf(song, SECOND))
+
+        expect(song.instruments[0].name).toBe(SECOND)
+        expect(song.columns[column].notes).toContain(added)
+        //three Steps: the first pick, the note, the second pick
+        song.undo()
+        expect(song.instruments[0].name).toBe(FIRST)
+        expect(song.columns[column].notes).toContain(added)
+        song.undo()
+        song.undo()
+        expect(history.canUndo).toBe(false)
+    })
+
     it('ends the run when the panel closes or opens (reset)', () => {
         const {song} = auditionSong()
         const picks = new InstrumentPickSession()
@@ -119,6 +172,13 @@ describe('a run of instrument picks is one audition', () => {
         history.endGroup()
         expect(numbersOf(song)).toEqual(rewriteForSwap(afterFirst, FIRST, SECOND, 'Gb'))
         expect(song.instruments[0].name).toBe(SECOND)
+        //the first pick was NOT undone (an undo would also have force-closed the group): it is still
+        //its own Step, under the group's
+        song.undo()
+        expect(song.instruments[0].name).toBe(FIRST)
+        song.undo()
+        expect(song.instruments[0].name).toBe(ORIGIN)
+        expect(history.canUndo).toBe(false)
     })
 
     it('is setInstrument, unchanged, without a history', () => {
