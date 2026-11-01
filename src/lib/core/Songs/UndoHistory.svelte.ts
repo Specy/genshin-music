@@ -205,6 +205,19 @@ export class UndoHistory<D> {
         return this.#groupDepth
     }
 
+    /**
+     * The Step the history STANDS ON: the top of the undo stack, or null when nothing has landed or
+     * an edit is still in flight (a mutator mid-call, an open group, an open Step with deltas) -
+     * then the top is no longer the latest edit. Compared by IDENTITY, like the savepoint: a caller
+     * that kept the Step its own edit landed can ask "has anything happened since?" without an
+     * index that eviction or a cleared redo branch would invalidate. The layer panel's instrument
+     * picks are what ask it (instrumentPickSession.ts). Not reactive, for groupDepth's reason.
+     */
+    get lastStep(): UndoStep<D> | null {
+        if (this.#stepDepth > 0 || this.#groupDepth > 0 || this.#hasOpenDeltas) return null
+        return this.#undo.at(-1) ?? null
+    }
+
     get #hasOpenDeltas(): boolean {
         return (this.#openStep?.deltas.length ?? 0) > 0
     }

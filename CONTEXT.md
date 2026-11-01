@@ -147,7 +147,7 @@ _Avoid_: scrubbing (alone — the minimap above scrubs silently and never carrie
 ### Composer Editing
 
 **Undo Step**:
-One user-meaningful unit of reversal in the composer's history. Everything the song file records — notes, spans, tempo changers, breakpoints, columns, Basepoints, bpm, reverb, the track roster and every per-track field, the song's name — changes inside some Step; cursor state (selected column, active layer, view framing, tools selection) never makes one, the selected column being persisted notwithstanding. A gesture is one Step however many edits it performs — a Duration Hold's whole life is a single Step. Undoing or redoing a Step also returns the selection to the column the edit was made at, without sounding it.
+One user-meaningful unit of reversal in the composer's history. Everything the song file records — notes, spans, tempo changers, breakpoints, columns, Basepoints, bpm, reverb, the track roster and every per-track field, the song's name — changes inside some Step; cursor state (selected column, active layer, view framing, tools selection) never makes one, the selected column being persisted notwithstanding. A gesture is one Step however many edits it performs — a Duration Hold's whole life is a single Step, and so is a run of instrument picks in the layer panel, each made from the instrument the run started on (picking the original back leaves no Step at all). Undoing or redoing a Step also returns the selection to the column the edit was made at, without sounding it.
 _Avoid_: history entry (implementation-flavored), snapshot (the retired whole-song-copy mechanism)
 
 **Savepoint**:

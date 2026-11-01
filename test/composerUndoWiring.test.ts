@@ -1,9 +1,10 @@
 /**
- * THE COMPOSER'S HALF OF ADR-0013 - the four wirings that live in the component rather than in the
+ * THE COMPOSER'S HALF OF ADR-0013 - the five wirings that live in the component rather than in the
  * song model or the history container, each of which was a real defect before it was written:
  * a walk that leaves the active layer addressing a track the Step removed, a Duration Hold group
  * left open when the popover's note is deleted under it, a rename that is already on disk being
- * recorded as an undoable Step, and the layer popup's per-tick inputs landing one Step each.
+ * recorded as an undoable Step, the layer popup's per-tick inputs landing one Step each, and its
+ * instrument picks composing one lossy swap per pick (a song's low notes saved an octave up).
  *
  * ASSERTED AGAINST THE SOURCE, like test/composerMidiLock.test.ts and the other composer rows:
  * Composer.svelte is a 3000-line component behind a dynamic pixi import, so these rules can only be
@@ -108,5 +109,16 @@ describe('the layer settings popup collapses a gesture into one Step', () => {
     expect(functionCode('endInstrumentEditGroup')).toContain(
       'if (history.groupDepth > 0) history.endGroup();'
     );
+  });
+});
+
+describe('the layer panel\'s instrument picks are one audition', () => {
+  it('routes every panel edit through the pick session, bounded by the panel visit', () => {
+    //instrumentPickSession.test.ts drives the rule on a real song; this pins that the composer
+    //actually reaches it - a bare setInstrument here would compose one swap per pick again
+    expect(functionCode('editInstrument')).toContain('instrumentPicks.apply(song, index, instrument);');
+    expect(functionCode('editInstrument')).not.toContain('song.setInstrument(');
+    expect(composer).toContain('onSettingsOpenChange={layerSettingsOpenChanged}');
+    expect(functionCode('layerSettingsOpenChanged')).toContain('instrumentPicks.reset();');
   });
 });

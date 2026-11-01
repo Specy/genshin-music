@@ -638,9 +638,8 @@ describe('a press made to dismiss a composer overlay is not an edit', () => {
     expect(instrumentControls).toContain('{#if isEditing}');
     //...reported from the state itself, not from the four call sites that close it
     expect(instrumentControls).toContain('onSettingsOpenChange?.(isEditing);');
-    expect(composer).toContain(
-      'onSettingsOpenChange={(open) => (layerSettingsDismissesClicks = open)}'
-    );
+    expect(composer).toContain('onSettingsOpenChange={layerSettingsOpenChanged}');
+    expect(functionCode('layerSettingsOpenChanged')).toContain('layerSettingsDismissesClicks = open;');
   });
 
   it('the canvas is told the answer, not which overlay is open', () => {
