@@ -55,7 +55,7 @@
   <link rel="canonical" href={canonicalUrl} />
   <meta property="og:url" content={canonicalUrl} />
   <link rel="manifest" href="{base}/manifest.json" />
-  <link rel="apple-touch-icon" href="{base}/logo192.png" />
+  <link rel="apple-touch-icon" href="{base}/apple-touch-icon.png" />
   {#if robots}
     <meta name="robots" content={robots} />
   {/if}

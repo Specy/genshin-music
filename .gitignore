@@ -16,6 +16,9 @@
 /static/robots.txt
 /static/manifest.json
 /static/manifestData
+/static/apple-touch-icon.png
+/static/apple-touch-icon-precomposed.png
+/static/.well-known
 # per-game audio overlay (ADR-0003: samples live in src/lib/games/<id>/instruments/,
 # copied to the URL-locked paths by scripts/gameStatic.js)
 /static/assets/audio/genshin
