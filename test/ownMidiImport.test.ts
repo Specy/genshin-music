@@ -115,6 +115,33 @@ describe('a composed export, imported back', () => {
         }
     })
 
+    it('keeps the rest before the first note', () => {
+        //export puts column 0 at a known time, so the empty columns a song starts with are measured
+        //from there instead of being dropped - which used to send every such song to the importer
+        const source = new ComposedSong('late start', [INSTRUMENTS[0]])
+        source.initColumnsForConstruction([
+            columnOf([]),
+            columnOf([]),
+            columnOf([{trackIndex: 0, id: 60}]),
+            columnOf([{trackIndex: 0, id: 62}]),
+        ])
+        const song = songFromOwnMidi(throughBytes(source.toMidi()), 'x.mid')!.song as ComposedSong
+        expect(shape(noteBearingPrefix(song.columns))).toEqual({2: ['0:60:1'], 3: ['0:62:1']})
+    })
+
+    it.runIf(SUB_BEAT >= 0)('keeps a sub-beat rest before the first note', () => {
+        const source = new ComposedSong('half beat late', [INSTRUMENTS[0]])
+        source.initColumnsForConstruction([
+            columnOf([], SUB_BEAT),
+            columnOf([{trackIndex: 0, id: 60}], SUB_BEAT),
+            columnOf([{trackIndex: 0, id: 62}]),
+        ])
+        const song = songFromOwnMidi(throughBytes(source.toMidi()), 'x.mid')!.song as ComposedSong
+        const kept = noteBearingPrefix(song.columns)
+        expect(shape(kept)).toEqual(shape(source.columns))
+        expect(kept.map(c => c.tempoChanger)).toEqual(source.columns.map(c => c.tempoChanger))
+    })
+
     it('falls back to the song name from the file name when the export wrote none', () => {
         const midi = composedSource().toMidi()
         midi.name = ''
@@ -135,12 +162,6 @@ describe('a composed export the import cannot rebuild exactly goes to the import
         expect(strand).toBeDefined()
         const source = new ComposedSong('strand', [name])
         source.initColumnsForConstruction([columnOf([{trackIndex: 0, id: 60}]), columnOf([{trackIndex: 0, id: strand!}])])
-        expect(songFromOwnMidi(throughBytes(source.toMidi()), 'x.mid')).toBeNull()
-    })
-
-    it('a rest before the first note, which the import would drop', () => {
-        const source = new ComposedSong('late start', [INSTRUMENTS[0]])
-        source.initColumnsForConstruction([columnOf([]), columnOf([]), columnOf([{trackIndex: 0, id: 60}])])
         expect(songFromOwnMidi(throughBytes(source.toMidi()), 'x.mid')).toBeNull()
     })
 

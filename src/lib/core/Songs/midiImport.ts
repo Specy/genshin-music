@@ -280,6 +280,14 @@ export type MidiImportOptions = {
      * moment it gains a sustaining instrument.
      */
     layers: readonly MidiImportLayer[]
+    /**
+     * Where column 0 sits on the file's clock, in ms. Given, the rest before the first note is kept
+     * as empty columns, filled with the largest changers that fit like any other gap. Omitted, column
+     * 0 IS the first note, which is right for a foreign file: its lead-in is not a column anyone
+     * wrote. Only the import of our own exports passes it (MIDI_EXPORT_START_MS), and a note earlier
+     * than it - a file edited since - moves the start back to that note rather than before column 0.
+     */
+    startMs?: number
 }
 
 export type MidiTrackStats = {
@@ -466,9 +474,12 @@ export function importMidiTracks(
 
     // ---- 3. place each chord on an absolute grid ------------------------------------------
     const firstTime = groups[0][0].time
+    const startTime = options.startMs !== undefined && Number.isFinite(options.startMs)
+        ? Math.min(options.startMs, firstTime)
+        : firstTime
     const slots: {slot: number; notes: MidiNote[]}[] = []
     for (const group of groups) {
-        const slot = Math.round((group[0].time - firstTime) / unitMs)
+        const slot = Math.round((group[0].time - startTime) / unitMs)
         const previous = slots[slots.length - 1]
         //two chords can still quantize onto the same slot; merging keeps slots strictly
         //increasing, which the column walk below relies on
@@ -483,6 +494,14 @@ export function importMidiTracks(
     /** Index of the column holding each chord. */
     const chordColumnIndex: number[] = []
     let cursor = 0
+    //the rest before the first chord, when the caller placed column 0 ahead of it (`startMs`)
+    for (const tempoChanger of fillWithColumns(slots[0].slot, table)) {
+        const column = new NoteColumn()
+        column.tempoChanger = tempoChanger
+        columns.push(column)
+        columnStartSlots.push(cursor)
+        cursor += table.find(t => t.tempoChanger === tempoChanger)?.units ?? 1
+    }
     slots.forEach((entry, index) => {
         const next = slots[index + 1]
         //The final chord has no following chord to size its gap. A whole beat is the floor,

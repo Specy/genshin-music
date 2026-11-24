@@ -47,6 +47,13 @@ type OldFormatNoteType = OldFormat['songNotes'][number]
  */
 export type NoteMoveUnit = 'row' | 'semitone'
 
+/**
+ * Where column 0 sits in a MIDI export, in ms: the offset toMidi hands toRecordedSong. Named because
+ * the import of our own exports (ownMidiImport.ts) reads the rest before the first note against it -
+ * a song that starts with empty columns comes back starting with them.
+ */
+export const MIDI_EXPORT_START_MS = 100
+
 /** Shared shape of the LEGACY serialized versions (≤v3): index+layer columns, top-level instruments. */
 export type BaseSerializedComposedSong = SerializedSong & {
     type: "composed"
@@ -2148,7 +2155,7 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 5> 
         return stranded
     }
     toMidi = (): Midi => {
-        const song = this.toRecordedSong()
+        const song = this.toRecordedSong(MIDI_EXPORT_START_MS)
         //A tap carries no length of its own, so the export has to invent one — and it must not
         //exceed the column the tap sits in, or it overlaps the columns after it and re-imports
         //as a sustain. RecordedNote has nowhere to record which column it came from, so this is

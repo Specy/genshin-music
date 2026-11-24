@@ -22,11 +22,12 @@
 //
 // ACCEPTED ONLY IF EXACT. Nothing shows the user this song before it is saved, so the import is
 // checked the only way that cannot miss a case: the song it built is exported again, and must
-// write the same notes the file holds - same track, Note Number and start tick, and the same length
-// wherever the layer can hold - on tracks named the same, in the same order. The importer is lossy in ways a composed song can hit (a strand
-// between the rows is snapped onto a key, the rest before the first note is not kept, a hold across
-// a sub-beat rest can shrink to a tap), and any of them sends the file to the importer screen,
-// where the user sees the result before keeping it.
+// write the same notes the file holds - same track, Note Number and start tick, and the same
+// length wherever the layer can hold - on tracks named the same, in the same order. The importer
+// is lossy in ways a composed song can hit (a strand between the rows is snapped onto a key, a
+// hold across a sub-beat rest can shrink to a tap), and any of them sends the file to the importer
+// screen, where the user sees the result before keeping it. The rest before the first note is
+// kept: export puts column 0 at a known time (MIDI_EXPORT_START_MS), and the importer is told so.
 //
 // NOT OURS AFTER ALL: export writes exactly one track per layer, silent ones included, each named
 // after its layer. A file with another number of tracks, or with its names out of step, has been
@@ -36,7 +37,7 @@
 // user can say what each track is.
 import type {Midi} from '@tonejs/midi'
 import {BASE_LAYER_LIMIT} from '$core/sharedConfig'
-import {ComposedSong} from './ComposedSong.svelte'
+import {ComposedSong, MIDI_EXPORT_START_MS} from './ComposedSong.svelte'
 import {RecordedSong} from './RecordedSong'
 import {RecordedNote} from './SongClasses'
 import {decodeMidiMetadata, type MidiSongKind} from './midiMetadata'
@@ -149,6 +150,8 @@ export function songFromOwnMidi(midi: Midi, fileName: string): OwnMidiImport | n
             includeOutOfRange: true,
             pitch: metadata.pitch,
             layers: instruments,
+            //where export put column 0, so a song that starts with empty columns keeps them
+            startMs: MIDI_EXPORT_START_MS,
         }
     )
     if (result.columns.length === 0) return null

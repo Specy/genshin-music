@@ -10,7 +10,7 @@
 // bug found in this pipeline was invisible at the integer-ms tempos (120, 240) and only bit
 // where the column length is fractional.
 import {describe, expect, it} from 'vitest'
-import {CANONICAL_NOTE_IDS, INSTRUMENTS, INSTRUMENTS_DATA, PITCHES} from './imports'
+import {CANONICAL_NOTE_IDS, INSTRUMENTS, INSTRUMENTS_DATA, PITCHES, TEMPO_CHANGERS} from './imports'
 import {ComposedSong} from '../src/lib/core/Songs/ComposedSong.svelte'
 import {NoteColumn} from '../src/lib/core/Songs/SongClasses'
 import {Midi} from '../src/lib/core/Songs/midiConstructor'
@@ -608,5 +608,49 @@ describe('suggestOffset', () => {
         expect(withFixedTrack.accidentals)
             .toBe(globalOnly.accidentals + fixedOnly.accidentals)
         expect(withFixedTrack.stranded).toBe(globalOnly.stranded + fixedOnly.stranded)
+    })
+})
+
+// `startMs`: where column 0 sits on the file's clock. Only the import of our own exports passes it
+// (they put column 0 at MIDI_EXPORT_START_MS); a foreign file's lead-in stays dropped.
+describe('the rest before the first note', () => {
+    const at = (...seconds: number[]): MidiImportTrack[] => [{
+        notes: seconds.map(time => ({midi: 60, time, duration: 0.25})),
+        layer: 0,
+        localOffset: null,
+        maxScaling: 0,
+    }]
+    const noteColumns = (columns: {notes: unknown[]}[]) =>
+        columns.flatMap((column, index) => (column.notes.length > 0 ? [index] : []))
+    const options = {bpm: 120, offset: 0, includeAccidentals: true, pitch: 'C' as Pitch, layers: layersOf([false])}
+
+    it('is dropped when the caller does not say where column 0 is', () => {
+        expect(noteColumns(importMidiTracks(at(1.1, 1.6), options).columns)).toEqual([0, 1])
+    })
+
+    it('is kept as empty columns from `startMs`', () => {
+        //two beats of rest at bpm 120, then the notes a beat apart
+        const result = importMidiTracks(at(1.1, 1.6), {...options, startMs: 100})
+        expect(noteColumns(result.columns)).toEqual([2, 3])
+        expect(result.columns.slice(0, 2).every(column => column.notes.length === 0)).toBe(true)
+    })
+
+    const quarter = TEMPO_CHANGERS.findIndex(t => t.changer === 0.25)
+
+    it.runIf(quarter !== -1)('fills a sub-beat rest with the largest columns that fit, like any other gap', () => {
+        //a quarter beat of rest: one column of the changer a quarter beat long
+        const result = importMidiTracks(at(0.225, 0.725), {...options, startMs: 100})
+        expect(noteColumns(result.columns)).toEqual([1, 2])
+        expect(result.columns[0].tempoChanger).toBe(quarter)
+    })
+
+    it('moves column 0 back to a note that comes before `startMs`, never ahead of it', () => {
+        expect(noteColumns(importMidiTracks(at(0.1, 0.6), {...options, startMs: 600}).columns)).toEqual([0, 1])
+    })
+
+    it('measures a hold from the same start, so its span is unchanged', () => {
+        const held: MidiImportTrack[] = [{notes: [{midi: 60, time: 1.1, duration: 1}], layer: 0, localOffset: null, maxScaling: 0}]
+        const result = importMidiTracks(held, {...options, layers: layersOf([true]), startMs: 100})
+        expect(result.columns[2].notes[0]?.span).toBe(2)
     })
 })
