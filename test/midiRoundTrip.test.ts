@@ -364,8 +364,8 @@ describe('the Basepoint, on both sides of the pipeline', () => {
 
     /**
      * Pitched instruments moved by a register and by nothing else: every key sounds its nominal
-     * moved by whole octaves. (A per-button flavored one - Vintage-Lyre - stays best-effort, see
-     * MidiImportOptions.pitch, and has no register.)
+     * moved by whole octaves. (A per-button flavored one - Vintage-Lyre - has no register; its
+     * keys between the rows are pinned by the TUNED test below.)
      */
     const REGISTERED = INSTRUMENTS.filter((name: string) => registerShift(name) !== 0
         && INSTRUMENTS_DATA[name as keyof typeof INSTRUMENTS_DATA].notes.every(note => note.pitched)
@@ -393,6 +393,50 @@ describe('the Basepoint, on both sides of the pipeline', () => {
                 expect(result.merged).toBe(0)
             }
         }
+    })
+
+    /**
+     * Instruments with a key that sounds BETWEEN the grid's rows (Genshin's Vintage-Lyre: Db, Eb, Ab,
+     * Bb on the D, E, A, B rows). Chosen from config, so a game without one skips the test.
+     */
+    const TUNED = INSTRUMENTS.filter((name: string) =>
+        getSoundingTable(name).some((sounding, button) =>
+            INSTRUMENTS_DATA[name as keyof typeof INSTRUMENTS_DATA].notes[button]?.pitched !== false
+            && isAccidentalMidi(sounding)))
+
+    it.runIf(TUNED.length > 0)('lands a pitch between the rows on the key that sounds it, at every Basepoint', () => {
+        //the snap picks a white row by distance alone, and on these instruments the key for an
+        //accidental can sit on the row ABOVE: Eb (75) snapped down to the D row, whose key sounds
+        //Db, so our own export came back a whole tone low - and so did a foreign file's Eb
+        for (const name of TUNED) {
+            for (const pitch of PITCHES as readonly Pitch[]) {
+                const keys = getSoundingTable(name).map(sounding => sounding + basepointOffset(pitch))
+                const result = importMidiTracks(
+                    [{notes: keys.map((midi, index) => ({midi, time: index * 0.5, duration: 0.25})), layer: 0, localOffset: null, maxScaling: 0}],
+                    {bpm: 120, offset: 0, includeAccidentals: false, pitch, layers: [{name, pitch: ''}]}
+                )
+                //every key comes back as itself, and none of them was an accidental to drop: a note
+                //the layer's own instrument sounds exactly was not moved, so accidentals off keeps it
+                expect(numbersOf(result.columns), `${name} at ${pitch}`).toEqual([...keys].sort((a, b) => a - b))
+                expect(result.accidentals, `${name} at ${pitch}`).toBe(0)
+            }
+        }
+    })
+
+    it.runIf(TUNED.length > 0)('still snaps an accidental the tuned instrument has no key for', () => {
+        //the exact-key rule is a lookup on the instrument, not a licence to keep every accidental
+        const name = TUNED[0]
+        const sounding = new Set(getSoundingTable(name))
+        const missing = [...Array(128).keys()].find(n =>
+            isAccidentalMidi(n) && !sounding.has(n)
+            && n > Math.min(...sounding) && n < Math.max(...sounding))
+        expect(missing).toBeDefined()
+        const result = importMidiTracks(
+            [{notes: [{midi: missing!, time: 0, duration: 0.25}], layer: 0, localOffset: null, maxScaling: 0}],
+            {bpm: 120, offset: 0, includeAccidentals: true, pitch: 'C', layers: [{name, pitch: ''}]}
+        )
+        expect(result.accidentals).toBe(1)
+        expect(numbersOf(result.columns)).not.toEqual([missing])
     })
 
     it('keeps two adjacent notes of a non-C song distinct instead of merging them', () => {

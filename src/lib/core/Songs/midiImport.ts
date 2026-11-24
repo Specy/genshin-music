@@ -121,7 +121,17 @@ function transformMidiNumber(
         }
     }
 
-    const number = liftSnappedNumber(group.instrumentName, group.pitch, snapped.id)
+    // AN ACCIDENTAL THE LAYER'S OWN INSTRUMENT HAS A KEY FOR IS KEPT, not snapped (ADR-0007 addendum
+    // 2026-11-24). The snap only knows the grid's white rows, and picks one by distance alone, so on
+    // an instrument whose keys sound between those rows it can land on the wrong neighbour:
+    // Vintage-Lyre's Eb key lives on the E row, but 75 snapped DOWN to the D row, whose key sounds
+    // Db - our own export of an Eb came back a whole tone low, and a foreign file's Eb did too.
+    // Taking the key that sounds the pitch exactly is the only answer that cannot be wrong; it is
+    // decided per layer from the instrument's own sounding table, so an untuned instrument (no key
+    // between the rows) snaps exactly as before. Not an accidental then: nothing was moved.
+    const exact = foldedGridNumber + pitchOffset
+    const keepsExact = snapped.isAccidental && numberToButton(group.instrumentName, group.pitch, exact) !== -1
+    const number = keepsExact ? exact : liftSnappedNumber(group.instrumentName, group.pitch, snapped.id)
     const voiceable = numberToButton(group.instrumentName, group.pitch, number) !== -1
     const sounding = getSoundingTable(group.instrumentName)
     const min = Math.min(...sounding) + pitchOffset
@@ -131,7 +141,7 @@ function transformMidiNumber(
 
     return {
         number,
-        isAccidental: snapped.isAccidental,
+        isAccidental: snapped.isAccidental && !keepsExact,
         voiceable,
         addressable: Number.isFinite(number) && number >= span.min && number <= span.max,
         // A missing button between the extrema is a gap, not an invented direction.
@@ -246,7 +256,7 @@ export type MidiImportOptions = {
      * requires, but repeats periodically now; Song Grid display bounds are no longer a discard rule.
      *
      * Two consequences, both intended:
-     *  - our own export re-imports to the same notes at ANY Basepoint on an untuned instrument. It
+     *  - our own export re-imports to the same notes at ANY Basepoint, on every instrument. It
      *    used to come back lifted twice — and, worse, with distinct notes colliding: at Db the
      *    exported 65 and 66 both snapped to 65 and both lifted to 66, so one of them was merged
      *    away (or dropped outright with accidentals off).
@@ -254,11 +264,12 @@ export type MidiImportOptions = {
      *    major: it is transposed into grid space, snapped there, and the Basepoint puts it back.
      *    The selector used to only relabel the song, so it came back a whole tone sharp.
      *
-     * On a TUNED instrument (genshin's Vintage-Lyre) the trip stays BEST-EFFORT, and cannot not be:
-     * its buttons sound between the grid's rows, and the snap has only grid rows to land on — a
-     * Db that was exported at 73 snaps to the C row and returns as 72. What ADR-0007 still defers
-     * is auto-Basepoint DETECTION: a file that names no key signature and carries no metadata of
-     * ours is imported at whatever Basepoint the user picked, not at one inferred from its notes.
+     * On a TUNED instrument (genshin's Vintage-Lyre), whose keys sound between the grid's rows, an
+     * accidental the layer's instrument has a key for is kept rather than snapped (see
+     * transformMidiNumber): the snap picks a row by distance alone and used to bring Eb, Ab and Bb
+     * back on the row below, a whole tone low. What ADR-0007 still defers is auto-Basepoint
+     * DETECTION: a file that names no key signature and carries no metadata of ours is imported at
+     * whatever Basepoint the user picked, not at one inferred from its notes.
      */
     pitch: Pitch
     /**
