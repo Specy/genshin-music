@@ -22,6 +22,8 @@
         "song_backup_downloaded": "已下载歌曲备份",
         "old_format_export_dropped_notes": "有 {{count}} 个音符无法写入供旧版乐谱工具使用的部分（它们在默认乐器上没有对应的位置）。您的文件仍然包含所有音符。",
         "converted_song_stranded_notes": "某些音符可能无法播放，因为某些乐器不支持它们",
+        "own_midi_lost_notes": "已导入歌曲“{{song_name}}”，但有 {{count}} 个音符无法放置",
+        "only_first_file_opened_in_composer": "作曲器中只打开了“{{file_name}}”。请逐个打开其他文件。",
         "no_songs_to_backup": "没有要备份的歌曲",
         "no_empty_name": "请填写一个非空白的名称",
         "cloned_song": "复制歌曲：“{{song_name}}”",

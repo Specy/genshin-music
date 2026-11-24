@@ -1,6 +1,6 @@
 import {ComposedSong, type OldFormatComposed, type UnknownSerializedComposedSong} from "../Songs/ComposedSong.svelte"
 import {type OldFormatRecorded, RecordedSong, type UnknownSerializedRecordedSong} from "../Songs/RecordedSong"
-import {FileDownloader} from "../utils/Utilities"
+import {FileDownloader, isAudioFormat, isMidiFormat, isVideoFormat} from "../utils/Utilities"
 import {audioBufferToMp3Blob, audioBufferToWavBlob} from "$lib/audio/audioBufferEncoders"
 import {songsStore} from "$stores/SongsStore.svelte"
 import {type SerializedSong, Song} from "../Songs/Song.svelte"
@@ -11,9 +11,12 @@ import {type SerializedSong, Song} from "../Songs/Song.svelte"
 // and the `module` field it would otherwise prefer is itself mislabeled CommonJS (breaks Vite's
 // dev-mode SSR module runner with "exports is not defined" if forced via ssr.noExternal - tried
 // and reverted). `import type` sidesteps the whole problem: it's fully erased at compile time, so
-// there's no runtime import statement to fail either way - correct here since this file only ever
-// uses `Midi` as a type annotation (downloadMidi's parameter), never constructs one.
+// there's no runtime import statement to fail either way - correct here since `Midi` is only a
+// type annotation below (downloadMidi's parameter). The one MIDI this file DOES construct
+// (importFiles) takes its constructor from midiConstructor, which is where that problem is solved.
 import type {Midi} from "@tonejs/midi"
+import {Midi as MidiConstructor} from "../Songs/midiConstructor"
+import {songFromOwnMidi} from "../Songs/ownMidiImport"
 import {type SerializedTheme, Theme, ThemeProvider} from "../theme/ThemeProvider.svelte"
 import {convertedSongLostNotes, isForeignSong, songService} from "./SongService"
 import {Folder, type SerializedFolder} from "../Folder"
@@ -203,6 +206,74 @@ export class FileService {
         const themeErrors = result.getThemeErrors()
         themeErrors.forEach(e => logger.error(`${i18n.t('logs:error_importing_theme', {theme_name: e.file?.other?.name ?? ''})} | ${e.error}`))
         return result
+    }
+
+    /**
+     * Every file the user hands over in one gesture - picked with an Import button or dropped on
+     * the window - sorted by what it is, by name first and then by content:
+     *  - one of our own MIDI exports goes straight into the library (ownMidiImport.ts);
+     *  - any other MIDI, and any audio or video file, is for the composer's MIDI importer, which
+     *    takes ONE file: the first is handed to `openInComposer` once everything else is imported,
+     *    and the rest are named in a warning rather than silently dropped;
+     *  - everything else is read as a song sheet, backup, folder or theme, exactly as before.
+     * One file failing never stops the others: each is reported on its own.
+     */
+    async importFiles(files: readonly File[], openInComposer: (file: File) => unknown): Promise<void> {
+        const forComposer: File[] = []
+        for (const file of files) {
+            const name = (file.name || '').toLowerCase()
+            if (isAudioFormat(name) || isVideoFormat(name)) {
+                forComposer.push(file)
+                continue
+            }
+            if (isMidiFormat(name)) {
+                let own: ReturnType<typeof songFromOwnMidi>
+                try {
+                    own = songFromOwnMidi(new MidiConstructor(await file.arrayBuffer()), file.name)
+                } catch (e) {
+                    console.error(e)
+                    logger.error(i18n.t('composer:midi_parser.error_is_file_midi'), 8000)
+                    continue
+                }
+                if (!own) {
+                    forComposer.push(file)
+                    continue
+                }
+                try {
+                    await this.importAndLog(own.song.serialize() as UnknownSong)
+                } catch {
+                    //importAndLog has already said what failed
+                    continue
+                }
+                if (own.lostNotes > 0) {
+                    logger.warn(i18n.t('logs:own_midi_lost_notes', {
+                        count: own.lostNotes,
+                        song_name: own.song.name,
+                    }), 8000)
+                }
+                continue
+            }
+            let data: UnknownFile
+            try {
+                data = JSON.parse(await file.text())
+            } catch (e) {
+                console.error(e)
+                logger.error(i18n.t('logs:error_importing_invalid_format'), 8000)
+                continue
+            }
+            try {
+                await this.importAndLog(data)
+            } catch {
+                //importAndLog has already said what failed
+            }
+        }
+        if (forComposer.length === 0) return
+        if (forComposer.length > 1) {
+            logger.warn(i18n.t('logs:only_first_file_opened_in_composer', {
+                file_name: forComposer[0].name,
+            }), 8000)
+        }
+        await openInComposer(forComposer[0])
     }
 
     async importUnknownFile(unknownFile: UnknownFile): Promise<UnknownFileResult> {

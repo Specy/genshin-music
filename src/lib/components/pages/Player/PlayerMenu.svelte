@@ -12,7 +12,7 @@
   import { globalConfigStore } from '$stores/GlobalConfigStore.svelte';
   import { createShortcutListener } from '$stores/KeybindsStore.svelte';
   import { asyncConfirm, asyncPrompt } from '$stores/AsyncPromptStore.svelte';
-  import { setPendingMidiImport } from '$stores/PendingMidiImportStore';
+  import { openInComposerImporter } from '$stores/ComposerImportRoute';
   import { settingsService } from '$core/Services/SettingsService';
   import { fileService } from '$core/Services/FileService';
   import { songService } from '$core/Services/SongService';
@@ -20,7 +20,7 @@
   import { ThemeProvider } from '$core/theme/ThemeProvider.svelte';
   import { ComposedSong } from '$core/Songs/ComposedSong.svelte';
   import { RecordedSong } from '$core/Songs/RecordedSong';
-  import type { SerializedSong, SongStorable, SongType } from '$core/Songs/Song.svelte';
+  import type { SongStorable, SongType } from '$core/Songs/Song.svelte';
   import { serializeForDownload } from '$core/Songs/legacySheetExport';
   import type {
     SettingInstrumentSettingsUpdate,
@@ -28,7 +28,6 @@
     SettingVolumeUpdate,
   } from '$core/types/SettingsPropriety';
   import type { PlayerSettingsDataType } from '$core/BaseSettings';
-  import { isAudioFormat, isMidiFormat, isVideoFormat } from '$core/utils/Utilities';
   import { clickOutside } from '$lib/utils/clickOutside';
   import { t } from '$i18n/binding.svelte';
   import MenuSidebar from '$cmp/menu/MenuSidebar.svelte';
@@ -152,15 +151,17 @@
     isOpen = override !== null ? override : !isOpen;
   }
 
-  async function importSong(files: FileElement<SerializedSong[] | SerializedSong>[]) {
-    for (const file of files) {
-      try {
-        const songs = Array.isArray(file.data) ? file.data : [file.data];
-        await fileService.importAndLog(songs);
-      } catch (e) {
-        console.error(e);
-        logger.error(t('logs:error_importing_file_generic'), 8000);
-      }
+  // One route for picked and dropped files alike (FileService.importFiles): a MIDI, audio or video
+  // file that is not one of our own exports is offered to the composer's importer, asking first.
+  async function importSong(files: FileElement<File>[]) {
+    try {
+      await fileService.importFiles(
+        files.map((picked) => picked.file),
+        openInComposerImporter
+      );
+    } catch (e) {
+      console.error(e);
+      logger.error(t('logs:error_importing_file_generic'), 8000);
     }
   }
 
@@ -186,33 +187,6 @@
     const name = await asyncPrompt(t('question:enter_folder_name'));
     if (!name) return;
     folderStore.createFolder(name);
-  }
-
-  async function askForComposerImport(file: File) {
-    const fileName = file.name || 'unknown';
-    if (isAudioFormat(fileName) || isVideoFormat(fileName) || isMidiFormat(fileName)) {
-      const confirmed = await asyncConfirm(t('player:midi_or_audio_import_redirect_warning'));
-      if (confirmed) {
-        // Hand the file to the composer's importer rather than making the user pick it again
-        // over there. Module state is the only thing that crosses goto(); a hard reload of
-        // /composer?showMidi=true loses it and simply opens the importer empty.
-        setPendingMidiImport(file);
-        await goto(resolve('/composer?showMidi=true'));
-      }
-    } else {
-      logger.error(t('logs:error_importing_invalid_format'), 8000);
-    }
-  }
-
-  async function jsonImportError(error?: unknown, files?: File[]) {
-    if (error) console.error(error);
-    if (files) {
-      const first = files[0];
-      if (first) return askForComposerImport(first);
-      logger.error(t('logs:error_importing_invalid_format'), 8000);
-    } else {
-      logger.error(t('logs:error_importing_invalid_format'), 8000);
-    }
   }
 
   async function downloadAllSongs() {
@@ -529,7 +503,7 @@
           }}
         >
           {#snippet importButton()}
-            <FilePicker onPick={importSong} onError={jsonImportError} as="json" multiple={true}>
+            <FilePicker onPick={importSong} as="file" multiple={true}>
               <AppButton>
                 {#snippet icon()}
                   <IconUpload />

@@ -42,7 +42,8 @@
   import Analytics from '$core/Analytics';
   import { homeStore } from '$stores/HomeStore.svelte';
   import { logger } from '$stores/LoggerStore.svelte';
-  import { consumePendingMidiImport } from '$stores/PendingMidiImportStore';
+  import { consumePendingMidiImport, setPendingMidiImport } from '$stores/PendingMidiImportStore';
+  import { claimComposerImports } from '$stores/ComposerImportRoute';
   import { ComposedSong, type ComposedSongHistory } from '$core/Songs/ComposedSong.svelte';
   import { RecordedSong } from '$core/Songs/RecordedSong';
   import { VsrgSong } from '$core/Songs/VsrgSong.svelte';
@@ -208,6 +209,9 @@
   // ?showMidi=true is the player's route, which is why the seed consumes too.
   // svelte-ignore state_referenced_locally
   let pendingMidiFile = $state.raw(showMidi ? consumePendingMidiImport() : null);
+  // MidiParser reads its file once, at mount: a new one handed over while it is already open is
+  // installed by mounting it afresh, which this counter keys.
+  let midiParserMount = $state(0);
   let isPlaying = $state(false);
   // A context resume can be pending before playback has an audio-clock anchor. Keep that state
   // separate from isPlaying: the canvas must not move until audio has an exact start time, while
@@ -400,6 +404,10 @@
       });
     }
     cleanup.push(registerLeaveHandler(prepareToLeave));
+    // A file only the MIDI importer can read - picked or dropped anywhere while this page is up -
+    // opens the importer here instead of asking to navigate to the page we are already on. The
+    // /theme preview leaves the route alone: there, a dropped MIDI asks to open the real composer.
+    if (!inPreview) cleanup.push(claimComposerImports(openImporterWith));
     //A context rebuild resets the audio clock to zero, while this run's columnStartTime and
     //commitTime are absolute times taken from the old one - the transport would park waiting on
     //a boundary the new clock will not reach, with isPlaying stuck true and a play button that
@@ -2598,6 +2606,21 @@
     return true;
   }
 
+  /**
+   * Open the MIDI importer with `file` in it - by the same door its own button uses, so a dirty
+   * song is still asked about first. Already open, the file replaces the one in it; mid-question,
+   * it waits in the pending slot, which the opening consumes once the question is answered yes.
+   */
+  async function openImporterWith(file: File) {
+    setPendingMidiImport(file);
+    if (isMidiVisible) {
+      pendingMidiFile = consumePendingMidiImport();
+      midiParserMount++;
+      return;
+    }
+    await changeMidiVisibility(true);
+  }
+
   async function downloadSong(songToDownload: SerializedSong, as: 'song' | 'midi') {
     try {
       if (songToDownload.id === song.id) {
@@ -2842,16 +2865,18 @@
   description="Create or edit songs with the composer, using up to 52 layers, tempo changers, multiple instruments and pitches. You can also convert a MIDI, video or audio into a sheet."
 />
 {#if isMidiVisible}
-  <MidiParser
-    data={{
-      selectedColumn: song.selected,
-    }}
-    initialFile={pendingMidiFile}
-    functions={{
-      changeMidiVisibility,
-      loadSong,
-    }}
-  />
+  {#key midiParserMount}
+    <MidiParser
+      data={{
+        selectedColumn: song.selected,
+      }}
+      initialFile={pendingMidiFile}
+      functions={{
+        changeMidiVisibility,
+        loadSong,
+      }}
+    />
+  {/key}
 {/if}
 <!-- `composer-grid-in-preview` keeps /theme's composer preview on the pre-existing centred layout:
      App.css's desktop block gives the real page a permanent sidebar column and a canvas that fills
