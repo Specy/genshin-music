@@ -11,7 +11,7 @@ import {
 import {ComposedSong, defaultInstrumentMap} from "./ComposedSong.svelte"
 import {clamp, groupByNotes} from "../utils/Utilities"
 import {SIMULTANEOUS_NOTE_THRESHOLD_MS} from "./duplicateNotes"
-import {encodeMidiMetadata} from "./midiMetadata"
+import {encodeMidiMetadata, type MidiSongKind} from "./midiMetadata"
 import clonedeep from 'lodash.clonedeep'
 import {NoteLayer} from "./Layer"
 // This file genuinely CONSTRUCTS a Midi below (toMidi()), so the type cannot be the only import.
@@ -533,8 +533,10 @@ export class RecordedSong extends Song<RecordedSong, SerializedRecordedSong> {
      * one beat; ComposedSong passes its SHORTEST column instead, because a tap sitting in a
      * 1/8 column would otherwise be written a full beat long, overlap the columns after it,
      * and re-import as a multi-column sustain.
+     * @param kind The song model the file says it came from (midiMetadata.ts): `composed` when
+     * ComposedSong exports through this method, which is the only reason it is a parameter.
      */
-    toMidi(tapDurationMs?: number): Midi {
+    toMidi(tapDurationMs?: number, kind: MidiSongKind = 'recorded'): Midi {
         const midi = new MidiConstructor()
         //below ~15bpm the 3-byte microseconds-per-quarter field overflows and the tempo comes
         //back as something else entirely (bpm 3 returns as 18)
@@ -551,7 +553,7 @@ export class RecordedSong extends Song<RecordedSong, SerializedRecordedSong> {
         midi.header.meta.push({
             ticks: 0,
             type: "text",
-            text: encodeMidiMetadata({instruments: this.instruments, pitch: this.pitch, reverb: this.reverb}),
+            text: encodeMidiMetadata({instruments: this.instruments, pitch: this.pitch, reverb: this.reverb, kind}),
         })
         midi.name = this.name
         /**

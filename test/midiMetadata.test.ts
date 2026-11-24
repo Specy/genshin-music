@@ -54,10 +54,11 @@ describe('midi metadata', () => {
         //THE scope rule. Notes, timing, note lengths, tempo and tempo changers are MIDI's job;
         //if any of them appear here, re-importing our own export stops exercising the code a
         //foreign file goes through.
+        //`kind` is the one label beside the instruments: which song MODEL to rebuild, nothing it plays
         const song = songWithLayers()
-        const text = encodeMidiMetadata(song)
+        const text = encodeMidiMetadata({instruments: song.instruments, pitch: song.pitch, reverb: song.reverb, kind: 'composed'})
         const payload = JSON.parse(text.slice(text.indexOf(':') + 1))
-        expect(Object.keys(payload).sort()).toEqual(['app', 'instruments', 'pitch', 'reverb', 'v'])
+        expect(Object.keys(payload).sort()).toEqual(['app', 'instruments', 'kind', 'pitch', 'reverb', 'v'])
         for (const forbidden of ['bpm', 'tempo', 'tempoChangers', 'columns', 'notes', 'spans', 'duration']) {
             expect(JSON.stringify(payload)).not.toContain(forbidden)
         }
@@ -70,6 +71,25 @@ describe('midi metadata', () => {
         const notes = midi.tracks.flatMap(t => t.notes.map(n => `${n.midi}@${n.time.toFixed(3)}`))
         expect(notes.sort()).toEqual(['60@0.100', '64@0.373'])
         expect(Math.round((midi.header.tempos[0]?.bpm ?? 0) * 4)).toBe(220)
+    })
+
+    it('names the song model the export came from', () => {
+        expect(throughFile(songWithLayers()).metadata!.kind).toBe('composed')
+        const recorded = songWithLayers().toRecordedSong()
+        const midi = new Midi(new Uint8Array(recorded.toMidi().toArray()).buffer as ArrayBuffer)
+        expect(decodeMidiMetadata(midi.header.meta ?? [])!.kind).toBe('recorded')
+    })
+
+    it('reads an export from before the kind existed, or a kind it does not know, as composed', () => {
+        //no version bump came with the field, so an older build still reads the instruments of a
+        //newer export, and a newer build has to read the older exports that have no kind at all
+        const instruments = [new InstrumentData({name: INSTRUMENTS[0]})]
+        const old = encodeMidiMetadata({instruments, pitch: 'C', reverb: false})
+        expect(old).not.toContain('kind')
+        expect(decodeMidiMetadata([{type: 'text', text: old}])!.kind).toBe('composed')
+        const unknown = encodeMidiMetadata({instruments, pitch: 'C', reverb: false, kind: 'composed'})
+            .replace('"kind":"composed"', '"kind":"vsrg"')
+        expect(decodeMidiMetadata([{type: 'text', text: unknown}])!.kind).toBe('composed')
     })
 
     it('ignores a file that is not ours', () => {

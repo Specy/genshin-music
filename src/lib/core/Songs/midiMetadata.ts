@@ -12,6 +12,15 @@
 // The .mid is NOT a save format. The JSON format remains the real one; this exists so a song
 // exported for an app that cannot read our format comes back usefully rather than as bare notes.
 //
+// THE KIND (composed or recorded) is the one label beside the instruments, and it is inside the
+// rule rather than an exception to it: it says which song MODEL to rebuild, not one thing about
+// what the song plays. This metadata being present at all is also what lets one of our own
+// exports skip the importer screen (ownMidiImport.ts) - and even then every note still comes off
+// the MIDI events: a
+// composed export goes through importMidiTracks, the foreign-file importer itself, and a recorded
+// one is read event for event. A file written before the kind existed has none, and is rebuilt
+// as a composed song, which is what the importer always made of it.
+//
 // PORTABILITY: a Text meta event is standard and DAWs ignore ones they do not understand, but
 // some editors drop or rewrite them on re-save. So this is best-effort by construction — every
 // reader must work without it, and `decodeMidiMetadata` returning null is an ordinary outcome,
@@ -24,6 +33,9 @@ import type {Pitch} from '$core/legacyConfig'
 const METADATA_PREFIX = 'genshin-music-meta:'
 const METADATA_VERSION = 1
 
+/** Which song model an export came from - the two that can be written as MIDI. */
+export type MidiSongKind = 'composed' | 'recorded'
+
 type MidiMetadataPayload = {
     app: string
     v: number
@@ -31,12 +43,20 @@ type MidiMetadataPayload = {
     instruments: SerializedInstrumentData[]
     pitch: string
     reverb: boolean
+    /**
+     * Added without a version bump, deliberately: a reader rejects any other `v` outright, so
+     * bumping it would cost every older build the instruments of every newer export. Optional, so
+     * an older reader simply ignores it and a newer one reads its absence as `composed`.
+     */
+    kind?: MidiSongKind
 }
 
 export type MidiMetadata = {
     instruments: InstrumentData[]
     pitch: Pitch
     reverb: boolean
+    /** `composed` when the file names none: an export from before the field existed. */
+    kind: MidiSongKind
 }
 
 /** The text to store in a Text meta event. */
@@ -44,6 +64,7 @@ export function encodeMidiMetadata(song: {
     instruments: InstrumentData[]
     pitch: Pitch
     reverb: boolean
+    kind?: MidiSongKind
 }): string {
     const payload: MidiMetadataPayload = {
         app: APP_NAME,
@@ -52,6 +73,7 @@ export function encodeMidiMetadata(song: {
         pitch: song.pitch,
         reverb: song.reverb,
     }
+    if (song.kind) payload.kind = song.kind
     return METADATA_PREFIX + JSON.stringify(payload)
 }
 
@@ -80,6 +102,9 @@ export function decodeMidiMetadata(
                 instruments: payload.instruments.map(data => InstrumentData.deserialize(data)),
                 pitch: (payload.pitch ?? 'C') as Pitch,
                 reverb: payload.reverb === true,
+                //anything but the one other model is a composed song, unknown values included:
+                //that is the model the importer has always built from a MIDI
+                kind: payload.kind === 'recorded' ? 'recorded' : 'composed',
             }
         } catch {
             //truncated or hand-edited text: fall through and treat the file as foreign

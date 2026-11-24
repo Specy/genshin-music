@@ -2163,7 +2163,7 @@ export class ComposedSong extends Song<ComposedSong, SerializedComposedSong, 5> 
                     : Math.min(shortest, msPerBeat * TEMPO_CHANGERS[column.tempoChanger].changer),
             msPerBeat
         )
-        const midi = song.toMidi(shortestColumnMs)
+        const midi = song.toMidi(shortestColumnMs, 'composed')
         const midiNames = [...new Set(this.instruments.map(i => INSTRUMENTS_DATA[i.name].midiName))]
         this.instruments.forEach((ins, i) => {
             const instrument = INSTRUMENTS_DATA[ins.name]
