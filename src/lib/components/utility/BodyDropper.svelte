@@ -21,6 +21,11 @@
   //
   // THE OVERLAY IS ALWAYS MOUNTED and only switched on and off by a class, and hiding waits a beat:
   // a momentary flip can then neither rebuild it nor restart its animation.
+  //
+  // A DRAG WITHOUT FILES - a link or text from another window - is swallowed everywhere but a text
+  // field, as every drop always was here. Left to the browser, a link dropped on the page navigates
+  // the tab to it, leaving the app with whatever was unsaved (the player has no leave guard). A text
+  // field is the one place such a drop means something, so there the browser inserts it as usual.
   let {
     onDrop,
     showDropArea = false,
@@ -41,6 +46,18 @@
 
   function hasFiles(event: DragEvent): boolean {
     return event.dataTransfer?.types.includes('Files') ?? false;
+  }
+
+  function isTextField(target: EventTarget | null): boolean {
+    return (
+      target instanceof Element &&
+      target.closest('input, textarea, [contenteditable]:not([contenteditable="false"])') !== null
+    );
+  }
+
+  /** Cancelling dragover AND drop is what stops the browser navigating to a dropped link. */
+  function swallowDropWithoutFiles(event: DragEvent) {
+    if (!isTextField(event.target)) event.preventDefault();
   }
 
   function show() {
@@ -78,7 +95,7 @@
   }
 
   function handleDragOver(event: DragEvent) {
-    if (!hasFiles(event)) return;
+    if (!hasFiles(event)) return swallowDropWithoutFiles(event);
     // Without this the browser refuses the drop (and opens the file in the tab instead).
     event.preventDefault();
     // A drag that started outside a frame we listen in can arrive without an enter of its own.
@@ -94,7 +111,7 @@
   }
 
   function handleDrop(event: DragEvent) {
-    if (!hasFiles(event)) return;
+    if (!hasFiles(event)) return swallowDropWithoutFiles(event);
     event.preventDefault();
     endDrag();
     const files = Array.from(event.dataTransfer?.files ?? []);
