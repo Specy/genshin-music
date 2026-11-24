@@ -39,3 +39,8 @@ build-stats.html
 # local leftovers of deleted trees (still on disk, never re-track)
 /src-tauri/
 /.claude/
+# wizspec agent-workflows skills (installed via `npx skills add`; the canonical copies
+# live in .agents/ and agent/, and skills-lock.json pins their commit)
+/.agents/
+/agent/
+/skills-lock.json
