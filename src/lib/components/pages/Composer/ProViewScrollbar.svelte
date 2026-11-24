@@ -18,6 +18,10 @@
   // a drag already in progress): fading in quickly and out slowly, the two durations living on the
   // two states in the style block below. The hover half is behind `(hover: hover)` because a touch
   // LATCHES :hover until the next tap, which would leave the scrollbar stuck on over a playing song.
+  //
+  // ...AND ALWAYS ON A DEVICE THAT CANNOT HOVER (`(hover: none)`, a phone or a tablet without a
+  // pointer): there the hover reveal does not exist, so hiding it over a playing song left a touch
+  // user no way to scroll the axis at all until playback stopped.
   let {
     scroll,
     top,
@@ -156,6 +160,14 @@
   .pro-scrollbar-dragging .pro-scrollbar-thumb {
     width: 10px;
     opacity: 0.75;
+  }
+
+  /* No hover to reveal it with, so it never hides: see the header comment. */
+  @media (hover: none) {
+    .pro-scrollbar {
+      opacity: 1;
+      pointer-events: auto;
+    }
   }
 
   @media (hover: hover) {
