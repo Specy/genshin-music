@@ -9,7 +9,7 @@
   import { folderStore } from '$stores/FoldersStore.svelte';
   import { globalConfigStore } from '$stores/GlobalConfigStore.svelte';
   import { asyncConfirm, asyncPrompt } from '$stores/AsyncPromptStore.svelte';
-  import { openInComposerImporter } from '$stores/ComposerImportRoute';
+  import { composerImporter, openInComposerImporter } from '$stores/ComposerImportRoute';
   import { fileService } from '$core/Services/FileService';
   import { KeyboardProvider } from '$lib/providers/KeyboardProvider';
   import { clickOutside } from '$lib/utils/clickOutside';
@@ -186,9 +186,12 @@
     try {
       await fileService.importFiles(
         files.map((picked) => picked.file),
-        async (file) => {
-          toggleMenu(false);
-          await openInComposerImporter(file);
+        {
+          ...composerImporter,
+          open: (file) => {
+            toggleMenu(false);
+            return openInComposerImporter(file);
+          },
         }
       );
     } catch (e) {

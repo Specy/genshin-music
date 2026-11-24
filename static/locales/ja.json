@@ -22,7 +22,6 @@
         "song_backup_downloaded": "曲のバックアップがダウンロードされました",
         "old_format_export_dropped_notes": "{{count}} 個のノートを旧来の楽譜ツール向けに含めることができませんでした（デフォルトの楽器に対応する位置がありません）。ファイル自体にはすべてのノートが含まれています。",
         "converted_song_stranded_notes": "一部のノートは、一部の楽器に対応していないため再生されない場合があります",
-        "own_midi_lost_notes": "曲 \"{{song_name}}\" をインポートしましたが、{{count}} 個のノートを配置できませんでした",
         "only_first_file_opened_in_composer": "コンポーザーで開いたのは \"{{file_name}}\" だけです。ほかのファイルは1つずつ開いてください。",
         "no_songs_to_backup": "バックアップする曲がありません",
         "no_empty_name": "空白でない名前を入力してください",

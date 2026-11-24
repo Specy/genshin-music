@@ -11,8 +11,11 @@
  * off this — the importer reads it once, imperatively, when it opens.
  *
  * Consume-once is the invariant that matters: a file left in the slot would be re-imported the
- * next time the importer is opened by hand, so `consume` always empties it. A hard reload (not
- * an SPA navigation) loses the pending file, which only means the importer opens empty.
+ * next time the importer is opened by hand, so `consume` always empties it. It is taken only by the
+ * composer mounting for a hand-off (?showMidi=true); a hand-off whose navigation never happened (a
+ * leave the user cancelled) is left behind, and the composer empties the slot unread whenever its
+ * importer opens any other way. A hard reload (not an SPA navigation) loses the pending file, which
+ * only means the importer opens empty.
  */
 let pending: File | null = null;
 
@@ -31,4 +34,9 @@ export function consumePendingMidiImport(): File | null {
 /** Drops the pending file without importing it (an abandoned handoff must not linger). */
 export function clearPendingMidiImport() {
   pending = null;
+}
+
+/** Whether `file` is still waiting, i.e. nothing has taken it since it was handed over. */
+export function isStillPendingMidiImport(file: File): boolean {
+  return pending === file;
 }

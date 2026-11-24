@@ -12,7 +12,7 @@
   import Home from '$lib/components/shell/Home.svelte';
   import { fileService } from '$core/Services/FileService';
   import { logger } from '$stores/LoggerStore.svelte';
-  import { openInComposerImporter } from '$stores/ComposerImportRoute';
+  import { composerImporter } from '$stores/ComposerImportRoute';
   import { canLeave, navigationGuard, type NavigationTarget } from '$stores/navigationGuard.svelte';
   import { appPathname } from '$lib/utils/appPathname';
   import { t } from '$i18n/binding.svelte';
@@ -72,7 +72,7 @@
   // first, unless the composer is the page and has claimed the route (ComposerImportRoute).
   async function handleDrop(files: File[]) {
     try {
-      await fileService.importFiles(files, openInComposerImporter);
+      await fileService.importFiles(files, composerImporter);
     } catch (e) {
       console.error(e);
       logger.error(t('logs:error_importing_file_generic'));

@@ -11,7 +11,7 @@ import {InstrumentData, NoteColumn, RecordedNote} from '../src/lib/core/Songs/So
 import {Midi} from '../src/lib/core/Songs/midiConstructor'
 import {encodeMidiMetadata} from '../src/lib/core/Songs/midiMetadata'
 import {instrumentSupportsSustain} from '../src/lib/core/Songs/midiImport'
-import {basepointOffset, getSoundingTable} from '../src/lib/core/Songs/noteIds'
+import {basepointOffset, getSoundingTable, isAccidentalMidi} from '../src/lib/core/Songs/noteIds'
 import {songFromOwnMidi} from '../src/lib/core/Songs/ownMidiImport'
 import type {Pitch} from '../src/lib/core/legacyConfig'
 
@@ -75,7 +75,6 @@ describe('a composed export, imported back', () => {
         const result = songFromOwnMidi(throughBytes(source.toMidi()), 'Round trip.mid')
         expect(result).not.toBeNull()
         expect(result!.kind).toBe('composed')
-        expect(result!.lostNotes).toBe(0)
         const song = result!.song as ComposedSong
         expect(song).toBeInstanceOf(ComposedSong)
         expect(song.name).toBe('Round trip')
@@ -108,7 +107,6 @@ describe('a composed export, imported back', () => {
                 source.initColumnsForConstruction(numbers.map(id => columnOf([{trackIndex: 0, id}])))
                 const result = songFromOwnMidi(throughBytes(source.toMidi()), 'x.mid')
                 expect(result, `${name} at ${pitch}`).not.toBeNull()
-                expect(result!.lostNotes, `${name} at ${pitch}`).toBe(0)
                 expect(
                     shape(noteBearingPrefix((result!.song as ComposedSong).columns)),
                     `${name} at ${pitch}`
@@ -121,6 +119,40 @@ describe('a composed export, imported back', () => {
         const midi = composedSource().toMidi()
         midi.name = ''
         expect(songFromOwnMidi(throughBytes(midi), 'My song.mid')!.song.name).toBe('My song')
+    })
+})
+
+describe('a composed export the import cannot rebuild exactly goes to the importer screen', () => {
+    //nothing shows the user a direct import before it is saved, so a song the importer would change
+    //must not be saved silently: each case below is one the shared importer is lossy on
+    const SUSTAINING = INSTRUMENTS.find((name: string) => instrumentSupportsSustain(name))
+
+    it('a strand between the rows, which the import would snap onto a key', () => {
+        const name = INSTRUMENTS[0]
+        const keys = new Set(getSoundingTable(name))
+        const strand = [...Array(128).keys()].find(n => isAccidentalMidi(n) && !keys.has(n)
+            && n > Math.min(...keys) && n < Math.max(...keys))
+        expect(strand).toBeDefined()
+        const source = new ComposedSong('strand', [name])
+        source.initColumnsForConstruction([columnOf([{trackIndex: 0, id: 60}]), columnOf([{trackIndex: 0, id: strand!}])])
+        expect(songFromOwnMidi(throughBytes(source.toMidi()), 'x.mid')).toBeNull()
+    })
+
+    it('a rest before the first note, which the import would drop', () => {
+        const source = new ComposedSong('late start', [INSTRUMENTS[0]])
+        source.initColumnsForConstruction([columnOf([]), columnOf([]), columnOf([{trackIndex: 0, id: 60}])])
+        expect(songFromOwnMidi(throughBytes(source.toMidi()), 'x.mid')).toBeNull()
+    })
+
+    it.runIf(SUSTAINING !== undefined && SUB_BEAT >= 0)('a hold across a sub-beat rest, which the import would shorten', () => {
+        const source = new ComposedSong('held', [SUSTAINING!])
+        const id = getSoundingTable(SUSTAINING!)[0]
+        source.initColumnsForConstruction([
+            columnOf([{trackIndex: 0, id, span: 2}], SUB_BEAT),
+            columnOf([], SUB_BEAT),
+            columnOf([{trackIndex: 0, id}]),
+        ])
+        expect(songFromOwnMidi(throughBytes(source.toMidi()), 'x.mid')).toBeNull()
     })
 })
 
@@ -186,20 +218,39 @@ describe('a file that is not one of ours, as far as this import is concerned', (
         midi.addTrack().addNote({midi: 60, time: 0, duration: 0.5})
         expect(songFromOwnMidi(throughBytes(midi), 'x.mid')).toBeNull()
     })
+
+    it('an export a DAW has since dropped an empty track from', () => {
+        //the silent middle layer's track goes, and every later track would shift onto the layer
+        //before it - its notes played by that layer's instrument
+        const midi = composedSource().toMidi()
+        expect(midi.tracks[1].notes).toHaveLength(0)
+        midi.tracks.splice(1, 1)
+        expect(songFromOwnMidi(throughBytes(midi), 'x.mid')).toBeNull()
+    })
+
+    it('an export a DAW has since put a conductor track in front of, keeping the count', () => {
+        //the conductor goes first and the silent last layer's track is dropped: as many tracks as
+        //layers, and every note one track later than the layer it was written for
+        const source = new ComposedSong('conductor', [INSTRUMENTS[0], INSTRUMENTS[1] ?? INSTRUMENTS[0]])
+        source.initColumnsForConstruction([columnOf([{trackIndex: 0, id: 60}])])
+        const midi = source.toMidi()
+        const conductor = midi.addTrack()
+        midi.tracks.pop()
+        midi.tracks.unshift(conductor)
+        midi.tracks.pop()
+        expect(midi.tracks).toHaveLength(2)
+        expect(songFromOwnMidi(throughBytes(midi), 'x.mid')).toBeNull()
+    })
 })
 
 describe('an export written before the song kind existed', () => {
     it('comes back composed, which is what the importer always made of it', () => {
-        const midi = new Midi()
-        midi.header.setTempo(220 / 4)
-        midi.header.meta.push({
-            ticks: 0,
-            type: 'text',
-            text: encodeMidiMetadata({instruments: [new InstrumentData({name: INSTRUMENTS[0]})], pitch: 'C', reverb: false}),
-        })
-        const track = midi.addTrack()
-        track.addNote({midi: 60, time: 0, duration: 60 / 220})
-        track.addNote({midi: 62, time: 60 / 220, duration: 60 / 220})
+        const source = new ComposedSong('old', [INSTRUMENTS[0]])
+        source.initColumnsForConstruction([columnOf([{trackIndex: 0, id: 60}]), columnOf([{trackIndex: 0, id: 62}])])
+        const midi = source.toMidi()
+        const old = encodeMidiMetadata({instruments: [new InstrumentData({name: INSTRUMENTS[0]})], pitch: 'C', reverb: false})
+        expect(old).not.toContain('kind')
+        midi.header.meta = [{ticks: 0, type: 'text', text: old}]
         const result = songFromOwnMidi(throughBytes(midi), 'old.mid')
         expect(result!.kind).toBe('composed')
         expect(shape((result!.song as ComposedSong).columns)).toEqual({0: ['0:60:1'], 1: ['0:62:1']})

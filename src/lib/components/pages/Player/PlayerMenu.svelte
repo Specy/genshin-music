@@ -12,7 +12,7 @@
   import { globalConfigStore } from '$stores/GlobalConfigStore.svelte';
   import { createShortcutListener } from '$stores/KeybindsStore.svelte';
   import { asyncConfirm, asyncPrompt } from '$stores/AsyncPromptStore.svelte';
-  import { openInComposerImporter } from '$stores/ComposerImportRoute';
+  import { composerImporter } from '$stores/ComposerImportRoute';
   import { settingsService } from '$core/Services/SettingsService';
   import { fileService } from '$core/Services/FileService';
   import { songService } from '$core/Services/SongService';
@@ -157,7 +157,7 @@
     try {
       await fileService.importFiles(
         files.map((picked) => picked.file),
-        openInComposerImporter
+        composerImporter
       );
     } catch (e) {
       console.error(e);

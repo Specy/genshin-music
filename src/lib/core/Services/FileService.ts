@@ -38,6 +38,14 @@ export type UnknownFileTypes = UnknownSong | OldFormatComposed | OldFormatRecord
 export type UnknownFile = UnknownFileTypes | UnknownFileTypes[]
 export type UnknownSongImport = UnknownSong | UnknownSong[]
 
+/** Where FileService.importFiles sends what only the composer's MIDI importer can read. */
+export type ComposerImporter = {
+    /** Hand `file` to the importer; resolves to whether the importer actually took it. */
+    open: (file: File) => Promise<boolean> | boolean
+    /** Whether the importer is open right now. Absent means it never is (no composer on the page). */
+    isOpen?: () => boolean
+}
+
 type SplitImports = {
     songs: UnknownSong[]
     folders: SerializedFolder[]
@@ -213,20 +221,27 @@ export class FileService {
      * the window - sorted by what it is, by name first and then by content:
      *  - one of our own MIDI exports goes straight into the library (ownMidiImport.ts);
      *  - any other MIDI, and any audio or video file, is for the composer's MIDI importer, which
-     *    takes ONE file: the first is handed to `openInComposer` once everything else is imported,
-     *    and the rest are named in a warning rather than silently dropped;
+     *    takes ONE file: the first is handed to `importer.open` once everything else is imported,
+     *    and once the importer has really taken it, the rest are named in a warning;
+     *  - while that importer is already OPEN, every MIDI goes to it, our own exports included: the
+     *    user is in the middle of importing, and a file sent there is meant for the screen in front
+     *    of them, not for the library behind it;
      *  - everything else is read as a song sheet, backup, folder or theme, exactly as before.
      * One file failing never stops the others: each is reported on its own.
      */
-    async importFiles(files: readonly File[], openInComposer: (file: File) => unknown): Promise<void> {
-        const forComposer: File[] = []
+    async importFiles(files: readonly File[], importer: ComposerImporter): Promise<void> {
+        const forImporter: File[] = []
         for (const file of files) {
-            const name = (file.name || '').toLowerCase()
+            const name = file.name || ''
             if (isAudioFormat(name) || isVideoFormat(name)) {
-                forComposer.push(file)
+                forImporter.push(file)
                 continue
             }
             if (isMidiFormat(name)) {
+                if (importer.isOpen?.()) {
+                    forImporter.push(file)
+                    continue
+                }
                 let own: ReturnType<typeof songFromOwnMidi>
                 try {
                     own = songFromOwnMidi(new MidiConstructor(await file.arrayBuffer()), file.name)
@@ -236,20 +251,13 @@ export class FileService {
                     continue
                 }
                 if (!own) {
-                    forComposer.push(file)
+                    forImporter.push(file)
                     continue
                 }
                 try {
                     await this.importAndLog(own.song.serialize() as UnknownSong)
                 } catch {
                     //importAndLog has already said what failed
-                    continue
-                }
-                if (own.lostNotes > 0) {
-                    logger.warn(i18n.t('logs:own_midi_lost_notes', {
-                        count: own.lostNotes,
-                        song_name: own.song.name,
-                    }), 8000)
                 }
                 continue
             }
@@ -267,13 +275,15 @@ export class FileService {
                 //importAndLog has already said what failed
             }
         }
-        if (forComposer.length === 0) return
-        if (forComposer.length > 1) {
+        if (forImporter.length === 0) return
+        //only once the importer has the file: a declined "open it in the composer?" or a cancelled
+        //save question opened nothing, and a warning saying otherwise would be false
+        const opened = await importer.open(forImporter[0])
+        if (opened && forImporter.length > 1) {
             logger.warn(i18n.t('logs:only_first_file_opened_in_composer', {
-                file_name: forComposer[0].name,
+                file_name: forImporter[0].name,
             }), 8000)
         }
-        await openInComposer(forComposer[0])
     }
 
     async importUnknownFile(unknownFile: UnknownFile): Promise<UnknownFileResult> {

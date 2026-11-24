@@ -48,7 +48,6 @@
     "imported_folder": "Imported folder \"{{folder_name}}\"",
     "imported_song": "Imported {{song_type}} song \"{{song_name}}\"",
     "converted_song_stranded_notes": "Some notes might not play as they are not supported by some instruments",
-    "own_midi_lost_notes": "Imported \"{{song_name}}\", but {{count}} of its notes could not be placed",
     "only_first_file_opened_in_composer": "Only \"{{file_name}}\" was opened in the composer. Open the other files one at a time.",
     "changing_language": "Changing language...",
     "error_changing_language": "Error changing language"

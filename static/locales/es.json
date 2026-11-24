@@ -24,7 +24,6 @@
     "song_backup_downloaded": "Copia de seguridad de la canción descargada",
     "old_format_export_dropped_notes": "{{count}} nota(s) no se pudieron incluir para las herramientas de partituras antiguas (no tienen posición en el instrumento predeterminado). Tu archivo conserva todas las notas.",
     "converted_song_stranded_notes": "Algunas notas podrían no sonar porque no son compatibles con algunos instrumentos",
-    "own_midi_lost_notes": "Canción \"{{song_name}}\" importada, pero {{count}} de sus notas no se pudieron colocar",
     "only_first_file_opened_in_composer": "Solo se abrió \"{{file_name}}\" en el Compositor. Abre los demás archivos de uno en uno.",
     "no_songs_to_backup": "No hay canciones para respaldar",
     "no_empty_name": "Escribe un nombre que no esté vacío",
