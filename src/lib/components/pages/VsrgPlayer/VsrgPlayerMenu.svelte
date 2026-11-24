@@ -27,7 +27,7 @@
   import IconUpload from '~icons/fa6-solid/upload';
   import { fileService } from '$core/Services/FileService';
   import { logger } from '$stores/LoggerStore.svelte';
-  import type { SerializedSong } from '$core/Songs/Song.svelte';
+  import { composerImporter } from '$stores/ComposerImportRoute';
 
   // No shortcut listener in this file - the vsrg-player page route registers restart/stop
   // shortcuts instead.
@@ -43,23 +43,19 @@
 
   const excludedSongs: SongType[] = ['composed', 'recorded'];
 
-  // Same shape as PlayerMenu/ComposerMenu's importer, minus their MIDI-redirect prompt: this menu
-  // only ever lists vsrg songs, and a dropped .mid is not one.
-  async function importSong(files: FileElement<SerializedSong[] | SerializedSong>[]) {
-    for (const file of files) {
-      try {
-        const songs = Array.isArray(file.data) ? file.data : [file.data];
-        await fileService.importAndLog(songs);
-      } catch (e) {
-        console.error(e);
-        logger.error(t('logs:error_importing_file_generic'), 8000);
-      }
+  // The same route as every other Import button and a drop on this page (FileService.importFiles):
+  // this menu only lists vsrg songs, but a sheet or one of our own MIDI exports picked here still
+  // belongs in the library, and a foreign MIDI is offered to the composer's importer.
+  async function importSong(files: FileElement<File>[]) {
+    try {
+      await fileService.importFiles(
+        files.map((picked) => picked.file),
+        composerImporter
+      );
+    } catch (e) {
+      console.error(e);
+      logger.error(t('logs:error_importing_file_generic'), 8000);
     }
-  }
-
-  function importError(error?: unknown) {
-    if (error) console.error(error);
-    logger.error(t('logs:error_importing_invalid_format'), 8000);
   }
 
   //the page is useless without a song, so it opens straight onto the song list
@@ -233,7 +229,7 @@
           }}
         >
           {#snippet importButton()}
-            <FilePicker onPick={importSong} onError={importError} as="json" multiple={true}>
+            <FilePicker onPick={importSong} as="file" multiple={true}>
               <AppButton>
                 {#snippet icon()}
                   <IconUpload />

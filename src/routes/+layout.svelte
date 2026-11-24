@@ -7,11 +7,12 @@
   import RootMetadata from '$lib/components/shell/RootMetadata.svelte';
   import Logger from '$lib/components/shell/Logger.svelte';
   import AsyncPrompt from '$lib/components/shell/AsyncPrompt.svelte';
-  import BodyDropper, { type DroppedFile } from '$lib/components/utility/BodyDropper.svelte';
+  import BodyDropper from '$lib/components/utility/BodyDropper.svelte';
   import AppInit from '$lib/components/shell/AppInit.svelte';
   import Home from '$lib/components/shell/Home.svelte';
-  import { fileService, type UnknownSongImport } from '$core/Services/FileService';
+  import { fileService } from '$core/Services/FileService';
   import { logger } from '$stores/LoggerStore.svelte';
+  import { composerImporter } from '$stores/ComposerImportRoute';
   import { canLeave, navigationGuard, type NavigationTarget } from '$stores/navigationGuard.svelte';
   import { appPathname } from '$lib/utils/appPathname';
   import { t } from '$i18n/binding.svelte';
@@ -66,20 +67,16 @@
     }
   });
 
-  async function handleDrop(files: DroppedFile[]) {
+  // The same route as both menus' Import buttons (FileService.importFiles): sheets and our own MIDI
+  // exports into the library, anything only the MIDI importer can read to the composer - asking
+  // first, unless the composer is the page and has claimed the route (ComposerImportRoute).
+  async function handleDrop(files: File[]) {
     try {
-      for (const file of files) {
-        const data = file.data as UnknownSongImport;
-        await fileService.importAndLog(data);
-      }
+      await fileService.importFiles(files, composerImporter);
     } catch (e) {
       console.error(e);
-      logger.error('Error importing file');
+      logger.error(t('logs:error_importing_file_generic'));
     }
-  }
-
-  function handleDropError() {
-    logger.error('There was an error importing the file! Was it the correct format?');
   }
 
   // QUIRK (load-bearing, read before touching this function): bypassOnce is set unconditionally
@@ -110,7 +107,7 @@
 </script>
 
 <ThemeVars>
-  <BodyDropper showDropArea={true} onDrop={handleDrop} as="json" onError={handleDropError} />
+  <BodyDropper showDropArea={true} onDrop={handleDrop} />
   <Logger />
   <AsyncPrompt />
   <AppInit />

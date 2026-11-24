@@ -1,6 +1,6 @@
 import {ComposedSong, type OldFormatComposed, type UnknownSerializedComposedSong} from "../Songs/ComposedSong.svelte"
 import {type OldFormatRecorded, RecordedSong, type UnknownSerializedRecordedSong} from "../Songs/RecordedSong"
-import {FileDownloader} from "../utils/Utilities"
+import {FileDownloader, isAudioFormat, isMidiFormat, isVideoFormat} from "../utils/Utilities"
 import {audioBufferToMp3Blob, audioBufferToWavBlob} from "$lib/audio/audioBufferEncoders"
 import {songsStore} from "$stores/SongsStore.svelte"
 import {type SerializedSong, Song} from "../Songs/Song.svelte"
@@ -11,9 +11,12 @@ import {type SerializedSong, Song} from "../Songs/Song.svelte"
 // and the `module` field it would otherwise prefer is itself mislabeled CommonJS (breaks Vite's
 // dev-mode SSR module runner with "exports is not defined" if forced via ssr.noExternal - tried
 // and reverted). `import type` sidesteps the whole problem: it's fully erased at compile time, so
-// there's no runtime import statement to fail either way - correct here since this file only ever
-// uses `Midi` as a type annotation (downloadMidi's parameter), never constructs one.
+// there's no runtime import statement to fail either way - correct here since `Midi` is only a
+// type annotation below (downloadMidi's parameter). The one MIDI this file DOES construct
+// (importFiles) takes its constructor from midiConstructor, which is where that problem is solved.
 import type {Midi} from "@tonejs/midi"
+import {Midi as MidiConstructor} from "../Songs/midiConstructor"
+import {songFromOwnMidi} from "../Songs/ownMidiImport"
 import {type SerializedTheme, Theme, ThemeProvider} from "../theme/ThemeProvider.svelte"
 import {convertedSongLostNotes, isForeignSong, songService} from "./SongService"
 import {Folder, type SerializedFolder} from "../Folder"
@@ -34,6 +37,14 @@ export type UnknownSong =
 export type UnknownFileTypes = UnknownSong | OldFormatComposed | OldFormatRecorded | SerializedFolder | SerializedTheme
 export type UnknownFile = UnknownFileTypes | UnknownFileTypes[]
 export type UnknownSongImport = UnknownSong | UnknownSong[]
+
+/** Where FileService.importFiles sends what only the composer's MIDI importer can read. */
+export type ComposerImporter = {
+    /** Hand `file` to the importer; resolves to whether the importer actually took it. */
+    open: (file: File) => Promise<boolean> | boolean
+    /** Whether the importer is open right now. Absent means it never is (no composer on the page). */
+    isOpen?: () => boolean
+}
 
 type SplitImports = {
     songs: UnknownSong[]
@@ -203,6 +214,76 @@ export class FileService {
         const themeErrors = result.getThemeErrors()
         themeErrors.forEach(e => logger.error(`${i18n.t('logs:error_importing_theme', {theme_name: e.file?.other?.name ?? ''})} | ${e.error}`))
         return result
+    }
+
+    /**
+     * Every file the user hands over in one gesture - picked with an Import button or dropped on
+     * the window - sorted by what it is, by name first and then by content:
+     *  - one of our own MIDI exports goes straight into the library (ownMidiImport.ts);
+     *  - any other MIDI, and any audio or video file, is for the composer's MIDI importer, which
+     *    takes ONE file: the first is handed to `importer.open` once everything else is imported,
+     *    and once the importer has really taken it, the rest are named in a warning;
+     *  - while that importer is already OPEN, every MIDI goes to it, our own exports included: the
+     *    user is in the middle of importing, and a file sent there is meant for the screen in front
+     *    of them, not for the library behind it;
+     *  - everything else is read as a song sheet, backup, folder or theme, exactly as before.
+     * One file failing never stops the others: each is reported on its own.
+     */
+    async importFiles(files: readonly File[], importer: ComposerImporter): Promise<void> {
+        const forImporter: File[] = []
+        for (const file of files) {
+            const name = file.name || ''
+            if (isAudioFormat(name) || isVideoFormat(name)) {
+                forImporter.push(file)
+                continue
+            }
+            if (isMidiFormat(name)) {
+                if (importer.isOpen?.()) {
+                    forImporter.push(file)
+                    continue
+                }
+                let own: ReturnType<typeof songFromOwnMidi>
+                try {
+                    own = songFromOwnMidi(new MidiConstructor(await file.arrayBuffer()), file.name)
+                } catch (e) {
+                    console.error(e)
+                    logger.error(i18n.t('composer:midi_parser.error_is_file_midi'), 8000)
+                    continue
+                }
+                if (!own) {
+                    forImporter.push(file)
+                    continue
+                }
+                try {
+                    await this.importAndLog(own.song.serialize() as UnknownSong)
+                } catch {
+                    //importAndLog has already said what failed
+                }
+                continue
+            }
+            let data: UnknownFile
+            try {
+                data = JSON.parse(await file.text())
+            } catch (e) {
+                console.error(e)
+                logger.error(i18n.t('logs:error_importing_invalid_format'), 8000)
+                continue
+            }
+            try {
+                await this.importAndLog(data)
+            } catch {
+                //importAndLog has already said what failed
+            }
+        }
+        if (forImporter.length === 0) return
+        //only once the importer has the file: a declined "open it in the composer?" or a cancelled
+        //save question opened nothing, and a warning saying otherwise would be false
+        const opened = await importer.open(forImporter[0])
+        if (opened && forImporter.length > 1) {
+            logger.warn(i18n.t('logs:only_first_file_opened_in_composer', {
+                file_name: forImporter[0].name,
+            }), 8000)
+        }
     }
 
     async importUnknownFile(unknownFile: UnknownFile): Promise<UnknownFileResult> {

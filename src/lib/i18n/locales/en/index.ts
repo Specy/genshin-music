@@ -64,6 +64,9 @@ export const i18n_en = {
     imported_song: `Imported {{song_type}} song "{{song_name}}"`,
     converted_song_stranded_notes:
       'Some notes might not play as they are not supported by some instruments',
+    // Several MIDI, audio or video files were picked or dropped at once; the composer's importer
+    // converts one file at a time, so only the first was opened in it.
+    only_first_file_opened_in_composer: `Only "{{file_name}}" was opened in the composer. Open the other files one at a time.`,
 
     changing_language: 'Changing language...',
     error_changing_language: 'Error changing language',

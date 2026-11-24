@@ -42,7 +42,8 @@
   import Analytics from '$core/Analytics';
   import { homeStore } from '$stores/HomeStore.svelte';
   import { logger } from '$stores/LoggerStore.svelte';
-  import { consumePendingMidiImport } from '$stores/PendingMidiImportStore';
+  import { clearPendingMidiImport, consumePendingMidiImport } from '$stores/PendingMidiImportStore';
+  import { claimComposerImports } from '$stores/ComposerImportRoute';
   import { ComposedSong, type ComposedSongHistory } from '$core/Songs/ComposedSong.svelte';
   import { RecordedSong } from '$core/Songs/RecordedSong';
   import { VsrgSong } from '$core/Songs/VsrgSong.svelte';
@@ -202,12 +203,23 @@
    * song.
    */
   const songIsDirty = $derived(history.isDirty || midiPreviewLoaded);
-  // The file that sent the user here, handed over by whichever menu could not parse it
-  // (PendingMidiImportStore). Taken at the moment the importer opens - so a hand-opened importer
-  // never re-imports a stale file - and passed down for MidiParser to parse on mount.
-  // ?showMidi=true is the player's route, which is why the seed consumes too.
+  // The file MidiParser parses on mount. Seeded from the pending slot only when this page was
+  // opened by a hand-off (?showMidi=true, ComposerImportRoute's navigation): that is the one moment
+  // the slot is valid. Later, a file handed over on this page arrives through openImporterWith, and
+  // an importer opened by hand starts empty.
   // svelte-ignore state_referenced_locally
   let pendingMidiFile = $state.raw(showMidi ? consumePendingMidiImport() : null);
+  // MidiParser reads its file once, at mount: a new one handed over while it is already open is
+  // installed by mounting it afresh, which this counter keys.
+  let midiParserMount = $state(0);
+  // A file handed to THIS composer (openImporterWith) while the importer is still being opened -
+  // waiting on the save question. Local, not the pending slot: the slot carries a file across a
+  // navigation and is only ever taken at mount, so anything found in it later was abandoned on the
+  // way here (a leave the user cancelled) and must not surface in an importer opened by hand.
+  let queuedMidiFile: File | null = null;
+  // The opening in progress, so a second request while the first is still asking JOINS it instead
+  // of being told no - and a file dropped meanwhile lands in the importer that question opens.
+  let importerOpening: Promise<boolean> | null = null;
   let isPlaying = $state(false);
   // A context resume can be pending before playback has an audio-clock anchor. Keep that state
   // separate from isPlaying: the canvas must not move until audio has an exact start time, while
@@ -400,6 +412,12 @@
       });
     }
     cleanup.push(registerLeaveHandler(prepareToLeave));
+    // A file only the MIDI importer can read - picked or dropped anywhere while this page is up -
+    // opens the importer here instead of asking to navigate to the page we are already on. The
+    // /theme preview leaves the route alone: there, a dropped MIDI asks to open the real composer.
+    if (!inPreview) {
+      cleanup.push(claimComposerImports({ open: openImporterWith, isOpen: () => isMidiVisible }));
+    }
     //A context rebuild resets the audio clock to zero, while this run's columnStartTime and
     //commitTime are absolute times taken from the old one - the transport would park waiting on
     //a boundary the new clock will not reach, with isPlaying stuck true and a play button that
@@ -2578,9 +2596,13 @@
         return false;
       }
 
-      // Consume only after opening is accepted. A cancelled attempt keeps the handoff available for
-      // the user's next attempt instead of silently losing the file that brought them here.
-      pendingMidiFile = consumePendingMidiImport();
+      // Taken only once opening is accepted, so the file a drop queued during the question is the
+      // one installed. A cancelled attempt is abandoned by its requester (openImporterWith clears
+      // the queue), and the pending slot is emptied here unread: its hand-off was only ever valid at
+      // mount, so whatever is in it now was left behind by a navigation that never happened.
+      pendingMidiFile = queuedMidiFile;
+      queuedMidiFile = null;
+      clearPendingMidiImport();
       midiPreviewLoaded = false;
       isMidiVisible = true;
       midiOpening = false;
@@ -2596,6 +2618,34 @@
     isMidiVisible = false;
     midiOpening = false;
     return true;
+  }
+
+  /**
+   * Every request to OPEN the importer - its own button and a handed-over file alike - comes through
+   * here, so a request made while another is still on the save question joins that one.
+   */
+  function requestMidiImporter(): Promise<boolean> {
+    if (isMidiVisible) return Promise.resolve(true);
+    importerOpening ??= changeMidiVisibility(true).finally(() => (importerOpening = null));
+    return importerOpening;
+  }
+
+  /**
+   * Open the MIDI importer with `file` in it - by the same door its own button uses, so a dirty
+   * song is still asked about first. Already open, the file replaces the one in it; mid-question, it
+   * is queued for the importer that question opens. Resolves to whether the importer took the file;
+   * a refused opening drops it, so it cannot turn up later in an importer opened by hand.
+   */
+  async function openImporterWith(file: File): Promise<boolean> {
+    if (isMidiVisible) {
+      pendingMidiFile = file;
+      midiParserMount++;
+      return true;
+    }
+    queuedMidiFile = file;
+    const opened = await requestMidiImporter();
+    if (!opened) queuedMidiFile = null;
+    return opened;
   }
 
   async function downloadSong(songToDownload: SerializedSong, as: 'song' | 'midi') {
@@ -2842,16 +2892,18 @@
   description="Create or edit songs with the composer, using up to 52 layers, tempo changers, multiple instruments and pitches. You can also convert a MIDI, video or audio into a sheet."
 />
 {#if isMidiVisible}
-  <MidiParser
-    data={{
-      selectedColumn: song.selected,
-    }}
-    initialFile={pendingMidiFile}
-    functions={{
-      changeMidiVisibility,
-      loadSong,
-    }}
-  />
+  {#key midiParserMount}
+    <MidiParser
+      data={{
+        selectedColumn: song.selected,
+      }}
+      initialFile={pendingMidiFile}
+      functions={{
+        changeMidiVisibility,
+        loadSong,
+      }}
+    />
+  {/key}
 {/if}
 <!-- `composer-grid-in-preview` keeps /theme's composer preview on the pre-existing centred layout:
      App.css's desktop block gives the real page a permanent sidebar column and a canvas that fills
@@ -3150,7 +3202,8 @@
     updateThisSong,
     handleSettingChange,
     changeVolume,
-    changeMidiVisibility,
+    changeMidiVisibility: (visible: boolean) =>
+      visible ? requestMidiImporter() : changeMidiVisibility(false),
   }}
   {inPreview}
   onPanelOpenChange={(open) => (menuDismissesClicks = open)}

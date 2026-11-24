@@ -9,13 +9,12 @@
   import { folderStore } from '$stores/FoldersStore.svelte';
   import { globalConfigStore } from '$stores/GlobalConfigStore.svelte';
   import { asyncConfirm, asyncPrompt } from '$stores/AsyncPromptStore.svelte';
-  import { setPendingMidiImport } from '$stores/PendingMidiImportStore';
+  import { composerImporter, openInComposerImporter } from '$stores/ComposerImportRoute';
   import { fileService } from '$core/Services/FileService';
   import { KeyboardProvider } from '$lib/providers/KeyboardProvider';
   import { clickOutside } from '$lib/utils/clickOutside';
   import { createMediaQuery } from '$lib/utils/mediaQuery.svelte';
   import { COMPOSER_DESKTOP_MEDIA_QUERY } from './composerCanvasGeometry';
-  import { isAudioFormat, isMidiFormat, isVideoFormat } from '$core/utils/Utilities';
   import type { SerializedSong, SongType } from '$core/Songs/Song.svelte';
   import type { ComposerSettingsDataType } from '$core/BaseSettings';
   import type { SettingUpdate, SettingVolumeUpdate } from '$core/types/SettingsPropriety';
@@ -180,35 +179,24 @@
     folderStore.createFolder(name);
   }
 
-  async function importFile(files: FileElement<SerializedSong[] | SerializedSong>[]) {
-    for (const file of files) {
-      try {
-        const songs = Array.isArray(file.data) ? file.data : [file.data];
-        await fileService.importAndLog(songs);
-      } catch (e) {
-        console.error(e);
-        if (e) console.error(e);
-        logger.error(t('logs:error_importing_invalid_format'), 8000);
-      }
-    }
-  }
-
-  function jsonImportError(e: unknown, files: File[]) {
-    if (e) console.error(e);
-    if (files.length > 0) {
-      const file = files[0];
-      const name = file.name;
-      if (!isMidiFormat(name) && !isVideoFormat(name) && !isAudioFormat(name))
-        return logger.error(t('composer:error_importing_file_invalid_format'), 8000);
-      // Carry the file over instead of making the user pick it again inside the importer; the
-      // importer takes it while opening, so this must be set BEFORE changeMidiVisibility. The
-      // hand-off is silent: the importer opens with the file already in it, so there is nothing
-      // to tell the user to do.
-      setPendingMidiImport(file);
-      functions.changeMidiVisibility(true);
-      toggleMenu();
-    } else {
-      logger.error(t('composer:error_importing_file_invalid_format_audio_video'), 8000);
+  // One route for picked and dropped files alike (FileService.importFiles). A MIDI, audio or video
+  // file that is not one of our own exports opens the importer with the file already in it - the
+  // composer claims that route while mounted (ComposerImportRoute) - so the menu gets out of the way.
+  async function importFile(files: FileElement<File>[]) {
+    try {
+      await fileService.importFiles(
+        files.map((picked) => picked.file),
+        {
+          ...composerImporter,
+          open: (file) => {
+            toggleMenu(false);
+            return openInComposerImporter(file);
+          },
+        }
+      );
+    } catch (e) {
+      console.error(e);
+      logger.error(t('logs:error_importing_file_generic'), 8000);
     }
   }
 </script>
@@ -421,7 +409,7 @@
           }}
         >
           {#snippet importButton()}
-            <FilePicker onPick={importFile} onError={jsonImportError} as="json" multiple={true}>
+            <FilePicker onPick={importFile} as="file" multiple={true}>
               <AppButton>
                 {#snippet icon()}
                   <IconUpload />

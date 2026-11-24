@@ -22,6 +22,7 @@
         "song_backup_downloaded": "已下載歌曲備份",
         "old_format_export_dropped_notes": "有 {{count}} 個音符無法寫入供舊版樂譜工具使用的部分（它們在默認樂器上沒有對應的位置）。您的檔案仍然包含所有音符。",
         "converted_song_stranded_notes": "某些音符可能無法播放，因為某些樂器不支持它們",
+        "only_first_file_opened_in_composer": "作曲器中只開啟了“{{file_name}}”。請逐一開啟其他檔案。",
         "no_songs_to_backup": "沒有要備份的歌曲",
         "no_empty_name": "請填寫一個非空白的名稱",
         "cloned_song": "複製歌曲：“{{song_name}}”",

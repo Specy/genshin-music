@@ -24,6 +24,7 @@
         "song_backup_downloaded": "Yedeklenen şarkılar indirildi",
         "old_format_export_dropped_notes": "{{count}} nota eski nota araçları için dahil edilemedi (varsayılan enstrümanda konumları yok). Dosyanızda tüm notalar duruyor.",
         "converted_song_stranded_notes": "Bazı notalar bazı enstrümanlar tarafından desteklenmediği için çalınmayabilir",
+        "only_first_file_opened_in_composer": "Besteleyicide yalnızca \"{{file_name}}\" açıldı. Diğer dosyaları tek tek açın.",
         "no_songs_to_backup": "Yedeklenecek şarkı yok",
         "no_empty_name": "Lütfen isim alanını boş bırakmayın",
         "cloned_song": "\"{{song_name}}\" adlı şarkı klonlandı.",

@@ -366,16 +366,22 @@ export type {
     Debouncer
 }
 
+// The three below ignore the extension's case: SONG.MID and TAKE.MP3 are what some systems and
+// devices name files, and a router that lowercased the name while the importer did not used to
+// send TAKE.MP3 to the importer only for it to be parsed there as MIDI.
 export function isVideoFormat(fileName: string) {
-    return fileName.endsWith(".mp4") || fileName.endsWith(".webm") || fileName.endsWith(".mov")
+    const name = fileName.toLowerCase()
+    return name.endsWith(".mp4") || name.endsWith(".webm") || name.endsWith(".mov")
 }
 
 export function isMidiFormat(fileName: string) {
-    return fileName.endsWith(".mid") || fileName.endsWith(".midi")
+    const name = fileName.toLowerCase()
+    return name.endsWith(".mid") || name.endsWith(".midi")
 }
 
 export function isAudioFormat(fileName: string) {
-    return fileName.endsWith(".mp3") || fileName.endsWith(".wav") || fileName.endsWith(".ogg")
+    const name = fileName.toLowerCase()
+    return name.endsWith(".mp3") || name.endsWith(".wav") || name.endsWith(".ogg")
 }
 
 export {

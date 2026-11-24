@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import {
   clearPendingMidiImport,
   consumePendingMidiImport,
+  isStillPendingMidiImport,
   setPendingMidiImport,
 } from '../src/lib/stores/PendingMidiImportStore';
 
@@ -40,5 +41,15 @@ describe('pending midi import handoff', () => {
     clearPendingMidiImport();
 
     expect(consumePendingMidiImport()).toBe(null);
+  });
+
+  it('says whether a file handed over is still waiting', () => {
+    // how the route tells a hand-off the composer took from one whose navigation never happened
+    const dropped = file('song.mid');
+    setPendingMidiImport(dropped);
+    expect(isStillPendingMidiImport(dropped)).toBe(true);
+    expect(isStillPendingMidiImport(file('other.mid'))).toBe(false);
+    consumePendingMidiImport();
+    expect(isStillPendingMidiImport(dropped)).toBe(false);
   });
 });

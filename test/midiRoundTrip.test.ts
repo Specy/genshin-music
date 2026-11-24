@@ -10,7 +10,7 @@
 // bug found in this pipeline was invisible at the integer-ms tempos (120, 240) and only bit
 // where the column length is fractional.
 import {describe, expect, it} from 'vitest'
-import {CANONICAL_NOTE_IDS, INSTRUMENTS, INSTRUMENTS_DATA, PITCHES} from './imports'
+import {CANONICAL_NOTE_IDS, INSTRUMENTS, INSTRUMENTS_DATA, PITCHES, TEMPO_CHANGERS} from './imports'
 import {ComposedSong} from '../src/lib/core/Songs/ComposedSong.svelte'
 import {NoteColumn} from '../src/lib/core/Songs/SongClasses'
 import {Midi} from '../src/lib/core/Songs/midiConstructor'
@@ -364,8 +364,8 @@ describe('the Basepoint, on both sides of the pipeline', () => {
 
     /**
      * Pitched instruments moved by a register and by nothing else: every key sounds its nominal
-     * moved by whole octaves. (A per-button flavored one - Vintage-Lyre - stays best-effort, see
-     * MidiImportOptions.pitch, and has no register.)
+     * moved by whole octaves. (A per-button flavored one - Vintage-Lyre - has no register; its
+     * keys between the rows are pinned by the TUNED test below.)
      */
     const REGISTERED = INSTRUMENTS.filter((name: string) => registerShift(name) !== 0
         && INSTRUMENTS_DATA[name as keyof typeof INSTRUMENTS_DATA].notes.every(note => note.pitched)
@@ -393,6 +393,50 @@ describe('the Basepoint, on both sides of the pipeline', () => {
                 expect(result.merged).toBe(0)
             }
         }
+    })
+
+    /**
+     * Instruments with a key that sounds BETWEEN the grid's rows (Genshin's Vintage-Lyre: Db, Eb, Ab,
+     * Bb on the D, E, A, B rows). Chosen from config, so a game without one skips the test.
+     */
+    const TUNED = INSTRUMENTS.filter((name: string) =>
+        getSoundingTable(name).some((sounding, button) =>
+            INSTRUMENTS_DATA[name as keyof typeof INSTRUMENTS_DATA].notes[button]?.pitched !== false
+            && isAccidentalMidi(sounding)))
+
+    it.runIf(TUNED.length > 0)('lands a pitch between the rows on the key that sounds it, at every Basepoint', () => {
+        //the snap picks a white row by distance alone, and on these instruments the key for an
+        //accidental can sit on the row ABOVE: Eb (75) snapped down to the D row, whose key sounds
+        //Db, so our own export came back a whole tone low - and so did a foreign file's Eb
+        for (const name of TUNED) {
+            for (const pitch of PITCHES as readonly Pitch[]) {
+                const keys = getSoundingTable(name).map(sounding => sounding + basepointOffset(pitch))
+                const result = importMidiTracks(
+                    [{notes: keys.map((midi, index) => ({midi, time: index * 0.5, duration: 0.25})), layer: 0, localOffset: null, maxScaling: 0}],
+                    {bpm: 120, offset: 0, includeAccidentals: false, pitch, layers: [{name, pitch: ''}]}
+                )
+                //every key comes back as itself, and none of them was an accidental to drop: a note
+                //the layer's own instrument sounds exactly was not moved, so accidentals off keeps it
+                expect(numbersOf(result.columns), `${name} at ${pitch}`).toEqual([...keys].sort((a, b) => a - b))
+                expect(result.accidentals, `${name} at ${pitch}`).toBe(0)
+            }
+        }
+    })
+
+    it.runIf(TUNED.length > 0)('still snaps an accidental the tuned instrument has no key for', () => {
+        //the exact-key rule is a lookup on the instrument, not a licence to keep every accidental
+        const name = TUNED[0]
+        const sounding = new Set(getSoundingTable(name))
+        const missing = [...Array(128).keys()].find(n =>
+            isAccidentalMidi(n) && !sounding.has(n)
+            && n > Math.min(...sounding) && n < Math.max(...sounding))
+        expect(missing).toBeDefined()
+        const result = importMidiTracks(
+            [{notes: [{midi: missing!, time: 0, duration: 0.25}], layer: 0, localOffset: null, maxScaling: 0}],
+            {bpm: 120, offset: 0, includeAccidentals: true, pitch: 'C', layers: [{name, pitch: ''}]}
+        )
+        expect(result.accidentals).toBe(1)
+        expect(numbersOf(result.columns)).not.toEqual([missing])
     })
 
     it('keeps two adjacent notes of a non-C song distinct instead of merging them', () => {
@@ -564,5 +608,49 @@ describe('suggestOffset', () => {
         expect(withFixedTrack.accidentals)
             .toBe(globalOnly.accidentals + fixedOnly.accidentals)
         expect(withFixedTrack.stranded).toBe(globalOnly.stranded + fixedOnly.stranded)
+    })
+})
+
+// `startMs`: where column 0 sits on the file's clock. Only the import of our own exports passes it
+// (they put column 0 at MIDI_EXPORT_START_MS); a foreign file's lead-in stays dropped.
+describe('the rest before the first note', () => {
+    const at = (...seconds: number[]): MidiImportTrack[] => [{
+        notes: seconds.map(time => ({midi: 60, time, duration: 0.25})),
+        layer: 0,
+        localOffset: null,
+        maxScaling: 0,
+    }]
+    const noteColumns = (columns: {notes: unknown[]}[]) =>
+        columns.flatMap((column, index) => (column.notes.length > 0 ? [index] : []))
+    const options = {bpm: 120, offset: 0, includeAccidentals: true, pitch: 'C' as Pitch, layers: layersOf([false])}
+
+    it('is dropped when the caller does not say where column 0 is', () => {
+        expect(noteColumns(importMidiTracks(at(1.1, 1.6), options).columns)).toEqual([0, 1])
+    })
+
+    it('is kept as empty columns from `startMs`', () => {
+        //two beats of rest at bpm 120, then the notes a beat apart
+        const result = importMidiTracks(at(1.1, 1.6), {...options, startMs: 100})
+        expect(noteColumns(result.columns)).toEqual([2, 3])
+        expect(result.columns.slice(0, 2).every(column => column.notes.length === 0)).toBe(true)
+    })
+
+    const quarter = TEMPO_CHANGERS.findIndex(t => t.changer === 0.25)
+
+    it.runIf(quarter !== -1)('fills a sub-beat rest with the largest columns that fit, like any other gap', () => {
+        //a quarter beat of rest: one column of the changer a quarter beat long
+        const result = importMidiTracks(at(0.225, 0.725), {...options, startMs: 100})
+        expect(noteColumns(result.columns)).toEqual([1, 2])
+        expect(result.columns[0].tempoChanger).toBe(quarter)
+    })
+
+    it('moves column 0 back to a note that comes before `startMs`, never ahead of it', () => {
+        expect(noteColumns(importMidiTracks(at(0.1, 0.6), {...options, startMs: 600}).columns)).toEqual([0, 1])
+    })
+
+    it('measures a hold from the same start, so its span is unchanged', () => {
+        const held: MidiImportTrack[] = [{notes: [{midi: 60, time: 1.1, duration: 1}], layer: 0, localOffset: null, maxScaling: 0}]
+        const result = importMidiTracks(held, {...options, layers: layersOf([true]), startMs: 100})
+        expect(result.columns[2].notes[0]?.span).toBe(2)
     })
 })
